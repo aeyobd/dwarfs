@@ -8,7 +8,7 @@
 
     # PMGRID=512
     # ASMTH=2.0
-    TREE_NUM_BEFORE_NODESPLIT=10
+    # TREE_NUM_BEFORE_NODESPLIT=10
     # TREEPM_NOTIMESPLIT
     
 # Softening types and particle types

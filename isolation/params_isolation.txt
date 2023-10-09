@@ -1,0 +1,121 @@
+%  Relevant files
+
+InitCondFile  	  ./iso_scaled
+OutputDir         ./out
+
+EnergyFile        energy.txt
+InfoFile          info.txt
+TimingsFile       timings.txt
+CpuFile           cpu.txt
+
+RestartFile       restart
+SnapshotFileBase  snapshot
+
+OutputListFilename	lala.txt
+
+% CPU-time limit
+
+ResubmitOn        0
+ResubmitCommand   xyz
+
+% Code options
+
+ICFormat                 3
+SnapFormat               3
+ComovingIntegrationOn    0
+
+TypeOfTimestepCriterion  0
+OutputListOn             0
+PeriodicBoundariesOn     0
+
+%  Caracteristics of run
+
+
+Omega0	              0
+OmegaLambda           0
+OmegaBaryon           0
+HubbleParam         1.0
+BoxSize             350
+
+
+% Output frequency
+
+TimeOfFirstSnapshot    0
+
+CpuTimeBetRestartFile     3600.0    ; here in seconds
+TimeBetStatistics         0.05
+
+NumFilesPerSnapshot       1
+NumFilesWrittenInParallel 1
+
+
+% Accuracy of time integration
+
+
+CourantFac             0.1      % for SPH
+MaxSizeTimestep        0.5
+MinSizeTimestep        0
+
+
+% Tree algorithm, force accuracy, domain update frequency
+
+ErrTolTheta            0.5
+TypeOfOpeningCriterion 0
+ErrTolForceAcc         0.005
+
+TreeDomainUpdateFrequency    0.05  %0.1
+MaxRMSDisplacementFac  0.25
+
+%  Further parameters of SPH
+
+DesNumNgb              50
+MaxNumNgbDeviation     1
+ArtBulkViscConst       0.8
+
+% Memory allocation
+
+PartAllocFactor       3.5 %3.5
+TreeAllocFactor       3.5  %3.5
+BufferSize            50          % in MByte
+
+% System of units
+
+UnitLength_in_cm	 1.0
+UnitMass_in_g            1.0
+UnitVelocity_in_cm_per_s 1.0
+GravityConstantInternal  1.0   % if set to zero, the physical value 6.672e-8
+	  		       % is taken
+
+% Softening lengths
+
+SofteningGas	   1  %PartType0 
+SofteningHalo	 0.08
+SofteningDisk      1
+SofteningBulge     1
+SofteningStars     1   	%PartType4
+SofteningBndry     1
+
+SofteningGasMaxPhys	  1
+SofteningHaloMaxPhys	 0.08
+SofteningDiskMaxPhys      1
+SofteningBulgeMaxPhys     1
+SofteningStarsMaxPhys     1
+SofteningBndryMaxPhys     1
+
+MinGasTemp = 100
+InitGasTemp = 100
+
+
+TimeBegin	0.00
+TimeMax	 1176
+TimeBetSnapshot	500
+
+MinGasHsmlFractional	0.1
+TimeLimitCPU	217000
+
+ErrTolIntAccuracy      2.000e-02
+
+
+%Halo_M200   1
+%Halo_R200   200.0
+%Halo_c      10

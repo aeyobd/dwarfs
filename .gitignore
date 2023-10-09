@@ -2,3 +2,14 @@ gadget/build
 gadget/Gadget
 gadget/output
 .ipynb_checkpoints
+__pycache__
+
+*.hdf5
+*.pdf
+*.err
+*.out
+*.dat
+
+out
+
+Gadget4

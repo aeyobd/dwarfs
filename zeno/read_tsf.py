@@ -92,10 +92,11 @@ def output_to_hdf5(table, filename):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("requires filename")
+    if len(sys.argv) < 3:
+        print("requires filename, outname")
         sys.exit(1)
     filename = sys.argv[1]
+    outname = sys.argv[2]
 
     particles = read_file(filename)
 
@@ -103,6 +104,4 @@ if __name__ == "__main__":
     particles["Velocity"] = inflate_list(particles["Velocity"], 3)
     for var, l in particles.items():
         print(var, len(l),  l[:5])
-    hdfname = path.splitext(filename)[0]
-    hdfname += ".hdf5"
-    output_to_hdf5(particles, hdfname)
+    output_to_hdf5(particles, outname)
