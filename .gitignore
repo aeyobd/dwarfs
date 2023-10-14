@@ -5,10 +5,17 @@ gadget/output
 __pycache__
 
 *.hdf5
+*.dat
+*.gsp
+
 *.pdf
+*.gif
+
 *.err
 *.out
-*.dat
+*-usedvalues
+
+.pytest_cache
 
 out
 

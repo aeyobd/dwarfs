@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 inputFile = sys.argv[1]
 outputFile = sys.argv[2]
 scaleRadius = float(sys.argv[3]) # scale radius (2.11 kpc for Fornax)
-scaleMass = float(sys.argv[4]) # mass eclosed in scale radius (~2*10^8 M_sol for Fornax)
+scaleMass = float(sys.argv[4]) # mass eclosed in scale radius, M_sol (~2*10^8 M_sol for Fornax)
 
 ## G = 1, M_0 = 10^10 solar masses, R_0 = 1 kpc, T_0 = 4.718*10^6 yrs, V_0 = 207.4 km/s
 G = 1
