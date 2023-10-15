@@ -5,29 +5,42 @@ from os import path
 
 class Snapshot:
     _filename = None
+    gadget4 = False
 
     def __init__(self, positions, velocities, 
-            ids=None, potential=None,
+            IDs=None, potential=None,
             header = {}):
         self.pos = positions
         self.vel = velocities
-        if ids is None:
-            ids = np.arange(len(self))
-        self.ids = ids
+        if IDs is None:
+            IDs = np.arange(len(self))
+        self.IDs = IDs
         if potential is None:
             potential = np.zeros(len(self))
         self.potential = potential
         self.header = header
 
     @classmethod
-    def file(cls, filename):
-        with h5py.File(filename, "r") as f:
-            pos = get_h5_vector(f, "Coordinates")
-            vel = get_h5_vector(f, "Velocities")
-            IDs = get_h5_vector(f, "ParticleIDs")
-            acc = get_h5_vector(f, "Acceleration")
-            pot = get_h5_vector(f, "Potential")
-            header = get_h5_header(f)
+    def file(cls, filename, gadget4=False):
+        if gadget4:
+            with h5py.File(filename, "r") as f:
+                pos = get_h5_vector(f, "Position")
+                vel = get_h5_vector(f, "Velocity")
+                IDs = get_h5_vector(f, "ParticleIDs")
+                header = get_h5_header(f)
+            c = cls(pos, vel, IDs, header=header)
+            c._filename = filename
+            c.gadget4 = True
+            return c
+
+        else:
+            with h5py.File(filename, "r") as f:
+                pos = get_h5_vector(f, "Coordinates")
+                vel = get_h5_vector(f, "Velocities")
+                IDs = get_h5_vector(f, "ParticleIDs")
+                acc = get_h5_vector(f, "Acceleration")
+                pot = get_h5_vector(f, "Potential")
+                header = get_h5_header(f)
 
         c = cls(pos, vel, IDs, header=header, potential=pot)
         c._filename = filename
@@ -45,51 +58,80 @@ class Snapshot:
             print("snapshot saved at ", self._filename)
         return True
 
+    def filter(self, filt, inplace=False):
+        assert len(filt) == len(self)
+        copy = self.copy()
+        copy.pos = copy.pos[filt]
+        copy.vel = copy.vel[filt]
+        copy.IDs = copy.IDs[filt]
+        if copy.potential is not None:
+            copy.potential = copy.potential[filt]
+        return copy
 
     def _save(self):
+
         with h5py.File(self._filename, "a") as f:
-            set_h5_vector(f, "Coordinates", self.pos)
-            set_h5_vector(f, "Velocities", self.vel)
-            set_h5_vector(f, "ParticleIDs", self.ids)
-            # set_h5_vector(f, "Acceleration", self.acc)
+            if self.gadget4:
+                set_h5_vector(f, "Position", self.pos)
+                set_h5_vector(f, "Velocity", self.vel)
+            else:
+                set_h5_vector(f, "Coordinates", self.pos)
+                set_h5_vector(f, "Velocities", self.vel)
+
+            set_h5_vector(f, "ParticleIDs", self.IDs)
             set_h5_header(f, self.header)
 
     def _save_new(self):
         with h5py.File(self._filename, "w") as f:
             part = f.create_group("PartType1")
             f.create_group("Header")
-            set_h5_vector(f, "Coordinates", self.pos)
-            set_h5_vector(f, "Velocities", self.vel)
-            set_h5_vector(f, "ParticleIDs", self.ids)
-            set_h5_vector(f, "Potential", self.potential)
-            set_h5_vector(f, "PertAccel", np.zeros(len(self)))
-            set_h5_vector(f, "Acceleration", np.zeros(len(self)))
-            set_h5_vector(f, "TimeStep", np.zeros(len(self)))
+
+            set_h5_vector(f, "ParticleIDs", self.IDs)
+            if self.gadget4:
+                set_h5_vector(f, "Position", self.pos)
+                set_h5_vector(f, "Velocity", self.vel)
+            else:
+                set_h5_vector(f, "Coordinates", self.pos)
+                set_h5_vector(f, "Velocities", self.vel)
+                set_h5_vector(f, "Potential", self.potential)
+                set_h5_vector(f, "PertAccel", np.zeros(len(self)))
+                set_h5_vector(f, "Acceleration", np.zeros(len(self)))
+                set_h5_vector(f, "TimeStep", np.zeros(len(self)))
             # set_h5_vector(f, "Acceleration", self.acc)
             set_h5_header(f, self.header)
 
 
-    def shift(self, p0, v0=[0,0,0], inplace=True):
+    def shift(self, p0, v0=[0,0,0], inplace=False):
         if inplace:
             self.pos += p0
             self.vel += v0
             return self
         else:
-            pass
+            shifted = self.copy()
+            shifted.pos += p0
+            shifted.vel += v0
+            return shifted
 
-    def scale(self, r_scale=1, v_scale=1, m_scale=1):
-        self.pos *= r_scale
-        self.vel *= v_scale
-        self.m *= m_scale
+    def scale(self, r_scale=1, v_scale=1, m_scale=1, inplace=False):
+        if inplace:
+            self.pos *= r_scale
+            self.vel *= v_scale
+            self.m *= m_scale
+        else:
+            scaled = self.copy()
+            scaled.pos *= r_scale
+            scaled.vel *= v_scale
+            scaled.m *= m_scale
+            return scaled
 
 
     def copy(self):
-        pos = np.copy(self.positions)
-        vel = np.copy(self.velocities)
-        ids = np.copy(self.ids)
+        pos = np.copy(self.pos)
+        vel = np.copy(self.vel)
+        IDs = np.copy(self.IDs)
         potential = np.copy(self.potential)
-        header = copY(self.header)
-        return Snapshot(pos, vel, ids=ids, potential=potential, header=header)
+        header = self.header.copy()
+        return Snapshot(pos, vel, IDs=IDs, potential=potential, header=header)
 
 
     @property
@@ -170,21 +212,22 @@ def set_h5_header(h5_f, header):
 
 
 def set_h5_header_attr(h5_f, key, val):
-    attrs = f["Header"].attrs
+    attrs = h5_f["Header"].attrs
 
     if key in attrs.keys():
         attrs.modify(key, val)
     else:
         dtype, shape = get_dtype_shape(val)
-        attrs.create(key, shape, val, dtype=dtype)
-
+        # if shape == 1 and hasattr(val, "__len__"):
+            # val = val[0]
+        attrs.create(key, val, shape, dtype=dtype)
 
 
 def get_dtype_shape(val):
     if hasattr(val, "__len__"):
         return get_arr_dtype_shape(val)
     else:
-        shape = 0
+        shape = 1
         dtype = get_dtype(val)
         return dtype, shape
 
@@ -192,6 +235,8 @@ def get_dtype_shape(val):
 def get_arr_dtype_shape(arr):
     if isinstance(arr, np.ndarray):
         shape = arr.shape
+        if len(shape) == 1:
+            shape = shape[0]
         el = arr.flatten()[0]
         dtype = get_dtype(el)
         return dtype, shape

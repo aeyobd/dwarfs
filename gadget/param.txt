@@ -1,7 +1,7 @@
 
 %----  Relevant files 
 InitCondFile         ../zeno/nfw_scaled
-OutputDir            ./output
+OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
 
@@ -20,30 +20,29 @@ MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  1         # Gyr
+TimeMax	                  1176
 
 %---- Cosmological parameters
-Omega0	                  0.308
+Omega0	                  0
 OmegaLambda               0
 OmegaBaryon               0
-HubbleParam               0.72
+HubbleParam               1.0
 Hubble                    100.0
-BoxSize                   0
+BoxSize                   30
 ComovingIntegrationOn	  0
 
 
 %---- System of units
-UnitLength_in_cm         3.085678e21        ;  kpc / h
-UnitMass_in_g            1.989e33           ;  1.0 Msun / h
-UnitVelocity_in_cm_per_s 1e5                ;  1 km/sec
-# unit time will be approximantly 1Gyr
-GravityConstantInternal  0
+UnitLength_in_cm         1.0 
+UnitMass_in_g            1.0 
+UnitVelocity_in_cm_per_s 1.0 
+GravityConstantInternal  1.0
 
 
 
 %---- Output frequency and output paramaters
 OutputListOn              1 
-TimeBetSnapshot           0.0
+TimeBetSnapshot           0.1
 TimeOfFirstSnapshot       0.0
 TimeBetStatistics         0.01
 NumFilesPerSnapshot       1
@@ -51,13 +50,13 @@ MaxFilesWithConcurrentIO  1
 
 %---- Accuracy of time integration
 ErrTolIntAccuracy        0.01 
-CourantFac               0.3
-MaxSizeTimestep          0.01
+CourantFac               0.1
+MaxSizeTimestep          0.5
 MinSizeTimestep          0.0 
 
 %---- Tree algorithm, force accuracy, domain update frequency
 TypeOfOpeningCriterion                0
-ErrTolTheta                           0.70
+ErrTolTheta                           0.5
 ErrTolThetaMax                        1.0
 ErrTolForceAcc                        0.005
 TopNodeFactor                         3.0
@@ -72,14 +71,14 @@ MaxNumNgbDeviation               1
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.1	# 10 pc
-SofteningComovingClass0       0.1	# 10 pc
+SofteningMaxPhysClass0       0.08	# 10 pc
+SofteningComovingClass0       0.08	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
 
 %----- SPH
-ArtBulkViscConst             1.0
+ArtBulkViscConst             0.8
 MinEgySpec                   0
-InitGasTemp                  0
+InitGasTemp                  100
 

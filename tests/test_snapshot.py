@@ -14,6 +14,13 @@ ids = np.arange(Nrows)
 filename = "tests/snapshot_test.hdf5"
 newfilename = "tests/snapshot_test_new.hdf5"
 
+def test_init():
+    if os.path.exists(filename):
+        os.remove(filename)
+    if os.path.exists(newfilename):
+        os.remove(newfilename)
+
+
 def test_get_dtype():
     dtypes = {
             "double": 0.0,
@@ -23,11 +30,7 @@ def test_get_dtype():
     for dtype, val in dtypes.items():
         assert dtype == snapshot.get_dtype(val)
 
-def test_init():
-    if os.path.exists(filename):
-        os.remove(filename)
-    if os.path.exists(newfilename):
-        os.remove(newfilename)
+
 
 def test_save_snapshot():
     snap = Snapshot(pos, vel, ids, potentials)
@@ -38,6 +41,22 @@ def test_save_as():
     assert snap.save(newfilename)
     newsnap = Snapshot.file(newfilename)
     assert np.all(newsnap.pos == pos)
+
+def test_copy():
+    snap0 = Snapshot.file(filename)
+    snap1 = snap0.copy()
+    dx = np.random.uniform(3)
+    snap1.shift(dx, inplace=True)
+    assert np.all(snap1.pos == snap0.pos+dx)
+
+def test_shift():
+    snap = Snapshot.file(filename)
+    dx = np.random.uniform(3)
+    dv = np.random.uniform(3)
+    shifted = snap.shift(dx, dv)
+    assert np.all(snap.pos + dx == shifted.pos)
+    assert np.all(snap.vel + dv == shifted.vel)
+
 
 def test_save_all_cols():
     expected_cols = ['Acceleration', 'Coordinates', 'ParticleIDs', 'PertAccel', 'Potential', 'TimeStep', 'Velocities']
@@ -61,12 +80,8 @@ def test_xyz():
     assert np.all(pos[:,1] == snap.y)
     assert np.all(pos[:,2] == snap.z)
 
-
-def test_transform():
-    dp = np.random.normal(0, 1, (3))
-    dv = np.random.normal(0, 1, (3))
-    dm = np.random.uniform(1, 10)
-
+def test_vxyz():
     snap = Snapshot.file(filename)
-
-
+    assert np.all(vel[:,0] == snap.v_x)
+    assert np.all(vel[:,1] == snap.v_y)
+    assert np.all(vel[:,2] == snap.v_z)

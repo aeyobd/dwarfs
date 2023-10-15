@@ -3,14 +3,14 @@
 
     # LEAN
     SELFGRAVITY
-    # EXTERNALGRAVITY
-    # EXTERNALGRAVITY_MW
+    EXTERNALGRAVITY
+    EXTERNALGRAVITY_MW
     
 # Gravity options
 
     # PMGRID=512
     # ASMTH=2.0
-    TREE_NUM_BEFORE_NODESPLIT=3
+    TREE_NUM_BEFORE_NODESPLIT=10
     # TREEPM_NOTIMESPLIT
     
 # Softening types and particle types
@@ -20,7 +20,7 @@
 # Floating point accuracy
 
     POSITIONS_IN_64BIT
-    DOUBLEPRECISION=1 
+    DOUBLEPRECISION=1 # mixed precision
 
 # Group finding
 
@@ -28,6 +28,4 @@
 
 # Miscellaneous code options
 
-    OUTPUT_POTENTIAL
-    OUTPUT_ACCELERATION
 

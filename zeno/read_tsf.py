@@ -4,6 +4,8 @@ import re
 from os import path
 import numpy as np
 
+from lilguys import Snapshot
+
 
 def read_file(filename):
     header = True
@@ -72,23 +74,35 @@ def inflate_list(l, ndim):
         lix = i*ndim
         uix = (i+1)*ndim 
         out.append(l[lix:uix])
-    return out
+    return np.array(out)
+
+
+def make_header(N, mass):
+    Npart = 2
+
+    header = {}
+    header["NumPart_ThisFile"] = (0, N)
+    header["NumPart_Total"] = (0, N)
+    header["MassTable"] = (0., mass)
+    header["Time"] = 0.
+    header["Redshift"] = 0.
+    header["BoxSize"] = 350.
+    header["NumFilesPerSnapshot"] = 1
+    return header
 
 def output_to_hdf5(table, filename):
     N = len(table["Mass"])
-    with h5py.File(filename, "w") as f:
-        grp = f.create_group("PartType1")
-        header = f.create_group("Header")
-        params = f.create_group("Parameters")
-        conf = f.create_group("Config")
-        # m = f.create_dataset("Mass", (N,), dtype="f")
-        # m[:] = table["Mass"]
-        x = grp.create_dataset("Position", (N,3), dtype="f")
-        x[:,:] = table["Position"]
-        v = grp.create_dataset("Velocity", (N,3), dtype="f")
-        v[:,:] = table["Velocity"]
-        idx = grp.create_dataset("ParticleIDs", (N), dtype="i")
-        idx[:] = np.arange(N)
+    mass = table["Mass"][0]
+    print(mass)
+    header = make_header(N, mass)
+    snap = Snapshot(
+            table["Position"],
+            table["Velocity"],
+            IDs = np.arange(N),
+            header=header
+            )
+    # snap.gadget4 = True
+    snap.save(filename)
 
 
 if __name__ == "__main__":

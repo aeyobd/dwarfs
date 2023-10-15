@@ -22,6 +22,7 @@ def process(filename):
         attr.create("BoxSize", 0, (1), dtype="double")
         attr.create("NumFilesPerSnapshot", (1), dtype="int")
 
+    print("processed")
 
 if __name__ == "__main__":
     process(sys.argv[1])

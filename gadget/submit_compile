@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#SBATCH	 -J	 isolation_new
+#SBATCH --ntasks=2				#Number of cores
+#SBATCH -A durham				#Account name
+#SBATCH -t 2:00:00
+#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
+#SBATCH --mail-user=dboyea@uvic.ca
+#SBATCH --mail-type=END				#Notifications for job done & fail
+#SBATCH -o %J.out		#Standard output file
+#SBATCH -e %J.err		#Error file
+
+# these are defined in bash_profile
+module load gnu_comp
+module load openmpi
+module load fftw/2.1.5
+module load hdf5
+module load gsl
+
+# mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget4 param.txt
+cd ~/gadget4
+make CONFIG=~/dwarfs/gadget/Config.sh DIR=~/dwarfs/gadget

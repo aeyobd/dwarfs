@@ -11,9 +11,12 @@ galcen_frame = Galactocentric(
 geocen_frame = ICRS()
 
 
-class dwarf_obs:
-    def __init__(self, ra, dec, distance, pm_ra, pm_dec, radial_velocity,
-            distance_err=None, pm_ra_err=None, pm_dec_err=None, radial_velocity_err=None):
+class observation:
+    def __init__(self, ra, dec, 
+            distance=None, pm_ra=None, pm_dec=None, 
+            radial_velocity=None,
+            distance_err=None, pm_ra_err=None, pm_dec_err=None,
+            radial_velocity_err=None):
         self.ra = ra
         self.dec = dec
         self.distance = distance
@@ -26,7 +29,7 @@ class dwarf_obs:
         self.radial_velocity_err = radial_velocity_err
 
 
-class dwarf_phase:
+class phase_point:
     def __init__(self, x, y, z, v_x, v_y, v_z):
         self.x = x
         self.y = y 
@@ -77,11 +80,11 @@ def to_galcen(obs):
     vy /= u.km/u.s
     vz /= u.km/u.s
  
-    return dwarf_phase(x, y, z, vx, vy, vz)
+    return phase_point(x, y, z, vx, vy, vz)
 
 
 
-def to_skycoord(phase):
+def to_sky(phase):
     sc = SkyCoord(
             x = phase.x * u.kpc, 
             y = phase.y * u.kpc,
@@ -93,7 +96,7 @@ def to_skycoord(phase):
             )
     tc = sc.transform_to(geocen_frame)
 
-    return dwarf_obs(
+    return observation(
             tc.ra / u.degree,
             tc.dec / u.degree,
             tc.distance / u.kpc,
