@@ -10,7 +10,7 @@
 
     # PMGRID=512
     # ASMTH=2.0
-    TREE_NUM_BEFORE_NODESPLIT=10
+    TREE_NUM_BEFORE_NODESPLIT=3
     # TREEPM_NOTIMESPLIT
     
 # Softening types and particle types
@@ -27,5 +27,6 @@
     # FOF
 
 # Miscellaneous code options
-
-
+    OUTPUT_POTENTIAL
+    OUTPUT_ACCELERATION
+    EVALPOTENTIAL

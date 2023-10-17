@@ -10,9 +10,15 @@ def rho_star_int(r_max, r_scale, n):
     return 4*np.pi * quad(lambda r: r**2 * rho_star(r, r_scale, n), 0, r_max)[0]
 
 def get_most_bound(snap, min_bound=0, verbose=False):
+    if snap.potential is None or np.min(snap.potential) >= 0:
+        p0 = np.mean(snap.pos, axis=0)
+        v0 = np.mean(snap.vel, axis=0)
+        return p0, v0
+
     idx = np.argmin(snap.potential)
     p0 = snap.pos[idx, :]
     v0 = snap.vel[idx, :]
+
 
     filt = snap.potential + 0.5 * np.sum((snap.vel-v0)**2, axis=1) < 0
     if verbose:
@@ -23,8 +29,10 @@ def get_most_bound(snap, min_bound=0, verbose=False):
         v0 = np.mean(snap.vel[filt], axis=0)
     return p0, v0
 
-def center_snapshot(snap, inplace=False):
+def center_snapshot(snap, inplace=False, verbose=True):
     p0, v0 = get_most_bound(snap)
+    if verbose:
+        print(f"shifting by {p0}, {v0}")
     return snap.shift(-p0, -v0, inplace=inplace)
 
 def get_energy(snap):

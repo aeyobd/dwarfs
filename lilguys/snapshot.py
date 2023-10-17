@@ -2,47 +2,46 @@ import h5py
 import numpy as np
 from os import path
 
+from .hdfutils import get_h5_vector, get_h5_header, set_h5_vector, set_h5_header, make_default_header
+
 
 class Snapshot:
     _filename = None
     gadget4 = False
 
     def __init__(self, positions, velocities, 
-            IDs=None, potential=None,
-            header = {}):
+            IDs=None, potential=None, accelerations=None,
+            header = {}, m=None):
         self.pos = positions
         self.vel = velocities
         if IDs is None:
             IDs = np.arange(len(self))
+        self.acc = accelerations
         self.IDs = IDs
-        if potential is None:
-            potential = np.zeros(len(self))
         self.potential = potential
+        if header == {}:
+            N = len(self)
+            header = make_default_header(N, m)
         self.header = header
 
     @classmethod
-    def file(cls, filename, gadget4=False):
-        if gadget4:
-            with h5py.File(filename, "r") as f:
-                pos = get_h5_vector(f, "Position")
-                vel = get_h5_vector(f, "Velocity")
-                IDs = get_h5_vector(f, "ParticleIDs")
-                header = get_h5_header(f)
-            c = cls(pos, vel, IDs, header=header)
-            c._filename = filename
-            c.gadget4 = True
-            return c
-
-        else:
-            with h5py.File(filename, "r") as f:
-                pos = get_h5_vector(f, "Coordinates")
-                vel = get_h5_vector(f, "Velocities")
-                IDs = get_h5_vector(f, "ParticleIDs")
+    def file(cls, filename, accelerations=True, potentials=True):
+        with h5py.File(filename, "r") as f:
+            pos = get_h5_vector(f, "Coordinates")
+            vel = get_h5_vector(f, "Velocities")
+            IDs = get_h5_vector(f, "ParticleIDs")
+            if accelerations:
                 acc = get_h5_vector(f, "Acceleration")
+            else:
+                acc = None
+            if potentials:
                 pot = get_h5_vector(f, "Potential")
-                header = get_h5_header(f)
+            else:
+                pot = None
+            header = get_h5_header(f)
 
-        c = cls(pos, vel, IDs, header=header, potential=pot)
+        c = cls(pos, vel, IDs, header=header, potential=pot, 
+                accelerations=acc)
         c._filename = filename
         return c
 
@@ -188,75 +187,3 @@ class Snapshot:
 
 
 
-def get_h5_header(h5_f):
-    h5_header = h5_f["Header"].attrs
-    header = {}
-    for key, val in h5_header.items():
-        header[key] = val
-
-    return header
-
-def get_h5_vector(h5_f, key):
-    return np.array(h5_f["PartType1/" + key][()])
-
-def set_h5_vector(h5_f, key, val):
-    if key in h5_f["PartType1"].keys():
-        del h5_f["PartType1/" + key]
-    dtype, shape = get_dtype_shape(val)
-    h5_f.create_dataset("PartType1/" + key, data=val, dtype=dtype)
-
-
-def set_h5_header(h5_f, header):
-    for key, val in header.items():
-        set_h5_header_attr(h5_f, key, val)
-
-
-def set_h5_header_attr(h5_f, key, val):
-    attrs = h5_f["Header"].attrs
-
-    if key in attrs.keys():
-        attrs.modify(key, val)
-    else:
-        dtype, shape = get_dtype_shape(val)
-        # if shape == 1 and hasattr(val, "__len__"):
-            # val = val[0]
-        attrs.create(key, val, shape, dtype=dtype)
-
-
-def get_dtype_shape(val):
-    if hasattr(val, "__len__"):
-        return get_arr_dtype_shape(val)
-    else:
-        shape = 1
-        dtype = get_dtype(val)
-        return dtype, shape
-
-
-def get_arr_dtype_shape(arr):
-    if isinstance(arr, np.ndarray):
-        shape = arr.shape
-        if len(shape) == 1:
-            shape = shape[0]
-        el = arr.flatten()[0]
-        dtype = get_dtype(el)
-        return dtype, shape
-
-    elif isinstance(arr, (tuple, list)):
-        shape = len(arr)
-        el = arr[0]
-        dtype = get_dtype(el)
-        return dtype, shape
-
-    else:
-        raise NotImplementedError
-
-
-def get_dtype(val):
-    if isinstance(val, (float, np.floating)):
-        return "double"
-    if isinstance(val, (int, np.integer)):
-        return "int"
-    if isinstance(val, (str, np.str_)):
-        return "str"
-    else:
-        raise NotImplementedError(type(val))

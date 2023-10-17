@@ -1,20 +1,21 @@
 #!/bin/bash
 
-#SBATCH	 -J	mw_orbit
-#SBATCH -n 2                #Number of cores
+#SBATCH	 -J	 mw_orbit
+#SBATCH --ntasks=2				#Number of cores
 #SBATCH -A durham				#Account name
 #SBATCH -t 2:00:00
 #SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
 #SBATCH --mail-user=dboyea@uvic.ca
 #SBATCH --mail-type=END				#Notifications for job done & fail
-#SBATCH -o %J.out		#Standard output file
-#SBATCH -e %J.err		#Error file
+#SBATCH -o /cosma/home/durham/dc-boye1/dwarfs/logs/%J.out		#Standard output file
+#SBATCH -e /cosma/home/durham/dc-boye1/dwarfs/logs/%J.err		#Error file
 
-module load intel_comp/2019
-module load intel_mpi/2019
-module load fftw/2.1.5 
-module load gsl/2.4
-# module load gnu_comp/7.3.0 
+# these are defined in bash_profile
+module load gnu_comp
+module load openmpi
+module load fftw
 module load hdf5
+module load gsl
 
-mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boru1/Gadget-RAPHAMW/source/Gadget2 params_orbit.txt
+mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/orbits/Gadget4 param.txt
+# /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget4 param.txt
