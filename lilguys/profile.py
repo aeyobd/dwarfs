@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate import quad
+from scipy.spatial import KDTree
 from .units import G
 
 
@@ -9,7 +10,13 @@ def rho_star(r, r_scale, n):
 def rho_star_int(r_max, r_scale, n):
     return 4*np.pi * quad(lambda r: r**2 * rho_star(r, r_scale, n), 0, r_max)[0]
 
-def get_most_bound(snap, min_bound=0, verbose=False):
+def get_most_bound(snap, knn=10):
+    X_tree = KDTree(snap.pos)
+    k_d, k_i = X_tree.query(snap.pos, k=knn)
+    idx = np.argmin(np.mean(k_d, axis=1))
+    return snap.pos[idx], snap.vel[idx]
+
+def get_most_bound_old(snap, min_bound=0, verbose=False):
     if snap.potential is None or np.min(snap.potential) >= 0:
         p0 = np.mean(snap.pos, axis=0)
         v0 = np.mean(snap.vel, axis=0)
@@ -52,8 +59,9 @@ def sort_r(snap):
     return snap_sorted
 
 class Profile:
-    def __init__(self, snap, r_bins=20, E_bins=20):
+    def __init__(self, snap, r_bins=20, E_bins=20, eps_r = 1e-3):
         self.snap = sort_r(center_snapshot(snap))
+        self.snap_filt = self.snap.r > eps_r
 
         self.m = snap.m
         self.create_r_bins(r_bins)
@@ -61,24 +69,25 @@ class Profile:
         self.compute_masses()
 
         self.compute_density()
-        self.psi = np.interp(self.r, self.snap.r, self.snap.potential)
+        self.psi = np.interp(self.r, self.snap.r[self.snap_filt], 
+                self.snap.potential[self.snap_filt])
 
     def create_r_bins(self, Nbins):
-        log_r_min = np.log10(np.min(self.snap.r))
-        log_r_max = np.log10(np.max(self.snap.r))
+        log_r_min = np.log10(np.min(self.snap.r[self.snap_filt]))
+        log_r_max = np.log10(np.max(self.snap.r[self.snap_filt]))
         self.r_bins = np.logspace(log_r_min, log_r_max, num=Nbins)
         self.r = 0.5 * (self.r_bins[1:] + self.r_bins[:-1])
 
 
 
     def compute_masses(self):
-        N = len(self.snap.r)
+        N = len(self.snap.r[self.snap_filt])
         snap_M_r = self.m * np.arange(N)
-        self.M = np.interp(self.r, self.snap.r, snap_M_r)
+        self.M = np.interp(self.r, self.snap.r[self.snap_filt], snap_M_r)
         
 
     def compute_density(self):
-        DM_counts, _ = np.histogram(self.snap.r, bins=self.r_bins)
+        DM_counts, _ = np.histogram(self.snap.r[self.snap_filt], bins=self.r_bins)
         self.dV = 4/3 * np.pi * (self.r_bins[1:]**3 - self.r_bins[:-1]**3)
         self.nu_DM = DM_counts * self.m / self.dV
 

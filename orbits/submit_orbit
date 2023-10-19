@@ -17,5 +17,5 @@ module load fftw
 module load hdf5
 module load gsl
 
-mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/orbits/Gadget4 param.txt
+mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/gadget/GadgetMW param.txt
 # /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget4 param.txt

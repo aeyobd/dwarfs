@@ -1,6 +1,6 @@
-gadget/build
 gadget/Gadget
-gadget/output
+gadget/GadgetMW
+
 .ipynb_checkpoints
 __pycache__
 
@@ -20,5 +20,9 @@ __pycache__
 .pytest_cache
 
 out
+out_old
+out_n1
+build
+build_mw
 
 Gadget4
