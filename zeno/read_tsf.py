@@ -3,11 +3,12 @@ import sys
 import re
 from os import path
 import numpy as np
+import argparse
 
 from lilguys import Snapshot
 
 
-def read_file(filename):
+def read_file(filename, verbose=False):
     header = True
     table = {}
     sublist = []
@@ -24,7 +25,8 @@ def read_file(filename):
 
                 if "Particles" in lintems[1]:
                     header = False
-                    print(lintems)
+                    if verbose:
+                        print(lintems)
                     continue
                 continue
 
@@ -41,12 +43,14 @@ def read_file(filename):
                     elif len(dims) == 2:
                         ndims = dims[1]
                     else:
-                        print(dims)
+                        if verbose:
+                            print(dims)
                         raise Exception("only works for 2d data")
 
                     N = dims[0]
-                    print(variable)
-                    print(N, ndims)
+                    if verbose:
+                        print(variable)
+                        print(N, ndims)
 
                     table[variable] = [float(item) for item in lintems[2:]]
 
@@ -90,10 +94,11 @@ def make_header(N, mass):
     header["NumFilesPerSnapshot"] = 1
     return header
 
-def output_to_hdf5(table, filename):
+def output_to_hdf5(table, filename, verbose=False):
     N = len(table["Mass"])
     mass = table["Mass"][0]
-    print(mass)
+    if verbose:
+        print(mass)
     header = make_header(N, mass)
     snap = Snapshot(
             table["Position"],
@@ -102,20 +107,30 @@ def output_to_hdf5(table, filename):
             header=header
             )
     # snap.gadget4 = True
+    print("loaded ", len(snap), "particles")
     snap.save(filename)
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("requires filename, outname")
-        sys.exit(1)
-    filename = sys.argv[1]
-    outname = sys.argv[2]
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', type=str)
+    parser.add_argument('output', type=str)
 
-    particles = read_file(filename)
+    args = parser.parse_args()
+    return args
+
+def tsf_to_hdf5(filename, outname, verbose=False):
+    particles = read_file(filename, verbose=verbose)
 
     particles["Position"] = inflate_list(particles["Position"], 3)
     particles["Velocity"] = inflate_list(particles["Velocity"], 3)
-    for var, l in particles.items():
-        print(var, len(l),  l[:5])
-    output_to_hdf5(particles, outname)
+    if verbose:
+        for var, l in particles.items():
+            print(var, len(l),  l[:5])
+    output_to_hdf5(particles, outname, verbose=verbose)
+
+if __name__ == "__main__":
+    args = get_args()
+    filename = args.input
+    outname = args.output
+    tsf_to_hdf5(filename, outname)

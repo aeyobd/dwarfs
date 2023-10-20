@@ -7,11 +7,14 @@ __pycache__
 *.hdf5
 *.dat
 *.gsp
+nfw*.txt
+*.log
 
 *.pdf
 *.gif
 *.png
 .coverage
+
 
 *.err
 *.out

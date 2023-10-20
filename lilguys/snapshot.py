@@ -18,6 +18,8 @@ class Snapshot:
             IDs = np.arange(len(self))
         self.acc = accelerations
         self.IDs = IDs
+        if potential is None:
+            potential = np.zeros(len(self))
         self.potential = potential
         if header == {}:
             N = len(self)
@@ -93,9 +95,7 @@ class Snapshot:
                 set_h5_vector(f, "Coordinates", self.pos)
                 set_h5_vector(f, "Velocities", self.vel)
                 set_h5_vector(f, "Potential", self.potential)
-                set_h5_vector(f, "PertAccel", np.zeros(len(self)))
                 set_h5_vector(f, "Acceleration", np.zeros(len(self)))
-                set_h5_vector(f, "TimeStep", np.zeros(len(self)))
             # set_h5_vector(f, "Acceleration", self.acc)
             set_h5_header(f, self.header)
 

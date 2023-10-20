@@ -29,5 +29,6 @@
 # Miscellaneous code options
 
     OUTPUT_POTENTIAL
+    EVALPOTENTIAL
     OUTPUT_ACCELERATION
 
