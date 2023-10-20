@@ -1,3 +1,7 @@
+## Rescales positions, velocities, and mass from natural units to GADGET simulation units
+## Then returns new rescaled data to datafile
+## Syntax: inputFile outputFile physicalScaleRadius massInPhysicalScaleRadius
+
 import numpy as np
 import h5py
 import sys
@@ -8,7 +12,7 @@ import matplotlib.pyplot as plt
 inputFile = sys.argv[1]
 outputFile = sys.argv[2]
 scaleRadius = float(sys.argv[3]) # scale radius (2.11 kpc for Fornax)
-scaleMass = float(sys.argv[4]) # mass eclosed in scale radius (~2*10^8 M_sol for Fornax)
+scaleMass = float(sys.argv[4]) # mass eclosed in scale radius, M_sol (~2*10^8 M_sol for Fornax)
 
 ## G = 1, M_0 = 10^10 solar masses, R_0 = 1 kpc, T_0 = 4.718*10^6 yrs, V_0 = 207.4 km/s
 G = 1
@@ -19,18 +23,18 @@ V_0 = 207.4
 
 def rescale(filename,radius,mass):
     with h5py.File(filename, 'a') as f:
-        pos = f['PartType1/Position'][()]
+        pos = f['PartType1/Coordinates'][()]
         ids = f['PartType1/ParticleIDs'][()]
-        #pot = f['PartType1/Potential'][()]
-        vel = f['PartType1/Velocity'][()]
-        # acc = f['PartType1/Acceleration'][()]
+        pot = f['PartType1/Potential'][()]
+        vel = f['PartType1/Velocities'][()]
+        acc = f['PartType1/Acceleration'][()]
         mdm = f['Header'].attrs['MassTable'][1]
 
         pos = np.array(pos)
         ids = np.array(ids)
-        # pot = np.array(pot)
+        pot = np.array(pot)
         vel = np.array(vel)
-        # acc = np.array(acc)
+        acc = np.array(acc)
 
         ## Natural Units: (scaleR = 1, M(<scaleR) = 1)
         x = pos[:,0]
@@ -41,9 +45,9 @@ def rescale(filename,radius,mass):
         vy = vel[:,1]
         vz = vel[:,2]
 
-        # ax = acc[:,0]
-        # ay = acc[:,1]
-        # az = acc[:,2]
+        ax = acc[:,0]
+        ay = acc[:,1]
+        az = acc[:,2]
 
         ## Rescaling
         x_s = x*radius/R_0
@@ -56,10 +60,10 @@ def rescale(filename,radius,mass):
         vx_s = vx*np.sqrt(G*M_s/r_ss)
         vy_s = vy*np.sqrt(G*M_s/r_ss)
         vz_s = vz*np.sqrt(G*M_s/r_ss)
-
-        # ax_s = np.zeros(len(ax))
-        # ay_s = np.zeros(len(ay))
-        # az_s = np.zeros(len(az))
+        
+        ax_s = np.zeros(len(ax))
+        ay_s = np.zeros(len(ay))
+        az_s = np.zeros(len(az))
 
         mdm_s = mdm*mass/M_0
 
@@ -72,20 +76,20 @@ def rescale(filename,radius,mass):
         vel[:,1] = vy_s
         vel[:,2] = vz_s
 
-        # acc[:,0] = ax_s
-        # acc[:,1] = ay_s
-        # acc[:,2] = az_s
+        acc[:,0] = ax_s
+        acc[:,1] = ay_s
+        acc[:,2] = az_s
 
         ## Delete old data
-        del f['PartType1/Position']
-        del f['PartType1/Velocity']
-        # del f['PartType1/Acceleration']
+        del f['PartType1/Coordinates']
+        del f['PartType1/Velocities']
+        del f['PartType1/Acceleration']
 
         ## Add rescaled data
-        f.create_dataset("PartType1/Position", data=pos)
-        f.create_dataset("PartType1/Velocity", data=vel)
-        # f.create_dataset("PartType1/Acceleration", data=acc)
-
+        f.create_dataset("PartType1/Coordinates", data=pos)
+        f.create_dataset("PartType1/Velocities", data=vel)
+        f.create_dataset("PartType1/Acceleration", data=acc)
+        
         attrs = f['Header'].attrs
         MassTable = attrs['MassTable']
         MassTable[1] = mdm_s

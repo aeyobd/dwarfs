@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         ./nfw_scaled
+InitCondFile         ./nfw_scaled_1e4
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt

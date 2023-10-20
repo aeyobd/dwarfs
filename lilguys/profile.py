@@ -43,7 +43,7 @@ def center_snapshot(snap, inplace=False, verbose=True):
     return snap.shift(-p0, -v0, inplace=inplace)
 
 def get_energy(snap):
-    E_kin = 1/2 * snap.v**2
+    E_kin = snap.m * snap.v**2
     Etot = E_kin + snap.potential
     return Etot
 

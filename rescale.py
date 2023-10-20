@@ -3,7 +3,6 @@ import argparse
 import numpy as np
 
 
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('input')

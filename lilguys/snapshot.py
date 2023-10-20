@@ -27,22 +27,25 @@ class Snapshot:
         self.header = header
 
     @classmethod
-    def file(cls, filename, accelerations=True, potentials=True):
+    def file(cls, filename):
         with h5py.File(filename, "r") as f:
+            keys = f["PartType1"].keys()
+            header = get_h5_header(f)
+
             pos = get_h5_vector(f, "Coordinates")
             vel = get_h5_vector(f, "Velocities")
             IDs = get_h5_vector(f, "ParticleIDs")
-            if accelerations:
+
+            if "Acceleration" in keys:
                 acc = get_h5_vector(f, "Acceleration")
             else:
                 acc = None
-            if potentials:
+            if "Potential" in keys:
                 pot = get_h5_vector(f, "Potential")
             else:
                 pot = None
-            header = get_h5_header(f)
 
-        c = cls(pos, vel, IDs, header=header, potential=pot, 
+        c = cls(pos, vel, IDs=IDs, header=header, potential=pot, 
                 accelerations=acc)
         c._filename = filename
         return c
