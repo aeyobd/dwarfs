@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH	 -J	 isolation
+#SBATCH	 -J	 mw_orbit
 #SBATCH --ntasks=2				#Number of cores
 #SBATCH -A durham				#Account name
 #SBATCH -t 2:00:00
@@ -17,6 +17,5 @@ module load fftw
 module load hdf5
 module load gsl
 
-rm -r out/* 
-mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget param.txt
-# /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget4 param.txt
+rm -r out2/*
+mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/gadget/GadgetMW param2.txt

@@ -11,7 +11,8 @@ class Snapshot:
 
     def __init__(self, positions, velocities, 
             IDs=None, potential=None, accelerations=None,
-            header = {}, m=None):
+            header = {}, m=None,
+            ext_potential=None):
         self.pos = positions
         self.vel = velocities
         if IDs is None:
@@ -20,7 +21,10 @@ class Snapshot:
         self.IDs = IDs
         if potential is None:
             potential = np.zeros(len(self))
+        if ext_potential is None:
+            ext_potential = np.zeros(len(self))
         self.potential = potential
+        self.ext_potential = ext_potential
         if header == {}:
             N = len(self)
             header = make_default_header(N, m)
@@ -45,8 +49,13 @@ class Snapshot:
             else:
                 pot = None
 
+            if "ExtPotential" in keys:
+                ext_pot = get_h5_vector(f, "ExtPotential")
+            else:
+                ext_pot = None
+
         c = cls(pos, vel, IDs=IDs, header=header, potential=pot, 
-                accelerations=acc)
+                accelerations=acc, ext_potential=ext_pot)
         c._filename = filename
         return c
 
@@ -64,10 +73,15 @@ class Snapshot:
 
     def filter(self, filt, inplace=False):
         assert len(filt) == len(self)
-        copy = self.copy()
+        if inplace:
+            copy = self
+        else:
+            copy = self.copy()
         copy.pos = copy.pos[filt]
         copy.vel = copy.vel[filt]
         copy.IDs = copy.IDs[filt]
+        copy.header["NumPart_ThisFile"] = (0, len(copy))
+        copy.header["NumPart_Total"] = (0, len(copy))
         if copy.potential is not None:
             copy.potential = copy.potential[filt]
         return copy

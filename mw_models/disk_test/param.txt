@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         ./twobody
+InitCondFile         disk_test
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
@@ -12,15 +12,15 @@ SnapFormat           3
 
 
 %---- CPU-time limits
-TimeLimitCPU              86400   % 24h, in seconds
-CpuTimeBetRestartFile     7200    % 2h,  in seconds
+TimeLimitCPU              1800000   % 500h
+CpuTimeBetRestartFile     18000.0    % 2h,  in seconds
 
 %----- Memory alloction
 MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  10
+TimeMax	                  300
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -39,19 +39,34 @@ UnitVelocity_in_cm_per_s 1.0
 GravityConstantInternal  1.0
 
 
+% the potential
+MWThinMass	    6
+MWThin_A	    3.944
+MWThin_B	    0.311
+MWThickMass	    0
+MWThick_A	    3.886
+MWThick_B	    0.918
+
+MWBulgeMass		0
+MWBulge_A	    1
+
+MWHaloMass	    0
+MWHalo_R		20.2
+MWHalo_C		9.545
+
 
 %---- Output frequency and output paramaters
-OutputListOn              0 
-TimeBetSnapshot           0.1
+OutputListOn              0
+TimeBetSnapshot           1
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         0.01
+TimeBetStatistics         0.2
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
 %---- Accuracy of time integration
-ErrTolIntAccuracy        0.01 
-CourantFac               0.1
-MaxSizeTimestep          0.01
+ErrTolIntAccuracy        0.025
+CourantFac               0.15
+MaxSizeTimestep          1.0
 MinSizeTimestep          0.0 
 
 %---- Tree algorithm, force accuracy, domain update frequency
@@ -66,13 +81,13 @@ ActivePartFracForNewDomainDecomp      0.02
 
 %---- Initial density estimate
 DesNumNgb                        64
-MaxNumNgbDeviation               1 
+MaxNumNgbDeviation               2
 
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.0001	# 10 pc
-SofteningComovingClass0       0.0001	# 10 pc
+SofteningMaxPhysClass0       0.08	# 10 pc
+SofteningComovingClass0       0.08	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
@@ -80,5 +95,5 @@ SofteningClassOfPartType1    0
 %----- SPH
 ArtBulkViscConst             0.8
 MinEgySpec                   0
-InitGasTemp                  100
+InitGasTemp                  0
 

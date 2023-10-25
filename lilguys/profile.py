@@ -42,10 +42,18 @@ def center_snapshot(snap, inplace=False, verbose=True):
         print(f"shifting by {p0}, {v0}")
     return snap.shift(-p0, -v0, inplace=inplace)
 
-def get_energy(snap):
-    E_kin = snap.m * snap.v**2
-    Etot = E_kin + snap.potential
-    return Etot
+
+def get_KE(snap):
+    E_kin = 0.5*snap.v**2
+    return E_kin
+
+def get_Etot(snap):
+    return np.sum(0.5*snap.potential + snap.ext_potential + get_KE(snap), axis=-1)
+
+
+
+def get_L(snap, p0=np.zeros(3), v0 = np.zeros(3)):
+    return np.cross((snap.pos-p0), (snap.vel - v0))
 
 def sort_r(snap):
     idx = np.argsort(snap.r)

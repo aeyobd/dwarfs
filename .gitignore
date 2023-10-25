@@ -18,6 +18,7 @@ nfw*.txt
 
 *.err
 *.out
+out*/
 *-usedvalues
 
 .pytest_cache

@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         orbit_0
+InitCondFile         orbit_1
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt

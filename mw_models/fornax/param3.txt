@@ -1,7 +1,7 @@
 
 %----  Relevant files 
-InitCondFile         orbit_0_n1
-OutputDir            ./out_n1
+InitCondFile         orbit_3
+OutputDir            ./out3
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
 
@@ -52,6 +52,7 @@ MWBulge_A	    1.344
 
 MWHaloMass	    115.0
 MWHalo_R		20.2
+MWHalo_C		9.545
 
 
 %---- Output frequency and output paramaters
