@@ -3,26 +3,29 @@ import numpy as np
 from os import path
 
 from .hdfutils import get_h5_vector, get_h5_header, set_h5_vector, set_h5_header, make_default_header
+from . import units
 
 
 class Snapshot:
     _filename = None
-    gadget4 = False
 
     def __init__(self, positions, velocities, 
             IDs=None, potential=None, accelerations=None,
             header = {}, m=None,
             ext_potential=None):
+
         self.pos = positions
         self.vel = velocities
+
         if IDs is None:
             IDs = np.arange(len(self))
-        self.acc = accelerations
-        self.IDs = IDs
         if potential is None:
             potential = np.zeros(len(self))
         if ext_potential is None:
             ext_potential = np.zeros(len(self))
+
+        self.acc = accelerations
+        self.IDs = IDs
         self.potential = potential
         self.ext_potential = ext_potential
         if header == {}:
@@ -71,6 +74,7 @@ class Snapshot:
             print("snapshot saved at ", self._filename)
         return True
 
+
     def filter(self, filt, inplace=False):
         assert len(filt) == len(self)
         if inplace:
@@ -105,16 +109,19 @@ class Snapshot:
             f.create_group("Header")
 
             set_h5_vector(f, "ParticleIDs", self.IDs)
-            if self.gadget4:
-                set_h5_vector(f, "Position", self.pos)
-                set_h5_vector(f, "Velocity", self.vel)
-            else:
-                set_h5_vector(f, "Coordinates", self.pos)
-                set_h5_vector(f, "Velocities", self.vel)
-                set_h5_vector(f, "Potential", self.potential)
-                set_h5_vector(f, "Acceleration", np.zeros(len(self)))
-            # set_h5_vector(f, "Acceleration", self.acc)
+            set_h5_vector(f, "Coordinates", self.pos)
+            set_h5_vector(f, "Velocities", self.vel)
+            set_h5_vector(f, "Potential", self.potential)
+            set_h5_vector(f, "Acceleration", np.zeros(len(self)))
             set_h5_header(f, self.header)
+
+    def calc_potential(self, h=0.08):
+        for i in range(len(self)):
+            p1 = self.pos[i]
+            p2 = self.pos
+            r = np.sqrt(np.sum((p1 - p2)**2, -1))
+            self.potential[i] = -units.G * self.m * np.sum(1/np.sqrt(r**2 + h**2))
+
 
 
     def shift(self, p0, v0=[0,0,0], inplace=False):

@@ -10,34 +10,24 @@ def rho_star(r, r_scale, n):
 def rho_star_int(r_max, r_scale, n):
     return 4*np.pi * quad(lambda r: r**2 * rho_star(r, r_scale, n), 0, r_max)[0]
 
-def get_most_bound(snap, knn=10):
-    X_tree = KDTree(snap.pos)
-    k_d, k_i = X_tree.query(snap.pos, k=knn)
-    idx = np.argmin(np.mean(k_d, axis=1))
-    return snap.pos[idx], snap.vel[idx]
 
-def get_most_bound_old(snap, min_bound=0, verbose=False):
-    if snap.potential is None or np.min(snap.potential) >= 0:
-        p0 = np.mean(snap.pos, axis=0)
-        v0 = np.mean(snap.vel, axis=0)
-        return p0, v0
+def V_circ(M, r):
+    return np.sqrt(G*M/r)
 
-    idx = np.argmin(snap.potential)
-    p0 = snap.pos[idx, :]
-    v0 = snap.vel[idx, :]
+def most_bound(snap, percentile=0.2):
+    E = snap.potential
+    filt = E < np.percentile(E, percentile)
+    return snap.filter(filt)
 
-
-    filt = snap.potential + 0.5 * np.sum((snap.vel-v0)**2, axis=1) < 0
-    if verbose:
-        print("bound fraction: ", np.mean(filt))
-
-    if np.sum(filt) > min_bound:
-        p0 = np.mean(snap.pos[filt], axis=0)
-        v0 = np.mean(snap.vel[filt], axis=0)
+def get_center(snap, percentile=0.2):
+    bound = most_bound(snap, percentile=percentile)
+    p0 = np.mean(bound.pos, axis=-2)
+    v0 = np.mean(bound.vel, axis=-2)
     return p0, v0
 
-def center_snapshot(snap, inplace=False, verbose=True):
-    p0, v0 = get_most_bound(snap)
+
+def center_snapshot(snap, inplace=False, verbose=False):
+    p0, v0 = get_center(snap)
     if verbose:
         print(f"shifting by {p0}, {v0}")
     return snap.shift(-p0, -v0, inplace=inplace)
@@ -47,9 +37,16 @@ def get_KE(snap):
     E_kin = 0.5*snap.v**2
     return E_kin
 
+def get_E_local(snap):
+    return get_KE(snap) + snap.potential
+
 def get_Etot(snap):
     return np.sum(0.5*snap.potential + snap.ext_potential + get_KE(snap), axis=-1)
 
+def get_Vmax(snap):
+    r = sort_r(snap).r
+    M = np.arange(len(snap)) * snap.m
+    return np.max(V_circ(M, r))
 
 
 def get_L(snap, p0=np.zeros(3), v0 = np.zeros(3)):
@@ -62,46 +59,55 @@ def sort_r(snap):
     snap_sorted.vel = snap.vel[idx]
     snap_sorted.IDs = snap.IDs[idx]
     snap_sorted.potential = snap.potential[idx]
-
+    snap_sorted.ext_potential = snap.ext_potential[idx]
 
     return snap_sorted
 
+
 class Profile:
-    def __init__(self, snap, r_bins=20, E_bins=20, eps_r = 1e-3):
-        self.snap = sort_r(center_snapshot(snap))
-        self.snap_filt = self.snap.r > eps_r
+    def __init__(self, snap, r_bins=20, E_bins=20, eps_r = 1e-3, center=True):
+        if center:
+            self.snap = sort_r(center_snapshot(snap))
+        else:
+            self.snap = sort_r(snap)
+        filt = self.snap.r > eps_r
+        self.snap = self.snap.filter(filt)
 
         self.m = snap.m
         self.create_r_bins(r_bins)
 
         self.compute_masses()
-
+        self.compute_V_circ()
         self.compute_density()
-        self.psi = np.interp(self.r, self.snap.r[self.snap_filt], 
-                self.snap.potential[self.snap_filt])
+        self.psi = np.interp(self.r, self.snap.r, self.snap.potential)
 
     def create_r_bins(self, Nbins):
-        log_r_min = np.log10(np.min(self.snap.r[self.snap_filt]))
-        log_r_max = np.log10(np.max(self.snap.r[self.snap_filt]))
-        self.r_bins = np.logspace(log_r_min, log_r_max, num=Nbins)
+        log_r_min = np.log10(np.min(self.snap.r))
+        log_r_max = np.log10(np.max(self.snap.r))
+        self.r_bins = np.logspace(log_r_min, log_r_max, Nbins+1)
         self.r = 0.5 * (self.r_bins[1:] + self.r_bins[:-1])
 
 
+    def compute_V_circ(self):
+        self.V_circ = np.sqrt(G * self.M / self.r)
+        self.V_circ_err = self.M_err / self.M * self.V_circ
+        return self.V_circ
 
     def compute_masses(self):
-        N = len(self.snap.r[self.snap_filt])
+        N = len(self.snap.r)
         snap_M_r = self.m * np.arange(N)
-        self.M = np.interp(self.r, self.snap.r[self.snap_filt], snap_M_r)
+        snap_M_err = self.m * np.sqrt(np.arange(N))
+
+        self.M = np.interp(self.r, self.snap.r, snap_M_r)
+        self.M_err = np.interp(self.r, self.snap.r, snap_M_err)
         
 
     def compute_density(self):
-        DM_counts, _ = np.histogram(self.snap.r[self.snap_filt], bins=self.r_bins)
+        DM_counts, _ = np.histogram(self.snap.r, bins=self.r_bins)
         self.dV = 4/3 * np.pi * (self.r_bins[1:]**3 - self.r_bins[:-1]**3)
         self.nu_DM = DM_counts * self.m / self.dV
+        self.nu_DM_err = np.sqrt(DM_counts) * self.m / self.dV
 
-    def set_stars(self, IDs):
-        pass
-        
 
     def add_stars(self, n, r_scale):
         self.M_star_tot = rho_star_int(np.inf, r_scale_star, n=n)
@@ -114,5 +120,8 @@ class Profile:
     def create_E_bins(self, Nbins):
         E_max = self.psi[0]
         E_min = E_max/Nbins
-        self.E = np.linspace(E_min, E_max, Nbins)
+        self.E = np.linspace(E_min, E_max, Nbins + 1)
+
+    def __len__(self):
+        return len(self.r)
 

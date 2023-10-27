@@ -41,7 +41,7 @@ def kernel_hist2d(x, y, knn=10, depth=5, eta=2, **kwargs):
     X = np.array([x, y]).transpose()
     tree = KDTree(X)
 
-    image, x_edges, y_edges = np.histogram2d(X[:,0], X[:,1], bins=50)
+    image, x_edges, y_edges = np.histogram2d(X[:,0], X[:,1], **kwargs)
     x_mid = bin_mids(x_edges)
     y_mid = bin_mids(y_edges)
 
@@ -79,7 +79,7 @@ def gaussian_kernel(sigma=1, side_length=None):
     return kernel / np.sum(kernel)
 
 
-def add_overlay(image, overlay, center_x, center_y):
+def add_overlay(image, overlay, center_x, center_y, inplace=False):
     """
     Add a subregion from a smaller array to a given position in a full image.
 
@@ -101,6 +101,8 @@ def add_overlay(image, overlay, center_x, center_y):
     smaller_array = np.ones((5, 5))
     result_image = add_subregion_to_image(full_image, smaller_array, 10, 10)
     """
+    if not inplace:
+        image = np.copy(image)
     side_length = overlay.shape[0]
     half_length = side_length // 2
 
