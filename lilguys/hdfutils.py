@@ -1,5 +1,7 @@
 import h5py
 import numpy as np
+import re
+from os import path
 
 def make_default_header(N, mass):
     Npart = 2
@@ -102,3 +104,15 @@ def is_array(val):
 
 def is_bytes(val):
     return isinstance(val, (bytes, np.bytes_))
+
+
+
+
+
+def get_epsilon(directory):
+    filename = path.join(directory + "/parameters-usedvalues")
+    with open(filename, "r") as f:
+        for line in f:
+            if line.startswith("SofteningComovingClass0"):
+                match = re.findall(r"\d*\.?\d+", line)[-1]
+                return float(match)

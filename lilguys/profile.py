@@ -2,6 +2,7 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.spatial import KDTree
 from .units import G
+from .gravity import min_phi
 
 
 def rho_star(r, r_scale, n):
@@ -12,17 +13,19 @@ def rho_star_int(r_max, r_scale, n):
 
 
 def V_circ(M, r):
-    return np.sqrt(G*M/r)
+    return np.where(r>0, np.sqrt(G*M/r), 0)
 
 def most_bound(snap, percentile=0.2):
     E = snap.potential
     filt = E < np.percentile(E, percentile)
     return snap.filter(filt)
 
-def get_center(snap, percentile=0.2):
-    bound = most_bound(snap, percentile=percentile)
-    p0 = np.mean(bound.pos, axis=-2)
-    v0 = np.mean(bound.vel, axis=-2)
+def get_center(snap, eta=5):
+    p0 = snap.pos[np.argmin(snap.potential)]
+    s1 = snap.shift(-p0)
+    sigma = eta*snap.epsilon
+    weights = np.exp(-s1.r**2 / sigma**2)
+    v0 = np.average(snap.vel, weights=weights, axis=0)
     return p0, v0
 
 
@@ -107,6 +110,7 @@ class Profile:
         self.dV = 4/3 * np.pi * (self.r_bins[1:]**3 - self.r_bins[:-1]**3)
         self.nu_DM = DM_counts * self.m / self.dV
         self.nu_DM_err = np.sqrt(DM_counts) * self.m / self.dV
+        self.nu_DM_err[DM_counts == 0] = np.nan
 
 
     def add_stars(self, n, r_scale):

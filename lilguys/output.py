@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from os import path
+from . import hdfutils
 
 class Output:
     def __init__(self, directory):
@@ -19,6 +20,7 @@ class Output:
         self.ext_potential = np.empty((self.Nt, self.Np))
         self.m = snap0.m
         self.IDs = snap0.IDs
+        self.epsilon = hdfutils.get_epsilon(directory)
 
         for i in range(self.Nt):
             snap = Snapshot.file(filenames[i])
@@ -40,4 +42,6 @@ class Output:
         return np.sqrt(np.sum(self.pos**2, axis=-1))
 
     def __getitem__(self, idx):
-        return Snapshot.file(self.filenames[idx])
+        snap =  Snapshot.file(self.filenames[idx])
+        snap.epsilon = self.epsilon
+        return snap

@@ -73,13 +73,13 @@ def to_galcen(obs):
     tc = sc.transform_to(galcen_frame)
     x, y, z = [tc.x, tc.y, tc.z]
     vx, vy, vz = [tc.v_x, tc.v_y, tc.v_z]
-    x /= u.kpc
-    y /= u.kpc
-    z /= u.kpc
-    vx /= u.km/u.s
-    vy /= u.km/u.s
-    vz /= u.km/u.s
+    x = x.to("kpc").value
+    y = y.to("kpc").value
+    z = z.to("kpc").value
  
+    vx = vx.to("km/s").value
+    vy = vy.to("km/s").value
+    vz = vz.to("km/s").value
     return phase_point(x, y, z, vx, vy, vz)
 
 
@@ -97,12 +97,12 @@ def to_sky(phase):
     tc = sc.transform_to(geocen_frame)
 
     return observation(
-            tc.ra / u.degree,
-            tc.dec / u.degree,
-            tc.distance / u.kpc,
-            tc.pm_ra_cosdec / u.mas * u.yr,
-            tc.pm_dec / u.mas * u.yr,
-            tc.radial_velocity / (u.km/u.s)
+            tc.ra.to("degree").value,
+            tc.dec.to("degree").value,
+            tc.distance.to("kpc").value,
+            tc.pm_ra_cosdec.to("mas/yr").value,
+            tc.pm_dec.to("mas/yr").value,
+            tc.radial_velocity.to("km/s").value,
             )
 
 

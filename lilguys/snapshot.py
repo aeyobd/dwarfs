@@ -4,6 +4,7 @@ from os import path
 
 from .hdfutils import get_h5_vector, get_h5_header, set_h5_vector, set_h5_header, make_default_header
 from . import units
+from . import gravity
 
 
 class Snapshot:
@@ -12,8 +13,9 @@ class Snapshot:
     def __init__(self, positions, velocities, 
             IDs=None, potential=None, accelerations=None,
             header = {}, m=None,
-            ext_potential=None):
+            ext_potential=None, epsilon=np.nan):
 
+        self.epsilon = epsilon
         self.pos = positions
         self.vel = velocities
 
@@ -115,13 +117,9 @@ class Snapshot:
             set_h5_vector(f, "Acceleration", np.zeros(len(self)))
             set_h5_header(f, self.header)
 
-    def calc_potential(self, h=0.08):
+    def calc_potential(self):
         for i in range(len(self)):
-            p1 = self.pos[i]
-            p2 = self.pos
-            r = np.sqrt(np.sum((p1 - p2)**2, -1))
-            self.potential[i] = -units.G * self.m * np.sum(1/np.sqrt(r**2 + h**2))
-
+            self.potential[i] = gravity.phi(self.pos[i], self)
 
 
     def shift(self, p0, v0=[0,0,0], inplace=False):
@@ -154,7 +152,7 @@ class Snapshot:
         IDs = np.copy(self.IDs)
         potential = np.copy(self.potential)
         header = self.header.copy()
-        return Snapshot(pos, vel, IDs=IDs, potential=potential, header=header)
+        return Snapshot(pos, vel, IDs=IDs, potential=potential, header=header, epsilon=self.epsilon)
 
 
     @property

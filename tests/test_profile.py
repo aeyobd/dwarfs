@@ -22,16 +22,13 @@ class TestSnapshotUtils:
     vel = np.random.normal(0, 0.05, (N, 3))
     m=1
 
-    snap = Snapshot(pos, vel, m=m)
+    snap = Snapshot(pos, vel, m=m, epsilon=1/np.sqrt(N))
     snap.calc_potential()
     x0 = np.random.normal(0, 1, (3))
     v0 = np.random.uniform(0, 1, (3))
     shifted = snap.shift(x0, v0)
-    f_bound = 0.2
-    tol = 2e-2
 
-    filt = snap.potential < np.percentile(snap.potential, f_bound)
-    dx = np.std(snap.x[filt]) / np.sqrt(np.sum(filt))
+    dx = np.sqrt(np.mean(snap.r**2)) / np.sqrt(N)
 
     def test_get_center(self):
         xb, vb = profile.get_center(self.shifted)
@@ -41,8 +38,8 @@ class TestSnapshotUtils:
     def test_center_snapshot(self):
         centered = profile.center_snapshot(self.shifted)
         xb, vb = profile.get_center(centered)
-        assert xb == approx(0, abs=4*self.dx)
-        assert vb == approx(0, abs=4*self.dx)
+        assert xb == approx(0, abs=5*self.dx)
+        assert vb == approx(0, abs=5*self.dx)
     
 
     def test_sort_r(self):
@@ -111,7 +108,7 @@ class TestUniformProfile:
     vel = pos
     m=1
     Nbins = 10
-    snap = Snapshot(pos, vel, m=m)
+    snap = Snapshot(pos, vel, m=m, epsilon=1/np.sqrt(N))
 
     snap.calc_potential()
     profile.center_snapshot(snap, inplace=True)
@@ -145,8 +142,8 @@ class TestUniformProfile:
         print(self.prof.r_bins)
         z = z_score(rho_exp, rho, rho_err)
 
-        assert np.mean(z**2) < 2
-        assert np.all(rho_err <= rho)
+        assert np.nanmean(z**2) < 2
+        assert np.all(np.nan_to_num(rho_err, 0) <= rho)
 
     def test_M(self):
         M_exp = self.m * self.N * (self.prof.r/self.Rmax)**3

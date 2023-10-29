@@ -6,4 +6,5 @@ from . import coords
 from . import profile
 from . import image
 from . import hdfutils
+from . import gravity
 
