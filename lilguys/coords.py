@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.coordinates import Galactocentric, ICRS, SkyCoord
 from astropy import units as u
-from . import units
+from .units import R_0, V_0
 
 
 galcen_frame = Galactocentric(
@@ -81,25 +81,25 @@ def to_galcen(obs):
     tc = sc.transform_to(galcen_frame)
     x, y, z = [tc.x, tc.y, tc.z]
     vx, vy, vz = [tc.v_x, tc.v_y, tc.v_z]
-    x = x.to("kpc").value
-    y = y.to("kpc").value
-    z = z.to("kpc").value
+    x = x.to("kpc").value / R_0
+    y = y.to("kpc").value / R_0
+    z = z.to("kpc").value / R_0
  
-    vx = vx.to("km/s").value
-    vy = vy.to("km/s").value
-    vz = vz.to("km/s").value
+    vx = vx.to("km/s").value / V_0
+    vy = vy.to("km/s").value / V_0
+    vz = vz.to("km/s").value / V_0
     return phase_point(x, y, z, vx, vy, vz)
 
 
 
 def to_sky(phase):
     sc = SkyCoord(
-            x = phase.x * u.kpc, 
-            y = phase.y * u.kpc,
-            z = phase.z * u.kpc,
-            v_x = phase.v_x * u.km/u.s,
-            v_y = phase.v_y * u.km/u.s,
-            v_z = phase.v_z * u.km/u.s,
+            x = phase.x * u.kpc * R_0, 
+            y = phase.y * u.kpc * R_0,
+            z = phase.z * u.kpc * R_0,
+            v_x = phase.v_x * u.km/u.s * V_0,
+            v_y = phase.v_y * u.km/u.s * V_0,
+            v_z = phase.v_z * u.km/u.s * V_0,
             frame = galcen_frame
             )
     tc = sc.transform_to(geocen_frame)
