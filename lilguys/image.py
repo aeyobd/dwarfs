@@ -4,16 +4,24 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 
-def mag_image(x, y, im_kwargs={}, **kwargs):
-    image, x_edges, y_edges = kernel_hist2d(x, y, **kwargs)
+def mag_image(x, y, knn=10, depth=5, eta=2, range=None, bins=None, vmin=None, vmax=None, **kwargs):
+    image, x_edges, y_edges = kernel_hist2d(x, y,
+            knn=knn, depth=depth, eta=eta, range=range, bins=bins)
 
-    imin = np.min(image[image>0])
-    imin = max(imin, 0.05)
-    norm = mpl.colors.LogNorm(imin, np.max(image))
+    if vmin is None:
+        vmin = np.min(image[image>0])
+        vmin = max(vmin, 0.05)
+    if vmax is None:
+        vmax = np.max(image)
+    norm = mpl.colors.LogNorm(vmin, vmax)
     extent=[min(x_edges), max(x_edges), min(y_edges), max(y_edges)]
 
-    plt.imshow(image, origin="lower", cmap="gray_r",
-            extent=extent, norm=norm, **im_kwargs)
+    if "cmap" not in kwargs.keys():
+        kwargs["cmap"] = "gray_r"
+    kwargs["origin"] = "lower"
+    kwargs["extent"] = extent
+    plt.imshow(image.transpose(), norm=norm, **kwargs)
+    return image, x_edges, y_edges
 
 
 def kernel_hist2d(x, y, knn=10, depth=5, eta=2, **kwargs):
@@ -59,7 +67,7 @@ def kernel_hist2d(x, y, knn=10, depth=5, eta=2, **kwargs):
         dist = tree.query((x_mid[i], y_mid[j]), k=knn)[0][-1]
         sigma = eta * dist/dx / np.sqrt(knn)
         kern = gaussian_kernel(sigma)
-        add_overlay(image, w*kern, i, j)
+        add_overlay(image, w*kern, i, j, inplace=True)
 
     return image, x_edges, y_edges
 

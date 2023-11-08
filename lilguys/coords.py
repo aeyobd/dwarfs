@@ -1,5 +1,7 @@
+import numpy as np
 from astropy.coordinates import Galactocentric, ICRS, SkyCoord
 from astropy import units as u
+from . import units
 
 
 galcen_frame = Galactocentric(
@@ -27,6 +29,12 @@ class observation:
         self.pm_ra_err = pm_ra_err
         self.pm_dec_err = pm_dec_err
         self.radial_velocity_err = radial_velocity_err
+
+    def __str__(self):
+        return f"observation at ({self.ra}, {self.dec})"
+
+    def __repr__(self):
+        return str(self)
 
 
 class phase_point:
@@ -106,3 +114,14 @@ def to_sky(phase):
             )
 
 
+def rand_coords(obs, N):
+    """Draws N random coordinates from a given observation obs"""
+    ra = np.full(N, obs.ra)
+    dec = np.full(N, obs.dec)
+    distance = np.random.normal(obs.distance,obs.distance_err, N)
+    pm_ra = np.random.normal(obs.pm_ra,obs.pm_ra_err, N)
+    pm_dec = np.random.normal(obs.pm_dec,obs.pm_dec_err, N)
+    radial_velocity = np.random.normal(obs.radial_velocity,obs.radial_velocity_err, N)
+    X = np.array([ra, dec, distance, pm_ra, pm_dec, radial_velocity])
+    rand_obs = [observation(*x) for x in X.transpose()]
+    return rand_obs

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#SBATCH	 -J	 mc_orbits
+#SBATCH --ntasks=2				#Number of cores
+#SBATCH -A durham				#Account name
+#SBATCH -t 2:00:00
+#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
+#SBATCH --mail-user=dboyea@uvic.ca
+#SBATCH --mail-type=END				#Notifications for job done & fail
+#SBATCH -o /cosma/home/durham/dc-boye1/dwarfs/logs/%J.out		#Standard output file
+#SBATCH -e /cosma/home/durham/dc-boye1/dwarfs/logs/%J.err		#Error file
+
+# these are defined in bash_profile
+module load gnu_comp
+module load openmpi
+module load fftw
+module load hdf5
+module load gsl
+
+rm -r out/*
+mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boye1/dwarfs/gadget/GadgetMW param.txt

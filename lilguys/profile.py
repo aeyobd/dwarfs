@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.spatial import KDTree
 from .units import G
-from .gravity import min_phi
+from .gravity import min_phi, norm, dist
 
 
 def rho_star(r, r_scale, n):
@@ -15,6 +15,10 @@ def rho_star_int(r_max, r_scale, n):
 def V_circ(M, r):
     return np.where(r>0, np.sqrt(G*M/r), 0)
 
+def V_r(snap, r):
+    M = np.sum(snap.r < r) * snap.m
+    return V_circ(M, r)
+
 def most_bound(snap, percentile=0.2):
     E = snap.potential
     filt = E < np.percentile(E, percentile)
@@ -26,6 +30,7 @@ def get_center(snap, eta=5):
     sigma = eta*snap.epsilon
     weights = np.exp(-s1.r**2 / sigma**2)
     v0 = np.average(snap.vel, weights=weights, axis=0)
+    E = get_E_local(snap, v0)
     return p0, v0
 
 
@@ -36,12 +41,12 @@ def center_snapshot(snap, inplace=False, verbose=False):
     return snap.shift(-p0, -v0, inplace=inplace)
 
 
-def get_KE(snap):
-    E_kin = 0.5*snap.v**2
+def get_KE(snap, v0=np.zeros(3)):
+    E_kin = 0.5*dist(v0, snap.vel)**2
     return E_kin
 
-def get_E_local(snap):
-    return get_KE(snap) + snap.potential
+def get_E_local(snap, v0=np.zeros(3)):
+    return get_KE(snap, v0) + snap.potential
 
 def get_Etot(snap):
     return np.sum(0.5*snap.potential + snap.ext_potential + get_KE(snap), axis=-1)

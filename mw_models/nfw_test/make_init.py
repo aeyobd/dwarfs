@@ -3,7 +3,7 @@ import numpy as np
 
 def main():
     r0 = 20
-    v0 = 0.08
+    v0 = 0.15
     r = np.array([r0, 0, 0])
 
     v1 = np.array([0, v0, 0])
