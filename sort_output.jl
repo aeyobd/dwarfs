@@ -47,10 +47,10 @@ function main()
         println("saving $(fout)")
     end
 
-    paramfile = "paramaters-usedvalues"
+    paramfile = "parameters-usedvalues"
     in_param = joinpath(din, paramfile)
     cp_param = joinpath(dout, paramfile)
-    cp(in_param, cp_param)
+    cp(in_param, cp_param, force=true)
 end
 
 
