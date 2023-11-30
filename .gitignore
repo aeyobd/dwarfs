@@ -1,5 +1,6 @@
 gadget/Gadget
 gadget/GadgetMW
+gadget/GadgetMC
 
 .ipynb_checkpoints
 __pycache__
@@ -28,5 +29,6 @@ out_old
 out_n1
 build
 build_mw
+build_mc
 
 Gadget4
