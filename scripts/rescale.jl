@@ -26,11 +26,11 @@ end
 
 function main()
     args = get_args()
-        
-    snap = Snapshot(args.input)
 
-    r_scale = args.radius / LilGuys.R_0
-    m_scale = args.mass / LilGuys.M_0
+    snap = Snapshot(args["input"])
+
+    r_scale = args["radius"] / LilGuys.R_0
+    m_scale = args["mass"]/ LilGuys.M_0
     v_scale = sqrt(LilGuys.G * m_scale / LilGuys.R_0)
 
     scaled = copy(snap)
@@ -42,7 +42,7 @@ function main()
         scaled = scaled[get_r(scaled.pos) .< args.max_radius]
     end
 
-    save(scaled, output)
+    save(scaled, args["output"])
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
