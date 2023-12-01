@@ -1,0 +1,4 @@
+*.hdf5
+out*/
+.ipynb_checkpoints/
+*-usedvalues
