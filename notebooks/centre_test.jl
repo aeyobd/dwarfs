@@ -15,14 +15,23 @@ begin
 	import StatsBase: mean, std
 end
 
+# ╔═╡ 271a074f-d819-43ca-b38c-3add4df10caa
+begin
+	# non reactive variables
+	snap = Ref{lguys.Snapshot}()
+	x = Ref{Vector}()
+	y = Ref{Vector}()
+	plot = Ref{Plot}()
+end
+
 # ╔═╡ ddd5502b-5c4a-4608-93c8-511101dd5dfe
 out = lguys.Output("/cosma/home/durham/dc-boye1/data/models/fornax/mw/out")
 
 # ╔═╡ 69b291b2-2589-489e-9a9b-19bdbc12114f
 begin
-	snap_i = out[1, :]
-	snap_m = out[100, :]
-	snap_f = out[end, :]
+	snap_i = out[1]
+	snap_m = out[100]
+	snap_f = out[end]
 end
 
 # ╔═╡ bb395b6a-7507-4f4e-a526-661881a2dff1
@@ -40,17 +49,23 @@ cen_f.xs
 # ╔═╡ 52716936-fea3-4cee-b6db-2079228a38eb
 cen_i.x_c[1:1]
 
+# ╔═╡ 2d1d98ef-f2ae-4a21-9c29-c264868a0a48
+function plot_positions(snap::lguys.Snapshot)
+	x = lguys.get_x(snap)
+	y = lguys.get_y(snap)
+	scatter(x, y, ma=0.05, lw=0, msa=0, ms=5)
+end
+
 # ╔═╡ 41bec3db-f68e-480c-8eb2-8245a6d0f8ef
 begin
-	scatter(snap_i.pos[1, :], snap_i.pos[2, :], ma=0.05, lw=0, msa=0, ms=5)
+	plot_positions(snap_i)
 	scatter!(cen_i.x_c[1:1], cen_i.x_c[2:2])
 end
 
 # ╔═╡ d86be9ed-2010-4d56-a031-57acaba94921
 begin
-	scatter(snap_f.pos[1, :], snap_f.pos[2, :], ma=0.05, lw=0, msa=0, ms=5)
+	plot_positions(snap_f)
 	scatter!(cen_f.x_c[1:1], cen_f.x_c[2:2])
-
 end
 
 # ╔═╡ 304e436b-6ceb-4212-bd0e-7cef47b6da5e
@@ -58,23 +73,25 @@ begin
 	cens = []
 	for i in 1:size(out, 1)
 		println(i)
-		
-		snap_a = out[i, :]
-		cen = lguys.ss_centre(snap_a)
+		cen = lguys.ss_centre(out[i])
 		push!(cens, cen.x_c)
 	end
 end
 
-# ╔═╡ 943d7709-4082-4f99-b17e-701fcb82edab
-cen_f.x_c[1:1], cen_f.x_c[2:2]
+# ╔═╡ 67b6f906-6856-4d75-ad98-8bfa5308b2f5
+begin
+	x[] = [x_vec[1] for x_vec in cens]
+	y[] = [x_vec[2] for x_vec in cens]
+	plot(x[], y[])
+end
 
 # ╔═╡ 13c83390-a33a-4d92-9cc8-57f552b70446
 begin 
-	p0 = lguys.centroid(snap_f.pos)
-	v0 = lguys.centroid(snap_f.vel)
+	p0 = lguys.centroid(snap_f.positions)
+	v0 = lguys.centroid(snap_f.velocities)
 	
-	rs = lguys.calc_r(snap_f.pos .- p0)
-	vs = lguys.calc_r(snap_f.vel .- v0)
+	rs = lguys.calc_r(snap_f.positions .- p0)
+	vs = lguys.calc_r(snap_f.velocities .- v0)
 	# vs_a = LilGuys.get_r(Matrix(transpose(reshape(snap_i.vel, (10_000, 3)))))
 	# rs_a = LilGuys.get_r(Matrix(transpose(reshape(snap_i.pos, (10_000, 3)))))
 
@@ -85,46 +102,46 @@ end
 idx = argmax(rs)
 
 # ╔═╡ 7d09ea26-c5fb-432f-8b21-b4983db0b13a
-vs1 = lguys.calc_r(snap_f.vel .- snap_f.vel[idx])
+vs1 = lguys.calc_r(snap_f.velocities .- snap_f.velocities[idx])
 
 # ╔═╡ e80ffd4b-8a4d-4e33-9f0e-e0f1f41a99ae
 histogram(vs1)
 
 # ╔═╡ 781dd39a-aca8-4f46-bc15-95a10d766edf
-rs1 = lguys.calc_r(snap_f.pos .- snap_f.pos[idx])
+rs1 = lguys.calc_r(snap_f.positions .- snap_f.positions[idx])
 
 # ╔═╡ 9d688a4c-f825-47f9-9a0f-f1a233c09835
 histogram(log10.(rs1))
 
 # ╔═╡ 6aaa45fb-1610-421e-932f-e0a97613581f
-std(lguys.calc_r(snap_f.pos .- p0)) / length(rs)^0.5
+std(lguys.calc_r(snap_f.positions .- p0)) / length(rs)^0.5
 
 # ╔═╡ ba1182dd-7b42-4483-9044-66c7c4fe36e7
-std(lguys.calc_r(snap_f.vel .- v0)) / length(vs)^0.5
+std(lguys.calc_r(snap_f.velocities .- v0)) / length(vs)^0.5
 
 # ╔═╡ e8846565-0ae8-4e0d-a77e-8176225713e5
-snap_f.pos[:, idx]
+snap_f.positions[:, idx]
 
 # ╔═╡ ecff81d3-38ff-4635-bab2-e159e5bbb5bf
-snap_f.vel[:, idx]
+snap_f.velocities[:, idx]
 
 # ╔═╡ b983472b-3310-447f-b017-ff490a8eb156
-snap_f.acc
+snap_f.accelerations
 
 # ╔═╡ a8c405cc-a504-46ca-b137-aa203bd9f7fd
 begin
-	v = lguys.calc_r(snap_f.vel[idx:idx] .- v0)[1]
-	pot = snap_f.Φ[idx]
+	v = lguys.calc_r(snap_f.velocities[idx:idx] .- v0)[1]
+	pot = snap_f.Φs[idx]
 	e = pot + 0.5v^2
 	e_l = pot + 0.5*(v-2*0.075)^2
 	e_h = pot + 0.5*(v+2*0.075)^2
 end
 
 # ╔═╡ b48bdbe5-968e-40f5-a899-699c98764eec
-histogram(snap_f.Φ)
+histogram(snap_f.Φs)
 
 # ╔═╡ 63c0ddfb-e988-4621-8091-de20bc583f8b
-scatter(rs, snap_f.Φ)
+scatter(rs, snap_f.Φs)
 
 # ╔═╡ 14a4c719-4820-45e7-8c5b-0d15eee3cdd7
 ϵs = lguys.calc_E_spec(snap_f)
@@ -144,16 +161,16 @@ end
 # ╔═╡ 6324702c-7ad0-408f-a64b-b3a574b07a89
 begin
 	circles = Plots.Shape[]
-	snap = snap_f
+	snap[] = snap_f
 	k = 100
-	rs2 = lguys.calc_r(snap.pos)
+	rs2 = lguys.calc_r(snap[].positions)
 	r_cut = sort(rs2)[k]
 	filt = rs .< r_cut
 	snap_filt = snap_f[filt]
 	for i in 1:k
-		x = snap_filt.pos[1, i]
-		y = snap_filt.pos[2, i]
-		z = snap_filt.pos[3, i]
+		x = snap_filt.positions[1, i]
+		y = snap_filt.positions[2, i]
+		z = snap_filt.positions[3, i]
 		if abs(z) > 10
 			continue
 		end
@@ -169,10 +186,10 @@ end
 begin
 	circles2 = Plots.Shape[]
 	for i in 1:k
-		x = snap_filt.vel[1, i]
-		y = snap_filt.vel[2, i]
-		z = snap_filt.vel[3, i]
-		r = lguys.calc_r(snap_filt.pos[:, i])
+		x = snap_filt.velocities[1, i]
+		y = snap_filt.velocities[2, i]
+		z = snap_filt.velocities[3, i]
+		r = lguys.calc_r(snap_filt.positions[:, i])
 
 		r = dvs[i]
 		push!(circles2, circle(x, y, r))
@@ -226,16 +243,18 @@ end
 
 # ╔═╡ Cell order:
 # ╠═06484816-d7f4-4389-b0bf-e5a95214082e
+# ╠═271a074f-d819-43ca-b38c-3add4df10caa
 # ╠═ddd5502b-5c4a-4608-93c8-511101dd5dfe
 # ╠═69b291b2-2589-489e-9a9b-19bdbc12114f
 # ╠═d0923b9a-a822-4324-aca6-4044655986ea
 # ╠═bb395b6a-7507-4f4e-a526-661881a2dff1
 # ╠═620c8b0a-e399-4976-ab09-313beeb7596f
 # ╠═52716936-fea3-4cee-b6db-2079228a38eb
+# ╠═2d1d98ef-f2ae-4a21-9c29-c264868a0a48
 # ╠═41bec3db-f68e-480c-8eb2-8245a6d0f8ef
 # ╠═d86be9ed-2010-4d56-a031-57acaba94921
 # ╠═304e436b-6ceb-4212-bd0e-7cef47b6da5e
-# ╠═943d7709-4082-4f99-b17e-701fcb82edab
+# ╠═67b6f906-6856-4d75-ad98-8bfa5308b2f5
 # ╠═13c83390-a33a-4d92-9cc8-57f552b70446
 # ╠═8bebe29d-0157-490e-bf4c-bc847dc1c442
 # ╠═7d09ea26-c5fb-432f-8b21-b4983db0b13a

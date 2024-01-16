@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.32
+# v0.19.36
 
 using Markdown
 using InteractiveUtils
@@ -29,7 +29,7 @@ md"""
 """
 
 # ╔═╡ 18a20162-1b0f-4da8-931d-5ff95da22f54
-function M_s(v_max)
+function M_s_from_vel(v_max)
 	x = v_max / 50 # km/s
 	α = 3.36
 	γ = -2.4
@@ -38,12 +38,17 @@ function M_s(v_max)
 end
 
 # ╔═╡ 3fc2fab3-2e37-4927-94f0-eeecaa89d575
-V_circ_max_0 = find_zero(x -> M_s(x) - M_s_0, 30)
+V_circ_max_0 = find_zero(x -> M_s_from_vel(x) - M_s_0, 30)
 
 # ╔═╡ d9cb3699-6a0f-4d32-b3f8-410cf2c92019
 begin
-	v_1 = LinRange(0, 50, 1000)
-	plot(v_1, M_s.(v_1))
+	v_1 = LinRange(0, 40, 1000)
+	plot(v_1, M_s_from_vel.(v_1))
+	xlabel!("v_circ_max / km s")
+	ylabel!("M_s")
+	hline!([M_s_0])
+	vline!([V_circ_max_0])
+
 end
 
 # ╔═╡ fd225a65-b833-4971-a308-09adc0f0b10f
@@ -112,51 +117,85 @@ The circular velocity profile of a NFW profile is
 The below function finds the root of maximum circular velocity.
 """
 
+# ╔═╡ 912f6b2d-93e3-4acb-ba7c-acbf1083736b
+A_NFW(c) = log(1+c) - c/(1+c)
+
 # ╔═╡ ca8ad5fd-5450-45ca-810e-424edb316c42
-α_vmax = find_zero(x-> (x/(x + 1) - log(x + 1))/x^2 + 1/(x + 1)^2, 2) 
+α_vmax = find_zero(x-> -A_NFW(x)/x^2 + 1/(x + 1)^2, 2) 
 
 # ╔═╡ 7e4ad5d3-3024-431e-ad37-0868be0ddee8
 begin
-	A_NFW(c) = log(1+c) - c/(1+c)
-	r_s(M200) = 1/calc_c(M200, 0) * (3*M200/(800π * ρ_crit))^(1/3)
+	calc_r_s(M200) = 1/calc_c(M200, 0) * (3*M200/(800π * ρ_crit))^(1/3)
 	calc_M_s(M200) = M200 * A_NFW(1) / A_NFW(calc_c(M200, 0))
 	
-	ρ_s(M200) = calc_M_s(M200) / (4π/3* r_s(M200)^3)
+	calc_ρ_s(M200) = calc_M_s(M200) / (4π/3* calc_r_s(M200)^3)
 
-	calc_r_max(M200) = α_vmax*r_s(M200)
+	calc_r_max(M200) = α_vmax*calc_r_s(M200)
 end
 
 # ╔═╡ ea60ecd0-c145-41b3-b2af-742338b53b88
-begin # at least two of these are wrong
+begin 
+	const G = 4.30091e-6 # km^2/s^2 kpc / M⊙
+	
+	function calc_ρ_0(M200)
+		calc_M_s(M200) / (4π * calc_r_s(M200)^3 * A_NFW(1))
+	end
+	
 	function calc_M(M200, r)
-		R = r_s(M200)
-		return 4π * ρ_s(M200) * R^3 * (log(1 + r/R) - r/(r+R))
+		r_s = calc_r_s(M200)
+		return 4π * calc_ρ_0(M200) * r_s^3 * A_NFW(r/r_s)
 	end
 
 	function calc_V_max(M200) # in km/s
 		r_max = calc_r_max(M200)
 		M = calc_M(M200, r_max)
-		G = 4.30091e-6 # km^2/s^2 kpc / M⊙
+		
 		return sqrt( G*M / r_max )
 	end
 
-	function calc_V_max3(M200)
-		G = 4.30091e-6 # km^2/s^2 kpc / M⊙
-		return 1.64 * r_s(M200) * √(G * ρ_s(M200))
+	function calc_V_max3(M200) # this one is wrong somewhere
+		return 1.64 * calc_r_s(M200) * √(G * calc_ρ_s(M200))
 	end
 end
 
-# ╔═╡ 918426b3-e58b-4b46-a104-d427b3a87a06
-calc_V_max(1e10)
+# ╔═╡ 2f9d465f-f2c2-43d3-bc78-519bbb723d29
+begin
+	function calc_r200(M200)
+		c = calc_c(M200, 0)
+		r = calc_r_s(M200)
+		r200 = c*r
+	end
+		
+	function calc_V200(M200)
+		r200 = calc_r200(M200)
+		V200 = sqrt(G * M200 / r200)
+	end
+end
 
-# ╔═╡ e76a670d-3f4c-4579-8a22-25a4fc16b86e
-calc_r_max(1e10)
+# ╔═╡ a04c4445-9107-4546-8d73-fa043b68036e
+begin 
+	function calc_V_circ(M200, r)
+		c = calc_c(M200, 0)
+		r_s = calc_r_s(M200)
+		x = r/r_s
+	
+		v_v200_sq = c/x * A_NFW(x) / A_NFW(c)
+		V200 = calc_V200(M200)
+		return sqrt(v_v200_sq ) * V200
+	end
+
+	function calc_V_circ2(M200, r)
+		M = calc_M(M200, r)
+		
+		return sqrt(G * M / r)
+	end
+end
 
 # ╔═╡ 2232ac95-2873-4ef9-be90-96f1d0fe8049
 function calc_V_max2(M200)
 	r_max = calc_r_max(M200)
 	c = calc_c(M200, 0)
-	r = r_s(M200)
+	r = calc_r_s(M200)
 	r200 = c*r
 	G = 4.30091e-6 # km^2/s^2 kpc / M⊙
 
@@ -167,39 +206,42 @@ function calc_V_max2(M200)
 	return V200 * sqrt(v_rel_sq)
 end
 
-# ╔═╡ 47bd76c2-9c6a-4377-b992-2343057951fe
-calc_V_max2(1.04e10)
-
-# ╔═╡ 9403d837-1cf9-4d3e-8130-a97699d1d576
-begin
-plot(x->1/x*A_NFW(x))
-ylims!(0, 1)
-xlims!(0, 10)
+# ╔═╡ 5c8e1f2d-747f-45f4-953d-fb02462c87e6
+begin 
+	M200 = find_zero(x->calc_V_max(x) - V_circ_max_0,  1e10)
+	r_max = calc_r_max(M200)
+	V_circ_max = calc_V_max2(M200)
+	c = calc_c(M200, 0)
+	r_s = calc_r_s(M200)
+	Ms = calc_M_s(M200)
 end
 
-# ╔═╡ 5c8e1f2d-747f-45f4-953d-fb02462c87e6
-M_0 = find_zero(x->calc_V_max2(x) - V_circ_max_0,  1e10)
+# ╔═╡ 5e68334b-246d-4f17-9862-4a3cf1743f4f
+begin
+	r = LinRange(0, 10, 1000)
+	v = calc_V_circ.(M200, r)
+	plot(r, v)
+	hline!([calc_V_max(M200), V_circ_max_0])
+	vline!([calc_r_max(M200)])
+end
 
-# ╔═╡ f17d3c84-548e-499a-a86f-42289e1b4d77
-V_circ_max_0
+# ╔═╡ b0197f89-92a5-4ac3-9ab2-b0d05aa368d7
+calc_V_circ(M200, calc_r_max(M200))
 
-# ╔═╡ 7183c9f3-9fef-4af5-87c5-165ade992a9e
-calc_r_max(M_0)
+# ╔═╡ ae7c4833-46f6-48ec-a4be-d546c4bc583e
+calc_V_max(M200)
 
-# ╔═╡ 6dfa2c6c-fc57-46cf-b87b-c7df6c22fe1f
-calc_V_max2(M_0)
+# ╔═╡ 21c7cecb-4a5f-4aba-94f1-47a1268a7595
+md"""
+- M_200 = $M200
+- r200 = $(c*r_s)
+- Ms = $Ms
+- rs = $r_s
+- c = $c
+- Vmax = $(V_circ_max)
+- rmax = $r_max
 
-# ╔═╡ 8406209c-54f3-47fd-98cb-73cce28d414a
-calc_c(M_0, 0)
-
-# ╔═╡ 3a1a3352-e3c9-4357-a83b-6d1690702a0e
-r_s(M_0)
-
-# ╔═╡ 8470acef-80a5-44b2-ab2c-90b23dba4f8d
-calc_M_s(M_0)
-
-# ╔═╡ cb7b4f70-47a1-4b1e-a927-f01d9ffea7b9
-calc_M_s(1e10)
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1326,7 +1368,7 @@ version = "1.4.1+1"
 # ╠═2c90aad4-87e7-11ee-2fbd-05f67c7e0343
 # ╟─67e892f1-3969-484f-9671-e0ac018babf2
 # ╠═aec3d9a7-d447-4e9f-aa83-fa5b20541b5c
-# ╠═bdd43353-da4c-48fb-bb67-b2aec628dd71
+# ╟─bdd43353-da4c-48fb-bb67-b2aec628dd71
 # ╠═18a20162-1b0f-4da8-931d-5ff95da22f54
 # ╠═3fc2fab3-2e37-4927-94f0-eeecaa89d575
 # ╠═d9cb3699-6a0f-4d32-b3f8-410cf2c92019
@@ -1337,21 +1379,17 @@ version = "1.4.1+1"
 # ╠═57071589-7f70-4739-bb6f-5ce184a8a09a
 # ╟─312e16fd-8a35-4067-bd02-3260c213a9eb
 # ╟─7fc985b7-9cb5-4b48-a27f-3de4cd7e9acf
+# ╠═912f6b2d-93e3-4acb-ba7c-acbf1083736b
 # ╠═ca8ad5fd-5450-45ca-810e-424edb316c42
 # ╠═7e4ad5d3-3024-431e-ad37-0868be0ddee8
 # ╠═ea60ecd0-c145-41b3-b2af-742338b53b88
-# ╠═918426b3-e58b-4b46-a104-d427b3a87a06
-# ╠═47bd76c2-9c6a-4377-b992-2343057951fe
-# ╠═e76a670d-3f4c-4579-8a22-25a4fc16b86e
+# ╠═a04c4445-9107-4546-8d73-fa043b68036e
+# ╠═5e68334b-246d-4f17-9862-4a3cf1743f4f
+# ╠═b0197f89-92a5-4ac3-9ab2-b0d05aa368d7
+# ╠═ae7c4833-46f6-48ec-a4be-d546c4bc583e
+# ╠═2f9d465f-f2c2-43d3-bc78-519bbb723d29
 # ╠═2232ac95-2873-4ef9-be90-96f1d0fe8049
-# ╠═9403d837-1cf9-4d3e-8130-a97699d1d576
 # ╠═5c8e1f2d-747f-45f4-953d-fb02462c87e6
-# ╠═f17d3c84-548e-499a-a86f-42289e1b4d77
-# ╠═7183c9f3-9fef-4af5-87c5-165ade992a9e
-# ╠═6dfa2c6c-fc57-46cf-b87b-c7df6c22fe1f
-# ╠═8406209c-54f3-47fd-98cb-73cce28d414a
-# ╠═3a1a3352-e3c9-4357-a83b-6d1690702a0e
-# ╠═8470acef-80a5-44b2-ab2c-90b23dba4f8d
-# ╠═cb7b4f70-47a1-4b1e-a927-f01d9ffea7b9
+# ╠═21c7cecb-4a5f-4aba-94f1-47a1268a7595
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
