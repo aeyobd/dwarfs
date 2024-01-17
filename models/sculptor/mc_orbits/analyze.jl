@@ -94,7 +94,7 @@ out.times
 peris
 
 # ╔═╡ 0793fe69-11ce-4009-bf8e-4022bfbe5b1a
-peris
+out[10].accelerations
 
 # ╔═╡ 3158f1ea-e68c-4ec3-bedd-a8d6f2b5814d
 pos1
@@ -146,7 +146,7 @@ histogram(LilGuys.calc_r(snap.positions))
 histogram(snap.Φs_ext)
 
 # ╔═╡ 2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
-ϵ = LilGuys.calc_E_spec_kin(out[100]) + out[100].Φs_ext
+ϵ = LilGuys.calc_E_spec_kin(out[1]) + out[1].Φs_ext
 
 # ╔═╡ 8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
 maximum(ϵ)
@@ -158,7 +158,7 @@ observations = to_sky(snap, invert_velocity=true)
 dists = getproperty.(observations, :distance)
 
 # ╔═╡ 0eb5b370-56b4-4546-9849-82d80e707f0f
-idx[] = [argmax(abs.(dists .- d) .< 0.1) for d in [80, 85, 90, 92]]
+idx[] = [argmax(abs.(dists .- d) .< 0.1) for d in [77, 80, 85, 86, 90, 92]]
 
 # ╔═╡ a449025f-647c-4b68-afad-cefc2941a4da
 argmax(abs.(dists .- LilGuys.percentile(dists, 16)) .< 0.1)

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.32
+# v0.19.36
 
 using Markdown
 using InteractiveUtils
@@ -18,38 +18,28 @@ end
 begin
 	import Pkg
 	Pkg.activate()
-	using LilGuys
-	using PyCall
-	using Plots
+	import LilGuys as lguys
+	using Plots; plotly()
 	using PlutoUI
+
+	u = lguys.u
+	gp = lguys.galpy.potential
 end
 
-# ╔═╡ 7625daf9-5e45-41a1-aebd-96656bf0e86f
-begin
-	galpy = pyimport("galpy")
-	pot = pyimport("galpy.potential")
-	conversion = pyimport("galpy.util.conversion")
-	u = pyimport("astropy.units")
-	orbit = pyimport("galpy.orbit")
-	coords = pyimport("astropy.coordinates")
-end
-
-# ╔═╡ d30862dc-00ca-4ccf-a602-0b67147ffd1f
-begin
-	M0 = 1e10*u.M_sun
-	R0 = 1*u.kpc
-	V0 = 207.4*u.km/u.s
-end
-
-# ╔═╡ 95071915-95ec-4d56-9fbc-9ab6ef9f4ed9
+# ╔═╡ 3a360b8d-e830-47ab-bfbc-ce147b15d09d
 md"""
-| Component  | Values                    |      |
-| ---------- | ------------------------- | ---- |
-| thin disk  | M=5.9, a=3.9, b=0.31      |      |
-| thick disk | M=2, a=4.4, b=0.92        |      |
-| bulge      | M = 2.1, a = 1.3          |      |
-| halo       | Mvir=115, r=20.2, c=9.545 |      |
+This notebook uses Galpy to compute some example orbits in a milky way potential. This is useful for rapidly development and exploration of orbits.
 """
+
+# ╔═╡ 6607d695-788a-4667-91ec-b1d290fb9ea5
+begin
+	Φ_mw = lguys.MWPotential()
+	r_c = LinRange(0, 20, 100)
+	vs = lguys.V_circ(Φ_mw, r_c)
+	plot(r_c, vs)
+	xlabel!("r/kpc")
+	ylabel!("Vcirc")
+end
 
 # ╔═╡ ffa7eb1e-b515-4bf0-9f68-c8ea1c5191c8
 begin
@@ -57,26 +47,11 @@ c = 9.545
 Mhalo = 115 * 1/(log(1+c) - (c)/(1+c))
 end
 
-# ╔═╡ 7507f841-51a7-495b-a19a-d3da6751b140
-begin
-	hp = pot.HernquistPotential(amp=2.1M0, a=1.3R0)
-	np = pot.NFWPotential(amp=Mhalo*M0, a=20R0)
-	thin_p = pot.MiyamotoNagaiPotential(amp=5.9M0, a=3.9R0, b=0.31R0)
-	thick_p = pot.MiyamotoNagaiPotential(amp=2M0, a=4.4R0, b=0.92R0)
-	tp = hp + np + thick_p + thin_p
-end
-
-# ╔═╡ 6607d695-788a-4667-91ec-b1d290fb9ea5
-begin
-	r_c = LinRange(0, 20, 100)
-	v = pot.vcirc(tp, r_c * u.kpc)
-	plot(r_c, v)
-	xlabel!("r/kpc")
-	ylabel!("Vcirc")
-end
-
 # ╔═╡ fc6cc98e-58c9-46e1-8a77-874cb078614d
-σ_slider = Slider(-3:0.1:3, default=0)
+σ_slider = Slider(-3:0.1:3, default=0) # a 3 σ slider for standard normal distributions...
+
+# ╔═╡ f6e46008-b849-4f2b-9296-ec28120e8866
+lguys.PhasePoint(zeros(3), ones(3)).z
 
 # ╔═╡ 27c9d926-06ff-45b1-895e-a93e12749452
 @bind dpm_dec σ_slider
@@ -96,20 +71,25 @@ begin
 	pm_ra =(0.099 + 0.002*dpm_ra)
 	pm_dec = (-0.160 + 0.002*dpm_dec)
 	radial_velocity = (111.4 +0.37 * dradial_velocity)
-	obs = coords.SkyCoord(ra=15.03917*u.deg, dec=-33.70917*u.deg,
-		distance= distance*u.kpc,
-		pm_ra_cosdec =pm_ra*u.mas/u.yr,
-		pm_dec = pm_dec*u.mas/u.yr,
-		radial_velocity=radial_velocity* u.km/u.s)
-
-	pp = obs.transform_to(LilGuys.galcen_frame)
+	ra=15.03917
+	dec=-33.70917
+	obs = lguys.Observation(ra, dec, distance, pm_ra, pm_dec, radial_velocity)
 
 end
 
-# ╔═╡ d4616277-e1d8-40ab-8d3d-c5a493ab5615
+# ╔═╡ 74eb54e2-77b3-4fed-9408-65547b7bb295
 begin
-	o = orbit.Orbit(obs)
+phase = lguys.to_galcen(obs)
+phase2 = lguys.PhasePoint(phase.position, -phase.velocity)
+
+obs_r = lguys.to_sky(phase2)
 end
+
+# ╔═╡ 0c1a14da-5d01-4937-9df4-91b4bb27f78f
+phase2
+
+# ╔═╡ ca0d411b-5dbc-4fa1-b4da-c6107a8088fa
+lguys.to_galcen(obs_r)
 
 # ╔═╡ 98bb6eb8-ead1-456d-b906-612763a2ddd6
 md"""
@@ -119,34 +99,20 @@ md"""
 - distance = $(distance)
 """
 
-# ╔═╡ 8fb855e6-246f-44dc-a862-b28409e5883e
-md"""
-- x = $(pp.x[])
-- y = $(pp.y[])
-- z = $(pp.z[])
-- vx = $(pp.v_x[])
-- vy = $(pp.v_y[])
-- vz = $(pp.v_z[])
-
-"""
-
-# ╔═╡ 1fbe302e-4f2f-47ae-963c-d94baed9e30c
-1
+# ╔═╡ cb724c3b-8ad9-466c-be2e-610ad5c6251a
+phase.velocity
 
 # ╔═╡ 0cbbba9a-8009-4e88-a19d-41fb121ca994
 begin
-	ts = LinRange(0, 10, 1000)
-o.integrate(ts * u.Gyr, tp, method="odeint")
-x = o.x(ts * u.Gyr)
-y = o.y(ts * u.Gyr)
-z = o.z(ts * u.Gyr)
-end
+	t, x, y, z, vx, vy, vz, phi = lguys.calc_orbit(phase)
+	t1, x1, y1, z1, vx1, vy1, vz1, phi1 = lguys.calc_orbit(phase2)
 
-# ╔═╡ 9e8b5a2f-8033-4123-a0fc-78e43c78603b
-begin
 	r = @. sqrt(x^2 + y^2 + z^2)
-	plot(ts, r)
-	hline!([minimum(r), maximum(r)])
+	v = @. sqrt(vx^2 + vy^2 + vz^2)
+
+	r1 = @. sqrt(x1^2 + y1^2 + z1^2)
+	v1 = @. sqrt(vx1^2 + vy1^2 + vz1^2)
+
 end
 
 # ╔═╡ ccfc0c3c-008e-4cc4-8f90-1f319b8559d3
@@ -154,32 +120,62 @@ md"""
 The current pericenter is $(minimum(r)) and apocenter $(maximum(r))
 """
 
-# ╔═╡ 41d84183-6a2e-4617-864c-48a8cc49965a
-plot(x, y)
+# ╔═╡ 9e8b5a2f-8033-4123-a0fc-78e43c78603b
+begin
+	plot(t.value, r)
 
-# ╔═╡ 56d10644-402c-4cb2-bf04-eee362820fbb
+	plot!(-t1.value, r1)
+	hline!([minimum(r), maximum(r)])
+end
+
+# ╔═╡ 41d84183-6a2e-4617-864c-48a8cc49965a
+[plot(x, y), plot(x, z), plot(y, z)]
+
+# ╔═╡ 84102b3f-b7cf-445f-a7a7-6cc71638ac90
+[plot(vx, vy), plot(vx, vz), plot(vy, vz)]
+
+# ╔═╡ 0de9032e-e2d3-4cca-925f-c7686f3487e3
+
+begin
+plot(r, v)
+plot!(r1, v1)
+end
+
+# ╔═╡ 8024cb70-2830-4b38-b7d1-ced4a0e49742
+v
+
+# ╔═╡ a4fcb1e7-012c-43df-a23a-086b72aed39d
+v1
+
+# ╔═╡ 52fce3f3-ff1b-4908-a676-71747cc64cf2
+begin
 plot(x, z)
+plot!(x1, z1)
+end
 
 # ╔═╡ Cell order:
+# ╟─3a360b8d-e830-47ab-bfbc-ce147b15d09d
 # ╠═1f568548-84e8-11ee-0abf-cd4651e92589
-# ╠═7625daf9-5e45-41a1-aebd-96656bf0e86f
-# ╠═d30862dc-00ca-4ccf-a602-0b67147ffd1f
-# ╠═7507f841-51a7-495b-a19a-d3da6751b140
-# ╟─95071915-95ec-4d56-9fbc-9ab6ef9f4ed9
 # ╠═6607d695-788a-4667-91ec-b1d290fb9ea5
 # ╠═ffa7eb1e-b515-4bf0-9f68-c8ea1c5191c8
 # ╠═fc6cc98e-58c9-46e1-8a77-874cb078614d
-# ╠═d4616277-e1d8-40ab-8d3d-c5a493ab5615
+# ╠═0c1a14da-5d01-4937-9df4-91b4bb27f78f
+# ╠═ca0d411b-5dbc-4fa1-b4da-c6107a8088fa
+# ╠═f6e46008-b849-4f2b-9296-ec28120e8866
+# ╠═aeaae20c-4ee7-4f66-8b1f-52d3afdda205
+# ╠═74eb54e2-77b3-4fed-9408-65547b7bb295
+# ╟─98bb6eb8-ead1-456d-b906-612763a2ddd6
 # ╠═27c9d926-06ff-45b1-895e-a93e12749452
 # ╠═a8af2878-70df-4eca-a535-e0b3dd720a81
 # ╠═ea6a411f-428e-4aed-98a8-c2fdf783cfca
 # ╠═a1e19b57-4cfc-4081-993d-8ad6ca7426de
-# ╟─98bb6eb8-ead1-456d-b906-612763a2ddd6
-# ╟─8fb855e6-246f-44dc-a862-b28409e5883e
-# ╠═aeaae20c-4ee7-4f66-8b1f-52d3afdda205
-# ╠═1fbe302e-4f2f-47ae-963c-d94baed9e30c
 # ╟─ccfc0c3c-008e-4cc4-8f90-1f319b8559d3
+# ╠═cb724c3b-8ad9-466c-be2e-610ad5c6251a
 # ╠═0cbbba9a-8009-4e88-a19d-41fb121ca994
 # ╠═9e8b5a2f-8033-4123-a0fc-78e43c78603b
 # ╠═41d84183-6a2e-4617-864c-48a8cc49965a
-# ╠═56d10644-402c-4cb2-bf04-eee362820fbb
+# ╠═84102b3f-b7cf-445f-a7a7-6cc71638ac90
+# ╠═0de9032e-e2d3-4cca-925f-c7686f3487e3
+# ╠═8024cb70-2830-4b38-b7d1-ced4a0e49742
+# ╠═a4fcb1e7-012c-43df-a23a-086b72aed39d
+# ╠═52fce3f3-ff1b-4908-a676-71747cc64cf2
