@@ -20,15 +20,13 @@ const err = LilGuys.Observation(
 )
 
 
-function sample(N = 10_000)
+function sample(N = 1000)
     mc_obs = LilGuys.rand_coords(obs, err, N)
     mc_phase = [LilGuys.to_galcen(o) for o in mc_obs]
-    pos = reduce(hcat, [[p.pos...] for p in mc_phase])
-    vel = reduce(hcat, [[p.vel...] for p in mc_phase])
+    pos = reduce(hcat, [[p.position...] for p in mc_phase])
+    vel = reduce(hcat, [[p.velocity...] for p in mc_phase])
 
     vel *= -1 # reverse velocities to go backwards in time
-    println(size(pos))
-    println(size(vel))
     snap = Snapshot(positions=pos, velocities= vel, masses=LilGuys.ConstVector(0., N))
     return snap
 end
