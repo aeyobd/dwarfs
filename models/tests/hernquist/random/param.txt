@@ -20,7 +20,7 @@ MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  2120 % 10 Gyr (CHECK)
+TimeMax	                  300
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -28,7 +28,7 @@ OmegaLambda               0
 OmegaBaryon               0
 HubbleParam               1.0
 Hubble                    100.0
-BoxSize                   3000
+BoxSize                   30
 ComovingIntegrationOn	  0
 
 
@@ -40,17 +40,17 @@ GravityConstantInternal  1.0
 
 
 % the potential
-MWThinMass	    5.9
+MWThinMass	    0
 MWThin_A	    3.944
 MWThin_B	    0.311
-MWThickMass	    2.0
+MWThickMass	    0
 MWThick_A	    3.886
 MWThick_B	    0.918
 
-MWBulgeMass		2.1
-MWBulge_A	    1.3
+MWBulgeMass		0.9
+MWBulge_A	    1.5
 
-MWHaloMass	    115.0
+MWHaloMass	    0
 MWHalo_R		20.2
 MWHalo_C		9.545
 
@@ -59,7 +59,7 @@ MWHalo_C		9.545
 OutputListOn              0
 TimeBetSnapshot           1
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         1.0
+TimeBetStatistics         0.2
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
@@ -74,7 +74,7 @@ TypeOfOpeningCriterion                0
 ErrTolTheta                           0.5
 ErrTolThetaMax                        1.0
 ErrTolForceAcc                        0.005
-TopNodeFactor                         1.0
+TopNodeFactor                         3.0
 
 ActivePartFracForNewDomainDecomp      0.02
 # ActivePartFracForPMinsteadOfEwald     0.05

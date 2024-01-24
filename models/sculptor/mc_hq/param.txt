@@ -1,6 +1,5 @@
-
 %----  Relevant files 
-InitCondFile         initial
+InitCondFile         positions
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
@@ -20,7 +19,7 @@ MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  2120 % 10 Gyr (CHECK)
+TimeMax	                  1000 % 2546
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -40,26 +39,15 @@ GravityConstantInternal  1.0
 
 
 % the potential
-MWThinMass	    5.9
-MWThin_A	    3.944
-MWThin_B	    0.311
-MWThickMass	    2.0
-MWThick_A	    3.886
-MWThick_B	    0.918
-
-MWBulgeMass		2.1
-MWBulge_A	    1.3
-
-MWHaloMass	    115.0
-MWHalo_R		20.2
-MWHalo_C		9.545
+A_StaticHQHalo  20
+Mass_StaticHQHalo  115
 
 
 %---- Output frequency and output paramaters
 OutputListOn              0
 TimeBetSnapshot           1
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         1.0
+TimeBetStatistics         0.2
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
@@ -67,14 +55,14 @@ MaxFilesWithConcurrentIO  1
 ErrTolIntAccuracy        0.025
 CourantFac               0.15
 MaxSizeTimestep          1.0
-MinSizeTimestep          0.0 
+MinSizeTimestep          0.0
 
 %---- Tree algorithm, force accuracy, domain update frequency
 TypeOfOpeningCriterion                0
-ErrTolTheta                           0.5
-ErrTolThetaMax                        1.0
-ErrTolForceAcc                        0.005
-TopNodeFactor                         1.0
+ErrTolTheta                           0.2
+ErrTolThetaMax                        0.2
+ErrTolForceAcc                        0.001
+TopNodeFactor                         0.5
 
 ActivePartFracForNewDomainDecomp      0.02
 # ActivePartFracForPMinsteadOfEwald     0.05
@@ -86,8 +74,8 @@ MaxNumNgbDeviation               2
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.08	# 10 pc
-SofteningComovingClass0       0.08	# 10 pc
+SofteningMaxPhysClass0       0.0001	# 10 pc
+SofteningComovingClass0      0.0001	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 

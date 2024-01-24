@@ -19,10 +19,6 @@ end
 # ╔═╡ 7fde36fd-8f27-45c3-b255-989e394998c2
 begin 
 	out = lguys.Output("out")
-end
-
-# ╔═╡ d30ab28e-1488-47fb-af19-e1e6ea795798
-begin 
 	M = 115.0
 	c = 9.545
 	r_s = 20.2
@@ -31,7 +27,7 @@ end
 
 # ╔═╡ 8b30ba3c-8441-432c-a893-8e38db3599f5
 begin 
-	id = 7
+	id = 45
 	positions = lguys.extract(out, :positions, id)
 	velocities = lguys.extract(out, :velocities, id)
 	accelerations = lguys.extract(out, :accelerations, id)
@@ -145,7 +141,6 @@ scatter(out.times, lguys.calc_r(accelerations))
 # ╔═╡ Cell order:
 # ╠═71e3f40f-a912-4bcb-aa30-313f8b5dae9e
 # ╠═7fde36fd-8f27-45c3-b255-989e394998c2
-# ╠═d30ab28e-1488-47fb-af19-e1e6ea795798
 # ╠═8b30ba3c-8441-432c-a893-8e38db3599f5
 # ╠═05b392b8-43eb-4f97-81d5-985513497908
 # ╠═85cc1e79-2556-46cf-823f-485ca908b0b5

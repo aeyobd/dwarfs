@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH	 -J	 nfw_test
+#SBATCH	 -J	 hernquist
 #SBATCH --ntasks=2				#Number of cores
 #SBATCH -A durham				#Account name
-#SBATCH -t 0:10:00
+#SBATCH -t 2:00:00
 #SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
 #SBATCH --mail-user=dboyea@uvic.ca
 #SBATCH --mail-type=END				#Notifications for job done & fail
@@ -17,4 +17,4 @@ module load hdf5
 module load gsl
 
 rm -r out/*
-mpirun -np $SLURM_NTASKS $HOME/dwarfs/gadget/GadgetMC param.txt > log.out
+mpirun -np $SLURM_NTASKS $GADGET_DIR/GadgetMW param.txt > log.out
