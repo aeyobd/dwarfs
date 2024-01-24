@@ -4,237 +4,162 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 1ecbfa5e-8439-11ee-3a96-fb3d2dc7a2d3
+# ╔═╡ 71e3f40f-a912-4bcb-aa30-313f8b5dae9e
 begin 
 	import Pkg
 	Pkg.activate()
-	using Plots
-	plotly()
-	using DataFrames, CSV
+	import LilGuys as lguys
+	using Plots; plotly()
+	using QuadGK
+	using Roots
 
-	using LilGuys
-
+	pwd()
 end
 
-# ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
-if !@isdefined err
-	include("sample.jl")
-end
-
-# ╔═╡ cd9dea36-93f8-4461-85b1-87030d9367bb
-pwd()
-
-# ╔═╡ 7371d47e-b406-414c-8738-596f9c57a945
-begin
-	x = Ref{Vector{Int}}()
-	y = Ref{Vector{Int}}()
-	z = Ref{Vector{Int}}()
-	pos = Ref{Vector{Int}}()
-	idx = Ref{Vector{Int}}()
-
-end
-
-# ╔═╡ 9c7e5bb4-8db0-4527-a8ec-331e2aed958b
-begin
-	filename = "out"
-	out = Output(filename);
-end
-
-# ╔═╡ 4d4a18fc-8990-4dcc-97c5-c9e01708ea2e
+# ╔═╡ 7fde36fd-8f27-45c3-b255-989e394998c2
 begin 
-	snap = out[1]
-	snap = snap[sortperm(snap.index)]
+	out = lguys.Output("out")
 end
 
-# ╔═╡ 4481a5e1-d635-4fea-a5c5-c85f0d6df62f
-begin
-	df = CSV.read("peris_apos.csv", DataFrame)
-	df_idx = sortperm(df[!, :index])
-	peris = df[df_idx, :pericenter]
-	apos = df[df_idx, :apocenter];
-end
-
-# ╔═╡ fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
-begin
-	hist_plots = []
-	p1 = histogram(peris)
-	xlabel!("pericenter")
-	push!(hist_plots, p1)
-
-	p1 = histogram(apos, bins=20)
-	xlabel!("apocenter")
-	push!(hist_plots, p1)
-
-	hist_plots
-end
-
-# ╔═╡ b2004011-d651-4201-a973-3c417f354e2b
+# ╔═╡ d30ab28e-1488-47fb-af19-e1e6ea795798
 begin 
-	ps = LilGuys.extract(out, :positions)
-	pos1 = hcat([p[:, 84] for p in ps]...)
-	
-	rs = hcat([LilGuys.calc_r(p) for p in ps]...)
-
+	M = 115.0
+	c = 9.545
+	r_s = 20.2
+	calc_Φ(r) = -lguys.G* M * 1/r * log(1 + r/r_s) / (log(1+c) - c/(1+c))
 end
 
-# ╔═╡ e5d40e2f-ac47-4827-853d-2f94bc39a624
-begin
-	idx[] = [2]
-	plot(out.times, rs[idx[][1], :])
-	hline!([peris[idx[]], apos[idx[]]])
-end
-
-# ╔═╡ 45a1a7b4-a9e8-4f24-8100-0dc010ab7262
-snap.masses
-
-# ╔═╡ b8e526b1-e6c5-40e1-a8ce-bf8e7e846182
-out.times
-
-# ╔═╡ 567f2899-9766-4e55-bc71-3f6f17a5a127
-peris
-
-# ╔═╡ 0793fe69-11ce-4009-bf8e-4022bfbe5b1a
-out[10].accelerations
-
-# ╔═╡ 3158f1ea-e68c-4ec3-bedd-a8d6f2b5814d
-pos1
-
-# ╔═╡ 2db2ce78-d599-4a2a-a3af-54a5215263e5
-begin
-	xy_plots = []
-
-	p = plot()
-	for i in idx[]
-		xs = hcat([p[:, i] for p in ps]...)
-		
-		plot!(xs[1, :], xs[2, :])
-	end
-	xlabel!(p, "x")
-	ylabel!(p, "y")
-	push!(xy_plots, p)
-
-	p = plot()
-	for i in idx[]
-		xs = hcat([p[:, i] for p in ps]...)
-		plot!(xs[2, :], xs[3, :])
-	end	
-	xlabel!(p, "y")
-	ylabel!(p, "z")
-	push!(xy_plots, p)
-
-	
-	p = plot()
-	for i in idx[]
-		xs = hcat([p[:, i] for p in ps]...)
-		plot!(xs[1, :], xs[3, :])
-	end
-	xlabel!(p, "x")
-	
-	ylabel!(p, "z")
-	push!(xy_plots, p)
-
-	xy_plots
-end
-
-# ╔═╡ 92b28dd8-c353-4959-b181-a843367b3223
-histogram(LilGuys.calc_r(snap.velocities))
-
-# ╔═╡ 471a5501-bc7b-4114-be1a-9088b4e674cd
-histogram(LilGuys.calc_r(snap.positions))
-
-# ╔═╡ 5a5ca70c-286f-4325-ac4a-143713a844c4
-histogram(snap.Φs_ext)
-
-# ╔═╡ 2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
-ϵ = LilGuys.calc_E_spec_kin(out[1]) + out[1].Φs_ext
-
-# ╔═╡ 8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
-maximum(ϵ)
-
-# ╔═╡ 5f11f6ab-c9ab-4600-acca-a0bb84d81a12
-observations = to_sky(snap, invert_velocity=true)
-
-# ╔═╡ 92aac8e8-d599-4a1e-965e-e653bc54c509
-dists = getproperty.(observations, :distance)
-
-# ╔═╡ 0eb5b370-56b4-4546-9849-82d80e707f0f
-idx[] = [argmax(abs.(dists .- d) .< 0.1) for d in [77, 80, 85, 86, 90, 92]]
-
-# ╔═╡ a449025f-647c-4b68-afad-cefc2941a4da
-argmax(abs.(dists .- LilGuys.percentile(dists, 16)) .< 0.1)
-
-# ╔═╡ 0460a804-a14a-40cc-9490-0a1ee7551fbb
-argmax(abs.(dists .- LilGuys.percentile(dists, 60)) .< 0.1)
-
-# ╔═╡ ede3836c-740d-4ac7-bbc7-3165981a1878
-normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
-
-# ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
-begin
-plots = []
-	
-for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity]
-    x = [getproperty(o, sym) for o in observations]
-    p = histogram(x, normalize=:pdf)
-
-    μ = getproperty(obs, sym)
-    σ = getproperty(err, sym)
-    
-    x_mod = LinRange(μ - 3σ, μ + 3σ, 1000)
-    y_mod = normal_dist.(x_mod, μ, σ)
-    plot!(p, x_mod, y_mod, z_order=2, lw=2)
-    title!(p, string(sym))
-
-    push!(plots, p)
-end
-
-plots
-end
-
-# ╔═╡ d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
+# ╔═╡ 8b30ba3c-8441-432c-a893-8e38db3599f5
 begin 
+	id = 7
+	positions = lguys.extract(out, :positions, id)
+	velocities = lguys.extract(out, :velocities, id)
+	accelerations = lguys.extract(out, :accelerations, id)
 
-plots_scat = []
-for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity, :ra, :dec]
-    x = [getproperty(o, sym) for o in observations]
-    y = peris
-    p = scatter(x, y, ms=0.3)
-	xlabel!(p, string(sym))
-	ylabel!(p, "pericenter")
-
-    push!(plots_scat, p)
+	Φs = lguys.extract(out, :Φs_ext, id)
 end
 
-plots_scat
+# ╔═╡ 05b392b8-43eb-4f97-81d5-985513497908
+lguys.plot_xyz(positions)
+
+# ╔═╡ 85cc1e79-2556-46cf-823f-485ca908b0b5
+lguys.plot_xyz(velocities)
+
+# ╔═╡ 6a376f08-b2f7-4fc4-bf95-bce4c978afbe
+lguys.plot_xyz(accelerations)
+
+# ╔═╡ eb154a33-67da-4bb4-819d-1a4fefdbc66d
+begin 
+	rs = lguys.calc_r(positions)
+	vs = lguys.calc_r(velocities)
 end
+
+# ╔═╡ f9dd10c3-40cd-492c-9d62-0fa505ee065b
+plot(calc_Φ.(rs) ./ Φs)
+
+# ╔═╡ e798f63f-c5ad-46c7-a07e-478f95635367
+begin
+	plot(out.times, lguys.calc_E_spec.(Φs, vs))
+	ylabel!("total energy")
+end
+
+# ╔═╡ dd0f4746-5873-433c-918c-97ad34f9c770
+begin 
+	Ls = lguys.calc_L_spec(positions, velocities)
+
+	L_rel_err = (Ls .- Ls[:, 1]) ./ Ls[:, 1]
+	plot(transpose(L_rel_err))
+end
+
+# ╔═╡ 45c20cb4-fbc6-4e5b-987f-080b7a66fd9e
+md"""
+Check that the peri and apocenter are as expected...
+"""
+
+# ╔═╡ 3a106dcd-7e52-4f58-a9ab-bb88ba7137ec
+begin
+	L = lguys.calc_r(Ls[:, 1])
+	E = 1/2 * vs[1]^2 + Φs[1]
+	
+	f(r) =  r^-2 + 2*(calc_Φ(r) - E) / L^2
+	g(r) = 2 / sqrt(2*(E - calc_Φ(r)) - L^2/r^2)
+end
+
+# ╔═╡ 49ed11e0-9cfb-4309-b64b-ad7b4118280d
+begin 
+	peri_obs = minimum(rs)
+	apo_obs = maximum(rs)
+	peri_exp = find_zero(f, peri_obs)
+	apo_exp = find_zero(f, apo_obs)
+
+	println("rel peri error ", peri_obs/peri_exp)
+	println("rel apo error ", apo_obs/apo_exp)
+
+	ϵ= 1e-8
+	T_exp, int_err = quadgk(g, peri_exp + ϵ, apo_exp - ϵ)
+	println("integration relerr ", int_err)
+end
+
+# ╔═╡ 367a74bc-806f-4e3a-99fc-833bb85a9e6a
+begin 
+	xs_1 = LinRange(0.7*peri_exp, 1.3*apo_exp, 1000)
+	plot(xs_1, f.(xs_1))
+	vline!([apo_exp, peri_exp])
+	hline!([0])
+end
+
+# ╔═╡ 4e35ac67-fe15-44f0-8a67-3e552660d672
+begin
+	xs_2 = LinRange(peri_exp+ϵ, apo_exp-ϵ, 1000)
+	plot(xs_2, g.(xs_2))
+	ylims!(0, 20)
+end
+
+# ╔═╡ ab00e3c3-fbeb-4e9b-882f-f5c425e99e88
+begin
+	t_0 = out.times[argmax(rs[out.times .< T_exp])]
+	N_periods = floor(Int, (out.times[end] - t_0) / T_exp)
+	
+	plot(out.times, rs)
+	hline!([apo_exp, peri_exp])
+	vline!(collect(0:N_periods) .* T_exp .+ t_0)
+	xlabel!("time")
+	ylabel!("r")
+end
+
+# ╔═╡ 3506bc94-695e-49d5-aaca-7ba2448565a8
+collect(1:3) * T_exp[1]
+
+# ╔═╡ f32c522f-a979-40c3-a64f-97a7053b95b9
+begin
+	plot(out.times, 1/2*vs.^2, label="T")
+	plot!(out.times, Φs, label="V")
+	plot!(out.times, Φs + 1/2*vs.^2, label="total")
+	xlabel!("time")
+	ylabel!("energy")
+end
+
+# ╔═╡ 972cb86d-b688-4a66-ad7b-babcfd0f7291
+scatter(out.times, lguys.calc_r(accelerations))
 
 # ╔═╡ Cell order:
-# ╠═1ecbfa5e-8439-11ee-3a96-fb3d2dc7a2d3
-# ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
-# ╠═cd9dea36-93f8-4461-85b1-87030d9367bb
-# ╠═7371d47e-b406-414c-8738-596f9c57a945
-# ╠═9c7e5bb4-8db0-4527-a8ec-331e2aed958b
-# ╠═4d4a18fc-8990-4dcc-97c5-c9e01708ea2e
-# ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f
-# ╠═fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
-# ╠═0eb5b370-56b4-4546-9849-82d80e707f0f
-# ╠═a449025f-647c-4b68-afad-cefc2941a4da
-# ╠═0460a804-a14a-40cc-9490-0a1ee7551fbb
-# ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
-# ╠═b2004011-d651-4201-a973-3c417f354e2b
-# ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
-# ╠═45a1a7b4-a9e8-4f24-8100-0dc010ab7262
-# ╠═b8e526b1-e6c5-40e1-a8ce-bf8e7e846182
-# ╠═567f2899-9766-4e55-bc71-3f6f17a5a127
-# ╠═0793fe69-11ce-4009-bf8e-4022bfbe5b1a
-# ╠═3158f1ea-e68c-4ec3-bedd-a8d6f2b5814d
-# ╠═2db2ce78-d599-4a2a-a3af-54a5215263e5
-# ╠═92b28dd8-c353-4959-b181-a843367b3223
-# ╠═471a5501-bc7b-4114-be1a-9088b4e674cd
-# ╠═5a5ca70c-286f-4325-ac4a-143713a844c4
-# ╠═2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
-# ╠═8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
-# ╠═5f11f6ab-c9ab-4600-acca-a0bb84d81a12
-# ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
-# ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
-# ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
+# ╠═71e3f40f-a912-4bcb-aa30-313f8b5dae9e
+# ╠═7fde36fd-8f27-45c3-b255-989e394998c2
+# ╠═d30ab28e-1488-47fb-af19-e1e6ea795798
+# ╠═8b30ba3c-8441-432c-a893-8e38db3599f5
+# ╠═05b392b8-43eb-4f97-81d5-985513497908
+# ╠═85cc1e79-2556-46cf-823f-485ca908b0b5
+# ╠═6a376f08-b2f7-4fc4-bf95-bce4c978afbe
+# ╠═eb154a33-67da-4bb4-819d-1a4fefdbc66d
+# ╠═f9dd10c3-40cd-492c-9d62-0fa505ee065b
+# ╠═e798f63f-c5ad-46c7-a07e-478f95635367
+# ╠═dd0f4746-5873-433c-918c-97ad34f9c770
+# ╟─45c20cb4-fbc6-4e5b-987f-080b7a66fd9e
+# ╠═3a106dcd-7e52-4f58-a9ab-bb88ba7137ec
+# ╠═367a74bc-806f-4e3a-99fc-833bb85a9e6a
+# ╠═4e35ac67-fe15-44f0-8a67-3e552660d672
+# ╠═49ed11e0-9cfb-4309-b64b-ad7b4118280d
+# ╠═ab00e3c3-fbeb-4e9b-882f-f5c425e99e88
+# ╠═3506bc94-695e-49d5-aaca-7ba2448565a8
+# ╠═f32c522f-a979-40c3-a64f-97a7053b95b9
+# ╠═972cb86d-b688-4a66-ad7b-babcfd0f7291

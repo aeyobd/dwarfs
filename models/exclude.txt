@@ -1,6 +1,7 @@
 *.hdf5
 out*/
 *.out
+*.dat
 .ipynb_checkpoints/
 *-usedvalues
 __pycache__

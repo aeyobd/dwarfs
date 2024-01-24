@@ -24,6 +24,9 @@ begin
 
 	u = lguys.u
 	gp = lguys.galpy.potential
+
+	using CSV 
+	using DataFrames
 end
 
 # ╔═╡ 3a360b8d-e830-47ab-bfbc-ce147b15d09d
@@ -153,6 +156,12 @@ plot(x, z)
 plot!(x1, z1)
 end
 
+# ╔═╡ f742c296-b2c6-4fd8-8d87-a0ad84b3b525
+begin
+	df = DataFrame(x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, phi=phi)
+	CSV.write("sculptor_orbits.csv", df)
+end
+
 # ╔═╡ Cell order:
 # ╟─3a360b8d-e830-47ab-bfbc-ce147b15d09d
 # ╠═1f568548-84e8-11ee-0abf-cd4651e92589
@@ -179,3 +188,4 @@ end
 # ╠═8024cb70-2830-4b38-b7d1-ced4a0e49742
 # ╠═a4fcb1e7-012c-43df-a23a-086b72aed39d
 # ╠═52fce3f3-ff1b-4908-a676-71747cc64cf2
+# ╠═f742c296-b2c6-4fd8-8d87-a0ad84b3b525

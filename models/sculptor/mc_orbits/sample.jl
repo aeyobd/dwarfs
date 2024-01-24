@@ -14,25 +14,29 @@ const err = LilGuys.Observation(
     ra = 0,
     dec = 0,
     distance = 3,
-    pm_ra = 0.002,
-    pm_dec = 0.002,
-    radial_velocity = 0.37
+    pm_ra = 0.02,
+    pm_dec = 0.02,
+    radial_velocity = 1,
 )
 
 
-function sample(N = 1000)
+function sample(N = 10)
     mc_obs = LilGuys.rand_coords(obs, err, N)
-    mc_phase = [LilGuys.to_galcen(o) for o in mc_obs]
-    pos = reduce(hcat, [[p.position...] for p in mc_phase])
-    vel = reduce(hcat, [[p.velocity...] for p in mc_phase])
+    pushfirst!(mc_obs, obs) # add the true observation to the sample
 
-    vel *= -1 # reverse velocities to go backwards in time
-    snap = Snapshot(positions=pos, velocities= vel, masses=LilGuys.ConstVector(0., N))
+    mc_phase = [LilGuys.to_galcen(o) for o in mc_obs]
+    pos = hcat([p.position for p in mc_phase]...)
+    vel = hcat([p.velocity for p in mc_phase]...)
+
+    vel .*= -1 # reverse velocities to go backwards in time
+
+    m = 0
+    snap = Snapshot(pos, vel, fill(m, N+1))
     return snap
 end
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
     snap = sample()
-    save("positions.hdf5", snap)
+    save("initial.hdf5", snap)
 end

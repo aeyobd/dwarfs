@@ -2,7 +2,7 @@
 # Basic code operation
 
     # LEAN
-    # SELFGRAVITY
+    SELFGRAVITY
     EXTERNALGRAVITY
     EXTERNALGRAVITY_MW
     
@@ -10,7 +10,7 @@
 
     # PMGRID=512
     # ASMTH=2.0
-    TREE_NUM_BEFORE_NODESPLIT=3
+    TREE_NUM_BEFORE_NODESPLIT=1
     # TREEPM_NOTIMESPLIT
     
 # Softening types and particle types
@@ -30,3 +30,5 @@
     OUTPUT_POTENTIAL
     OUTPUT_ACCELERATION
     EVALPOTENTIAL
+
+    FORCETEST=1
