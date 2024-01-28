@@ -2,7 +2,7 @@
 # Basic code operation
 
     # LEAN
-    SELFGRAVITY
+    # SELFGRAVITY
     EXTERNALGRAVITY
     EXTERNALGRAVITY_MW
     
@@ -31,4 +31,4 @@
     OUTPUT_ACCELERATION
     EVALPOTENTIAL
 
-    FORCETEST=1
+    # FORCETEST=1

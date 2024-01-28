@@ -2,21 +2,21 @@ import LilGuys as lguys
 
 
 const obs = lguys.Observation(
-    ra = 15.03917,
-    dec = -33.70917,
-    distance = 86,
-    pm_ra = 0.099,
-    pm_dec = -0.160,
-    radial_velocity = 111.4,
+    ra = 39.99708333,
+    dec = -34.44916667,
+    distance = 147,
+    pm_ra = 0.374,
+    pm_dec = -0.401,
+    radial_velocity = 55.3,
 )
 
 const err = lguys.Observation(
     ra = 0,
     dec = 0,
-    distance = 3,
-    pm_ra = 0.02,
-    pm_dec = 0.02,
-    radial_velocity = 1,
+    distance = 12,
+    pm_ra = 0.035,
+    pm_dec = 0.035,
+    radial_velocity = 0.3,
 )
 
 

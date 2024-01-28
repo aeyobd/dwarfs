@@ -4,7 +4,7 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 1ecbfa5e-8439-11ee-3a96-fb3d2dc7a2d3
+# ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
 begin 
 	import Pkg
 	Pkg.activate()
@@ -14,6 +14,7 @@ begin
 
 	import LilGuys as lguys
 end
+
 
 # ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 if !@isdefined obs # read in sample (but only once)
@@ -88,7 +89,11 @@ histogram(snap.Φs_ext)
 maximum(ϵ)
 
 # ╔═╡ 5f11f6ab-c9ab-4600-acca-a0bb84d81a12
-observations = lguys.to_sky(snap, invert_velocity=true)
+begin
+	points = [lguys.Galactocentric(snap.positions[:, i]*lguys.R0, -snap.velocities[:, i]*lguys.V0) for i in 1:length(snap)]
+	observations = lguys.transform.(lguys.Observation, points)
+end
+
 
 # ╔═╡ 92aac8e8-d599-4a1e-965e-e653bc54c509
 dists = getproperty.(observations, :distance)
@@ -96,12 +101,15 @@ dists = getproperty.(observations, :distance)
 # ╔═╡ ede3836c-740d-4ac7-bbc7-3165981a1878
 normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
 
+# ╔═╡ f26e923c-7b92-410d-bd5b-9ab3baed4562
+obs[end]
+
 # ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
 begin
 plots[] = []
 	
 for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity]
-    x = [getproperty(o, sym) for o in observations]
+    x = getproperty.(observations, sym)
     p = histogram(x, normalize=:pdf)
 
     μ = getproperty(obs, sym)
@@ -230,38 +238,17 @@ begin
 	plots[]
 end
 
-# ╔═╡ 10d24ec8-64fe-45ba-a4ef-6415eff99d01
-Φs_ext[1]
-
-# ╔═╡ 2593c47b-2005-4c29-9d1e-836b9ed535c4
-phi_exp.(rs[1])
-
-# ╔═╡ f5d200aa-578d-4a7d-bab6-184958d8988a
-begin 
-	a_to_r = accelerations ./ positions
-	a_to_r ./= sum(a_to_r, dims=1)
-end
-
-# ╔═╡ 19374315-f488-4416-92d7-c2004c6a6671
-scatter(transpose(a_to_r))
-
-# ╔═╡ 8ca200a1-e036-4e63-8cee-dfbbc19c772f
-(out[13].accelerations .- out[14].accelerations)./out[14].accelerations
-
-# ╔═╡ 80beae53-f02c-4475-95e4-209da2fa10cf
-(out[13].positions .- out[14].positions)./out[14].positions
-
 # ╔═╡ 2e7c1798-4066-4c46-b5ed-732263728ac0
 out[14]
 
 # ╔═╡ f6b27164-ee7c-428b-aefb-75e89d178f3e
-lguys.plot_xyz(snap.positions)
+lguys.scatter_xyz(snap.positions)
 
 # ╔═╡ 5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
-lguys.plot_xyz(snap.velocities)
+lguys.scatter_xyz(-snap.velocities .* lguys.V0)
 
 # ╔═╡ Cell order:
-# ╠═1ecbfa5e-8439-11ee-3a96-fb3d2dc7a2d3
+# ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 # ╠═ed6ec0e9-5734-4569-b214-2c86c22d3c55
 # ╠═cd9dea36-93f8-4461-85b1-87030d9367bb
@@ -282,6 +269,7 @@ lguys.plot_xyz(snap.velocities)
 # ╠═8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
 # ╠═5f11f6ab-c9ab-4600-acca-a0bb84d81a12
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
+# ╠═f26e923c-7b92-410d-bd5b-9ab3baed4562
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
@@ -298,12 +286,6 @@ lguys.plot_xyz(snap.velocities)
 # ╠═09bbae0d-ca3e-426d-b77c-69dd68ca42cc
 # ╠═fa4e7992-1ac6-4d71-a923-8b3cf81d0030
 # ╠═35f0ea14-a945-4745-910c-365b730676c5
-# ╠═10d24ec8-64fe-45ba-a4ef-6415eff99d01
-# ╠═2593c47b-2005-4c29-9d1e-836b9ed535c4
-# ╠═f5d200aa-578d-4a7d-bab6-184958d8988a
-# ╠═19374315-f488-4416-92d7-c2004c6a6671
-# ╠═8ca200a1-e036-4e63-8cee-dfbbc19c772f
-# ╠═80beae53-f02c-4475-95e4-209da2fa10cf
 # ╟─2e7c1798-4066-4c46-b5ed-732263728ac0
 # ╠═f6b27164-ee7c-428b-aefb-75e89d178f3e
 # ╠═5fdd8307-d528-4cd7-a5e4-1f15aba75cd5

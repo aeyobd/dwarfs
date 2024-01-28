@@ -17,3 +17,5 @@ module load hdf5 #/1.8.20
 
 set -x
 mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boru1/Gadget-RAPHAMW/source/Gadget2 params.txt > log.out
+
+julia calc_peris.jl

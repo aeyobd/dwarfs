@@ -5,3 +5,5 @@ out*/
 .ipynb_checkpoints/
 *-usedvalues
 __pycache__
+
+peris_apos.csv
