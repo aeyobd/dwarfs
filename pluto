@@ -1,3 +1,0 @@
-#!/bin/bash
-
-julia -e "import Pluto; Pluto.run(launch_browser=false, require_secret_for_access=false)"

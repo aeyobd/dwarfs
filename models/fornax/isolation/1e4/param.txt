@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         ./nfw_scaled_1e4
+InitCondFile         ./initial
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
@@ -20,7 +20,7 @@ MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  1176
+TimeMax	                  100
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -41,8 +41,8 @@ GravityConstantInternal  1.0
 
 
 %---- Output frequency and output paramaters
-OutputListOn              1 
-TimeBetSnapshot           0.1
+OutputListOn              0 
+TimeBetSnapshot           10
 TimeOfFirstSnapshot       0.0
 TimeBetStatistics         0.01
 NumFilesPerSnapshot       1

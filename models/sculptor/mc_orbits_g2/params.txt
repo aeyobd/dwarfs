@@ -1,6 +1,6 @@
 %  Relevant files
 
-InitCondFile  	   positions
+InitCondFile  	   initial
 OutputDir          out/
 
 EnergyFile         energy.txt

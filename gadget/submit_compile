@@ -7,7 +7,7 @@
 #SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
 #SBATCH --mail-user=dboyea@uvic.ca
 #SBATCH --mail-type=END				#Notifications for job done & fail
-#SBATCH -o %J.out		#Standard output file
+#SBATCH -o logs/%J.out		#Standard output file
 
 # these are defined in bash_profile
 module load gnu_comp
@@ -16,10 +16,9 @@ module load fftw
 module load hdf5
 module load gsl
 
+rm Gadget GadgetMW GadgetMC
+
 cd ~/gadget4
 make CONFIG=~/dwarfs/gadget/Config.sh BUILD_DIR=~/dwarfs/gadget/build EXEC=~/dwarfs/gadget/Gadget
 make CONFIG=~/dwarfs/gadget/ConfigMW.sh BUILD_DIR=~/dwarfs/gadget/build_mw EXEC=~/dwarfs/gadget/GadgetMW
 make CONFIG=~/dwarfs/gadget/ConfigMC.sh BUILD_DIR=~/dwarfs/gadget/build_mc EXEC=~/dwarfs/gadget/GadgetMC
-
-cd ~/gadget4_og
-make CONFIG=~/dwarfs/gadget/ConfigHQ.sh BUILD_DIR=~/dwarfs/gadget/build_hq EXEC=~/dwarfs/gadget/GadgetHQ
