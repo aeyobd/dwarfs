@@ -161,7 +161,7 @@ begin
 	positions = [positions[:, i, :] for i in idx]
 	velocities = [velocities[:, i, :] for i in idx]
 	accelerations = [accelerations[:, i, :] for i in idx]
-	# Φs_ext = lguys.extract(out, :Φs_ext, idx)
+	Φs_ext = lguys.extract(out, :Φs_ext, idx)
 	Φs = lguys.extract(out, :Φs, idx)
 
 
@@ -241,6 +241,12 @@ lguys.scatter_xyz(snap.positions)
 # ╔═╡ 5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
 lguys.scatter_xyz(-snap.velocities .* lguys.V0)
 
+# ╔═╡ 9c82b9ce-57a5-4b16-8bd9-6458931ef6f5
+snap.positions
+
+# ╔═╡ 89357b44-82e3-4f84-9cf1-3c0c01d1cf03
+snap.velocities * lguys.V0
+
 # ╔═╡ Cell order:
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
@@ -281,3 +287,5 @@ lguys.scatter_xyz(-snap.velocities .* lguys.V0)
 # ╟─2e7c1798-4066-4c46-b5ed-732263728ac0
 # ╠═f6b27164-ee7c-428b-aefb-75e89d178f3e
 # ╠═5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
+# ╠═9c82b9ce-57a5-4b16-8bd9-6458931ef6f5
+# ╠═89357b44-82e3-4f84-9cf1-3c0c01d1cf03
