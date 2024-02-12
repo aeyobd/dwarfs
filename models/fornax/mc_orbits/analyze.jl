@@ -68,7 +68,7 @@ findfirst(isequal(lguys.percentile(peris, 16)), peris)
 findfirst(isequal(lguys.percentile(peris, 84)), peris)
 
 # ╔═╡ 795cfff6-7951-4f2b-a956-a8f8c8c40113
-idx = [1, 2]
+idx = [1, 187, 8753]
 
 # ╔═╡ 0b9cb669-ef83-44a3-b4a8-f1c2e07cba0b
 out.times
@@ -100,9 +100,6 @@ dists = getproperty.(observations, :distance)
 
 # ╔═╡ ede3836c-740d-4ac7-bbc7-3165981a1878
 normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
-
-# ╔═╡ f26e923c-7b92-410d-bd5b-9ab3baed4562
-obs[end]
 
 # ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
 begin
@@ -161,10 +158,10 @@ begin
 	positions = lguys.extract(out, :positions, idx)
 	velocities = lguys.extract(out, :velocities, idx)
 	accelerations = lguys.extract(out, :accelerations, idx)
-	positions = [positions[:, i, :] for i in idx]
-	velocities = [velocities[:, i, :] for i in idx]
-	accelerations = [accelerations[:, i, :] for i in idx]
-	# Φs_ext = lguys.extract(out, :Φs_ext, idx)
+	positions = collect(eachslice(positions, dims=2))
+	velocities = collect(eachslice(velocities, dims=2))
+	accelerations = collect(eachslice(accelerations, dims=2))
+	Φs_ext = lguys.extract(out, :Φs_ext, idx)
 	Φs = lguys.extract(out, :Φs, idx)
 
 
@@ -204,8 +201,8 @@ scatter(rs, accs, marker_z=out.times)
 # ╔═╡ 5d5f719c-e5b7-4e05-94b0-71523da46b66
 begin 
 	plots[] = [plot()]
-	for i in idx
-		scatter!(positions[i][1, :], accs[i])
+	for i in 1:length(positions)
+		plot!(positions[i][1, :], accs[i])
 	end
 	plots[]
 end 
@@ -222,8 +219,8 @@ end
 # ╔═╡ fa4e7992-1ac6-4d71-a923-8b3cf81d0030
 begin 
 	plots[] = [plot()]
-	for i in idx
-		scatter!(out.times, accs[i] .- a_exp.(rs[i]))
+	for i in 1:length(accs)
+		plot!(out.times, accs[i] .- a_exp.(rs[i]))
 	end
 	plots[]
 end 
@@ -232,8 +229,8 @@ end
 begin 
 	plots[] = [plot()]
 	
-	for i in idx
-		scatter!(out.times, Φs_ext[i, :] .- phi_exp.(rs[i]))
+	for i in 1:length(idx)
+		plot!(out.times, Φs_ext[i, :] .- phi_exp.(rs[i]))
 	end
 	plots[]
 end
@@ -246,6 +243,18 @@ lguys.scatter_xyz(snap.positions)
 
 # ╔═╡ 5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
 lguys.scatter_xyz(-snap.velocities .* lguys.V0)
+
+# ╔═╡ a75690d5-d1da-4c84-bedc-337f3662fbee
+begin 
+	obs1 = lguys.Observation(ra=obs.ra, dec=obs.dec, distance=137, pm_ra=0.384, pm_dec=-0.382, radial_velocity=55.1)
+	
+	obs3 = lguys.Observation(ra=obs.ra, dec=obs.dec, distance=158, pm_ra=0.390, pm_dec=-0.376, radial_velocity=55.4)
+end
+
+# ╔═╡ 0f81bf9e-29c4-4429-8a1e-0d848e6b8ec0
+for o in [obs1, obs, obs3]
+	println(lguys.transform(lguys.Galactocentric, o))
+end
 
 # ╔═╡ Cell order:
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
@@ -269,7 +278,6 @@ lguys.scatter_xyz(-snap.velocities .* lguys.V0)
 # ╠═8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
 # ╠═5f11f6ab-c9ab-4600-acca-a0bb84d81a12
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
-# ╠═f26e923c-7b92-410d-bd5b-9ab3baed4562
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
@@ -289,3 +297,5 @@ lguys.scatter_xyz(-snap.velocities .* lguys.V0)
 # ╟─2e7c1798-4066-4c46-b5ed-732263728ac0
 # ╠═f6b27164-ee7c-428b-aefb-75e89d178f3e
 # ╠═5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
+# ╠═0f81bf9e-29c4-4429-8a1e-0d848e6b8ec0
+# ╠═a75690d5-d1da-4c84-bedc-337f3662fbee

@@ -19,7 +19,7 @@ begin
 	import Pkg
 	Pkg.activate()
 	import LilGuys as lguys
-	using Plots; plotly()
+	using Plots; #plotly()
 	using PlutoUI
 
 	using CSV 
@@ -37,11 +37,12 @@ This notebook uses Galpy to compute some example orbits in a milky way potential
 # ╔═╡ 6607d695-788a-4667-91ec-b1d290fb9ea5
 begin
 	Φ_mw = MWPotential()
-	r_c = LinRange(0, 20, 100)
+	r_c = LinRange(0, 50, 100)
 	vs = V_circ(Φ_mw, r_c)
 	plot(r_c, vs)
 	xlabel!("r/kpc")
 	ylabel!("Vcirc")
+	savefig("v_circ.pdf")
 end
 
 # ╔═╡ ffa7eb1e-b515-4bf0-9f68-c8ea1c5191c8
