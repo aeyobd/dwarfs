@@ -32,3 +32,6 @@ build_mw
 build_mc
 
 Gadget4
+
+*.npy
+*.csv
