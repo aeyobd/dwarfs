@@ -7,7 +7,7 @@
 #SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
 #SBATCH --mail-user=dboyea@uvic.ca
 #SBATCH --mail-type=END				#Notifications for job done & fail
-#SBATCH -o out/%J.out		#Standard output file
+#SBATCH -o %J.out		#Standard output file
 
 # these are defined in bash_profile
 module load gnu_comp
