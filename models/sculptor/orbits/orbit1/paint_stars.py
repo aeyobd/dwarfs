@@ -3,7 +3,6 @@ from math import pi
 import numpy as np
 from scipy.integrate import quad
 import pandas as pd
-from scipy.special import gammaincinv
 
 import h5py
 import sys
@@ -26,7 +25,7 @@ plt.rcParams['figure.autolayout'] = True
 
 
 G = 1
-np.random.seed(667408)
+# np.random.seed(667408)
 
 
 
@@ -43,12 +42,6 @@ vy       = np.copy(   f['/PartType1/Velocities'][:,1]  )
 vz       = np.copy(   f['/PartType1/Velocities'][:,2]  )
 N        = len(x)
 f.close()
-
-print("partmass" , partmass)
-print("N" , N)
-print("x", x.shape)
-print("v", vx.shape)
-print("id", PartIDs.shape)
 
 print("      *  Computing DM energies from model" )
 #
@@ -86,7 +79,7 @@ MSr = np.vectorize(lambda x: 4*pi *  quad( lambda r: r*r * rhoS(r)/MS , 0., x  )
 print("      *  Binning DM model to compute DF" )
 #
 EN     = 100
-DFNr   = 100
+DFNr   = 50
 DFrmax = np.max(r)
 DFrmin = np.min(r)
 EPSREL = 1e-7
@@ -150,31 +143,34 @@ E = np.linspace(minE,maxE,num=EN)
 
 print("      *    ...stars..." )
 DFS = fS(E)
+df_df = pd.DataFrame({"E": E, "DFs": DFS})
+
 if np.any (DFS < 0) :
   print("      *  Exit. star DF < 0, see df.dat. NO DM DF computed yet." )
-  np.savetxt("df.dat", np.column_stack(( E, DFS)))
-  sys.exit(0)
+  df_df.to_csv("df.csv", index=False)
+  # sys.exit(0)
 
 
 print("      *    ...DM..." )
+
 DFDM = fDM(E)
+
+df_df["DFDM"] = DFDM
 if np.any (DFDM < 0) :
   print("      *  Exit. DM DF < 0, see df.dat" )
-  np.savetxt("df.dat", np.column_stack(( E, DFS, DFDM)))
-  #sys.exit(0)
+  df_df.to_csv("df.csv", index=False)
+  # sys.exit(0)
 
 print("      *  star + dm DF >= 0, all good" )
 
 
-pd.DataFrame({"E": E, 'DFDM': DFDM, "DFs": DFS}).to_csv('DFDM.csv')
 
 print("      *  Computing probabilities" )
 probs = np.interp(-Etot, E, DFS)/ np.interp(-Etot, E, DFDM)
 probs = probs/np.sum(probs[~np.isnan(probs)])
 
-print(probs)
 print("      *  Writing probability file stars.npy -- to be used with specific model.dat" )
-np.save("stars.npy", np.column_stack( (PartIDs, probs) ) )
+pd.DataFrame({"PartIDs": PartIDs, "probs": probs}).to_csv("stars.csv", index=False)
 
 
 print("      *  Sanity check: density plot using new probabilities" )

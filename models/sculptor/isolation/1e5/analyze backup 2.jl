@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.36
 
 using Markdown
 using InteractiveUtils
@@ -15,34 +15,12 @@ end
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
 out = lguys.Output("out")
 
-# ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
-begin 
-	Ls = hcat([lguys.calc_L_tot(snap) for snap in out]...)
-	plot(transpose(Ls))
-	xlabel!("snapshot")
-	ylabel!("L")
-end
-
-# ╔═╡ bfa7593c-4915-4e03-83e6-8f790de4c1a5
-begin 
-	Es = hcat([lguys.calc_E_tot(snap) for snap in out]...)
-	plot(transpose(Es))
-	xlabel!("snapshot")
-	ylabel!("energy")
-end
-
-# ╔═╡ fe476f91-5be3-4cf9-88df-55d9568ab88f
-pos = lguys.extract(out, :positions)
-
-# ╔═╡ 4984a413-8fb7-4937-8c5c-f7e424573866
-cens = lguys.ss_centre(out)
-
 # ╔═╡ c5672da9-0dad-4d22-abe5-9e186ccde02d
 begin
-	snap_i = out[1]
+	snap_i = lguys.Snapshot("initial.hdf5")
 	snap_f = out[end]
-	prof_i = lguys.Profile(snap_i, cens[1].x_c, cens[1].v_c)
-	prof_f = lguys.Profile(snap_f, cens[end].x_c, cens[end].v_c)
+	prof_i = lguys.Profile(snap_i)
+	prof_f = lguys.Profile(snap_f)
 end
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
@@ -70,9 +48,28 @@ begin
 	ylabel!("velocity (km/s)")
 end
 
+# ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
+begin 
+	Ls = hcat([lguys.calc_L_tot(snap) for snap in out]...)
+	plot(transpose(Ls))
+	xlabel!("snapshot")
+	ylabel!("L")
+end
+
+# ╔═╡ bfa7593c-4915-4e03-83e6-8f790de4c1a5
+begin 
+	Es = hcat([lguys.calc_E_tot(snap) for snap in out]...)
+	plot(transpose(Es))
+	xlabel!("snapshot")
+	ylabel!("energy")
+end
+
+# ╔═╡ fe476f91-5be3-4cf9-88df-55d9568ab88f
+pos = lguys.extract(out, :positions)
+
 # ╔═╡ 3cf46f2f-33c1-4eb5-b2af-243a0e89d1be
 begin 
-	
+	cens = [lguys.ss_centre(snap) for snap in out]
 	x_cen = [cen.x_c for cen in cens]
 	v_cen = [cen.v_c for cen in cens]
 end
@@ -113,7 +110,6 @@ end
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═fe476f91-5be3-4cf9-88df-55d9568ab88f
-# ╠═4984a413-8fb7-4937-8c5c-f7e424573866
 # ╠═3cf46f2f-33c1-4eb5-b2af-243a0e89d1be
 # ╠═d6fe3195-4d4d-4db8-a384-a195233dc159
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
