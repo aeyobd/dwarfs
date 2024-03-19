@@ -112,8 +112,8 @@ begin
 	end
 end
 
-# ╔═╡ ae52451d-cdd3-4321-a324-d4904ed78c92
-lguys.calc_fE
+# ╔═╡ a1be8128-4780-4ccc-8f05-63c9b7acb31e
+vcat([1,2,3], 4)
 
 # ╔═╡ dfa675d6-aa32-45c3-a16c-626e16f36083
 begin 
@@ -128,6 +128,12 @@ begin
 	M = linear_interpolation(radii, Mins)(r)
 	Ms = M_s.(r)
 end
+
+# ╔═╡ ae52451d-cdd3-4321-a324-d4904ed78c92
+fe_2 = lguys.calc_fϵ(ν_dm, ψ, r)
+
+# ╔═╡ 6622d715-e1b7-4204-af54-7815f333c7ea
+fs_2 = lguys.calc_fϵ(ν_s, ψ, r)
 
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 begin 
@@ -201,13 +207,20 @@ begin
 	f_s_e = f_s.(E)
 end
 
+# ╔═╡ 24e265af-1489-43c3-b765-6f1bda9b3982
+
+
+# ╔═╡ b0458871-bf01-45b6-aa92-c07ce8ad22bb
+
+
 # ╔═╡ 75d23b44-71e7-4e28-ad3e-c537f3d4422f
 begin
-	plot(xlabel="log ϵ", ylabel="log f DM", ylim=(-8, 0.5))
+	plot(xlabel="log ϵ", ylabel="log f", ylim=(-10, 3))
 	plot!(log10.(E), nm.log10.(f_dm_e), label="dm")
-	plot!(log10.(E), nm.log10.(f_dm_e2), label="")
- plot!(log10.(E), nm.log10.(f_s_e), ylims=(-10, 5), xlabel="log E", ylabel="log f stars", label="stars")
-	
+	#plot!(log10.(E), nm.log10.(f_dm_e2), label="")
+ 	plot!(log10.(E), nm.log10.(f_s_e), label="stars")
+	plot!(log10.(E), nm.log10.(fe_2.(E)), label="lguys")
+	plot!(log10.(E), nm.log10.(fs_2.(E)), label="lguys")
 end
 
 # ╔═╡ 35b3d9ed-91ec-41c3-bbe6-1b5a13f4ee02
@@ -218,9 +231,6 @@ begin
 	hline!([0], color=:black, label="")
 	
 end
-
-# ╔═╡ 0d973031-5352-4d34-967a-c5beae114532
-
 
 # ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
 begin 
@@ -259,9 +269,9 @@ end
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 begin
-	plot(xlabel="log r / kpc", ylabel="log ν", ylim=(-3, 0.5), xlim=(-2, 0))
+	plot(xlabel="log r / kpc", ylabel="log ν", ylim=(-5, 0.5), xlim=(-2, 2))
 	plot!(log10.(r), nm.log10.(ν_s), label="exponential")
-	plot!(log10.(r), nm.log10.(ν_s_nbody), label="nbody reconstruction")
+	scatter!(log10.(r), nm.log10.(ν_s_nbody), label="nbody reconstruction")
 
 end
 
@@ -322,6 +332,8 @@ write_stars()
 # ╠═7a39cd4f-9646-4969-9410-b093bca633cb
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
 # ╠═ae52451d-cdd3-4321-a324-d4904ed78c92
+# ╠═6622d715-e1b7-4204-af54-7815f333c7ea
+# ╠═a1be8128-4780-4ccc-8f05-63c9b7acb31e
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
@@ -333,9 +345,10 @@ write_stars()
 # ╠═c12d34fb-4c4c-4974-8cf1-7ba212c4b42d
 # ╠═41917a4f-453f-41da-bab9-9074021a5f7e
 # ╠═78ce5a98-fd3f-4e39-981f-2bea58b117bf
+# ╠═24e265af-1489-43c3-b765-6f1bda9b3982
+# ╠═b0458871-bf01-45b6-aa92-c07ce8ad22bb
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
 # ╠═35b3d9ed-91ec-41c3-bbe6-1b5a13f4ee02
-# ╠═0d973031-5352-4d34-967a-c5beae114532
 # ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
 # ╠═3b229c8e-9320-4c07-b948-c34a0c082341
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1

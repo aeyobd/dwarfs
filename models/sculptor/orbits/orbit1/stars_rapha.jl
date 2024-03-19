@@ -43,7 +43,7 @@ begin
 	
 	ρ_s(r) = exp((-r/r_s_s))
 	
-	Nr = 100
+	Nr = 50
 	NE = 100
 end
 
@@ -112,6 +112,11 @@ begin
 	end
 end
 
+# ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
+begin 
+	ψ_i = lguys.lerp(radii, -Φs).(r)
+end
+
 # ╔═╡ dfa675d6-aa32-45c3-a16c-626e16f36083
 begin 
 	ψ = linear_interpolation(radii, -Φs)(r)
@@ -126,13 +131,8 @@ begin
 	Ms = M_s.(r)
 end
 
-# ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
-begin 
-	ρ = linear_interpolation(r, ν_dm, extrapolation_bc=Line())
-	ψ_i = linear_interpolation(radii, -Φs, extrapolation_bc=Line())
-
-	fe_2 = lguys.calc_fE(ρ, ψ_i, r_bins=r)
-end
+# ╔═╡ adb3c8a9-df61-44b0-aa4a-8a5df30399ca
+fe_2 = lguys.calc_fϵ(ν_dm, ψ_i, r_bins=r)
 
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 begin 
@@ -158,7 +158,7 @@ begin
 	d2ν_dψ2_s = ifelse.(isnan.(d2ν_dψ2_s), 0, d2ν_dψ2_s)
 
 	d2ν_dψ2_dm_i = linear_interpolation(reverse(ψ), reverse(d2ν_dψ2_dm), extrapolation_bc=Line())
-	d2ν_dψ2_s_i = linear_interpolation(reverse(ψ), reverse(d2ν_dψ2_s), extrapolation_bc=Line())
+	d2ν_dψ2_s_i = linear_interpolation(reverse(ψ), reverse(d2ν_dψ2_s))
 end
 
 # ╔═╡ 45d0f929-de54-4a62-b4bd-2fdcaf8594b3
@@ -172,8 +172,8 @@ less_than_one = M .< 1 .- 1 ./ collect(1:Nr)
 
 # ╔═╡ 41917a4f-453f-41da-bab9-9074021a5f7e
 begin 
-	f_s(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_s_i(ψi) / sqrt(ϵ - ψi), 0, ϵ)[1]
-	f_dm(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_dm_i(ψi) / sqrt(ϵ - ψi), 0, ϵ)[1]
+	f_s(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_s_i(ψi) / sqrt(ϵ - ψi), 1e-6, ϵ)[1]
+	f_dm(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_dm_i(ψi) / sqrt(ϵ - ψi), 1e-6, ϵ)[1]
 end
 
 # ╔═╡ 78ce5a98-fd3f-4e39-981f-2bea58b117bf
@@ -190,6 +190,9 @@ begin
 	plot(xlabel="log ϵ", ylabel="log f DM")
 	plot!(log10.(E), nm.log10.(f_dm_e), label="")
 end
+
+# ╔═╡ 9d94daad-1846-49f5-b872-a6f639d07b65
+scatter(log10.(E), nm.log10.(fe_2.(E)))
 
 # ╔═╡ 0d973031-5352-4d34-967a-c5beae114532
 plot(log10.(E), nm.log10.(f_s_e), xlims=(-2, -1), ylims=(-50, 5), xlabel="log E", ylabel="log f stars", legend=false)
@@ -293,6 +296,7 @@ write_stars()
 # ╠═7a39cd4f-9646-4969-9410-b093bca633cb
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
 # ╠═1fab14ec-6bfc-4243-bc48-915d1a129925
+# ╠═adb3c8a9-df61-44b0-aa4a-8a5df30399ca
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
@@ -303,6 +307,7 @@ write_stars()
 # ╠═41917a4f-453f-41da-bab9-9074021a5f7e
 # ╠═78ce5a98-fd3f-4e39-981f-2bea58b117bf
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
+# ╠═9d94daad-1846-49f5-b872-a6f639d07b65
 # ╠═0d973031-5352-4d34-967a-c5beae114532
 # ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
 # ╠═3b229c8e-9320-4c07-b948-c34a0c082341
