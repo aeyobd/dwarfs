@@ -8,6 +8,7 @@ __pycache__
 *.hdf5
 *.dat
 *.gsp
+*.fits
 nfw*.txt
 *.log
 
