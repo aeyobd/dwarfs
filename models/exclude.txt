@@ -6,4 +6,10 @@ out*/
 *-usedvalues
 __pycache__
 
+*.pdf
+*.png
+*.gif
+*.npy
 peris_apos.csv
+
+*backup*.jl
