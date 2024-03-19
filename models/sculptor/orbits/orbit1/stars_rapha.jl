@@ -126,6 +126,14 @@ begin
 	Ms = M_s.(r)
 end
 
+# ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
+begin 
+	ρ = linear_interpolation(r, ν_dm, extrapolation_bc=Line())
+	ψ_i = linear_interpolation(radii, -Φs, extrapolation_bc=Line())
+
+	fe_2 = lguys.calc_fE(ρ, ψ_i, r_bins=r)
+end
+
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 begin 
 	plot(xscale=:log10, yscale=:log10, xlims=(1e-1, 1e3), ylims=(1e-15, 1),
@@ -284,6 +292,7 @@ write_stars()
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
 # ╠═7a39cd4f-9646-4969-9410-b093bca633cb
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
+# ╠═1fab14ec-6bfc-4243-bc48-915d1a129925
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
