@@ -112,6 +112,9 @@ begin
 	end
 end
 
+# ╔═╡ ae52451d-cdd3-4321-a324-d4904ed78c92
+lguys.calc_fE
+
 # ╔═╡ dfa675d6-aa32-45c3-a16c-626e16f36083
 begin 
 	ψ = linear_interpolation(radii, -Φs)(r)
@@ -141,23 +144,42 @@ begin
 	plot!(log10.(radii), -Φs, label="snapshot")
 end
 
+# ╔═╡ 3ded4670-22ce-4535-b382-6791fd42f4ba
+begin # try alternate method
+	ν1 = lguys.gradient(ν_dm, r)
+	ν2 = lguys.gradient(ν1, r)
+
+	ψ1 = lguys.gradient(ψ, r)
+	ψ2 = lguys.gradient(ψ1, r)
+
+	d2ν_dψ2_dm2 = @. ψ1^-2 * ν2 - ψ1^-3 * ν1 * ψ2
+
+end
+
 # ╔═╡ 4d06de8b-70c8-4f3a-bd68-4d4cb569913e
 begin 
-	dν_dψ_dm = lguys.gradient(ψ, ν_dm)
-	d2ν_dψ2_dm = lguys.gradient(ψ, dν_dψ_dm)
-	dν_dψ_s = lguys.gradient(ψ, ν_s)
-	d2ν_dψ2_s = lguys.gradient(ψ, dν_dψ_s)
+	dν_dψ_dm = lguys.gradient(ν_dm, ψ)
+	d2ν_dψ2_dm = lguys.gradient(dν_dψ_dm, ψ)
+	dν_dψ_s = lguys.gradient(ν_s, ψ)
+	d2ν_dψ2_s = lguys.gradient(dν_dψ_s, ψ)
 	d2ν_dψ2_s = ifelse.(isnan.(d2ν_dψ2_s), 0, d2ν_dψ2_s)
 
 	d2ν_dψ2_dm_i = linear_interpolation(reverse(ψ), reverse(d2ν_dψ2_dm), extrapolation_bc=Line())
+	d2ν_dψ2_dm_i2 = linear_interpolation(reverse(ψ), reverse(d2ν_dψ2_dm2), extrapolation_bc=Line())
 	d2ν_dψ2_s_i = linear_interpolation(reverse(ψ), reverse(d2ν_dψ2_s), extrapolation_bc=Line())
 end
+
+# ╔═╡ f9a98234-31d8-4964-9d82-a856277fe6a5
+d2ν_dψ2_s_i(1)
 
 # ╔═╡ 45d0f929-de54-4a62-b4bd-2fdcaf8594b3
 plot(log10.(r), dν_dψ_s)
 
 # ╔═╡ a537f12e-52f1-45b1-b6ac-0af8f392236a
-plot(ψ, d2ν_dψ2_dm)
+begin 
+	plot(ψ, asinh.(d2ν_dψ2_dm))
+	plot!(ψ, asinh.(d2ν_dψ2_dm2))
+end
 
 # ╔═╡ c12d34fb-4c4c-4974-8cf1-7ba212c4b42d
 less_than_one = M .< 1 .- 1 ./ collect(1:Nr)
@@ -166,6 +188,7 @@ less_than_one = M .< 1 .- 1 ./ collect(1:Nr)
 begin 
 	f_s(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_s_i(ψi) / sqrt(ϵ - ψi), 0, ϵ)[1]
 	f_dm(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_dm_i(ψi) / sqrt(ϵ - ψi), 0, ϵ)[1]
+	f_dm2(ϵ) = 1/√8π^2 * quadgk(ψi -> d2ν_dψ2_dm_i2(ψi) / sqrt(ϵ - ψi), 0, ϵ)[1]
 end
 
 # ╔═╡ 78ce5a98-fd3f-4e39-981f-2bea58b117bf
@@ -174,21 +197,34 @@ begin
 	E_min = ψ[end]
 	E = LinRange(E_min, E_max, NE)
 	f_dm_e = f_dm.(E)
+	f_dm_e2 = f_dm2.(E)
 	f_s_e = f_s.(E)
 end
 
 # ╔═╡ 75d23b44-71e7-4e28-ad3e-c537f3d4422f
 begin
-	plot(xlabel="log ϵ", ylabel="log f DM")
-	plot!(log10.(E), nm.log10.(f_dm_e), label="")
+	plot(xlabel="log ϵ", ylabel="log f DM", ylim=(-8, 0.5))
+	plot!(log10.(E), nm.log10.(f_dm_e), label="dm")
+	plot!(log10.(E), nm.log10.(f_dm_e2), label="")
+ plot!(log10.(E), nm.log10.(f_s_e), ylims=(-10, 5), xlabel="log E", ylabel="log f stars", label="stars")
+	
+end
+
+# ╔═╡ 35b3d9ed-91ec-41c3-bbe6-1b5a13f4ee02
+begin
+	plot(xlabel="log ϵ", ylabel="asinh f")
+	scatter!(log10.(E), asinh.(f_dm_e/1e-5), label="DM")
+	scatter!(log10.(E), asinh.(f_s_e/1e-5), label="stars")
+	hline!([0], color=:black, label="")
+	
 end
 
 # ╔═╡ 0d973031-5352-4d34-967a-c5beae114532
-plot(log10.(E), nm.log10.(f_s_e), ylims=(-10, 5), xlabel="log E", ylabel="log f stars", legend=false)
+
 
 # ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
 begin 
-	probs = f_s_e ./ f_dm_e
+	probs = f_s_e ./ f_dm_e2
 	probs ./= maximum(probs)
 	prob = linear_interpolation(E, probs, extrapolation_bc=Line())
 end
@@ -223,7 +259,7 @@ end
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 begin
-	plot(xlabel="log r / kpc", ylabel="log ν", ylim=(-10, 0), xlim=(-1, 1))
+	plot(xlabel="log r / kpc", ylabel="log ν", ylim=(-3, 0.5), xlim=(-2, 0))
 	plot!(log10.(r), nm.log10.(ν_s), label="exponential")
 	plot!(log10.(r), nm.log10.(ν_s_nbody), label="nbody reconstruction")
 
@@ -285,16 +321,20 @@ write_stars()
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
 # ╠═7a39cd4f-9646-4969-9410-b093bca633cb
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
+# ╠═ae52451d-cdd3-4321-a324-d4904ed78c92
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
 # ╠═4d06de8b-70c8-4f3a-bd68-4d4cb569913e
+# ╠═f9a98234-31d8-4964-9d82-a856277fe6a5
+# ╠═3ded4670-22ce-4535-b382-6791fd42f4ba
 # ╠═45d0f929-de54-4a62-b4bd-2fdcaf8594b3
 # ╠═a537f12e-52f1-45b1-b6ac-0af8f392236a
 # ╠═c12d34fb-4c4c-4974-8cf1-7ba212c4b42d
 # ╠═41917a4f-453f-41da-bab9-9074021a5f7e
 # ╠═78ce5a98-fd3f-4e39-981f-2bea58b117bf
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
+# ╠═35b3d9ed-91ec-41c3-bbe6-1b5a13f4ee02
 # ╠═0d973031-5352-4d34-967a-c5beae114532
 # ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
 # ╠═3b229c8e-9320-4c07-b948-c34a0c082341

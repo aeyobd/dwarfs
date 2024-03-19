@@ -13,8 +13,14 @@ begin
 	using LaTeXStrings
 end
 
+# ╔═╡ 8fc58ec7-f79f-46b3-8b45-e134022e1737
+using Profile
+
 # ╔═╡ 6964cbd2-9ef9-4682-9ac1-80c10518c374
-out = lguys.Output("out")
+@profile out = lguys.Output("out")
+
+# ╔═╡ 9aca4d19-a059-4a89-bad2-b018f0dd7564
+
 
 # ╔═╡ dc6bef2c-e4eb-41ab-8f37-3569c068573a
 # ╠═╡ skip_as_script = true
@@ -314,7 +320,9 @@ end
 
 # ╔═╡ Cell order:
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
+# ╠═8fc58ec7-f79f-46b3-8b45-e134022e1737
 # ╠═6964cbd2-9ef9-4682-9ac1-80c10518c374
+# ╠═9aca4d19-a059-4a89-bad2-b018f0dd7564
 # ╠═dc6bef2c-e4eb-41ab-8f37-3569c068573a
 # ╠═a554ca71-8142-43c7-83b7-144f0d4a31fd
 # ╠═ffcebc1f-9daa-49cc-8426-b3c1a1050587
