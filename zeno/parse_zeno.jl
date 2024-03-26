@@ -129,21 +129,18 @@ function main()
     N = length(parsed.data["Mass"])
     println("loaded $(N) particles")
 
-    mass = parsed.data["Mass"][1] # all the masses shold be the same
+    mass = parsed.data["Mass"]
     vel = inflate(parsed, "Velocity")
     pos = inflate(parsed, "Position")
 
-    header = LilGuys.make_default_header(N, mass)
-
     snap = Snapshot(
-        pos = pos,
-        vel = vel,
-        header = header,
-        m = mass
+        pos,
+        vel,
+        mass
     )
 
     println("output: ", outfile, "\n")
-    write!(outfile, snap) 
+    save(outfile, snap) 
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

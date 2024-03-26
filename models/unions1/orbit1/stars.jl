@@ -10,6 +10,7 @@ begin
 
 	import LilGuys as lguys
 	using Plots
+	import Arya
 end
 
 # ╔═╡ dc9b9af8-26b9-4fd4-a886-f935454d4443
@@ -58,19 +59,18 @@ begin
 	x = LinRange(-3.5, -1.8, 100)
 	r_h = 0.003/2
 	M_h = 16 / lguys.M0
-	ρ0 = M_h / r_h ^ 3
+	ρ0 = M_h / (4π/3 * r_h ^ 3 ) 
+	
 
-	plot!(x, log10(ρ0) .+ log10.(ρ_exp.(10 .^ x / r_h)))
+	plot!(x, log10(ρ0) .+ log10.(ρ_exp.((10 .^ x )/ r_h)))
 	scatter!(log10.(prof.rs), log10.(prof.ρs))
 	scatter!(log10.(prof_r.rs),  log10.(prof_r.ρs))
 
+	vline!([log10.(r_h)], label="rH")
 end
 
 # ╔═╡ d58eb47e-5c1e-481a-af9a-9d25f44b0916
 sum(snap.masses) * lguys.M0
-
-# ╔═╡ 488739be-5aec-4822-9bc0-b0627c0cd0ed
-scatter(rs, lguys.calc_ϵ(snap), ms=1)
 
 # ╔═╡ 0ac8f1e2-fd2e-4d47-9db6-9ab4fec7e3ef
 begin 
@@ -98,6 +98,13 @@ begin
 
 end
 
+# ╔═╡ 488739be-5aec-4822-9bc0-b0627c0cd0ed
+begin 
+	plot(xlabel="log r", ylabel="binding energy")
+	scatter!(log10.(rs), lguys.calc_ϵ(snap), ms=1)
+	scatter!(log10.(rs_r), lguys.calc_ϵ(snapr), ms=1)
+end
+
 # ╔═╡ 5b3bc89a-a581-4c01-bdfd-db1512129888
 begin 
 	scatter(log10.(rs1), ϵ1, ms=1, msw=0)
@@ -106,7 +113,7 @@ end
 
 # ╔═╡ b3893bba-b5f7-4479-8573-86e4068e9014
 begin 
-	plot(xlabel="log r", ylabel="log v")
+	plot(xlabel="log r", ylabel="log v / km ")
 	scatter!(log10.(rs1), (vs1), ms=1, msw=0)
 	scatter!(log10.(rs_r), (vs_r), ms=1, msw=0)
 end

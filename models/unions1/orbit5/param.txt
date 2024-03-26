@@ -20,7 +20,7 @@ MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  400 % 10 Gyr (CHECK)
+TimeMax	                  2800 % 13 Gyr 
 
 %---- Cosmological parameters
 Omega0	                  0
