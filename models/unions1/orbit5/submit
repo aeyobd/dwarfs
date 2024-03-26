@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH	 -J	 sculptor_full
+#SBATCH	 -J	 orbit5
 #SBATCH --ntasks=8				#Number of cores
 #SBATCH -A durham				#Account name
-#SBATCH -t 1:00:00
+#SBATCH -t 8:00:00
 #SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
 #SBATCH --mail-user=dboyea@uvic.ca
 #SBATCH --mail-type=END				#Notifications for job done & fail
