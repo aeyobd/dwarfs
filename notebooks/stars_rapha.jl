@@ -225,13 +225,15 @@ begin
 	ν_s_nbody_r = m_s_r ./ As
 end
 
+# ╔═╡ 6aab795a-c568-48c8-ad0b-6888d2d2507e
+md"""Hello I am a dog $(Resource("density.pdf"))"""
+
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 begin
-	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu", ylim=(-15, 2), xlim=(-2, 1.5))
+	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu", ylim=(-15, 2), xlim=(-2, 1.5), fontfamily="Times")
 	plot!(log10.(r), nm.log10.(ν_s), label="stars")
 	plot!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
-	#plot!(log10.(r) , nm.log10.(ν_s_nbody_r), label="nbody")
-
+	plot!(log10.(r) , nm.log10.(ν_s_nbody_r), label="rapha")
 end
 
 # ╔═╡ b7d81ab1-9bf3-4976-9a3c-784ddbae85f7
@@ -306,6 +308,7 @@ write_stars()
 # ╠═3b229c8e-9320-4c07-b948-c34a0c082341
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
+# ╠═6aab795a-c568-48c8-ad0b-6888d2d2507e
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
 # ╠═b7d81ab1-9bf3-4976-9a3c-784ddbae85f7
 # ╠═74e18b36-c914-4df7-8743-1e0a1bb0c391

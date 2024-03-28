@@ -41,10 +41,10 @@ GravityConstantInternal  1.0
 
 
 %---- Output frequency and output paramaters
-OutputListOn              1 
-TimeBetSnapshot           0.1
+OutputListOn              0
+TimeBetSnapshot           10
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         0.01
+TimeBetStatistics         1
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
@@ -71,8 +71,8 @@ MaxNumNgbDeviation               1
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.03	# 10 pc
-SofteningComovingClass0       0.03	# 10 pc
+SofteningMaxPhysClass0       0.025	# 10 pc
+SofteningComovingClass0      0.025	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
