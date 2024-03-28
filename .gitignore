@@ -37,3 +37,6 @@ Gadget4
 *.npy
 *.csv
 *.tar.gz
+
+.DS_store
+gr-temp

@@ -31,9 +31,6 @@ md"""
 Given a list of densities with uncertanties (sculptor_densities.csv), which profiles best fit?
 """
 
-# ╔═╡ 77e1a8d8-74b6-455d-bb37-b0f59a356f6c
-isdefined(Main, :PlutoRunner)
-
 # ╔═╡ 058e97e0-2284-4a9b-ab09-4d51fd01c0b8
 @model function linear_reg(x, y)
 	# priors
@@ -85,7 +82,6 @@ plot(chain)
 # ╟─a0d149b6-8f16-4573-8c93-b670fa865e40
 # ╠═59d999de-dfe8-11ee-0ba0-d7bde6f4231a
 # ╠═9eaa93cd-3f49-45e8-b83c-721c10b1671b
-# ╠═77e1a8d8-74b6-455d-bb37-b0f59a356f6c
 # ╠═058e97e0-2284-4a9b-ab09-4d51fd01c0b8
 # ╠═4103cc1e-c7db-4ab2-8d45-e1922ec018f0
 # ╠═73216801-4923-48fc-aedc-4d27939b2d95
