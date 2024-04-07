@@ -2,19 +2,14 @@
 
 #SBATCH	 -J	 sculptor_mc
 #SBATCH --ntasks=2				#Number of cores
-#SBATCH -A durham				#Account name
+#SBATCH -A $SLURM_ACCOUNT				#Account name
 #SBATCH -t 0:10:00
-#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
-#SBATCH --mail-user=dboyea@uvic.ca
-#SBATCH --mail-type=END				#Notifications for job done & fail
 #SBATCH -o %J.out		#Standard output file
 
 # these are defined in bash_profile
-module load gnu_comp
-module load openmpi
-module load fftw
-module load hdf5
-module load gsl
 
+
+set -x
+export OMP_NUM_THREADS=$SLURM_NTASKS
 rm -r out/*
-mpirun -np $SLURM_NTASKS $HOME/dwarfs/gadget/GadgetMC param.txt > out/log.out
+mpirun -np $SLURM_NTASKS $GADGET_PATH/GadgetMC param.txt > out/log.out

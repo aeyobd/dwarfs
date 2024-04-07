@@ -2,23 +2,18 @@
 
 #SBATCH	 -J	 compile_gadget
 #SBATCH --ntasks=1				#Number of cores
-#SBATCH -A durham				#Account name
-#SBATCH -t 2:00:00
-#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
-#SBATCH --mail-user=dboyea@uvic.ca
-#SBATCH --mail-type=END				#Notifications for job done & fail
-#SBATCH -o logs/%J.out		#Standard output file
+#SBATCH -A $SLURM_ACCOUNT				#Account name
+#SBATCH -t 1:00:00
+#SBATCH -o %J.out		#Standard output file
 
-# these are defined in bash_profile
-module load gnu_comp
-module load openmpi
-module load fftw
-module load hdf5
-module load gsl
+# module load gsl
 
+set -x
 rm Gadget GadgetMW GadgetMC
 
-cd ~/gadget4
-make CONFIG=~/dwarfs/gadget/Config.sh BUILD_DIR=~/dwarfs/gadget/build EXEC=~/dwarfs/gadget/Gadget
-make CONFIG=~/dwarfs/gadget/ConfigMW.sh BUILD_DIR=~/dwarfs/gadget/build_mw EXEC=~/dwarfs/gadget/GadgetMW
-make CONFIG=~/dwarfs/gadget/ConfigMC.sh BUILD_DIR=~/dwarfs/gadget/build_mc EXEC=~/dwarfs/gadget/GadgetMC
+SCRIPT_DIR="/home/dboyea/project/dwarfs/gadget"
+
+cd ~/Gadget4
+make CONFIG=$SCRIPT_DIR/Config.sh BUILD_DIR=$SCRIPT_DIR/build EXEC=$SCRIPT_DIR/Gadget
+make CONFIG=$SCRIPT_DIR/ConfigMW.sh BUILD_DIR=$SCRIPT_DIR/build_mw EXEC=$SCRIPT_DIR/GadgetMW
+make CONFIG=$SCRIPT_DIR/ConfigMC.sh BUILD_DIR=$SCRIPT_DIR/build_mc EXEC=$SCRIPT_DIR/GadgetMC

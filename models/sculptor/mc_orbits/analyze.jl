@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -51,6 +51,8 @@ begin
 end
 
 # ╔═╡ fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	plots[] = []
 	p1 = histogram(peris)
@@ -63,6 +65,7 @@ begin
 
 	plots[]
 end
+  ╠═╡ =#
 
 # ╔═╡ e10615ab-0ece-4ebb-81d0-47ffdd6ea6c5
 begin
@@ -71,6 +74,9 @@ begin
 	idx_qs = [findfirst(isequal(p), peris) for p in quantiles]
 	idx = vcat([1], idx_qs)
 end
+
+# ╔═╡ 9fad353f-751e-4577-b704-aa2eadeb0969
+quantiles
 
 # ╔═╡ 92b28dd8-c353-4959-b181-a843367b3223
 histogram(lguys.calc_r(snap.velocities))
@@ -101,6 +107,8 @@ dists = getproperty.(observations, :distance)
 normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
 
 # ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 plots[] = []
 	
@@ -121,8 +129,11 @@ end
 
 plots[]
 end
+  ╠═╡ =#
 
 # ╔═╡ d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
+# ╠═╡ disabled = true
+#=╠═╡
 begin 
 
 plots_scat = []
@@ -138,6 +149,7 @@ end
 
 plots_scat
 end
+  ╠═╡ =#
 
 # ╔═╡ 4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 begin 
@@ -160,16 +172,14 @@ for f in fieldnames(lguys.Observation)
 end
 
 # ╔═╡ a644a33e-57a4-4af4-98be-1e0e84948069
-begin
-	gp_orbit = CSV.read("/cosma/home/durham/dc-boye1/dwarfs/notebooks/sculptor_orbits.csv", DataFrame)
-end
+
 
 # ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
 begin
 	
-	positions = lguys.extract(out, :positions, idx)
-	velocities = lguys.extract(out, :velocities, idx)
-	accelerations = lguys.extract(out, :accelerations, idx)
+	positions = lguys.extract_vector(out, :positions, idx)
+	velocities = lguys.extract_vector(out, :velocities, idx)
+	accelerations = lguys.extract_vector(out, :accelerations, idx)
 	positions = [positions[:, i, :] for i in 1:length(idx)]
 	velocities = [velocities[:, i, :] for i in 1:length(idx)]
 	accelerations = [accelerations[:, i, :] for i in 1:length(idx)]
@@ -259,6 +269,9 @@ lguys.scatter_xyz(-snap.velocities .* lguys.V0)
 # ╔═╡ 2dfe9a85-6553-4632-81e0-33c148fd1102
 reverse(out.times)
 
+# ╔═╡ ca334fc0-3840-4182-8bbf-b78375bb7ed9
+positions
+
 # ╔═╡ 519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 function get_initial_t(j)
 	i = idx[j]
@@ -347,6 +360,7 @@ end
 # ╠═4d4a18fc-8990-4dcc-97c5-c9e01708ea2e
 # ╠═fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
 # ╠═e10615ab-0ece-4ebb-81d0-47ffdd6ea6c5
+# ╠═9fad353f-751e-4577-b704-aa2eadeb0969
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═92b28dd8-c353-4959-b181-a843367b3223
@@ -379,6 +393,7 @@ end
 # ╠═5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
 # ╠═2dfe9a85-6553-4632-81e0-33c148fd1102
 # ╠═5f45e7c7-e447-48bf-ade4-38f516df2dad
+# ╠═ca334fc0-3840-4182-8bbf-b78375bb7ed9
 # ╠═519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 # ╠═5316884b-3971-4ca7-9106-f638241d3388
 # ╠═34b812d2-21c0-4983-9d14-7dbef08ab670

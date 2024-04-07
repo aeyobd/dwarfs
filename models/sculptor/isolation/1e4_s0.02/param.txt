@@ -16,7 +16,7 @@ TimeLimitCPU              86400   % 24h, in seconds
 CpuTimeBetRestartFile     7200    % 2h,  in seconds
 
 %----- Memory alloction
-MaxMemSize                1800    % in MByte
+MaxMemSize                1000    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0

@@ -25,13 +25,13 @@ echo cleaning up
 rm -f $halo_path $model_path $txt_path $hdf5_path $out_path
 
 echo generating halo
-$ZENO_PATH/bin/halogsp $halo_path
+$ZENOPATH/bin/halogsp $halo_path
 
 echo generating nbody model
-$ZENO_PATH/bin/gspmodel $halo_path $model_path nbody=$N
+$ZENOPATH/bin/gspmodel $halo_path $model_path nbody=$N
 
 echo writing to text file
-$ZENO_PATH/bin/tsf $model_path maxline=$N > $txt_path
+$ZENOPATH/bin/tsf $model_path maxline=$N > $txt_path
 
 echo converting to hdf5
 

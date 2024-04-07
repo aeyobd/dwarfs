@@ -24,7 +24,6 @@ end
 
 # ╔═╡ 641946b3-e6f2-4d6d-8777-7698f353eb3d
 begin 
-	import Interpolations: linear_interpolation, Line
 	import QuadGK: quadgk
 	using Plots
 	using DataFrames, CSV
@@ -35,7 +34,7 @@ begin
 end
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-dirname1 = "/cosma/home/durham/dc-boye1/sculptor/isolation/1e5/"
+dirname1 = "/home/dboyea/project/dwarfs/models/sculptor/isolation/1e4/"
 
 # ╔═╡ 92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
 begin 
@@ -54,11 +53,12 @@ begin
 	# parameters 
 	snapname = "./out/snapshot_001.hdf5"
 	outname = "./star_probabilities.hdf5"
+	
 	r_s_s = 0.308 # kpc
 	
 	ρ_s(r) = exp((-r/r_s_s))
 	
-	Nr = 50
+	Nr = 40
 	NE = 100
 end
 
@@ -67,26 +67,19 @@ md"""
 overwrite $outname ? $(@bind overwrite CheckBox())
 """
 
-# ╔═╡ 8113e42a-19d3-4244-a1b1-7ee0aa7015ec
-stars_rapha = CSV.read("stars.csv", DataFrame)
-
 # ╔═╡ 4cb09115-143d-456f-9c6a-19656f638677
-snap = lguys.Snapshot(snapname)
-
-# ╔═╡ 4bcc1596-9332-4d56-b7d2-7aa52ca6392c
 begin 
-	p_rapha = stars_rapha[invperm(sortperm(snap.index)), :probs]
-	all(stars_rapha[invperm(sortperm(snap.index)), :PartIDs] .== snap.index)
+	println("$dirname")
+	snap = lguys.Snapshot(snapname)
+	cens = CSV.read("centres.csv", DataFrame)
 end
-
-# ╔═╡ da0b82b9-d0e8-4135-a793-efd121fca3c3
-cen = lguys.ss_centre(snap)
 
 # ╔═╡ 0f5671e6-deb4-11ee-3178-4d3f920f23a2
 begin
+	cen_i = cens[1, :]
 	snap_i = lguys.copy(snap)
-	snap_i.positions .-= cen.x_c
-	snap_i.velocities .-= cen.v_c
+	snap_i.positions .-= [cen_i.x, cen_i.y, cen_i.z]
+	snap_i.velocities .-= [cen_i.vx, cen_i.vy, cen_i.vz]
 
 
 	radii = lguys.calc_r(snap_i.positions)
@@ -108,9 +101,6 @@ begin
 
 	Mins = cumsum(snap_i.masses) ./ sum(snap_i.masses)
 end
-
-# ╔═╡ 290bd73f-8065-4d97-b94e-9f18fdd5d7e4
-prof = lguys.Profile(snap_i)
 
 # ╔═╡ 23158c79-d35c-411a-a35a-950f04214e19
 begin 
@@ -143,14 +133,14 @@ end
 
 # ╔═╡ dfa675d6-aa32-45c3-a16c-626e16f36083
 begin 
-	ψ = linear_interpolation(radii, -Φs)(r)
+	ψ = lguys.lerp(radii, -Φs).(r)
 	
 	As = 4π/3 * diff(r_e .^ 3)
 	ν_dm = m_dm ./ As
 
 	ν_s = ρ_s.(r) ./ M_s_tot
 
-	M = linear_interpolation(radii, Mins)(r)
+	M = lguys.lerp(radii, Mins).(r)
 	Ms = M_s.(r)
 end
 
@@ -195,45 +185,41 @@ end
 # ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
 begin 
 	probs = f_s_e ./ f_dm_e
-	probs ./= maximum(probs)
-	prob = linear_interpolation(E, probs, extrapolation_bc=Line())
+	probs ./= maximum(probs) # arbitrary scaling...
+	prob = lguys.lerp(E, probs)
 end
 
 # ╔═╡ 3b229c8e-9320-4c07-b948-c34a0c082341
 begin 
 	ps = prob.(ϵs)
-	print(sum(ps .< 0))
+	print(sum(ps .< 0), " negative probabilities")
 	ps[ps .< 0] .= 0
 end
 
 # ╔═╡ 77e2c1e3-7756-4ab7-810a-03ccdc635aa1
-histogram(ps, yscale=:log10)
+begin 
+	plot(xlabel="stellar weights", ylabel="frequency")
+	
+	stephist!((ps), yscale=:log10)
+end
 
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
 begin 
 	m_s = Vector{Float64}(undef, Nr)
-	m_s_r = Vector{Float64}(undef, Nr)
 
 	for i in 1:Nr
 		filt = r_e[i] .<= radii .< r_e[i+1]
 		m_s[i] = sum(ps[filt])
-		m_s_r[i] = sum(p_rapha[filt])
 	end
 	m_s ./= sum(m_s)
-	m_s_r ./= sum(m_s_r)
 	ν_s_nbody = m_s ./ As
-	ν_s_nbody_r = m_s_r ./ As
 end
-
-# ╔═╡ 6aab795a-c568-48c8-ad0b-6888d2d2507e
-md"""Hello I am a dog $(Resource("density.pdf"))"""
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 begin
-	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu", ylim=(-15, 2), xlim=(-2, 1.5), fontfamily="Times")
+	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu", ylim=(-10, 0.5), xlim=(-1.5, 1.3), fontfamily="Times")
 	plot!(log10.(r), nm.log10.(ν_s), label="stars")
 	plot!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
-	plot!(log10.(r) , nm.log10.(ν_s_nbody_r), label="rapha")
 end
 
 # ╔═╡ b7d81ab1-9bf3-4976-9a3c-784ddbae85f7
@@ -262,8 +248,7 @@ begin
 end
 
 # ╔═╡ bd8489da-ac53-46c6-979e-06d5dc6e25d1
-begin 
-	function write_stars()
+function write_stars()
 		if isfile(outname)
 			if overwrite
 				rm(outname)
@@ -276,7 +261,6 @@ begin
 		h5write(outname, "/index", idx0)
 		h5write(outname, "/probabilities", p_idx)
 		println("probabilities written to $outname")
-	end
 end
 
 # ╔═╡ f42cb7e1-64b7-47da-be05-dd50c2471fb3
@@ -289,12 +273,8 @@ write_stars()
 # ╟─10569544-637d-4ab3-b193-c9b7bf7b3f3e
 # ╠═92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
 # ╠═855fd729-22b6-4845-9d2b-e796d4a15811
-# ╠═8113e42a-19d3-4244-a1b1-7ee0aa7015ec
-# ╠═4bcc1596-9332-4d56-b7d2-7aa52ca6392c
 # ╠═4cb09115-143d-456f-9c6a-19656f638677
-# ╠═da0b82b9-d0e8-4135-a793-efd121fca3c3
 # ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
-# ╠═290bd73f-8065-4d97-b94e-9f18fdd5d7e4
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
 # ╠═7a39cd4f-9646-4969-9410-b093bca633cb
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
@@ -308,7 +288,6 @@ write_stars()
 # ╠═3b229c8e-9320-4c07-b948-c34a0c082341
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
-# ╠═6aab795a-c568-48c8-ad0b-6888d2d2507e
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
 # ╠═b7d81ab1-9bf3-4976-9a3c-784ddbae85f7
 # ╠═74e18b36-c914-4df7-8743-1e0a1bb0c391
