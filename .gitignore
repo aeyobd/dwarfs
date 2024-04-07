@@ -11,8 +11,10 @@ __pycache__
 *.fits
 nfw*.txt
 *.log
+core.*
 
 *.pdf
+*.mp4
 *.gif
 *.png
 .coverage

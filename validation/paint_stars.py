@@ -113,6 +113,7 @@ plt.plot(np.log10(DFr), np.log10(nuS),  color="blue", label = "stars")
 plt.xlabel ("$\\log_{10} r$")
 plt.ylabel ("$\\log_{10} \\nu_\\star$")
 plt.legend()
+plt.ylim(-15)
 plt.savefig("figures/nu.png")
 
 
