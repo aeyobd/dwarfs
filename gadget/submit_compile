@@ -1,17 +1,17 @@
 #!/bin/bash
 
 #SBATCH	 -J	 compile_gadget
-#SBATCH --ntasks=1				#Number of cores
-#SBATCH -A $SLURM_ACCOUNT				#Account name
+#SBATCH --ntasks=1
+#SBATCH -A durham
 #SBATCH -t 1:00:00
-#SBATCH -o %J.out		#Standard output file
+#SBATCH -o %J.out
+#SBATCH -p cosma
 
-# module load gsl
 
-set -x
+source ~/slurm_header.sh
 rm Gadget GadgetMW GadgetMC
 
-SCRIPT_DIR="/home/dboyea/project/dwarfs/gadget"
+SCRIPT_DIR=$SLURM_SUBMIT_DIR
 
 cd ~/Gadget4
 make CONFIG=$SCRIPT_DIR/Config.sh BUILD_DIR=$SCRIPT_DIR/build EXEC=$SCRIPT_DIR/Gadget
