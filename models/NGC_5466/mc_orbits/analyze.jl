@@ -206,7 +206,7 @@ end
 positions
 
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
-lguys.plot_xyz(positions...)
+lguys.plot_xyz_layout(positions...)
 
 # ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
 lguys.plot_xyz(velocities...)
@@ -320,6 +320,27 @@ begin
 	hline!(apos[1:1])
 end
 
+# ╔═╡ 0cfc1412-9610-4106-b0a7-7d6490e117f3
+begin 
+	N_samples = 100
+	N_t = 200
+	all_positions =  lguys.extract_vector(out, :positions, 1:N_samples)[:, :, 1:N_t]
+	x_all = transpose(all_positions[1, :, :])
+	y_all = transpose(all_positions[2, :, :])
+	z_all = transpose(all_positions[3, :, :])
+	R_all = @. sqrt(x_all^2 + y_all^2)
+	r_all = @. sqrt(x_all^2 + y_all^2 + z_all^2)
+end
+
+# ╔═╡ 10411718-0b5e-4475-b996-4a2a9fbd6258
+plot(-x_all, y_all, aspect_ratio=1, label="", color="black", alpha=0.1)
+
+# ╔═╡ d963bcfd-73e4-4bfc-b7e5-9b9606037aac
+plot(R_all, z_all, aspect_ratio=1, label="", color="black", alpha=0.1)
+
+# ╔═╡ 53903c8e-61bd-4590-a563-de3967020e3a
+plot(-out.times[1:N_t] * lguys.T0 * 1e3, r_all, label="", color="black", alpha=0.1)
+
 # ╔═╡ de1e5245-0946-47cd-8e2c-ba1914cfeb74
 begin 
 	# orbit info
@@ -397,4 +418,8 @@ end
 # ╠═519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 # ╠═5316884b-3971-4ca7-9106-f638241d3388
 # ╠═34b812d2-21c0-4983-9d14-7dbef08ab670
+# ╠═0cfc1412-9610-4106-b0a7-7d6490e117f3
+# ╠═10411718-0b5e-4475-b996-4a2a9fbd6258
+# ╠═d963bcfd-73e4-4bfc-b7e5-9b9606037aac
+# ╠═53903c8e-61bd-4590-a563-de3967020e3a
 # ╠═de1e5245-0946-47cd-8e2c-ba1914cfeb74
