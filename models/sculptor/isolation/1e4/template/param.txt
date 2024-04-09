@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         initial
+InitCondFile         ../initial
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
@@ -12,15 +12,15 @@ SnapFormat           3
 
 
 %---- CPU-time limits
-TimeLimitCPU              86400   % 24h, in seconds
-CpuTimeBetRestartFile     7200    % 2h,  in seconds
+TimeLimitCPU              86400   % 24h/s
+CpuTimeBetRestartFile     7200    % 2h/s
 
 %----- Memory alloction
-MaxMemSize                1000    % in MByte
+MaxMemSize                1000    % MB
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  1176 % 5.5 Gyr
+TimeMax	                  1176 % 5.54 Gyr
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -44,7 +44,7 @@ GravityConstantInternal  1.0
 OutputListOn              0
 TimeBetSnapshot           10
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         0.01
+TimeBetStatistics         1
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
@@ -62,7 +62,7 @@ ErrTolForceAcc                        0.005
 TopNodeFactor                         3.0
 
 ActivePartFracForNewDomainDecomp      0.02
-% ActivePartFracForPMinsteadOfEwald     0.05
+# ActivePartFracForPMinsteadOfEwald     0.05
 
 %---- Initial density estimate
 DesNumNgb                        64
@@ -71,8 +71,8 @@ MaxNumNgbDeviation               1
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.02    % ADJUST
-SofteningComovingClass0      0.02
+SofteningMaxPhysClass0       0.08	# 10 pc
+SofteningComovingClass0      0.08	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 

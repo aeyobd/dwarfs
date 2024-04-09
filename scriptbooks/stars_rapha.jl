@@ -34,7 +34,7 @@ begin
 end
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-dirname1 = "/home/dboyea/project/dwarfs/models/sculptor/isolation/1e4/"
+dirname1 = "/home/dboyea/sculptor/isolation/1e4/fiducial/"
 
 # ╔═╡ 92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
 begin 
@@ -54,12 +54,12 @@ begin
 	snapname = "./out/snapshot_001.hdf5"
 	outname = "./star_probabilities.hdf5"
 	
-	r_s_s = 0.308 # kpc
+	r_s_s = 0.8 # kpc
 	
 	ρ_s(r) = exp((-r/r_s_s))
 	
-	Nr = 40
-	NE = 100
+	Nr = 10
+	NE = 500
 end
 
 # ╔═╡ 10569544-637d-4ab3-b193-c9b7bf7b3f3e
@@ -71,7 +71,7 @@ overwrite $outname ? $(@bind overwrite CheckBox())
 begin 
 	println("$dirname")
 	snap = lguys.Snapshot(snapname)
-	cens = CSV.read("centres.csv", DataFrame)
+	cens = CSV.read("data/centres.csv", DataFrame)
 end
 
 # ╔═╡ 0f5671e6-deb4-11ee-3178-4d3f920f23a2
@@ -135,8 +135,8 @@ end
 begin 
 	ψ = lguys.lerp(radii, -Φs).(r)
 	
-	As = 4π/3 * diff(r_e .^ 3)
-	ν_dm = m_dm ./ As
+	ν_dm = lguys.calc_ρ_hist(radii, r_e)[2]
+	ν_dm ./= length(snap)
 
 	ν_s = ρ_s.(r) ./ M_s_tot
 
@@ -153,7 +153,7 @@ end
 
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 begin 
-	plot(xscale=:log10, yscale=:log10, xlims=(1e-1, 1e3), ylims=(1e-15, 2),
+	plot(xscale=:log10, yscale=:log10, xlims=(1e-1, 1e3), ylims=(1e-15, 1),
 	xlabel="r", ylabel="ν")
 	plot!(r, ν_dm, label="DM")
 	plot!(r, ν_s, label="stars")
@@ -185,8 +185,15 @@ end
 # ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
 begin 
 	probs = f_s_e ./ f_dm_e
-	probs ./= maximum(probs) # arbitrary scaling...
+	probs ./= sum(probs) # arbitrary scaling...
 	prob = lguys.lerp(E, probs)
+end
+
+# ╔═╡ 84fdc265-988c-40db-87e5-44ba55d0e412
+begin 
+	plot(xlabel="log ϵ", ylabel="f_s / f_dm")
+	plot!(log10.(E), f_s_e ./ f_dm_e / 50, label="probability")
+	stephist!(log10.(ϵs), norm=:pdf, label="dark matter")
 end
 
 # ╔═╡ 3b229c8e-9320-4c07-b948-c34a0c082341
@@ -194,14 +201,38 @@ begin
 	ps = prob.(ϵs)
 	print(sum(ps .< 0), " negative probabilities")
 	ps[ps .< 0] .= 0
+	ps ./= sum(ps)
 end
 
 # ╔═╡ 77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 begin 
 	plot(xlabel="stellar weights", ylabel="frequency")
-	
-	stephist!((ps), yscale=:log10)
+
+	histogram!((ps), yscale=:log10)
 end
+
+# ╔═╡ a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
+begin 
+	plot(xlabel="log radii", ylabel="pdf (dn / dlog r)")
+	stephist!(log10.(radii), norm=:pdf, label="dark matter")
+	stephist!(log10.(radii), weights=ps, norm=:pdf, label="stars")
+end
+
+# ╔═╡ 33a26663-0c08-411b-902b-a509b2afa5ad
+begin 
+	plot(xlabel="log radii", ylabel="pstar > 0.025")
+
+	histogram!(log10.(radii[ps .> 2e-4]))
+end
+
+# ╔═╡ a73db457-2cc2-4917-bb25-0429f4daecbd
+length(radii)
+
+# ╔═╡ 0e7a922f-4e61-4d02-ac28-3915f5d1c9da
+length(ps)
+
+# ╔═╡ 7d69e393-c4db-4ff0-ab5a-85ac50c785c2
+maximum(ps)
 
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
 begin 
@@ -212,29 +243,21 @@ begin
 		m_s[i] = sum(ps[filt])
 	end
 	m_s ./= sum(m_s)
-	ν_s_nbody = m_s ./ As
+	ν_s_nbody = lguys.calc_ρ_hist(radii, r_e, weights=ps)[2]
 end
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 begin
-	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu", ylim=(-10, 0.5), xlim=(-1.5, 1.3), fontfamily="Times")
+	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu", ylim=(-10, 0), xlim=(-1.5, 2.3), fontfamily="Times")
 	plot!(log10.(r), nm.log10.(ν_s), label="stars")
 	plot!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
 end
 
-# ╔═╡ b7d81ab1-9bf3-4976-9a3c-784ddbae85f7
-begin
-	w = 5
-	filt = abs.(snap_i.positions[3, :]) .< w
-	plot(xlims=(-w, w), ylims=(-w, w), xlabel="X", ylabel="Y")
-	scatter!(snap_i.positions[1, filt], snap_i.positions[2, filt], marker_z=(ps[filt]), msw=0, ms=1, label="", cmap=cgrad(:greys, rev=true))
-end
+# ╔═╡ 27071738-f294-4e48-99f0-a08f2e369137
+lguys.plot_centre(snap_i.positions, marker_z = ps, cmap=cgrad(:greys, rev=true), ms=1.5, width=15)
 
-# ╔═╡ 74e18b36-c914-4df7-8743-1e0a1bb0c391
-begin
-	plot(xlims=(-w, w), ylims=(-w, w), xlabel="X", ylabel="Y")
-	scatter!(snap_i.positions[1, filt], snap_i.positions[2, filt], msw=0, ms=1, label="", color=:black)
-end
+# ╔═╡ ffec02d2-32ed-4396-b5ff-2021724476d9
+lguys.plot_centre(snap_i.positions, ms=1, width=10)
 
 # ╔═╡ 7348b63e-43fa-4ff0-98dd-9de7f3167243
 begin 
@@ -285,12 +308,18 @@ write_stars()
 # ╠═78ce5a98-fd3f-4e39-981f-2bea58b117bf
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
 # ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
+# ╠═84fdc265-988c-40db-87e5-44ba55d0e412
 # ╠═3b229c8e-9320-4c07-b948-c34a0c082341
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
+# ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
+# ╠═33a26663-0c08-411b-902b-a509b2afa5ad
+# ╠═a73db457-2cc2-4917-bb25-0429f4daecbd
+# ╠═0e7a922f-4e61-4d02-ac28-3915f5d1c9da
+# ╠═7d69e393-c4db-4ff0-ab5a-85ac50c785c2
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
-# ╠═b7d81ab1-9bf3-4976-9a3c-784ddbae85f7
-# ╠═74e18b36-c914-4df7-8743-1e0a1bb0c391
+# ╠═27071738-f294-4e48-99f0-a08f2e369137
+# ╠═ffec02d2-32ed-4396-b5ff-2021724476d9
 # ╠═7348b63e-43fa-4ff0-98dd-9de7f3167243
 # ╠═f42cb7e1-64b7-47da-be05-dd50c2471fb3
 # ╠═bd8489da-ac53-46c6-979e-06d5dc6e25d1
