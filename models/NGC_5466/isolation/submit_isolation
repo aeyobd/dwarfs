@@ -11,7 +11,7 @@
 
 source $HOME/slurm_header.sh
 
-rm out/* 
+rm -rf out/* 
 rm data/* 
 
 mpirun -np $SLURM_NTASKS $GADGET_PATH/Gadget param.txt > log.out

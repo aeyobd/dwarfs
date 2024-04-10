@@ -20,7 +20,7 @@ MaxMemSize                1000    % MB
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  1176 % 5.54 Gyr
+TimeMax	                  212 % 1 Gyr
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -42,7 +42,7 @@ GravityConstantInternal  1.0
 
 %---- Output frequency and output paramaters
 OutputListOn              0
-TimeBetSnapshot           10
+TimeBetSnapshot           1
 TimeOfFirstSnapshot       0.0
 TimeBetStatistics         1
 NumFilesPerSnapshot       1
