@@ -70,10 +70,10 @@ MaxSizeTimestep          0.5
 MinSizeTimestep          0.0 
 
 %---- Tree algorithm, force accuracy, domain update frequency
-TypeOfOpeningCriterion                0
+TypeOfOpeningCriterion                0 % geometric opening
 ErrTolTheta                           0.5
-ErrTolThetaMax                        1.0
-ErrTolForceAcc                        0.005
+ErrTolThetaMax                        1.0 % only for relative opening
+ErrTolForceAcc                        0.005 # Relative opening
 TopNodeFactor                         1.0
 
 ActivePartFracForNewDomainDecomp      0.02
@@ -86,8 +86,8 @@ MaxNumNgbDeviation               2
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.08	# 10 pc
-SofteningComovingClass0       0.08	# 10 pc
+SofteningMaxPhysClass0       0.0001	# 0.1 pc (ignored)
+SofteningComovingClass0       0.0001
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 

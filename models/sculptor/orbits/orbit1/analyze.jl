@@ -128,11 +128,9 @@ end
   ╠═╡ =#
 
 # ╔═╡ 9d587b4e-5670-4854-9c17-f5c7f7c6a57f
-#=╠═╡
 md"""
 from EN 21, 
 """
-  ╠═╡ =#
 
 # ╔═╡ 04df30cf-0931-4a63-a4ac-2d8409bc5f7d
 #=╠═╡
@@ -159,7 +157,6 @@ end
 floor(Int, 1/2)
 
 # ╔═╡ 6497d973-d800-4052-a9b1-23f91dc3aa9f
-#=╠═╡
 begin 
 	anim = @animate for i in 1:10:length(out)
 		snap = out[i]
@@ -177,7 +174,6 @@ begin
 	
 	gif(anim, "sculptor.gif", fps = 12)
 end
-  ╠═╡ =#
 
 # ╔═╡ 2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
 #=╠═╡
