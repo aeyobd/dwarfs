@@ -50,9 +50,9 @@ MWThick_B	    0.918
 MWBulgeMass		2.1
 MWBulge_A	    1.3
 
-MWHaloMass	    126.4
-MWHalo_R		20.2
-MWHalo_C		11.28
+MWHaloMass	    164
+MWHalo_R		33
+MWHalo_C		7.53
 
 
 %---- Output frequency and output paramaters

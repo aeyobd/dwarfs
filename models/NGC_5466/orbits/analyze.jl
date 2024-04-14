@@ -18,7 +18,7 @@ begin
 end
 
 # ╔═╡ 0c85a109-f75b-45b2-be77-1664bfdd4567
-path = "orbit1"
+path = "orbit1_heavy"
 
 # ╔═╡ 7bb77640-17c4-44b1-832f-9258fb790d8b
 out = lguys.Output("$path/out")
@@ -46,28 +46,37 @@ begin
 	plot!(R_cen, x_cen[3, :], label="")
 end
 
-# ╔═╡ 0deee36d-3f91-40ba-9a46-e07a0e813574
-pwd()
-
 # ╔═╡ 4f0a2096-0e67-43f9-99da-6fdb00fe2f19
 begin 
-	anim = @animate for i in 1:10:length(out)
+	anim = @animate for i in 1:20:length(out)
 		snap = out[i]
 		lguys.plot_centre(snap.positions, 
 			ms=1, msw=0, ma=0.1, width=50, z_filter=:none)
+		# scatter!(x_cen[1, i:i], x_cen[2, i:i])
 	end
 	
 	gif(anim, "orbit1.gif", fps = 12)
 end
 
+# ╔═╡ 6f933ea2-0fbe-409a-912d-01ac9b853160
+begin 
+	lguys.plot_centre(out[end].positions .- x_cen[:, end], z_filter=:none, ms=2, alpha=0.1)
+end
+
+# ╔═╡ 3b95c66e-0a45-4e69-86d7-4208c64ffaa6
+idx_f = length(out) - 0
+
 # ╔═╡ f83658c4-dc0d-41e8-9707-26bcd1344d1b
 begin 
 	plot(xlabel="x / kpc", ylabel="y / kpc")
-	scatter!(out[end].positions[1, :], out[end].positions[2, :], ms=3, aspect_ratio=1, alpha=0.1, label="")
+	scatter!(out[idx_f].positions[1, :], out[idx_f].positions[2, :], ms=3, aspect_ratio=1, alpha=0.1, label="")
 end
 
+# ╔═╡ 59382ef6-ecc6-4915-a3d5-02827729ab25
+x_cen[:, idx_f]
+
 # ╔═╡ fa20f05a-951f-44e1-ae8b-6e24393304f6
-snap_f = out[end]
+snap_f = out[idx_f]
 
 # ╔═╡ 10456dbb-1aa4-436b-a80f-39ec29fa8137
 particles_gc = [lguys.Galactocentric(snap_f.positions[:, i]..., (lguys.V0 * snap_f.velocities[:, i])...) for i in 1:length(snap_f)]
@@ -78,18 +87,35 @@ obs_pred = lguys.transform.(lguys.Observation, particles_gc)
 # ╔═╡ 44353e99-0968-4619-9c7d-bea32be287fe
 begin 
 	plot(xlabel="ra", ylabel="dec")
-	histogram2d!([o.ra for o in obs_pred], [o.dec for o in obs_pred], colorbar_scale=:log10)
+	scatter!([o.ra for o in obs_pred], [o.dec for o in obs_pred], colorbar_scale=:log10)
+end
+
+# ╔═╡ 104d4ce4-3324-43be-8978-9c1650b15f51
+histogram([o.radial_velocity for o in obs_pred], bins=LinRange(90, 120, 100))
+
+# ╔═╡ ef36fcd0-abef-45d2-ab13-00c3fea80ff3
+begin 
+	plot()
+	scatter!([o.distance for o in obs_pred], [o.radial_velocity for o in obs_pred], ms=2, alpha=0.3)
+end
+
+# ╔═╡ 6fe7539f-fb34-45e4-abc8-d1000b6ad1ab
+begin 
+	plot()
+	scatter!([o.pm_ra for o in obs_pred], [o.pm_dec for o in obs_pred], alpha=0.5, label="", ms=1)
+	scatter!([-5.41], [-0.79])
 end
 
 # ╔═╡ 620e20ca-1d7a-42be-bd4d-b62f5573f48b
-obs_m = lguys.transform(lguys.Observation, lguys.Galactocentric(x_cen[:, end]..., (v_cen[:, end] * lguys.V0)...))
+obs_m = lguys.transform(lguys.Observation, lguys.Galactocentric(x_cen[:, idx_f]..., (v_cen[:, idx_f] * lguys.V0)...))
 
 # ╔═╡ a80ec84b-6bf9-4130-9e87-b00ee6d340cf
 begin 
 	dra = 3
 	plot(xlabel="ra", ylabel="dec", xlims=(obs_m.ra - dra, obs_m.ra + dra), 
 	ylims=(obs_m.dec - dra, obs_m.dec + dra))
-	scatter!([o.ra for o in obs_pred], [o.dec for o in obs_pred], alpha=0.5, label="")
+	scatter!([o.ra for o in obs_pred], [o.dec for o in obs_pred], alpha=0.5, label="", ms=1)
+
 end
 
 # ╔═╡ Cell order:
@@ -100,12 +126,17 @@ end
 # ╠═e82adf25-15c3-44dc-ba1f-46e962ef9b14
 # ╠═2c426184-6e1f-4256-bd5b-fc70d20e0481
 # ╠═4b456983-017f-47e1-a76a-0688fa53b6fb
-# ╠═0deee36d-3f91-40ba-9a46-e07a0e813574
 # ╠═4f0a2096-0e67-43f9-99da-6fdb00fe2f19
 # ╠═f83658c4-dc0d-41e8-9707-26bcd1344d1b
+# ╠═6f933ea2-0fbe-409a-912d-01ac9b853160
+# ╠═59382ef6-ecc6-4915-a3d5-02827729ab25
 # ╠═fa20f05a-951f-44e1-ae8b-6e24393304f6
 # ╠═10456dbb-1aa4-436b-a80f-39ec29fa8137
 # ╠═1b027221-000b-4929-b893-7f2aa829b3ed
-# ╠═44353e99-0968-4619-9c7d-bea32be287fe
 # ╠═620e20ca-1d7a-42be-bd4d-b62f5573f48b
+# ╠═44353e99-0968-4619-9c7d-bea32be287fe
 # ╠═a80ec84b-6bf9-4130-9e87-b00ee6d340cf
+# ╠═104d4ce4-3324-43be-8978-9c1650b15f51
+# ╠═ef36fcd0-abef-45d2-ab13-00c3fea80ff3
+# ╠═6fe7539f-fb34-45e4-abc8-d1000b6ad1ab
+# ╠═3b95c66e-0a45-4e69-86d7-4208c64ffaa6
