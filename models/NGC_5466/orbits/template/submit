@@ -1,20 +1,15 @@
 #!/bin/bash
+#SBATCH	 -J	ngc2566
+#SBATCH --ntasks=16
+#SBATCH -t 8:00:00
+#SBATCH -o %J.out		
+#SBATCH --mem-per-cpu=4gb
+#SBATCH --nodes=2
 
-#SBATCH	 -J	 sculptor_full
-#SBATCH --ntasks=2				#Number of cores
-#SBATCH -A durham				#Account name
-#SBATCH -t 3:00:00
-#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
-#SBATCH --mail-user=dboyea@uvic.ca
-#SBATCH --mail-type=END				#Notifications for job done & fail
-#SBATCH -o %J.out		#Standard output file
+# #SBATCH -p cosma			        
+# #SBATCH -A durham
 
-module load gnu_comp
-module load openmpi
-module load fftw
-module load hdf5
-module load gsl
 
 rm -r out/* 
-mpirun -np $SLURM_NTASKS $GADGET_DIR/GadgetMW param.txt > log.out
-# /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget4 param.txt
+# mpirun -np $SLURM_NTASKS $GADGET_PATH/GadgetMW param.txt > log.out
+srun $GADGET_PATH/GadgetMW param.txt > log.out

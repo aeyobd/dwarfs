@@ -12,7 +12,11 @@ begin
 	import QuadGK: quadgk
 	using Plots
 	import Arya
+	using Revise
 end
+
+# ╔═╡ e1be7316-59ac-48aa-b6e9-8745e2acc87e
+include("/home/dboyea/project/dwarfs/scripts/nbody_imf.jl")
 
 # ╔═╡ ca1421a7-a41e-4180-aba6-53b9a9d912d9
 begin 
@@ -91,7 +95,7 @@ begin
 end
 
 # ╔═╡ 67dcfd2c-efcf-4d24-aaaa-40425801bebc
-snap_i = lguys.Snapshot("isolation/initial.hdf5")
+snap_i = lguys.Snapshot("isolation/varmass/initial.hdf5")
 
 # ╔═╡ c0737916-605e-495b-aac1-f008438cc937
 r_bins_i, ρ_n_i = lguys.calc_ρ_hist(lguys.calc_r(snap_i), 60, weights=snap_i.masses)
@@ -105,9 +109,6 @@ begin
 
 	scatter!(log10.(x_bg / 1e3), -1/2.5*y_bg .+ 8.6, label="Baumgardt observations")
 end
-
-# ╔═╡ c7004a4b-f292-4031-a977-0ece3bfa598c
-scatter(log10.(x_bg), -y_bg)
 
 # ╔═╡ 79db0d71-f5ff-4098-89c1-c83cedf7af2c
 sum(1/2 * lguys.calc_radial_discrete_Φ(snap_i))
@@ -123,6 +124,63 @@ begin
 	plot(xlabel="x / pc", ylabel="y / pc", aspect_ratio=1, legend=false, xlims=[-70, 70], ylims=[-70, 70])
 	scatter!(snap_i.positions[1, :]*1e3, snap_i.positions[2, :]*1e3, ms=1, alpha=0.3)
 end
+
+# ╔═╡ d54945f0-a06c-41eb-99c9-8998c759d5c6
+md"""
+The IMF Sampling method
+"""
+
+# ╔═╡ b1ed4a7c-e841-4d37-b832-20958ab0e04a
+ms = LinRange(0.08, 100, 1000)
+
+# ╔═╡ c16979e2-4915-418e-ba17-fd80c5a4ecf5
+mm = sample_ms(m_tot=5.0e-6)
+
+# ╔═╡ bb4d8d6e-238f-4a42-875f-36e9ffb07344
+ps = LinRange(0, 1, 100)
+
+# ╔═╡ 57651083-e99f-4aa7-9420-e3e4e1ddcf16
+sum(mm)
+
+# ╔═╡ c5df6ebc-1084-466c-a8a0-7a818e0cfc97
+length(mm)
+
+# ╔═╡ ce619bc1-1687-446a-8bd9-147cb711006a
+iimf = calc_inv_imf()
+
+# ╔═╡ f4b9bc26-a154-489b-88b6-ebee08973e02
+plot(ps, iimf.(ps), yscale=:log10)
+
+# ╔═╡ 4ff91067-ed4c-41e6-9193-27b58c548cbc
+begin 
+	plot()
+	bins, h = lguys.calc_histogram(mm, 1000)
+	h ./= length(mm)
+	h ./= bins[2] - bins[1]
+	scatter!(log10.(lguys.midpoint(bins)), log10.(h))
+	plot!(log10.(ms), log10.(kroupa_imf.(ms)))
+end
+
+# ╔═╡ 70541f54-d8d3-425a-b3e9-f71f5d1103b4
+length(h)
+
+# ╔═╡ 826336e3-359e-45be-9996-6317cba988df
+ms
+
+# ╔═╡ 29c87835-1b93-47da-b315-f7a2560656df
+quadgk(m->kroupa_imf(m) * m, 0.08, 100)
+
+# ╔═╡ 0779e921-6d25-4306-a6cc-538a49e6948f
+quadgk(m->kroupa_imf(m), 0.08, 100)
+
+# ╔═╡ 63525479-85fe-4f7e-bd8a-e86699e27508
+lguys.randu(0, 1, 100)
+
+# ╔═╡ 8cc4b88a-392c-4131-b586-b345af0227f0
+quadgk(m->kroupa_imf(m), 0.08, 100)
+
+# ╔═╡ 258c8953-2250-4df5-a47c-c628ff546d4e
+lguys.M0
 
 # ╔═╡ Cell order:
 # ╠═21c8ee88-f68f-11ee-31eb-cb16b9d55d6c
@@ -144,8 +202,24 @@ end
 # ╠═67dcfd2c-efcf-4d24-aaaa-40425801bebc
 # ╠═c0737916-605e-495b-aac1-f008438cc937
 # ╠═3eec7494-95cd-4158-b52a-42d60ed8c5a5
-# ╠═c7004a4b-f292-4031-a977-0ece3bfa598c
 # ╠═79db0d71-f5ff-4098-89c1-c83cedf7af2c
 # ╠═4d78f141-7a95-4877-9b21-d0547e6c7942
 # ╠═58ae2346-b169-4651-8f13-3908728ee7e0
 # ╠═4bf3da00-7c91-4107-92f9-942ab2372b78
+# ╠═d54945f0-a06c-41eb-99c9-8998c759d5c6
+# ╠═e1be7316-59ac-48aa-b6e9-8745e2acc87e
+# ╠═b1ed4a7c-e841-4d37-b832-20958ab0e04a
+# ╠═c16979e2-4915-418e-ba17-fd80c5a4ecf5
+# ╠═bb4d8d6e-238f-4a42-875f-36e9ffb07344
+# ╠═57651083-e99f-4aa7-9420-e3e4e1ddcf16
+# ╠═c5df6ebc-1084-466c-a8a0-7a818e0cfc97
+# ╠═ce619bc1-1687-446a-8bd9-147cb711006a
+# ╠═f4b9bc26-a154-489b-88b6-ebee08973e02
+# ╠═4ff91067-ed4c-41e6-9193-27b58c548cbc
+# ╠═70541f54-d8d3-425a-b3e9-f71f5d1103b4
+# ╠═826336e3-359e-45be-9996-6317cba988df
+# ╠═29c87835-1b93-47da-b315-f7a2560656df
+# ╠═0779e921-6d25-4306-a6cc-538a49e6948f
+# ╠═63525479-85fe-4f7e-bd8a-e86699e27508
+# ╠═8cc4b88a-392c-4131-b586-b345af0227f0
+# ╠═258c8953-2250-4df5-a47c-c628ff546d4e

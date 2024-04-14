@@ -19,25 +19,16 @@ begin
 	import NaNMath as nm
 end
 
-# ╔═╡ 9f75b286-b021-4fa1-a29d-7051c55c0a33
-if !isdefined(Main, :PlutoRunner) # if running from file
-	using ArgParse
-	println("running as script")
-	dirname2 = get_args()
-end
-
-# ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
-md"""
-To make this both a cml utility and interactive, we take inputs in the following cells
-"""
-
 # ╔═╡ 82c76c56-e874-4eba-9367-569b656155a2
 pwd()
+
+# ╔═╡ d9552869-9e46-4262-add5-1241710cbc8b
+dirname = "low_s"
 
 # ╔═╡ f645be76-6477-4970-b655-603d700a10e7
 begin 
 	cd(@__DIR__)
-	cd("fiducial")
+	cd(dirname)
 	pwd()
 end
 
@@ -63,6 +54,8 @@ end
 
 # ╔═╡ 82517c9b-ff77-430e-bbed-239da814a851
 begin
+	println("loading centeres from $dirname")
+
 	cens = CSV.read("data/centres.csv", DataFrames.DataFrame)
 	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
 	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
@@ -109,6 +102,22 @@ histogram2d(snap_i.positions[1, :], snap_i.positions[2, :], bins = LinRange(-0.1
 
 # ╔═╡ 528d0258-c218-4e7a-aa18-f096fdf45270
 histogram2d(snap_f.positions[1, :], snap_f.positions[2, :], bins = LinRange(-0.1, 0.1, 100))
+
+# ╔═╡ 665ae91c-585c-4561-8f20-7541370cb837
+# ╠═╡ disabled = true
+#=╠═╡
+begin 
+	ps = lguys.extract(snap_i, :positions, p_filt)
+	histogram2d(ps[1, :], ps[2, :], weights=probabilities)
+end
+  ╠═╡ =#
+
+# ╔═╡ 106cbda4-57e0-459b-868b-b44339c944fc
+begin 
+	ps = lguys.extract_vector(snap_f, :positions)
+	radii = lguys.calc_r(ps)
+
+end
 
 # ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 function plot_ρ_dm!(snap, x_c; kwargs...)
@@ -220,30 +229,11 @@ end
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
 lguys.plot_xyz_layout(1e3 * lguys.extract_vector(out, :positions, 3000)[:, 1:50])
 
-# ╔═╡ 665ae91c-585c-4561-8f20-7541370cb837
-# ╠═╡ disabled = true
-#=╠═╡
-begin 
-	ps = lguys.extract(snap_i, :positions, p_filt)
-	histogram2d(ps[1, :], ps[2, :], weights=probabilities)
-end
-  ╠═╡ =#
-
-# ╔═╡ 106cbda4-57e0-459b-868b-b44339c944fc
-#=╠═╡
-begin 
-	ps = lguys.extract_vector(snap_f, :positions)
-	radii = lguys.calc_r(ps)
-
-end
-  ╠═╡ =#
-
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╠═374489bc-627f-4fc9-9734-7c49456710ac
-# ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╠═82c76c56-e874-4eba-9367-569b656155a2
-# ╠═9f75b286-b021-4fa1-a29d-7051c55c0a33
+# ╠═d9552869-9e46-4262-add5-1241710cbc8b
 # ╠═f645be76-6477-4970-b655-603d700a10e7
 # ╠═5717c18c-69cd-4740-a37a-d7ef80d68ae9
 # ╠═5f7e3de9-a7fe-4217-a53c-0101d4b6314d
