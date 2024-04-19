@@ -16,6 +16,9 @@ begin
 end
 
 
+# ╔═╡ 29b05cbb-b4c8-4efd-aa2a-0989d2aeb0bd
+using FFTW
+
 # ╔═╡ d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 using Statistics
 
@@ -30,14 +33,20 @@ plots = Ref{Vector{Plots.Plot}}() # so we can reuse this variable
 # ╔═╡ cd9dea36-93f8-4461-85b1-87030d9367bb
 pwd()
 
+# ╔═╡ a0445fc7-3a2e-4278-b7ad-65aeda4f3631
+dir = "steep"
+
 # ╔═╡ 9c7e5bb4-8db0-4527-a8ec-331e2aed958b
 begin
+	cd(@__DIR__)
+	cd(dir)
 	filename = "out"
 	out = lguys.Output(filename);
 end
 
 # ╔═╡ 4481a5e1-d635-4fea-a5c5-c85f0d6df62f
 begin
+	println(dir)
 	df = CSV.read("peris_apos.csv", DataFrame)
 	df_idx = sortperm(df[!, :index])
 	peris = df[df_idx, :pericenter]
@@ -77,6 +86,22 @@ end
 
 # ╔═╡ 9fad353f-751e-4577-b704-aa2eadeb0969
 quantiles
+
+# ╔═╡ 1a57cd0f-281e-4475-8f06-dd84efbcea4e
+function print_stats(arr)
+	println("mean = $(mean(arr)) ± $(std(arr))")
+	md = median(arr)
+	println("median = $(md)")
+	println("- $(md - lguys.percentile(arr, 16))")
+	println("+ $(lguys.percentile(arr, 84) - md)")
+
+end
+
+# ╔═╡ cf3c0395-1373-4255-a495-f3b04065a592
+print_stats(peris)
+
+# ╔═╡ 6ad34ccc-8bb1-4b1b-8e62-73e433f2855c
+print_stats(apos)
 
 # ╔═╡ 92b28dd8-c353-4959-b181-a843367b3223
 histogram(lguys.calc_r(snap.velocities))
@@ -185,7 +210,6 @@ begin
 	accelerations = [accelerations[:, i, :] for i in 1:length(idx)]
 	Φs_ext = lguys.extract(out, :Φs_ext, idx)
 	Φs = lguys.extract(out, :Φs, idx)
-
 
 end
 
@@ -371,17 +395,80 @@ begin
 	end
 end
 
+# ╔═╡ f04c9ca6-9064-4b34-a185-f8822e4630a2
+md"""
+Calculating the period
+"""
+
+# ╔═╡ 2bde146c-d39f-4cb3-a147-439dcb069433
+scatter(diff(out.times), ms=1)
+
+# ╔═╡ cad1bca0-20b9-4e37-9904-7f65745c9d3e
+std(diff(out.times))
+
+# ╔═╡ a3e91a9c-e386-4a5c-af19-47cf4acb4a4d
+mean(diff(out.times))
+
+# ╔═╡ 7804cbc9-68b5-4806-860e-ccb0e896b07d
+
+
+# ╔═╡ 09cafe17-3e01-411f-91e3-a507a8f11db3
+begin 
+	freq =  1/lguys.T0*1/mean(diff(out.times)) 
+	N = length(out)
+	freqs =  rfftfreq(N, freq)
+	periods = 1 ./ freqs
+end
+
+# ╔═╡ 1f3c094e-9a51-4fd7-86d9-b9f62f49bccc
+freq
+
+# ╔═╡ 893a568e-4ccf-483e-81c7-ca36805f48fb
+plot(freqs, abs.(rfft(rs[1])))
+
+# ╔═╡ ccf9723d-4cdd-4878-8ba4-6abcf364d5f3
+function compute_period(radii)
+	f = abs.(rfft(radii))
+	idx = argmax(f[2:end]) + 1 # ignore zero point
+	return periods[idx]
+end
+
+# ╔═╡ b80b9813-5761-4a7b-be7d-5069858cd691
+length(out)
+
+# ╔═╡ 6e444cc7-5287-497b-9c6a-eb06c1786923
+begin 
+	Ps = []
+	radiii = lguys.extract_vector(out, :positions, collect(1:1000))
+	
+	for i in 1:size(radiii, 2)
+		P = compute_period(lguys.calc_r(radiii[:, i, :]))
+		push!(Ps, P)
+	end
+end
+
+# ╔═╡ 5215104f-dca4-4cae-b18b-aac9dbc7f41e
+histogram(Ps)
+
+# ╔═╡ 33fa84d7-c6dc-4c4a-895f-0da926c48bc5
+print_stats(Ps)
+
 # ╔═╡ Cell order:
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═29b05cbb-b4c8-4efd-aa2a-0989d2aeb0bd
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 # ╠═ed6ec0e9-5734-4569-b214-2c86c22d3c55
 # ╠═cd9dea36-93f8-4461-85b1-87030d9367bb
+# ╠═a0445fc7-3a2e-4278-b7ad-65aeda4f3631
 # ╠═9c7e5bb4-8db0-4527-a8ec-331e2aed958b
 # ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f
 # ╠═4d4a18fc-8990-4dcc-97c5-c9e01708ea2e
 # ╠═fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
 # ╠═e10615ab-0ece-4ebb-81d0-47ffdd6ea6c5
 # ╠═9fad353f-751e-4577-b704-aa2eadeb0969
+# ╠═1a57cd0f-281e-4475-8f06-dd84efbcea4e
+# ╠═cf3c0395-1373-4255-a495-f3b04065a592
+# ╠═6ad34ccc-8bb1-4b1b-8e62-73e433f2855c
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═92b28dd8-c353-4959-b181-a843367b3223
@@ -423,3 +510,16 @@ end
 # ╠═d963bcfd-73e4-4bfc-b7e5-9b9606037aac
 # ╠═53903c8e-61bd-4590-a563-de3967020e3a
 # ╠═de1e5245-0946-47cd-8e2c-ba1914cfeb74
+# ╠═f04c9ca6-9064-4b34-a185-f8822e4630a2
+# ╠═2bde146c-d39f-4cb3-a147-439dcb069433
+# ╠═cad1bca0-20b9-4e37-9904-7f65745c9d3e
+# ╠═a3e91a9c-e386-4a5c-af19-47cf4acb4a4d
+# ╠═7804cbc9-68b5-4806-860e-ccb0e896b07d
+# ╠═1f3c094e-9a51-4fd7-86d9-b9f62f49bccc
+# ╠═09cafe17-3e01-411f-91e3-a507a8f11db3
+# ╠═893a568e-4ccf-483e-81c7-ca36805f48fb
+# ╠═ccf9723d-4cdd-4878-8ba4-6abcf364d5f3
+# ╠═b80b9813-5761-4a7b-be7d-5069858cd691
+# ╠═6e444cc7-5287-497b-9c6a-eb06c1786923
+# ╠═5215104f-dca4-4cae-b18b-aac9dbc7f41e
+# ╠═33fa84d7-c6dc-4c4a-895f-0da926c48bc5

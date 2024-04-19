@@ -5,11 +5,7 @@
 #SBATCH -o %J.out		
 #SBATCH --mem-per-cpu=2gb
 # #SBATCH --nodes=2
-
 #SBATCH -p cosma			        
 #SBATCH -A durham
 
-
-rm -r out/* 
-mpirun -np $SLURM_NTASKS $GADGET_PATH/GadgetMW param.txt > log.out
-#srun $GADGET_PATH/GadgetMW param.txt > log.out
+mpirun -np $SLURM_NTASKS $GADGET_PATH/GadgetMW param.txt 2 920 >> log.out

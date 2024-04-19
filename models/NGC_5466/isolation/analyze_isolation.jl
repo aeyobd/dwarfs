@@ -23,7 +23,7 @@ end
 pwd()
 
 # ╔═╡ d9552869-9e46-4262-add5-1241710cbc8b
-dirname = "low_s"
+dirname = "fiducial"
 
 # ╔═╡ f645be76-6477-4970-b655-603d700a10e7
 begin 
@@ -103,22 +103,6 @@ histogram2d(snap_i.positions[1, :], snap_i.positions[2, :], bins = LinRange(-0.1
 # ╔═╡ 528d0258-c218-4e7a-aa18-f096fdf45270
 histogram2d(snap_f.positions[1, :], snap_f.positions[2, :], bins = LinRange(-0.1, 0.1, 100))
 
-# ╔═╡ 665ae91c-585c-4561-8f20-7541370cb837
-# ╠═╡ disabled = true
-#=╠═╡
-begin 
-	ps = lguys.extract(snap_i, :positions, p_filt)
-	histogram2d(ps[1, :], ps[2, :], weights=probabilities)
-end
-  ╠═╡ =#
-
-# ╔═╡ 106cbda4-57e0-459b-868b-b44339c944fc
-begin 
-	ps = lguys.extract_vector(snap_f, :positions)
-	radii = lguys.calc_r(ps)
-
-end
-
 # ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 function plot_ρ_dm!(snap, x_c; kwargs...)
 	pos = lguys.extract_vector(snap, :positions)
@@ -143,6 +127,12 @@ begin
 	plot_ρ_dm!(snap_f, x_cen[:, idx_f], label="final")
 
 end
+
+# ╔═╡ 5915c34e-6562-4bb0-8411-231a9704aca0
+r_h = 2.3 * 60 / 206265 * 16
+
+# ╔═╡ a9095ec3-2fe3-4241-8bd0-fedc91aa0d4b
+radii
 
 # ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 begin 
@@ -197,6 +187,18 @@ begin
 
 end
 
+# ╔═╡ e326570a-11d7-428f-90cf-520ddfce0fcf
+lguys.percentile(radii, 50)
+
+# ╔═╡ 4dff8e47-af0b-488e-90a0-1151a348d4fe
+r_h
+
+# ╔═╡ cf61f890-c512-432f-8dc3-160c1a00e793
+Rs = @. sqrt(snap_i.positions[1, :]^2 + snap_i.positions[2, :]^2)
+
+# ╔═╡ 802f1318-57ef-4870-a82e-c14aee9dd658
+lguys.percentile(Rs, 50)
+
 # ╔═╡ df627d8a-b2ca-49db-a22a-54c3c43c2aff
 size(rs)
 
@@ -229,6 +231,42 @@ end
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
 lguys.plot_xyz_layout(1e3 * lguys.extract_vector(out, :positions, 3000)[:, 1:50])
 
+# ╔═╡ 136692ab-39a6-4899-b95d-abe063beaed6
+histogram(lguys.calc_r(snap_i.positions) * 1e3, xlim=(0, 30))
+
+# ╔═╡ 6e14d250-eeca-4688-b212-2106f273c468
+minimum(lguys.calc_r(snap_i.positions)) * 1e3
+
+# ╔═╡ 08fdf8bc-4b63-4459-b0bd-6394ab9f13f8
+plot([minimum(lguys.calc_r(out[i].positions, x_cen[:, i])) * 1e3 for i in 1:length(out)])
+
+# ╔═╡ 19514763-a33b-48d1-8948-8a5ed5ea936a
+out[1].positions[:, 2]
+
+# ╔═╡ c60893bf-396e-4297-91e7-af726b73ec7b
+lguys.percentile(lguys.calc_r(snap_i.positions), 0.1) * 1e3
+
+# ╔═╡ 300791aa-ad1a-4640-8857-67f104c597a7
+lguys.percentile(lguys.calc_r(snap_f.positions, x_cen[:, end]), 0.1) * 1e3
+
+# ╔═╡ 665ae91c-585c-4561-8f20-7541370cb837
+# ╠═╡ disabled = true
+#=╠═╡
+begin 
+	ps = lguys.extract(snap_i, :positions, p_filt)
+	histogram2d(ps[1, :], ps[2, :], weights=probabilities)
+end
+  ╠═╡ =#
+
+# ╔═╡ 106cbda4-57e0-459b-868b-b44339c944fc
+#=╠═╡
+begin 
+	ps = lguys.extract_vector(snap_f, :positions)
+	radii = lguys.calc_r(ps)
+
+end
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╠═374489bc-627f-4fc9-9734-7c49456710ac
@@ -252,6 +290,8 @@ lguys.plot_xyz_layout(1e3 * lguys.extract_vector(out, :positions, 3000)[:, 1:50]
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 # ╠═27f8deff-96ae-4d9a-a110-d146ac34965a
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
+# ╠═5915c34e-6562-4bb0-8411-231a9704aca0
+# ╠═a9095ec3-2fe3-4241-8bd0-fedc91aa0d4b
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═6e98a5ce-ab2e-441b-b772-73df8e6655c2
@@ -259,7 +299,17 @@ lguys.plot_xyz_layout(1e3 * lguys.extract_vector(out, :positions, 3000)[:, 1:50]
 # ╠═d6fe3195-4d4d-4db8-a384-a195233dc159
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
 # ╠═33fadf6d-23b7-40e7-b7ec-6863dc1980f6
+# ╠═e326570a-11d7-428f-90cf-520ddfce0fcf
+# ╠═4dff8e47-af0b-488e-90a0-1151a348d4fe
+# ╠═cf61f890-c512-432f-8dc3-160c1a00e793
+# ╠═802f1318-57ef-4870-a82e-c14aee9dd658
 # ╠═df627d8a-b2ca-49db-a22a-54c3c43c2aff
 # ╠═f21cfe22-95f3-485d-902b-b022a41548c2
 # ╠═470466ff-3709-4cdb-93c0-b5b7848a940d
 # ╠═3b2bb553-0130-4c8a-80ad-6e1f7071a293
+# ╠═136692ab-39a6-4899-b95d-abe063beaed6
+# ╠═6e14d250-eeca-4688-b212-2106f273c468
+# ╠═08fdf8bc-4b63-4459-b0bd-6394ab9f13f8
+# ╠═19514763-a33b-48d1-8948-8a5ed5ea936a
+# ╠═c60893bf-396e-4297-91e7-af726b73ec7b
+# ╠═300791aa-ad1a-4640-8857-67f104c597a7

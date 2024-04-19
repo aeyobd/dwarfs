@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         ../initial
+InitCondFile         initial
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
@@ -16,7 +16,7 @@ TimeLimitCPU              1800000   % 500h
 CpuTimeBetRestartFile     18000.0    % 2h,  in seconds
 
 %----- Memory alloction
-MaxMemSize                1000    % in MByte
+MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
@@ -50,9 +50,9 @@ MWThick_B	    0.918
 MWBulgeMass		2.1
 MWBulge_A	    1.3
 
-MWHaloMass	    126.4
-MWHalo_R		20.2
-MWHalo_C		11.28
+MWHaloMass	    95.7
+MWHalo_R		10
+MWHalo_C		20.78
 
 
 %---- Output frequency and output paramaters
@@ -66,14 +66,14 @@ MaxFilesWithConcurrentIO  1
 %---- Accuracy of time integration
 ErrTolIntAccuracy        0.025
 CourantFac               0.15
-MaxSizeTimestep          1.0
+MaxSizeTimestep          0.5
 MinSizeTimestep          0.0 
 
 %---- Tree algorithm, force accuracy, domain update frequency
-TypeOfOpeningCriterion                0
+TypeOfOpeningCriterion                0 % geometric opening
 ErrTolTheta                           0.5
-ErrTolThetaMax                        1.0
-ErrTolForceAcc                        0.005
+ErrTolThetaMax                        1.0 % only for relative opening
+ErrTolForceAcc                        0.005 # Relative opening
 TopNodeFactor                         1.0
 
 ActivePartFracForNewDomainDecomp      0.02
@@ -86,8 +86,8 @@ MaxNumNgbDeviation               2
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.08	# 10 pc
-SofteningComovingClass0       0.08	# 10 pc
+SofteningMaxPhysClass0       0.0001	# 0.1 pc (ignored)
+SofteningComovingClass0       0.0001
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
