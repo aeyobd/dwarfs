@@ -55,7 +55,6 @@ MWHalo_R		20.2
 MWHalo_C		12.62
 
 
-
 %---- Output frequency and output paramaters
 OutputListOn              0
 TimeBetSnapshot           1
