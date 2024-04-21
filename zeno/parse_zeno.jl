@@ -130,6 +130,9 @@ function main()
     println("loaded $(N) particles")
 
     mass = parsed.data["Mass"]
+    if all(mass .== mass[1])
+        mass = mass[1]
+    end
     vel = inflate(parsed, "Velocity")
     pos = inflate(parsed, "Position")
 

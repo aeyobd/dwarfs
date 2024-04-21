@@ -34,7 +34,7 @@ begin
 end
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-dirname1 = "/home/dboyea/sculptor/isolation/1e4/fiducial/"
+dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/crater_ii/isolation/1e4/fiducial"
 
 # ╔═╡ 92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
 begin 
@@ -51,15 +51,15 @@ end
 # ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
 begin 
 	# parameters 
-	snapname = "./out/snapshot_001.hdf5"
+	snapname = "./out/snapshot_000.hdf5"
 	outname = "./star_probabilities.hdf5"
 	
-	r_s_s = 0.8 # kpc
+	r_s_s = 0.9 # kpc
 	
 	ρ_s(r) = exp((-r/r_s_s))
 	
-	Nr = 10
-	NE = 500
+	Nr = 50
+	NE = 100
 end
 
 # ╔═╡ 10569544-637d-4ab3-b193-c9b7bf7b3f3e
@@ -153,10 +153,10 @@ end
 
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 begin 
-	plot(xscale=:log10, yscale=:log10, xlims=(1e-1, 1e3), ylims=(1e-15, 1),
-	xlabel="r", ylabel="ν")
-	plot!(r, ν_dm, label="DM")
-	plot!(r, ν_s, label="stars")
+	plot(xlims=(-1.2, 3), ylims=(-15, 0),
+	xlabel="log r", ylabel="log density")
+	plot!(log10.(r), log10.(ν_dm), label="DM")
+	plot!(log10.(r), log10.(ν_s), label="stars (analytic)")
 end
 
 # ╔═╡ b625d8a5-7265-4849-9bd6-ca8064d392eb
