@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#SBATCH	 -J	 sculptor_full
+#SBATCH --ntasks=2				#Number of cores
+#SBATCH -A durham				#Account name
+#SBATCH -t 3:00:00
+#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
+#SBATCH --mail-user=dboyea@uvic.ca
+#SBATCH --mail-type=END				#Notifications for job done & fail
+#SBATCH -o %J.out		#Standard output file
+
+source ~/slurm_header.sh
+
+
+rm -r out/* 
+mpirun -np $SLURM_NTASKS $GADGET_PATH/GadgetMW param.txt > log.out
+# /cosma/home/durham/dc-boye1/dwarfs/gadget/Gadget4 param.txt

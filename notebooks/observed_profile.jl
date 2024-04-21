@@ -15,12 +15,16 @@ This is done from the observed absolute magnitude and an expected mass to light 
 
 # ╔═╡ aec3d9a7-d447-4e9f-aa83-fa5b20541b5c
 begin
-Y_s = 1.2 # latin y not big υ.
-MV = -11.1 
-MV_sol = 4.83
-mag_to_L(m1, m2) = 100^((m2-m1)/5)
+	Y_s = 1.2 # latin y not big υ.
+	MV = -11.1 
+	MV_sol = 4.83 
+	
+	mag_to_L(m1, m2) = 100^((m2-m1)/5)
+	M_s_0 = mag_to_L(MV, MV_sol) * Y_s
+	#println(M_s_0)
 
-M_s_0 = mag_to_L(MV, MV_sol) * Y_s
+	Y_s = 1.6
+	M_s_0 = 2.56e5 #* Y_s
 end
 
 # ╔═╡ bdd43353-da4c-48fb-bb67-b2aec628dd71
@@ -43,11 +47,11 @@ V_circ_max_0 = find_zero(x -> M_s_from_vel(x) - M_s_0, 30)
 # ╔═╡ d9cb3699-6a0f-4d32-b3f8-410cf2c92019
 begin
 	v_1 = LinRange(0, 40, 1000)
-	plot(v_1, M_s_from_vel.(v_1))
+	plot(v_1, M_s_from_vel.(v_1), yscale=:log10, ylim=[1e3, 1e9])
 	xlabel!("v_circ_max / km s")
 	ylabel!("M_s")
-	hline!([M_s_0])
-	vline!([V_circ_max_0])
+	hline!([M_s_0], label="", color=2)
+	vline!([V_circ_max_0], label="", color=2)
 
 end
 
@@ -58,14 +62,15 @@ md"""
 
 # ╔═╡ ef4ad7fc-fdf8-4e60-b2a6-e583ae226749
 begin
-	# from plank cosmology
-	Ω_m0 = 0.272
-	Ω_Λ0 = 0.728
-	σ8 = 0.81
-	h = 0.704
-	n_s = 0.967
+	# from plank cosmology 2018
+	h = 0.674 #pm 0.05
+	Ω_m0 = 0.315
+	Ω_Λ0 = 1 - Ω_m0
+	σ8 = 0.811
+
+	n_s = 0.965
 	
-	ρ_crit = 127 # Mo/kpc
+	ρ_crit = 277.5366*h^2 # M⊙/kpc = (3H^2 / 8πG)
 end
 
 # ╔═╡ 92def240-121d-467e-8026-f30e99e97b06
@@ -126,7 +131,7 @@ A_NFW(c) = log(1+c) - c/(1+c)
 # ╔═╡ 7e4ad5d3-3024-431e-ad37-0868be0ddee8
 begin
 	calc_r_s(M200) = 1/calc_c(M200, 0) * (3*M200/(800π * ρ_crit))^(1/3)
-	calc_M_s(M200) = M200 * A_NFW(1) / A_NFW(calc_c(M200, 0))
+	calc_M_s(M200) = M200 / A_NFW(calc_c(M200, 0))
 	
 	calc_ρ_s(M200) = calc_M_s(M200) / (4π/3* calc_r_s(M200)^3)
 
@@ -136,14 +141,10 @@ end
 # ╔═╡ ea60ecd0-c145-41b3-b2af-742338b53b88
 begin 
 	const G = 4.30091e-6 # km^2/s^2 kpc / M⊙
-	
-	function calc_ρ_0(M200)
-		calc_M_s(M200) / (4π * calc_r_s(M200)^3 * A_NFW(1))
-	end
-	
+
 	function calc_M(M200, r)
 		r_s = calc_r_s(M200)
-		return 4π * calc_ρ_0(M200) * r_s^3 * A_NFW(r/r_s)
+		return calc_M_s(M200) * A_NFW(r/r_s)
 	end
 
 	function calc_V_max(M200) # in km/s
@@ -208,7 +209,7 @@ end
 
 # ╔═╡ 5c8e1f2d-747f-45f4-953d-fb02462c87e6
 begin 
-	M200 = find_zero(x->calc_V_max(x) - V_circ_max_0,  1e10)
+	M200 = find_zero(x->calc_V_max(x) - V_circ_max_0,  5000)
 	r_max = calc_r_max(M200)
 	V_circ_max = calc_V_max2(M200)
 	c = calc_c(M200, 0)
@@ -218,11 +219,12 @@ end
 
 # ╔═╡ 5e68334b-246d-4f17-9862-4a3cf1743f4f
 begin
+	plot(xlabel="radius", ylabel="circular velocity")
 	r = LinRange(0, 10, 1000)
 	v = calc_V_circ.(M200, r)
-	plot(r, v)
-	hline!([calc_V_max(M200), V_circ_max_0])
-	vline!([calc_r_max(M200)])
+	plot!(r, v)
+	hline!([calc_V_max(M200), V_circ_max_0], color=2, label="")
+	vline!([calc_r_max(M200)], color=2,label="")
 end
 
 # ╔═╡ b0197f89-92a5-4ac3-9ab2-b0d05aa368d7
@@ -243,6 +245,15 @@ md"""
 
 """
 
+# ╔═╡ 2028b2c4-71ca-457d-a72f-602ff06504d2
+calc_ρ_s(M200)
+
+# ╔═╡ d4901de1-e990-4d90-9d8f-745d0c737d73
+c^3 / A_NFW(c) * ρ_crit * 200
+
+# ╔═╡ 6bbeae54-9ff6-4935-9f12-8b0980dace52
+calc_M(M200, 0.5)
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -258,7 +269,7 @@ Roots = "~2.0.22"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.1"
+julia_version = "1.10.2"
 manifest_format = "2.0"
 project_hash = "cefd7f6ba8859fa48073762a8f30672aef7c61b1"
 
@@ -353,7 +364,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.1.0+0"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
@@ -611,21 +622,26 @@ version = "0.16.1"
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
-version = "0.6.3"
+version = "0.6.4"
 
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "7.84.0+0"
+version = "8.4.0+0"
 
 [[deps.LibGit2]]
-deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
+deps = ["Base64", "LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
+
+[[deps.LibGit2_jll]]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll"]
+uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
+version = "1.6.4+0"
 
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.10.2+0"
+version = "1.11.0+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -726,7 +742,7 @@ version = "1.1.8"
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.2+0"
+version = "2.28.2+1"
 
 [[deps.Measures]]
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
@@ -744,7 +760,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.10.11"
+version = "2023.1.10"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
@@ -765,12 +781,12 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.21+4"
+version = "0.3.23+4"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+0"
+version = "0.8.1+2"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -798,7 +814,7 @@ version = "1.6.2"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.42.0+0"
+version = "10.42.0+1"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -820,7 +836,7 @@ version = "0.42.2+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.0"
+version = "1.10.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
@@ -881,7 +897,7 @@ deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
 [[deps.Random]]
-deps = ["SHA", "Serialization"]
+deps = ["SHA"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.RecipesBase]]
@@ -973,6 +989,7 @@ version = "1.2.0"
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+version = "1.10.0"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "36b3d696ce6366023a0ea192b4cd442268995a0d"
@@ -982,7 +999,7 @@ version = "1.4.2"
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-version = "1.9.0"
+version = "1.10.0"
 
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
@@ -997,9 +1014,9 @@ uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.34.2"
 
 [[deps.SuiteSparse_jll]]
-deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
+deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "5.10.1+6"
+version = "7.2.1+1"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -1256,7 +1273,7 @@ version = "1.5.0+0"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+0"
+version = "1.2.13+1"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1297,7 +1314,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+0"
+version = "5.8.0+1"
 
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1338,12 +1355,12 @@ version = "1.1.6+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.48.0+0"
+version = "1.52.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.4.0+0"
+version = "17.4.0+2"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1391,5 +1408,8 @@ version = "1.4.1+1"
 # ╠═2232ac95-2873-4ef9-be90-96f1d0fe8049
 # ╠═5c8e1f2d-747f-45f4-953d-fb02462c87e6
 # ╠═21c7cecb-4a5f-4aba-94f1-47a1268a7595
+# ╠═2028b2c4-71ca-457d-a72f-602ff06504d2
+# ╠═d4901de1-e990-4d90-9d8f-745d0c737d73
+# ╠═6bbeae54-9ff6-4935-9f12-8b0980dace52
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

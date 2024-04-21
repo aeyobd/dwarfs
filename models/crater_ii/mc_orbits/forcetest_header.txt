@@ -1,0 +1,9 @@
+P[i].getType(), 
+timebin, 
+(long long)P[i].ID.get(), 
+All.Time, 
+pos[0], pos[1], pos[2], 
+P[i].DistToID1,                                                                                   
+P[i].GravAccelDirect[0], P[i].GravAccelDirect[1], P[i].GravAccelDirect[2], 
+Sp->P[i].GravAccel[0],Sp->P[i].GravAccel[1], Sp->P[i].GravAccel[2], 
+P[i].Potential, P[i].PotentialDirect;                                                                                                   
