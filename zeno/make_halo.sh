@@ -39,5 +39,5 @@ julia parse_zeno.jl $txt_path $hdf5_path
 
 echo centreing
 
-../scripts/centre_snapshot.jl $hdf5_path $out_path -m com -c
+../scripts/centre_snapshot.jl $hdf5_path $out_path -m com 
 echo completed

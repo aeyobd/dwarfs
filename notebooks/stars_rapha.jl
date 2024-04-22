@@ -34,7 +34,26 @@ begin
 end
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/crater_ii/isolation/1e4/fiducial"
+dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e4/fiducial"
+
+# ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
+begin 
+	# parameters 
+	snapname = "./out/snapshot_000.hdf5"
+	outname = "./star_probabilities.hdf5"
+	
+	r_s_s = 0.91 # kpc
+	
+	ρ_s(r) = exp((-r/r_s_s))
+	
+	Nr = 50
+	NE = 100
+end
+
+# ╔═╡ 10569544-637d-4ab3-b193-c9b7bf7b3f3e
+md"""
+overwrite $outname ? $(@bind overwrite CheckBox())
+"""
 
 # ╔═╡ 92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
 begin 
@@ -47,25 +66,6 @@ begin
 	cd(dirname)
 	pwd()
 end
-
-# ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
-begin 
-	# parameters 
-	snapname = "./out/snapshot_000.hdf5"
-	outname = "./star_probabilities.hdf5"
-	
-	r_s_s = 0.9 # kpc
-	
-	ρ_s(r) = exp((-r/r_s_s))
-	
-	Nr = 50
-	NE = 100
-end
-
-# ╔═╡ 10569544-637d-4ab3-b193-c9b7bf7b3f3e
-md"""
-overwrite $outname ? $(@bind overwrite CheckBox())
-"""
 
 # ╔═╡ 4cb09115-143d-456f-9c6a-19656f638677
 begin 
@@ -253,6 +253,13 @@ begin
 	plot!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
 end
 
+# ╔═╡ b688d4f8-7a24-4ca0-a0e9-5b08c5b304e3
+begin
+	plot(xlabel=L"\log  \rm r / kpc", ylabel=L"\log \nu - \log \nu_{\rm analytic}", ylim=(-1, 1), size=(600, 200), xlim=(-1.5, 2.3))
+	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
+	hline!([0], color="black", label="", z_order=1)
+end
+
 # ╔═╡ 27071738-f294-4e48-99f0-a08f2e369137
 lguys.plot_centre(snap_i.positions, marker_z = ps, cmap=cgrad(:greys, rev=true), ms=1.5, width=15)
 
@@ -293,9 +300,9 @@ write_stars()
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
 # ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
+# ╠═855fd729-22b6-4845-9d2b-e796d4a15811
 # ╟─10569544-637d-4ab3-b193-c9b7bf7b3f3e
 # ╠═92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
-# ╠═855fd729-22b6-4845-9d2b-e796d4a15811
 # ╠═4cb09115-143d-456f-9c6a-19656f638677
 # ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
@@ -318,6 +325,7 @@ write_stars()
 # ╠═7d69e393-c4db-4ff0-ab5a-85ac50c785c2
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
+# ╠═b688d4f8-7a24-4ca0-a0e9-5b08c5b304e3
 # ╠═27071738-f294-4e48-99f0-a08f2e369137
 # ╠═ffec02d2-32ed-4396-b5ff-2021724476d9
 # ╠═7348b63e-43fa-4ff0-98dd-9de7f3167243
