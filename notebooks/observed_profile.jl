@@ -19,12 +19,13 @@ begin
 	MV = -11.1 
 	MV_sol = 4.83 
 	
-	mag_to_L(m1, m2) = 100^((m2-m1)/5)
+	mag_to_L(m1, m2) = 10^((m2-m1)/2.5)
 	M_s_0 = mag_to_L(MV, MV_sol) * Y_s
 	#println(M_s_0)
 
-	Y_s = 1.6
-	M_s_0 = 2.56e5 #* Y_s
+	# Y_s = 1.6
+	# M_s_0 = 2.56e5 # crater ii
+	# M_s_0 = 2.39e7 # fornax
 end
 
 # ╔═╡ bdd43353-da4c-48fb-bb67-b2aec628dd71
@@ -71,6 +72,9 @@ begin
 	n_s = 0.965
 	
 	ρ_crit = 277.5366*h^2 # M⊙/kpc = (3H^2 / 8πG)
+
+	const G = 4.30091e-6 # km^2/s^2 kpc / M⊙
+
 end
 
 # ╔═╡ 92def240-121d-467e-8026-f30e99e97b06
@@ -122,75 +126,122 @@ The circular velocity profile of a NFW profile is
 The below function finds the root of maximum circular velocity.
 """
 
-# ╔═╡ 912f6b2d-93e3-4acb-ba7c-acbf1083736b
-A_NFW(c) = log(1+c) - c/(1+c)
+# ╔═╡ af38fc99-0822-4edb-b88b-20cf35a5ac21
+begin 
+	struct NFW
+		r_s::Float64
+		M_s::Float64
+		c::Float64
+	end
+
+	function NFW(; R200, M200, c)
+		r_s = R200 / c
+		M_s = calc_M_s(M200, c)
+		return NFW(r_s, M_s, c)
+	end
+
+	function NFW(M200)
+		c = calc_c(M200, 0)
+		R200 = calc_R200(M200)
+		return NFW(R200=R200, M200=M200, c=c)
+	end
+	calc_M_s(M200, c) = M200  / A_NFW(c)
+	calc_M200(M_s, c) =  A_NFW(c) * M_s
+	calc_M200(halo::NFW) = calc_M200(halo.M_s, halo.c)
+	
+	calc_R200(M200) = cbrt(M200 / (200ρ_crit * (4π/3)))
+	calc_R200(halo::NFW) = halo.r_s * halo.c
+
+	A_NFW(c) = log(1+c) - c/(1+c)
+	A_NFW(halo::NFW) = A_NFW(halo.c)
+end
 
 # ╔═╡ ca8ad5fd-5450-45ca-810e-424edb316c42
 α_vmax = find_zero(x-> -A_NFW(x)/x^2 + 1/(x + 1)^2, 2) 
 
-# ╔═╡ 7e4ad5d3-3024-431e-ad37-0868be0ddee8
+# ╔═╡ 74d6c5a0-4e9a-4c30-a09e-635840933e51
 begin
-	calc_r_s(M200) = 1/calc_c(M200, 0) * (3*M200/(800π * ρ_crit))^(1/3)
-	calc_M_s(M200) = M200 / A_NFW(calc_c(M200, 0))
-	
-	calc_ρ_s(M200) = calc_M_s(M200) / (4π/3* calc_r_s(M200)^3)
 
-	calc_r_max(M200) = α_vmax*calc_r_s(M200)
-end
+	calc_ρ_s(halo) = halo.M_s / (4π/3 * halo.r_s^3)
+	calc_r_max(halo) = α_vmax * halo.r_s
 
-# ╔═╡ ea60ecd0-c145-41b3-b2af-742338b53b88
-begin 
-	const G = 4.30091e-6 # km^2/s^2 kpc / M⊙
-
-	function calc_M(M200, r)
-		r_s = calc_r_s(M200)
-		return calc_M_s(M200) * A_NFW(r/r_s)
-	end
-
-	function calc_V_max(M200) # in km/s
-		r_max = calc_r_max(M200)
-		M = calc_M(M200, r_max)
-		
-		return sqrt( G*M / r_max )
-	end
-
-	function calc_V_max3(M200) # this one is wrong somewhere
-		return 1.64 * calc_r_s(M200) * √(G * calc_ρ_s(M200))
-	end
-end
-
-# ╔═╡ 2f9d465f-f2c2-43d3-bc78-519bbb723d29
-begin
-	function calc_r200(M200)
-		c = calc_c(M200, 0)
-		r = calc_r_s(M200)
-		r200 = c*r
-	end
-		
-	function calc_V200(M200)
-		r200 = calc_r200(M200)
-		V200 = sqrt(G * M200 / r200)
-	end
+	calc_M(halo, r) = halo.M_s * A_NFW(r/halo.r_s)
 end
 
 # ╔═╡ a04c4445-9107-4546-8d73-fa043b68036e
 begin 
-	function calc_V_circ(M200, r)
-		c = calc_c(M200, 0)
-		r_s = calc_r_s(M200)
-		x = r/r_s
+	function calc_V200(halo)
+		r200 = calc_R200(halo)
+		V200 = sqrt(G * calc_M200(halo) / r200)
+	end
 	
-		v_v200_sq = c/x * A_NFW(x) / A_NFW(c)
-		V200 = calc_V200(M200)
+	function calc_V_circ(halo, r)
+		x = r/halo.r_s
+	
+		v_v200_sq = halo.c/x * A_NFW(x) / A_NFW(halo.c)
+		V200 = calc_V200(halo)
 		return sqrt(v_v200_sq ) * V200
 	end
 
-	function calc_V_circ2(M200, r)
-		M = calc_M(M200, r)
-		
+	function calc_V_circ2(halo, r)
+		M = calc_M(halo, r)
 		return sqrt(G * M / r)
 	end
+
+	function calc_V_max(halo) # in km/s
+		r_max = calc_r_max(halo)
+		M = calc_M(halo, r_max)
+		
+		return sqrt( G*M / r_max )
+	end
+
+	function calc_V_max3(halo) # this one is wrong somewhere
+		return 1.64 * halo.r_s * √(G * calc_ρ_s(halo))
+	end
 end
+
+# ╔═╡ 5c8e1f2d-747f-45f4-953d-fb02462c87e6
+begin 
+	M200 = find_zero(x->calc_V_max(NFW(x)) - V_circ_max_0,  5000)
+	halo = NFW(M200)
+end
+
+# ╔═╡ 0e2fb5ab-f183-47a7-8352-1189c7deb989
+calc_V_circ(halo, calc_R200(halo))
+
+# ╔═╡ b4b6ab10-c84a-43c0-93ff-d29b5c7578a3
+calc_V200(halo)
+
+# ╔═╡ d07c09ea-d1e3-4837-9969-46d3e4760235
+calc_M(halo, calc_R200(halo))
+
+# ╔═╡ f2c8daac-63a4-488d-af2a-4a5d3c7733ce
+calc_M200(halo)
+
+# ╔═╡ bc0e8db9-ec7b-4c28-a326-8ffae92990e3
+M200
+
+# ╔═╡ 437d7d57-ca66-4e53-b7bb-21ac7bab5d69
+begin
+	r_max = calc_r_max(halo)
+	V_circ_max = calc_V_max(halo)
+end
+
+# ╔═╡ 5e68334b-246d-4f17-9862-4a3cf1743f4f
+begin
+	plot(xlabel="radius", ylabel="circular velocity")
+	r = LinRange(0, 10, 1000)
+	v = map(rr->calc_V_circ(halo, rr), r)
+	plot!(r, v)
+	hline!([calc_V_max(halo), V_circ_max_0], color=2, label="")
+	vline!([calc_r_max(halo)], color=2,label="")
+end
+
+# ╔═╡ b0197f89-92a5-4ac3-9ab2-b0d05aa368d7
+calc_V_circ(halo, calc_r_max(halo))
+
+# ╔═╡ ae7c4833-46f6-48ec-a4be-d546c4bc583e
+calc_V_max(halo)
 
 # ╔═╡ 2232ac95-2873-4ef9-be90-96f1d0fe8049
 function calc_V_max2(M200)
@@ -207,52 +258,24 @@ function calc_V_max2(M200)
 	return V200 * sqrt(v_rel_sq)
 end
 
-# ╔═╡ 5c8e1f2d-747f-45f4-953d-fb02462c87e6
-begin 
-	M200 = find_zero(x->calc_V_max(x) - V_circ_max_0,  5000)
-	r_max = calc_r_max(M200)
-	V_circ_max = calc_V_max2(M200)
-	c = calc_c(M200, 0)
-	r_s = calc_r_s(M200)
-	Ms = calc_M_s(M200)
-end
-
-# ╔═╡ 5e68334b-246d-4f17-9862-4a3cf1743f4f
-begin
-	plot(xlabel="radius", ylabel="circular velocity")
-	r = LinRange(0, 10, 1000)
-	v = calc_V_circ.(M200, r)
-	plot!(r, v)
-	hline!([calc_V_max(M200), V_circ_max_0], color=2, label="")
-	vline!([calc_r_max(M200)], color=2,label="")
-end
-
-# ╔═╡ b0197f89-92a5-4ac3-9ab2-b0d05aa368d7
-calc_V_circ(M200, calc_r_max(M200))
-
-# ╔═╡ ae7c4833-46f6-48ec-a4be-d546c4bc583e
-calc_V_max(M200)
-
 # ╔═╡ 21c7cecb-4a5f-4aba-94f1-47a1268a7595
 md"""
 - M_200 = $M200
-- r200 = $(c*r_s)
-- Ms = $Ms
-- rs = $r_s
-- c = $c
+- r200 = $(halo.c*halo.r_s)
+- Ms = $(halo.M_s)
+- rs = $(halo.r_s)
+- M(r<rs) = $(halo.M_s * A_NFW(1))
+- c = $(halo.c)
 - Vmax = $(V_circ_max)
 - rmax = $r_max
 
 """
 
-# ╔═╡ 2028b2c4-71ca-457d-a72f-602ff06504d2
-calc_ρ_s(M200)
-
-# ╔═╡ d4901de1-e990-4d90-9d8f-745d0c737d73
-c^3 / A_NFW(c) * ρ_crit * 200
-
 # ╔═╡ 6bbeae54-9ff6-4935-9f12-8b0980dace52
-calc_M(M200, 0.5)
+calc_M(halo, 0.5)
+
+# ╔═╡ 51cf6429-3bd4-4abf-8294-18f71aa9a68b
+A_NFW(halo.c)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1396,20 +1419,23 @@ version = "1.4.1+1"
 # ╠═57071589-7f70-4739-bb6f-5ce184a8a09a
 # ╟─312e16fd-8a35-4067-bd02-3260c213a9eb
 # ╟─7fc985b7-9cb5-4b48-a27f-3de4cd7e9acf
-# ╠═912f6b2d-93e3-4acb-ba7c-acbf1083736b
+# ╠═af38fc99-0822-4edb-b88b-20cf35a5ac21
+# ╠═74d6c5a0-4e9a-4c30-a09e-635840933e51
 # ╠═ca8ad5fd-5450-45ca-810e-424edb316c42
-# ╠═7e4ad5d3-3024-431e-ad37-0868be0ddee8
-# ╠═ea60ecd0-c145-41b3-b2af-742338b53b88
+# ╠═0e2fb5ab-f183-47a7-8352-1189c7deb989
+# ╠═b4b6ab10-c84a-43c0-93ff-d29b5c7578a3
+# ╠═d07c09ea-d1e3-4837-9969-46d3e4760235
+# ╠═f2c8daac-63a4-488d-af2a-4a5d3c7733ce
 # ╠═a04c4445-9107-4546-8d73-fa043b68036e
+# ╠═5c8e1f2d-747f-45f4-953d-fb02462c87e6
+# ╠═bc0e8db9-ec7b-4c28-a326-8ffae92990e3
+# ╠═437d7d57-ca66-4e53-b7bb-21ac7bab5d69
 # ╠═5e68334b-246d-4f17-9862-4a3cf1743f4f
 # ╠═b0197f89-92a5-4ac3-9ab2-b0d05aa368d7
 # ╠═ae7c4833-46f6-48ec-a4be-d546c4bc583e
-# ╠═2f9d465f-f2c2-43d3-bc78-519bbb723d29
 # ╠═2232ac95-2873-4ef9-be90-96f1d0fe8049
-# ╠═5c8e1f2d-747f-45f4-953d-fb02462c87e6
 # ╠═21c7cecb-4a5f-4aba-94f1-47a1268a7595
-# ╠═2028b2c4-71ca-457d-a72f-602ff06504d2
-# ╠═d4901de1-e990-4d90-9d8f-745d0c737d73
 # ╠═6bbeae54-9ff6-4935-9f12-8b0980dace52
+# ╠═51cf6429-3bd4-4abf-8294-18f71aa9a68b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

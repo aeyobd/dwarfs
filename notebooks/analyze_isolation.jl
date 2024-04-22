@@ -40,7 +40,7 @@ To make this both a cml utility and interactive, we take inputs in the following
 pwd()
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/crater_ii/isolation/1e4/fiducial"
+dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e4/fiducial"
 
 # ╔═╡ f645be76-6477-4970-b655-603d700a10e7
 begin 
@@ -248,7 +248,7 @@ length(probabilities)
 
 # ╔═╡ f21cfe22-95f3-485d-902b-b022a41548c2
 begin 
-	plot()
+	plot(legend_position=:outertopright)
 	for Npoints in round.(Int, length(out[1]) * percens)
 		plot!(1:length(out), log10.(rs[Npoints, :]), label="f=$(round(Npoints/length(out[1]), digits=3))")
 	end
@@ -258,7 +258,7 @@ end
 
 # ╔═╡ 38aeb93b-8b79-4880-b0d1-cef180d13bc3
 begin 
-	plot(dpi=600)
+	plot(dpi=600, legend=false)
 	for i in eachindex(percens)
 		plot!(1:length(out), log10.(rs_s[i, :]), label="$(percens[i])")
 	end
@@ -273,14 +273,13 @@ begin
 		snap = out[i]
 		xr = 10
 		plot(legend=false, grid=false, axis=false, dpi=100,
-			xlim=(-xr, xr), ylim=(-xr, xr))
+			xlim=(-xr, xr), ylim=(-xr, xr), fmt=:gif)
 		scatter!(snap.positions[2, :], snap.positions[3, :],
 		ms=1, msw=0, ma=1)
 		scatter!([0], [0], ms=2, msw=0)
 	
 	end
-	gif(anim, "isolation.mp4", fps=12)
-	anim
+	gif(anim, "isolation.gif", fps=12) #anim
 end
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
