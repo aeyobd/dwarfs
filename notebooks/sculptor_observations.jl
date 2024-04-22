@@ -1,20 +1,8 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.41
 
 using Markdown
 using InteractiveUtils
-
-# ╔═╡ 1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
-begin 
-	import LilGuys as lguys
-	using Arya
-end
-
-# ╔═╡ 0915fc20-c108-4328-ada9-9bf9b0cdeebb
-using Distributions
-
-# ╔═╡ 18220090-4d10-4bed-9959-6002244c2579
-using StatsPlots
 
 # ╔═╡ bff50014-bfa9-11ee-33f0-0f67e543c2d4
 begin 
@@ -31,59 +19,16 @@ begin
 
 end
 
+# ╔═╡ 1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
+begin 
+	import LilGuys as lguys
+	using Arya
+end
+
 # ╔═╡ 47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 md"""
 Do observations from different sources ll agree?
 """
-
-# ╔═╡ 79fb2f6c-b78e-433e-82d7-ed48279a5ce3
-md"""
-
-# Basic properties
-### Observations
-
-| parameter                | value                            | Source                                 |
-| ------------------------ | -------------------------------- | -------------------------------------- |
-| $M_V$                    | -11.1 $\pm 0.5$                  | mcconnachie2012                        |
-| $\Upsilon_\star$         | 1.2                              | assumed                                |
-| $\alpha$                 | 15.03917                         | mcconnachie2012                        |
-| $\delta$                 | -33.70917                        | mcconnachie2012                        |
-| $1/\pi$                  | $86 \pm 3$ kpc                   |                                        |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | mcconnachie2020                        |
-| $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | mcconnachie2020                        |
-| RV                       | $111.4 \pm 0.37$ km s$^{-1}$     | mcconnachie2012 ?, sigmaV from MV2020a |
-| r_h                      | $94\pm1$ arcmin                  | MV20                                   |
-
-also compiled in sestito 2023
-
-"""
-
-# ╔═╡ 220ba45e-50b9-4bc7-be8a-b814b52ae544
-md"""
-Get all the gaia in this range
-```ADL
-SELECT * FROM gaiadr3.gaia_source WHERE 1 = CONTAINS( POINT(15.03917, -33.70917), CIRCLE(ra, dec, 3))
-```
-"""
-
-# ╔═╡ 71842348-99ad-4bdd-9b7d-f4fe98bfa924
-md"""
-Aladin
-```
-15.03917, -33.70917	
-zoom 20 arcmin
-```
-"""
-
-# ╔═╡ c5ebf9db-17ca-437e-9678-8240c4406393
-Base.@kwdef struct DwarfObservation
-	study::String
-	name::String = "Scl"
-	α::Measurement = 0 ± 0
-	δ::Measurement = NaN ± 0
-	ell::Measurement = NaN ± 0
-	PA::Measurement = NaN ± 0
-end
 
 # ╔═╡ ebfe3e7b-c791-4699-b039-09c4be31ea0d
 begin 
@@ -180,6 +125,9 @@ begin
 	histogram2d!(xi, eta,)
 end
 
+# ╔═╡ 930c5c65-46d9-4b33-af6f-0727fac63c5f
+
+
 # ╔═╡ 468588eb-73ac-4be5-bfcd-5dcb3c79a8aa
 begin 
 	dθ = 0.5*rh/60
@@ -216,8 +164,8 @@ begin
 	contour!(kde_d.x, kde_d.y, Σ_kde, lw=1, levels=10)
 	plot_circle!(2rh/60, lw=2, ls=:dot, color=:black, label=L"$r_{h}$")
 
-	xlabel!(r"$\xi / ˚$")
-	ylabel!(r"$\eta / ˚$")
+	xlabel!(L"\xi / \rm degree")
+	ylabel!(L"\eta / \rm degree")
 end
 
 # ╔═╡ d49c5f63-e2a4-4ff5-af4a-d4239b50abae
@@ -703,13 +651,8 @@ begin
 	p[]
 end
 
-# ╔═╡ b94bffa3-7bee-401e-a88e-b04867c2e52c
-begin
-	d_kde = lguys.gradient(kde_prof.x, kde_prof.density)
-	r_kde = 10 .^ kde_prof.x
-	rm_kde = lguys.midpoint(r_kde)
-	σ_kde =  1 ./ (π* diff(r_kde .^ 2) ) .* lguys.midpoint(kde_prof.density) .* diff(kde_prof.x)
-end
+# ╔═╡ 0c9d5bfc-a218-45a8-b342-58d9b7affef7
+
 
 # ╔═╡ 36e7c3f1-9dc7-4233-a348-082cc7f623b1
 begin 
@@ -781,109 +724,10 @@ begin
 	p[]
 end 
 
-# ╔═╡ 351c4370-78ff-43e0-9062-a8597329d1b1
-function calc_Γ(rs, σs)
-	xs = nm.log10.(rs)
-	ys = nm.log10.(σs)
-	return lguys.gradient(xs, ys)
-end
-
-# ╔═╡ 8ad632cd-28ee-4613-a806-deeec4ffb03f
-begin 
-	plot(xlabel="log r / degrees", ylabel="Γ")
-	plot!(log10.(rm2), calc_Γ(rm2, σs), label="histogram" )
-	#plot!(log10.(rm_kde), calc_Γ(rm_kde, σ_kde), label="kde" )
-	vline!([log10.(rh/60)], label="")
-end
-
-# ╔═╡ 8c179ac4-a556-411c-8ae6-b7a40b9a5386
-begin 
-	bw_dist = LogNormal(-2, 1)
-	k_dist = Poisson(20)
-	G_dist = Normal(19, 2)
-	ξ_dist = Normal()
-	pcut_dist = 0.2 + 0.6*Beta(2, 2)
-	r_ext = 0.5
-end
-
-# ╔═╡ e505b8e9-c037-4198-85fb-dfba0a14b68e
-function calc_profile(log_radii, bw; 
-		rmin=nothing, rmax=nothing, k=10)
-	log_r_sample, density = calc_kde(sort(log_radii), bw=bw)
-	dr = maximum(log_radii) - minimum(log_radii)
-	dr /= length(log_r_sample)
-	Areas = 2π  * (10 .^ log_r_sample) .* lguys.gradient(10 .^ log_r_sample)
-	σ = density ./ Areas
-	return log_r_sample, σ
-end
-
-# ╔═╡ ac2548f4-ceb0-49f8-96e1-1e9273b518c1
-function calc_hist_profile(log_radii, bw; 
-		rmin=nothing, rmax=nothing, k=10)
-	xmin = minimum(log_radii)
-	xmax = maximum(log_radii)
-	
-	log_r_sample, density = lguys.calc_histogram(log_radii)
-	dr = maximum(log_radii) 
-	dr /= length(log_r_sample)
-	Areas = 2π  * (10 .^ log_r_sample) .* lguys.gradient(10 .^ log_r_sample)
-	σ = density ./ Areas
-	return log_r_sample, σ
-end
-
-# ╔═╡ a6ea217e-ca39-47e3-975a-5536bea0dcbc
-plot(calc_profile(log10.(r_ell), 0.5)...)
-
-# ╔═╡ 2b8c94a2-cf4d-4d14-9e6f-00950e2b329f
-begin 
-	Nmc = 100
-	bw_rand = rand(bw_dist, Nmc)
-	k_rand = rand(k_dist, Nmc)
-	
-	hist_y = []
-	hist_r = []
-	hist_yerr = []
-	hist_σ = []
-	hist_σ_err = []
-
-	x1 = sort(log10.(j24.r_ell))
-	for i in 1:Nmc
-		filt = 0.2 .< j24.PSAT
-		filt .&= j24.phot_g_mean_mag .> 20
-		filt .&= j24.r_ell .> 0
-		
- 		r, σ = calc_profile(x1[filt], bw_rand[i])
-		
-		push!(hist_r, r)
-		push!(hist_y, σ)
-	end
-end
-
-# ╔═╡ d538ed01-2daa-48f3-8528-d42dae101d0b
-begin 
-	p[] = plot(
-		# xlim=(-2, 0.5),
-		# ylim=(1, 4.2),
-		xlabel=L"\log r / \rm kpc",
-		ylabel=L"\log \Sigma"
-		
-	)
-
-	for i in 1:Nmc
-		plot!(hist_r[i], nm.log10.(hist_y[i]), label="", color="blue", lw=0.3, alpha=0.1)
-	end
-
-	p[]
-end
-
 # ╔═╡ Cell order:
 # ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
-# ╟─79fb2f6c-b78e-433e-82d7-ed48279a5ce3
-# ╟─220ba45e-50b9-4bc7-be8a-b814b52ae544
-# ╟─71842348-99ad-4bdd-9b7d-f4fe98bfa924
-# ╠═c5ebf9db-17ca-437e-9678-8240c4406393
 # ╠═ebfe3e7b-c791-4699-b039-09c4be31ea0d
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
 # ╠═d1a2aa9e-13d3-4cd1-9326-3039991eebe3
@@ -898,6 +742,7 @@ end
 # ╠═ba71616e-dadf-4025-9afd-66dc40d4e65b
 # ╠═01b26f1d-f6bd-4e20-a344-0b55a2f91bf4
 # ╠═37a0afd4-73b9-4d8b-b65a-eabae4d01bba
+# ╠═930c5c65-46d9-4b33-af6f-0727fac63c5f
 # ╠═468588eb-73ac-4be5-bfcd-5dcb3c79a8aa
 # ╠═1942cac0-2da8-4bec-80d0-a9302ddc9ea1
 # ╠═5786e566-fc49-42d6-9032-0ce4a7d4497a
@@ -964,7 +809,7 @@ end
 # ╠═ad904c0e-cfe9-46cf-96b8-f4cb0093dff5
 # ╠═50138654-cfd9-4dc4-b35d-80f3f375960c
 # ╠═8c1ca1f4-70d5-486e-b8c0-5eaeea1aa096
-# ╠═b94bffa3-7bee-401e-a88e-b04867c2e52c
+# ╠═0c9d5bfc-a218-45a8-b342-58d9b7affef7
 # ╠═36e7c3f1-9dc7-4233-a348-082cc7f623b1
 # ╠═bf3e6ca0-d3dd-43da-89cc-5bb6d15ba0ce
 # ╠═8863b312-eb5c-40a5-a638-138b8be214e5
@@ -973,13 +818,3 @@ end
 # ╠═697a3f87-143b-44f1-9edc-dafbeb220f4e
 # ╠═e00404f0-68bb-4cff-89f0-fc7ae9b78e99
 # ╠═37e0e1b9-2e7b-48e2-9245-0060581b13c2
-# ╠═351c4370-78ff-43e0-9062-a8597329d1b1
-# ╠═8ad632cd-28ee-4613-a806-deeec4ffb03f
-# ╠═0915fc20-c108-4328-ada9-9bf9b0cdeebb
-# ╠═18220090-4d10-4bed-9959-6002244c2579
-# ╠═8c179ac4-a556-411c-8ae6-b7a40b9a5386
-# ╠═e505b8e9-c037-4198-85fb-dfba0a14b68e
-# ╠═ac2548f4-ceb0-49f8-96e1-1e9273b518c1
-# ╠═a6ea217e-ca39-47e3-975a-5536bea0dcbc
-# ╠═2b8c94a2-cf4d-4d14-9e6f-00950e2b329f
-# ╠═d538ed01-2daa-48f3-8528-d42dae101d0b

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.41
 
 using Markdown
 using InteractiveUtils
@@ -14,7 +14,6 @@ begin
 	
 	using DataFrames 
 	using CSV
-	using LaTeXStrings
 	
 	import LilGuys as lguys
 end
@@ -58,34 +57,6 @@ begin
 	filtered = data[filt, :]
 end
 
-# ╔═╡ 6ca5439b-b4d7-44d5-b7bd-303f14ee7c15
-function to_tangent(α_0, δ_0, α, δ)
-	denom = @. (sind(δ) * sind(δ_0) 
-		+ cosd(δ) * cosd(δ_0) * cosd(α - α_0)
-	)
-	
-	eta_num = @. (sind(δ_0) * cosd(δ) * cosd(α-α_0)
-		-cosd(δ_0) * sind(δ) 
-	)
-	
-	xi_num = @. cosd(δ) * sind(α - α_0)
-	
-	xi = @. rad2deg(xi_num/denom)
-	eta = @. rad2deg(eta_num / denom)
-
-	return xi, -eta
-end
-
-# ╔═╡ d04f8836-bf9a-4a7b-8ec9-a1ba783c7295
-function calc_r_ell(x, y, a, b, PA)
-	θ = @. deg2rad(PA)
-	x_p = @. x * cos(θ) + -y * sin(θ)
-	y_p = @. x * sin(θ) + y * cos(θ)
-
-	r_sq = @. (x_p / a)^2 + (y_p / b)^2
-	return sqrt.(r_sq)
-end
-
 # ╔═╡ 32293baf-0c39-488d-b495-a86f42eed178
 begin 
 	ra0 = 15.03916666
@@ -100,8 +71,8 @@ end
 
 # ╔═╡ ba71616e-dadf-4025-9afd-66dc40d4e65b
 begin 
-	xi, eta = to_tangent(ra0, dec0, filtered.ra, filtered.dec)
-	r_ell = calc_r_ell(xi, eta, a, b, PA-90) * sqrt(a*b)
+	xi, eta = lguys.to_tangent(filtered.ra, filtered.dec, ra0, dec0)
+	r_ell = lguys.calc_r_ell(xi, eta, a, b, PA-90) * sqrt(a*b)
 end
 
 # ╔═╡ efe133bc-670a-49a5-9f22-c937456a11b5
@@ -180,9 +151,6 @@ p = Ref{Plots.Plot}()
 md"""
 # Gaussian Process regression
 """
-
-# ╔═╡ abb50575-f5b9-43cd-8d73-92a7986fd9f0
-
 
 # ╔═╡ 299c30ce-1f9c-48a6-b432-06c20aef5e64
 @model function gp_model(log_r, y)
@@ -421,8 +389,6 @@ spline_predict(365, α, bc1)
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
 # ╠═f6a5c138-10bc-48e2-aec7-45fd61b9b17f
-# ╠═6ca5439b-b4d7-44d5-b7bd-303f14ee7c15
-# ╠═d04f8836-bf9a-4a7b-8ec9-a1ba783c7295
 # ╠═32293baf-0c39-488d-b495-a86f42eed178
 # ╠═ba71616e-dadf-4025-9afd-66dc40d4e65b
 # ╟─efe133bc-670a-49a5-9f22-c937456a11b5
@@ -438,7 +404,6 @@ spline_predict(365, α, bc1)
 # ╠═20d997f1-72de-4c6b-9aa3-836c85221c21
 # ╠═b0de0957-acc9-49e8-a988-f531844cb9c0
 # ╠═4cc65ca0-7a21-4dc0-b8f2-df1cdd55f915
-# ╠═abb50575-f5b9-43cd-8d73-92a7986fd9f0
 # ╠═299c30ce-1f9c-48a6-b432-06c20aef5e64
 # ╠═b7d0c9e4-e040-49e4-a1d0-b483277437d8
 # ╠═0d34d28e-d924-4580-b788-6a29b3f68752
