@@ -23,7 +23,7 @@ md"""
 """
 
 # ╔═╡ 0c85a109-f75b-45b2-be77-1664bfdd4567
-path = "orbit1"
+path = "orbit3"
 
 # ╔═╡ 7bb77640-17c4-44b1-832f-9258fb790d8b
 out = lguys.Output("$path/out/combined.hdf5")
@@ -40,7 +40,7 @@ md"""
 
 # ╔═╡ 390bc099-3434-4c19-924c-bde742f9f46c
 begin
-	cens = CSV.read("$path/data/centres.csv", DataFrames.DataFrame)
+	cens = CSV.read("$path/out/centres.csv", DataFrames.DataFrame)
 	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
 	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
 end
@@ -68,7 +68,7 @@ end
 
 # ╔═╡ 4b456983-017f-47e1-a76a-0688fa53b6fb
 begin 
-	plot(xlabel="R / kpc", ylabel="z / kpc", aspect_ratio=1, xlim=[0, 50])
+	plot(xlabel="R / kpc", ylabel="z / kpc", aspect_ratio=1, xlim=[0, 200])
 	R_cen = @. sqrt(x_cen[1, :]^2 + x_cen[2, :]^2)
 	plot!(R_cen, x_cen[3, :], label="")
 end
@@ -100,7 +100,7 @@ begin
 end
 
 # ╔═╡ 3b95c66e-0a45-4e69-86d7-4208c64ffaa6
-idx_f = 220
+idx_f = 1000
 
 # ╔═╡ f83658c4-dc0d-41e8-9707-26bcd1344d1b
 begin 
@@ -129,13 +129,12 @@ begin
 end
 
 # ╔═╡ 104d4ce4-3324-43be-8978-9c1650b15f51
-histogram([o.radial_velocity for o in obs_pred], bins=LinRange(90, 120, 100))
+histogram([o.radial_velocity for o in obs_pred])
 
 # ╔═╡ ef36fcd0-abef-45d2-ab13-00c3fea80ff3
 begin 
 	plot(xlabel="heliocentric distance / kpc", ylabel="radial velocity / kpc")
 	scatter!([o.distance for o in obs_pred], [o.radial_velocity for o in obs_pred], ms=2, alpha=0.3, label="")
-	scatter!([16], [106], label="")
 end
 
 # ╔═╡ 6fe7539f-fb34-45e4-abc8-d1000b6ad1ab
@@ -187,12 +186,6 @@ begin
 	r_m = lguys.midpoint(r_m)
 end
 
-# ╔═╡ d9a28fdc-d702-4cbd-9aaf-5b214a0d0a23
-lguys.calc_r(out[1].positions, x_cen[:, 1])
-
-# ╔═╡ e85ea859-4998-42c8-90ff-ccde7aeb070b
-pythonplot
-
 # ╔═╡ b8d2b64c-d908-4f2e-af5d-bd2e8bf15471
 begin
 	df_rho = DataFrame()
@@ -218,9 +211,6 @@ rs_s = sort(rs)
 # ╔═╡ b01fba62-cfcd-4c21-886b-119837eafc2e
 pot = lguys.calc_radial_discrete_Φ(out[idx_f].masses, rs_s)
 
-# ╔═╡ eeffe348-46f7-475a-a2bd-02bd291b0b31
-gr()
-
 # ╔═╡ aadb3a9a-f54d-4333-b82e-35768bef7a86
 ϵs = 1/2 * vs[sortperm(rs)].^2 .+ pot
 
@@ -230,11 +220,17 @@ histogram(ϵs)
 # ╔═╡ b405662f-2708-4437-b00d-6bb9ea4b03a9
 sum(ϵs .< 0)
 
+# ╔═╡ fa1859c7-c5b7-498d-8f12-d89598f9baec
+begin 
+	rc, Vc = lguys.calc_V_circ(out[idx_f], x_cen[:, idx_f])
+	scatter(log10.(rc), Vc * lguys.V0)
+end
+
 # ╔═╡ 955abecb-54d2-4917-ac4b-003d04a305e9
 rho_i
 
 # ╔═╡ a5620a88-0afd-4bea-8a93-bae7f0d12086
-r_h = 2
+r_h = 1.421
 
 # ╔═╡ d76d03d9-7080-4fc4-b7ea-9a3a69516d47
 begin 
@@ -266,22 +262,55 @@ m_p = out[1].masses[1]
 # ╔═╡ acdefcc1-3fd0-47c1-955c-622f8aafe60b
 v_circ = [sqrt(sum(rs .< r) * m_p / r) for r in rs]
 
-# ╔═╡ 372f081d-a039-4747-9e30-0ed748d87608
-scatter(log10.(rs), v_circ * lguys.V0)
+# ╔═╡ 21e53503-de27-4e21-a434-ca320a2d6f39
+lguys.calc_V_circ
+
+# ╔═╡ 82ac7c7f-5a30-4d12-b8dc-290fcff755d3
+begin 
+	M_hs = []
+	M_3hs = []
+	f_bound = []
+
+	# bound fractions inside, middle, and out
+
+	v_max = []
+	v_r_h = []
+	
+	for i in 1:length(out)
+		radii = lguys.calc_r(out[i].positions, x_cen[:, i])
+		velocities = lguys.calc_r(out[i].velocities, v_cen[:, i])
+		masses = out[i].masses
+		pots = out[i].Φs
+		es = 1/2 * velocities .^ 2 .+ pots
+		m = sum(radii .< r_h)
+		push!(M_hs, m)
+		
+		m = sum(radii .< 3r_h)
+		push!(M_3hs, m)
+
+		push!(f_bound, lguys.mean(es .< 0))
+		
+		radii = sort(radii)
+		M_r = m_p .* collect(1:length(radii))
+		v_circ = @. sqrt(lguys.G * M_r ./ radii) * lguys.V0 # in kms
+		push!(v_max, maximum(v_circ))
+
+		v_circ = lguys.calc_V_circ(sum(masses[radii .< r_h]), r_h)
+		push!(v_r_h, v_circ)
+	end
+	
+	M_hs .*= m_p * lguys.M0
+	M_3hs .*= m_p * lguys.M0
+end
 
 # ╔═╡ e757ce6c-ca9a-4eda-a986-aa7f00451679
 begin 
 	plot(xlabel="time / Gyr", ylabel="max circular velocity")
-	plot!(out.times, v_max, s=1, label="")
+	plot!(out.times, log10.(v_r_h), s=1, label="")
 end
 
-# ╔═╡ a92a2800-dc22-4461-848e-4c6cc0669c16
-begin 
-	plot(xlabel="time / Gyr", ylabel="bound fraction")
-	plot!(out.times, f_bound_i, s=1, label="innermost")
-	plot!(out.times, f_bound_m, s=1, label="middle")
-	plot!(out.times, f_bound_o, s=1, label="outer")
-end
+# ╔═╡ b81f1caa-5c18-45af-ba44-c55e68644134
+v_r_h
 
 # ╔═╡ c35607a8-ed18-4491-8425-ff76160d7ead
 begin
@@ -298,9 +327,6 @@ begin
 	time_evol[!, "times"] = out.times .- out.times[idx_f]
 	time_evol[!, "M_3r"] = M_3hs
 	time_evol[!, "f"] = f_bound
-	time_evol[!, "f_i"] = f_bound_i
-	time_evol[!, "f_m"] = f_bound_m
-	time_evol[!, "f_o"] = f_bound_o
 	time_evol[!, "rs"] = lguys.calc_r(x_cen)
 	time_evol[!, "xs"] = x_cen[1, :]
 	time_evol[!, "ys"] = x_cen[2, :]
@@ -346,8 +372,6 @@ CSV.write("$path/density_prof.csv", df_rho)
 # ╠═6fe7539f-fb34-45e4-abc8-d1000b6ad1ab
 # ╠═3b95c66e-0a45-4e69-86d7-4208c64ffaa6
 # ╠═ec6636df-98d4-41a9-b343-8ec81224b620
-# ╠═d9a28fdc-d702-4cbd-9aaf-5b214a0d0a23
-# ╠═e85ea859-4998-42c8-90ff-ccde7aeb070b
 # ╠═d76d03d9-7080-4fc4-b7ea-9a3a69516d47
 # ╠═b8d2b64c-d908-4f2e-af5d-bd2e8bf15471
 # ╠═9279f480-1e0e-4a64-b959-161939bfb38e
@@ -357,17 +381,18 @@ CSV.write("$path/density_prof.csv", df_rho)
 # ╠═acdefcc1-3fd0-47c1-955c-622f8aafe60b
 # ╠═f3d672e0-6cc0-48c2-958d-d635c67cf97c
 # ╠═b01fba62-cfcd-4c21-886b-119837eafc2e
-# ╠═eeffe348-46f7-475a-a2bd-02bd291b0b31
 # ╠═aadb3a9a-f54d-4333-b82e-35768bef7a86
 # ╠═ddf3c730-882d-4f86-b61d-8f936c52e06a
 # ╠═b405662f-2708-4437-b00d-6bb9ea4b03a9
-# ╠═372f081d-a039-4747-9e30-0ed748d87608
+# ╠═fa1859c7-c5b7-498d-8f12-d89598f9baec
 # ╠═955abecb-54d2-4917-ac4b-003d04a305e9
 # ╠═a5620a88-0afd-4bea-8a93-bae7f0d12086
 # ╠═579be7d8-0cac-45ce-acc4-7b7866339dfd
 # ╠═f08d508c-2e53-4840-832b-ec71a1fe3f67
+# ╠═21e53503-de27-4e21-a434-ca320a2d6f39
+# ╠═82ac7c7f-5a30-4d12-b8dc-290fcff755d3
 # ╠═e757ce6c-ca9a-4eda-a986-aa7f00451679
-# ╠═a92a2800-dc22-4461-848e-4c6cc0669c16
+# ╠═b81f1caa-5c18-45af-ba44-c55e68644134
 # ╠═c35607a8-ed18-4491-8425-ff76160d7ead
 # ╠═7ca8f7cf-14c5-4d2b-aac6-093a77156183
 # ╠═cc6dec8f-04e1-4794-a061-124e99cbd0d2

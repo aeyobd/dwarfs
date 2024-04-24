@@ -12,15 +12,15 @@ SnapFormat           3
 
 
 %---- CPU-time limits
-TimeLimitCPU              86400   % 24h/s
-CpuTimeBetRestartFile     7200    % 2h/s
+TimeLimitCPU              86400   % 24h, in seconds
+CpuTimeBetRestartFile     7200    % 2h,  in seconds
 
 %----- Memory alloction
-MaxMemSize                1000    % MB
+MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  1176 % 5.54 Gyr
+TimeMax	                  1176 % 5.5 Gyr
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -44,7 +44,7 @@ GravityConstantInternal  1.0
 OutputListOn              0
 TimeBetSnapshot           10
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         1
+TimeBetStatistics         0.01
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
@@ -71,8 +71,8 @@ MaxNumNgbDeviation               1
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       1.0	# 10 pc
-SofteningComovingClass0      1.0	# 10 pc
+SofteningMaxPhysClass0       0 # not used
+SofteningComovingClass0      3.0
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 

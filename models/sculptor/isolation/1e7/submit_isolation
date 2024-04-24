@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+#SBATCH	 -J	 isolation
+#SBATCH --ntasks=2				#Number of cores
+#SBATCH -A $SLURM_ACCOUNT				#Account name
+#SBATCH -t 8:00:00
+#SBATCH --mem-per-cpu=8G		#Memory per core
+#SBATCH -o %J.out		#Standard output file
+
+set -x 
+rm -r out/* 
+export OMP_NUM_THREADS=$SLURM_NTASKS
+mpirun -np $SLURM_NTASKS $GADGET_DIR/Gadget param.txt > log.out
+
+scontrol show job=$SLURM_JOB_ID

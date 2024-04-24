@@ -71,8 +71,8 @@ MaxNumNgbDeviation               1
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.02	# 10 pc
-SofteningComovingClass0      0.02	# 10 pc
+SofteningMaxPhysClass0       0.08	# 10 pc
+SofteningComovingClass0      0.08	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
