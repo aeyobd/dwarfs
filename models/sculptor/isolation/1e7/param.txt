@@ -1,6 +1,6 @@
 
 %----  Relevant files 
-InitCondFile         ../initial
+InitCondFile         initial
 OutputDir            ./out
 SnapshotFileBase     snapshot
 OutputListFilename   outputs.txt
@@ -16,11 +16,11 @@ TimeLimitCPU              86400   % 24h, in seconds
 CpuTimeBetRestartFile     7200    % 2h,  in seconds
 
 %----- Memory alloction
-MaxMemSize                1800    % in MByte
+MaxMemSize                2000    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  1176 % 5.5 Gyr
+TimeMax	                  1176
 
 %---- Cosmological parameters
 Omega0	                  0
@@ -44,7 +44,7 @@ GravityConstantInternal  1.0
 OutputListOn              0
 TimeBetSnapshot           10
 TimeOfFirstSnapshot       0.0
-TimeBetStatistics         0.01
+TimeBetStatistics         1
 NumFilesPerSnapshot       1
 MaxFilesWithConcurrentIO  1 
 
@@ -71,8 +71,8 @@ MaxNumNgbDeviation               1
 
 
 %---- Gravitational softening length
-SofteningMaxPhysClass0       0.08	# 10 pc
-SofteningComovingClass0      0.08	# 10 pc
+SofteningMaxPhysClass0       0.025	# 10 pc
+SofteningComovingClass0      0.025	# 10 pc
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
