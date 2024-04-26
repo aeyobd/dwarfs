@@ -1,0 +1,29 @@
+{
+    "filename": "UrsaMinor.GAIASOURCE.RUWE.VELS.PROB.fits",
+    "outname": "test.json",
+    "ra": 227.2854,
+    "dec": 67.2225,
+    "dra":  0,
+    "ddec": 0,
+    "ecc": 0.55,
+    "rh": 17.32,
+    "PA": 50,
+    "dist": 76,
+    "dist_err": 10,
+
+    "filter_mode": "jax",
+
+    "psat_min": 0.2,
+
+    "ruwe_max": 1.4,
+    "g_min": 21,
+    "g_max": 12,
+    "max_ang_dist": 0.5,
+    "n_sigma_dist": 3,
+    "pmra": -0.124,
+    "pmdec": 0.078,
+    "dpm": 0.5,
+
+    "cmd_cut": [1.63,20.99, 1.26,19.88, 1.32,18.24, 1.69,16.24, 1.50,15.99, 1.19,17.31, 0.85,18.83, 0.67,19.29, -0.07,19.67, -0.18,20.08, 0.26,20.31, 0.58,20.11, 0.30,20.86]
+
+}
