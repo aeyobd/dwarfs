@@ -11,7 +11,7 @@ begin
 	using FITSIO
 	using DataFrames 
 	using CSV
-	using Plots; gr()
+	using CairoMakie
 
 	import NaNMath as nm
 	using KernelDensity
@@ -19,16 +19,19 @@ begin
 
 end
 
-# ╔═╡ 1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
-begin 
-	import LilGuys as lguys
-	using Arya
-end
-
 # ╔═╡ 47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 md"""
 Do observations from different sources ll agree?
 """
+
+# ╔═╡ 69c98029-165c-407b-9a63-a27e06e30e45
+import Arya
+
+# ╔═╡ 1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
+begin 
+	import LilGuys as lguys
+	#using Arya
+end
 
 # ╔═╡ ebfe3e7b-c791-4699-b039-09c4be31ea0d
 begin 
@@ -61,25 +64,38 @@ begin
 end
 
 # ╔═╡ d1a2aa9e-13d3-4cd1-9326-3039991eebe3
-begin 
-	plot(xlabel=L"\xi / \textrm{degrees}", ylabel=L"\eta / \textrm{degrees}", aspect_ratio=1)
-	scatter!(scl_all.xi, scl_all.eta, ms=1, alpha=0.1, label="gaia all")
+let
+	f = Figure()
+	ax = Axis(f[1, 1], xlabel=L"\xi / \textrm{degrees}", ylabel=L"\eta / \textrm{degrees}", aspect=1)
+	scatter!(ax, scl_all.xi, scl_all.eta,label="gaia all", color=(:blue, 0.2), markersize=1)
+
+	f
 end
 
+# ╔═╡ 63205ce8-cd48-40c3-9fc4-da3c13eb5b0e
+scl_all.xi
+
 # ╔═╡ 1d7bbfed-bb40-469b-86e4-411c3fbfdec8
-begin 
-	plot(xlabel=L"\xi / \textrm{arcmin} ", ylabel=L"\eta / \textrm{arcmin}", aspect_ratio=1, xlim=(-10, 10), ylim=(-10, 10), dpi=400, fontfamily="Computer Modern", title="Gaia All")
+let 
+	dθ = 10
+	f = Figure()
+	ax = Axis(f[1, 1], xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}", aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
 	
-	scatter!(60*scl_all.xi, 60*scl_all.eta, ms=2, alpha=1, label="", marker_z=scl_all.phot_g_mean_mag, cmap=cgrad(:greys), cb_title="G mag", clims=(8, 22))
+	scatter!(60*scl_all.xi, 60*scl_all.eta, markersize=3, color=scl_all.phot_g_mean_mag, colormap=:greys)
+
+	f
 	
 end
 
 # ╔═╡ 02d19c07-411f-40d6-9ac3-010ebfd4bdfe
-begin 
-	plot(xlabel=L"\xi / \textrm{arcmin} ", ylabel=L"\eta / \textrm{arcmin}", aspect_ratio=1, xlim=(-10, 10), ylim=(-10, 10), dpi=400, fontfamily="Computer Modern", title="J24 All")
+let 
+	dθ = 10
+	f = Figure()
+	ax = Axis(f[1, 1], xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}", aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
 	
-	scatter!(60*j24.xi, 60*j24.eta, ms=2, alpha=1, label="", marker_z=j24.phot_g_mean_mag, cmap=cgrad(:greys), cb_title="G mag", clims=(8, 22))
-	
+	scatter!(60*j24.xi, 60*j24.eta, color=j24.phot_g_mean_mag, colormap=:greys, markersize=3)
+
+	f
 end
 
 # ╔═╡ f6a5c138-10bc-48e2-aec7-45fd61b9b17f
@@ -91,11 +107,21 @@ begin
 	b22_filtered = b22[filt_b22, :]
 end
 
+# ╔═╡ b16a4815-22c6-44cd-b0d9-67a349500637
+begin 
+	p[] = plot(xlabel=L"\xi / \textrm{arcmin} ", ylabel=L"\eta / \textrm{arcmin}", aspect_ratio=1, xlim=(-10, 10), ylim=(-10, 10), dpi=400, fontfamily="Computer Modern", title="J24 members")
+	
+	scatter!(60*j24_filtered.xi, 60*j24_filtered.eta, ms=2, alpha=1, label="", marker_z=j24_filtered.phot_g_mean_mag, cmap=cgrad(:greys), cb_title="G mag", clims=(8, 22), dpi=1600, show=true)
+	p[]
+	savefig("j24_memb.png")
+	p[]
+end
+
 # ╔═╡ c54224d3-c528-41bb-bce6-c910fc680b55
-histogram2d(j24[:, "ra"], j24[:, "dec"], bins=300)
+hexbin(j24[:, "ra"], j24[:, "dec"], bins=300)
 
 # ╔═╡ 5e5afcb8-9344-4213-a5b0-33f437ea0263
-histogram2d(b22[:, "RA_ICRS"], b22[:, "DE_ICRS"], bins=300)
+hexbin(b22[:, "RA_ICRS"], b22[:, "DE_ICRS"], bins=300)
 
 # ╔═╡ ba71616e-dadf-4025-9afd-66dc40d4e65b
 begin 
@@ -112,31 +138,35 @@ plot(log10.(sort(r_ell)))
 
 # ╔═╡ 01b26f1d-f6bd-4e20-a344-0b55a2f91bf4
 begin 
-	stephist(j24.PSAT, bins=20)
+	hist(j24.PSAT[j24.PSAT .> 0], bins=20)
 	# stephist!(b22.Pmemb)
 end
 
 # ╔═╡ 37a0afd4-73b9-4d8b-b65a-eabae4d01bba
-begin 
-	plot(
-		aspect_ratio=:equal, xlims=(-1.2, 1.2), ylims=(-1, 1),
+let
+	f = Figure()
+	ax = Axis(f[1, 1], aspect=1, limits=(-1.2, 1.2, -1, 1),
 		xlabel = L"\xi / \textrm{degree}", ylabel = L"\eta / \textrm{degree}"
 	)
-	histogram2d!(xi, eta,)
+	hexbin!(xi, eta,)
+	f
 end
 
 # ╔═╡ 930c5c65-46d9-4b33-af6f-0727fac63c5f
 
 
 # ╔═╡ 468588eb-73ac-4be5-bfcd-5dcb3c79a8aa
-begin 
+let
+	f = Figure()
 	dθ = 0.5*rh/60
-	nb = 20
-	histogram2d(xi, eta,
-		aspect_ratio=:equal, bins=(LinRange(-dθ, dθ, nb), LinRange(-dθ, dθ, nb)),
-	xlim=(-dθ, dθ))
-	xlabel!(L"\xi / \textrm{degree}")
-	ylabel!(L"\eta / \textrm{degree}")
+
+	ax = Axis(f[1,1], 
+		xlabel = L"\xi / \textrm{degree}",
+		ylabel = L"\eta / \textrm{degree}",
+		limits = (-dθ, dθ, -dθ, dθ)
+	)
+	scatter!(ax, xi, eta)
+	f
 end
 
 # ╔═╡ 1942cac0-2da8-4bec-80d0-a9302ddc9ea1
@@ -158,14 +188,40 @@ function plot_circle!(radius, x=0, y=0; kwargs...)
 	plot!(x .+ radius*cos.(t), y .+ radius*sin.(t); kwargs...)
 end
 
+# ╔═╡ 74327a32-0084-4a3c-986e-0bd0b81996f9
+let
+	dθ = 0.5
+	p[] = plot(aspect_ratio = 1, ticks=:naitive, extra_kwargs=:subplot, xlim=(-dθ, dθ), ylim=(-dθ, dθ), legend=false, dpi=300
+)
+	
+	scatter!(xi, eta, 
+		ms=1, label="")
+	
+	contour!(kde_d.x, kde_d.y, Σ_kde, 
+		lw=2, colorbar=false)
+	
+	plot_circle!(2rh/60, 
+		lw=2, ls=:dot, color=:black)
+
+	θ_text = 45
+	r_text = 2rh/60
+	annotate!(r_text * cosd(θ_text), r_text * sind(θ_text), Plots.text(L"$2 r_{h}$", 12,  rotation = -90+θ_text, valign=:bottom))
+
+	xlabel!(L"\xi/ \rm degree")
+	ylabel!(L"\eta / \rm degree")
+	#savefig("sculptor_tangent_plane.tex")
+	p[]
+end
+
 # ╔═╡ 08135ca7-78c7-4f40-a014-cdb9a0833188
-begin 
-	scatter(xi, eta, aspect_ratio=:equal, xlim=(-1, 1), ylim=(-1, 1), ms=1, label="", )
+let 
+	f, ax, s = scatter(xi, eta, aspect_ratio=:equal, xlim=(-1, 1), ylim=(-1, 1), ms=1, label="", )
 	contour!(kde_d.x, kde_d.y, Σ_kde, lw=1, levels=10)
 	plot_circle!(2rh/60, lw=2, ls=:dot, color=:black, label=L"$r_{h}$")
 
-	xlabel!(L"\xi / \rm degree")
-	ylabel!(L"\eta / \rm degree")
+	# xlabel!(L"\xi / \rm degree")
+	# ylabel!(L"\eta / \rm degree")
+	f
 end
 
 # ╔═╡ d49c5f63-e2a4-4ff5-af4a-d4239b50abae
@@ -177,8 +233,8 @@ end
 
 # ╔═╡ 3fd48123-0ba9-4300-8406-76c36da982c5
 begin 
-	plot(proj=:polar)
-	scatter!(kde_theta, kde_r, proj=:polar, label="", marker_z = Σ_kde, ms=3, ylims=(0, 0.5))
+	#plot(proj=:polar)
+	scatter(kde_theta, kde_r, proj=:polar, label="", marker_z = Σ_kde, ms=3, ylims=(0, 0.5))
 end
 
 # ╔═╡ 042f8215-b6fe-49db-a166-055567da4bb0
@@ -191,17 +247,18 @@ end
 lguys.calc_histogram(vec(kde_theta), θ_bins , weights=vec(Σ_kde))
 
 # ╔═╡ 51c415b2-c5c8-46db-81f6-13d242c79484
-begin 
+let 
 	r_cuts_2 = [0, 0.1, 0.2, 0.3, 0.5, 3]
-	p1 = plot(xlabel="θ", ylabel="relative mean surface density in annulus")
-	
+	#p1 = plot(xlabel="θ", ylabel="relative mean surface density in annulus")
+	f = Figure()
+	ax = Axis(f[1, 1])
 	for i in 1:length(r_cuts_2)-1
 		filt_r = r_cuts_2[i] .< kde_r .< r_cuts_2[i+1]
 		y = lguys.calc_histogram(vec(kde_theta[filt_r]), θ_bins, weights=vec(Σ_kde[filt_r]))[2]
 		
-		plot!(θ_bm,y ./ lguys.mean(y), label="r = $(r_cuts_2[i]) - $(r_cuts_2[i+1])˚")
+		lines!(θ_bm, y ./ lguys.mean(y), label="r = $(r_cuts_2[i]) - $(r_cuts_2[i+1])˚")
 	end
-	p1
+	f
 end
 
 # ╔═╡ e49c409b-188f-4d65-a193-288a5fc8e656
@@ -224,53 +281,43 @@ begin
 end
   ╠═╡ =#
 
-# ╔═╡ 47370a21-5127-4b53-84d5-b6307c7cd585
-begin 
-	plot(xlabel="rell", ylabel="count / bin")
-	scatterhist!(log10.(j24_filtered.r_ell), label="J+24")
-	scatterhist!(log10.(b22_filtered.r_ell), label="B+22")
-end
-
 # ╔═╡ 0e6d1577-cc27-40a5-a483-aacc6f735a2f
 begin
-	plot(xlabel="datapoint", ylabel="rell(jax) / rell(me)")
-	scatter!(j24_filtered.r_ell ./ r_ell .* sqrt(a*b), alpha=0.1, label="") 
+	#plot(xlabel="datapoint", ylabel="rell(jax) / rell(me)")
+	scatter(j24_filtered.r_ell ./ r_ell .* sqrt(a*b), alpha=0.1, label="") 
 end
 
-# ╔═╡ 1d5f749f-8ed3-4f92-b8c2-4d4bee8f46f1
-gr()
-
 # ╔═╡ 9e95d81c-5305-4b67-9867-b0e04efd63aa
-histogram2d(j24_filtered.pmra, j24_filtered.pmdec, xlabel=L"\mu_{\alpha *} / \rm mas\, yr^{-1}", ylabel=L"\mu_\delta", aspect_ratio=:equal,)
+hexbin(j24_filtered.pmra, j24_filtered.pmdec, xlabel=L"\mu_{\alpha *} / \rm mas\, yr^{-1}", ylabel=L"\mu_\delta", aspect_ratio=:equal,)
 
 # ╔═╡ 3dccd820-de5c-422c-8585-7c74e6a09b07
-histogram2d(j24_filtered.pmra, j24_filtered.pmdec, bins=LinRange(-2, 2, 100), xlabel=L"\mu_{\alpha *} / \rm mas\, yr^{-1}", ylabel=L"\mu_\delta", colorbar_scale=:log10, aspect_ratio=1, xlims=(-2, 2))
+hexbin(j24_filtered.pmra, j24_filtered.pmdec, bins=LinRange(-2, 2, 100), xlabel=L"\mu_{\alpha *} / \rm mas\, yr^{-1}", ylabel=L"\mu_\delta", colorbar_scale=:log10, aspect_ratio=1, xlims=(-2, 2))
 
 # ╔═╡ 856a5528-7941-4691-b723-31ad3da7786e
 begin 
-	plot(xlabel=L"\mu_{\alpha *} / \rm mas\, yr^{-1}", ylabel=L"\mu_\delta  / \rm mas\, yr^{-1}", colorbar_scale=:log10, aspect_ratio=:equal)
+	# plot(xlabel=L"\mu_{\alpha *} / \rm mas\, yr^{-1}", ylabel=L"\mu_\delta  / \rm mas\, yr^{-1}", colorbar_scale=:log10, aspect_ratio=:equal)
 	
-	histogram2d!(j24.pmra, j24.pmdec, bins=LinRange(-20, 20, 100), xlim=(-20, 20))
+	hexbin(j24.pmra, j24.pmdec, bins=20)
 end
 
 # ╔═╡ 81374c1a-cf4a-4504-b669-7a2bbe5a6b5c
 begin 
-	plot(colorbar_scale=:log10, yflip=true,
-	xlabel="BP - RP", ylabel="G")
+	# plot(colorbar_scale=:log10, yflip=true,
+	# xlabel="BP - RP", ylabel="G")
 	
-	histogram2d!(j24_filtered.bp_rp, j24_filtered.phot_g_mean_mag, bins=100)
+	hexbin(j24_filtered.bp_rp, j24_filtered.phot_g_mean_mag, bins=100)
 end
 
 # ╔═╡ eb071752-34ac-4e97-9444-9f9bca62dc3b
 begin 
-	plot(colorbar_scale=:log10,yflip=true,
-	xlabel="BP - RP", ylabel="G")
-	histogram2d!(j24.bp_rp, j24.phot_g_mean_mag, bins=200)
+	#plot(colorbar_scale=:log10,yflip=true,
+	#xlabel="BP - RP", ylabel="G")
+	hexbin(j24.bp_rp, j24.phot_g_mean_mag, bins=200)
 end
 
 # ╔═╡ 83b506bb-f385-464e-8f5c-7adfff45105a
 begin 
-	scatter(j24_filtered.bp_rp, j24_filtered.phot_g_mean_mag, marker_z=log10.(r_ell), 
+	scatter(j24_filtered.bp_rp, j24_filtered.phot_g_mean_mag, color=log10.(r_ell), 
 	yflip=true, xlabel="bp rp", ylabel="G")
 
 end
@@ -284,9 +331,9 @@ end
 
 # ╔═╡ a4e857c0-39d9-4fa0-871f-ccc66cb17c25
 begin 
-	plot(colorbar_scale=:log10, xlabel=L"\varpi / \rm mas", ylabel=L"\delta\varpi/\rm mas"
-	)
-	histogram2d!(j24.parallax, j24.parallax_error, colorbar_scale=:log10)
+	#plot(colorbar_scale=:log10, xlabel=L"\varpi / \rm mas", ylabel=L"\delta\varpi/\rm mas"
+	#)
+	hexbin(j24.parallax, j24.parallax_error, bins=20)
 end
 
 # ╔═╡ c70fce56-9367-4f6a-92bb-f0d0d7a616e0
@@ -340,91 +387,14 @@ md"""
 # Cumulative plots
 """
 
-# ╔═╡ 54477bfa-bfc0-4d44-9f03-72531ec3de7d
-function plot_cdf!(rs, weights=ones(length(rs)); norm=:density, kwargs...)
-	idx = sortperm(rs)
-	if norm == :density
-		ys = cumsum(weights[idx]) / sum(weights[idx])
-	elseif norm == :count
-		ys = cumsum(weights[idx])
-	else
-		error("Norm not known : $norm")
-	end
-	
-	plot!(rs[idx], ys; kwargs... )
-	
-	return rs[idx],ys
-end
-
-# ╔═╡ cd9ed83d-6827-4809-8929-c0e58ae5da57
-begin 
-	p2 = plot()
-	r_cuts = [0, 0.5, 1, 1.5, 2, 3, 5]
-	for i in 1:(length(r_cuts) - 1)
-		
-		r_filt = r_cuts[i] .< r_ell .< r_cuts[i + 1]
-		plot_cdf!(j24_filtered[r_filt, :phot_g_mean_mag], ones(sum(r_filt)) / sum(r_filt), 
-			label="$(r_cuts[i]) < r/r_h < $(r_cuts[i+1])")
-	end
-
-	xlabel!("G mag")
-	ylabel!("CDF")
-	p2
-end
-
 # ╔═╡ 786f8e2c-3b12-47a9-b431-18e30cdf2a1e
 idxs = sortperm(r_ell)
 
 # ╔═╡ 38553483-6028-4d78-9805-80581e55e214
 M = cumsum(ones(length(idxs)))
 
-# ╔═╡ 20d997f1-72de-4c6b-9aa3-836c85221c21
-p = Ref{Plots.Plot}()
-
-# ╔═╡ b16a4815-22c6-44cd-b0d9-67a349500637
-begin 
-	p[] = plot(xlabel=L"\xi / \textrm{arcmin} ", ylabel=L"\eta / \textrm{arcmin}", aspect_ratio=1, xlim=(-10, 10), ylim=(-10, 10), dpi=400, fontfamily="Computer Modern", title="J24 members")
-	
-	scatter!(60*j24_filtered.xi, 60*j24_filtered.eta, ms=2, alpha=1, label="", marker_z=j24_filtered.phot_g_mean_mag, cmap=cgrad(:greys), cb_title="G mag", clims=(8, 22), dpi=1600, show=true)
-	p[]
-	savefig("j24_memb.png")
-	p[]
-end
-
-# ╔═╡ 74327a32-0084-4a3c-986e-0bd0b81996f9
-begin 
-	p[] = plot(aspect_ratio = 1, ticks=:naitive, extra_kwargs=:subplot, xlim=(-dθ, dθ), ylim=(-dθ, dθ), legend=false, dpi=300
-)
-	
-	scatter!(xi, eta, 
-		ms=1, label="")
-	
-	contour!(kde_d.x, kde_d.y, Σ_kde, 
-		lw=2, colorbar=false)
-	
-	plot_circle!(2rh/60, 
-		lw=2, ls=:dot, color=:black)
-
-	θ_text = 45
-	r_text = 2rh/60
-	annotate!(r_text * cosd(θ_text), r_text * sind(θ_text), Plots.text(L"$2 r_{h}$", 12,  rotation = -90+θ_text, valign=:bottom))
-
-	xlabel!(L"\xi/ \rm degree")
-	ylabel!(L"\eta / \rm degree")
-	#savefig("sculptor_tangent_plane.tex")
-	p[]
-end
-
 # ╔═╡ 71b76e09-565d-48e9-bfb3-2d457fc0c8af
 r_circ = @. sqrt(j24_filtered.xi ^2 + j24_filtered.eta ^ 2)
-
-# ╔═╡ 2de3acc9-0af4-408f-a3fb-4f3e7fc21514
-begin 
-	p[] = plot( xscale=:log10, yscale=:log10, xlabel="radius (degree)", ylabel="CDF")
-	rs, cdfs = plot_cdf!(r_ell[idxs], label="elliptical", norm=:count)
-	plot_cdf!(r_circ, label="circular", norm=:count)
-	p[]
-end
 
 # ╔═╡ 523f6558-ff6b-4543-9612-554b97d78029
 r2 = @. sqrt((xi + 0.0028) ^2 + (eta -0.00195)  ^ 2)
@@ -436,44 +406,27 @@ begin
 	r_mean =  @.sqrt.((xi .- μ_xi).^2 + (eta - μ_eta).^2)
 end
 
-# ╔═╡ c463f463-30ac-4a3d-91ad-65ed428b8a2f
-begin 
-	p[] = plot( xscale=:log10, yscale=:log10, xlabel="radius (degree)", ylabel="cumulative star count")
-
-	plot_cdf!(r_circ, label="circular", norm=:count)
-	plot_cdf!(r_mean, label="mean centre",  norm=:count)
-
-	p[]
-
-end
-
 # ╔═╡ e7ac218f-a88d-4775-84b2-6ca0d8a6c74f
 lguys.std(xi) / sqrt(length(xi))
 
 # ╔═╡ 06ee46e0-ab72-40dc-8aad-1f7f1cebc031
 lguys.std(eta) / sqrt(length(eta))
 
-# ╔═╡ 86ed9a86-e4d5-4f63-9642-fb28638af89b
-begin
-	plot(xlabel="log r / kpc", ylabel="log Σ")
-
-	bins, ys = lguys.calc_histogram(log10.(r_ell), 50)
-	areas = π * diff((10 .^ bins) .^ 2)
-
-	plot!(lguys.midpoint(bins), log10.(ys ./ areas), label="elliptical")
-	
-	bins, ys = lguys.calc_histogram(log10.(r_circ), 50)
-	plot!(lguys.midpoint(bins), log10.(ys ./areas), label="circular")
-end
-
 # ╔═╡ 9002fcb7-ffb2-4e2b-a4e9-57599d6e233d
-begin 
-	plot(xlabel="ξ", ylabel="η", xlim=(-dθ, dθ), ylim=(-dθ, dθ), aspect_ratio=:equal)
+let
+	dθ = 0.5
+	#plot(xlabel="ξ", ylabel="η", xlim=(-dθ, dθ), ylim=(-dθ, dθ), aspect_ratio=:equal)
 
+	f = Figure()
+	ax = Axis(f[1, 1])
 	for a in LinRange(0.1dθ, 2dθ, 8)
-		plot!(x->a*cosd(x + PA), x->a*(1-ecc)*sind(x + PA), LinRange(0, 360, 100), label="", color="black")
+		t = LinRange(0, 360, 100)
+		x = @. a*cosd(t + PA)
+		y = @. a*(1-ecc)*sind(t + PA)
+		lines!(x, y, label="", color="black")
 	end
 	scatter!(xi, eta, ms=1,label="", alpha=0.3)
+	f
 end
 
 # ╔═╡ 03bd2cca-dc14-41a7-b1d5-02b31b41a6b1
@@ -492,20 +445,23 @@ scatter(xi, eta, ms=3, xlim=(-0.15, 0.15), ylim=(-0.15, 0.15))
 rand(10)
 
 # ╔═╡ ebb24519-ee2d-4781-a2bd-16ccbc957060
-begin
-	h = plot()
+let
+	f = Figure()
+	ax = Axis(f[1, 1])
 	for r in 10 .^ LinRange(-1.3, 0, 10)
 		if sum(0.9r .< r_ell .< 1.1r) > 0
-			scatterhist!(ϕ[0.9r .< r_ell .< 1.1r], bins=20, label="$r", norm=:pdf)
+			stephist!(ϕ[0.9r .< r_ell .< 1.1r], bins=20, label="$r", norm=:pdf)
 		end
 	end
-	h
+	f
 end
 
 # ╔═╡ 49a5de24-907c-49e1-9747-8be5bb28b64d
-begin 
-	plot(xlabel="angle", ylabel="count")
-	histogram!(ϕ, bins=50, label="")
+let 
+	fig, ax, h = hist(ϕ, bins=50, label="")
+	ax.xlabel = "angle"
+	ax.ylabel = "count"
+	fig
 end
 
 # ╔═╡ 4a493f03-594a-4a4b-811a-6001926d44ae
@@ -603,7 +559,7 @@ end
 log10.(r_ell)
 
 # ╔═╡ 45264d8f-2c81-4d9a-a6b4-737e384f01a7
-histogram(log10.(r_ell))
+hist(log10.(r_ell))
 
 # ╔═╡ 1bd6e99f-2a85-4301-a23b-e0f24ba75219
 log10.(r_ell)
@@ -615,25 +571,29 @@ length(r_ell)
 x, y, hs = calc_akde(sort((r_ell)), bw=4, k=500, kernel=gaussian_kernel)
 
 # ╔═╡ 1e38e2f1-38e8-4813-a56e-b4fce91ea635
-begin 
-	scatter(sort(log10.(r_ell)), log10.(hs))
+let 
+	fig, ax, sc = scatter(sort(log10.(r_ell)), log10.(hs))
 	scatter!(log10.(lguys.midpoint(sort(r_ell))), log10.(250*lguys.diff(sort(r_ell))), alpha=0.1)
 	plot!([-3, 0.5], [-3, 0.5])
+	fig
 end
 
 # ╔═╡ ad904c0e-cfe9-46cf-96b8-f4cb0093dff5
-begin 
-	plot(log10.(x), 5*y .* x .* log(10) ./ lguys.gradient(log10.(x)) /length(r_ell) )
-	plot!(calc_kde(sort(log10.(r_ell)), bw=0.01)...)
-	scatterhist!(log10.(r_ell), norm=:pdf)
+let 
+	fig, ax, ls = lines(log10.(x), 5*y .* x .* log(10) ./ lguys.gradient(log10.(x)) /length(r_ell) )
+	lines!(calc_kde(sort(log10.(r_ell)), bw=0.01)...)
+	stephist!(log10.(r_ell), normalization=:pdf)
+	fig
 end
 
 # ╔═╡ 50138654-cfd9-4dc4-b35d-80f3f375960c
-begin 
-	plot()
-	plot!(x, y )
-	scatterhist!(r_ell, norm=:pdf)
-	plot!(kde(r_ell))
+let 
+	fig = Figure()
+	ax = Axis(fig[1, 1])
+	lines!(x, y)
+	stephist!(r_ell, bins=50, normalization=:pdf)
+	lines!(kde(r_ell))
+	fig
 end
 
 # ╔═╡ 8c1ca1f4-70d5-486e-b8c0-5eaeea1aa096
@@ -725,12 +685,14 @@ begin
 end 
 
 # ╔═╡ Cell order:
-# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
+# ╠═69c98029-165c-407b-9a63-a27e06e30e45
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 # ╠═ebfe3e7b-c791-4699-b039-09c4be31ea0d
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
 # ╠═d1a2aa9e-13d3-4cd1-9326-3039991eebe3
+# ╠═63205ce8-cd48-40c3-9fc4-da3c13eb5b0e
 # ╠═1d7bbfed-bb40-469b-86e4-411c3fbfdec8
 # ╠═02d19c07-411f-40d6-9ac3-010ebfd4bdfe
 # ╠═b16a4815-22c6-44cd-b0d9-67a349500637
@@ -757,35 +719,27 @@ end
 # ╠═e49c409b-188f-4d65-a193-288a5fc8e656
 # ╠═e696721c-f3a6-4812-a17a-2062b3f957e7
 # ╠═40ad7745-df35-4898-af0f-8b24ee752aae
-# ╠═47370a21-5127-4b53-84d5-b6307c7cd585
 # ╠═0e6d1577-cc27-40a5-a483-aacc6f735a2f
 # ╠═24b30dd5-a2a8-47b2-9695-8b48f6bf2667
 # ╠═596d3898-d7b5-42f6-bcda-fe2e91c64a05
-# ╠═1d5f749f-8ed3-4f92-b8c2-4d4bee8f46f1
 # ╠═9e95d81c-5305-4b67-9867-b0e04efd63aa
 # ╠═3dccd820-de5c-422c-8585-7c74e6a09b07
 # ╠═856a5528-7941-4691-b723-31ad3da7786e
 # ╠═81374c1a-cf4a-4504-b669-7a2bbe5a6b5c
 # ╠═eb071752-34ac-4e97-9444-9f9bca62dc3b
 # ╠═83b506bb-f385-464e-8f5c-7adfff45105a
-# ╠═cd9ed83d-6827-4809-8929-c0e58ae5da57
 # ╠═b057629d-cc8a-48bd-ba5b-6d2203f988ba
 # ╠═a4e857c0-39d9-4fa0-871f-ccc66cb17c25
 # ╠═c70fce56-9367-4f6a-92bb-f0d0d7a616e0
 # ╠═cd8f63a6-bd53-4cf4-a3f4-a8943e0a1caf
-# ╠═802348e2-8e11-42f5-b2e8-4a66a39936a2
-# ╠═54477bfa-bfc0-4d44-9f03-72531ec3de7d
+# ╟─802348e2-8e11-42f5-b2e8-4a66a39936a2
 # ╠═786f8e2c-3b12-47a9-b431-18e30cdf2a1e
 # ╠═38553483-6028-4d78-9805-80581e55e214
-# ╠═20d997f1-72de-4c6b-9aa3-836c85221c21
-# ╠═2de3acc9-0af4-408f-a3fb-4f3e7fc21514
-# ╠═c463f463-30ac-4a3d-91ad-65ed428b8a2f
 # ╠═71b76e09-565d-48e9-bfb3-2d457fc0c8af
 # ╠═523f6558-ff6b-4543-9612-554b97d78029
 # ╠═c1a82bee-8ac0-4038-8a72-76ebfd85e2d6
 # ╠═e7ac218f-a88d-4775-84b2-6ca0d8a6c74f
 # ╠═06ee46e0-ab72-40dc-8aad-1f7f1cebc031
-# ╠═86ed9a86-e4d5-4f63-9642-fb28638af89b
 # ╠═9002fcb7-ffb2-4e2b-a4e9-57599d6e233d
 # ╠═03bd2cca-dc14-41a7-b1d5-02b31b41a6b1
 # ╠═b797849c-3617-4f85-a977-8493f0a694ac

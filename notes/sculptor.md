@@ -14,7 +14,9 @@ The Sculptor DSph
 | $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | mcconnachie2020                        |
 | $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | mcconnachie2020                        |
 | RV                       | $111.4 \pm 0.37$ km s$^{-1}$     | mcconnachie2012 ?, sigmaV from MV2020a |
-| r_h                      | $94\pm1$ arcmin                  | MV20                                   |
+| r_h                      | xxx$94\pm1$ arcmin               | MV20                                   |
+| ecc                      | 0.37                             | ?                                      |
+| PA                       | 94                               |                                        |
 
 also compiled in sestito 2023
 
@@ -32,17 +34,27 @@ also compiled in sestito 2023
 | $M_s$                | 0.290 \M0                     |
 | $M(r<r_s)$           | 0.056 \M0                     |
 
+
+
+stellar profile
+
+$R_s = 0.174$​ kpc (2D)
+
+$r_s=0.109$​ kpc (3D)
+
+
+
+softening
+$$
+h = 4\frac{r_{200}}{\sqrt{N_{200}}}
+$$
+
+
 ### los velocities
 
-- Ms = 2.902232710323569e9
 
-- rs = 2.761685693102923
-- M(r<rs) = 5.605580653278457e8
-- c = 13.081069936383678
-- Vmax = 31.261058632548806
-- rmax = 5.972370629164147
 
-# Orbits
+Orbits
 
 
 
