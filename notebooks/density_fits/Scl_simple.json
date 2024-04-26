@@ -1,0 +1,26 @@
+{
+    "filename": "../Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits",
+    "outname": "sculptor.json",
+    "ra": 15.03917,
+    "dec": -33.70917,
+    "dra":  0,
+    "ddec": 0,
+    "ecc": 0.37,
+    "rh": 12.33,
+    "PA": 94,
+    "dist": 86,
+    "dist_err": 3,
+
+    "filter_mode": "jax",
+
+    "psat_min": 0.2,
+
+    "ruwe_max": 1.4,
+    "g_min": 21,
+    "g_max": 12,
+    "max_ang_dist": 0.5,
+    "n_sigma_dist": 3,
+    "pmra": 0.099,
+    "pmdec": -0.160,
+    "dpm": 0.5
+}
