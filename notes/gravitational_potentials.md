@@ -257,3 +257,24 @@ with exponential drop off $u_h = 200$, $\eta=2$. Becomes as published with $u_h 
 
 
 
+# 2D profiles
+
+## Exponential
+
+$$
+\Sigma(R) = \Sigma_0 \exp(-R/R_s)
+$$
+
+
+$$
+M(R) =  \pi  R_s^2 \Sigma_0 \left(1 - x \exp(-x) - \exp(-x)\right)
+$$
+
+
+Solving $M(R) = 1/2M_{\rm tot}$,  the half mass radius is $1.6783\,R_s$​. 
+
+for the 3D exponential, 
+$$
+M(r) = 4\pi r_s^3 \rho_0 \left(2 - 2e^{-x} - 2xe^{-x} - x^2\,e^{-x}\right)
+$$
+which gives $r_h = 2.674 r_s$. So, given $R_s$, $r_s = 0.62762\,R_s$. (Verify this!)
