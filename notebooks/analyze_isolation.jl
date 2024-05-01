@@ -8,8 +8,8 @@ using InteractiveUtils
 begin
 	import Pkg; Pkg.activate()
 
-	using Plots; gr()
-	import Arya
+	using CairoMakie
+	using Arya
 
 	import LilGuys as lguys
 end
@@ -48,7 +48,7 @@ md"""
 dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6"
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
-r_s_s = 0.109 # stellar scale radius
+r_s_s = 0.11 # stellar scale radius
 
 # ╔═╡ ef3d1d5f-0979-44a7-8f0f-bf4638ea5612
 ρ_s(r) = 1/8π /r_s_s^3 * exp(-r / r_s_s)
@@ -138,199 +138,27 @@ end
   ╠═╡ =#
 
 # ╔═╡ 72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
-begin 
-	histogram2d(log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0)
-	xlabel!("log radius / kpc")
-	ylabel!("velocity (km/s)")
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="velocity (km/s)" )
+	Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0)
+
+	fig
 end
 
 # ╔═╡ 4e4c420e-6d35-42af-b859-b62861b1b6b9
-begin 
-	histogram2d(log10.(lguys.calc_r(snap_f.positions)), lguys.calc_r(snap_f.velocities) * lguys.V0)
-	xlabel!("log radius / kpc")
-	ylabel!("velocity (km/s)")
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel = "log radius / kpc", ylabel ="velocity (km/s)" )
+	Arya.hist2d!(ax, log10.(lguys.calc_r(snap_f.positions)), lguys.calc_r(snap_f.velocities) * lguys.V0)
+	fig
 end
 
 # ╔═╡ b9746093-0f2f-4478-82ba-00911c8fcceb
-histogram2d(snap_i.positions[1, :], snap_i.positions[2, :], bins = LinRange(-10, 10, 100))
+Arya.hist2d(snap_i.positions[1, :], snap_i.positions[2, :], bins = LinRange(-10, 10, 100))
 
 # ╔═╡ 528d0258-c218-4e7a-aa18-f096fdf45270
-histogram2d(snap_f.positions[1, :] .- x_cen[1, end:end], snap_f.positions[2, :] .- x_cen[2, end:end], bins = LinRange(-10, 10, 100))
-
-# ╔═╡ 29391db0-a45e-4edb-9c5c-7cfc8c141551
-length(probabilities)
-
-# ╔═╡ 9f6aa667-2478-4e96-9289-4d2c74bbf1c0
-lguys.calc_ρ_hist(radii, weights=probabilities)
-
-# ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
-function plot_ρ_dm!(snap; kwargs...)
-	pos = lguys.extract_vector(snap, :positions)
-	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40)
-	plot!(log10.(lguys.midpoint(r)), log10.(ρ); xlabel="log r", ylabel="log ρ", kwargs...)
-end
-
-# ╔═╡ dd3a3e04-7b33-4f84-a935-0860283eca80
-function plot_ρ_s!(snap; kwargs...)
-	pos = lguys.extract_vector(snap, :positions, pidx)
-	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=probabilities)
-	plot!(log10.(lguys.midpoint(r)), log10.(ρ); xlabel="log r", ylabel="log ρ", kwargs...)
-end
-
-# ╔═╡ 27f8deff-96ae-4d9a-a110-d146ac34965a
-begin 
-	function plot_ρ_dm(snap)
-		plot()
-		plot_ρ_dm!(snap)
-	end
-
-end
-
-# ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
-begin 
-	plot()
-	plot_ρ_dm!(snap_i, label="initial")
-	plot_ρ_dm!(snap_f, label="final")
-
-end
-
-# ╔═╡ a8de1562-6afe-4002-b7bd-9d5541e8d354
-begin 
-	plot(xlim=(-2, 2), ylim=(-12, 3), title="stars")
-	plot_ρ_s!(snap_i, label="initial")
-	plot_ρ_s!(snap_f, label="final")
-	vline!([log10(r_s_s)], label="r_s")
-
-	log_r_pred = LinRange(-2, 2, 1000)
-	ρ_s_pred = ρ_s.(10 .^ log_r_pred)
-
-	plot!(log_r_pred, log10.(ρ_s_pred), label="expected")
-
-end
-
-# ╔═╡ e33d56a7-7a0e-4fa9-8f0d-041b43584d59
-sum(lguys.calc_r(snap_i) .< r_s_s)
-
-# ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
-histogram(log10.(lguys.calc_r(snap_i)), ylabel="count", xlabel="log r / kpc", label="")
-
-# ╔═╡ fb0dec74-aaab-43a4-9b37-d13634c5dcad
-md"""
-# Time variation
-"""
-
-# ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
-begin 
-	Ls = hcat([lguys.calc_L_tot(snap) for snap in out]...)
-	plot(transpose(Ls))
-	xlabel!("snapshot")
-	ylabel!("L")
-end
-
-# ╔═╡ bfa7593c-4915-4e03-83e6-8f790de4c1a5
-begin 
-	Es = hcat([lguys.calc_E_tot(snap) for snap in out]...)
-	plot(transpose(Es ./ Es[1]))
-	xlabel!("snapshot")
-	ylabel!("rel change energy")
-end
-
-# ╔═╡ fe476f91-5be3-4cf9-88df-55d9568ab88f
-pos = lguys.extract(snap_i, :positions)
-
-# ╔═╡ 70f9aa47-956c-4db3-ad3a-f18a18318d33
-lguys.plot_xyz_layout(x_cen)
-
-# ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
-plot(transpose(v_cen) * lguys.V0)
-
-# ╔═╡ dc221349-eb61-4ace-8de3-a6c50249aca0
-begin 
-	rs = Vector[]
-	Ms = Vector[]
-	rs_s = Vector[]
-
-	percens = [0.003, 0.01, .05, .10, .20, .30, .50, .9]
-	
-	for i in 1:length(out)
-		r = lguys.calc_r(out[i].positions .- x_cen[:, i])
-		s_idx = sortperm(r)
-		push!(rs, r[s_idx])
-		
-		
-		ms = cumsum(probabilities[out[i].index[s_idx]])
-		ms ./= ms[end]
-		idxs = searchsortedfirst.([ms], percens)
-		if i % 50 == 0
-			println(idxs)
-		end
-		push!(Ms, ms)
-		push!(rs_s, r[s_idx][idxs])
-	end
-
-	rs = hcat(rs...)
-	rs_s = hcat(rs_s...)
-
-end
-
-# ╔═╡ f21cfe22-95f3-485d-902b-b022a41548c2
-begin 
-	plot(legend_position=:outertopright)
-	for Npoints in round.(Int, length(out[1]) * percens)
-		plot!(1:length(out), log10.(rs[Npoints, :]), label="f=$(round(Npoints/length(out[1]), digits=3))")
-	end
-	xlabel!("snapshot")
-	ylabel!("log r contating fraction of particles")
-end
-
-# ╔═╡ 38aeb93b-8b79-4880-b0d1-cef180d13bc3
-begin 
-	plot(dpi=600, legend=false)
-	for i in eachindex(percens)
-		plot!(1:length(out), log10.(rs_s[i, :]), label="$(percens[i])")
-	end
-
-	xlabel!("snapshot")
-	ylabel!("log r contating stellar mass")
-end
-
-# ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
-out.times * lguys.T0
-
-# ╔═╡ 470466ff-3709-4cdb-93c0-b5b7848a940d
-begin 
-	anim = @animate for i in 1:10:length(out)
-		snap = out[i]
-		xr = 10
-		plot(legend=false, grid=false, axis=false, dpi=100,
-			xlim=(-xr, xr), ylim=(-xr, xr), fmt=:gif)
-		scatter!(snap.positions[2, :], snap.positions[3, :],
-		ms=1, msw=0, ma=1)
-		scatter!([0], [0], ms=2, msw=0)
-	
-	end
-	gif(anim, "isolation.gif", fps=12) #anim
-end
-
-# ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lguys.plot_xyz_layout(lguys.extract_vector(out, :positions, 4012))
-
-# ╔═╡ ce8420db-b395-4db2-acb2-d900281add38
-begin 
-	w = 10
-	plot(xlims=(-w, w), ylims=(-w, w))
-
-	idx_p = 100
-	snap_p = out[idx_p]
-
-	filt_p = snap_p.positions[3, :] .- x_cen[3, idx_p] .< w
-	scatter!(snap_p.positions[1, filt_p] .- x_cen[1, idx_p], snap_p.positions[2, filt_p] .- x_cen[2, idx_p], marker_z=asinh.(probabilities[snap_p.index][filt_p] ./ 0.01), ms=1, msw=0, label="")
-end
-
-# ╔═╡ a9fe4a34-f8ce-46bd-84fb-bdae17a508a4
-histogram(probabilities, bins=20, yscale=:log10, xlabel="probability", ylabel="count")
+Arya.hist2d(snap_f.positions[1, :] .- x_cen[1, end:end], snap_f.positions[2, :] .- x_cen[2, end:end], bins = LinRange(-10, 10, 100))
 
 # ╔═╡ 665ae91c-585c-4561-8f20-7541370cb837
 # ╠═╡ disabled = true
@@ -346,6 +174,238 @@ begin
 	ps = lguys.extract_vector(snap_f, :positions)
 	radii = lguys.calc_r(ps)
 
+end
+
+# ╔═╡ 29391db0-a45e-4edb-9c5c-7cfc8c141551
+length(probabilities)
+
+# ╔═╡ 9f6aa667-2478-4e96-9289-4d2c74bbf1c0
+lguys.calc_ρ_hist(radii, weights=probabilities)
+
+# ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
+function plot_ρ_dm!(snap; kwargs...)
+	pos = lguys.extract_vector(snap, :positions)
+	rs = lguys.calc_r(pos)
+	r, ρ = lguys.calc_ρ_hist(rs, 40)
+	lines!(log10.(lguys.midpoint(r)), log10.(ρ); xlabel="log r", ylabel="log ρ", kwargs...)
+end
+
+# ╔═╡ dd3a3e04-7b33-4f84-a935-0860283eca80
+function plot_ρ_s!(snap; kwargs...)
+	pos = lguys.extract_vector(snap, :positions, pidx)
+	rs = lguys.calc_r(pos)
+	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=probabilities)
+	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+end
+
+# ╔═╡ 27f8deff-96ae-4d9a-a110-d146ac34965a
+begin 
+	function plot_ρ_dm(snap)
+		plot()
+		plot_ρ_dm!(snap)
+	end
+
+end
+
+# ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
+let 
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel = "log rho DM")
+	plot_ρ_dm!(snap_i, label="initial")
+	plot_ρ_dm!(snap_f, label="final")
+
+	fig
+
+end
+
+# ╔═╡ a8de1562-6afe-4002-b7bd-9d5541e8d354
+let 
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel = "log rho stars", 
+		limits=((-1.9, 0.5), (-5, 2)))
+
+	vlines!(log10(r_s_s), label="r_s")
+
+	plot_ρ_s!(snap_i, label="initial")
+	plot_ρ_s!(snap_f, label="final")
+
+	log_r_pred = LinRange(-2, 2, 1000)
+	ρ_s_pred = ρ_s.(10 .^ log_r_pred)
+
+	lines!(log_r_pred, log10.(ρ_s_pred), label="expected")
+	
+	axislegend(ax)
+	fig
+end
+
+# ╔═╡ e33d56a7-7a0e-4fa9-8f0d-041b43584d59
+sum(lguys.calc_r(snap_i) .< r_s_s)
+
+# ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
+hist(log10.(lguys.calc_r(snap_i)), ylabel="count", xlabel="log r / kpc", label="")
+
+# ╔═╡ fb0dec74-aaab-43a4-9b37-d13634c5dcad
+md"""
+# Time variation
+"""
+
+# ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
+# ╠═╡ disabled = true
+#=╠═╡
+begin 
+	Ls = hcat([lguys.calc_L_tot(snap) for snap in out]...)
+	plot(transpose(Ls))
+	xlabel!("snapshot")
+	ylabel!("L")
+end
+  ╠═╡ =#
+
+# ╔═╡ bfa7593c-4915-4e03-83e6-8f790de4c1a5
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="relative change in energy")
+	Es = hcat([lguys.calc_E_tot(snap) for snap in out]...)
+	lines!((Es ./ Es[1])[1, :])
+	fig
+end
+
+# ╔═╡ fe476f91-5be3-4cf9-88df-55d9568ab88f
+pos = lguys.extract(snap_i, :positions)
+
+# ╔═╡ 19af6571-8794-4e65-b77d-d5fc94a5e1b9
+lines(x_cen)
+
+# ╔═╡ fb9ceaf0-df22-40ed-9a5a-908efba10135
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="x / kpc", ylabel="y / kpc")
+
+	
+	fig
+end
+
+# ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
+lines(transpose(v_cen) * lguys.V0)
+
+# ╔═╡ dc221349-eb61-4ace-8de3-a6c50249aca0
+function find_radii_fracs(out, x_cen, probabilities) 
+	rs = Vector[]
+	Ms = Vector[]
+	rs_s = Vector[]
+
+	percens = [0.003, 0.01, .03, .1, .3, .9]
+	
+	for i in 1:length(out)
+		r = lguys.calc_r(out[i].positions .- x_cen[:, i])
+		s_idx = sortperm(r)
+		push!(rs, r[s_idx])
+		
+		ps = probabilities[out[i].index[s_idx]]
+		ms = cumsum(ps)
+		ms ./= ms[end]
+		idxs = searchsortedfirst.([ms], percens)
+		if i % 50 == 0
+			println(idxs)
+		end
+		push!(Ms, ms)
+		push!(rs_s, r[s_idx][idxs])
+	end
+
+	rs = hcat(rs...)
+	rs_s = hcat(rs_s...)
+
+	return percens, rs, rs_s
+
+end
+
+# ╔═╡ 34244a2e-9501-451c-bd77-bebfebde2a78
+percens, rs, rs_s = find_radii_fracs(out, x_cen, probabilities)
+
+# ╔═╡ f21cfe22-95f3-485d-902b-b022a41548c2
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="log r containing fraction of DM")
+	
+	for i in eachindex(percens)
+		Npoints = round.(Int, length(out[1]) * percens[i])
+		lines!(1:length(out), log10.(rs[Npoints, :]), 				
+			label="$(round(Npoints/length(out[1]), digits=3))",
+			color=i, colorrange=(1, length(percens))
+		)
+	end
+
+	Legend(fig[1,2], ax, "f = ")
+	fig
+end
+
+# ╔═╡ 38aeb93b-8b79-4880-b0d1-cef180d13bc3
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="log r containing stellar mass")
+	for i in eachindex(percens)
+		lines!(1:length(out), log10.(rs_s[i, :]), 
+			color=i, colorrange=(1, length(percens)),
+			label="$(percens[i])")
+	end
+	Legend(fig[1,2], ax, "fraction")
+	fig
+end
+
+# ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
+out.times * lguys.T0
+
+# ╔═╡ 470466ff-3709-4cdb-93c0-b5b7848a940d
+# ╠═╡ disabled = true
+#=╠═╡
+begin 
+	anim = @animate for i in 1:10:length(out)
+		snap = out[i]
+		xr = 10
+		plot(legend=false, grid=false, axis=false, dpi=100,
+			xlim=(-xr, xr), ylim=(-xr, xr), fmt=:gif)
+		scatter!(snap.positions[2, :], snap.positions[3, :],
+		ms=1, msw=0, ma=1)
+		scatter!([0], [0], ms=2, msw=0)
+	
+	end
+	gif(anim, "isolation.gif", fps=12) #anim
+end
+  ╠═╡ =#
+
+# ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
+lguys.plot_xyz_layout(lguys.extract_vector(out, :positions, 4012))
+
+# ╔═╡ ce8420db-b395-4db2-acb2-d900281add38
+let 
+	w = 100
+
+	fig = Figure()
+	ax = Axis(fig[1,1], limits=(-w, w, -w, w))
+
+	idx_p = 100
+	snap_p = out[idx_p]
+	filt_p = snap_p.positions[3, :] .- x_cen[3, idx_p] .< w
+
+	w = probabilities[snap_p.index][filt_p]
+
+	x = snap_p.positions[1, filt_p] .- x_cen[1, idx_p]
+	y = snap_p.positions[2, filt_p] .- x_cen[2, idx_p]
+	println(x[5])
+	Arya.hist2d!(ax, x, y, weights = w, bins=((LinRange(-w, w, 100)), (LinRange(-w, w, 100)))
+	)
+	fig
+end
+
+# ╔═╡ a9fe4a34-f8ce-46bd-84fb-bdae17a508a4
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+	yscale=log10, xlabel="probability", ylabel="count")
+	
+	hist!(probabilities, bins=20, )
+	fig
 end
 
 # ╔═╡ Cell order:
@@ -387,9 +447,11 @@ end
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═fe476f91-5be3-4cf9-88df-55d9568ab88f
-# ╠═70f9aa47-956c-4db3-ad3a-f18a18318d33
+# ╠═19af6571-8794-4e65-b77d-d5fc94a5e1b9
+# ╠═fb9ceaf0-df22-40ed-9a5a-908efba10135
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
 # ╠═dc221349-eb61-4ace-8de3-a6c50249aca0
+# ╠═34244a2e-9501-451c-bd77-bebfebde2a78
 # ╠═f21cfe22-95f3-485d-902b-b022a41548c2
 # ╠═38aeb93b-8b79-4880-b0d1-cef180d13bc3
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
