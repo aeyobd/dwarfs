@@ -22,6 +22,7 @@ using Statistics
 # ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 if !@isdefined obs # read in sample (but only once)
 	include("sample.jl")
+	obs
 end
 
 # ╔═╡ ed6ec0e9-5734-4569-b214-2c86c22d3c55
@@ -32,7 +33,7 @@ pwd()
 
 # ╔═╡ 9c7e5bb4-8db0-4527-a8ec-331e2aed958b
 begin
-	filename = "out"
+	filename = "out/combined.hdf5"
 	out = lguys.Output(filename);
 end
 
@@ -107,8 +108,6 @@ dists = getproperty.(observations, :distance)
 normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
 
 # ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
-# ╠═╡ disabled = true
-#=╠═╡
 begin
 plots[] = []
 	
@@ -129,7 +128,6 @@ end
 
 plots[]
 end
-  ╠═╡ =#
 
 # ╔═╡ d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 # ╠═╡ disabled = true
@@ -398,3 +396,4 @@ end
 # ╠═5316884b-3971-4ca7-9106-f638241d3388
 # ╠═34b812d2-21c0-4983-9d14-7dbef08ab670
 # ╠═de1e5245-0946-47cd-8e2c-ba1914cfeb74
+                                    

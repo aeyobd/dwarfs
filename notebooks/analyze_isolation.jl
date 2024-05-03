@@ -48,7 +48,12 @@ md"""
 dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6"
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
-r_s_s = 0.11 # stellar scale radius
+begin 
+	r_s_s = 0.109 # stellar scale radius
+	# halo scale mass and radius
+	R_s = 2.76
+	M_s = 0.290
+end
 
 # ╔═╡ ef3d1d5f-0979-44a7-8f0f-bf4638ea5612
 ρ_s(r) = 1/8π /r_s_s^3 * exp(-r / r_s_s)
@@ -109,65 +114,115 @@ md"""
 # Initial/Final
 """
 
+# ╔═╡ 4710d1b5-fd6f-4369-8398-64e9123c8b41
+idx_i = 20; idx_f = length(out)
+
 # ╔═╡ c5672da9-0dad-4d22-abe5-9e186ccde02d
 begin
-	snap_i = out[1]
-	snap_i.x_cen = x_cen[:, 1]
-	snap_i.v_cen = v_cen[:, 1]
+	snap_i = out[idx_i]
+	snap_i.x_cen = x_cen[:, idx_i]
+	snap_i.v_cen = v_cen[:, idx_i]
 
-	snap_f = out[end - 1]
-	snap_f.x_cen = x_cen[:, end]
-	snap_f.v_cen = v_cen[:, end]
+	snap_f = out[idx_f]
+	snap_f.x_cen = x_cen[:, idx_f]
+	snap_f.v_cen = v_cen[:, idx_f]
 
 end
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
-# ╠═╡ disabled = true
-#=╠═╡
-begin 
-	plot()
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
 
 	rc, Vc = lguys.calc_V_circ(snap_i)
-	scatter!(log10.(rc), Vc * lguys.V0, label="initial")
+	lines!(log10.(rc), Vc * lguys.V0, label="initial")
 
 	rc, Vc = lguys.calc_V_circ(snap_f)
-	scatter!(log10.(rc), Vc * lguys.V0, label="final")
-	xlabel!("log r")
-	ylabel!("V_circ")
+	lines!(log10.(rc), Vc * lguys.V0, label="final")
+
+	A(x) = log(1+x)  - x/(1+x)
+	c = 13.1
+	V200 = sqrt(M_s * A(c) / (R_s * c))
+	println(V200)
+	V_nfw(x) = V200 * sqrt(A(x) / x / (A(c) / c))
+
+	log_r = LinRange(-2, 2.5, 1000)
+	y = V_nfw.(10 .^ log_r ./ R_s)
+	lines!(log_r, y * lguys.V0)
+	fig
 end
-  ╠═╡ =#
+
+# ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
+md"""
+phase space distribution of star particles initial and final snapshot
+"""
 
 # ╔═╡ 72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 let
-	fig = Figure()
+	fig = Figure(size=(700, 300))
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="velocity (km/s)" )
-	Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0)
+	Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0, bins=100)
+
+	ax2 = Axis(fig[1,2] )
+	Arya.hist2d!(ax2, log10.(lguys.calc_r(snap_f.positions)), lguys.calc_r(snap_f.velocities) * lguys.V0,
+	bins=100)
+
+	linkaxes!(ax, ax2)
+	hideydecorations!(ax2)
 
 	fig
 end
 
-# ╔═╡ 4e4c420e-6d35-42af-b859-b62861b1b6b9
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "log radius / kpc", ylabel ="velocity (km/s)" )
-	Arya.hist2d!(ax, log10.(lguys.calc_r(snap_f.positions)), lguys.calc_r(snap_f.velocities) * lguys.V0)
-	fig
-end
+# ╔═╡ a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
+md"""
+the dark matter distribution of  the snapshot (initial and final)
+"""
 
 # ╔═╡ b9746093-0f2f-4478-82ba-00911c8fcceb
-Arya.hist2d(snap_i.positions[1, :], snap_i.positions[2, :], bins = LinRange(-10, 10, 100))
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
 
-# ╔═╡ 528d0258-c218-4e7a-aa18-f096fdf45270
-Arya.hist2d(snap_f.positions[1, :] .- x_cen[1, end:end], snap_f.positions[2, :] .- x_cen[2, end:end], bins = LinRange(-10, 10, 100))
+	bins = LinRange(-10, 10, 100)
+	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], bins = bins)
+
+	ax2 = Axis(fig[1,2], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc",
+	title="final")
+	
+	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], bins = bins)
+	hideydecorations!(ax2)
+	linkaxes!(ax, ax2)
+	fig
+end
+
+# ╔═╡ 24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
+md"""
+stellar distribution of initial and final snapshot
+"""
 
 # ╔═╡ 665ae91c-585c-4561-8f20-7541370cb837
-# ╠═╡ disabled = true
-#=╠═╡
-begin 
-	ps = lguys.extract(snap_i, :positions, p_filt)
-	histogram2d(ps[1, :], ps[2, :], weights=probabilities)
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+
+	bins = LinRange(-1, 1, 100)
+	probs = probabilities[snap_i.index]
+	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], weights=probs, bins = bins)
+
+	ax2 = Axis(fig[1,2], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc",
+	title="final")
+
+	probs = probabilities[snap_f.index]
+
+	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=probs, bins = bins)
+	hideydecorations!(ax2)
+	linkaxes!(ax, ax2)
+	fig
 end
-  ╠═╡ =#
 
 # ╔═╡ 106cbda4-57e0-459b-868b-b44339c944fc
 begin 
@@ -179,15 +234,13 @@ end
 # ╔═╡ 29391db0-a45e-4edb-9c5c-7cfc8c141551
 length(probabilities)
 
-# ╔═╡ 9f6aa667-2478-4e96-9289-4d2c74bbf1c0
-lguys.calc_ρ_hist(radii, weights=probabilities)
-
 # ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 function plot_ρ_dm!(snap; kwargs...)
 	pos = lguys.extract_vector(snap, :positions)
+	mass = lguys.extract(snap, :masses)
 	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); xlabel="log r", ylabel="log ρ", kwargs...)
+	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=mass)
+	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
 end
 
 # ╔═╡ dd3a3e04-7b33-4f84-a935-0860283eca80
@@ -207,14 +260,28 @@ begin
 
 end
 
+# ╔═╡ 7c20845e-3db1-4aa0-993f-a8d26751f87e
+
+
 # ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 let 
 	fig = Figure()
 
-	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel = "log rho DM")
+	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\textrm{DM} (10^{10} M_\odot / \textrm{kpc}^3)",
+	limits=(-2, 3, -8, 0))
 	plot_ρ_dm!(snap_i, label="initial")
 	plot_ρ_dm!(snap_f, label="final")
 
+
+	ρ_0 = M_s / (4 * π * R_s^3)
+
+	ρ_nfw(r) = ρ_0  / (r/R_s) * 1/(r/R_s + 1)^2
+
+	log_r = LinRange(-2, 3, 1000)
+	y = log10.(ρ_nfw.(10 .^ log_r))
+	lines!(log_r, y, label="expected")
+
+	axislegend(ax)
 	fig
 
 end
@@ -251,6 +318,9 @@ md"""
 # Time variation
 """
 
+# ╔═╡ 5b9a64a1-38c1-4f4d-aac3-d91663c368a3
+lguys.calc_L_tot(snap_i)
+
 # ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═╡ disabled = true
 #=╠═╡
@@ -266,8 +336,8 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="relative change in energy")
-	Es = hcat([lguys.calc_E_tot(snap) for snap in out]...)
-	lines!((Es ./ Es[1])[1, :])
+	Es = [lguys.calc_E_tot(snap) for snap in out]
+	lines!((Es ./ Es[1]))
 	fig
 end
 
@@ -276,15 +346,6 @@ pos = lguys.extract(snap_i, :positions)
 
 # ╔═╡ 19af6571-8794-4e65-b77d-d5fc94a5e1b9
 lines(x_cen)
-
-# ╔═╡ fb9ceaf0-df22-40ed-9a5a-908efba10135
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="x / kpc", ylabel="y / kpc")
-
-	
-	fig
-end
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
 lines(transpose(v_cen) * lguys.V0)
@@ -323,16 +384,20 @@ end
 # ╔═╡ 34244a2e-9501-451c-bd77-bebfebde2a78
 percens, rs, rs_s = find_radii_fracs(out, x_cen, probabilities)
 
+# ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
+times = out.times * lguys.T0
+
 # ╔═╡ f21cfe22-95f3-485d-902b-b022a41548c2
 let 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="log r containing fraction of DM")
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r containing fraction of DM")
 	
 	for i in eachindex(percens)
 		Npoints = round.(Int, length(out[1]) * percens[i])
-		lines!(1:length(out), log10.(rs[Npoints, :]), 				
-			label="$(round(Npoints/length(out[1]), digits=3))",
-			color=i, colorrange=(1, length(percens))
+		label = "$(round(Npoints/length(out[1]), digits=3))"
+		y = log10.(rs[Npoints, :])
+		lines!(times, y, 				
+			label=label, color=i, colorrange=(1, length(percens))
 		)
 	end
 
@@ -343,18 +408,15 @@ end
 # ╔═╡ 38aeb93b-8b79-4880-b0d1-cef180d13bc3
 let 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="log r containing stellar mass")
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r containing stellar mass")
 	for i in eachindex(percens)
-		lines!(1:length(out), log10.(rs_s[i, :]), 
+		lines!(times, log10.(rs_s[i, :]), 
 			color=i, colorrange=(1, length(percens)),
 			label="$(percens[i])")
 	end
 	Legend(fig[1,2], ax, "fraction")
 	fig
 end
-
-# ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
-out.times * lguys.T0
 
 # ╔═╡ 470466ff-3709-4cdb-93c0-b5b7848a940d
 # ╠═╡ disabled = true
@@ -375,28 +437,7 @@ end
   ╠═╡ =#
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lguys.plot_xyz_layout(lguys.extract_vector(out, :positions, 4012))
-
-# ╔═╡ ce8420db-b395-4db2-acb2-d900281add38
-let 
-	w = 100
-
-	fig = Figure()
-	ax = Axis(fig[1,1], limits=(-w, w, -w, w))
-
-	idx_p = 100
-	snap_p = out[idx_p]
-	filt_p = snap_p.positions[3, :] .- x_cen[3, idx_p] .< w
-
-	w = probabilities[snap_p.index][filt_p]
-
-	x = snap_p.positions[1, filt_p] .- x_cen[1, idx_p]
-	y = snap_p.positions[2, filt_p] .- x_cen[2, idx_p]
-	println(x[5])
-	Arya.hist2d!(ax, x, y, weights = w, bins=((LinRange(-w, w, 100)), (LinRange(-w, w, 100)))
-	)
-	fig
-end
+lines(lguys.extract_vector(out, :positions, 100_000))
 
 # ╔═╡ a9fe4a34-f8ce-46bd-84fb-bdae17a508a4
 let
@@ -426,29 +467,31 @@ end
 # ╠═2fb86841-fc96-47e1-af57-898fa2690ff3
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
+# ╠═4710d1b5-fd6f-4369-8398-64e9123c8b41
 # ╠═c5672da9-0dad-4d22-abe5-9e186ccde02d
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
+# ╠═a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
-# ╠═4e4c420e-6d35-42af-b859-b62861b1b6b9
+# ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
-# ╠═528d0258-c218-4e7a-aa18-f096fdf45270
+# ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 # ╠═665ae91c-585c-4561-8f20-7541370cb837
 # ╠═106cbda4-57e0-459b-868b-b44339c944fc
 # ╠═29391db0-a45e-4edb-9c5c-7cfc8c141551
-# ╠═9f6aa667-2478-4e96-9289-4d2c74bbf1c0
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 # ╠═dd3a3e04-7b33-4f84-a935-0860283eca80
 # ╠═27f8deff-96ae-4d9a-a110-d146ac34965a
+# ╠═7c20845e-3db1-4aa0-993f-a8d26751f87e
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 # ╠═a8de1562-6afe-4002-b7bd-9d5541e8d354
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
 # ╟─fb0dec74-aaab-43a4-9b37-d13634c5dcad
+# ╠═5b9a64a1-38c1-4f4d-aac3-d91663c368a3
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═fe476f91-5be3-4cf9-88df-55d9568ab88f
 # ╠═19af6571-8794-4e65-b77d-d5fc94a5e1b9
-# ╠═fb9ceaf0-df22-40ed-9a5a-908efba10135
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
 # ╠═dc221349-eb61-4ace-8de3-a6c50249aca0
 # ╠═34244a2e-9501-451c-bd77-bebfebde2a78
@@ -457,5 +500,4 @@ end
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
 # ╠═470466ff-3709-4cdb-93c0-b5b7848a940d
 # ╠═3b2bb553-0130-4c8a-80ad-6e1f7071a293
-# ╠═ce8420db-b395-4db2-acb2-d900281add38
 # ╠═a9fe4a34-f8ce-46bd-84fb-bdae17a508a4
