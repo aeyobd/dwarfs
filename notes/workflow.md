@@ -19,16 +19,26 @@ This document introduces my workflow for running N-body simulations of dwarfs in
 
 # Misc
 
+Jaclyn's data 
+
+https://www.canfar.net/storage/vault/list/jax/DSPHS_Gaia_eDR3/December_2022/1-Component_HB_Probabilities
+
 
 
 ## Numerical Setup
 
 See @power+2003 for a discussion of this...
 $$
-h_{grav} = \frac{R_{200}}{\sqrt{N}}
+h_{grav} = 4 \frac{R_{200}}{\sqrt{N}}
 $$
 
-10pc for $10^7$ particles
+Asya gave the similar relation
+$$
+h = 0.005R_{\rm max} (N/1e6)^{-1/2}
+$$
+which is $5/4$ of the value from @power+2003
+
+
 
 ## Units
 

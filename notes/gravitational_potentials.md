@@ -84,7 +84,7 @@ $$
 $$
 and $A(c)$ is as above. The characteristic density can also be written in terms of scale mass,  $M_s = M_{200}/{A(c)}$  (see below), giving
 $$
-\rho_s =  \frac{M_s}{4/3\ \pi\, {r_s}^3}
+\rho_s =  \frac{M_s}{4\ \pi\, {r_s}^3}
 $$
 ### Contained mass
 
