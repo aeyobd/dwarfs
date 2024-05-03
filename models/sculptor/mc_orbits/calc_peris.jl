@@ -2,7 +2,7 @@ using LilGuys
 using CSV
 using DataFrames
 
-filename = "out"
+filename = "out/combined.hdf5"
 out = Output(filename)
 
 idx, peris, apos = LilGuys.peris_apos(out)

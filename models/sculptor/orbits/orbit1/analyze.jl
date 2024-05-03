@@ -7,154 +7,334 @@ using InteractiveUtils
 # ╔═╡ bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
 begin 
 	using Pkg; Pkg.activate()
-	import LilGuys as lguys
-	using Plots; #plotlyjs()
+	using CairoMakie;
 	using CSV, DataFrames
-	using LaTeXStrings
+
+	import LilGuys as lguys
+
+	using Arya
 end
 
-# ╔═╡ 8fc58ec7-f79f-46b3-8b45-e134022e1737
-using ProfileSVG
+# ╔═╡ 60fe0995-3dd6-48ff-86e8-6fc5e099e39b
+begin 
+	using HDF5
 
-# ╔═╡ 6964cbd2-9ef9-4682-9ac1-80c10518c374
-out =  lguys.Output("out")
+	f = h5open("star_probabilities.hdf5")
+	p_idx = f["index"][:]
+	probabilities = f["probabilities"][:][sortperm(p_idx)]
+	p_idx = sort(p_idx)
+end
+
+# ╔═╡ a227ef84-a874-4176-9253-36bc36a743fa
+using LsqFit: curve_fit
+
+# ╔═╡ 4316d09d-43f6-4f6b-b830-0b8961743c61
+if !@isdefined obs # read in sample (but only once)
+	include("../../mc_orbits/sample.jl")
+end
+
+# ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
+begin 
+	out =  lguys.Output("out/combined.hdf5")
+	
+	cens = CSV.read("out/centres.csv", DataFrames.DataFrame)
+	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
+	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
+	out.x_cen .= x_cen
+	out.v_cen .= v_cen
+
+	out
+end
+
+# ╔═╡ f4d42909-5397-41e6-ac0c-07185bfece0e
+r_h = 0.109
 
 # ╔═╡ dc6bef2c-e4eb-41ab-8f37-3569c068573a
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
-	cens = lguys.ss_centre(out)
+	idx_i = 1
+	idx_f = 1038
+	snap_i = out[idx_i]
+	snap_f = out[idx_f]
 	
-	snap_i = out[1]
-	snap_f = out[end]
-
-	prof_i = lguys.Profile(snap_i, cens[1].x_c, cens[1].v_c)
-	prof_f = lguys.Profile(snap_f,  cens[end].x_c, cens[end].v_c)
+	"$(out.times[[idx_i, idx_f]] * lguys.T0) Gyr"
 end
   ╠═╡ =#
 
-# ╔═╡ 60fe0995-3dd6-48ff-86e8-6fc5e099e39b
-#=╠═╡
+# ╔═╡ a71bb30e-4a4c-4e94-b318-a426e3ee3045
 begin 
-	using HDF5
+	orbit_expected = CSV.read("orbit.csv", DataFrame)
+	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
+	v_cen_exp = -transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
 
-	f = h5open("star_probabilities.hdf5")
-	m_star = zeros(length(snap_i))
-
-	for i in 1:length(snap_i)
-		j = snap_i.index[i]
-		m_star[i] = f["probabilities"][findfirst(isequal(j), f["index"][:])]
-
-	end
 end
-  ╠═╡ =#
 
-# ╔═╡ a554ca71-8142-43c7-83b7-144f0d4a31fd
-#=╠═╡
-snap_i.index
-  ╠═╡ =#
+# ╔═╡ 29887611-5a0b-4f3a-8a3f-2da94b1765d2
+lguys.plot_xyz(x_cen, x_cen_exp)
 
-# ╔═╡ ffcebc1f-9daa-49cc-8426-b3c1a1050587
-#=╠═╡
-f["index", :]
-  ╠═╡ =#
+# ╔═╡ f563cbc7-655b-46e3-8686-2e4561b2467a
+function plot_ρ_dm!(snap, x_cen; kwargs...)
+	pos = lguys.extract_vector(snap, :positions)
+	pos .-= x_cen
+	mass = lguys.extract(snap, :masses)
+	rs = lguys.calc_r(pos)
+	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=mass)
+	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+end
 
-# ╔═╡ c9d4096f-abbd-4789-b762-4c3156c57232
-#=╠═╡
-profs = [lguys.Profile(out[i], cens[i].x_c, cens[i].v_c) for i in 1:length(out)]
-  ╠═╡ =#
+# ╔═╡ d2491f4d-f2b3-47c0-894c-94529b8cbe55
+function get_Vc(snap, skip=10)
+	ϵ = lguys.calc_ϵ(snap)
+	filt = ϵ .> 0
+	r = lguys.calc_r(snap[filt])
+	ms = snap.masses[filt][sortperm(r)]
+	r = sort(r)
+
+	r = r[1:skip:end]
+	M = cumsum(ms)[1:skip:end]
+
+	Vc = @. sqrt(lguys.G * M / r) * lguys.V0
+	r, Vc 
+end
+
+# ╔═╡ 3b044830-d631-4379-8401-cba29523e2f0
+function plot_Vc!(snap; kwargs...)
+
+	rc, Vc = get_Vc(snap)
+	lines!(log10.(rc), Vc; kwargs...)
+end
+
+# ╔═╡ 86877090-cfc9-4621-9187-d3da81f0428f
+import NaNMath as nm
+
+# ╔═╡ 1ace0815-7dc6-486f-b4c4-95fb41bc4313
+import StatsBase: percentile
+
+# ╔═╡ b7492731-148e-4445-a35b-23c9a444ef48
+function Vc_model(r, param)
+	Rs,scale =param
+	x = r ./ Rs
+	inner = @. (nm.log(1+x) - x/(1+x)) / x
+	return @. scale *nm.sqrt(inner)
+end
+
+# ╔═╡ 93e0c066-0229-4b49-95dc-f0a9a9f742e0
+function fit_Vc(rc, Vc)
+	filt = Vc .> percentile(Vc, 80)
+	fit = curve_fit(Vc_model, rc[filt], Vc[filt], [2., 30.])
+	return fit.param
+end
+
+# ╔═╡ 8547a5a2-7170-47a3-8110-cc2a5d49c070
+function V_r_max(param)
+	Rs, scale =param
+
+	r = 2.16258 * Rs
+	return r, Vc_model(r, param)
+end
+
+# ╔═╡ 086b4aa9-5671-4c31-9a01-f5585464bb8a
+function get_Vh(snap, r_h)
+	r = lguys.calc_r(snap)
+	m = sum(snap.masses[r .< r_h])
+	return sqrt(lguys.G * m / r_h) * lguys.V0
+end
+
+# ╔═╡ 9a8a5ad2-6aff-4d37-9748-7a415568f751
+function get_V_r_max(output::lguys.Output; skip=1)
+	V_maxs = Float64[]
+	r_maxs = Float64[]
+	V_hs = Float64[]
+
+	for i in 1:skip:length(output)
+		snap = output[i]
+		rc, Vc = get_Vc(snap)
+		param = fit_Vc(rc, Vc)
+		r_max, V_max = V_r_max(param)
+
+		Vh = get_Vh(snap, r_h)
+		
+		push!(V_maxs, V_max)
+		push!(r_maxs, r_max)
+		push!(V_hs, Vh)
+	end
+
+	return r_maxs, V_maxs, V_hs
+end
+
+# ╔═╡ 9418347c-e49f-4483-be0f-98a3b9578bac
+r_max, V_max, V_h = get_V_r_max(out, skip=10)
 
 # ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
 #=╠═╡
-begin 
-	Nt = length(out)
-	V_maxs = Vector{Float64}(undef, Nt)
-	r_maxs = Vector{Float64}(undef, Nt)
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
 
-	for i in 1:Nt
-		idx = argmax(profs[i].Vs_circ)
-		V_maxs[i] = profs[i].Vs_circ[idx]
-		r_maxs[i] = profs[i].rs[idx]
-	end
+	plot_Vc!(snap_i, label="initial")
+
+	plot_Vc!(snap_f, label="final")
+
+	α = 0.4
+	β = 0.65
+	x = LinRange(1, 0.1, 100)
+
+	y = @. 2^α * x^β * (1 + x^2)^(-α)
+	lines!(log10.(x .* r_max[1]), y .* V_max[1], lw=10, label="EN21")
+
+	scatter!(log10.(r_max), V_max, color=Arya.COLORS[4], label="Vmax")
+
+	axislegend(ax)
+	fig
 end
   ╠═╡ =#
-
-# ╔═╡ 78e2da2d-126b-442f-91d0-4cf9c1a4e82c
-#=╠═╡
-prof_i
-  ╠═╡ =#
-
-# ╔═╡ 693bcb86-29b8-4dd6-989b-641af3ff4b42
-p = Ref{Plots.Plot}()
 
 # ╔═╡ dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 #=╠═╡
-begin 
-	p[] = plot()
-	for prof in [prof_i, prof_f]
-		scatter!(log10.(prof.rs), log10.(prof.ρs))
-	end
-	p[]
-	xlabel!("log r / kpc")
-	ylabel!("log density")
-
-
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\log\rho_\textrm{DM}",
+	limits=(nothing, (-13, 0)))
+	
+	plot_ρ_dm!(snap_i, x_cen[:, idx_i], label="initial")
+	plot_ρ_dm!(snap_f, x_cen[:, idx_f], label="final")
+	
+	axislegend(ax)
+	fig
 	# only include bound points in profile...
 end
   ╠═╡ =#
 
-# ╔═╡ 6619ffaa-2e99-4be4-ad96-b22afda64b88
-#=╠═╡
-begin 
-	p[] = plot()
-	for prof in [prof_i, prof_f]
-		scatter!(log10.(prof.rs), lguys.V0 * prof.Vs_circ)
-	end
-	p[]
-	xlabel!("log r / kpc")
-	ylabel!("circular velocity")
+# ╔═╡ d5316554-9f4d-45ea-93bf-f6d0f5eab4c2
+function plot_ρ_s!(snap; kwargs...)
+	pos = lguys.extract_vector(snap, :positions, p_idx)
+	rs = lguys.calc_r(pos, snap.x_cen)
+	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=probabilities)
+	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+end
 
-	# only include bound points in profile...
+# ╔═╡ 4c331023-0777-43c7-90e5-3341aae0b141
+#=╠═╡
+let 
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
+		limits=((-1.9, 1), (-8, 2)))
+
+	plot_ρ_s!(snap_i, label="initial")
+	plot_ρ_s!(snap_f, label="final")
+	
+	axislegend(ax)
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
+#=╠═╡
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+
+	bins = LinRange(-10, 10, 100)
+	colorrange=(1e1, 1e3)
+	
+	bins = (x_cen[1, idx_i]  .+ bins,  x_cen[2, idx_i]  .+bins)
+	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], bins = bins, colorscale=log10, colorrange=colorrange)
+
+	ax2 = Axis(fig[1,2], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc",
+	title="final")
+
+	bins = LinRange(-10, 10, 100)
+	bins = (x_cen[1, idx_f]  .+ bins,  x_cen[2, idx_f]  .+bins)
+	hm = Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], bins = bins, colorscale=log10, colorrange=colorrange)
+	
+	Colorbar(fig[:, end+1], hm)
+	
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ 1ebb1ab6-c1a0-4d6b-8529-65155575b96e
+mlog10 = Makie.pseudolog10
+
+# ╔═╡ fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
+#=╠═╡
+let
+	fig = Figure()
+	r_max = 130
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "y / kpc", ylabel="z / kpc", title="dark matter",
+	limits=(-r_max, r_max, -r_max, r_max))
+	bins = LinRange(-r_max, r_max, 100)
+	
+	Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=mlog10)
+
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ 155222b2-f9df-4189-afbe-1af9d571d859
+#=╠═╡
+let
+	fig = Figure()
+	r_max = 100
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "y / kpc", ylabel="z / kpc", title="stars",
+	limits=(-r_max, r_max, -r_max, r_max))
+	bins = LinRange(-r_max, r_max, 300)
+
+	hm = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-10, 0.06), weights=probabilities[snap_f.index])
+
+	Colorbar(fig[:, end+1], hm)
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ 2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
+#=╠═╡
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+
+	bin_range = LinRange(-2, 2, 100)
+	colorrange =(1e-10, 1e-2)
+
+	bins = (x_cen[1, idx_i]  .+ bin_range,  x_cen[2, idx_i]  .+ bin_range)
+		
+	probs = probabilities[snap_i.index]
+
+	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], weights=probs, bins = bins, colorscale=mlog10, colorrange=colorrange)
+
+	ax2 = Axis(fig[1,2], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc",
+	title="final")
+
+	probs = probabilities[snap_f.index]
+
+	bins = (x_cen[1, idx_f]  .+ bin_range,  x_cen[2, idx_f]  .+ bin_range)
+
+	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=probs, bins = bins, colorscale=mlog10, colorrange=colorrange)
+	
+	fig
 end
   ╠═╡ =#
 
 # ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
-#=╠═╡
-begin 
-	plot(out.times * lguys.T0/1e9, V_maxs * lguys.V0)
-	xlabel!("time / Gyr")
-	ylabel!("V_circ max / km / s")
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="V_circ / km / s",
+	limits=(nothing, (0, nothing)))
+	x = out.times[1:10:end] * lguys.T0
+	scatter!(x, V_max, label="max")
+	scatter!(x, V_h, label=L"r=r_h")
+	axislegend(ax)
+	
+	fig
 end
-  ╠═╡ =#
-
-# ╔═╡ 9d587b4e-5670-4854-9c17-f5c7f7c6a57f
-md"""
-from EN 21, 
-"""
-
-# ╔═╡ 04df30cf-0931-4a63-a4ac-2d8409bc5f7d
-#=╠═╡
-begin 
-	scatter(r_maxs, V_maxs*lguys.V0, label="")
-	x =  LinRange(1, 0.1, 1000)
-	α = 0.4
-	β = 0.65
-	y = @. 2^α * x^β * (1 + x^2)^(-α)
-	plot!(x .* r_maxs[1], y .* V_maxs[1] * lguys.V0, lw=10, label="EN21")
-	plot!(xlabel=L"$R_{\rm max}$", ylabel=L"$V_{\rm max}\ / \ {\rm km / s^{-1}}$")
-end
-  ╠═╡ =#
-
-# ╔═╡ e6cbe208-2d1e-42c6-aadc-db3c2bd7c737
-#=╠═╡
-begin 
-	x_cen = hcat([cen.x_c for cen in cens]...)
-	v_cen = hcat([cen.v_c for cen in cens]...)
-end
-  ╠═╡ =#
-
-# ╔═╡ 365542d6-ed5d-4c9d-9c00-5bdf5a3bfe75
-floor(Int, 1/2)
 
 # ╔═╡ 6497d973-d800-4052-a9b1-23f91dc3aa9f
 begin 
@@ -175,76 +355,43 @@ begin
 	gif(anim, "sculptor.gif", fps = 12)
 end
 
-# ╔═╡ 2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
+# ╔═╡ 7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 #=╠═╡
-begin 
-	x0 = cens[1].x_c[1]
-	y0 = cens[1].x_c[2]
-	plot(xlims=(x0 - 10, x0 + 10), ylims=(y0 - 10, y0 + 10), xlabel="X", ylabel="Y")
-	fil = m_star .> 1e-10
-	scatter!(snap_i.positions[1, fil], snap_i.positions[2, fil], marker_z = log10.(m_star[fil]), msw=0, ms=2, colorbar_title="log stellar probability", label="")
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e2, 1e6)),
+		xlabel=L"\epsilon", ylabel="count")
+	stephist!(lguys.calc_ϵ(snap_i), )
+	es = lguys.calc_ϵ(snap_f)
+	es = es[es .> 0]
+	stephist!(es)
+
+	fig
 
 end
   ╠═╡ =#
 
-# ╔═╡ a5f23b9f-0e47-4ab5-a4ad-3d1ae079090a
+# ╔═╡ a1cc4e82-0b92-4fcf-9254-1ce788e408bb
 #=╠═╡
-begin 
-	xe = cens[end].x_c[1]
-	ye = cens[end].x_c[2]
-	plot(xlims=(xe - 30, xe + 30), ylims=(ye - 30, ye + 30))
-	file = m_star .> 1e-10
-	scatter!(snap_f.positions[1, file], snap_f.positions[2, file], marker_z = log10.(m_star[file]), msw=0, ms=2, clims=(-10, 10), label="")
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-8, 1)),
+		xlabel=L"\epsilon", ylabel="count")
+	stephist!(lguys.calc_ϵ(snap_i), weights=probabilities[snap_i.index])
+	es = lguys.calc_ϵ(snap_f)
+	filt = es .> 0
+	es = es[filt]
+	probs = probabilities[snap_f.index][filt]
+	stephist!(es, weights = probs)
+
+	fig
 
 end
   ╠═╡ =#
 
-# ╔═╡ 381e9b54-cf7c-47a6-9440-b22223f82095
+# ╔═╡ 2014a0f5-c99d-40de-9005-fa61ae9863b6
 #=╠═╡
-histogram(m_star)
-  ╠═╡ =#
-
-# ╔═╡ a71bb30e-4a4c-4e94-b318-a426e3ee3045
-df = CSV.read("orbit.csv", DataFrame)
-
-# ╔═╡ 052b814a-e830-458b-aa79-533a63a89285
-#=╠═╡
-lguys.plot_xyz(x_cen, transpose(hcat(df.x, df.y, df.z)))
-
-  ╠═╡ =#
-
-# ╔═╡ 8e3e6607-b7de-4de6-a616-927488588579
-#=╠═╡
-begin
-	plot(x_cen[2, :], x_cen[3, :], label="n body")
-	plot!(df.y, df.z, label="single particle")
-	scatter!(x_cen[2, 1:1], x_cen[3,1:1], label="start")
-	xlabel!("x / kpc")
-	ylabel!("y / kpc")
-end
-  ╠═╡ =#
-
-# ╔═╡ f25bdc49-6b88-4bc1-906a-baff1ca7d1f7
-#=╠═╡
-cens[1].v_c
-  ╠═╡ =#
-
-# ╔═╡ 51aad59f-96ff-4e88-bff2-f3ce378dd73b
-#=╠═╡
-prof_i.rs
-  ╠═╡ =#
-
-# ╔═╡ 59227684-c081-4465-bd39-c0f1698c8988
-#=╠═╡
-begin
-	radii = lguys.calc_r(snap_i.positions, cens[1].x_c)
-	vels = lguys.calc_r(snap_i.velocities, cens[1].v_c)
-	Φ_f = lguys.calc_radial_Φ(radii, snap_i.masses)
-
-	ke = @. 1/2 * vels^2
-	ϵ = @. -Φ_f(radii) - ke
-	filt = @. ϵ > 0
-end
+length(lguys.calc_ϵ(snap_i))
   ╠═╡ =#
 
 # ╔═╡ aca25368-28c7-4f4a-bfcf-295902eaff9a
@@ -253,11 +400,9 @@ begin
 end
 
 # ╔═╡ 743d20cd-9636-4384-9bf2-b2d7e259ae7d
-r_h = 0.308
-
-# ╔═╡ c7aa3122-4bdd-4889-895a-d143f8919405
+# ╠═╡ disabled = true
 #=╠═╡
-prof = lguys.Profile(snap_i[filt], cens[1].x_c, cens[1].v_c, Nr=200)
+r_h = 0.308
   ╠═╡ =#
 
 # ╔═╡ 7f168f93-849e-4586-a04f-6434165e6561
@@ -282,69 +427,163 @@ function gradient(x, y)
 	return grad
 end
 
-# ╔═╡ ea62a7e0-5fda-4d0c-aedb-61f6f97c1b8f
-#=╠═╡
-histogram(ϵ)
-  ╠═╡ =#
+# ╔═╡ b7629fac-2357-4e62-95ef-2ea12e92f335
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
+	r_c = lguys.calc_r(x_cen)
+	lines!(out.times * lguys.T0, r_c)
+	fig
+end
 
-# ╔═╡ 33e0615a-2d5a-4b07-808f-98e3cd9d22b2
+# ╔═╡ 42c677e3-8b25-4c8a-99ef-3abd0abcb891
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
+	r_c = lguys.calc_r(x_cen)
+	lines!(1:length(out), r_c)
+	fig
+end
+
+# ╔═╡ 46f6e4a2-6e2b-4f23-807c-b41be51a0960
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="R / kpc", ylabel="z / kpc"
+	)
+	x = x_cen[1, :]
+	y = x_cen[2, :]
+	z = x_cen[3, :]
+	R = @. sqrt(x^2 + y^2)
+	lines!(R, z)
+	fig
+end
+
+# ╔═╡ f2381a9c-96d7-4935-8967-32b8bfb3fb48
 #=╠═╡
 begin 
-	rs = lguys.calc_r(snap_i[filt].positions, cens[1].x_c)
-	vs = lguys.calc_r(snap_i[filt].positions, cens[1].x_c)
-	idx = sortperm(rs)
-	rs = rs[idx]
-	vs = vs[idx]
-
+	p_min = 1e-5
+	snap_f_stars = snap_f[probabilities[snap_f.index] .> p_min]
+	println(length(snap_f_stars))
+	obs_pred = lguys.to_sky(snap_f_stars)
+	m_star_f = probabilities[snap_f_stars.index]
 end
   ╠═╡ =#
 
-# ╔═╡ 821793b5-514a-4dd8-95a3-1955fb65c855
-
-
-# ╔═╡ b7629fac-2357-4e62-95ef-2ea12e92f335
-#=╠═╡
+# ╔═╡ 07c3bfc4-615e-4847-a66f-fb824f384ce8
 begin 
-	plot()
-	r_c = [lguys.calc_r(cen.x_c) for cen in cens]
-	plot!(out.times, r_c)
+	snap_cen = lguys.Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
+
+	obs_c = lguys.to_sky(snap_cen)
+end
+
+# ╔═╡ 4962c654-9f9f-44b9-b0ee-68791522562a
+begin 
+	snap_o = lguys.Snapshot(x_cen_exp, v_cen_exp, zeros(size(x_cen_exp, 1)))
+
+	obs_o = lguys.to_sky(snap_o)
+end
+
+# ╔═╡ 68243ab7-0d82-48a2-8737-7cc105ae7325
+#=╠═╡
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="RA / degrees",
+		ylabel="dec / degrees"
+	)
+
+	x = [o.ra for o in obs_pred]
+	y = [o.dec for o in obs_pred]
+	
+	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100)
+
+	scatter!(obs.ra, obs.dec, color=:red)
+
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ 3c25a197-b610-4bb2-b254-49d14534b343
+#=╠═╡
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel=L"\mu_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"\mu_\delta / \textrm{mas\,yr^{-1}}")
+
+	x = [o.pm_ra for o in obs_pred]
+	y = [o.pm_dec for o in obs_pred]
+	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100)
+	scatter!(obs.pm_ra, obs.pm_dec, color=:red)
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ 270739f1-4dda-4c92-9fe1-371caf5dd322
+#=╠═╡
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="distance / kpc",
+		ylabel = "radial velocity / km/s")
+
+
+	
+	x = [o.distance for o in obs_pred]
+	y = [o.radial_velocity for o in obs_pred]
+	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100)
+
+	scatter!(obs.distance, obs.radial_velocity, markersize=15, color=:red)
+
+	fig
 end
   ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
-# ╠═8fc58ec7-f79f-46b3-8b45-e134022e1737
-# ╠═6964cbd2-9ef9-4682-9ac1-80c10518c374
-# ╠═dc6bef2c-e4eb-41ab-8f37-3569c068573a
-# ╠═a554ca71-8142-43c7-83b7-144f0d4a31fd
-# ╠═ffcebc1f-9daa-49cc-8426-b3c1a1050587
+# ╠═4316d09d-43f6-4f6b-b830-0b8961743c61
+# ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 # ╠═60fe0995-3dd6-48ff-86e8-6fc5e099e39b
-# ╠═c9d4096f-abbd-4789-b762-4c3156c57232
-# ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
-# ╠═78e2da2d-126b-442f-91d0-4cf9c1a4e82c
-# ╠═693bcb86-29b8-4dd6-989b-641af3ff4b42
-# ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
-# ╠═6619ffaa-2e99-4be4-ad96-b22afda64b88
-# ╠═245721a6-01aa-43e7-922d-ed5da02207c1
-# ╠═9d587b4e-5670-4854-9c17-f5c7f7c6a57f
-# ╠═04df30cf-0931-4a63-a4ac-2d8409bc5f7d
-# ╠═e6cbe208-2d1e-42c6-aadc-db3c2bd7c737
-# ╠═365542d6-ed5d-4c9d-9c00-5bdf5a3bfe75
-# ╠═6497d973-d800-4052-a9b1-23f91dc3aa9f
-# ╠═2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
-# ╠═a5f23b9f-0e47-4ab5-a4ad-3d1ae079090a
-# ╠═381e9b54-cf7c-47a6-9440-b22223f82095
-# ╠═052b814a-e830-458b-aa79-533a63a89285
-# ╠═8e3e6607-b7de-4de6-a616-927488588579
+# ╠═f4d42909-5397-41e6-ac0c-07185bfece0e
+# ╠═dc6bef2c-e4eb-41ab-8f37-3569c068573a
+# ╠═29887611-5a0b-4f3a-8a3f-2da94b1765d2
 # ╠═a71bb30e-4a4c-4e94-b318-a426e3ee3045
-# ╠═f25bdc49-6b88-4bc1-906a-baff1ca7d1f7
-# ╠═51aad59f-96ff-4e88-bff2-f3ce378dd73b
-# ╠═59227684-c081-4465-bd39-c0f1698c8988
+# ╠═f563cbc7-655b-46e3-8686-2e4561b2467a
+# ╠═d2491f4d-f2b3-47c0-894c-94529b8cbe55
+# ╠═93e0c066-0229-4b49-95dc-f0a9a9f742e0
+# ╠═3b044830-d631-4379-8401-cba29523e2f0
+# ╠═a227ef84-a874-4176-9253-36bc36a743fa
+# ╠═86877090-cfc9-4621-9187-d3da81f0428f
+# ╠═1ace0815-7dc6-486f-b4c4-95fb41bc4313
+# ╠═b7492731-148e-4445-a35b-23c9a444ef48
+# ╠═8547a5a2-7170-47a3-8110-cc2a5d49c070
+# ╠═086b4aa9-5671-4c31-9a01-f5585464bb8a
+# ╠═9a8a5ad2-6aff-4d37-9748-7a415568f751
+# ╠═9418347c-e49f-4483-be0f-98a3b9578bac
+# ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
+# ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
+# ╠═d5316554-9f4d-45ea-93bf-f6d0f5eab4c2
+# ╠═4c331023-0777-43c7-90e5-3341aae0b141
+# ╠═4801ff80-5761-490a-801a-b263b90d63fd
+# ╠═1ebb1ab6-c1a0-4d6b-8529-65155575b96e
+# ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
+# ╠═155222b2-f9df-4189-afbe-1af9d571d859
+# ╠═2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
+# ╠═245721a6-01aa-43e7-922d-ed5da02207c1
+# ╠═6497d973-d800-4052-a9b1-23f91dc3aa9f
+# ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
+# ╠═a1cc4e82-0b92-4fcf-9254-1ce788e408bb
+# ╠═2014a0f5-c99d-40de-9005-fa61ae9863b6
 # ╠═aca25368-28c7-4f4a-bfcf-295902eaff9a
 # ╠═743d20cd-9636-4384-9bf2-b2d7e259ae7d
-# ╠═c7aa3122-4bdd-4889-895a-d143f8919405
 # ╠═7f168f93-849e-4586-a04f-6434165e6561
-# ╠═ea62a7e0-5fda-4d0c-aedb-61f6f97c1b8f
-# ╠═33e0615a-2d5a-4b07-808f-98e3cd9d22b2
-# ╠═821793b5-514a-4dd8-95a3-1955fb65c855
 # ╠═b7629fac-2357-4e62-95ef-2ea12e92f335
+# ╠═42c677e3-8b25-4c8a-99ef-3abd0abcb891
+# ╠═46f6e4a2-6e2b-4f23-807c-b41be51a0960
+# ╠═f2381a9c-96d7-4935-8967-32b8bfb3fb48
+# ╠═07c3bfc4-615e-4847-a66f-fb824f384ce8
+# ╠═4962c654-9f9f-44b9-b0ee-68791522562a
+# ╠═68243ab7-0d82-48a2-8737-7cc105ae7325
+# ╠═3c25a197-b610-4bb2-b254-49d14534b343
+# ╠═270739f1-4dda-4c92-9fe1-371caf5dd322
