@@ -16,7 +16,7 @@ function main()
 
     N = size(pos, 1)
 
-    snap = lguys.Snapshot(positions=pos, velocities=vel, masses=zeros(N))
+    snap = lguys.Snapshot(pos, vel, zeros(N))
     lguys.save("nfw_test.hdf5", snap)
 end
 
