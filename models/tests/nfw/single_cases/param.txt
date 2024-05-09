@@ -12,7 +12,7 @@ SnapFormat           3
 
 
 %---- CPU-time limits
-TimeLimitCPU              1800000   % 500h
+TimeLimitCPU              600   % 500h
 CpuTimeBetRestartFile     18000.0    % 2h,  in seconds
 
 %----- Memory alloction
