@@ -26,14 +26,13 @@ begin
 	using JSON
 end
 
-# ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "UMi.json"
+# ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
+md"""
+ # setup
+"""
 
 # ╔═╡ acb9ae92-924b-4723-8bd7-d775595b24c3
 COLORS = Arya.COLORS;
-
-# ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
-red = COLORS[6]
 
 # ╔═╡ 95a463d3-fdec-4fa6-9f4f-6d4a485aebf1
 F = Float64
@@ -72,6 +71,17 @@ begin
 	end
 end
 
+# ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
+red = COLORS[6]
+
+# ╔═╡ 8a551dbe-9112-48c2-be9a-8b688dc5a05c
+md"""
+# inputs
+"""
+
+# ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
+name = "Scl.json"
+
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
 	param_file = "params/$name"
@@ -82,6 +92,11 @@ begin
 
 	params = DensityParams(params_json)
 end
+
+# ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
+md"""
+# functions
+"""
 
 # ╔═╡ a0683e1e-5210-40fd-8841-1a6a315d3efe
 function is_point_in_polygon(point, polygon)
@@ -314,6 +329,19 @@ let
 	fig
 end
 
+# ╔═╡ 0010dffc-9717-4747-b7c2-2e396097399b
+let 
+	fig, ax, p = scatter(members.ra, members.dec, markersize=2,
+        color=(:grey, 0.2))
+	ax.aspect = 1 / cosd(params.dec)
+	
+	ax.xgridvisible = false
+	ax.ygridvisible = false
+	ax.xlabel="ra / degrees"
+	ax.ylabel = "dec / degrees"
+	fig
+end
+
 # ╔═╡ d0c4ad68-2bd3-44e7-9f42-45795fb7ecee
 let 
 	fig, ax, p = plot_all_tangent(all_stars, markersize=5,
@@ -391,6 +419,11 @@ let
 	    color=(red, 1), markersize=1)
 	fig
 end
+
+# ╔═╡ 39f615b4-b62c-493e-8d11-be45910d79a8
+md"""
+# density calculation
+"""
 
 # ╔═╡ 7c5397f3-40f3-49a4-acfb-27beadc5fa6b
 function running_hist(xs, bw, normalize=false)
@@ -475,7 +508,7 @@ function calc_properties(rs, bw=0.1)
     Γ = calc_Γ(log_r, Σ)
     Γ_max = @. 2*(1 - Σ / Σ_m)
     
-    return (log_r=log_r, log_r_bins=log_r_bin, counts=counts, Σ=Σ, Σ_m=Σ_m, Γ=Γ, Γ_max=Γ_max, M_in=M_in)
+    return (log_r=log_r, log_r_bins=log_r_bin, counts=counts, Σ=Σ, Σ_m=Σ_m, Γ=Γ, Γ_max=Γ_max, M_in=M_in, N=length(rs))
 end
 
 # ╔═╡ 58f7a246-f997-413b-abe4-73282abbc91c
@@ -588,6 +621,9 @@ end
 # ╔═╡ 71d3b349-bf04-456a-b41c-a5acc58a7f73
 popt, pred, res = fit_profile(obs)
 
+# ╔═╡ 2c33af35-4217-4534-9e30-1a697b32892f
+
+
 # ╔═╡ 5c117b2f-a32c-4afd-9c66-943ab4634e71
 dist = params.dist ± params.dist_err
 
@@ -650,6 +686,11 @@ let
 	
 	fig
 end
+
+# ╔═╡ a7209445-84e9-435d-9144-90f8eb5e70cb
+md"""
+# Membership selection effects
+"""
 
 # ╔═╡ 748430e6-520f-49c1-94e2-d1a0246d91b3
 begin 
@@ -739,10 +780,147 @@ let
 	fig
 end
 
+# ╔═╡ 49ae0572-5d6b-4935-bc95-0a845bb3df2f
+md"""
+# Background density
+"""
+
 # ╔═╡ eeecad14-ec74-4559-9765-5648f0b3d74e
 cmd_cut_umi =  [1.63,20.99, 1.26,19.88, 1.32,18.24, 1.69,16.24, 1.50,15.99, 1.19,17.31, 0.85,18.83, 0.67,19.29, -0.07,19.67, -0.18,20.08, 0.26,20.31, 0.58,20.11, 0.30,20.86]
 
+# ╔═╡ d7984df8-84b1-41ff-b19b-dd17b1772d4a
+r_max = maximum(sqrt.(all_stars.xi .^ 2 + all_stars.eta .^ 2))
+
+# ╔═╡ 4fb45cd6-673e-48a6-a5a7-374abc7bf4a9
+obs
+
+# ╔═╡ c6362b4a-a2e8-4d3b-be03-79fb12b84b36
+function scatter_dens!(obs, norm=:count; kwargs...)
+	y = obs.Σ
+
+	if norm == :count
+		y *= obs.N
+	end
+
+	y = log10.(y)
+
+	x = value.(obs.log_r)
+	y_err = err.(y)
+	y = value.(y)
+
+	scatter!(x, y; kwargs...)
+	errorbars!(x, y, y_err; kwargs...)
+	
+end
+	
+
+# ╔═╡ e033e344-737e-46e8-ab85-5fe33d191f41
+"""
+A simple density calculation 
+"""
+function calc_offset_density(dra, ddec, r_cut; n_sigma_dist=3, dpm=1, cmd_cut=cmd_cut_umi)
+
+	
+	params = DensityParams(params_json, 
+		ra=params_json["ra"] + dra, dec=params_json["dec"] + ddec, PSAT_min=nothing, max_ang_dist=r_cut, ecc=0,
+		dpm=dpm,
+		cmd_cut=cmd_cut, n_sigma_dist=n_sigma_dist
+	)
+
+	_, memb = load_and_filter(params)
+	r = memb.r_ell * 60
+	
+	obs = calc_properties(r)
+	return obs
+end
+
 # ╔═╡ b6eaa6be-4a23-4357-9ce8-40aa9f16d7f6
+let 
+	fig = Figure(size=(900,500))
+
+	ax = Axis(fig[1, 1],
+		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
+		xlabel=log_r_label
+	)
+
+	r_shift = 0.75 * r_max
+	r_cut = r_max - r_shift
+
+	
+	dras = r_shift*[1, 0, -1, 0, 0]
+	ddecs = r_shift*[0, 1, 0, -1, 0]
+
+	Nc = length(dras) 
+
+	Σs = Measurement[]
+	
+	for i in 1:Nc
+		dra = dras[i]
+		ddec =  ddecs[i]
+		label = "$(round(dra, digits=1)), $(round(ddec, digits=1))"
+		obs = calc_offset_density(dra, ddec, r_cut)
+		scatter_dens!(obs, label=label)
+		if abs(dra^2 + ddec^2) > 0 
+			append!(Σs, obs.Σ * obs.N)
+		end
+	end
+
+	Σ_m = sum(Σs) / length(Σs)
+	println("log Sigma background = $(log10.(Σ_m))")
+	global log_Σ_bg
+	log_Σ_bg = log10(Σ_m)
+	hlines!(value.(log_Σ_bg))
+	hspan!(value.(log_Σ_bg) .- err.(log_Σ_bg), value.(log_Σ_bg) .+ err.(log_Σ_bg), alpha=0.1)
+	
+	Legend(fig[1,2], ax, "position offset \n(degrees)", merge=true)
+
+	fig
+end
+
+# ╔═╡ f832459e-edcb-48b4-ba3c-1d75a23f51e0
+let 
+	fig = Figure(size=(900,500))
+
+	ax = Axis(fig[1, 1],
+		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
+		xlabel=log_r_label
+	)
+
+	r_shift = 0.75 * r_max
+	r_cut = r_max - r_shift
+
+	
+	dras = r_shift*[1, 0, -1, 0, 0]
+	ddecs = r_shift*[0, 1, 0, -1, 0]
+
+	Nc = length(dras) 
+
+	Σs = Measurement[]
+	
+	for i in 1:Nc
+		dra = dras[i]
+		ddec =  ddecs[i]
+		label = "$(round(dra, digits=1)), $(round(ddec, digits=1))"
+		obs = calc_offset_density(dra, ddec, r_cut, dpm=nothing, cmd_cut=nothing, n_sigma_dist=nothing)
+		scatter_dens!(obs, label=label)
+		if abs(dra^2 + ddec^2) > 0 
+			append!(Σs, obs.Σ * obs.N)
+		end
+	end
+
+	Σ_m = sum(Σs) / length(Σs)
+	println("log Sigma background = $(log10.(Σ_m))")
+	global log_Σ_bg2
+	log_Σ_bg2 = log10(Σ_m)
+	hlines!(value.(log_Σ_bg2))
+	hspan!(value.(log_Σ_bg2) .- err.(log_Σ_bg2), value.(log_Σ_bg2) .+ err.(log_Σ_bg2), alpha=0.1)
+	
+	Legend(fig[1,2], ax, "position offset \n(degrees)", merge=true)
+
+	fig
+end
+
+# ╔═╡ 48e41a6f-775d-4d9f-850d-df9bd20dcf09
 let 
 	fig = Figure(size=(900,500))
 
@@ -750,63 +928,83 @@ let
 	ax = Axis(fig[1, 1],
 		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
 		xlabel=log_r_label,
-		limits=(nothing, (-3, 1))
 		
 	)
-
-	dras = 2*[1, 0, -1, 0, 0]
-	ddecs = 2*[0, 1, 0, -1, 0]
-	Nc = length(dras) 
-
-	ls = []
-	labels = []
 	
-	for i in 1:Nc
-		dra = dras[i]
-		ddec =  ddecs[i]
-		label = "$dra, $ddec"
-		
-		params = DensityParams(params_json, 
-			ra=params_json["ra"] + dra, dec=params_json["dec"] + ddec, PSAT_min=nothing, max_ang_dist=0.5, ecc=0,
-			dpm=1,
-			cmd_cut=cmd_cut_umi, n_sigma_dist=3
-		)
-		
-		_, memb = load_and_filter(params)
-		r = memb.r_ell * 60
-		
-		obs = calc_properties(r)
-		y = value.(obs.Σ)
-		y .*= length(r)
-		l = lines!(ax, obs.log_r, log10.(y))
-		push!(ls, l)
-		push!(labels, label)
-	end
-
-	params = DensityParams(params_json, ecc=0)
+	params = DensityParams(params_json)
 	_, memb = load_and_filter(params)
 	r = memb.r_ell * 60
 	obs = calc_properties(r)
-	y = value.(obs.Σ)
-	y .*= length(r)
-	l = lines!(ax, obs.log_r, log10.(y))
-	push!(ls, l)
-	push!(labels, "fiducial")
+	scatter_dens!(obs, label="fiducial")
 
-	Legend(fig[1,2], ls, labels, "position offset \n(degrees)")
+	obs = calc_offset_density(0, 0, 2)
+	scatter_dens!(obs, label="simple")
 
+	
+	params = DensityParams(params_json, PSAT_min=nothing, ecc=0, )
+	_, memb = load_and_filter(params)
+	r = memb.r_ell * 60
+	obs = calc_properties(r)
+	scatter_dens!(obs, label="all")
+
+
+	hlines!(value.(log_Σ_bg), label="background")
+	hspan!(value.(log_Σ_bg) .- err.(log_Σ_bg), value.(log_Σ_bg) .+ err.(log_Σ_bg), alpha=0.1)
+
+	hlines!(value.(log_Σ_bg2),  label="all backbround")
+	hspan!(value.(log_Σ_bg2) .- err.(log_Σ_bg2), value.(log_Σ_bg2) .+ err.(log_Σ_bg2), alpha=0.1)
+	
+	Legend(fig[1, 2], ax, merge=true)
 	fig
 end
 
+# ╔═╡ 44803049-4cc5-4a23-990a-322934ccb076
+params_json
+
+# ╔═╡ 45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
+params
+
+# ╔═╡ 28d71909-e3e7-4e32-9183-4da862a58eb7
+begin 
+	fits_name = name[begin:end-5] * "_fit.fits"
+	f = FITS(fits_name, "w")
+	obs_df = Dict{String, Any}()
+	obs_units = Dict{String, Any}()
+
+	
+	obs_df["log_r"] = value.(obs.log_r)
+	obs_df["log_r_err"] = err.(obs.log_r)
+	obs_df["surface_dens"] = value.(obs.Σ)
+	obs_df["surface_dens_err"] = err.(obs.Σ)
+	obs_df["log_slope"] = value.(obs.Γ)
+	obs_df["log_slope_err"] = err.(obs.Γ)
+
+	obs_df["scale_radius_2d"] = value.(popt)
+	obs_df["scale_radius_2d_err"] = err.(popt)
+
+
+	
+	obs_units["log_r"] = "log arcmin"
+	obs_units["log_r_err"] = "log arcmin"
+	obs_units["scale_radius_2d"] = "log arcmin"
+	obs_units["scale_radius_2d_err"] = "log arcmin"
+	
+	write(f, obs_df, units=obs_units, hdutype=ASCIITableHDU)
+	close(f)
+end
+
 # ╔═╡ Cell order:
+# ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
-# ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
-# ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╠═95a463d3-fdec-4fa6-9f4f-6d4a485aebf1
 # ╠═d6cbd9cb-bfa7-46c1-970a-ab3fb3740c48
 # ╠═e3f52a32-9a21-4c8f-8e5c-9ca3e7dbc331
+# ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
+# ╠═8a551dbe-9112-48c2-be9a-8b688dc5a05c
+# ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
+# ╠═4093a7d6-2f74-4c37-a4a8-270934ede924
 # ╠═a0683e1e-5210-40fd-8841-1a6a315d3efe
 # ╠═e4a6382e-21f6-4d34-8376-142ba859b18a
 # ╠═4a9cf94b-8714-4320-9f8b-a480b0741ba5
@@ -832,11 +1030,13 @@ end
 # ╠═f890216a-2e4e-4f44-92ee-ded0eaa17a68
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
+# ╠═0010dffc-9717-4747-b7c2-2e396097399b
 # ╠═d0c4ad68-2bd3-44e7-9f42-45795fb7ecee
 # ╠═b6424e6f-9b0d-4f29-b53d-0bd814a67139
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
 # ╠═0f002b56-8b8f-4025-8d7b-fb51423e8da0
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
+# ╠═39f615b4-b62c-493e-8d11-be45910d79a8
 # ╠═7c5397f3-40f3-49a4-acfb-27beadc5fa6b
 # ╠═2d3308fa-ce87-4967-a934-d2821a42b8b7
 # ╠═3d105351-9a5c-4410-a360-ec8736374909
@@ -854,6 +1054,7 @@ end
 # ╠═aca3780b-1d2f-4a44-a53a-754794c334b1
 # ╠═2da8531e-eb37-4ec5-af5a-e0c2dfd8c4d1
 # ╠═71d3b349-bf04-456a-b41c-a5acc58a7f73
+# ╠═2c33af35-4217-4534-9e30-1a697b32892f
 # ╠═5c117b2f-a32c-4afd-9c66-943ab4634e71
 # ╠═0c87248a-cfa7-4a6d-af84-87f5543f68e2
 # ╠═b20058a8-a9b6-49ff-b8ff-a2d45c76f645
@@ -863,10 +1064,21 @@ end
 # ╠═82d90218-f32e-4b72-a99a-bc2a264d7dce
 # ╠═617a5128-e6a4-40a5-bc5e-45dba4eeaa58
 # ╠═1ca6ea59-b129-460e-8925-2592332ba280
+# ╟─a7209445-84e9-435d-9144-90f8eb5e70cb
 # ╠═748430e6-520f-49c1-94e2-d1a0246d91b3
 # ╠═45422d53-317c-4824-a41a-4a80b1fbd102
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╠═c0b3c3f6-0450-4242-9e13-41f9af17e562
+# ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
 # ╠═eeecad14-ec74-4559-9765-5648f0b3d74e
+# ╠═d7984df8-84b1-41ff-b19b-dd17b1772d4a
+# ╠═4fb45cd6-673e-48a6-a5a7-374abc7bf4a9
+# ╠═c6362b4a-a2e8-4d3b-be03-79fb12b84b36
+# ╠═e033e344-737e-46e8-ab85-5fe33d191f41
+# ╠═48e41a6f-775d-4d9f-850d-df9bd20dcf09
 # ╠═b6eaa6be-4a23-4357-9ce8-40aa9f16d7f6
+# ╠═f832459e-edcb-48b4-ba3c-1d75a23f51e0
+# ╠═44803049-4cc5-4a23-990a-322934ccb076
+# ╠═45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
+# ╠═28d71909-e3e7-4e32-9183-4da862a58eb7
