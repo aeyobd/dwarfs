@@ -49,7 +49,7 @@ dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
 begin 
-	r_s_s = 0.109 # stellar scale radius
+	r_s_s = 0.11 # stellar scale radius
 	# halo scale mass and radius
 	R_s = 2.76
 	M_s = 0.290
@@ -115,7 +115,10 @@ md"""
 """
 
 # ╔═╡ 4710d1b5-fd6f-4369-8398-64e9123c8b41
-idx_i = 20; idx_f = length(out)
+idx_i = 1; idx_f = length(out)
+
+# ╔═╡ 97f89831-00e6-49a2-a712-ac47fd2dee47
+out.times[idx_i] * lguys.T0
 
 # ╔═╡ c5672da9-0dad-4d22-abe5-9e186ccde02d
 begin
@@ -267,8 +270,8 @@ end
 let 
 	fig = Figure()
 
-	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\textrm{DM} (10^{10} M_\odot / \textrm{kpc}^3)",
-	limits=(-2, 3, -8, 0))
+	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
+	limits=(-3, 3, -8, 0))
 	plot_ρ_dm!(snap_i, label="initial")
 	plot_ρ_dm!(snap_f, label="final")
 
@@ -279,19 +282,41 @@ let
 
 	log_r = LinRange(-2, 3, 1000)
 	y = log10.(ρ_nfw.(10 .^ log_r))
-	lines!(log_r, y, label="expected")
+	lines!(log_r, y, label="expected", color="black", linestyle=:dot)
 
 	axislegend(ax)
 	fig
 
 end
 
+# ╔═╡ 4e45e756-8a9c-43b4-aac7-2016347f5afb
+let
+	skip = 10
+	snap = snap_i
+	idx = 1:skip:length(snap)
+	r = sort(lguys.calc_r(snap))[idx]
+	
+	M = idx
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel=L"\log\;r\;/\;\textrm{kpc}",
+		ylabel="log number of particles",
+		limits=((-3, 3), nothing)
+	)
+
+	ax.yticks = 0:2:7
+	lines!(log10.(r), log10.(M))
+
+	fig
+end
+
 # ╔═╡ a8de1562-6afe-4002-b7bd-9d5541e8d354
 let 
 	fig = Figure()
 
-	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel = "log rho stars", 
-		limits=((-1.9, 0.5), (-5, 2)))
+	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
+		limits=((-1.9, 0.5), (-7, 2)))
 
 	vlines!(log10(r_s_s), label="r_s")
 
@@ -301,7 +326,7 @@ let
 	log_r_pred = LinRange(-2, 2, 1000)
 	ρ_s_pred = ρ_s.(10 .^ log_r_pred)
 
-	lines!(log_r_pred, log10.(ρ_s_pred), label="expected")
+	lines!(log_r_pred, log10.(ρ_s_pred), label="expected", color="black", linestyle=:dot)
 	
 	axislegend(ax)
 	fig
@@ -322,15 +347,26 @@ md"""
 lguys.calc_L_tot(snap_i)
 
 # ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
-# ╠═╡ disabled = true
-#=╠═╡
-begin 
-	Ls = hcat([lguys.calc_L_tot(snap) for snap in out]...)
-	plot(transpose(Ls))
-	xlabel!("snapshot")
-	ylabel!("L")
+let 
+	idx = 1:10:length(out)
+
+	Ls = hcat([lguys.calc_L_tot(snap) for snap in out[idx]]...)
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="total angular momentum component"
+	)
+
+	t = out.times[idx] * lguys.T0
+	
+	for i in 1:3
+		lines!(t, Ls[i, :], label=["x", "y", "z"][i])
+	end
+
+	axislegend(ax)
+	fig
 end
-  ╠═╡ =#
 
 # ╔═╡ bfa7593c-4915-4e03-83e6-8f790de4c1a5
 let
@@ -341,14 +377,25 @@ let
 	fig
 end
 
+# ╔═╡ e3a45a8e-cc52-4e9d-9db3-97109b59fc77
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="potential / kinetic energy")
+	E_kin = [sum(0.5 * lguys.calc_v(snap) .^ 2) for snap in out]
+	E_pot = [0.5 * sum(snap.Φs) for snap in out]
+
+	lines!(E_pot ./ E_kin)
+	fig
+end
+
 # ╔═╡ fe476f91-5be3-4cf9-88df-55d9568ab88f
 pos = lguys.extract(snap_i, :positions)
 
-# ╔═╡ 19af6571-8794-4e65-b77d-d5fc94a5e1b9
-lines(x_cen)
+# ╔═╡ 91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
+lguys.plot_xyz(x_cen)
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
-lines(transpose(v_cen) * lguys.V0)
+lguys.plot_xyz(v_cen * lguys.V0)
 
 # ╔═╡ dc221349-eb61-4ace-8de3-a6c50249aca0
 function find_radii_fracs(out, x_cen, probabilities) 
@@ -437,7 +484,7 @@ end
   ╠═╡ =#
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lines(lguys.extract_vector(out, :positions, 100_000))
+lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 
 # ╔═╡ a9fe4a34-f8ce-46bd-84fb-bdae17a508a4
 let
@@ -465,6 +512,7 @@ end
 # ╠═9f75b286-b021-4fa1-a29d-7051c55c0a33
 # ╠═5f7e3de9-a7fe-4217-a53c-0101d4b6314d
 # ╠═2fb86841-fc96-47e1-af57-898fa2690ff3
+# ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═4710d1b5-fd6f-4369-8398-64e9123c8b41
@@ -483,6 +531,7 @@ end
 # ╠═27f8deff-96ae-4d9a-a110-d146ac34965a
 # ╠═7c20845e-3db1-4aa0-993f-a8d26751f87e
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
+# ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═a8de1562-6afe-4002-b7bd-9d5541e8d354
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
@@ -490,8 +539,9 @@ end
 # ╠═5b9a64a1-38c1-4f4d-aac3-d91663c368a3
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
+# ╠═e3a45a8e-cc52-4e9d-9db3-97109b59fc77
 # ╠═fe476f91-5be3-4cf9-88df-55d9568ab88f
-# ╠═19af6571-8794-4e65-b77d-d5fc94a5e1b9
+# ╠═91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
 # ╠═dc221349-eb61-4ace-8de3-a6c50249aca0
 # ╠═34244a2e-9501-451c-bd77-bebfebde2a78

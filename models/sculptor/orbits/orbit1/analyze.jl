@@ -49,6 +49,14 @@ end
 # ╔═╡ f4d42909-5397-41e6-ac0c-07185bfece0e
 r_h = 0.109
 
+# ╔═╡ a71bb30e-4a4c-4e94-b318-a426e3ee3045
+begin 
+	orbit_expected = CSV.read("orbit.csv", DataFrame)
+	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
+	v_cen_exp = -transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
+
+end
+
 # ╔═╡ dc6bef2c-e4eb-41ab-8f37-3569c068573a
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -62,26 +70,149 @@ begin
 end
   ╠═╡ =#
 
-# ╔═╡ a71bb30e-4a4c-4e94-b318-a426e3ee3045
-begin 
-	orbit_expected = CSV.read("orbit.csv", DataFrame)
-	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
-	v_cen_exp = -transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
-
-end
-
 # ╔═╡ 29887611-5a0b-4f3a-8a3f-2da94b1765d2
-lguys.plot_xyz(x_cen, x_cen_exp)
+lguys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
 
-# ╔═╡ f563cbc7-655b-46e3-8686-2e4561b2467a
-function plot_ρ_dm!(snap, x_cen; kwargs...)
-	pos = lguys.extract_vector(snap, :positions)
-	pos .-= x_cen
-	mass = lguys.extract(snap, :masses)
-	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=mass)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+# ╔═╡ 256b5101-78db-4bcf-aa67-0dd51cce6222
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
+	r = lguys.calc_r(x_cen)
+	lines!(out.times * lguys.T0, r)
+	lines!(lguys.T0*(orbit_expected.t .- orbit_expected.t[begin]), lguys.calc_r(x_cen_exp))
+	fig
 end
+
+# ╔═╡ 46f6e4a2-6e2b-4f23-807c-b41be51a0960
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="R / kpc", ylabel="z / kpc"
+	)
+	x = x_cen[1, :]
+	y = x_cen[2, :]
+	z = x_cen[3, :]
+	R = @. sqrt(x^2 + y^2)
+	lines!(R, z)
+	fig
+end
+
+# ╔═╡ a9e79439-16a4-4908-bfe0-f0770cdb26df
+md"""
+# Mass evolution
+"""
+
+# ╔═╡ dfa506e2-095a-47a2-9f14-baa04dd45d2d
+function get_M_h(output::lguys.Output, radius; idxs=(1:10:length(output)))
+	N = length(idxs)
+	M = Vector{Float64}(undef, N)
+	Ms = Vector{Float64}(undef, N)
+	
+	for i in eachindex(idxs)
+		snap = output[idxs[i]]
+		ϵ = lguys.calc_ϵ(snap)
+		filt = ϵ .> 0
+		
+		rs = lguys.calc_r(snap[filt])
+		filt2 = rs .< radius
+
+		M[i] = sum(filt2)
+
+		ps = probabilities[snap.index[filt]]
+
+		Ms[i] = sum(ps[filt2])
+		
+	end
+
+	return M, Ms
+end
+
+# ╔═╡ 807c46f6-56e0-4ab4-b31f-ac4a3fec9761
+collect(1:4:10)
+
+# ╔═╡ 3755ea87-bc79-4b2e-b84f-5b08df7aa086
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+	xlabel="time / Gyr",
+	ylabel="normalized mass within 1 rh"
+	)
+
+	M_dm_h, M_s_h = get_M_h(out, r_h)
+
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="DM")
+	scatter!(out.times[1:10:end] * lguys.T0, M_s_h ./ M_s_h[1], label="stars")
+
+	Legend(fig[1, 2], ax)
+	
+	fig
+end
+
+# ╔═╡ 5bd14979-a02d-4c03-a6e9-090a63a25059
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+	xlabel="time / Gyr",
+	ylabel="normalized mass within 10 rh"
+	)
+
+	M_dm_h, M_s_h = get_M_h(out, 10r_h)
+
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="DM")
+	scatter!(out.times[1:10:end] * lguys.T0, M_s_h ./ M_s_h[1], label="stars")
+
+	Legend(fig[1, 2], ax)
+	println(M_dm_h[1], M_s_h[1])
+	fig
+end
+
+# ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+	xlabel="time / Gyr",
+	ylabel="normalized mass within 100 rh"
+	)
+
+	M_dm_h, M_s_h = get_M_h(out, 100r_h)
+
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="DM")
+	scatter!(out.times[1:10:end] * lguys.T0, M_s_h ./ M_s_h[1], label="stars")
+
+	Legend(fig[1, 2], ax)
+	println(M_dm_h[1], M_s_h[1])
+	fig
+end
+
+# ╔═╡ df260566-9d3f-4f02-8081-30bc7f277d10
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+	xlabel="time / Gyr",
+	ylabel="normalized bound mass"
+	)
+
+	M_dm_h, M_s_h = get_M_h(out, 1e10r_h)
+
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="DM")
+	scatter!(out.times[1:10:end] * lguys.T0, M_s_h ./ M_s_h[1], label="stars")
+
+	Legend(fig[1, 2], ax)
+	println(M_dm_h[1], M_s_h[1])
+	fig
+end
+
+# ╔═╡ 0e50f90a-2024-433d-a5b9-b1352c8095cc
+size(out[1].positions)
+
+# ╔═╡ 0c1fa354-6784-4efa-ba10-1fe0ea448e30
+
+
+# ╔═╡ e14fa4a1-6175-4b9f-ad01-525c1617fe63
+md"""
+
+# Evolution of circular Velocity
+"""
 
 # ╔═╡ d2491f4d-f2b3-47c0-894c-94529b8cbe55
 function get_Vc(snap, skip=10)
@@ -120,18 +251,21 @@ function Vc_model(r, param)
 end
 
 # ╔═╡ 93e0c066-0229-4b49-95dc-f0a9a9f742e0
-function fit_Vc(rc, Vc)
-	filt = Vc .> percentile(Vc, 80)
+function fit_Vc(rc, Vc; percen=80)
+	filt = Vc .> percentile(Vc, percen)
 	fit = curve_fit(Vc_model, rc[filt], Vc[filt], [2., 30.])
-	return fit.param
+	
+	return (; r_c=fit.param[1], V_c=fit.param[2], fit=fit,
+	r_min=minimum(rc[filt]),
+	r_max=maximum(rc[filt])
+	)
 end
 
 # ╔═╡ 8547a5a2-7170-47a3-8110-cc2a5d49c070
-function V_r_max(param)
-	Rs, scale =param
+function V_r_max(Rs, Vs)
 
 	r = 2.16258 * Rs
-	return r, Vc_model(r, param)
+	return r, Vc_model(r, [Rs, Vs])
 end
 
 # ╔═╡ 086b4aa9-5671-4c31-9a01-f5585464bb8a
@@ -150,8 +284,8 @@ function get_V_r_max(output::lguys.Output; skip=1)
 	for i in 1:skip:length(output)
 		snap = output[i]
 		rc, Vc = get_Vc(snap)
-		param = fit_Vc(rc, Vc)
-		r_max, V_max = V_r_max(param)
+		fit = fit_Vc(rc, Vc)
+		r_max, V_max = V_r_max(fit.r_c, fit.V_c)
 
 		Vh = get_Vh(snap, r_h)
 		
@@ -189,6 +323,94 @@ let
 	fig
 end
   ╠═╡ =#
+
+# ╔═╡ c068c177-e879-4b8e-b1af-18690af9b334
+let 
+	i = length(out)
+	snap = out[i]
+
+	
+	fig = Figure(size=(700, 500))
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", 
+		ylabel=L"V_\textrm{circ}",
+	title="time = $(out.times[i]  * lguys.T0) Gyr")
+
+	plot_Vc!(snap, label="initial")
+	r, V = get_Vc(snap)
+	fit = fit_Vc(r, V)
+	r_max, V_max = V_r_max(fit.r_c, fit.V_c)
+
+
+
+	r_fit = LinRange(fit.r_min, fit.r_max, 100)
+	V_fit = Vc_model(r_fit, [fit.r_c, fit.V_c])
+
+	lines!(log10.(r_fit), V_fit, linewidth=3)
+	
+	scatter!(log10.(r_max), V_max, color=Arya.COLORS[3])
+
+
+	ax2 = Axis(fig[2, 1], xlabel="r/kpc", ylabel="residual")
+
+	filt = fit.r_min .<= r .<= fit.r_max
+	dV = V[filt] .- Vc_model(r[filt], [fit.r_c, fit.V_c])
+	scatter!(r[filt], dV)
+	vlines!(r_max)
+	
+    rowsize!(fig.layout, 2, Relative(1/4))
+	
+	fig
+end
+
+# ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"V_\text{circ} / \text{km\,s^{-1}}",
+	limits=(nothing, (0, nothing)))
+	x = out.times[1:10:end] * lguys.T0
+	scatter!(x, V_max, label=L"maximum $V_\text{circ}$")
+	scatter!(x, V_h, label=L"r=r_h")
+	axislegend(ax)
+	
+	fig
+end
+
+# ╔═╡ c5796d82-013b-4cdc-a625-31249b51197d
+md"""
+# Density evolution
+"""
+
+# ╔═╡ f563cbc7-655b-46e3-8686-2e4561b2467a
+function plot_ρ_dm!(snap, x_cen; kwargs...)
+	pos = lguys.extract_vector(snap, :positions)
+	pos .-= x_cen
+	mass = lguys.extract(snap, :masses)
+	rs = lguys.calc_r(pos)
+	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=mass)
+	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+end
+
+# ╔═╡ abe6f9cd-2b49-4826-ba9c-56244a10bff0
+let 
+	i = 15
+
+	snap = out[i]
+
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel=L"\log \; r / \textrm{kpc}", 
+		ylabel=L"V_\textrm{circ}",
+		title="circular velocity at snap$i"
+	)
+
+
+	plot_Vc!(snap)
+
+	fig
+
+	rc, Vc = get_Vc(snap)
+	fit_Vc(rc, Vc)
+end
 
 # ╔═╡ dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 #=╠═╡
@@ -323,38 +545,6 @@ let
 end
   ╠═╡ =#
 
-# ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="V_circ / km / s",
-	limits=(nothing, (0, nothing)))
-	x = out.times[1:10:end] * lguys.T0
-	scatter!(x, V_max, label="max")
-	scatter!(x, V_h, label=L"r=r_h")
-	axislegend(ax)
-	
-	fig
-end
-
-# ╔═╡ 6497d973-d800-4052-a9b1-23f91dc3aa9f
-begin 
-	anim = @animate for i in 1:10:length(out)
-		snap = out[i]
-		plot(legend=false, grid=false, axis=false, dpi=100)
-		scatter!(snap.positions[2, :], snap.positions[3, :], 
-			ms=1, msw=0, ma=0.1, marker_z = m_star)
-		plot!([0, 50], [-200, -200], color=:black)
-		annotate!([25], [-200], ["50 kpc"], annotationfontsize=8, annotationhalign=:center, annotationvalign=:bottom)
-		scatter!([0], [0], ms=2, msw=0)
-
-		# scatter!([x_cen[2, i]], [x_cen[3,  i]], ms=1)
-		xlims!(-200, 200)
-		ylims!(-200, 200)
-	end
-	
-	gif(anim, "sculptor.gif", fps = 12)
-end
-
 # ╔═╡ 7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 #=╠═╡
 let 
@@ -387,11 +577,6 @@ let
 	fig
 
 end
-  ╠═╡ =#
-
-# ╔═╡ 2014a0f5-c99d-40de-9005-fa61ae9863b6
-#=╠═╡
-length(lguys.calc_ϵ(snap_i))
   ╠═╡ =#
 
 # ╔═╡ aca25368-28c7-4f4a-bfcf-295902eaff9a
@@ -427,38 +612,6 @@ function gradient(x, y)
 	return grad
 end
 
-# ╔═╡ b7629fac-2357-4e62-95ef-2ea12e92f335
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r_c = lguys.calc_r(x_cen)
-	lines!(out.times * lguys.T0, r_c)
-	fig
-end
-
-# ╔═╡ 42c677e3-8b25-4c8a-99ef-3abd0abcb891
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r_c = lguys.calc_r(x_cen)
-	lines!(1:length(out), r_c)
-	fig
-end
-
-# ╔═╡ 46f6e4a2-6e2b-4f23-807c-b41be51a0960
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="R / kpc", ylabel="z / kpc"
-	)
-	x = x_cen[1, :]
-	y = x_cen[2, :]
-	z = x_cen[3, :]
-	R = @. sqrt(x^2 + y^2)
-	lines!(R, z)
-	fig
-end
-
 # ╔═╡ f2381a9c-96d7-4935-8967-32b8bfb3fb48
 #=╠═╡
 begin 
@@ -488,9 +641,14 @@ end
 #=╠═╡
 let
 	fig = Figure()
+
+	dy = 2
+	dx = dy * 1/cosd(obs.dec)
 	ax = Axis(fig[1,1],
 		xlabel="RA / degrees",
-		ylabel="dec / degrees"
+		ylabel="dec / degrees",
+		limits=(obs.ra .+ (-dx, dx), obs.dec .+ (-dy, dy)),
+		aspect = 1/cosd(obs.dec)
 	)
 
 	x = [o.ra for o in obs_pred]
@@ -500,6 +658,18 @@ let
 
 	scatter!(obs.ra, obs.dec, color=:red)
 
+	idx = idx_f-10:idx_f+10
+	x = [o.ra for o in obs_c[idx]]
+	y = [o.dec for o in obs_c[idx]]
+	
+	l = lines!(x, y, color=out.times[idx])
+	Colorbar(fig[1, 2], l)
+
+	x = [o.ra for o in obs_o[end-30:end]]
+	y = [o.dec for o in obs_o[end-30:end]]
+	
+	lines!(x, y, color=Arya.COLORS[2])
+	
 	fig
 end
   ╠═╡ =#
@@ -507,15 +677,25 @@ end
 # ╔═╡ 3c25a197-b610-4bb2-b254-49d14534b343
 #=╠═╡
 let
+	dr = 0.05
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel=L"\mu_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\mu_\delta / \textrm{mas\,yr^{-1}}")
+		ylabel=L"\mu_\delta / \textrm{mas\,yr^{-1}}",
+	limits=(obs.pm_ra .+ (-dr, dr), obs.pm_dec .+ (-dr, dr)),
+	aspect=1)
 
 	x = [o.pm_ra for o in obs_pred]
 	y = [o.pm_dec for o in obs_pred]
 	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100)
 	scatter!(obs.pm_ra, obs.pm_dec, color=:red)
+
+	x = [o.pm_ra for o in obs_c[idx_f-30:end]]
+	y = [o.pm_dec for o in obs_c[idx_f-30:end]]
+	
+	lines!(x, y, color=Arya.COLORS[2])
+
+	
 	fig
 end
   ╠═╡ =#
@@ -524,9 +704,14 @@ end
 #=╠═╡
 let
 	fig = Figure()
+	dx = 2
+	dy = 20
+	
 	ax = Axis(fig[1,1],
 		xlabel="distance / kpc",
-		ylabel = "radial velocity / km/s")
+		ylabel = "radial velocity / km/s",
+		limits=(obs.distance .+ (-dx, dx), obs.radial_velocity .+ (-dy, dy))
+	)
 
 
 	
@@ -536,6 +721,13 @@ let
 
 	scatter!(obs.distance, obs.radial_velocity, markersize=15, color=:red)
 
+
+	x = [o.distance for o in obs_c[idx_f-30:end]]
+	y = [o.radial_velocity for o in obs_c[idx_f-30:end]]
+	
+	lines!(x, y, color=Arya.COLORS[2])
+
+	
 	fig
 end
   ╠═╡ =#
@@ -546,10 +738,21 @@ end
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 # ╠═60fe0995-3dd6-48ff-86e8-6fc5e099e39b
 # ╠═f4d42909-5397-41e6-ac0c-07185bfece0e
+# ╠═a71bb30e-4a4c-4e94-b318-a426e3ee3045
 # ╠═dc6bef2c-e4eb-41ab-8f37-3569c068573a
 # ╠═29887611-5a0b-4f3a-8a3f-2da94b1765d2
-# ╠═a71bb30e-4a4c-4e94-b318-a426e3ee3045
-# ╠═f563cbc7-655b-46e3-8686-2e4561b2467a
+# ╠═256b5101-78db-4bcf-aa67-0dd51cce6222
+# ╠═46f6e4a2-6e2b-4f23-807c-b41be51a0960
+# ╟─a9e79439-16a4-4908-bfe0-f0770cdb26df
+# ╠═dfa506e2-095a-47a2-9f14-baa04dd45d2d
+# ╠═807c46f6-56e0-4ab4-b31f-ac4a3fec9761
+# ╠═3755ea87-bc79-4b2e-b84f-5b08df7aa086
+# ╠═5bd14979-a02d-4c03-a6e9-090a63a25059
+# ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
+# ╠═df260566-9d3f-4f02-8081-30bc7f277d10
+# ╠═0e50f90a-2024-433d-a5b9-b1352c8095cc
+# ╠═0c1fa354-6784-4efa-ba10-1fe0ea448e30
+# ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
 # ╠═d2491f4d-f2b3-47c0-894c-94529b8cbe55
 # ╠═93e0c066-0229-4b49-95dc-f0a9a9f742e0
 # ╠═3b044830-d631-4379-8401-cba29523e2f0
@@ -562,6 +765,11 @@ end
 # ╠═9a8a5ad2-6aff-4d37-9748-7a415568f751
 # ╠═9418347c-e49f-4483-be0f-98a3b9578bac
 # ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
+# ╠═c068c177-e879-4b8e-b1af-18690af9b334
+# ╠═245721a6-01aa-43e7-922d-ed5da02207c1
+# ╟─c5796d82-013b-4cdc-a625-31249b51197d
+# ╠═f563cbc7-655b-46e3-8686-2e4561b2467a
+# ╠═abe6f9cd-2b49-4826-ba9c-56244a10bff0
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 # ╠═d5316554-9f4d-45ea-93bf-f6d0f5eab4c2
 # ╠═4c331023-0777-43c7-90e5-3341aae0b141
@@ -570,17 +778,11 @@ end
 # ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
 # ╠═155222b2-f9df-4189-afbe-1af9d571d859
 # ╠═2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
-# ╠═245721a6-01aa-43e7-922d-ed5da02207c1
-# ╠═6497d973-d800-4052-a9b1-23f91dc3aa9f
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 # ╠═a1cc4e82-0b92-4fcf-9254-1ce788e408bb
-# ╠═2014a0f5-c99d-40de-9005-fa61ae9863b6
 # ╠═aca25368-28c7-4f4a-bfcf-295902eaff9a
 # ╠═743d20cd-9636-4384-9bf2-b2d7e259ae7d
 # ╠═7f168f93-849e-4586-a04f-6434165e6561
-# ╠═b7629fac-2357-4e62-95ef-2ea12e92f335
-# ╠═42c677e3-8b25-4c8a-99ef-3abd0abcb891
-# ╠═46f6e4a2-6e2b-4f23-807c-b41be51a0960
 # ╠═f2381a9c-96d7-4935-8967-32b8bfb3fb48
 # ╠═07c3bfc4-615e-4847-a66f-fb824f384ce8
 # ╠═4962c654-9f9f-44b9-b0ee-68791522562a

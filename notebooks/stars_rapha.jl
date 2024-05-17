@@ -38,7 +38,7 @@ md"""
 """
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/"
+dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e7/"
 
 # ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
 begin 
@@ -49,7 +49,7 @@ begin
 	
 	NE = 1000
 	
-	idx_i = 20
+	idx_i = 3
 	#include(dirname1 * "/star_params.jl")
 	idx_s = lpad(idx_i - 1,3,"0")
 	snapname = "./out/snapshot_$idx_s.hdf5"
@@ -105,7 +105,7 @@ begin
 	vels = lguys.calc_r(snap_i.velocities)
 
 	# calculate energies
-	Φs = lguys.calc_radial_discrete_Φ(snap_i.masses, radii)
+	Φs = lguys.calc_radial_discrete_Φ(radii, snap_i.masses)
 	ke = @. 1/2 * vels^2
 	ϵs = @. -Φs - ke
 
@@ -124,6 +124,9 @@ end
 
 # ╔═╡ f79414b4-620e-440e-a421-7bc13d373546
 Mins = cumsum(snap_i.masses) ./ sum(snap_i.masses)
+
+# ╔═╡ 45acc05f-85a8-4bbc-bd43-a34583c983b3
+Φs
 
 # ╔═╡ 23158c79-d35c-411a-a35a-950f04214e19
 begin 
@@ -311,7 +314,7 @@ let
 	fig = Figure()
 	Axis(fig[1,1], xlabel="log radii", ylabel="pstar > 0.025")
 
-	hist!(log10.(radii[ps .> 2e-4]))
+	hist!(log10.(radii[ps .> 2e-6]))
 
 	fig
 end
@@ -485,6 +488,7 @@ write_stars()
 # ╠═e37bf6d7-9445-49bf-8333-f68ad25436b2
 # ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
+# ╠═45acc05f-85a8-4bbc-bd43-a34583c983b3
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
 # ╠═b3663c19-c029-4a1e-ab82-a05177e3a5d0
 # ╠═36b4adbd-d706-4e72-a922-53080c67946c
