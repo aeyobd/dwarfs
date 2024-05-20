@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.41
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -37,7 +37,7 @@ end
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
 begin 
-	f = FITS("./data/UrsaMinor.GAIASOURCE.RUWE.VELS.PROB.fits")
+	f = FITS("./data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits")
 	all_stars = DataFrame(f[2])
 end
 
@@ -148,7 +148,7 @@ end
 # ╔═╡ 83b506bb-f385-464e-8f5c-7adfff45105a
 begin 
 	scatter(members.bp_rp, members.phot_g_mean_mag, color=log10.(members.r_ell), 
-	yflip=true, xlabel="bp rp", ylabel="G")
+	)
 
 end
 
@@ -184,7 +184,7 @@ function calc_Σ(rs)
 end
 
 # ╔═╡ cd8f63a6-bd53-4cf4-a3f4-a8943e0a1caf
-scatter(members[:, :phot_g_mean_mag], members.r_ell, ma=0.1, ms=3)
+scatter(members[:, :phot_g_mean_mag], members.r_ell)
 
 # ╔═╡ 9002fcb7-ffb2-4e2b-a4e9-57599d6e233d
 let
@@ -246,7 +246,7 @@ let
 	
 	#scatter!(ax, xi, eta, markersize=4, color=Arya.COLORS[3])
 	
-	contourf!(kde_d.x, kde_d.y, asinh.(Σ_kde), levels=130 , colormap=:magma, linewidth=2)
+	contourf!(kde_d.x, kde_d.y, asinh.(Σ_kde), levels=130 , colormap=:magma,)
 	
 	#plot_circle!(rh, 
 	#	lw=2, ls=:dot, color=:black)
@@ -270,6 +270,38 @@ let
 	fig
 end
 
+# ╔═╡ 2771e601-5dc9-4115-bba1-9096aa99ee28
+mean(sqrt.(all_stars.xi .^ 2 + all_stars.eta .^ 2) ./ all_stars.r_ell) * 60 
+
+# ╔═╡ b3334ad6-f7bf-4ca2-b895-a582472f2e90
+ecc = 0.37
+
+# ╔═╡ 0090b5d8-cbd9-4353-af3a-f793bc71ec37
+let
+	fig = Figure()
+	ax = PolarAxis(fig[1,1])
+	ϕ = atan.(all_stars.eta, all_stars.xi)
+	scatter!(ax, ϕ, all_stars.r_ell, markersize=2)
+
+	bins = LinRange(0, 2π, 20)
+	for i in 1:length(bins)-1
+		filt = ϕ .> bins[i]
+		filt .&= ϕ .< bins[i+1]
+		if sum(filt) > 0
+			println(sum(filt))
+			println(bins[i], "\t", maximum(all_stars.r_ell[filt]))
+		end
+	end
+	
+	fig
+end
+
+# ╔═╡ 0f36be65-b713-4dcd-a8a4-6c9898e9d36d
+15.379 / 9.786
+
+# ╔═╡ 9ac3b2c6-1e4c-4223-9a31-84aee5ef9a54
+1/(1-ecc)
+
 # ╔═╡ 9427aa86-2d46-4890-b2c5-36de3ca83264
 r_cuts = [percentile(radii, p) for p in LinRange(0, 100, 8)]
 
@@ -291,7 +323,7 @@ ecdfplot(members.r_ell)
 # ╔═╡ ebb24519-ee2d-4781-a2bd-16ccbc957060
 let
 	f = Figure(size=(1200, 500))
-	ax = Axis(f[1, 1], xlabel=L"$\theta / \textrm{radians}", ylabel="normalized density")
+	ax = Axis(f[1, 1], xlabel=L"\theta / \textrm{radians}", ylabel="normalized density")
 	bins = 10
 	ps = []
 	labels = []
@@ -320,7 +352,7 @@ end
 # ╔═╡ 7af6fd4f-a7f4-4e7f-a1e3-8899717dd2cd
 let
 	f = Figure(size=(1200, 500))
-	ax = Axis(f[1, 1], xlabel=L"$\theta / \textrm{radians}", ylabel="normalized density for rell")
+	ax = Axis(f[1, 1], xlabel=L"\theta / \textrm{radians}", ylabel="normalized density for rell")
 	bins = 10
 	ps = []
 	labels = []
@@ -390,6 +422,11 @@ end
 # ╠═ec1c1408-5c3c-4bfa-b8bd-f32dbc3379a9
 # ╠═9282a867-b9c7-4a50-b58a-da3ceb068cad
 # ╠═52d3db7f-8bbf-43cf-89f2-16134247d713
+# ╠═2771e601-5dc9-4115-bba1-9096aa99ee28
+# ╠═b3334ad6-f7bf-4ca2-b895-a582472f2e90
+# ╠═0090b5d8-cbd9-4353-af3a-f793bc71ec37
+# ╠═0f36be65-b713-4dcd-a8a4-6c9898e9d36d
+# ╠═9ac3b2c6-1e4c-4223-9a31-84aee5ef9a54
 # ╠═9427aa86-2d46-4890-b2c5-36de3ca83264
 # ╠═a563a2c5-bbca-4785-9024-41741119bf03
 # ╠═ac3c0cf9-b00b-4f57-9e36-837806ab733c
