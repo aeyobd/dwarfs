@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.41
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -258,6 +258,12 @@ function parallax_filter(all_stars, dist, dist_err, n_sigma_dist)
     )
 end
 
+# ╔═╡ c933ca4e-993c-488d-9f1a-c735d411c559
+function radius_filter(all_stars, ecc, r_max=maximum(all_stars.r_ell))
+	r_max = r_max * (1 - ecc)
+	return all_stars.r_ell .< r_max
+end
+
 # ╔═╡ 914bdd71-da5c-4bf8-894d-12f64df5ca02
 function select_members(all_stars, params)
 	filt = apply_filter(all_stars, psat_filter, params.PSAT_min)
@@ -270,7 +276,7 @@ function select_members(all_stars, params)
 	filt .&= apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
 
 	filt .&= apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
-
+	filt .&= apply_filter(all_stars, radius_filter, params.ecc)
 
 
 	println(sum(filt), " stars remaining")
@@ -290,6 +296,26 @@ end
 
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
 all_stars, members = load_and_filter(params)
+
+# ╔═╡ 319fe0dc-5b50-4ca3-9c77-aa6751f7d1c3
+isnan.(all_stars.pseudocolour)
+
+# ╔═╡ d048785f-2109-4117-9fd3-e244d423d12e
+let
+	filt = all_stars.ruwe .< 1.3
+	println(sum(filt))
+	filt .&= map(!, all_stars.astrometric_primary_flag)
+	# filt .&= map(!, isnan.(all_stars.phot_g_mean_mag))
+	# filt .&= map(!, isnan.(all_stars.bp_rp))
+	# filt .&= map(!, isnan.(all_stars.pseudocolour))
+	# filt .&= map(!, isnan.(all_stars.nu_eff_used_in_astrometry))
+
+	println(sum(filt))
+	println("nans ", sum(isnan.(all_stars[filt, :].PSAT)))
+	println("equal zero ", sum(all_stars[filt, :].PSAT .== 0))
+
+	println(sum(all_stars.PSAT .> 0))
+end
 
 # ╔═╡ 0c498087-0184-4da2-a079-e972dd987712
 md"""
@@ -331,9 +357,11 @@ end
 
 # ╔═╡ 0010dffc-9717-4747-b7c2-2e396097399b
 let 
-	fig, ax, p = scatter(members.ra, members.dec, markersize=2,
+	fig, ax, p = scatter(members.ra, members.dec, markersize=3,
         color=(:grey, 0.2))
-	ax.aspect = 1 / cosd(params.dec)
+	dra = 1
+	ax.limits = (params.ra .+ dra * [-1, 1] ./ cosd(params.dec), params.dec .+ dra*[-1, 1])
+	ax.aspect =  1 #cosd(params.dec)
 	
 	ax.xgridvisible = false
 	ax.ygridvisible = false
@@ -379,10 +407,10 @@ let
 	    xlabel=L"\mu_{\alpha *} / \mathrm{ mas\, yr^{-1}}", 
 	    ylabel=L"\mu_\delta / \mathrm{ mas\, yr^{-1}}")
 	scatter!(ax, all_stars.pmra, all_stars.pmdec, 
-	    color=(:grey, 0.2), markersize=1)
+	    color=(:black, 0.2), markersize=3)
 	
 	scatter!(ax, members.pmra, members.pmdec, 
-	    color=(red, 1), markersize=1)
+	    color=(red, 1), markersize=3)
 	fig
 end
 
@@ -394,7 +422,7 @@ let
 	    xlabel="bp - rp", 
 	    ylabel="G",)
 	scatter!(ax, all_stars.bp_rp, all_stars.phot_g_mean_mag, 
-	    color=(:grey, 0.2), markersize=1)
+	    color=(:black, 0.2), markersize=1)
 	
 	scatter!(ax, members.bp_rp, members.phot_g_mean_mag, 
 	    color=(red, 1), markersize=1)
@@ -473,16 +501,11 @@ function calc_Σ_mean(log_r, hist)
 end
 
 # ╔═╡ 7edaac34-e450-43a4-a022-90c38af9b5ca
-function calc_Γ(log_rs, ρs, step=1)
+function calc_Γ(log_rs, Σs, step=1)
 	dx = lguys.gradient(log_rs)
-	dρ = lguys.gradient(log10.(ρs))
+	dρ = lguys.gradient(log10.(Σs))
 
 	return dρ ./ dx #lguys.gradient(log10.(ρs), log_rs)
-end
-
-# ╔═╡ fb433202-4195-4dee-a2c6-f08656e64c2f
-function log_Σ_exp(r, A, r_s)
-    return @. A + 1/log(10) * (-r / r_s)
 end
 
 # ╔═╡ 830cbaab-b82f-4e8e-b975-1eb11662b11b
@@ -505,11 +528,21 @@ function calc_properties(rs, bw=0.1)
     A_in = @. π * (r_bin[2:end])^2
     Σ_m = M_in ./ A_in
 
+	println(Σ)
     Γ = calc_Γ(log_r, Σ)
     Γ_max = @. 2*(1 - Σ / Σ_m)
     
     return (log_r=log_r, log_r_bins=log_r_bin, counts=counts, Σ=Σ, Σ_m=Σ_m, Γ=Γ, Γ_max=Γ_max, M_in=M_in, N=length(rs))
 end
+
+# ╔═╡ a607e301-bd26-490b-99cb-ad28338d77f1
+
+
+# ╔═╡ a8408be2-c287-4338-98b9-6af2ea4da756
+Base.Broadcast.broadcastable(q::lguys.AbstractProfile) = Ref(q) 
+
+# ╔═╡ 1c2d73c2-e6c2-4adc-a5d2-f272a8d0b59b
+import NaNMath as nm
 
 # ╔═╡ 58f7a246-f997-413b-abe4-73282abbc91c
 function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
@@ -519,6 +552,7 @@ function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
     r_bins = 10 .^ log_r_bins
     
     Σ = Σ_model.(r)
+
     Γ = calc_Γ(log_r, Σ)
     M_in = [quadgk(rrr->2π*rrr*Σ_model(rrr), 0, rr)[1] for rr in r]
     Σ_m = M_in ./ (π * r .^ 2)
@@ -530,7 +564,7 @@ function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
 end
 
 # ╔═╡ 4ceea6c3-0bf5-40c2-b49e-2691e73e003c
-function fit_profile(obs; r_max=Inf, N=10_000)
+function fit_profile(obs; r_max=Inf, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
     r_val = [10 ^ r.val for r in obs.log_r]
     log_Σ = log10.(obs.Σ)
     filt = r_val .< r_max
@@ -539,18 +573,23 @@ function fit_profile(obs; r_max=Inf, N=10_000)
     
     r_val = r_val[filt]
     log_Σ = log_Σ[filt]
+	println(r_val)
+	println(log_Σ)
 
 
     log_Σ_val = [s.val for s in log_Σ]
     log_Σ_e = [s.err for s in log_Σ]
 
-    popt, covt = SciPy.optimize.curve_fit(log_Σ_exp, r_val, log_Σ_val, 
-        sigma=log_Σ_e, p0=[1, 0.1])
+	log_Σ_exp(r, popt...) = nm.log10.(lguys.calc_Σ.(profile(popt...), r))
+	popt, covt = SciPy.optimize.curve_fit(log_Σ_exp, r_val, log_Σ_val, 
+        sigma=log_Σ_e, p0=p0)
     
     popt_p = popt .± sqrt.(diag(covt))
     println("log_Σ_0 = $(popt_p[1])")
     println("r_s = $(popt_p[2])")
-    props = predict_properties(r->10 .^ log_Σ_exp(r, popt...), 
+
+	Σ_pred(r) = 10 .^ log_Σ_exp(r, popt...)
+    props = predict_properties(Σ_pred, 
         N=N, log_r_min=obs.log_r_bins[1], log_r_max=obs.log_r_bins[end])
     
     log_Σ_pred = log_Σ_exp.(10 .^ value.(obs.log_r), popt...)
@@ -587,7 +626,7 @@ function plot_Σ_fit_res(obs, pred, res)
 #     p2 = plot(ylabel=L"\Delta \log\Sigma", xlabel=log_r_label, ylim=(-2, 2))
 
 	y = res
-    scatter!(ax2, value.(obs.log_r), value.(y), err.(y), msw=1, msc=1, label="")
+    scatter!(ax2, value.(obs.log_r), value.(y), err.(y), label="")
     errorbars!(ax2, value.(obs.log_r), value.(y), err.(y))
 
 
@@ -604,6 +643,25 @@ end
 # ╔═╡ 62388099-b80b-4272-9bde-0c7315b15c19
 r = 60 * members.r_ell # arcminutes
 
+# ╔═╡ 4a98e0f2-da03-46f4-bf16-ab2e197ac7bd
+
+
+# ╔═╡ 402c67c1-05c4-4150-9af6-7c32c1740855
+maximum(r)
+
+# ╔═╡ 36d2446e-b1ac-4cbb-a65f-711aba600408
+maximum(all_stars.r_ell) * 60 * (1 - params.ecc)
+
+# ╔═╡ a254083b-61f2-45ad-b678-c4df6f16964b
+let
+	fig = Figure()
+	ax = PolarAxis(fig[1,1])
+	ϕ = atan.(members.eta, members.xi)
+	scatter!(ax, ϕ, members.r_ell, markersize=5, alpha=0.1)
+
+	fig
+end
+
 # ╔═╡ e5d3d41b-e786-460a-a44f-51d1d98dcf11
 obs = calc_properties(r)
 
@@ -612,17 +670,29 @@ println(maximum(r) / 60)
 
 # ╔═╡ 2da8531e-eb37-4ec5-af5a-e0c2dfd8c4d1
 let
-	fig, ax, p = hist(log10.(r))
+	fig, ax, p = scatter(obs.log_r, obs.counts * obs.N)
+
 	ax.xlabel = log_r_label
-	ax.ylabel = "count"
+	ax.ylabel = "count / bin"
+	ax.yscale=log10
+
 	fig
 end
 
 # ╔═╡ 71d3b349-bf04-456a-b41c-a5acc58a7f73
 popt, pred, res = fit_profile(obs)
 
-# ╔═╡ 2c33af35-4217-4534-9e30-1a697b32892f
+# ╔═╡ 1c8a12d7-7345-4306-a2d6-f346a5397832
+popt_3d, pred_3d, _ = fit_profile(obs, profile=lguys.Exp3D)
 
+# ╔═╡ 9083628f-b41a-45fc-9ee3-5754e9ec4fe9
+popt_k, pred_k, _ = fit_profile(obs, profile=lguys.KingProfile, p0=[1, 3, 100])
+
+# ╔═╡ d3eb4b98-8d1a-41df-9327-529da4c79911
+popt_c, pred_c, _ = fit_profile(obs, profile=lguys.LogCusp2D, p0=[1, 3])
+
+# ╔═╡ 2c33af35-4217-4534-9e30-1a697b32892f
+obs
 
 # ╔═╡ 5c117b2f-a32c-4afd-9c66-943ab4634e71
 dist = params.dist ± params.dist_err
@@ -638,6 +708,27 @@ popt[2] * 1.6783 # half light radius
 
 # ╔═╡ 162dfe57-99e0-4c03-8934-2a59056f484f
 plot_Σ_fit_res(obs, pred, res)
+
+# ╔═╡ 0b0b3ef9-9808-40cb-bb19-d7301af53deb
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], limits=((-0.8, 2), (-6.5, -1.5)))
+	scatter!(value.(obs.log_r), log10.(value.(obs.Σ)),)
+	errorbars!(value.(obs.log_r), log10.(value.(obs.Σ)), err.(log10.(obs.Σ)) )
+	
+	lines!(pred.log_r, log10.(pred.Σ), label="2D Exp", color=COLORS[2])
+
+	lines!(pred_3d.log_r, log10.(pred_3d.Σ), label="3D Exp", color=COLORS[3])
+
+	lines!(pred_k.log_r, log10.(pred_k.Σ), label="King", color=COLORS[4])
+	lines!(pred_c.log_r, log10.(pred_c.Σ), label="2D Log Cusp", color=COLORS[5])
+
+	ax.xlabel = log_r_label
+	ax.ylabel = L"\log\Sigma\quad [\textrm{fraction arcmin}^{-2}]"
+
+	axislegend(ax)
+	fig
+end
 
 # ╔═╡ 39cb37d9-f1d4-419e-9e19-c033bfba8556
 let
@@ -716,7 +807,7 @@ let
 		xlabel=log_r_label,
 	)
 
-	g_cuts = [21, 20.5, 20, 19.5, 19, 10]
+	g_cuts = [21.5, 20.5, 20, 19.5, 19, 10]
 	labels = []
 
 	ls = []
@@ -727,6 +818,7 @@ let
 		push!(labels, "$g_l, $g_h")
 		memb = members[filt, :]
 		println(size(memb, 1))
+		println(maximum(memb.r_ell))
 		r = memb.r_ell * 60
 		obs = calc_properties(r)
 
@@ -751,15 +843,15 @@ size(members)
 
 # ╔═╡ c0b3c3f6-0450-4242-9e13-41f9af17e562
 let 
-	fig = Figure(resolution=(900,500))
+	fig = Figure(size=(900,500))
 	p_cuts = [nothing, 0.01, 0.05, 0.1, 0.2, 0.5, 0.99]
 
 	Nc = length(p_cuts) 
 
 	ax = Axis(fig[1, 1],
-		ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
+		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
 		xlabel=log_r_label,
-		limits=(nothing, (-8, -1))
+		limits=(nothing, (-4, 3))
 		
 	)
 
@@ -770,8 +862,9 @@ let
 		params = DensityParams(params_json, PSAT_min=p_cuts[i])
 		_, memb = load_and_filter(params)
 		r = memb.r_ell * 60
+		println(maximum(memb.r_ell))
 		obs = calc_properties(r)
-		l = lines!(ax, obs.log_r, log10.(value.(obs.Σ)), color=i, colorrange=(1, Nc))
+		l = lines!(ax, obs.log_r, log10.(value.(obs.Σ * obs.N)), color=i, colorrange=(1, Nc))
 		push!(ls, l)
 	end
 
@@ -953,7 +1046,8 @@ let
 
 	hlines!(value.(log_Σ_bg2),  label="all backbround")
 	hspan!(value.(log_Σ_bg2) .- err.(log_Σ_bg2), value.(log_Σ_bg2) .+ err.(log_Σ_bg2), alpha=0.1)
-	
+
+	vlines!(log10.(60r_max * (1-params.ecc^2)))
 	Legend(fig[1, 2], ax, merge=true)
 	fig
 end
@@ -1014,6 +1108,8 @@ end
 # ╠═c9fe69bf-52d5-4fec-9667-2c29d31230df
 # ╠═0903be18-b239-4f38-98f2-2b170fc10c5a
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
+# ╠═319fe0dc-5b50-4ca3-9c77-aa6751f7d1c3
+# ╠═d048785f-2109-4117-9fd3-e244d423d12e
 # ╠═2ce9bedf-1ecb-4773-af65-1feff0f42f76
 # ╠═ba162d65-2ee8-4390-9450-3975c649a05b
 # ╠═2d8b2740-f9f2-4cca-823f-4b6491c31fe4
@@ -1025,6 +1121,7 @@ end
 # ╠═d36ca6c6-f9bc-47c4-b728-e6badaf866b3
 # ╠═d86bb8bb-8d7a-4a22-964c-f3c8d90cc9f0
 # ╠═9ee9ad05-41d2-4e26-8252-1ae322947bb1
+# ╠═c933ca4e-993c-488d-9f1a-c735d411c559
 # ╟─0c498087-0184-4da2-a079-e972dd987712
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╠═f890216a-2e4e-4f44-92ee-ded0eaa17a68
@@ -1036,30 +1133,40 @@ end
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
 # ╠═0f002b56-8b8f-4025-8d7b-fb51423e8da0
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
-# ╠═39f615b4-b62c-493e-8d11-be45910d79a8
+# ╟─39f615b4-b62c-493e-8d11-be45910d79a8
 # ╠═7c5397f3-40f3-49a4-acfb-27beadc5fa6b
 # ╠═2d3308fa-ce87-4967-a934-d2821a42b8b7
 # ╠═3d105351-9a5c-4410-a360-ec8736374909
 # ╠═46bb8315-5bd7-4175-9da1-f8cad761b8ec
 # ╠═7edaac34-e450-43a4-a022-90c38af9b5ca
-# ╠═fb433202-4195-4dee-a2c6-f08656e64c2f
 # ╠═830cbaab-b82f-4e8e-b975-1eb11662b11b
+# ╠═a607e301-bd26-490b-99cb-ad28338d77f1
+# ╠═a8408be2-c287-4338-98b9-6af2ea4da756
 # ╠═4ceea6c3-0bf5-40c2-b49e-2691e73e003c
+# ╠═1c2d73c2-e6c2-4adc-a5d2-f272a8d0b59b
 # ╠═58f7a246-f997-413b-abe4-73282abbc91c
 # ╠═9b3288b4-3c17-4325-9e2c-94f96328f3c3
 # ╠═1acc3b7d-2e9d-47ec-8afe-14876e57787c
 # ╠═c0fa8744-4da3-470c-a2b8-f89ce431e1ed
 # ╠═62388099-b80b-4272-9bde-0c7315b15c19
+# ╠═4a98e0f2-da03-46f4-bf16-ab2e197ac7bd
+# ╠═402c67c1-05c4-4150-9af6-7c32c1740855
+# ╠═36d2446e-b1ac-4cbb-a65f-711aba600408
+# ╠═a254083b-61f2-45ad-b678-c4df6f16964b
 # ╠═e5d3d41b-e786-460a-a44f-51d1d98dcf11
 # ╠═aca3780b-1d2f-4a44-a53a-754794c334b1
 # ╠═2da8531e-eb37-4ec5-af5a-e0c2dfd8c4d1
 # ╠═71d3b349-bf04-456a-b41c-a5acc58a7f73
+# ╠═1c8a12d7-7345-4306-a2d6-f346a5397832
+# ╠═9083628f-b41a-45fc-9ee3-5754e9ec4fe9
+# ╠═d3eb4b98-8d1a-41df-9327-529da4c79911
 # ╠═2c33af35-4217-4534-9e30-1a697b32892f
 # ╠═5c117b2f-a32c-4afd-9c66-943ab4634e71
 # ╠═0c87248a-cfa7-4a6d-af84-87f5543f68e2
 # ╠═b20058a8-a9b6-49ff-b8ff-a2d45c76f645
 # ╠═ac761271-6a6a-4df7-9476-1d44f02eb74d
 # ╠═162dfe57-99e0-4c03-8934-2a59056f484f
+# ╠═0b0b3ef9-9808-40cb-bb19-d7301af53deb
 # ╠═39cb37d9-f1d4-419e-9e19-c033bfba8556
 # ╠═82d90218-f32e-4b72-a99a-bc2a264d7dce
 # ╠═617a5128-e6a4-40a5-bc5e-45dba4eeaa58
