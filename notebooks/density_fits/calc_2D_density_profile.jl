@@ -36,11 +36,8 @@ given a sample of points, can we centre and calculate the 2D density profile
 - Centring method
 """
 
-# ╔═╡ 4c635734-5df3-49c0-9f0c-f9bd2dd995bc
-value
-
 # ╔═╡ 13fdf275-e2df-4385-ac9c-4bdd79e44b3f
-name = "Scl"
+name = "sculptor/fiducial"
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 samplename = "$(name)_sample.fits"
@@ -64,10 +61,28 @@ md"""
 # Centre finding
 """
 
+# ╔═╡ 5dbfcbc7-b21b-45c0-b8d4-52f215a90d54
+function mean_centre(stars)
+	return (lguys.mean(stars.ra), lguys.mean(stars.dec))
+end
+
+# ╔═╡ 7a1d304e-5be0-4b93-bded-b1158085c962
+mean_centre(sample)
+
 # ╔═╡ 5b8e641c-29d9-42a3-8149-9e2e5b3d46cb
 md"""
 # Calculating Radii
 """
+
+# ╔═╡ 9b067a18-d2eb-4112-91cf-5814fc02b388
+function add_r_ell!(stars, ecc, PA)
+	b = sqrt(1 - ecc)
+	a = 1/b
+	
+	println("a, b / r_h = $a, $b")
+	r_ell = lguys.calc_r_ell(stars.xi, stars.eta, a, b, PA-90)
+	stars[:, "r_ell"] = r_ell;
+end
 
 # ╔═╡ f3408055-ebec-41f3-8da1-e83f010da5bf
 rs = sample.r_ell * 60
@@ -157,10 +172,13 @@ function calc_properties(rs, bw=0.1)
     Γ_max = @. 2*(1 - Σ / Σ_m)
 
 	log_Σ = log10.(Σ)
+
+
     
-    return Dict(
+    return Dict{String, Any}(
 		"log_r"=>value.(log_r), 
 		"log_r_bins"=>log_r_bin, 
+		"log_r_units"=>"log arcmin",
 		"counts"=>value.(counts) * length(rs),
 		"surface_dens"=>value.(Σ), 
 		"surface_dens_err"=>err.(Σ), 
@@ -170,6 +188,7 @@ function calc_properties(rs, bw=0.1)
 		"Gamma"=>value.(Γ), 
 		"Gamma_err"=>err.(Γ), 
 		"Gamma_max"=>value.(Γ_max), 
+		"Gamma_max_err"=>err.(Γ_max), 
 		"M_in"=>value.(M_in),
 		#"N"=>[length(rs)]
 	)
@@ -177,9 +196,6 @@ end
 
 # ╔═╡ e283c660-056c-4572-845c-7a90fdbfc79b
 obs = calc_properties(rs)
-
-# ╔═╡ 00591800-eb6d-440d-a997-64d852f323e0
-nothing != nothing
 
 # ╔═╡ 91df1ddf-a197-4d43-b39c-e25409eef082
 Arya.errscatter(obs["log_r"], obs["log_Sigma"], yerr=obs["log_Sigma_err"])
@@ -199,21 +215,21 @@ end
 
 # ╔═╡ b87cf54b-2c4c-46c5-9336-c13e773e29ec
 begin 
-	fits_name = name * "_profile.fits"
-	f2 = FITS(fits_name, "w")
+	out_name = name * "_profile.json"
 
-	obs_units = Dict{String, Any}()
 
-	obs_units["log_r"] = "log arcmin"
-	obs_units["log_r_err"] = "log arcmin"
-	obs_units["scale_radius_2d"] = "log arcmin"
-	obs_units["scale_radius_2d_err"] = "log arcmin"
-	
-	write(f2, obs, units=obs_units)
-	close(f2)
+	open(out_name, "w") do f
+		JSON.print(f, obs)
+	end
 
-	println("wrote data to ", fits_name)
+	println("wrote data to ", out_name)
 end
+
+# ╔═╡ ab72c141-57ad-409c-914d-24fb0cd959a8
+obs
+
+# ╔═╡ bb547672-fc6b-49cb-8053-326dc7d8d7cb
+JSON.json
 
 # ╔═╡ 0b80353f-c698-4fae-b40f-1796f7c89792
 sum(obs["counts"]) == length(rs)
@@ -224,13 +240,15 @@ obs
 # ╔═╡ Cell order:
 # ╠═852717c0-aabf-4c03-9cf5-a6d91174e0f9
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
-# ╠═4c635734-5df3-49c0-9f0c-f9bd2dd995bc
 # ╠═13fdf275-e2df-4385-ac9c-4bdd79e44b3f
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 # ╠═72d975fe-9d97-474b-ba3f-f61ba12c7c80
-# ╠═514027d9-6e70-41f7-b134-526c142182c6
+# ╟─514027d9-6e70-41f7-b134-526c142182c6
+# ╠═5dbfcbc7-b21b-45c0-b8d4-52f215a90d54
+# ╠═7a1d304e-5be0-4b93-bded-b1158085c962
 # ╠═5b8e641c-29d9-42a3-8149-9e2e5b3d46cb
+# ╠═9b067a18-d2eb-4112-91cf-5814fc02b388
 # ╠═f3408055-ebec-41f3-8da1-e83f010da5bf
 # ╠═76db218a-c75d-4189-9e3a-ee1bf97bab4b
 # ╠═a34bc111-e1ec-4f14-a759-27702d33abf2
@@ -240,9 +258,10 @@ obs
 # ╠═3b97ac3c-b4ae-4b4c-878b-f0aff7c8f0e9
 # ╠═bdd6d321-1026-4d0f-9e45-fbc2c5a2a61c
 # ╠═e283c660-056c-4572-845c-7a90fdbfc79b
-# ╠═00591800-eb6d-440d-a997-64d852f323e0
 # ╠═91df1ddf-a197-4d43-b39c-e25409eef082
 # ╠═ddded03f-e2f3-47de-aca2-398a6209c282
 # ╠═b87cf54b-2c4c-46c5-9336-c13e773e29ec
+# ╠═ab72c141-57ad-409c-914d-24fb0cd959a8
+# ╠═bb547672-fc6b-49cb-8053-326dc7d8d7cb
 # ╠═0b80353f-c698-4fae-b40f-1796f7c89792
 # ╠═5c287839-7404-4386-bbbe-7da219e941c3
