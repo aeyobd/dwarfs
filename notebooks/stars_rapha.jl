@@ -37,64 +37,69 @@ md"""
 # Inputs
 """
 
+# ╔═╡ 530c6c09-4454-4952-8351-dccbb4ed429f
+import YAML
+
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e7/"
+paramname = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars/exp2d_big.yml"
+
+# ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
+begin 
+	params = YAML.load_file(paramname); 
+	cd(dirname(paramname))
+
+	if "centres_file" ∉ keys(params)
+		params["centres_file"] = params["snapshot_dir"] * "/centres.csv"
+	end
+
+	if "output_file" ∉ keys(params)
+		params["output_file"] = splitext(basename(paramname))[1] * "_stars.hdf5"
+	end
+	
+	params
+end
+
+# ╔═╡ 16e0729e-9a75-458e-a56c-73967c819c31
+profile_class = getproperty(lguys, Symbol(params["profile"]))
+
+# ╔═╡ 46be1f99-6f64-476e-84cb-11d4b6504a86
+NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
+
+# ╔═╡ d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
+profile = profile_class(;NamedTuple(params["profile_kwargs"])...)
 
 # ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
 begin 
 	# parameters 
-	r_s_s = 0.11
-	ρ_s(r) = exp(-r/r_s_s)
-	Nr = 150
+	ρ_s(r) = lguys.calc_ρ(profile, r)
+	Nr = params["num_radial_bins"]
 	
-	NE = 1000
-	
-	idx_i = 3
-	#include(dirname1 * "/star_params.jl")
-	idx_s = lpad(idx_i - 1,3,"0")
-	snapname = "./out/snapshot_$idx_s.hdf5"
-	#snapname = "../initial.hdf5"
-	outname = "./star_probabilities.hdf5"
+	NE = params["num_energy_bins"]
 
 
 	overwrite = true
 end
 
-# ╔═╡ 9ea8bae1-bdd4-4987-94cc-599df21f23ef
-NE
-
-# ╔═╡ 92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
-begin 
-	if isdefined(Main, :PlutoRunner)
-		dirname = dirname1
-	else
-		dirname = dirname2
-	end
-	cd(@__DIR__)
-	cd(dirname)
-	pwd()
-end
-
 # ╔═╡ 4cb09115-143d-456f-9c6a-19656f638677
 begin 
-	println("$dirname")
+	snapname = params["snapshot_dir"] * "/snapshot_" * lpad(params["snapshot"], 3, "0") * ".hdf5"
+	println(snapname)
 	snap = lguys.Snapshot(snapname)
-	cens = CSV.read("out/centres.csv", DataFrame)
+	
 end
 
-# ╔═╡ e5551ea6-7681-4544-a610-ddb5ee0add7b
-cens[idx_i, :]
+# ╔═╡ d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
+cen = CSV.read(params["centres_file"], DataFrame)[params["snapshot"], :]
 
-# ╔═╡ d7d83daf-6c70-4026-afa7-1f426ee805fa
-cens[idx_i, :].t * lguys.T0
+# ╔═╡ cf50c4b4-a634-4310-8aa5-91ab653313a9
+cen
 
 # ╔═╡ 0f5671e6-deb4-11ee-3178-4d3f920f23a2
 begin
 	# centre snapshot
-	cen_i = cens[idx_i, :]
 	snap_i = lguys.copy(snap)
-	snap_i.positions #.-= 0 * [cen_i.x, cen_i.y, cen_i.z]
-	snap_i.velocities #.-= 0 * [cen_i.vx, cen_i.vy, cen_i.vz]
+	snap_i.positions .-=  [cen.x, cen.y, cen.z]
+	snap_i.velocities .-= [cen.vx, cen.vy, cen.vz]
 
 
 	# sort by radii
@@ -356,7 +361,7 @@ let
 
 	ax2 = Axis(fig[2,1], 
 		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
-		limits=(nothing, (-1, 1)))
+		limits=((-1, 0.8), (-1, 1)))
 	
 	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
 	hlines!([0], color="black", label="", z_order=1)
@@ -455,6 +460,7 @@ sum(ps_all) # should be 1
 
 # ╔═╡ bd8489da-ac53-46c6-979e-06d5dc6e25d1
 function write_stars()
+	outname = params["output_file"]
 	if isfile(outname)
 		if overwrite
 			rm(outname)
@@ -478,14 +484,17 @@ write_stars()
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
 # ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
+# ╠═530c6c09-4454-4952-8351-dccbb4ed429f
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
+# ╠═9326c8a6-8b9b-4406-b00f-9febb3dcca46
+# ╠═16e0729e-9a75-458e-a56c-73967c819c31
+# ╠═d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
+# ╠═46be1f99-6f64-476e-84cb-11d4b6504a86
 # ╠═855fd729-22b6-4845-9d2b-e796d4a15811
-# ╠═9ea8bae1-bdd4-4987-94cc-599df21f23ef
-# ╟─92cc30ae-0b0a-4a72-aa0c-29150eeee5e0
 # ╠═4cb09115-143d-456f-9c6a-19656f638677
-# ╠═e5551ea6-7681-4544-a610-ddb5ee0add7b
-# ╠═d7d83daf-6c70-4026-afa7-1f426ee805fa
+# ╠═d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
 # ╠═e37bf6d7-9445-49bf-8333-f68ad25436b2
+# ╠═cf50c4b4-a634-4310-8aa5-91ab653313a9
 # ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
 # ╠═45acc05f-85a8-4bbc-bd43-a34583c983b3
