@@ -1,0 +1,11 @@
+PSAT_min: 0.2
+filename: "data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"
+PA: 94
+dist: 86
+ra: 15.03917
+pmdec: -0.16
+ecc: 0.37
+pmra: 0.099
+dist_err: 3
+dec: -33.70917
+rh: 12.33

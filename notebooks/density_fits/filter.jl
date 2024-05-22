@@ -24,10 +24,19 @@ begin
 	using Arya
 	
 	using JSON
+	import YAML
 end
 
 # ╔═╡ 542dd574-194a-49a2-adfc-a56db2ebea31
 using Tables
+
+# ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
+md"""
+Given a set of yaml parameters,
+this notebook simply filters the J23 observations according to the specifications.
+
+Use the calc_density... and the fit_profile notebooks to then analyze the sample
+"""
 
 # ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 md"""
@@ -49,7 +58,7 @@ begin
 		filename::String
 		ra::Float64
 		dec::Float64
-		ecc::F
+		ecc::F # can likely remove ecc, rh, PA
 		rh::F
 		PA::F
 		dist::F
@@ -83,55 +92,32 @@ md"""
 """
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "Scl.json"
-
-# ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
-begin 
-	param_file = "params/$name"
-	open(param_file, "r") do f
-	    global params_json
-	    params_json = JSON.parse(f)
-	end
-
-	params = DensityParams(params_json)
-end
+name = "sculptor/fiducial"
 
 # ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
 md"""
 # functions
 """
 
-# ╔═╡ a0683e1e-5210-40fd-8841-1a6a315d3efe
-function is_point_in_polygon(point, polygon)
-    x, y = point
-    inside = false
-    N = size(polygon, 2)  # Number of vertices in the polygon
-    j = N  # Start with the last vertex
-    for i in 1:N
-        xi, yi = polygon[1, i], polygon[2, i]
-        xj, yj = polygon[1, j], polygon[2, j]
-        
-        # Check if point intersects with polygon edge
-        intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
-        if intersect
-            inside = !inside
-        end
-        j = i
-    end
-    return inside
+# ╔═╡ fc4efd97-a140-4997-b668-904aa7ff5d30
+function read_file(filename)
+	f = YAML.load_file(filename)
+
+	if "inherits" ∈ keys(f)
+		f1 = read_file(dirname(filename) * "/" * f["inherits"])
+		delete!(f, "inherits")
+		merge!(f, f1)
+	end
+
+	return f
 end
 
-# ╔═╡ 4a9cf94b-8714-4320-9f8b-a480b0741ba5
+# ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
-	value(a::Measurement) = a.val
-	value(a) = a
-	err(a::Measurement) = a.err
-	err(a) = 0
-end
+	param_file = "$name.yml"
 
-# ╔═╡ e4a6382e-21f6-4d34-8376-142ba859b18a
-function Makie.convert_single_argument(y::Array{Measurement{T}}) where T
-	return value.(y)
+	params_json =read_file(param_file)
+	params = DensityParams(params_json)
 end
 
 # ╔═╡ 695d532c-86d1-4b24-b7af-600a8ca29687
@@ -171,17 +157,7 @@ function load_fits(filename)
 	return all_stars
 end
 
-# ╔═╡ c9fe69bf-52d5-4fec-9667-2c29d31230df
-function add_r_ell!(stars, ecc, PA)
-	b = sqrt(1 - ecc)
-	a = 1/b
-	
-	println("a, b / r_h = $a, $b")
-	r_ell = lguys.calc_r_ell(stars.xi, stars.eta, a, b, PA-90)
-	stars[:, "r_ell"] = r_ell;
-end
-
-# ╔═╡ 0903be18-b239-4f38-98f2-2b170fc10c5a
+# ╔═╡ 2dbdc00f-7f78-4cc7-b505-99115d8a1042
 function add_xi_eta!(stars, ra0, dec0)
 	xi, eta = lguys.to_tangent(stars.ra, stars.dec, ra0, dec0)
 	
@@ -189,14 +165,6 @@ function add_xi_eta!(stars, ra0, dec0)
 	stars[:, "eta"] = eta
 	stars
 end
-
-# ╔═╡ 2ce9bedf-1ecb-4773-af65-1feff0f42f76
-function min_filter(x, attr, cut)
-	return x[:, attr] .> cut
-end
-
-# ╔═╡ ba162d65-2ee8-4390-9450-3975c649a05b
-max_filter(x, attr, cut) = x[:, attr] .< cut
 
 # ╔═╡ 2d8b2740-f9f2-4cca-823f-4b6491c31fe4
 function apply_filter(df, func, params...)
@@ -209,10 +177,38 @@ function apply_filter(df, func, params...)
 	return filt
 end
 
+# ╔═╡ 2ce9bedf-1ecb-4773-af65-1feff0f42f76
+function min_filter(x, attr, cut)
+	return x[:, attr] .> cut
+end
+
+# ╔═╡ ba162d65-2ee8-4390-9450-3975c649a05b
+max_filter(x, attr, cut) = x[:, attr] .< cut
+
 # ╔═╡ 60444f7f-71ee-4886-b02b-66bdc5324f99
 md"""
 # Filtering
 """
+
+# ╔═╡ a0683e1e-5210-40fd-8841-1a6a315d3efe
+function is_point_in_polygon(point, polygon)
+    x, y = point
+    inside = false
+    N = size(polygon, 2)  # Number of vertices in the polygon
+    j = N  # Start with the last vertex
+    for i in 1:N
+        xi, yi = polygon[1, i], polygon[2, i]
+        xj, yj = polygon[1, j], polygon[2, j]
+        
+        # Check if point intersects with polygon edge
+        intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+        if intersect
+            inside = !inside
+        end
+        j = i
+    end
+    return inside
+end
 
 # ╔═╡ 029bb274-df79-4f8a-bdd2-13f293e38279
 function cmd_filter(all_stars, cmd_cut)
@@ -290,35 +286,14 @@ end
 # ╔═╡ 753a7958-e12a-486e-b65b-7b6a8002a400
 function load_and_filter(params)
 	all_stars = load_fits(params.filename)
-	add_xi_eta!(all_stars, params.ra, params.dec)
-	add_r_ell!(all_stars, params.ecc, params.PA)
 
+	add_xi_eta!(all_stars, params.ra, params.dec)
 	members = select_members(all_stars, params)
 	return all_stars, members
 end
 
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
 all_stars, members = load_and_filter(params)
-
-# ╔═╡ 319fe0dc-5b50-4ca3-9c77-aa6751f7d1c3
-isnan.(all_stars.pseudocolour)
-
-# ╔═╡ d048785f-2109-4117-9fd3-e244d423d12e
-let
-	filt = all_stars.ruwe .< 1.3
-	println(sum(filt))
-	filt .&= map(!, all_stars.astrometric_primary_flag)
-	# filt .&= map(!, isnan.(all_stars.phot_g_mean_mag))
-	# filt .&= map(!, isnan.(all_stars.bp_rp))
-	# filt .&= map(!, isnan.(all_stars.pseudocolour))
-	# filt .&= map(!, isnan.(all_stars.nu_eff_used_in_astrometry))
-
-	println(sum(filt))
-	println("nans ", sum(isnan.(all_stars[filt, :].PSAT)))
-	println("equal zero ", sum(all_stars[filt, :].PSAT .== 0))
-
-	println(sum(all_stars.PSAT .> 0))
-end
 
 # ╔═╡ 0c498087-0184-4da2-a079-e972dd987712
 md"""
@@ -341,6 +316,9 @@ end
 
 # ╔═╡ f890216a-2e4e-4f44-92ee-ded0eaa17a68
 params.rh
+
+# ╔═╡ d1cc0201-f5da-4747-ae20-b14a03f1abd6
+members
 
 # ╔═╡ efc003db-c980-40ba-822f-23220f7e852e
 md"""
@@ -457,27 +435,34 @@ md"""
 """
 
 # ╔═╡ 5a172f47-589f-4b2c-8180-108b293cebf7
-out_name = name[begin:end-5] * "_sample.fits"
+out_name = "$(name)_sample.fits"
 
-# ╔═╡ c2821906-7a9a-4303-b1a8-a788e9c07fd5
-f1 = FITS(params.filename)
+# ╔═╡ 00a51936-8a24-4d27-a8fd-ff1d11c0aa91
+columnindex
 
-# ╔═╡ 9b29f376-b02c-427e-b567-8447e029aa19
-header = read_header(f1[2])
+# ╔═╡ 49bd2648-9ed8-49d0-becc-ea58a83d9d22
+FITSHeader
+
+# ╔═╡ fafb4f70-7f7c-40de-a34f-69c9a8fe0920
+FITSIO.Libcfitsio.CFITSIO
 
 # ╔═╡ 28ff0827-dd3e-43ff-b210-9a45687dd1f8
 let
+	f1 = FITS(params.filename)
+	header = read_header(f1[2])
+
+	cols = FITSIO.colnames(f1[2])
+	close(f1)
+	
 	f = FITS(out_name, "w")
 
 	df = Dict(String(name) => members[:, name] for name in Tables.columnnames(members))
 	write(f, df,  header=header)
 
+	println("wrote to $out_name")
 	close(f)
 	df
 end
-
-# ╔═╡ baf1ea75-93e9-43bf-bef5-f52d003ad609
-f = FITS(out_name)
 
 # ╔═╡ 39f615b4-b62c-493e-8d11-be45910d79a8
 md"""
@@ -502,65 +487,11 @@ let
 	fig
 end
 
-# ╔═╡ e5d3d41b-e786-460a-a44f-51d1d98dcf11
-obs = calc_properties(r)
-
-# ╔═╡ aca3780b-1d2f-4a44-a53a-754794c334b1
-println(maximum(r) / 60)
-
-# ╔═╡ 71d3b349-bf04-456a-b41c-a5acc58a7f73
-popt, pred, res = fit_profile(obs)
-
-# ╔═╡ 1c8a12d7-7345-4306-a2d6-f346a5397832
-popt_3d, pred_3d, _ = fit_profile(obs, profile=lguys.Exp3D)
-
-# ╔═╡ 9083628f-b41a-45fc-9ee3-5754e9ec4fe9
-popt_k, pred_k, _ = fit_profile(obs, profile=lguys.KingProfile, p0=[1, 3, 100])
-
-# ╔═╡ d3eb4b98-8d1a-41df-9327-529da4c79911
-popt_c, pred_c, _ = fit_profile(obs, profile=lguys.LogCusp2D, p0=[1, 3])
-
-# ╔═╡ 2c33af35-4217-4534-9e30-1a697b32892f
-obs
-
 # ╔═╡ 5c117b2f-a32c-4afd-9c66-943ab4634e71
 dist = params.dist ± params.dist_err
 
-# ╔═╡ 639d02f7-faee-4985-aaf1-98d0f501496c
-dist * popt_3d[2] / 60 / (180 /π) * 1e3
-
-# ╔═╡ 0c87248a-cfa7-4a6d-af84-87f5543f68e2
-popt[2]  * 60 / (206265) * dist * 1e3  # scale radius in pc
-
 # ╔═╡ b20058a8-a9b6-49ff-b8ff-a2d45c76f645
 R_s_over_R_h = 1.6783
-
-# ╔═╡ ac761271-6a6a-4df7-9476-1d44f02eb74d
-popt[2] * 1.6783 # half light radius
-
-# ╔═╡ 162dfe57-99e0-4c03-8934-2a59056f484f
-plot_Σ_fit_res(obs, pred, res)
-
-# ╔═╡ 0b0b3ef9-9808-40cb-bb19-d7301af53deb
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1], limits=((-0.8, 2), (-6.5, -1.5)))
-	scatter!(value.(obs.log_r), log10.(value.(obs.Σ)),)
-	errorbars!(value.(obs.log_r), log10.(value.(obs.Σ)), err.(log10.(obs.Σ)) )
-	
-	lines!(pred.log_r, log10.(pred.Σ), label="2D Exp", color=COLORS[2])
-
-	lines!(pred_3d.log_r, log10.(pred_3d.Σ), label="3D Exp", color=COLORS[3])
-
-	lines!(pred_k.log_r, log10.(pred_k.Σ), label="King", color=COLORS[4])
-	lines!(pred_c.log_r, log10.(pred_c.Σ), label="2D Log Cusp", color=COLORS[5])
-
-	ax.xlabel = log_r_label
-	ax.ylabel = L"\log\Sigma\quad [\textrm{fraction arcmin}^{-2}]"
-
-	axislegend(ax)
-	fig
-end
 
 # ╔═╡ 39cb37d9-f1d4-419e-9e19-c033bfba8556
 let
@@ -580,56 +511,10 @@ end
 # ╔═╡ 82d90218-f32e-4b72-a99a-bc2a264d7dce
 theme(:colorcycle)
 
-# ╔═╡ 617a5128-e6a4-40a5-bc5e-45dba4eeaa58
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1])
-	scatter!(10 .^ value.(obs.log_r), value.(obs.Γ),)
-	errorbars!(10 .^ value.(obs.log_r), value.(obs.Γ), err.(obs.Γ) )
-	
-	lines!(10 .^ pred.log_r, pred.Γ, label="exponential", color=COLORS[2])
-	
-	ax.xlabel = "r / arcmin"
-	ax.ylabel = L"\Gamma = d\,\log \Sigma / d\,\log r"
-	
-	fig
-end
-
-# ╔═╡ 1ca6ea59-b129-460e-8925-2592332ba280
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1], limits=(-0.8, 2.2, -1, 2.2))
-	scatter!(value.(obs.log_r), value.(obs.Γ_max),)
-	errorbars!(value.(obs.log_r), value.(obs.Γ_max), err.(obs.Γ_max) )
-	
-	lines!(pred.log_r, pred.Γ_max, label="exponential", color=COLORS[2])
-	
-	ax.xlabel = log_r_label
-	ax.ylabel = L"\Gamma_\mathrm{max} = 2(1 - \Sigma / \bar{\Sigma})"
-	
-	fig
-end
-
 # ╔═╡ a7209445-84e9-435d-9144-90f8eb5e70cb
 md"""
 # Membership selection effects
 """
-
-# ╔═╡ 748430e6-520f-49c1-94e2-d1a0246d91b3
-begin 
-	data = Dict{String, Any}()
-	
-	data["log_r"] = value.(obs.log_r)
-	data["Sigma"] = value.(obs.Σ)
-	data["Sigma_err"] = err.(obs.Σ)
-	data["Gamma"] = value.(obs.Γ)
-	data["Gamma_err"] = err.(obs.Γ)
-	data["log_Sigma_0"] = popt[1].val
-	data["log_Sigma_0_err"] = popt[1].err
-	data["r_s"] = popt[2].val
-	data["r_s_err"] = popt[2].err
-	data
-end
 
 # ╔═╡ 45422d53-317c-4824-a41a-4a80b1fbd102
 let 
@@ -710,34 +595,8 @@ md"""
 # Background density
 """
 
-# ╔═╡ eeecad14-ec74-4559-9765-5648f0b3d74e
-cmd_cut_umi =  [1.63,20.99, 1.26,19.88, 1.32,18.24, 1.69,16.24, 1.50,15.99, 1.19,17.31, 0.85,18.83, 0.67,19.29, -0.07,19.67, -0.18,20.08, 0.26,20.31, 0.58,20.11, 0.30,20.86]
-
 # ╔═╡ d7984df8-84b1-41ff-b19b-dd17b1772d4a
 r_max = maximum(sqrt.(all_stars.xi .^ 2 + all_stars.eta .^ 2))
-
-# ╔═╡ 4fb45cd6-673e-48a6-a5a7-374abc7bf4a9
-obs
-
-# ╔═╡ c6362b4a-a2e8-4d3b-be03-79fb12b84b36
-function scatter_dens!(obs, norm=:count; kwargs...)
-	y = obs.Σ
-
-	if norm == :count
-		y *= obs.N
-	end
-
-	y = log10.(y)
-
-	x = value.(obs.log_r)
-	y_err = err.(y)
-	y = value.(y)
-
-	scatter!(x, y; kwargs...)
-	errorbars!(x, y, y_err; kwargs...)
-	
-end
-	
 
 # ╔═╡ e033e344-737e-46e8-ab85-5fe33d191f41
 """
@@ -891,6 +750,7 @@ params_json
 params
 
 # ╔═╡ Cell order:
+# ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
@@ -898,28 +758,24 @@ params
 # ╠═d6cbd9cb-bfa7-46c1-970a-ab3fb3740c48
 # ╠═e3f52a32-9a21-4c8f-8e5c-9ca3e7dbc331
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
-# ╠═8a551dbe-9112-48c2-be9a-8b688dc5a05c
+# ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
-# ╠═4093a7d6-2f74-4c37-a4a8-270934ede924
-# ╠═a0683e1e-5210-40fd-8841-1a6a315d3efe
-# ╠═e4a6382e-21f6-4d34-8376-142ba859b18a
-# ╠═4a9cf94b-8714-4320-9f8b-a480b0741ba5
+# ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
+# ╠═fc4efd97-a140-4997-b668-904aa7ff5d30
 # ╠═07235d51-10e1-4408-a4d1-cd2079fadb75
 # ╠═695d532c-86d1-4b24-b7af-600a8ca29687
 # ╠═32fd9b79-1a8b-4a69-9115-9065dd61ced2
-# ╠═c9fe69bf-52d5-4fec-9667-2c29d31230df
-# ╠═0903be18-b239-4f38-98f2-2b170fc10c5a
+# ╠═2dbdc00f-7f78-4cc7-b505-99115d8a1042
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
-# ╠═319fe0dc-5b50-4ca3-9c77-aa6751f7d1c3
-# ╠═d048785f-2109-4117-9fd3-e244d423d12e
+# ╠═2d8b2740-f9f2-4cca-823f-4b6491c31fe4
 # ╠═2ce9bedf-1ecb-4773-af65-1feff0f42f76
 # ╠═ba162d65-2ee8-4390-9450-3975c649a05b
-# ╠═2d8b2740-f9f2-4cca-823f-4b6491c31fe4
 # ╠═753a7958-e12a-486e-b65b-7b6a8002a400
 # ╟─60444f7f-71ee-4886-b02b-66bdc5324f99
 # ╠═914bdd71-da5c-4bf8-894d-12f64df5ca02
 # ╠═029bb274-df79-4f8a-bdd2-13f293e38279
+# ╠═a0683e1e-5210-40fd-8841-1a6a315d3efe
 # ╠═4467fa31-7171-404e-a225-e3c27afa0f7d
 # ╠═d36ca6c6-f9bc-47c4-b728-e6badaf866b3
 # ╠═d86bb8bb-8d7a-4a22-964c-f3c8d90cc9f0
@@ -928,6 +784,7 @@ params
 # ╟─0c498087-0184-4da2-a079-e972dd987712
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╠═f890216a-2e4e-4f44-92ee-ded0eaa17a68
+# ╠═d1cc0201-f5da-4747-ae20-b14a03f1abd6
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
 # ╠═0010dffc-9717-4747-b7c2-2e396097399b
@@ -938,44 +795,26 @@ params
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
 # ╟─4873af32-c387-4d42-909d-d39a25f56e24
 # ╠═5a172f47-589f-4b2c-8180-108b293cebf7
-# ╠═c2821906-7a9a-4303-b1a8-a788e9c07fd5
-# ╠═9b29f376-b02c-427e-b567-8447e029aa19
+# ╠═00a51936-8a24-4d27-a8fd-ff1d11c0aa91
+# ╠═49bd2648-9ed8-49d0-becc-ea58a83d9d22
+# ╠═fafb4f70-7f7c-40de-a34f-69c9a8fe0920
 # ╠═28ff0827-dd3e-43ff-b210-9a45687dd1f8
-# ╠═baf1ea75-93e9-43bf-bef5-f52d003ad609
 # ╠═542dd574-194a-49a2-adfc-a56db2ebea31
 # ╟─39f615b4-b62c-493e-8d11-be45910d79a8
 # ╠═9b3288b4-3c17-4325-9e2c-94f96328f3c3
 # ╠═62388099-b80b-4272-9bde-0c7315b15c19
 # ╠═a254083b-61f2-45ad-b678-c4df6f16964b
-# ╠═e5d3d41b-e786-460a-a44f-51d1d98dcf11
-# ╠═aca3780b-1d2f-4a44-a53a-754794c334b1
-# ╠═71d3b349-bf04-456a-b41c-a5acc58a7f73
-# ╠═1c8a12d7-7345-4306-a2d6-f346a5397832
-# ╠═639d02f7-faee-4985-aaf1-98d0f501496c
-# ╠═9083628f-b41a-45fc-9ee3-5754e9ec4fe9
-# ╠═d3eb4b98-8d1a-41df-9327-529da4c79911
-# ╠═2c33af35-4217-4534-9e30-1a697b32892f
 # ╠═5c117b2f-a32c-4afd-9c66-943ab4634e71
-# ╠═0c87248a-cfa7-4a6d-af84-87f5543f68e2
 # ╠═b20058a8-a9b6-49ff-b8ff-a2d45c76f645
-# ╠═ac761271-6a6a-4df7-9476-1d44f02eb74d
-# ╠═162dfe57-99e0-4c03-8934-2a59056f484f
-# ╠═0b0b3ef9-9808-40cb-bb19-d7301af53deb
 # ╠═39cb37d9-f1d4-419e-9e19-c033bfba8556
 # ╠═82d90218-f32e-4b72-a99a-bc2a264d7dce
-# ╠═617a5128-e6a4-40a5-bc5e-45dba4eeaa58
-# ╠═1ca6ea59-b129-460e-8925-2592332ba280
 # ╟─a7209445-84e9-435d-9144-90f8eb5e70cb
-# ╠═748430e6-520f-49c1-94e2-d1a0246d91b3
 # ╠═45422d53-317c-4824-a41a-4a80b1fbd102
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╠═c0b3c3f6-0450-4242-9e13-41f9af17e562
 # ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
-# ╠═eeecad14-ec74-4559-9765-5648f0b3d74e
 # ╠═d7984df8-84b1-41ff-b19b-dd17b1772d4a
-# ╠═4fb45cd6-673e-48a6-a5a7-374abc7bf4a9
-# ╠═c6362b4a-a2e8-4d3b-be03-79fb12b84b36
 # ╠═e033e344-737e-46e8-ab85-5fe33d191f41
 # ╠═48e41a6f-775d-4d9f-850d-df9bd20dcf09
 # ╠═b6eaa6be-4a23-4357-9ce8-40aa9f16d7f6

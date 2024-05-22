@@ -28,9 +28,6 @@ begin
 	import NaNMath as nm
 end
 
-# ╔═╡ fc892792-3f09-4bcc-84d1-eb9ad4f17b90
-using Tables
-
 # ╔═╡ 0d71de16-50d7-43da-b1fb-a477b949e15e
 md"""
 Given a set of density (histogram) observations, what profile is consistant?
@@ -44,31 +41,16 @@ We expect data as a
 """
 
 # ╔═╡ d0992dc9-08f1-487a-a96a-90996f29cefd
-name = "Scl"
+name = "sculptor/fiducial"
 
 # ╔═╡ aa23a8ab-3cff-400b-bbc9-592183f2e695
-profile_name = name *  "_profile.fits"
+profile_name = name *  "_profile.json"
 
-# ╔═╡ b40e74a6-2546-4e23-9318-138e1599024e
-f = FITS(profile_name)
-
-# ╔═╡ 1a4538d3-31f4-4267-9344-68662d3445b7
-df = DataFrame(f[2])
-
-# ╔═╡ dd43be76-f3be-49a4-abb8-72f1ac9f4491
-obs = Dict(name => read(f[2], name) for name in names(df))
-
-# ╔═╡ ff486f44-b4e3-4e9e-b276-472c89b95761
-read(obs[end, :])
-
-# ╔═╡ 74520378-dabb-4539-ba1a-cc1aff23cae9
-obs["log_r"] = obs["log_r"][1:end-1]
-
-# ╔═╡ 39faf220-f090-4f31-a944-5566602b1fd8
-obs["log_Sigma"] = obs["log_Sigma"][1:end-1]
-
-# ╔═╡ f6af24d3-5d9d-488a-869f-35301beeb95b
-obs["log_Sigma_err"] = obs["log_Sigma_err"][1:end-1]
+# ╔═╡ 88f02d81-927c-405a-ada4-064157c7dbf0
+open(profile_name) do f
+	global profile
+	profile = JSON.parse(f)
+end
 
 # ╔═╡ f890490e-17ef-4e78-a18a-437c90724f86
 md"""
@@ -83,7 +65,6 @@ function plot_Σ_fit_res(obs, pred, res)
     fig = Figure()
     ax = Axis(fig[1, 1], 
         ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}")
-    y = obs.log_Sigma  
 	
     errscatter!(ax, obs["log_r"], obs["log_Sigma"], yerr=obs["log_Sigma_err"])
 
@@ -99,7 +80,7 @@ function plot_Σ_fit_res(obs, pred, res)
 #     p2 = plot(ylabel=L"\Delta \log\Sigma", xlabel=log_r_label, ylim=(-2, 2))
 
 	y = res
-    errscatter!(ax2, obs.log_r, y, yerr=obs["log_Sigma_err"], label="")
+    errscatter!(ax2, obs["log_r"], y, yerr=obs["log_Sigma_err"], label="")
 
 
     hlines!(0, color=:black)
@@ -170,13 +151,7 @@ function fit_profile(obs; r_max=Inf, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
 end
 
 # ╔═╡ 3a0f2b8b-bb70-41bf-bcd7-aa241d4b7bdf
-popt, pred, res = fit_profile(obs, p0=[2, 7])
-
-# ╔═╡ 1540f3ca-3279-47d8-876c-5544ed7fb759
-obs["log_Sigma"]
-
-# ╔═╡ 0efcb02f-29c6-4276-a9a4-3fb735eca3a5
-obs
+popt, pred, res = fit_profile(profile, p0=[2, 7])
 
 # ╔═╡ 5cf332e8-47e4-4e9e-af94-199331a7aa3d
 md"""
@@ -185,7 +160,7 @@ md"""
 
 # ╔═╡ d6b7764b-65b1-4a71-9759-0c8b0b8672b6
 let
-	fig, ax, p = errscatter(obs["log_r"], obs["counts"], yerr=sqrt.(obs["counts"]))
+	fig, ax, p = errscatter(profile["log_r"], profile["counts"], yerr=sqrt.(profile["counts"]))
 
 	ax.xlabel = log_r_label
 	ax.ylabel = "count / bin"
@@ -195,24 +170,104 @@ let
 	fig
 end
 
+# ╔═╡ 98b776e5-824b-4db5-8455-b2433fba22b1
+plot_Σ_fit_res(profile, pred, res)
+
 # ╔═╡ 3c133454-d1c2-4aff-a27f-c3368bf06480
 let
-	fig = Figure()
-	ax = Axis(fig[1, 1], limits=((-0.8, 2), (-6.5, -1.5)))
-	errscatter!(value.(obs["log_r"]), obs["log_Sigma"], yerr=obs["log_Sigma_err"])
+	fig = Figure(size=(700, 300))
+	ax = Axis(fig[1, 1], limits=((-0.8, 3), nothing),
+		xlabel=log_r_label,
+		ylabel=L"\Gamma"
+	)
+
 	
-	lines!(pred.log_r, log10.(pred.Σ), label="2D Exp", color=COLORS[2])
+	errscatter!(value.(profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
+	
+	lines!(pred.log_r, pred.Γ, label="2D Exp", color=COLORS[2])
 
 
-	ax.xlabel = log_r_label
-	ax.ylabel = L"\log\Sigma\quad [\textrm{fraction arcmin}^{-2}]"
+	ax_lin = Axis(fig[1, 2],
+		xlabel="r / arcmin",
+		yticklabelsvisible=false,
+	)
+
+	
+	errscatter!(value.(10 .^ profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
+	
+	lines!(10 .^ pred.log_r, pred.Γ, label="2D Exp", color=COLORS[2])
+
+	linkyaxes!(ax, ax_lin)
+	
+	axislegend(ax)
+	fig
+end
+
+# ╔═╡ ab2ffe07-0f81-4254-b1a0-f4e46532a077
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], limits=((-0.8, 3), nothing),
+		xlabel=log_r_label,
+		ylabel=L"\Gamma_\textrm{max}"
+	)
+
+	
+	errscatter!(value.(profile["log_r"]), profile["Gamma_max"], yerr=profile["Gamma_max_err"])
+	
+	lines!(pred.log_r, pred.Γ_max, label="2D Exp", color=COLORS[2])
+
 
 	axislegend(ax)
 	fig
 end
 
-# ╔═╡ 98b776e5-824b-4db5-8455-b2433fba22b1
-plot_Σ_fit_res(obs, pred, res)
+# ╔═╡ e5cb1a72-90d9-45be-9450-a86c640b9420
+md"""
+# Comparting functional forms
+"""
+
+# ╔═╡ 0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
+let 
+	popt, pred, res = fit_profile(profile, p0=[2, 7], profile=lguys.Exp3D)
+
+	global popt_3d_exp = popt
+	
+	plot_Σ_fit_res(profile, pred, res)
+
+end
+
+# ╔═╡ 93cd5808-0e20-475a-8001-4e775d4ab4e7
+let 
+	popt, pred, res = fit_profile(profile, p0=[2, 7], profile=lguys.Exp2D)
+
+	global popt_2d_exp = popt
+	
+	plot_Σ_fit_res(profile, pred, res)
+
+end
+
+# ╔═╡ 824fc065-8ad8-408c-a4f7-0c464ed7fa13
+let 
+	popt, pred, res = fit_profile(profile, profile=lguys.KingProfile, p0=[1, 35, 600])
+
+	global popt_king = popt
+	
+	plot_Σ_fit_res(profile, pred, res)
+
+end
+
+# ╔═╡ fa96cf7f-248c-4765-aa3c-0ca9f656644d
+popt_king
+
+# ╔═╡ 1be3fa21-5945-4904-a23a-12c15cc4a485
+let 
+	popt, pred, res = fit_profile(profile, profile=lguys.LogCusp2D, p0=[1, 35])
+
+	global popt_cusp = popt
+	
+	plot_Σ_fit_res(profile, pred, res)
+
+end
 
 # ╔═╡ 2f7bf886-5b1e-44d1-a16b-1d6214405a5f
 md"""
@@ -225,14 +280,7 @@ md"""
 # ╟─f93365e6-971d-4321-9d91-44e9e86610cb
 # ╠═d0992dc9-08f1-487a-a96a-90996f29cefd
 # ╠═aa23a8ab-3cff-400b-bbc9-592183f2e695
-# ╠═ff486f44-b4e3-4e9e-b276-472c89b95761
-# ╠═b40e74a6-2546-4e23-9318-138e1599024e
-# ╠═1a4538d3-31f4-4267-9344-68662d3445b7
-# ╠═fc892792-3f09-4bcc-84d1-eb9ad4f17b90
-# ╠═dd43be76-f3be-49a4-abb8-72f1ac9f4491
-# ╠═74520378-dabb-4539-ba1a-cc1aff23cae9
-# ╠═39faf220-f090-4f31-a944-5566602b1fd8
-# ╠═f6af24d3-5d9d-488a-869f-35301beeb95b
+# ╠═88f02d81-927c-405a-ada4-064157c7dbf0
 # ╠═f890490e-17ef-4e78-a18a-437c90724f86
 # ╠═347aee22-17bf-11ef-196f-0146bd88f688
 # ╠═f6715279-c048-4260-b30a-8e0a4f7c5af5
@@ -240,10 +288,15 @@ md"""
 # ╠═333c27b4-1da5-4745-942a-961202399f6d
 # ╠═6b909975-cdba-4961-bc0f-842c68f33ef9
 # ╠═3a0f2b8b-bb70-41bf-bcd7-aa241d4b7bdf
-# ╠═1540f3ca-3279-47d8-876c-5544ed7fb759
-# ╠═0efcb02f-29c6-4276-a9a4-3fb735eca3a5
 # ╠═5cf332e8-47e4-4e9e-af94-199331a7aa3d
 # ╠═d6b7764b-65b1-4a71-9759-0c8b0b8672b6
-# ╠═3c133454-d1c2-4aff-a27f-c3368bf06480
 # ╠═98b776e5-824b-4db5-8455-b2433fba22b1
+# ╠═3c133454-d1c2-4aff-a27f-c3368bf06480
+# ╠═ab2ffe07-0f81-4254-b1a0-f4e46532a077
+# ╟─e5cb1a72-90d9-45be-9450-a86c640b9420
+# ╠═0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
+# ╠═93cd5808-0e20-475a-8001-4e775d4ab4e7
+# ╠═824fc065-8ad8-408c-a4f7-0c464ed7fa13
+# ╠═fa96cf7f-248c-4765-aa3c-0ca9f656644d
+# ╠═1be3fa21-5945-4904-a23a-12c15cc4a485
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
