@@ -1,0 +1,15 @@
+{
+    "filename": "data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits",
+    "ra": 15.03917,
+    "dec": -33.70917,
+    "ecc": 0.37,
+    "rh": 12.33,
+    "PA": 94,
+    "dist": 86,
+    "dist_err": 3,
+
+    "PSAT_min": 0.2,
+
+    "pmra": 0.099,
+    "pmdec": -0.160
+}

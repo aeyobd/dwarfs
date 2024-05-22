@@ -26,6 +26,9 @@ begin
 	using JSON
 end
 
+# ╔═╡ 542dd574-194a-49a2-adfc-a56db2ebea31
+using Tables
+
 # ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 md"""
  # setup
@@ -448,209 +451,46 @@ let
 	fig
 end
 
+# ╔═╡ 4873af32-c387-4d42-909d-d39a25f56e24
+md"""
+# Save sample
+"""
+
+# ╔═╡ 5a172f47-589f-4b2c-8180-108b293cebf7
+out_name = name[begin:end-5] * "_sample.fits"
+
+# ╔═╡ c2821906-7a9a-4303-b1a8-a788e9c07fd5
+f1 = FITS(params.filename)
+
+# ╔═╡ 9b29f376-b02c-427e-b567-8447e029aa19
+header = read_header(f1[2])
+
+# ╔═╡ 28ff0827-dd3e-43ff-b210-9a45687dd1f8
+let
+	f = FITS(out_name, "w")
+
+	df = Dict(String(name) => members[:, name] for name in Tables.columnnames(members))
+	write(f, df,  header=header)
+
+	close(f)
+	df
+end
+
+# ╔═╡ baf1ea75-93e9-43bf-bef5-f52d003ad609
+f = FITS(out_name)
+
 # ╔═╡ 39f615b4-b62c-493e-8d11-be45910d79a8
 md"""
 # density calculation
 """
-
-# ╔═╡ 7c5397f3-40f3-49a4-acfb-27beadc5fa6b
-function running_hist(xs, bw, normalize=false)
-	N = length(xs)
-	hist = zeros(N)
-
-	x_sort = sort(xs)
-	for i in 1:N
-		x0 = x_sort[i]
-		count = sum(x0 + bw .> x_sort .> x0 - bw)
-		hist[i] = count
-	end
-
-	if normalize
-		dx = lguys.gradient(x_sort)
-		area = sum(hist .* dx)
-		hist ./= area
-	end
-	return x_sort, hist
-end
-
-# ╔═╡ 2d3308fa-ce87-4967-a934-d2821a42b8b7
-function norm_hist(xs, bw)
-	bins = collect(minimum(xs):bw:(maximum(xs) + bw))
-	x_h, y_h = lguys.calc_histogram(xs, bins)
-    y_e = sqrt.(y_h)
-    
-	area = length(xs)
-
-	return x_h, y_h ./ area, y_e ./ area
-end
-
-# ╔═╡ 3d105351-9a5c-4410-a360-ec8736374909
-function calc_Σ(log_r, hist)
-	r = 10 .^ log_r
-	Σ = hist ./ (2π * log(10) * r .^ 2) # is equivalent because of derivative of log r
-	return Σ
-end
-
-# ╔═╡ 46bb8315-5bd7-4175-9da1-f8cad761b8ec
-function calc_Σ_mean(log_r, hist)
-	r = 10 .^ lguys.midpoint(log_r)
-	counts = cumsum(hist .* diff(log_r))
-	Areas = @. π * r^2
-	σ = counts ./ Areas
-	return σ
-end
-
-# ╔═╡ 7edaac34-e450-43a4-a022-90c38af9b5ca
-function calc_Γ(log_rs, Σs, step=1)
-	dx = lguys.gradient(log_rs)
-	dρ = lguys.gradient(log10.(Σs))
-
-	return dρ ./ dx #lguys.gradient(log10.(ρs), log_rs)
-end
-
-# ╔═╡ 830cbaab-b82f-4e8e-b975-1eb11662b11b
-function calc_properties(rs, bw=0.1)
-    log_r_bin, counts, δ_counts = norm_hist(log10.(rs), 0.1)
-    counts = counts .± δ_counts
-    log_r = lguys.midpoint(log_r_bin)
-    δ_log_r = diff(log_r_bin) ./ 2
-    log_r = log_r .± δ_log_r
-    r_bin = 10 .^ log_r_bin
-
-    r = 10 .^ log_r
-
-    As = π * diff((10 .^ log_r_bin) .^ 2)
-    Σ = counts ./ As 
-    # Σ_e = @. y_e / ys * Σ
-    #Σ_m = calc_Σ_mean(xs, ys)
-
-    M_in = cumsum(counts)
-    A_in = @. π * (r_bin[2:end])^2
-    Σ_m = M_in ./ A_in
-
-	println(Σ)
-    Γ = calc_Γ(log_r, Σ)
-    Γ_max = @. 2*(1 - Σ / Σ_m)
-    
-    return (log_r=log_r, log_r_bins=log_r_bin, counts=counts, Σ=Σ, Σ_m=Σ_m, Γ=Γ, Γ_max=Γ_max, M_in=M_in, N=length(rs))
-end
-
-# ╔═╡ a607e301-bd26-490b-99cb-ad28338d77f1
-
-
-# ╔═╡ a8408be2-c287-4338-98b9-6af2ea4da756
-Base.Broadcast.broadcastable(q::lguys.AbstractProfile) = Ref(q) 
-
-# ╔═╡ 1c2d73c2-e6c2-4adc-a5d2-f272a8d0b59b
-import NaNMath as nm
-
-# ╔═╡ 58f7a246-f997-413b-abe4-73282abbc91c
-function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
-    log_r_bins = LinRange(log_r_min, log_r_max, 1000)
-    log_r = lguys.midpoint(log_r_bins)
-    r = 10 .^  log_r
-    r_bins = 10 .^ log_r_bins
-    
-    Σ = Σ_model.(r)
-
-    Γ = calc_Γ(log_r, Σ)
-    M_in = [quadgk(rrr->2π*rrr*Σ_model(rrr), 0, rr)[1] for rr in r]
-    Σ_m = M_in ./ (π * r .^ 2)
-    Γ_max = 2*(1 .- Σ ./ Σ_m)
-    counts =  Σ .* (2π *  r .* diff(r_bins) )
-    
-    return (log_r=log_r, log_r_bins=log_r_bins, counts=counts, Σ=Σ, Σ_m=Σ_m, Γ=Γ, Γ_max=Γ_max, M_in=M_in)
-
-end
-
-# ╔═╡ 4ceea6c3-0bf5-40c2-b49e-2691e73e003c
-function fit_profile(obs; r_max=Inf, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
-    r_val = [10 ^ r.val for r in obs.log_r]
-    log_Σ = log10.(obs.Σ)
-    filt = r_val .< r_max
-    filt .&= map(x->isfinite(x), log_Σ)
-    filt .&= @. !isnan(log_Σ)
-    
-    r_val = r_val[filt]
-    log_Σ = log_Σ[filt]
-	println(r_val)
-	println(log_Σ)
-
-
-    log_Σ_val = [s.val for s in log_Σ]
-    log_Σ_e = [s.err for s in log_Σ]
-
-	log_Σ_exp(r, popt...) = nm.log10.(lguys.calc_Σ.(profile(popt...), r))
-	popt, covt = SciPy.optimize.curve_fit(log_Σ_exp, r_val, log_Σ_val, 
-        sigma=log_Σ_e, p0=p0)
-    
-    popt_p = popt .± sqrt.(diag(covt))
-    println("log_Σ_0 = $(popt_p[1])")
-    println("r_s = $(popt_p[2])")
-
-	Σ_pred(r) = 10 .^ log_Σ_exp(r, popt...)
-    props = predict_properties(Σ_pred, 
-        N=N, log_r_min=obs.log_r_bins[1], log_r_max=obs.log_r_bins[end])
-    
-    log_Σ_pred = log_Σ_exp.(10 .^ value.(obs.log_r), popt...)
-    log_Σ_res = log10.(obs.Σ) .- log_Σ_pred
-    return popt_p, props, log_Σ_res
-end
 
 # ╔═╡ 9b3288b4-3c17-4325-9e2c-94f96328f3c3
 function plot_rh!()
     vline!([log10.(r_h)], color="grey", s=:dash, z_order=1, label=L"r_h")
 end
 
-# ╔═╡ c0fa8744-4da3-470c-a2b8-f89ce431e1ed
-log_r_label = L"\log r / \mathrm{arcmin}"
-
-# ╔═╡ 1acc3b7d-2e9d-47ec-8afe-14876e57787c
-function plot_Σ_fit_res(obs, pred, res)
-    fig = Figure()
-    ax = Axis(fig[1, 1], 
-        ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}")
-    N = length(obs.log_r)
-    y = log10.(obs.Σ .* N)
-    errorbars!(ax, value.(obs.log_r), value.(y), err.(y))
-    scatter!(ax, value.(obs.log_r), value.(y))
-
-    lines!(ax, pred.log_r, log10.(pred.Σ .* N), color=COLORS[2])
-    
-    ax2 = Axis(fig[2, 1],
-        ylabel=L"\delta\log\Sigma", 
-    	xlabel=log_r_label,
-		limits = (nothing, (-1, 1))
-	)
-
-#     p2 = plot(ylabel=L"\Delta \log\Sigma", xlabel=log_r_label, ylim=(-2, 2))
-
-	y = res
-    scatter!(ax2, value.(obs.log_r), value.(y), err.(y), label="")
-    errorbars!(ax2, value.(obs.log_r), value.(y), err.(y))
-
-
-    hlines!(0, color=:black)
-    
-    rowsize!(fig.layout, 2, Relative(1/4))
-
-    linkxaxes!(ax, ax2)
-    hidexdecorations!(ax, grid=false)
-#     return plot(p1, p2, layout=grid(2, 1, heights=(0.8, 0.2)), link=:x, bottom_margin=[-5Plots.mm 0Plots.mm])
-    return fig
-end
-
 # ╔═╡ 62388099-b80b-4272-9bde-0c7315b15c19
 r = 60 * members.r_ell # arcminutes
-
-# ╔═╡ 4a98e0f2-da03-46f4-bf16-ab2e197ac7bd
-
-
-# ╔═╡ 402c67c1-05c4-4150-9af6-7c32c1740855
-maximum(r)
-
-# ╔═╡ 36d2446e-b1ac-4cbb-a65f-711aba600408
-maximum(all_stars.r_ell) * 60 * (1 - params.ecc)
 
 # ╔═╡ a254083b-61f2-45ad-b678-c4df6f16964b
 let
@@ -667,17 +507,6 @@ obs = calc_properties(r)
 
 # ╔═╡ aca3780b-1d2f-4a44-a53a-754794c334b1
 println(maximum(r) / 60)
-
-# ╔═╡ 2da8531e-eb37-4ec5-af5a-e0c2dfd8c4d1
-let
-	fig, ax, p = scatter(obs.log_r, obs.counts * obs.N)
-
-	ax.xlabel = log_r_label
-	ax.ylabel = "count / bin"
-	ax.yscale=log10
-
-	fig
-end
 
 # ╔═╡ 71d3b349-bf04-456a-b41c-a5acc58a7f73
 popt, pred, res = fit_profile(obs)
@@ -697,11 +526,14 @@ obs
 # ╔═╡ 5c117b2f-a32c-4afd-9c66-943ab4634e71
 dist = params.dist ± params.dist_err
 
-# ╔═╡ b20058a8-a9b6-49ff-b8ff-a2d45c76f645
-R_s_over_R_h = 1.6783
+# ╔═╡ 639d02f7-faee-4985-aaf1-98d0f501496c
+dist * popt_3d[2] / 60 / (180 /π) * 1e3
 
 # ╔═╡ 0c87248a-cfa7-4a6d-af84-87f5543f68e2
-popt[2]  * 60 / (206265) * dist * 1e3 * R_s_over_R_h # scale radius in pc
+popt[2]  * 60 / (206265) * dist * 1e3  # scale radius in pc
+
+# ╔═╡ b20058a8-a9b6-49ff-b8ff-a2d45c76f645
+R_s_over_R_h = 1.6783
 
 # ╔═╡ ac761271-6a6a-4df7-9476-1d44f02eb74d
 popt[2] * 1.6783 # half light radius
@@ -1058,35 +890,6 @@ params_json
 # ╔═╡ 45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
 params
 
-# ╔═╡ 28d71909-e3e7-4e32-9183-4da862a58eb7
-begin 
-	fits_name = name[begin:end-5] * "_fit.fits"
-	f = FITS(fits_name, "w")
-	obs_df = Dict{String, Any}()
-	obs_units = Dict{String, Any}()
-
-	
-	obs_df["log_r"] = value.(obs.log_r)
-	obs_df["log_r_err"] = err.(obs.log_r)
-	obs_df["surface_dens"] = value.(obs.Σ)
-	obs_df["surface_dens_err"] = err.(obs.Σ)
-	obs_df["log_slope"] = value.(obs.Γ)
-	obs_df["log_slope_err"] = err.(obs.Γ)
-
-	obs_df["scale_radius_2d"] = value.(popt)
-	obs_df["scale_radius_2d_err"] = err.(popt)
-
-
-	
-	obs_units["log_r"] = "log arcmin"
-	obs_units["log_r_err"] = "log arcmin"
-	obs_units["scale_radius_2d"] = "log arcmin"
-	obs_units["scale_radius_2d_err"] = "log arcmin"
-	
-	write(f, obs_df, units=obs_units, hdutype=ASCIITableHDU)
-	close(f)
-end
-
 # ╔═╡ Cell order:
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
@@ -1133,31 +936,22 @@ end
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
 # ╠═0f002b56-8b8f-4025-8d7b-fb51423e8da0
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
+# ╟─4873af32-c387-4d42-909d-d39a25f56e24
+# ╠═5a172f47-589f-4b2c-8180-108b293cebf7
+# ╠═c2821906-7a9a-4303-b1a8-a788e9c07fd5
+# ╠═9b29f376-b02c-427e-b567-8447e029aa19
+# ╠═28ff0827-dd3e-43ff-b210-9a45687dd1f8
+# ╠═baf1ea75-93e9-43bf-bef5-f52d003ad609
+# ╠═542dd574-194a-49a2-adfc-a56db2ebea31
 # ╟─39f615b4-b62c-493e-8d11-be45910d79a8
-# ╠═7c5397f3-40f3-49a4-acfb-27beadc5fa6b
-# ╠═2d3308fa-ce87-4967-a934-d2821a42b8b7
-# ╠═3d105351-9a5c-4410-a360-ec8736374909
-# ╠═46bb8315-5bd7-4175-9da1-f8cad761b8ec
-# ╠═7edaac34-e450-43a4-a022-90c38af9b5ca
-# ╠═830cbaab-b82f-4e8e-b975-1eb11662b11b
-# ╠═a607e301-bd26-490b-99cb-ad28338d77f1
-# ╠═a8408be2-c287-4338-98b9-6af2ea4da756
-# ╠═4ceea6c3-0bf5-40c2-b49e-2691e73e003c
-# ╠═1c2d73c2-e6c2-4adc-a5d2-f272a8d0b59b
-# ╠═58f7a246-f997-413b-abe4-73282abbc91c
 # ╠═9b3288b4-3c17-4325-9e2c-94f96328f3c3
-# ╠═1acc3b7d-2e9d-47ec-8afe-14876e57787c
-# ╠═c0fa8744-4da3-470c-a2b8-f89ce431e1ed
 # ╠═62388099-b80b-4272-9bde-0c7315b15c19
-# ╠═4a98e0f2-da03-46f4-bf16-ab2e197ac7bd
-# ╠═402c67c1-05c4-4150-9af6-7c32c1740855
-# ╠═36d2446e-b1ac-4cbb-a65f-711aba600408
 # ╠═a254083b-61f2-45ad-b678-c4df6f16964b
 # ╠═e5d3d41b-e786-460a-a44f-51d1d98dcf11
 # ╠═aca3780b-1d2f-4a44-a53a-754794c334b1
-# ╠═2da8531e-eb37-4ec5-af5a-e0c2dfd8c4d1
 # ╠═71d3b349-bf04-456a-b41c-a5acc58a7f73
 # ╠═1c8a12d7-7345-4306-a2d6-f346a5397832
+# ╠═639d02f7-faee-4985-aaf1-98d0f501496c
 # ╠═9083628f-b41a-45fc-9ee3-5754e9ec4fe9
 # ╠═d3eb4b98-8d1a-41df-9327-529da4c79911
 # ╠═2c33af35-4217-4534-9e30-1a697b32892f
@@ -1188,4 +982,3 @@ end
 # ╠═f832459e-edcb-48b4-ba3c-1d75a23f51e0
 # ╠═44803049-4cc5-4a23-990a-322934ccb076
 # ╠═45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
-# ╠═28d71909-e3e7-4e32-9183-4da862a58eb7

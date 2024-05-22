@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.41
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -25,15 +25,6 @@ md"""
 
 A quick collection of past literature observations and measurments of the Sculptor DSph
 """
-
-# ╔═╡ 498440b6-5572-4ddf-b4b4-0a96107b1417
-begin
-	value(x::Real) = x
-	value(x::Measurement) = x.val
-
-	err(x::Real) = 0
-	err(x::Measurement) = x.err
-end
 
 # ╔═╡ 010b8c68-8ae1-4e18-b001-32c24c2e43e4
 function obs_row(study; ra=NaN, dec=NaN, pm_ra=NaN, pm_dec=NaN, distance=NaN, radial_velocity=NaN, fe_h=NaN)
@@ -137,6 +128,11 @@ md"""
 ## McChonnachie & Venn 2020 a
 """
 
+# ╔═╡ 6a7761ba-cfe2-40e7-8d2d-78f7a47ff164
+md"""
+## Pace & Li
+"""
+
 # ╔═╡ 5540a9a2-54b6-42cf-ad68-470cdc9fc667
 md"""
 # Comparisons
@@ -144,37 +140,6 @@ md"""
 
 # ╔═╡ 777ec196-e193-456d-8d44-cba200a366dd
 obs = DataFrame([pietryznski2008, walker2009, battaglia2022, mv15, tolstoy23])
-
-# ╔═╡ e7a27898-0707-43f2-86e6-58864ccfc419
-@recipe(ErrScatter) do scene
-    Attributes(
-        color = theme(scene, :markercolor),
-		marker = :circle
-    )
-end
-
-# ╔═╡ ed73b1da-ed6a-43c9-b608-591451114642
-function Makie.plot!(sc::ErrScatter)
-	x = sc[1]
-	y = sc[2]
-	xerr = sc[3]
-	yerr = sc[4]
-
-	println(x)
-	println(y)
-	println(xerr)
-	println(yerr)
-	errorbars!(sc, x, y, yerr, color=sc.color)
-	errorbars!(sc, x, y, xerr, direction=:x, color=sc.color)
-	scatter!(sc, x, y, color=sc.color, marker=sc.marker)
-
-	sc
-end
-
-# ╔═╡ d03034b9-da5d-47c1-9d3e-157ba9c695cf
-function Makie.convert_arguments(::Type{<: ErrScatter}, x::AbstractArray, y::AbstractArray)
-	return (value.(x), value.(y), err.(x), err.(y))
-end
 
 # ╔═╡ a1f7d351-4f25-475b-939f-8e03ba5a10a0
 md"""
@@ -284,12 +249,11 @@ md"""
 # ╔═╡ Cell order:
 # ╟─72eb810c-114e-11ef-30ea-fd46e923ea49
 # ╠═53f06974-1fcc-4c90-86a0-5dd0cec4e4b8
-# ╠═498440b6-5572-4ddf-b4b4-0a96107b1417
 # ╠═3d32bef6-de64-4d1e-93a8-46c921c86011
 # ╠═010b8c68-8ae1-4e18-b001-32c24c2e43e4
 # ╠═722bd144-d047-4abf-b82f-f733134d3eb7
 # ╟─26ae0d94-698c-4e9d-bac6-3e91d0d197ab
-# ╠═351731df-8d84-41ba-83e7-793898b9a148
+# ╟─351731df-8d84-41ba-83e7-793898b9a148
 # ╠═0e1d8bc0-103a-4623-8546-aa7a32ee4504
 # ╟─cb3ef5d8-8231-42f1-b54f-42a6b08694c1
 # ╠═1ecf4404-caa5-418d-9170-2d539df69275
@@ -303,11 +267,9 @@ md"""
 # ╠═30f6a515-76dc-47fc-abc0-a90e28f64d9f
 # ╠═7a5e54c2-6186-4975-9cd4-b971a982a8cf
 # ╠═28fe217f-9bfb-450a-9e58-f552adb580d7
+# ╠═6a7761ba-cfe2-40e7-8d2d-78f7a47ff164
 # ╟─5540a9a2-54b6-42cf-ad68-470cdc9fc667
 # ╠═777ec196-e193-456d-8d44-cba200a366dd
-# ╠═e7a27898-0707-43f2-86e6-58864ccfc419
-# ╠═ed73b1da-ed6a-43c9-b608-591451114642
-# ╠═d03034b9-da5d-47c1-9d3e-157ba9c695cf
 # ╟─a1f7d351-4f25-475b-939f-8e03ba5a10a0
 # ╟─f41f6639-1523-47c7-96f8-82f1fdafb7a1
 # ╠═51d76b15-28d1-4871-a7dc-2a8a43802bff
