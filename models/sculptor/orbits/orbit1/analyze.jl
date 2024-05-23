@@ -365,14 +365,6 @@ let
 	fit_Vc(rc, Vc)
 end
 
-# ╔═╡ d5316554-9f4d-45ea-93bf-f6d0f5eab4c2
-function plot_ρ_s!(snap; kwargs...)
-	pos = lguys.extract_vector(snap, :positions, p_idx)
-	rs = lguys.calc_r(pos, snap.x_cen)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=probabilities)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
-end
-
 # ╔═╡ 1ebb1ab6-c1a0-4d6b-8529-65155575b96e
 mlog10 = Makie.pseudolog10
 
@@ -507,22 +499,6 @@ let
 end
   ╠═╡ =#
 
-# ╔═╡ 4c331023-0777-43c7-90e5-3341aae0b141
-#=╠═╡
-let 
-	fig = Figure()
-
-	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
-		limits=((-1.9, 1), (-8, 2)))
-
-	plot_ρ_s!(snap_i, label="initial")
-	plot_ρ_s!(snap_f, label="final")
-	
-	axislegend(ax)
-	fig
-end
-  ╠═╡ =#
-
 # ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
 #=╠═╡
 let
@@ -566,53 +542,6 @@ let
 end
   ╠═╡ =#
 
-# ╔═╡ 155222b2-f9df-4189-afbe-1af9d571d859
-#=╠═╡
-let
-	fig = Figure()
-	r_max = 100
-	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "y / kpc", ylabel="z / kpc", title="stars",
-	limits=(-r_max, r_max, -r_max, r_max))
-	bins = LinRange(-r_max, r_max, 300)
-
-	hm = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-10, 0.06), weights=probabilities[snap_f.index])
-
-	Colorbar(fig[:, end+1], hm)
-	fig
-end
-  ╠═╡ =#
-
-# ╔═╡ 2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
-#=╠═╡
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
-
-	bin_range = LinRange(-2, 2, 100)
-	colorrange =(1e-10, 1e-2)
-
-	bins = (x_cen[1, idx_i]  .+ bin_range,  x_cen[2, idx_i]  .+ bin_range)
-		
-	probs = probabilities[snap_i.index]
-
-	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], weights=probs, bins = bins, colorscale=mlog10, colorrange=colorrange)
-
-	ax2 = Axis(fig[1,2], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc",
-	title="final")
-
-	probs = probabilities[snap_f.index]
-
-	bins = (x_cen[1, idx_f]  .+ bin_range,  x_cen[2, idx_f]  .+ bin_range)
-
-	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=probs, bins = bins, colorscale=mlog10, colorrange=colorrange)
-	
-	fig
-end
-  ╠═╡ =#
-
 # ╔═╡ 7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 #=╠═╡
 let 
@@ -623,24 +552,6 @@ let
 	es = lguys.calc_ϵ(snap_f)
 	es = es[es .> 0]
 	stephist!(es)
-
-	fig
-
-end
-  ╠═╡ =#
-
-# ╔═╡ a1cc4e82-0b92-4fcf-9254-1ce788e408bb
-#=╠═╡
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-8, 1)),
-		xlabel=L"\epsilon", ylabel="count")
-	stephist!(lguys.calc_ϵ(snap_i), weights=probabilities[snap_i.index])
-	es = lguys.calc_ϵ(snap_f)
-	filt = es .> 0
-	es = es[filt]
-	probs = probabilities[snap_f.index][filt]
-	stephist!(es, weights = probs)
 
 	fig
 
@@ -690,64 +601,6 @@ let
 	y = [o.dec for o in obs_o[end-30:end]]
 	
 	lines!(x, y, color=Arya.COLORS[2])
-	
-	fig
-end
-  ╠═╡ =#
-
-# ╔═╡ 3c25a197-b610-4bb2-b254-49d14534b343
-#=╠═╡
-let
-	dr = 0.05
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel=L"\mu_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\mu_\delta / \textrm{mas\,yr^{-1}}",
-	limits=(obs.pm_ra .+ (-dr, dr), obs.pm_dec .+ (-dr, dr)),
-	aspect=1)
-
-	x = [o.pm_ra for o in obs_pred]
-	y = [o.pm_dec for o in obs_pred]
-	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100)
-	scatter!(obs.pm_ra, obs.pm_dec, color=:red)
-
-	x = [o.pm_ra for o in obs_c[idx_f-30:end]]
-	y = [o.pm_dec for o in obs_c[idx_f-30:end]]
-	
-	lines!(x, y, color=Arya.COLORS[2])
-
-	
-	fig
-end
-  ╠═╡ =#
-
-# ╔═╡ 270739f1-4dda-4c92-9fe1-371caf5dd322
-#=╠═╡
-let
-	fig = Figure()
-	dx = 2
-	dy = 20
-	
-	ax = Axis(fig[1,1],
-		xlabel="distance / kpc",
-		ylabel = "radial velocity / km/s",
-		limits=(obs.distance .+ (-dx, dx), obs.radial_velocity .+ (-dy, dy))
-	)
-
-
-	
-	x = [o.distance for o in obs_pred]
-	y = [o.radial_velocity for o in obs_pred]
-	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100)
-
-	scatter!(obs.distance, obs.radial_velocity, markersize=15, color=:red)
-
-
-	x = [o.distance for o in obs_c[idx_f-30:end]]
-	y = [o.radial_velocity for o in obs_c[idx_f-30:end]]
-	
-	lines!(x, y, color=Arya.COLORS[2])
-
 	
 	fig
 end
@@ -1111,15 +964,10 @@ end
 # ╠═eda7c370-dc70-4b82-8648-45af67918298
 # ╠═c9a86f53-1909-4509-98a8-7122bf4e5e3b
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
-# ╠═d5316554-9f4d-45ea-93bf-f6d0f5eab4c2
-# ╠═4c331023-0777-43c7-90e5-3341aae0b141
 # ╠═4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═1ebb1ab6-c1a0-4d6b-8529-65155575b96e
 # ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
-# ╠═155222b2-f9df-4189-afbe-1af9d571d859
-# ╠═2cb67a4d-6941-4b9e-ae09-ad96f6fac51f
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
-# ╠═a1cc4e82-0b92-4fcf-9254-1ce788e408bb
 # ╠═743d20cd-9636-4384-9bf2-b2d7e259ae7d
 # ╠═32cd2b3b-b756-4fbf-b348-5839fe1c0360
 # ╠═f2381a9c-96d7-4935-8967-32b8bfb3fb48
@@ -1127,8 +975,6 @@ end
 # ╠═4962c654-9f9f-44b9-b0ee-68791522562a
 # ╠═dc6bef2c-e4eb-41ab-8f37-3569c068573a
 # ╠═68243ab7-0d82-48a2-8737-7cc105ae7325
-# ╠═3c25a197-b610-4bb2-b254-49d14534b343
-# ╠═270739f1-4dda-4c92-9fe1-371caf5dd322
 # ╠═7ae8b02e-4c20-407f-bd00-b8866bb45bd6
 # ╟─cc68d116-d91c-4774-ad6c-0520cee6b339
 # ╠═815993ab-3527-4df2-99be-5f4b3e7163ba
