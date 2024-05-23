@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -456,7 +456,7 @@ let
 	
 	f = FITS(out_name, "w")
 
-	df = Dict(String(name) => members[:, name] for name in Tables.columnnames(members))
+	df = Dict(String(name) => members[:, name] for name in names(members))
 	write(f, df,  header=header)
 
 	println("wrote to $out_name")
