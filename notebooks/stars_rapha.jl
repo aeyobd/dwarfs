@@ -41,7 +41,7 @@ md"""
 import YAML
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars/exp2d_big.yml"
+paramname = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars/exp2d_small.yml"
 
 # ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
 begin 
