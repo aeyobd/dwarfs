@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -37,10 +37,21 @@ given a sample of points, can we centre and calculate the 2D density profile
 """
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
-samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_stars_today.fits" # = "$(name)_sample.fits" 
+begin 
+	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_stars_today.fits" # = "$(name)_sample.fits" 
+	samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
+end
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 outname = splitext(samplename)[1]  * "_profile.json"
+
+# ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
+begin 
+	ecc = 0.37
+	PA = 94
+	centre_method="mean"
+	mass_column = nothing
+end
 
 # ╔═╡ ac49a334-230a-42e4-b655-a472cd505688
 function add_xi_eta!(stars, ra0, dec0)
@@ -51,11 +62,17 @@ function add_xi_eta!(stars, ra0, dec0)
 	stars
 end
 
-# ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
-begin 
-	ecc = 0.0
-	PA = 94
-	centre_method="mean"
+# ╔═╡ 4b132b0d-bea3-4fe1-9a91-fdebcf2145b7
+function filter_edges!(sample)
+	r_max = sqrt(maximum(sample.xi .^ 2 + sample.eta .^ 2))
+	r_cut = r_max * sqrt(1 - ecc)
+
+	filt = sample.r_ell .< r_cut
+
+	sample = sample[filt, :]
+
+	Ncut = sum(map(!, filt))
+	println("cut $Ncut stars on edge ")
 end
 
 # ╔═╡ 514027d9-6e70-41f7-b134-526c142182c6
@@ -75,6 +92,17 @@ import StatsBase: weights
 function weighted_centre(stars, w)
 	w = weights(w)
 	return (lguys.mean(stars.ra, w), lguys.mean(stars.dec, w))
+end
+
+# ╔═╡ f6f2d0f1-d57a-42db-99b9-02c5315ed58b
+function calc_centre(sample)
+	if centre_method == "mean"
+		ra0, dec0 = mean_centre(sample)
+	elseif center_method == "weighted"
+		ra0, dec0 = weighted_centre(sample, sample.probability)
+	end
+
+	return ra0, dec0
 end
 
 # ╔═╡ 5b8e641c-29d9-42a3-8149-9e2e5b3d46cb
@@ -98,9 +126,17 @@ begin
 	sample = DataFrame(f[2])
 	close(f)
 
-	ra0, dec0 = weighted_centre(sample, sample.probability)
+	ra0, dec0 = calc_centre(sample)
 	add_xi_eta!(sample, ra0, dec0)
 	add_r_ell!(sample, ecc, PA)
+
+	if mass_column === nothing
+		sample[!, "mass"] = ones(size(sample, 1))
+	else
+		sample[!, "mass"] = sample[mass_column]
+	end
+
+	filter_edges!(sample)
 end
 
 # ╔═╡ b063d5f4-ad59-4bf3-bd88-a93d8b27fdf4
@@ -119,6 +155,18 @@ let
 	scatter!(sample.ra, sample.dec, alpha=0.1)
 	scatter!(ra0, dec0)
 	
+
+	fig
+end
+
+# ╔═╡ 619ca573-fd4b-4c65-8996-eab3869f2142
+let 
+	fig = Figure()
+	ax = PolarAxis(fig[1,1])
+
+
+	ϕ = atan.(sample.eta, sample.xi) .- deg2rad(PA)
+	scatter!(ϕ, sample.r_ell)
 
 	fig
 end
@@ -244,16 +292,16 @@ function calc_properties(rs; weights=nothing, bw=0.1)
 end
 
 # ╔═╡ e283c660-056c-4572-845c-7a90fdbfc79b
-obs = calc_properties(rs, weights=sample.probability, bw=1)
+obs = calc_properties(rs, weights=sample.mass, bw=1)
 
 # ╔═╡ 779b74ce-dbf9-4bea-b28c-ead21d75070c
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1])
 	
-	stephist!(log10.(rs), weights=sample.probability)
+	stephist!(log10.(rs), weights=sample.mass)
 
-	x, y = lguys.calc_histogram(log10.(rs), weights=sample.probability)
+	x, y = lguys.calc_histogram(log10.(rs), weights=sample.mass)
 	scatter!(lguys.midpoint(x), y)
 	fig
 end
@@ -371,15 +419,18 @@ obs
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
-# ╠═ac49a334-230a-42e4-b655-a472cd505688
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 # ╠═72d975fe-9d97-474b-ba3f-f61ba12c7c80
+# ╠═f6f2d0f1-d57a-42db-99b9-02c5315ed58b
+# ╠═ac49a334-230a-42e4-b655-a472cd505688
+# ╠═4b132b0d-bea3-4fe1-9a91-fdebcf2145b7
 # ╟─514027d9-6e70-41f7-b134-526c142182c6
 # ╠═5dbfcbc7-b21b-45c0-b8d4-52f215a90d54
 # ╠═ccf2ed52-439c-48fd-9ade-61cb3d6199d7
 # ╠═fa6dcca1-6a54-4841-9e44-30718b7f67f9
 # ╠═b063d5f4-ad59-4bf3-bd88-a93d8b27fdf4
 # ╠═d382b455-73ba-41d5-bbc8-eca53ea2166e
+# ╠═619ca573-fd4b-4c65-8996-eab3869f2142
 # ╠═5b8e641c-29d9-42a3-8149-9e2e5b3d46cb
 # ╠═9b067a18-d2eb-4112-91cf-5814fc02b388
 # ╠═f3408055-ebec-41f3-8da1-e83f010da5bf

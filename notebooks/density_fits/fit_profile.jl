@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -44,12 +44,25 @@ We expect data as a
 name = "sculptor/fiducial"
 
 # ╔═╡ aa23a8ab-3cff-400b-bbc9-592183f2e695
-profile_name = name *  "_profile.json"
+profile_name = name *  "_sample_profile.json"
+
+# ╔═╡ abeada6d-b74e-4769-90d6-3efe92dbbf1b
+distance = 86 ± 3
 
 # ╔═╡ 88f02d81-927c-405a-ada4-064157c7dbf0
 open(profile_name) do f
 	global profile
 	profile = JSON.parse(f)
+
+	for (key, val) in (profile)
+		if typeof(val) <: AbstractArray
+			profile[key][val .=== nothing] .= NaN
+			profile[key] = Float64.(profile[key])
+		end
+	end
+
+	profile
+
 end
 
 # ╔═╡ f890490e-17ef-4e78-a18a-437c90724f86
@@ -144,9 +157,9 @@ function fit_profile(obs; r_max=Inf, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
 	Σ_pred(r) = 10 .^ log_Σ_exp(r, popt...)
     props = predict_properties(Σ_pred, 
         N=N, log_r_min=obs["log_r_bins"][1], log_r_max=obs["log_r_bins"][end])
-    
-    log_Σ_pred = log_Σ_exp.(r_val, popt...)
-    log_Σ_res = value.(log_Σ).- log_Σ_pred
+
+    log_Σ_pred = log_Σ_exp.(10 .^ obs["log_r"], popt...)
+    log_Σ_res = value.(obs["log_Sigma"]).- log_Σ_pred
     return popt_p, props, log_Σ_res
 end
 
@@ -226,11 +239,19 @@ md"""
 # Comparting functional forms
 """
 
+# ╔═╡ 0214c61c-336a-4ef2-876d-c2f3b7ec0180
+begin 
+	popts = Dict{String, Any}()
+	preds = Dict{String, Any}()
+end
+
 # ╔═╡ 0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
 let 
 	popt, pred, res = fit_profile(profile, p0=[2, 7], profile=lguys.Exp3D)
 
-	global popt_3d_exp = popt
+	label = "exp3d"
+	global popts[label] = popt
+	global preds[label] = pred
 	
 	plot_Σ_fit_res(profile, pred, res)
 
@@ -240,30 +261,34 @@ end
 let 
 	popt, pred, res = fit_profile(profile, p0=[2, 7], profile=lguys.Exp2D)
 
-	global popt_2d_exp = popt
-	
+	label = "exp2d"
+	global popts[label] = popt
+	global preds[label] = pred
+
+
 	plot_Σ_fit_res(profile, pred, res)
 
 end
 
 # ╔═╡ 824fc065-8ad8-408c-a4f7-0c464ed7fa13
 let 
-	popt, pred, res = fit_profile(profile, profile=lguys.KingProfile, p0=[1, 35, 600])
+	popt, pred, res = fit_profile(profile, profile=lguys.KingProfile, p0=[1, 35, 200])
 
-	global popt_king = popt
+	label = "king"
+	global popts[label] = popt
+	global preds[label] = pred
 	
 	plot_Σ_fit_res(profile, pred, res)
 
 end
 
-# ╔═╡ fa96cf7f-248c-4765-aa3c-0ca9f656644d
-popt_king
-
 # ╔═╡ 1be3fa21-5945-4904-a23a-12c15cc4a485
 let 
-	popt, pred, res = fit_profile(profile, profile=lguys.LogCusp2D, p0=[1, 35])
+	popt, pred, res = fit_profile(profile, profile=lguys.LogCusp2D, p0=[1, 15])
 
-	global popt_cusp = popt
+	label = "cusp"
+	global popts[label] = popt
+	global preds[label] = pred
 	
 	plot_Σ_fit_res(profile, pred, res)
 
@@ -274,12 +299,44 @@ md"""
 # Saving fit parameters to json
 """
 
+# ╔═╡ c769d7b1-1b48-4a4a-aa02-ebc9a0658530
+popts
+
+# ╔═╡ 0b694b57-5e1b-4df4-8807-6ae2b151231e
+for (label, popt) in popts
+	print(label, "\t" )
+	arcmin_to_rad = 60 / 206265
+	r_s_am = popt[2]
+	r_s = r_s_am * arcmin_to_rad * distance * 1e3
+	print("$r_s_am\t\t")
+	print(r_s)
+	println()
+end
+
+# ╔═╡ 6d8705f8-8580-4424-be21-809ea1a0b526
+let
+	fig = Figure()
+    ax = Axis(fig[1, 1], 
+        ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}")
+	
+    errscatter!(ax, profile["log_r"], profile["log_Sigma"], yerr=profile["log_Sigma_err"])
+
+
+	for (label, pred) in preds
+    	lines!(ax, pred.log_r, log10.(pred.Σ), label=label)
+	end
+
+	axislegend()
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╠═0d71de16-50d7-43da-b1fb-a477b949e15e
 # ╠═bfeedd02-4339-40b8-bf68-1ccdbeaa5245
 # ╟─f93365e6-971d-4321-9d91-44e9e86610cb
 # ╠═d0992dc9-08f1-487a-a96a-90996f29cefd
 # ╠═aa23a8ab-3cff-400b-bbc9-592183f2e695
+# ╠═abeada6d-b74e-4769-90d6-3efe92dbbf1b
 # ╠═88f02d81-927c-405a-ada4-064157c7dbf0
 # ╠═f890490e-17ef-4e78-a18a-437c90724f86
 # ╠═347aee22-17bf-11ef-196f-0146bd88f688
@@ -294,9 +351,12 @@ md"""
 # ╠═3c133454-d1c2-4aff-a27f-c3368bf06480
 # ╠═ab2ffe07-0f81-4254-b1a0-f4e46532a077
 # ╟─e5cb1a72-90d9-45be-9450-a86c640b9420
+# ╠═0214c61c-336a-4ef2-876d-c2f3b7ec0180
 # ╠═0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
 # ╠═93cd5808-0e20-475a-8001-4e775d4ab4e7
 # ╠═824fc065-8ad8-408c-a4f7-0c464ed7fa13
-# ╠═fa96cf7f-248c-4765-aa3c-0ca9f656644d
 # ╠═1be3fa21-5945-4904-a23a-12c15cc4a485
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
+# ╠═c769d7b1-1b48-4a4a-aa02-ebc9a0658530
+# ╠═0b694b57-5e1b-4df4-8807-6ae2b151231e
+# ╠═6d8705f8-8580-4424-be21-809ea1a0b526
