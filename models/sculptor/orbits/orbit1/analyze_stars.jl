@@ -18,9 +18,6 @@ end
 # ╔═╡ cf6a7cbb-1034-4026-a3f3-1e854d2929e2
 using FITSIO, Tables
 
-# ╔═╡ 8115808d-b2d5-4207-93e0-e3e4afd64c90
-Arya.hist2d(randn(100), randn(100))
-
 # ╔═╡ c17b6fb0-3fdc-437e-84f8-cb0c81764898
 import YAML
 
@@ -72,9 +69,6 @@ snap_f = out[idx_f]
 
 # ╔═╡ 396a53a3-de0f-4d97-9693-40f3757d66f9
 snap_i = out[idx_i]
-
-# ╔═╡ 5edf4585-a842-4898-b018-e36255f6fee9
-supertypes(NTuple)
 
 # ╔═╡ 77479cd4-513c-4603-9aa0-1acd964c403a
 let
@@ -208,13 +202,13 @@ obs = YAML.load_file("../../mc_orbits/orbit1.yml")
 let 
 	fig = Figure()
 
-	dy = 2
+	dy = 1
 	dx = dy * 1/cosd(obs["dec"])
 	ax = Axis(fig[1,1],
 		xlabel="RA / degrees",
 		ylabel="dec / degrees",
 		limits=(obs["ra"] .+ (-dx, dx), obs["dec"] .+ (-dy, dy)),
-		aspect = 1/cosd(obs["dec"])
+		aspect = 1
 	)
 
 	x = [o.ra for o in obs_pred]
@@ -281,7 +275,6 @@ end
 
 # ╔═╡ Cell order:
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
-# ╠═8115808d-b2d5-4207-93e0-e3e4afd64c90
 # ╠═c17b6fb0-3fdc-437e-84f8-cb0c81764898
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
@@ -293,7 +286,6 @@ end
 # ╠═396a53a3-de0f-4d97-9693-40f3757d66f9
 # ╠═f9fe37ef-de81-4d69-9308-cda968851ed2
 # ╠═6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
-# ╠═5edf4585-a842-4898-b018-e36255f6fee9
 # ╠═77479cd4-513c-4603-9aa0-1acd964c403a
 # ╠═e33245ad-7562-47af-94b9-9708af45b2a4
 # ╠═7bc2c15c-33f7-43f3-a47f-ca39ffc22071
