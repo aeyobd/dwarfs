@@ -1,0 +1,10 @@
+profile = "KingProfile"
+num_radial_bins = 200
+num_energy_bins = 1000
+snapshot_dir = "../out"
+snapshot = 10
+
+[profile_kwargs]
+M = 1
+R_s = 0.135
+R_t = 3

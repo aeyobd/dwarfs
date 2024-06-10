@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -38,22 +38,25 @@ md"""
 """
 
 # ╔═╡ 530c6c09-4454-4952-8351-dccbb4ed429f
-import YAML
+import TOML
+
+# ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
+dir = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars/exp2d_small.yml"
+paramname = "king.toml"
 
 # ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
 begin 
-	params = YAML.load_file(paramname); 
-	cd(dirname(paramname))
+	cd(dir)
+	params = TOML.parsefile(paramname); 
 
 	if "centres_file" ∉ keys(params)
 		params["centres_file"] = params["snapshot_dir"] * "/centres.csv"
 	end
 
 	if "output_file" ∉ keys(params)
-		params["output_file"] = splitext(basename(paramname))[1] * "_stars.hdf5"
+		params["output_file"] = splitext(paramname)[1] * "_stars.hdf5"
 	end
 	
 	params
@@ -67,6 +70,9 @@ NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
 
 # ╔═╡ d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
 profile = profile_class(;NamedTuple(params["profile_kwargs"])...)
+
+# ╔═╡ aa69bde5-ab93-4105-9d48-ad0ace88e3f0
+r_h = params["profile_kwargs"]["R_s"]
 
 # ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
 begin 
@@ -94,6 +100,9 @@ cen = CSV.read(params["centres_file"], DataFrame)[params["snapshot"], :]
 # ╔═╡ cf50c4b4-a634-4310-8aa5-91ab653313a9
 cen
 
+# ╔═╡ d43a1be5-7ecd-474b-9580-1191b669ff24
+"R_t" in keys(params["profile_kwargs"])
+
 # ╔═╡ 0f5671e6-deb4-11ee-3178-4d3f920f23a2
 begin
 	# centre snapshot
@@ -116,6 +125,9 @@ begin
 
 	# filter snapshot
 	idx = ϵs .> 0
+	if "R_t" in keys(params["profile_kwargs"])
+		idx .&= radii .< profile.R_t
+	end
 	idx_excluded = snap_i.index[map(!, idx)]
 	
 	snap_i = snap_i[idx]
@@ -135,9 +147,12 @@ Mins = cumsum(snap_i.masses) ./ sum(snap_i.masses)
 
 # ╔═╡ 23158c79-d35c-411a-a35a-950f04214e19
 begin 
-	M_s_tot = 4π * quadgk(r-> r^2 * ρ_s(r), 0, Inf)[1]
-	M_s(r) = 4π * quadgk(r-> r^2 * ρ_s(r) / M_s_tot, 0, r)[1]
+	M_s_tot = 4π * quadgk(r-> r^2 * ρ_s(r), 1e-5, 1.9)[1]
+	M_s(r) = 4π * quadgk(r-> r^2 * ρ_s(r) / M_s_tot, 1e-5, r)[1]
 end
+
+# ╔═╡ 771413c9-3edf-4687-b4cd-3a60ae0ceda2
+M_s_tot
 
 # ╔═╡ b3663c19-c029-4a1e-ab82-a05177e3a5d0
 import StatsBase: percentile
@@ -146,7 +161,7 @@ import StatsBase: percentile
 begin
 	log_radii = log10.(radii)
 	r_min = radii[1]
-	r_max = radii[end]
+	r_max = 1.8 #radii[end]
 	r_e = 10 .^ LinRange(log10.(r_min), log10.(r_max), Nr+1)
 	r_e = percentile(radii, LinRange(0, 100, Nr+1))
 	r = lguys.midpoint(r_e)
@@ -180,11 +195,19 @@ begin
 	ν_dm = lguys.calc_ρ_hist(radii, r_e)[2]
 	ν_dm ./= length(snap)
 
-	ν_s = ρ_s.(r) ./ M_s_tot
+end
 
+# ╔═╡ 64699f70-b872-4a14-b498-508537ce11d7
+ρ_s(2.9)
+
+# ╔═╡ 830faf5d-da17-4939-ad7c-080503b66990
+begin
 	M = lguys.lerp(radii, Mins).(r)
 	Ms = M_s.(r)
 end
+
+# ╔═╡ 20f858d6-a9f5-4880-a431-60b395cc7e50
+ν_s = ρ_s.(r) ./ M_s_tot
 
 # ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
 begin 
@@ -208,6 +231,33 @@ let
 
 	fig
 end
+
+# ╔═╡ c537fdc7-4778-40e6-ab82-7e3151394473
+ν_s
+
+# ╔═╡ 46cf718e-79d5-4017-b113-72efa692a014
+r
+
+# ╔═╡ b53887a2-0b14-4d95-bdf5-d70960cfe736
+pn = lguys.Exp2D(M=1, R_s=1)
+
+# ╔═╡ c2e070b8-6f15-48e1-8ff3-8145f67b2001
+lguys.calc_M(pn, 100)
+
+# ╔═╡ 837dce1c-fadb-42df-92f9-49a1bd859d1f
+lguys.calc_M_2D(pn, 5)
+
+# ╔═╡ e9129b04-ffca-4b10-8cda-4955841a7655
+lguys.calc_Σ_from_ρ(pn, 1)
+
+# ╔═╡ fdf4f368-962a-4c3a-9571-8489740c31b0
+lguys.calc_Σ(pn, 1)
+
+# ╔═╡ c9098d39-3573-450b-8c5e-a6d847c85a3e
+lguys.calc_ρ_from_Σ(pn, 1)
+
+# ╔═╡ 162e0102-ed49-4648-acf9-c78e52d41ed3
+lguys.calc_ρ(pn, 1)
 
 # ╔═╡ 7481f47a-2b8a-45a3-9b4e-31ea14e9d331
 md"""
@@ -279,7 +329,7 @@ let
 	lines!((E), 20*prob.(E) ./maximum(prob.(E)), color=Arya.COLORS[3], label="f_s / f_dm")
 	stephist!((ϵs), normalization=:pdf, label="dark matter")
 	stephist!((ϵs), weights=100ps, label="stars (nbody)")
-	vlines!([maximum(ϵs)], color="grey", ls=:dot, label=L"\epsilon_\textrm{max}")
+	vlines!([maximum(ϵs)], color="grey", linestyle=:dot, label=L"\epsilon_\textrm{max}")
 
 	axislegend(ax, position=:lt)
 
@@ -311,6 +361,7 @@ let
 	ax = Axis(fig[1,1], xlabel="log radii", ylabel="pdf (dn / dlog r)")
 	stephist!(log10.(radii), normalization=:pdf, label="dark matter")
 	stephist!(log10.(radii), weights=ps, normalization=:pdf, label="stars")
+	axislegend()
 	fig
 end
 
@@ -354,17 +405,17 @@ The main result. The reconstructed density profile
 let
 	fig = Figure(size=(700, 500))
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
-		limits=(-1, 0.8, -15, 3)
+		limits=(0, 1, -15, 3)
 		)
 	lines!(log10.(r), nm.log10.(ν_s), label="stars")
 	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
 
 	ax2 = Axis(fig[2,1], 
 		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
-		limits=((-1, 0.8), (-1, 1)))
+		limits=((log10(0.1r_h), log10(100r_h)), (-1, 1)))
 	
 	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
-	hlines!([0], color="black", label="", z_order=1)
+	hlines!([0], color="black", label="")
 
 	linkxaxes!(ax, ax2, )
 	rowsize!(fig.layout, 2, Auto(0.3))
@@ -373,7 +424,7 @@ let
 end
 
 # ╔═╡ 73752ab9-9a1d-4d30-bf95-376f894cafc3
-
+100r_h
 
 # ╔═╡ b2452dfe-f3af-4a4f-a5da-8301cbf3fbf1
 R = sqrt.(lguys.get_x(snap_i) .^2 .+  lguys.get_y(snap_i) .^2)
@@ -411,16 +462,24 @@ let
 	fig = Figure()
 	filt = ps .> 0
 	
-	ax = Axis(fig[1,1], limits=(-r_hist, r_hist, -r_hist, r_hist), aspect=1)
+	ax = Axis(fig[1,1], 
+		limits=(-r_hist, r_hist, -r_hist, r_hist), 
+		aspect=1,
+		title="stars",
+		xlabel="x / kpc",
+		ylabel="y / kpc"
+	)
 	
-	Arya.hist2d!(ax, 
+	h = Arya.hist2d!(ax, 
 		lguys.get_x(snap_i)[filt], lguys.get_y(snap_i)[filt], 
-		weights=ps[filt], bins=LinRange(-r_hist, r_hist, N_hist))	
+		weights=ps[filt], bins=N_hist,
+		colorscale=log10,
+		colorrange=(1e-7, nothing)
+	)	
+
+	Colorbar(fig[1, 2],h )
 	fig
 end
-
-# ╔═╡ 9f179cf4-b9c2-4065-b1e2-16b389fd2e9d
-eltype(ones(Int64, 10))
 
 # ╔═╡ ee866164-c6f2-4f70-bde1-360abd5fd80e
 md"""
@@ -430,8 +489,23 @@ Histogram of same region in dark matter only (over a smaller dynamic range). Dar
 # ╔═╡ a52e5e94-6068-4545-962f-e02a485b62f5
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], limits=(-r_hist, r_hist, -r_hist, r_hist), aspect=1)
-	Arya.hist2d!(ax, lguys.get_x(snap_i), lguys.get_y(snap_i), bins=LinRange(-r_hist, r_hist, N_hist))	
+	ax = Axis(fig[1,1],
+		limits=(-r_hist, r_hist, -r_hist, r_hist), 
+		aspect=1,
+		title="dark matter",
+		xlabel="x / kpc",
+		ylabel="y / kpc"
+	)
+	
+	h = Arya.hist2d!(ax, 
+		lguys.get_x(snap_i), lguys.get_y(snap_i), 
+		bins=N_hist,
+		colorscale=log10,
+		colorrange=(1e-0, nothing)
+	)	
+
+	Colorbar(fig[1, 2],h )
+
 	fig
 end
 
@@ -485,28 +559,44 @@ write_stars()
 # ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
 # ╠═530c6c09-4454-4952-8351-dccbb4ed429f
+# ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
 # ╠═9326c8a6-8b9b-4406-b00f-9febb3dcca46
 # ╠═16e0729e-9a75-458e-a56c-73967c819c31
 # ╠═d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
 # ╠═46be1f99-6f64-476e-84cb-11d4b6504a86
+# ╠═aa69bde5-ab93-4105-9d48-ad0ace88e3f0
 # ╠═855fd729-22b6-4845-9d2b-e796d4a15811
 # ╠═4cb09115-143d-456f-9c6a-19656f638677
 # ╠═d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
 # ╠═e37bf6d7-9445-49bf-8333-f68ad25436b2
 # ╠═cf50c4b4-a634-4310-8aa5-91ab653313a9
+# ╠═d43a1be5-7ecd-474b-9580-1191b669ff24
 # ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
 # ╠═45acc05f-85a8-4bbc-bd43-a34583c983b3
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
+# ╠═771413c9-3edf-4687-b4cd-3a60ae0ceda2
 # ╠═b3663c19-c029-4a1e-ab82-a05177e3a5d0
 # ╠═36b4adbd-d706-4e72-a922-53080c67946c
 # ╠═7a39cd4f-9646-4969-9410-b093bca633cb
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
 # ╠═1fab14ec-6bfc-4243-bc48-915d1a129925
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
+# ╠═64699f70-b872-4a14-b498-508537ce11d7
+# ╠═830faf5d-da17-4939-ad7c-080503b66990
+# ╠═20f858d6-a9f5-4880-a431-60b395cc7e50
 # ╟─126c6825-723f-4d13-b5a3-64cba72fc867
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
+# ╠═c537fdc7-4778-40e6-ab82-7e3151394473
+# ╠═46cf718e-79d5-4017-b113-72efa692a014
+# ╠═b53887a2-0b14-4d95-bdf5-d70960cfe736
+# ╠═c2e070b8-6f15-48e1-8ff3-8145f67b2001
+# ╠═837dce1c-fadb-42df-92f9-49a1bd859d1f
+# ╠═e9129b04-ffca-4b10-8cda-4955841a7655
+# ╠═fdf4f368-962a-4c3a-9571-8489740c31b0
+# ╠═c9098d39-3573-450b-8c5e-a6d847c85a3e
+# ╠═162e0102-ed49-4648-acf9-c78e52d41ed3
 # ╟─7481f47a-2b8a-45a3-9b4e-31ea14e9d331
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
 # ╠═78ce5a98-fd3f-4e39-981f-2bea58b117bf
@@ -538,7 +628,6 @@ write_stars()
 # ╟─06e1b872-ce52-434f-a8d1-3b0a5055eed2
 # ╠═90856551-fff8-4d15-be66-6353091b5e50
 # ╠═cc231e78-cfc0-4876-9f8b-980139f7d27f
-# ╠═9f179cf4-b9c2-4065-b1e2-16b389fd2e9d
 # ╟─ee866164-c6f2-4f70-bde1-360abd5fd80e
 # ╠═a52e5e94-6068-4545-962f-e02a485b62f5
 # ╟─a3071af2-beff-408d-b109-d4f289f8f7f4

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -315,11 +315,11 @@ scatter(-snap.velocities .* lguys.V0)
 reverse(out.times)
 
 # ╔═╡ b8c9823f-ca6b-48bf-9140-40440562dac0
-import YAML
+import TOML
 
 # ╔═╡ 1152cd63-baab-426a-b464-b10857eed4ec
 for i in 1:length(idx)
-	fname = "orbit$i.yml"
+	fname = "orbit$i.toml"
 	o = observations[idx[i]]
 	properties = Dict(
 		"ra" => o.ra,
@@ -335,7 +335,9 @@ for i in 1:length(idx)
 	)
 
 	println("saving to $fname")
-	YAML.write_file(fname, properties)
+	open(fname, "w") do f
+		TOML.print(f, properties)
+	end
 end
 
 # ╔═╡ ca334fc0-3840-4182-8bbf-b78375bb7ed9

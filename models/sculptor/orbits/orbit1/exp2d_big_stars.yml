@@ -1,0 +1,5 @@
+1×6 DataFrame
+ Row │ ra       dec       pm_ra     pm_dec    sigma_los  r_b
+     │ Float64  Float64   Float64   Float64   Float64    Float64
+─────┼───────────────────────────────────────────────────────────
+   1 │ 15.0132  -33.7393  0.360701  -0.47462      6.912  295.301

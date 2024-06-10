@@ -39,7 +39,7 @@ given a sample of points, can we centre and calculate the 2D density profile
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
 	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_stars_today.fits" # = "$(name)_sample.fits" 
-	samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
+	#samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 end
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
@@ -86,7 +86,7 @@ function mean_centre(stars)
 end
 
 # ╔═╡ fa6dcca1-6a54-4841-9e44-30718b7f67f9
-import StatsBase: weights
+import StatsBase: weights, std
 
 # ╔═╡ ccf2ed52-439c-48fd-9ade-61cb3d6199d7
 function weighted_centre(stars, w)
@@ -126,7 +126,7 @@ begin
 	sample = DataFrame(f[2])
 	close(f)
 
-	ra0, dec0 = calc_centre(sample)
+	ra0, dec0 = weighted_centre(sample, sample.probability .^ 3)
 	add_xi_eta!(sample, ra0, dec0)
 	add_r_ell!(sample, ecc, PA)
 
@@ -386,8 +386,13 @@ end
 # ╔═╡ 31973f72-4ba5-4041-b501-d3a0c4fd12d0
 profile = obs
 
+# ╔═╡ e74188bd-b6eb-4ae1-afec-848a998808e8
+lguys.KingProfile
+
 # ╔═╡ c4a1621e-1943-49f1-8d2f-27fa335a0a4f
 let
+	r_b = 290
+	
 	fig = Figure(size=(700, 300))
 	ax = Axis(fig[1, 1], limits=((-0.8, 3), nothing),
 		xlabel=log_r_label,
@@ -396,15 +401,18 @@ let
 
 	
 	errscatter!(value.(profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
+	vlines!(log10(r_b))
 	
 
 	ax_lin = Axis(fig[1, 2],
 		xlabel="r / arcmin",
 		yticklabelsvisible=false,
+		limits=((-0.8, 1000), nothing)
 	)
 
 	
 	errscatter!(value.(10 .^ profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
+	vlines!(r_b)
 
 	linkyaxes!(ax, ax_lin)
 
@@ -483,6 +491,7 @@ obs
 # ╠═3589182c-ee3e-4a0d-ae1a-efc9ac98649a
 # ╠═60a223f2-ac5c-4a6a-af79-4b314d7d5509
 # ╠═31973f72-4ba5-4041-b501-d3a0c4fd12d0
+# ╠═e74188bd-b6eb-4ae1-afec-848a998808e8
 # ╠═c4a1621e-1943-49f1-8d2f-27fa335a0a4f
 # ╠═59b2acc5-66b4-48c6-9507-045ea77e6914
 # ╠═b87cf54b-2c4c-46c5-9336-c13e773e29ec

@@ -2,7 +2,7 @@
 profile: Exp2D
 profile_kwargs:
   M: 1
-  R_s: 0.120
+  R_s: 0.0675
 
 num_radial_bins: 200
 num_energy_bins: 1000
