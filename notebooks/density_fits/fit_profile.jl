@@ -46,8 +46,11 @@ name = "sculptor/fiducial"
 # ╔═╡ aa23a8ab-3cff-400b-bbc9-592183f2e695
 profile_name = name *  "_sample_profile.json"
 
+# ╔═╡ 4f1a0765-4462-41a3-84e1-ec01caaae4e1
+r_max = 15
+
 # ╔═╡ abeada6d-b74e-4769-90d6-3efe92dbbf1b
-distance = 86 ± 3
+distance = 89 ± 3
 
 # ╔═╡ 88f02d81-927c-405a-ada4-064157c7dbf0
 open(profile_name) do f
@@ -64,6 +67,9 @@ open(profile_name) do f
 	profile
 
 end
+
+# ╔═╡ 81f7e2d6-4e81-48de-add8-604258591769
+
 
 # ╔═╡ f890490e-17ef-4e78-a18a-437c90724f86
 md"""
@@ -82,7 +88,11 @@ function plot_Σ_fit_res(obs, pred, res)
     errscatter!(ax, obs["log_r"], obs["log_Sigma"], yerr=obs["log_Sigma_err"])
 
 
-    lines!(ax, pred.log_r, log10.(pred.Σ), color=COLORS[2])
+	filt = pred.log_r .< log10(r_max)
+    lines!(ax, pred.log_r[filt], log10.(pred.Σ)[filt], color=COLORS[2])
+	filt = map(!, filt)
+	
+    lines!(ax, pred.log_r[filt], log10.(pred.Σ)[filt], color=COLORS[2], linestyle=:dash)
     
     ax2 = Axis(fig[2, 1],
         ylabel=L"\delta\log\Sigma", 
@@ -134,7 +144,7 @@ function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
 end
 
 # ╔═╡ 347aee22-17bf-11ef-196f-0146bd88f688
-function fit_profile(obs; r_max=Inf, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
+function fit_profile(obs; r_max=r_max, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
     r_val = 10 .^ obs["log_r"]
     log_Σ = obs["log_Sigma"] .± obs["log_Sigma_err"]
     filt = r_val .< r_max
@@ -184,7 +194,11 @@ let
 end
 
 # ╔═╡ 98b776e5-824b-4db5-8455-b2433fba22b1
-plot_Σ_fit_res(profile, pred, res)
+let 
+	f = plot_Σ_fit_res(profile, pred, res)
+	ax = f.content[1]
+	f
+end
 
 # ╔═╡ 3c133454-d1c2-4aff-a27f-c3368bf06480
 let
@@ -336,8 +350,10 @@ end
 # ╟─f93365e6-971d-4321-9d91-44e9e86610cb
 # ╠═d0992dc9-08f1-487a-a96a-90996f29cefd
 # ╠═aa23a8ab-3cff-400b-bbc9-592183f2e695
+# ╠═4f1a0765-4462-41a3-84e1-ec01caaae4e1
 # ╠═abeada6d-b74e-4769-90d6-3efe92dbbf1b
 # ╠═88f02d81-927c-405a-ada4-064157c7dbf0
+# ╠═81f7e2d6-4e81-48de-add8-604258591769
 # ╠═f890490e-17ef-4e78-a18a-437c90724f86
 # ╠═347aee22-17bf-11ef-196f-0146bd88f688
 # ╠═f6715279-c048-4260-b30a-8e0a4f7c5af5
