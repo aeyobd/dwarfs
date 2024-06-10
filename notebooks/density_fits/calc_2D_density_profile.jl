@@ -159,6 +159,37 @@ let
 	fig
 end
 
+# ╔═╡ 8e75bc6b-2cb1-4993-92ad-037094092612
+begin 
+	pmra0 = lguys.mean(sample.pmra)
+	pmdec0 = lguys.mean(sample.pmdec)
+end
+
+# ╔═╡ e081f84f-595f-4cbf-8613-dba2b8f69323
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="log r / arcmin",
+		ylabel="mean proper motion radial"
+	)
+
+	vx = sample.pmra .- pmra0
+	vy = sample.pmdec .- pmdec0
+
+	x = sample.xi
+	y = sample.eta
+
+	r = @. sqrt(x^2 + y^2) * 60
+
+	pm_rad = (vx .* x .+ vy .* y ) ./ r
+
+	bins, counts = lguys.calc_histogram(log10.(r), weights=pm_rad)
+	_, N = lguys.calc_histogram(log10.(r))
+
+	errscatter!(lguys.midpoint(bins), counts, yerr=counts ./ sqrt.(N))
+	fig
+end
+
 # ╔═╡ 619ca573-fd4b-4c65-8996-eab3869f2142
 let 
 	fig = Figure()
@@ -430,6 +461,8 @@ obs
 # ╠═fa6dcca1-6a54-4841-9e44-30718b7f67f9
 # ╠═b063d5f4-ad59-4bf3-bd88-a93d8b27fdf4
 # ╠═d382b455-73ba-41d5-bbc8-eca53ea2166e
+# ╠═8e75bc6b-2cb1-4993-92ad-037094092612
+# ╠═e081f84f-595f-4cbf-8613-dba2b8f69323
 # ╠═619ca573-fd4b-4c65-8996-eab3869f2142
 # ╠═5b8e641c-29d9-42a3-8149-9e2e5b3d46cb
 # ╠═9b067a18-d2eb-4112-91cf-5814fc02b388
