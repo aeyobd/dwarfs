@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -16,10 +16,10 @@ begin
 end
 
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
-import YAML
+import TOML
 
 # ╔═╡ 96a57df5-a7b7-447a-a4a6-2b05e391a5c6
-obs_today = YAML.load_file("properties.yml")
+obs_today = TOML.parsefile("properties.toml")
 
 # ╔═╡ b75f0fb1-be59-416c-a61f-4109bada9ae9
 r_h = 0.11
@@ -186,24 +186,21 @@ let
 		marker=:+, markersize=10, label="expected"
 	)
 	
-	scatter!(cens.t[idx_peri] * lguys.T0, r[idx_peri], zorder=10,
+	scatter!(cens.t[idx_peri] * lguys.T0, r[idx_peri], 
 		label="last pericentre"
 	)
 
-	scatter!(cens.t[idx_apo] * lguys.T0, r[idx_apo], zorder=10,
+	scatter!(cens.t[idx_apo] * lguys.T0, r[idx_apo], 
 		label="last apocentre"
 	)
 	
-	scatter!(cens.t[idx_anteperi] * lguys.T0, r[idx_anteperi], zorder=10,
+	scatter!(cens.t[idx_anteperi] * lguys.T0, r[idx_anteperi], 
 		label="last last pericentre"
 	)
 	
 	Legend(fig[1, 2], ax)
 	fig
 end
-
-# ╔═╡ f5539446-eefc-498d-b422-19c47f94a6f1
-available_marker_symbols()
 
 # ╔═╡ af8a50bd-e761-4439-9fc9-80048c264d5b
 begin 
@@ -264,9 +261,13 @@ begin
 		"t_last_peri" => t_f - t_peri
 	)
 
-	YAML.write_file("obital_properties.yml", orbital_properties)
+	outfile = "orbital_properties.toml"
 
-	println("saved")
+	open(outfile, "w") do f
+		TOML.print(f, orbital_properties)
+	end
+
+	println("saved properties to $outfile")
 	orbital_properties
 end
 
@@ -300,7 +301,6 @@ end
 # ╠═c3d6b68e-1b2a-4f84-a620-fb8dbe02867a
 # ╠═7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
 # ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
-# ╠═f5539446-eefc-498d-b422-19c47f94a6f1
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
 # ╠═14eebce8-04f7-493b-824a-7808c7fa35dd

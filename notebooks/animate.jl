@@ -27,6 +27,21 @@ Makie.update_theme!(px_per_unit=0.5)
 # ╔═╡ 043e6913-7b92-4d55-962f-33c1d6e6b524
 cd("/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1")
 
+# ╔═╡ 8ee597b8-e5b1-4d5b-a8d6-03fb1a32544e
+starsfile = "../../isolation/1e6/stars/exp2d_stars.hdf5"
+
+# ╔═╡ 44a1f33e-18ae-4a2c-9973-2db7acf666cb
+let 
+	using HDF5
+
+	f = h5open(starsfile)
+	p_idx = f["index"][:]
+	global probabilities = f["probabilities"][:][sortperm(p_idx)]
+	p_idx = sort(p_idx)
+	close(f)
+	
+end
+
 # ╔═╡ 88535209-6ff9-45ee-90ef-4939bd79789c
 begin 
 	out =  lguys.Output("out/combined.hdf5")
@@ -39,6 +54,84 @@ begin
 
 	out
 end
+
+# ╔═╡ a3858097-f307-438e-84ff-6c7be376cb8e
+let
+	fig = Figure()
+	r_max = 10
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "y / kpc", ylabel="z / kpc",
+	limits=(-r_max, r_max, -r_max, r_max))
+
+	bins = LinRange(-r_max, r_max, 1000)
+	colorrange=(1e-11, 10e-3)
+
+	framerate = 10
+	idxs = vcat(1:1:91, 92:10:length(out))
+
+	i = 1
+	snap = out[i]
+
+	hm = Arya.hist2d!(ax, snap.positions[2, :] .- x_cen[2, i], snap.positions[3, :] .- x_cen[3, i], bins = bins, weights = probabilities[snap.index], colormap=:greys,
+		colorscale=log10,
+		colorrange=colorrange
+	)
+	
+	record(fig, "sculptor_stars.mp4", idxs, framerate = framerate) do i
+		snap = out[i]
+		x = snap.positions[2, :] .- x_cen[2, i]
+		y = snap.positions[3, :] .- x_cen[3, i]
+		ms = probabilities[snap.index]
+		H, x_e, y_e = Arya.histogram2d(x, y, bins, weights=ms)
+
+		println(maximum(H))
+		println(minimum(H[H .> 0]))
+		
+		hm[3] = H
+	end
+
+	fig
+end
+
+# ╔═╡ c05c2e3c-192f-479a-9b4c-9a0558275a5d
+let
+	fig = Figure()
+	r_max = 10
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "y / kpc", ylabel="z / kpc",
+	limits=(-r_max, r_max, -r_max, r_max))
+
+	bins = LinRange(-r_max, r_max, 1000)
+	colorrange=(1e-11, 10e-3)
+
+	framerate = 10
+	idxs = vcat(1:1:91, 92:10:length(out))
+
+	i = 1
+	snap = out[i]
+
+	hm = Arya.hist2d!(ax, snap.positions[2, :] .- x_cen[2, i], snap.positions[3, :] .- x_cen[3, i], bins = bins,  colormap=:greys,
+		colorscale=log10,
+		colorrange=colorrange
+	)
+	
+	# record(fig, "sculptor_stars.mp4", idxs, framerate = framerate) do i
+	# 	snap = out[i]
+	# 	x = snap.positions[2, :] .- x_cen[2, i]
+	# 	y = snap.positions[3, :] .- x_cen[3, i]
+	# 	H, x_e, y_e = Arya.histogram2d(x, y, bins)
+
+	# 	println(maximum(H))
+	# 	println(minimum(H[H .> 0]))
+		
+	# 	hm[3] = H
+	# end
+
+	fig
+end
+
+# ╔═╡ e449d00f-dda2-4bf7-81aa-fe4454310ec9
+
 
 # ╔═╡ 18d8144c-f1f6-494e-90a0-527c72f3880b
 md"""
@@ -214,19 +307,19 @@ let
 	framerate = 10
 	idxs = vcat(1:91, 92:10:length(out))
 
-	hm = Arya.hist2d!(ax, snap_i.positions[2, :], snap_i.positions[3, :], bins = bins, colorscale=log10, colorrange=colorrange)
+	hm = Arya.hist2d!(ax, snap_i.positions[2, :], snap_i.positions[3, :], bins = bins, colorscale=log10, colorrange=colorrange, colormap=:greys)
 	
-	record(fig, "sculptor.mp4", idxs, framerate = framerate) do i
-		snap = out[i]
-		x = snap.positions[2, :]
-		y = snap.positions[3, :]
-		H, x_e, y_e = Arya.histogram2d(x, y, bins)
+	# record(fig, "sculptor.mp4", idxs, framerate = framerate) do i
+	# 	snap = out[i]
+	# 	x = snap.positions[2, :]
+	# 	y = snap.positions[3, :]
+	# 	H, x_e, y_e = Arya.histogram2d(x, y, bins)
 
-		println(maximum(H))
-		println(minimum(H[H .> 0]))
+	# 	println(maximum(H))
+	# 	println(minimum(H[H .> 0]))
 		
-		hm[3] = H
-	end
+	# 	hm[3] = H
+	# end
 
 	fig
 end
@@ -373,9 +466,14 @@ end
 # ╠═ecfd2d72-08e0-11ef-23b5-55f91aef7d76
 # ╠═0a5520ea-604e-476e-a761-e12a0121cf27
 # ╠═043e6913-7b92-4d55-962f-33c1d6e6b524
+# ╠═8ee597b8-e5b1-4d5b-a8d6-03fb1a32544e
+# ╠═44a1f33e-18ae-4a2c-9973-2db7acf666cb
 # ╠═b0fa3f7c-be01-475c-b731-126226bfe337
 # ╠═88535209-6ff9-45ee-90ef-4939bd79789c
 # ╠═57497573-5d20-4d26-8b5a-7af72580c59b
+# ╠═a3858097-f307-438e-84ff-6c7be376cb8e
+# ╠═c05c2e3c-192f-479a-9b4c-9a0558275a5d
+# ╠═e449d00f-dda2-4bf7-81aa-fe4454310ec9
 # ╟─18d8144c-f1f6-494e-90a0-527c72f3880b
 # ╠═a5914e73-5866-48c8-a98e-ea0c3fb53178
 # ╠═6d461b4f-7d42-4853-8288-7f8f399c39ab

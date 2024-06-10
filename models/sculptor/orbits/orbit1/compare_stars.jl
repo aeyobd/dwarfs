@@ -39,9 +39,9 @@ end
 # ╔═╡ 49dfa506-3ab2-44ad-949e-2ce709d393c4
 begin 
 	profiles = Dict(
-		#"big" => load_profile("exp2d_big_stars_today_profile.json"),
+		"big" => load_profile("exp2d_big_stars_today_profile.json"),
 		"simulation" => load_profile("exp2d_stars_today_profile.json"),
-		#"small" => load_profile("exp2d_small_stars_today_profile.json"),
+		"small" => load_profile("exp2d_small_stars_today_profile.json"),
 	)
 end
 
@@ -57,7 +57,7 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=log_r_label,
 		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((-1, 3), (-12, 0))
+		limits=((-1.5, 3), (-10, 0))
 	)
 
 	for (label, profile) in profiles
@@ -71,7 +71,7 @@ let
 	)
 	
 	
-
+	vlines!(log10(295))
 	axislegend(ax)
 
 	fig

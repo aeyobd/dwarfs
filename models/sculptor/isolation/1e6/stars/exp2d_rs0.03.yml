@@ -1,0 +1,12 @@
+# 
+profile: Exp2D
+profile_kwargs:
+  M: 1
+  R_s: 0.03
+
+num_radial_bins: 1000
+num_energy_bins: 1000
+
+snapshot_dir: ../out
+snapshot: 10
+
