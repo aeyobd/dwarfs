@@ -3,6 +3,7 @@ using Arya
 using Makie
 
 OptF = Union{Float64, Nothing}
+F = Float64
 
 """
 The parameters used to calculate density from a dataframe
@@ -59,31 +60,44 @@ end
 given an all_stars dataframe with xi and eta in degrees, 
 plots the tangent plane with proper labels
 """
-function plot_all_tangent(all_stars; scale=1, units="degrees", r_max=nothing, kwargs...)
+function plot_all_tangent(all_stars; kwargs...)
     fig = Figure()
+
+    plot_all_tangent!(fig[1,1], all_stars; kwargs...)
+
+    return fig
+end
+
+function plot_all_tangent!(grid::GridPosition, all_stars; scale=1, units="degrees", r_max=nothing, kwargs...)
 
     x = scale*all_stars.xi
     y = scale*all_stars.eta
-    
+
     if r_max === nothing
         r_max = max(maximum(abs.(x)), maximum(abs.(y)))
     end
-    
-    ax = Axis(fig[1,1], 
+
+    ax = Axis(grid,
         xlabel=L"\xi / \textrm{%$units}", ylabel=L"\eta / \textrm{%$units}",
         aspect=1,
         limits=(-r_max, r_max, -r_max, r_max)
     )
 
-    p = plot_all_tangent!(ax, all_stars; scale=scale, kwargs...) 
+    plot_all_tangent!(ax, all_stars; scale=scale, kwargs...)
 
-    return Makie.FigureAxisPlot(fig, ax, p)
+    return ax
 end
 
-function plot_all_tangent!(ax, all_stars; scale=1, kwargs...)
+
+function plot_all_tangent!(ax::Axis, all_stars; scale=1, kwargs...)
+
     x = scale*all_stars.xi
-    y = scale*all_stars.eta 
-    return scatter!(ax, x, y; kwargs...)
+    y = scale*all_stars.eta
+    
+
+    p = scatter!(ax, x, y; kwargs...)
+
+    return p
 end
 
 

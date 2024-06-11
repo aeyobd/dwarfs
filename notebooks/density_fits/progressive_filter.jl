@@ -9,27 +9,19 @@ begin
 	import Pkg; Pkg.activate()
 
 	using FITSIO
-	using DataFrames, CSV
+	using DataFrames
+	using Measurements
 	
 	using GLMakie
-	using Measurements
-	#using KernelDensity
-	
-	import SciPy
-	using QuadGK
-	
-	import LinearAlgebra: diag
-	
+	import TOML
+		
 	import LilGuys as lguys
 	using Arya
 
 end
 
-# ╔═╡ 542dd574-194a-49a2-adfc-a56db2ebea31
-using Tables
-
-# ╔═╡ 0413c3a7-c423-4bc5-ae78-a6d89fb63084
-include("density_utils.jl")
+# ╔═╡ 91d87251-c9c6-467f-9cae-4f30bfea8acc
+include("filter_utils.jl")
 
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
@@ -41,20 +33,8 @@ md"""
  # setup
 """
 
-# ╔═╡ acb9ae92-924b-4723-8bd7-d775595b24c3
-COLORS = Arya.COLORS;
-
-# ╔═╡ 95a463d3-fdec-4fa6-9f4f-6d4a485aebf1
-F = Float64
-
-# ╔═╡ d6cbd9cb-bfa7-46c1-970a-ab3fb3740c48
-OptF = Union{F, Nothing}
-
 # ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
-red = COLORS[6]
-
-# ╔═╡ 3fb54fa8-f97f-428d-95ff-0b8f16070bce
-import TOML
+red = COLORS[6];
 
 # ╔═╡ 8a551dbe-9112-48c2-be9a-8b688dc5a05c
 md"""
@@ -77,134 +57,14 @@ md"""
 # functions
 """
 
-# ╔═╡ 2d8b2740-f9f2-4cca-823f-4b6491c31fe4
-function apply_filter(df, func, params...)
-	if any(params .== nothing)
-		filt = trues(size(df, 1))
-	else
-		filt = func(df, params...)
-	end
-	println("filter cuts $func \t", sum(map(!, filt)))
-	return filt
-end
+# ╔═╡ 2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
+all_stars_unfiltered = DataFrame(FITS(params.filename)[2])
 
-# ╔═╡ 2ce9bedf-1ecb-4773-af65-1feff0f42f76
-function min_filter(x, attr, cut)
-	return x[:, attr] .> cut
-end
-
-# ╔═╡ ba162d65-2ee8-4390-9450-3975c649a05b
-max_filter(x, attr, cut) = x[:, attr] .< cut
-
-# ╔═╡ 60444f7f-71ee-4886-b02b-66bdc5324f99
-md"""
-# Filtering
-"""
-
-# ╔═╡ a0683e1e-5210-40fd-8841-1a6a315d3efe
-function is_point_in_polygon(point, polygon)
-    x, y = point
-    inside = false
-    N = size(polygon, 2)  # Number of vertices in the polygon
-    j = N  # Start with the last vertex
-    for i in 1:N
-        xi, yi = polygon[1, i], polygon[2, i]
-        xj, yj = polygon[1, j], polygon[2, j]
-        
-        # Check if point intersects with polygon edge
-        intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
-        if intersect
-            inside = !inside
-        end
-        j = i
-    end
-    return inside
-end
-
-# ╔═╡ 029bb274-df79-4f8a-bdd2-13f293e38279
-function cmd_filter(all_stars, cmd_cut)
-	cmd_cut_m = reshape(cmd_cut, 2, :)
-	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.phot_g_mean_mag), [cmd_cut_m])
-end
-
-# ╔═╡ 4467fa31-7171-404e-a225-e3c27afa0f7d
-function ang_dist_filter(all_stars, ra0, dec0, max_ang_dist)
-filt_ang_dist = @. (
-   	max_ang_dist ^2
-    > (all_stars.ra - ra0)^2 * cosd(dec0)^2 
-    + (all_stars.dec - dec0)^2
-    )
-end
-
-# ╔═╡ d36ca6c6-f9bc-47c4-b728-e6badaf866b3
-function pm_filter(all_stars, pmra, pmdec, dpm)
-	filt_pm = @. (
-	    dpm^2 
-	    > (pmra - all_stars.pmra)^2 
-	    + (pmdec - all_stars.pmdec)^2 
-	    )
-end
-
-# ╔═╡ d86bb8bb-8d7a-4a22-964c-f3c8d90cc9f0
-function psat_filter(all_stars, psat_min)
-    println("number nan PSAT         \t", sum(isnan.(all_stars.PSAT)))
-    println("number exactly zero PSAT\t", sum(all_stars.PSAT .== 0))
-    println("number > zero           \t", sum(all_stars.PSAT .> 0))
-    println("number == 1             \t", sum(all_stars.PSAT .== 1))
-
-    println("total                   \t", length(all_stars.PSAT))
-	return all_stars.PSAT .> psat_min
-end
-
-# ╔═╡ 9ee9ad05-41d2-4e26-8252-1ae322947bb1
-function parallax_filter(all_stars, dist, dist_err, n_sigma_dist)
-	parallax = 1/dist
-	parallax_err = 1/dist * dist_err / dist_err
-
-	sigma = @. sqrt(all_stars.parallax_error^2 + parallax_err^2)
-	
-	filt_parallax = @. (
-    abs(all_stars.parallax - parallax) <  sigma * n_sigma_dist
-    )
-end
-
-# ╔═╡ c933ca4e-993c-488d-9f1a-c735d411c559
-function radius_filter(all_stars, ecc, r_max=maximum(all_stars.r_ell))
-	r_max = r_max * (1 - ecc)
-	return all_stars.r_ell .< r_max
-end
-
-# ╔═╡ 914bdd71-da5c-4bf8-894d-12f64df5ca02
-function select_members(all_stars, params)
-	filt = apply_filter(all_stars, psat_filter, params.PSAT_min)
-
-	filt .&= apply_filter(all_stars, min_filter, :phot_g_mean_mag, params.g_min)
-	filt .&= apply_filter(all_stars, max_filter, :phot_g_mean_mag, params.g_max)
-	filt .&= apply_filter(all_stars, max_filter, :ruwe, params.ruwe_max)
-	filt .&= apply_filter(all_stars, cmd_filter, params.cmd_cut)
-	filt .&= apply_filter(all_stars, ang_dist_filter, params.ra, params.dec, params.max_ang_dist)
-	filt .&= apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
-
-	filt .&= apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
-	filt .&= apply_filter(all_stars, radius_filter, params.ecc)
-
-
-	println(sum(filt), " stars remaining")
-	return all_stars[filt, :]
-	
-end
-
-# ╔═╡ 753a7958-e12a-486e-b65b-7b6a8002a400
-function load_and_filter(params)
-	all_stars = load_fits(params.filename)
-
-	add_xi_eta!(all_stars, params.ra, params.dec)
-	members = select_members(all_stars, params)
-	return all_stars, members
-end
+# ╔═╡ a53f9db4-df89-4717-8535-c06c989307bd
+all_stars = all_stars_unfiltered[all_stars_unfiltered.F_BEST .== 1, :]
 
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
-all_stars, members = load_and_filter(params)
+members = select_members(all_stars, params)
 
 # ╔═╡ 0c498087-0184-4da2-a079-e972dd987712
 md"""
@@ -215,21 +75,14 @@ The next three plots compare how different the r_ell and xi and eta calculated h
 let
 	f = Figure()
 	ax = Axis(f[1, 1],
-		xlabel="probability", 
-		ylabel="count",
+		xlabel="PSAT", 
+		ylabel="number of stars",
 		yscale=log10)
 
 	hist!(ax, all_stars.PSAT[all_stars.PSAT .>= 0], 
 		bins=20, label="j24")
-	#stephist!(b22.Pmemb, label="b22")
 	f
 end
-
-# ╔═╡ f890216a-2e4e-4f44-92ee-ded0eaa17a68
-params.rh
-
-# ╔═╡ d1cc0201-f5da-4747-ae20-b14a03f1abd6
-members
 
 # ╔═╡ efc003db-c980-40ba-822f-23220f7e852e
 md"""
@@ -237,143 +90,230 @@ md"""
 """
 
 # ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
-let 
-	fig, ax, p = plot_all_tangent(all_stars, markersize=2,
-        color=(:grey, 0.2))
-	plot_all_tangent!(ax, members, markersize=2, color=red)
+function plot_tangent(all_stars, members=nothing) 
+	fig = Figure()
+
+	ax = plot_all_tangent!(fig[1,1], all_stars, markersize=2,
+        color=(:black, 0.2))
+
+	if !isnothing(members )
+		plot_all_tangent!(ax, members, markersize=2, color=red)
+	end
 	
 	ax.xgridvisible = false
 	ax.ygridvisible = false
-	fig
+	
+	return fig
 end
 
-# ╔═╡ 0010dffc-9717-4747-b7c2-2e396097399b
-let 
-	fig, ax, p = scatter(members.ra, members.dec, markersize=3,
-        color=(:grey, 0.2))
-	dra = 1
-	ax.limits = (params.ra .+ dra * [-1, 1] ./ cosd(params.dec), params.dec .+ dra*[-1, 1])
-	ax.aspect =  1 #cosd(params.dec)
+# ╔═╡ d7d81ed8-0427-4ee5-8213-320ce5a6711f
+function plot_tangent!(grid, all_stars, members=nothing)
+	ax = plot_all_tangent!(grid, all_stars, markersize=2,
+        color=(:black, 0.2))
+
+	if !isnothing(members )
+		plot_all_tangent!(ax, members, markersize=2, color=red)
+	end
 	
 	ax.xgridvisible = false
 	ax.ygridvisible = false
-	ax.xlabel="ra / degrees"
-	ax.ylabel = "dec / degrees"
-	fig
+	
+	return ax
 end
 
-# ╔═╡ d0c4ad68-2bd3-44e7-9f42-45795fb7ecee
-let 
-	fig, ax, p = plot_all_tangent(all_stars, markersize=5,
-        color=(:grey, 0.2), r_max=30, scale=60, units="arcmin")
-	plot_all_tangent!(ax, members, scale=60, markersize=5, color=red)
-	fig
-end
-
-
-# ╔═╡ b6424e6f-9b0d-4f29-b53d-0bd814a67139
-let	
-	fig = Figure()
-	da = 60
-	ax = Axis(fig[1, 1], 
-	    xlabel=L"\xi / \textrm{arcmin} ", ylabel=L"\eta / \textrm{arcmin}",
-	    aspect=1,
-	    limits = (-da, da, -da, da))
-	
-	scatter!(ax, 
-	    60*members.xi, 60*members.eta, 
-	    color=members.phot_g_mean_mag, 
-	    colormap=:greys,
-	    markersize=5
-	)
-	
-	
-	fig
-end
-
-# ╔═╡ bffe11bd-4233-4a7c-9411-0dfb1ac79077
-let
-	fig = Figure()
-	da = 15
-	ax = Axis(fig[1, 1], limits=(-da, da, -da, da), aspect=1,
+# ╔═╡ 75701b7d-e1f1-47f2-800e-c07eec01a4ff
+function plot_pms!(grid, all_stars, members=nothing; da=10)
+	ax = Axis(grid, limits=(-da, da, -da, da), aspect=1,
 	    xlabel=L"\mu_{\alpha *} / \mathrm{ mas\, yr^{-1}}", 
 	    ylabel=L"\mu_\delta / \mathrm{ mas\, yr^{-1}}")
 	scatter!(ax, all_stars.pmra, all_stars.pmdec, 
-	    color=(:black, 0.2), markersize=3)
-	
-	scatter!(ax, members.pmra, members.pmdec, 
-	    color=(red, 1), markersize=3)
+	    color=(:black, 0.2), markersize=1)
+
+	if !isnothing(members)
+		scatter!(ax, members.pmra, members.pmdec, 
+		    color=(red, 1), markersize=1)
+	end
+
+	ax
+end
+
+# ╔═╡ bffe11bd-4233-4a7c-9411-0dfb1ac79077
+function plot_pms(all_stars, members=nothing)
+	fig = Figure()
+	plot_pms!(fig[1, 1], all_stars, members)
 	fig
 end
 
 # ╔═╡ 0f002b56-8b8f-4025-8d7b-fb51423e8da0
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1], aspect=1,
+function plot_cmd!(grid, all_stars, members=nothing)
+	ax = Axis(grid, aspect=1,
 	    limits=(-0.5, 3, 10, 22), yreversed=true,
 	    xlabel="bp - rp", 
 	    ylabel="G",)
 	scatter!(ax, all_stars.bp_rp, all_stars.phot_g_mean_mag, 
 	    color=(:black, 0.2), markersize=1)
-	
-	scatter!(ax, members.bp_rp, members.phot_g_mean_mag, 
-	    color=(red, 1), markersize=1)
+
+	if !isnothing(members)
+		scatter!(ax, members.bp_rp, members.phot_g_mean_mag, 
+		    color=(red, 1), markersize=1)
+	end
 	
 	ax.xgridvisible = false
 	ax.ygridvisible = false
-	
-	fig
+
+	ax
+end
+
+# ╔═╡ ca345f40-6743-4d43-b1d4-f509b120512a
+function plot_cmd(all_stars, members=nothing)
+	fig = Figure()
+	ax = plot_cmd!(fig[1,1], all_stars, members)
+	return fig
 end
 
 # ╔═╡ 049ff11e-c04c-41d9-abf1-ec040b799649
-let
-	fig = Figure()
+function plot_parallax!(grid, all_stars, members=nothing)
 	da = 15
-	ax = Axis(fig[1, 1], aspect=1, limits=(-10, 10, 0, 4),
+	ax = Axis(grid, aspect=1, limits=(-10, 10, 0, 4),
 	    xlabel=L"\varpi / \mathrm{ mas }", 
 	    ylabel=L"\delta\varpi / \mathrm{ mas }")
 	scatter!(ax, all_stars.parallax, all_stars.parallax_error, 
 	    color=(:grey, 0.2), markersize=1)
-	
-	scatter!(ax, members.parallax, members.parallax_error, 
-	    color=(red, 1), markersize=1)
+
+	if !isnothing(members)
+		scatter!(ax, members.parallax, members.parallax_error, 
+		    color=(red, 1), markersize=1)
+	end
+	ax
+end
+
+# ╔═╡ 2ec0ac71-8bb4-4459-a5a7-049ab711075e
+function plot_parallax(all_stars, members=nothing)
+	fig = Figure()
+	plot_parallax!(fig[1,1], all_stars, members)
 	fig
 end
 
-# ╔═╡ 4873af32-c387-4d42-909d-d39a25f56e24
+# ╔═╡ b57a31e4-5394-4c32-9020-5ade8a1018c1
+function plot_sample(all_stars, members=nothing)
+	@info plot_tangent(all_stars, members)
+	@info plot_parallax(all_stars, members)
+	@info plot_cmd(all_stars, members)
+	@info plot_pms(all_stars, members)
+end
+
+# ╔═╡ 082dcd7f-6b4b-42a1-b9f5-a65380787cee
+all_stars_unfiltered.F_ASTROMETRIC
+
+# ╔═╡ 31d4e643-67eb-45bf-9c3b-1e031ed0fed8
+sum(all_stars_unfiltered.F_ASTROMETRIC .!== 1.0 * (all_stars_unfiltered.ruwe .< 1.3))
+
+# ╔═╡ 494befb5-007c-40a7-8a8d-3e9908a8fb19
+sum(all_stars_unfiltered.F_NOTANAN .!== @. 1.0 * !(isnan(all_stars_unfiltered.pmra)
+	# || isnan(all_stars_unfiltered.parallax)
+	# || isnan(all_stars_unfiltered.pmdec)
+	|| isnan(all_stars_unfiltered.phot_bp_mean_mag)
+	|| isnan(all_stars_unfiltered.phot_rp_mean_mag)
+
+))
+
+# ╔═╡ 1219b4de-5e92-4951-8a21-a2b8a9e462af
+sum(all_stars_unfiltered.F_INGRID .!==
+@. 1.0 * !(
+		abs(all_stars_unfiltered.pmra) > 10
+		|| abs(all_stars_unfiltered.pmdec) > 10
+		|| (all_stars_unfiltered.phot_g_mean_mag) > 21
+		|| (all_stars_unfiltered.phot_g_mean_mag) < 16
+		|| (all_stars_unfiltered.bp_rp > 2.5) 
+
+)
+)
+
+# ╔═╡ e09b031c-a1d3-4e10-bf80-776f0cee69f4
+sum(all_stars_unfiltered.F_CPAR .!==
+	@. 1.0 * !(
+		abs.(all_stars_unfiltered.parallax_over_error) > 3
+	)
+)
+
+# ╔═╡ ab387f41-8d0f-4a1f-8dbf-b90396914c75
+maximum(all_stars.parallax_over_error)
+
+# ╔═╡ bbc4400c-66cc-42fb-95c3-f21c489ec316
+sum(all_stars_unfiltered.F_BEST .!==
+	@. (
+		all_stars_unfiltered.F_ASTROMETRIC
+		* all_stars_unfiltered.F_CPAR
+		* all_stars_unfiltered.F_INGRID
+		* all_stars_unfiltered.F_NOTANAN
+		* all_stars_unfiltered.F_FLUXEXCESS
+		#* (all_stars_unfiltered.phot_g_mean_mag < 21)
+	))
+
+# ╔═╡ 18fd8d15-f64d-47fa-88e5-a449ca62f156
+ingrid = all_stars_unfiltered[all_stars_unfiltered.F_INGRID .== 1, :]
+
+# ╔═╡ 4d2cc8cc-8d8b-4582-b80c-a69a72bac9c1
+hist(all_stars.phot_g_mean_mag, bins=100)
+
+# ╔═╡ 5766153c-34d5-4796-b6b1-fa0ef165115c
+maximum(ingrid.parallax)
+
+# ╔═╡ d1c16c53-a4dd-4acd-82c8-ec61fbb97274
+plot_sample(all_stars_unfiltered, ingrid)
+
+# ╔═╡ a340d775-deb9-47cb-a34b-bcddf4ae53af
+plot_sample(all_stars_unfiltered)
+
+# ╔═╡ 44ba1999-de3e-4683-8e64-e17a88ada314
+plot_sample(all_stars)
+
+# ╔═╡ b1cbb6c5-c2ee-448b-bd10-a4457c8c3aaf
+plot_sample(all_stars, members)
+
+# ╔═╡ 35bb3332-f457-4929-8c73-595f82c94b96
+
+
+# ╔═╡ 28881973-a203-424c-b4c4-63908fd04e38
 md"""
-# Save sample
+progressive filter addition
 """
 
-# ╔═╡ 5a172f47-589f-4b2c-8180-108b293cebf7
-out_name = "$(name)_sample.fits"
+# ╔═╡ c5ca7506-5952-4973-879e-e9848bb72d03
+plot_sample(all_stars_unfiltered)
 
-# ╔═╡ 00a51936-8a24-4d27-a8fd-ff1d11c0aa91
-columnindex
+# ╔═╡ 7b6c18c9-6724-428d-ac3b-6e8170d3607c
+filt_ruwe = apply_filter(all_stars_unfiltered, max_filter, :ruwe, 1.3)
 
-# ╔═╡ 49bd2648-9ed8-49d0-becc-ea58a83d9d22
-FITSHeader
+# ╔═╡ f6e14d18-a4b6-4df9-b2b9-de503c1013e7
+plot_sample(all_stars_unfiltered[filt_ruwe, :])
 
-# ╔═╡ fafb4f70-7f7c-40de-a34f-69c9a8fe0920
-FITSIO.Libcfitsio.CFITSIO
+# ╔═╡ f74f597a-908b-4569-8de8-219abba31afd
+filt_parallax = apply_filter(all_stars_unfiltered, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
 
-# ╔═╡ 28ff0827-dd3e-43ff-b210-9a45687dd1f8
-let
-	f1 = FITS(params.filename)
-	header = read_header(f1[2])
+# ╔═╡ 63bceb08-3f29-46eb-a9cf-eaeabec86845
+plot_sample(all_stars_unfiltered, all_stars_unfiltered[filt_parallax, :])
 
-	cols = FITSIO.colnames(f1[2])
-	close(f1)
-	
-	f = FITS(out_name, "w")
+# ╔═╡ eab8e0d4-0a40-48b6-9689-0c102d883a96
+filt_pm = apply_filter(all_stars_unfiltered, pm_filter, params.pmra, params.pmdec, params.dpm)
 
-	df = Dict(String(name) => members[:, name] for name in names(members))
-	write(f, df,  header=header)
+# ╔═╡ 9efe08e0-4b5d-4269-ac69-78b2481c6086
+plot_sample(all_stars_unfiltered, all_stars_unfiltered[filt_pm, :])
 
-	println("wrote to $out_name")
-	close(f)
-	df
-end
+# ╔═╡ b0e0a366-8bac-4cf6-8b40-33d517b41e47
+filt_cmd = apply_filter(all_stars_unfiltered, cmd_filter, params.cmd_cut)
+
+# ╔═╡ 84e0b255-ee28-43f5-af22-a6579c80fe81
+plot_sample(all_stars_unfiltered, all_stars_unfiltered[filt_cmd, :])
+
+# ╔═╡ 29dba8f1-b4a6-41da-8323-437447c9d888
+filt = filt_cmd .& filt_pm .& filt_parallax .& filt_ruwe
+
+# ╔═╡ 620aa7d7-0b02-475d-80a9-1e721d6144bf
+mymemb = all_stars_unfiltered[filt, :]
+
+# ╔═╡ 686bd76e-893c-461e-bb50-a9d12492d123
+plot_sample(all_stars_unfiltered[filt, :], members, )
 
 # ╔═╡ 39f615b4-b62c-493e-8d11-be45910d79a8
 md"""
@@ -423,6 +363,153 @@ md"""
 # ╔═╡ d7984df8-84b1-41ff-b19b-dd17b1772d4a
 r_max = maximum(sqrt.(all_stars.xi .^ 2 + all_stars.eta .^ 2))
 
+# ╔═╡ 31096853-9eaa-40e2-90aa-b248df77f73f
+lguys.calc_properties
+
+# ╔═╡ 65a10161-cbeb-49fe-b8d1-075ffe346e43
+function get_density(df)
+	r, fl = lguys.calc_radii(df.ra, df.dec, ecc=params.ecc, PA=params.PA)
+	r = r[fl] * 60
+	props = lguys.calc_properties(r, "arcmin", bins=40)
+
+	println("stars left ", length(r))
+	println("counts in first bin ", props.counts[1:3])
+
+	println("counts in last bin ", props.counts[end-2: end])
+	return props.log_r, props.log_Sigma, props.log_Sigma_err
+end
+
+# ╔═╡ 3c0c0122-5e28-4596-a5d6-8398e29ad180
+function plot_density!(sample; kwargs...)
+	x, y, yerr = get_density(sample)
+
+	errscatter!(x, y, yerr=yerr; kwargs...)
+end
+
+# ╔═╡ 08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
+get_density(all_stars_unfiltered[filt, :])
+
+# ╔═╡ 209a2f95-594f-470e-bd61-45040dadb554
+Makie.histogram_plot_types
+
+# ╔═╡ b55d72b9-e957-4480-b6db-97c9798b4d68
+function plot_density_sample!(grid, all_stars, sample=nothing)
+	ax = Axis(grid,
+		xlabel="log radius / arcmin",
+		ylabel=L"\log\;\Sigma \, / \, \textrm{stars arcmin^{-2}}",
+		limits=(nothing, (-2, 3))
+	)
+	plot_density!(all_stars, color=:black)
+	if sample !== nothing
+		plot_density!(sample, color=red)
+	end
+
+	return ax
+end
+
+# ╔═╡ d0c00f3e-f3d3-4cd1-8541-9ae239420174
+function plot_density_sample(all_stars, sample=nothing)
+	fig = Figure()
+	plot_density_sample!(fig[1,1], all_stars, sample)
+
+	return fig
+end
+
+# ╔═╡ 1c06e13b-8f5d-414b-8f2a-3d6f051ad495
+function plot_sample_w_dens(all_stars, sample=nothing)
+	fig = Figure(size=(800, 800))
+	plot_tangent!(fig[1,1], all_stars, sample)
+	plot_pms!(fig[1,2], all_stars, sample)
+	plot_cmd!(fig[2,1], all_stars, sample)
+	plot_density_sample!(fig[2,2], all_stars, sample)
+
+	fig
+end
+
+# ╔═╡ 498399c5-43f7-44db-bddd-03ec0f0fdd6b
+plot_sample_w_dens(all_stars_unfiltered)
+
+# ╔═╡ fab13f99-662c-4385-b266-029ce2eea233
+plot_sample_w_dens(all_stars_unfiltered, 
+	all_stars_unfiltered[filt_ruwe, :]
+)
+
+# ╔═╡ aac80d15-72c9-4091-befa-1b7fa7127c63
+plot_sample_w_dens(all_stars_unfiltered, 
+	all_stars_unfiltered[filt_parallax, :]
+)
+
+# ╔═╡ 4bfc9046-a5b2-4a72-82a7-3547066d7064
+plot_sample_w_dens(all_stars_unfiltered, 
+	all_stars_unfiltered[filt_cmd, :]
+)
+
+# ╔═╡ d74e062b-d7b0-422e-9f1b-102afee26d7b
+plot_sample_w_dens(all_stars_unfiltered, 
+	all_stars_unfiltered[filt_pm, :]
+)
+
+# ╔═╡ 16bd1702-b471-44da-96df-aca63c46a604
+plot_sample_w_dens(all_stars_unfiltered, 
+	all_stars_unfiltered[filt, :]
+)
+
+# ╔═╡ 62f00571-a1d0-4f77-9f09-a4b87c5aa63f
+plot_sample_w_dens(all_stars_unfiltered, 
+	all_stars_unfiltered[all_stars_unfiltered.PSAT .> 0.2, :]
+)
+
+# ╔═╡ fb95bc32-9cd2-485e-96f1-e8bebfbc8b59
+plot_density_sample(all_stars_unfiltered, all_stars_unfiltered[filt_cmd, :])
+
+# ╔═╡ b76fbfe9-8a0d-4816-ae81-6fb8597aaf80
+all_stars_unfiltered[filt_cmd, :]
+
+# ╔═╡ 12220e1c-9a98-447f-b3a4-b579b2989b68
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel="log radius / arcmin",
+		ylabel=L"\log\;\Sigma \, / \, \textrm{stars arcmin^{-2}}",
+		limits=(nothing, (-2, 3))
+	)
+	
+	plot_density!(trues(length(filt)), label="no filter")
+	plot_density!(filt_ruwe, label="RUWE only")
+
+	plot_density!(filt_parallax, label="parallax only")
+	plot_density!(filt_cmd, label="CMD only")
+
+	plot_density!(filt_pm, label="proper motion only")
+
+	axislegend(position=:lb)
+
+	fig
+end
+
+# ╔═╡ 691d6285-6bd3-47a1-a9e8-024874fb6bbd
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel="log radius / arcmin",
+		ylabel=L"\log\;\Sigma \, / \, \textrm{stars arcmin^{-2}}",
+		limits=(nothing, (-5, 3))
+	)
+	
+	plot_density!(trues(length(filt)), label="no filter")
+
+	plot_density!(filt, label="all filters")
+
+	plot_density!(all_stars_unfiltered.PSAT .> 0.2, label="PSAT > 0.2")
+
+	axislegend()
+
+	fig
+end
+
+# ╔═╡ bf7aac44-e090-4453-bdb5-7ecca95564f8
+Arya.histogram(randn(100), weights=ones(100))
+
 # ╔═╡ e033e344-737e-46e8-ab85-5fe33d191f41
 """
 A simple density calculation 
@@ -443,59 +530,59 @@ function calc_offset_density(dra, ddec, r_cut; n_sigma_dist=3, dpm=1, cmd_cut=cm
 	return obs
 end
 
-# ╔═╡ 44803049-4cc5-4a23-990a-322934ccb076
-params_json
-
-# ╔═╡ 45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
-params
-
 # ╔═╡ Cell order:
 # ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
-# ╠═0413c3a7-c423-4bc5-ae78-a6d89fb63084
-# ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
-# ╠═95a463d3-fdec-4fa6-9f4f-6d4a485aebf1
-# ╠═d6cbd9cb-bfa7-46c1-970a-ab3fb3740c48
+# ╠═91d87251-c9c6-467f-9cae-4f30bfea8acc
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
-# ╠═3fb54fa8-f97f-428d-95ff-0b8f16070bce
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
+# ╠═2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
+# ╠═a53f9db4-df89-4717-8535-c06c989307bd
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
-# ╠═2d8b2740-f9f2-4cca-823f-4b6491c31fe4
-# ╠═2ce9bedf-1ecb-4773-af65-1feff0f42f76
-# ╠═ba162d65-2ee8-4390-9450-3975c649a05b
-# ╠═753a7958-e12a-486e-b65b-7b6a8002a400
-# ╟─60444f7f-71ee-4886-b02b-66bdc5324f99
-# ╠═914bdd71-da5c-4bf8-894d-12f64df5ca02
-# ╠═029bb274-df79-4f8a-bdd2-13f293e38279
-# ╠═a0683e1e-5210-40fd-8841-1a6a315d3efe
-# ╠═4467fa31-7171-404e-a225-e3c27afa0f7d
-# ╠═d36ca6c6-f9bc-47c4-b728-e6badaf866b3
-# ╠═d86bb8bb-8d7a-4a22-964c-f3c8d90cc9f0
-# ╠═9ee9ad05-41d2-4e26-8252-1ae322947bb1
-# ╠═c933ca4e-993c-488d-9f1a-c735d411c559
 # ╟─0c498087-0184-4da2-a079-e972dd987712
-# ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
-# ╠═f890216a-2e4e-4f44-92ee-ded0eaa17a68
-# ╠═d1cc0201-f5da-4747-ae20-b14a03f1abd6
+# ╟─52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
-# ╠═0010dffc-9717-4747-b7c2-2e396097399b
-# ╠═d0c4ad68-2bd3-44e7-9f42-45795fb7ecee
-# ╠═b6424e6f-9b0d-4f29-b53d-0bd814a67139
+# ╠═d7d81ed8-0427-4ee5-8213-320ce5a6711f
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
+# ╠═75701b7d-e1f1-47f2-800e-c07eec01a4ff
 # ╠═0f002b56-8b8f-4025-8d7b-fb51423e8da0
+# ╠═ca345f40-6743-4d43-b1d4-f509b120512a
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
-# ╟─4873af32-c387-4d42-909d-d39a25f56e24
-# ╠═5a172f47-589f-4b2c-8180-108b293cebf7
-# ╠═00a51936-8a24-4d27-a8fd-ff1d11c0aa91
-# ╠═49bd2648-9ed8-49d0-becc-ea58a83d9d22
-# ╠═fafb4f70-7f7c-40de-a34f-69c9a8fe0920
-# ╠═28ff0827-dd3e-43ff-b210-9a45687dd1f8
-# ╠═542dd574-194a-49a2-adfc-a56db2ebea31
+# ╠═2ec0ac71-8bb4-4459-a5a7-049ab711075e
+# ╠═b57a31e4-5394-4c32-9020-5ade8a1018c1
+# ╠═082dcd7f-6b4b-42a1-b9f5-a65380787cee
+# ╠═31d4e643-67eb-45bf-9c3b-1e031ed0fed8
+# ╠═494befb5-007c-40a7-8a8d-3e9908a8fb19
+# ╠═1219b4de-5e92-4951-8a21-a2b8a9e462af
+# ╠═e09b031c-a1d3-4e10-bf80-776f0cee69f4
+# ╠═ab387f41-8d0f-4a1f-8dbf-b90396914c75
+# ╠═bbc4400c-66cc-42fb-95c3-f21c489ec316
+# ╠═18fd8d15-f64d-47fa-88e5-a449ca62f156
+# ╠═4d2cc8cc-8d8b-4582-b80c-a69a72bac9c1
+# ╠═5766153c-34d5-4796-b6b1-fa0ef165115c
+# ╠═d1c16c53-a4dd-4acd-82c8-ec61fbb97274
+# ╠═a340d775-deb9-47cb-a34b-bcddf4ae53af
+# ╠═44ba1999-de3e-4683-8e64-e17a88ada314
+# ╠═b1cbb6c5-c2ee-448b-bd10-a4457c8c3aaf
+# ╠═35bb3332-f457-4929-8c73-595f82c94b96
+# ╠═28881973-a203-424c-b4c4-63908fd04e38
+# ╠═c5ca7506-5952-4973-879e-e9848bb72d03
+# ╠═7b6c18c9-6724-428d-ac3b-6e8170d3607c
+# ╠═f6e14d18-a4b6-4df9-b2b9-de503c1013e7
+# ╠═f74f597a-908b-4569-8de8-219abba31afd
+# ╠═63bceb08-3f29-46eb-a9cf-eaeabec86845
+# ╠═eab8e0d4-0a40-48b6-9689-0c102d883a96
+# ╠═9efe08e0-4b5d-4269-ac69-78b2481c6086
+# ╠═b0e0a366-8bac-4cf6-8b40-33d517b41e47
+# ╠═84e0b255-ee28-43f5-af22-a6579c80fe81
+# ╠═29dba8f1-b4a6-41da-8323-437447c9d888
+# ╠═620aa7d7-0b02-475d-80a9-1e721d6144bf
+# ╠═686bd76e-893c-461e-bb50-a9d12492d123
 # ╟─39f615b4-b62c-493e-8d11-be45910d79a8
 # ╠═9b3288b4-3c17-4325-9e2c-94f96328f3c3
 # ╠═62388099-b80b-4272-9bde-0c7315b15c19
@@ -507,6 +594,24 @@ params
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
 # ╠═d7984df8-84b1-41ff-b19b-dd17b1772d4a
+# ╠═31096853-9eaa-40e2-90aa-b248df77f73f
+# ╠═65a10161-cbeb-49fe-b8d1-075ffe346e43
+# ╠═3c0c0122-5e28-4596-a5d6-8398e29ad180
+# ╠═08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
+# ╠═209a2f95-594f-470e-bd61-45040dadb554
+# ╠═d0c00f3e-f3d3-4cd1-8541-9ae239420174
+# ╠═b55d72b9-e957-4480-b6db-97c9798b4d68
+# ╠═1c06e13b-8f5d-414b-8f2a-3d6f051ad495
+# ╠═498399c5-43f7-44db-bddd-03ec0f0fdd6b
+# ╠═fab13f99-662c-4385-b266-029ce2eea233
+# ╠═aac80d15-72c9-4091-befa-1b7fa7127c63
+# ╠═4bfc9046-a5b2-4a72-82a7-3547066d7064
+# ╠═d74e062b-d7b0-422e-9f1b-102afee26d7b
+# ╠═16bd1702-b471-44da-96df-aca63c46a604
+# ╠═62f00571-a1d0-4f77-9f09-a4b87c5aa63f
+# ╠═fb95bc32-9cd2-485e-96f1-e8bebfbc8b59
+# ╠═b76fbfe9-8a0d-4816-ae81-6fb8597aaf80
+# ╠═12220e1c-9a98-447f-b3a4-b579b2989b68
+# ╠═691d6285-6bd3-47a1-a9e8-024874fb6bbd
+# ╠═bf7aac44-e090-4453-bdb5-7ecca95564f8
 # ╠═e033e344-737e-46e8-ab85-5fe33d191f41
-# ╠═44803049-4cc5-4a23-990a-322934ccb076
-# ╠═45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95

@@ -4,16 +4,17 @@ import LinearAlgebra: diag
 
 import LilGuys as lguys
 
-import Arya
+import Arya: value, err, histogram
 import StatsBase: weights, mean
 import TOML
+using Measurements
 
 F = Float64
 
 @kwdef mutable struct ObsProfile
     log_r::Vector{F}
     log_r_bins::Vector{F}
-    log_r_units::String
+    r_units::String
     counts::Vector{F}
     mass::Vector{F}
     mass_err::Vector{F}
@@ -56,7 +57,7 @@ end
 """
 calculates the elliptical radii given the ra and dec of stars
 """
-function calc_radii(ra, dec, weights=nothing, centre_method="mean", ecc=0, PA=0)
+function calc_radii(ra, dec; weights=nothing, centre_method="mean", ecc=0, PA=0)
     if weights === nothing
         weights = ones(length(ra))
     end
@@ -116,7 +117,7 @@ function calc_Σ(log_r_bin, hist, hist_err)
     Σ = hist ./ As 
 
     δ_Σ = hist_err ./ As
-	return Σ, δ_Σ
+	return Σ 
 end
 
 
@@ -148,19 +149,26 @@ function calc_Γ_max(Σ, Σ_m)
 end
 
 
-function calc_properties(rs; weights=nothing, bins=20)
+"""
+    calc_properties(rs, r_units; weights=nothing, bins=20, normalization="mass")
+
+Calculate the properties of a density profile given the radii `rs` and the units of the radii `r_units`.
+
+"""
+function calc_properties(rs, r_units; weights=nothing, bins=20, normalization="mass")
     if weights === nothing
         weights = ones(length(rs))
     end
-    h = Arya.histogram(log10.(rs), bins, weights=weights)
+    h = histogram(log10.(rs), bins, weights=weights)
     log_r_bin = h.bins
-    hist = h.values
     δ_hist = h.err
+    hist = h.values .± h.err
 
     log_r = lguys.midpoint(log_r_bin)
     δ_log_r = diff(log_r_bin) ./ 2
+    log_r = log_r .± δ_log_r
 
-    Σ, δ_Σ = calc_Σ(log_r_bin, hist)
+    Σ = calc_Σ(log_r_bin, hist, δ_hist)
     Σ_m = calc_Σ_mean(log_r_bin, hist)
     Γ = calc_Γ(log_r, Σ)
     Γ_max = calc_Γ_max(Σ, Σ_m)
@@ -171,20 +179,20 @@ function calc_properties(rs; weights=nothing, bins=20)
 
 
     prof = ObsProfile(
-        log_r=log_r,
-        log_r_bins=log_r_bin,
-        log_r_units="kpc",
-        counts=h.values,
-        mass=M_in,
-        mass_err=ones(length(M_in)),
-        Sigma=Σ,
-        Sigma_err=ones(length(Σ)),
-        log_Sigma=log_Σ,
-        log_Sigma_err=ones(length(log_Σ)),
-        Gamma=Γ,
-        Gamma_err=ones(length(Γ)),
-        Gamma_max=Γ_max,
-        Gamma_max_err=ones(length(Γ_max))
+        r_units = r_units,
+        log_r = value.(log_r),
+        log_r_bins = log_r_bin,
+        counts = value.(hist),
+        mass = value.(M_in),
+        mass_err= err.(M_in),
+        Sigma = value.(Σ),
+        Sigma_err = err.(Σ),
+        log_Sigma = value.(log_Σ),
+        log_Sigma_err = err.(log_Σ),
+        Gamma = value.(Γ),
+        Gamma_err = err.(Γ),
+        Gamma_max = value.(Γ_max),
+        Gamma_max_err = err.(Γ_max)
     )
 
     return prof
