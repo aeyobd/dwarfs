@@ -8,29 +8,29 @@ using InteractiveUtils
 begin 
 	import Pkg; Pkg.activate()
 
-	using FITSIO
-	using DataFrames, CSV
-	
 	using GLMakie
-	using Measurements
-	#using KernelDensity
-	
-	import SciPy
-	using QuadGK
-	
-	import LinearAlgebra: diag
 	
 	import LilGuys as lguys
 	using Arya
 	
-	using JSON
+	using DataFrames, CSV
+	using TOML
+end
 
+# ╔═╡ 34219d44-5c99-4756-a874-1286ade6659b
+begin
+	import SciPy
+	using QuadGK
+	using Measurements
+
+	import LinearAlgebra: diag
 	import NaNMath as nm
+
 end
 
 # ╔═╡ 0d71de16-50d7-43da-b1fb-a477b949e15e
 md"""
-Given a set of density (histogram) observations, what profile is consistant?
+Given a set of density observations, what profile is consistant?
 """
 
 # ╔═╡ f93365e6-971d-4321-9d91-44e9e86610cb
@@ -44,7 +44,7 @@ We expect data as a
 name = "sculptor/fiducial"
 
 # ╔═╡ aa23a8ab-3cff-400b-bbc9-592183f2e695
-profile_name = name *  "_sample_profile.json"
+profile_name = name *  "_sample_profile.toml"
 
 # ╔═╡ 4f1a0765-4462-41a3-84e1-ec01caaae4e1
 r_max = 15
@@ -53,9 +53,8 @@ r_max = 15
 distance = 89 ± 3
 
 # ╔═╡ 88f02d81-927c-405a-ada4-064157c7dbf0
-open(profile_name) do f
-	global profile
-	profile = JSON.parse(f)
+begin
+	profile = TOML.parsefile(profile_name)
 
 	for (key, val) in (profile)
 		if typeof(val) <: AbstractArray
@@ -64,12 +63,7 @@ open(profile_name) do f
 		end
 	end
 
-	profile
-
 end
-
-# ╔═╡ 81f7e2d6-4e81-48de-add8-604258591769
-
 
 # ╔═╡ f890490e-17ef-4e78-a18a-437c90724f86
 md"""
@@ -174,7 +168,7 @@ function fit_profile(obs; r_max=r_max, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3
 end
 
 # ╔═╡ 3a0f2b8b-bb70-41bf-bcd7-aa241d4b7bdf
-popt, pred, res = fit_profile(profile, p0=[2, 7])
+popt, pred, res = fit_profile(profile, p0=[10_000, 5])
 
 # ╔═╡ 5cf332e8-47e4-4e9e-af94-199331a7aa3d
 md"""
@@ -183,12 +177,15 @@ md"""
 
 # ╔═╡ d6b7764b-65b1-4a71-9759-0c8b0b8672b6
 let
-	fig, ax, p = errscatter(profile["log_r"], profile["counts"], yerr=sqrt.(profile["counts"]))
-
-	ax.xlabel = log_r_label
-	ax.ylabel = "count / bin"
-
-	ax.yscale=Makie.pseudolog10
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel=log_r_label,
+		ylabel = "counts / bin",
+		yscale = log10,
+		limits = (nothing, (0.9, nothing)),
+	)
+	
+	errscatter!(profile["log_r"], profile["counts"], yerr=sqrt.(profile["counts"]))
 
 	fig
 end
@@ -261,7 +258,7 @@ end
 
 # ╔═╡ 0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
 let 
-	popt, pred, res = fit_profile(profile, p0=[2, 7], profile=lguys.Exp3D)
+	popt, pred, res = fit_profile(profile, p0=[10_000, 7], profile=lguys.Exp3D)
 
 	label = "exp3d"
 	global popts[label] = popt
@@ -273,7 +270,7 @@ end
 
 # ╔═╡ 93cd5808-0e20-475a-8001-4e775d4ab4e7
 let 
-	popt, pred, res = fit_profile(profile, p0=[2, 7], profile=lguys.Exp2D)
+	popt, pred, res = fit_profile(profile, p0=[10_000, 7], profile=lguys.Exp2D)
 
 	label = "exp2d"
 	global popts[label] = popt
@@ -298,7 +295,7 @@ end
 
 # ╔═╡ 1be3fa21-5945-4904-a23a-12c15cc4a485
 let 
-	popt, pred, res = fit_profile(profile, profile=lguys.LogCusp2D, p0=[1, 15])
+	popt, pred, res = fit_profile(profile, profile=lguys.LogCusp2D, p0=[10000, 15])
 
 	label = "cusp"
 	global popts[label] = popt
@@ -316,16 +313,25 @@ md"""
 # ╔═╡ c769d7b1-1b48-4a4a-aa02-ebc9a0658530
 popts
 
+# ╔═╡ ba12cfef-a74d-4f4a-8acc-ca28b9ca5db0
+	arcmin_to_rad = 60 / 206265
+
+
 # ╔═╡ 0b694b57-5e1b-4df4-8807-6ae2b151231e
 for (label, popt) in popts
 	print(label, "\t" )
-	arcmin_to_rad = 60 / 206265
 	r_s_am = popt[2]
 	r_s = r_s_am * arcmin_to_rad * distance * 1e3
 	print("$r_s_am\t\t")
 	print(r_s)
 	println()
 end
+
+# ╔═╡ 3b152248-0f9f-4fd0-aecc-5912a39f0ec2
+popts["king"]
+
+# ╔═╡ 696b6919-da98-4e84-8cfa-3b30711bfa76
+popts["king"][2:end] .* arcmin_to_rad * distance * 1e3
 
 # ╔═╡ 6d8705f8-8580-4424-be21-809ea1a0b526
 let
@@ -345,15 +351,15 @@ let
 end
 
 # ╔═╡ Cell order:
-# ╠═0d71de16-50d7-43da-b1fb-a477b949e15e
+# ╟─0d71de16-50d7-43da-b1fb-a477b949e15e
 # ╠═bfeedd02-4339-40b8-bf68-1ccdbeaa5245
+# ╠═34219d44-5c99-4756-a874-1286ade6659b
 # ╟─f93365e6-971d-4321-9d91-44e9e86610cb
 # ╠═d0992dc9-08f1-487a-a96a-90996f29cefd
 # ╠═aa23a8ab-3cff-400b-bbc9-592183f2e695
 # ╠═4f1a0765-4462-41a3-84e1-ec01caaae4e1
 # ╠═abeada6d-b74e-4769-90d6-3efe92dbbf1b
 # ╠═88f02d81-927c-405a-ada4-064157c7dbf0
-# ╠═81f7e2d6-4e81-48de-add8-604258591769
 # ╠═f890490e-17ef-4e78-a18a-437c90724f86
 # ╠═347aee22-17bf-11ef-196f-0146bd88f688
 # ╠═f6715279-c048-4260-b30a-8e0a4f7c5af5
@@ -361,7 +367,7 @@ end
 # ╠═333c27b4-1da5-4745-942a-961202399f6d
 # ╠═6b909975-cdba-4961-bc0f-842c68f33ef9
 # ╠═3a0f2b8b-bb70-41bf-bcd7-aa241d4b7bdf
-# ╠═5cf332e8-47e4-4e9e-af94-199331a7aa3d
+# ╟─5cf332e8-47e4-4e9e-af94-199331a7aa3d
 # ╠═d6b7764b-65b1-4a71-9759-0c8b0b8672b6
 # ╠═98b776e5-824b-4db5-8455-b2433fba22b1
 # ╠═3c133454-d1c2-4aff-a27f-c3368bf06480
@@ -374,5 +380,8 @@ end
 # ╠═1be3fa21-5945-4904-a23a-12c15cc4a485
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
 # ╠═c769d7b1-1b48-4a4a-aa02-ebc9a0658530
+# ╠═ba12cfef-a74d-4f4a-8acc-ca28b9ca5db0
 # ╠═0b694b57-5e1b-4df4-8807-6ae2b151231e
+# ╠═3b152248-0f9f-4fd0-aecc-5912a39f0ec2
+# ╠═696b6919-da98-4e84-8cfa-3b30711bfa76
 # ╠═6d8705f8-8580-4424-be21-809ea1a0b526

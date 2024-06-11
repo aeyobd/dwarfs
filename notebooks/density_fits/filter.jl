@@ -59,43 +59,6 @@ md"""
 # ╔═╡ acb9ae92-924b-4723-8bd7-d775595b24c3
 COLORS = Arya.COLORS;
 
-# ╔═╡ 95a463d3-fdec-4fa6-9f4f-6d4a485aebf1
-F = Float64
-
-# ╔═╡ d6cbd9cb-bfa7-46c1-970a-ab3fb3740c48
-OptF = Union{F, Nothing}
-
-# ╔═╡ e3f52a32-9a21-4c8f-8e5c-9ca3e7dbc331
-begin
-	Base.@kwdef struct DensityParams
-		filename::String
-		ra::Float64
-		dec::Float64
-		ecc::F # can likely remove ecc, rh, PA
-		rh::F
-		PA::F
-		dist::F
-		dist_err::F
-		PSAT_min::OptF = nothing
-		ruwe_max::OptF = nothing
-		g_min::OptF = nothing
-		g_max::OptF = nothing
-		max_ang_dist::OptF = nothing
-		n_sigma_dist::OptF = nothing
-		pmra::OptF = nothing
-		pmdec::OptF = nothing
-		dpm::OptF = nothing
-
-		cmd_cut::Union{Array,Nothing} = nothing
-	end
-
-	function DensityParams(dict::Dict; kwargs...)
-		d2 =  NamedTuple{Tuple(Symbol.(keys(dict)))}(values(dict))
-
-		return DensityParams(; d2..., kwargs...)
-	end
-end
-
 # ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
 red = COLORS[6]
 
@@ -170,137 +133,10 @@ function load_fits(filename)
 	return all_stars
 end
 
-# ╔═╡ 2dbdc00f-7f78-4cc7-b505-99115d8a1042
-function add_xi_eta!(stars, ra0, dec0)
-	xi, eta = lguys.to_tangent(stars.ra, stars.dec, ra0, dec0)
-	
-	stars[:, "xi"] = xi
-	stars[:, "eta"] = eta
-	stars
-end
-
-# ╔═╡ 2d8b2740-f9f2-4cca-823f-4b6491c31fe4
-function apply_filter(df, func, params...)
-	if any(params .== nothing)
-		filt = trues(size(df, 1))
-	else
-		filt = func(df, params...)
-	end
-	println("filter cuts $func \t", sum(map(!, filt)))
-	return filt
-end
-
-# ╔═╡ 2ce9bedf-1ecb-4773-af65-1feff0f42f76
-function min_filter(x, attr, cut)
-	return x[:, attr] .> cut
-end
-
-# ╔═╡ ba162d65-2ee8-4390-9450-3975c649a05b
-max_filter(x, attr, cut) = x[:, attr] .< cut
-
-# ╔═╡ 60444f7f-71ee-4886-b02b-66bdc5324f99
-md"""
-# Filtering
-"""
-
-# ╔═╡ a0683e1e-5210-40fd-8841-1a6a315d3efe
-function is_point_in_polygon(point, polygon)
-    x, y = point
-    inside = false
-    N = size(polygon, 2)  # Number of vertices in the polygon
-    j = N  # Start with the last vertex
-    for i in 1:N
-        xi, yi = polygon[1, i], polygon[2, i]
-        xj, yj = polygon[1, j], polygon[2, j]
-        
-        # Check if point intersects with polygon edge
-        intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
-        if intersect
-            inside = !inside
-        end
-        j = i
-    end
-    return inside
-end
-
-# ╔═╡ 029bb274-df79-4f8a-bdd2-13f293e38279
-function cmd_filter(all_stars, cmd_cut)
-	cmd_cut_m = reshape(cmd_cut, 2, :)
-	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.phot_g_mean_mag), [cmd_cut_m])
-end
-
-# ╔═╡ 4467fa31-7171-404e-a225-e3c27afa0f7d
-function ang_dist_filter(all_stars, ra0, dec0, max_ang_dist)
-filt_ang_dist = @. (
-   	max_ang_dist ^2
-    > (all_stars.ra - ra0)^2 * cosd(dec0)^2 
-    + (all_stars.dec - dec0)^2
-    )
-end
-
-# ╔═╡ d36ca6c6-f9bc-47c4-b728-e6badaf866b3
-function pm_filter(all_stars, pmra, pmdec, dpm)
-	filt_pm = @. (
-	    dpm^2 
-	    > (pmra - all_stars.pmra)^2 
-	    + (pmdec - all_stars.pmdec)^2 
-	    )
-end
-
-# ╔═╡ d86bb8bb-8d7a-4a22-964c-f3c8d90cc9f0
-function psat_filter(all_stars, psat_min)
-    println("number nan PSAT         \t", sum(isnan.(all_stars.PSAT)))
-    println("number exactly zero PSAT\t", sum(all_stars.PSAT .== 0))
-    println("number > zero           \t", sum(all_stars.PSAT .> 0))
-    println("number == 1             \t", sum(all_stars.PSAT .== 1))
-
-    println("total                   \t", length(all_stars.PSAT))
-	return all_stars.PSAT .> psat_min
-end
-
-# ╔═╡ 9ee9ad05-41d2-4e26-8252-1ae322947bb1
-function parallax_filter(all_stars, dist, dist_err, n_sigma_dist)
-	parallax = 1/dist
-	parallax_err = 1/dist * dist_err / dist_err
-
-	sigma = @. sqrt(all_stars.parallax_error^2 + parallax_err^2)
-	
-	filt_parallax = @. (
-    abs(all_stars.parallax - parallax) <  sigma * n_sigma_dist
-    )
-end
-
-# ╔═╡ c933ca4e-993c-488d-9f1a-c735d411c559
-function radius_filter(all_stars, ecc, r_max=maximum(all_stars.r_ell))
-	r_max = r_max * (1 - ecc)
-	return all_stars.r_ell .< r_max
-end
-
-# ╔═╡ 914bdd71-da5c-4bf8-894d-12f64df5ca02
-function select_members(all_stars, params)
-	filt = apply_filter(all_stars, psat_filter, params.PSAT_min)
-
-	filt .&= apply_filter(all_stars, min_filter, :phot_g_mean_mag, params.g_min)
-	filt .&= apply_filter(all_stars, max_filter, :phot_g_mean_mag, params.g_max)
-	filt .&= apply_filter(all_stars, max_filter, :ruwe, params.ruwe_max)
-	filt .&= apply_filter(all_stars, cmd_filter, params.cmd_cut)
-	filt .&= apply_filter(all_stars, ang_dist_filter, params.ra, params.dec, params.max_ang_dist)
-	filt .&= apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
-
-	filt .&= apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
-	filt .&= apply_filter(all_stars, radius_filter, params.ecc)
-
-
-	println(sum(filt), " stars remaining")
-	return all_stars[filt, :]
-	
-end
-
 # ╔═╡ 753a7958-e12a-486e-b65b-7b6a8002a400
 function load_and_filter(params)
 	all_stars = load_fits(params.filename)
 
-	add_xi_eta!(all_stars, params.ra, params.dec)
 	members = select_members(all_stars, params)
 	return all_stars, members
 end
@@ -466,15 +302,6 @@ md"""
 
 # ╔═╡ 5a172f47-589f-4b2c-8180-108b293cebf7
 out_name = "$(name)_sample.fits"
-
-# ╔═╡ 00a51936-8a24-4d27-a8fd-ff1d11c0aa91
-columnindex
-
-# ╔═╡ 49bd2648-9ed8-49d0-becc-ea58a83d9d22
-FITSHeader
-
-# ╔═╡ fafb4f70-7f7c-40de-a34f-69c9a8fe0920
-FITSIO.Libcfitsio.CFITSIO
 
 # ╔═╡ 28ff0827-dd3e-43ff-b210-9a45687dd1f8
 let
@@ -791,9 +618,6 @@ params
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
-# ╠═95a463d3-fdec-4fa6-9f4f-6d4a485aebf1
-# ╠═d6cbd9cb-bfa7-46c1-970a-ab3fb3740c48
-# ╠═e3f52a32-9a21-4c8f-8e5c-9ca3e7dbc331
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
@@ -803,21 +627,8 @@ params
 # ╠═07235d51-10e1-4408-a4d1-cd2079fadb75
 # ╠═695d532c-86d1-4b24-b7af-600a8ca29687
 # ╠═32fd9b79-1a8b-4a69-9115-9065dd61ced2
-# ╠═2dbdc00f-7f78-4cc7-b505-99115d8a1042
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
-# ╠═2d8b2740-f9f2-4cca-823f-4b6491c31fe4
-# ╠═2ce9bedf-1ecb-4773-af65-1feff0f42f76
-# ╠═ba162d65-2ee8-4390-9450-3975c649a05b
 # ╠═753a7958-e12a-486e-b65b-7b6a8002a400
-# ╟─60444f7f-71ee-4886-b02b-66bdc5324f99
-# ╠═914bdd71-da5c-4bf8-894d-12f64df5ca02
-# ╠═029bb274-df79-4f8a-bdd2-13f293e38279
-# ╠═a0683e1e-5210-40fd-8841-1a6a315d3efe
-# ╠═4467fa31-7171-404e-a225-e3c27afa0f7d
-# ╠═d36ca6c6-f9bc-47c4-b728-e6badaf866b3
-# ╠═d86bb8bb-8d7a-4a22-964c-f3c8d90cc9f0
-# ╠═9ee9ad05-41d2-4e26-8252-1ae322947bb1
-# ╠═c933ca4e-993c-488d-9f1a-c735d411c559
 # ╟─0c498087-0184-4da2-a079-e972dd987712
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╠═f890216a-2e4e-4f44-92ee-ded0eaa17a68
@@ -832,9 +643,6 @@ params
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
 # ╟─4873af32-c387-4d42-909d-d39a25f56e24
 # ╠═5a172f47-589f-4b2c-8180-108b293cebf7
-# ╠═00a51936-8a24-4d27-a8fd-ff1d11c0aa91
-# ╠═49bd2648-9ed8-49d0-becc-ea58a83d9d22
-# ╠═fafb4f70-7f7c-40de-a34f-69c9a8fe0920
 # ╠═28ff0827-dd3e-43ff-b210-9a45687dd1f8
 # ╠═542dd574-194a-49a2-adfc-a56db2ebea31
 # ╟─39f615b4-b62c-493e-8d11-be45910d79a8
