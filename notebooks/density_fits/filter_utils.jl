@@ -173,6 +173,13 @@ function cmd_filter(all_stars, cmd_cut)
 	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.phot_g_mean_mag), [cmd_cut_m])
 end
 
+function rell_filter(all_stars, ecc, PA)
+    r_ell, filt = lguys.calc_radii(all_stars.ra, all_stars.dec, ecc=ecc, PA=PA)
+    return filt
+end
+
+
+
 
 function is_point_in_polygon(point, polygon)
     x, y = point

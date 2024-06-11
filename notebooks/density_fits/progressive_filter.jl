@@ -60,8 +60,43 @@ md"""
 # ╔═╡ 2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
 all_stars_unfiltered = DataFrame(FITS(params.filename)[2])
 
+# ╔═╡ ca19bba2-1797-4bac-8d60-c11d46ed7bb1
+begin
+	xi = all_stars_unfiltered.xi
+	eta = all_stars_unfiltered.eta
+
+	b = sqrt(1-params.ecc)
+	a = 1/b
+	r_ell = lguys.calc_r_ell(xi, eta, a, b, params.PA - 90)
+	r_ell *= 60
+	all_stars_unfiltered[!, :r_ell] = r_ell
+end
+
+# ╔═╡ 0307085b-816f-469f-8811-60af02cfcb67
+r_max = 60*sqrt(maximum(xi .^ 2 .+ eta .^ 2))
+
+# ╔═╡ 29859854-0d17-42ba-8b1d-8788511840c9
+r_ell_max = r_max * b
+
+# ╔═╡ 6c092147-c295-4ee5-9ee3-6e04c2aaaf98
+begin 
+	filt_r_ell = all_stars_unfiltered.r_ell .< r_ell_max
+	all_stars = all_stars_unfiltered[filt_r_ell, :]
+end
+
+# ╔═╡ c403ee08-852b-4bbe-a2ee-05b52be35210
+let 
+	fig = Figure()
+	ax = PolarAxis(fig[1,1], rlimits=(0, r_max))
+
+	ϕ = atan.(all_stars.eta, all_stars.xi) .- deg2rad(params.PA)
+	scatter!(ax, ϕ, all_stars.r_ell, alpha=0.1)
+
+	fig
+end
+
 # ╔═╡ a53f9db4-df89-4717-8535-c06c989307bd
-all_stars = all_stars_unfiltered[all_stars_unfiltered.F_BEST .== 1, :]
+filt_best = all_stars.F_BEST .== 1
 
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
 members = select_members(all_stars, params)
@@ -254,66 +289,42 @@ sum(all_stars_unfiltered.F_BEST .!==
 ingrid = all_stars_unfiltered[all_stars_unfiltered.F_INGRID .== 1, :]
 
 # ╔═╡ 4d2cc8cc-8d8b-4582-b80c-a69a72bac9c1
-hist(all_stars.phot_g_mean_mag, bins=100)
-
-# ╔═╡ 5766153c-34d5-4796-b6b1-fa0ef165115c
-maximum(ingrid.parallax)
-
-# ╔═╡ d1c16c53-a4dd-4acd-82c8-ec61fbb97274
-plot_sample(all_stars_unfiltered, ingrid)
-
-# ╔═╡ a340d775-deb9-47cb-a34b-bcddf4ae53af
-plot_sample(all_stars_unfiltered)
-
-# ╔═╡ 44ba1999-de3e-4683-8e64-e17a88ada314
-plot_sample(all_stars)
-
-# ╔═╡ b1cbb6c5-c2ee-448b-bd10-a4457c8c3aaf
-plot_sample(all_stars, members)
-
-# ╔═╡ 35bb3332-f457-4929-8c73-595f82c94b96
-
-
-# ╔═╡ 28881973-a203-424c-b4c4-63908fd04e38
-md"""
-progressive filter addition
-"""
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="G")
+	hist!(all_stars.phot_g_mean_mag[filt_best], bins=100)
+	fig
+end
 
 # ╔═╡ c5ca7506-5952-4973-879e-e9848bb72d03
-plot_sample(all_stars_unfiltered)
-
-# ╔═╡ 7b6c18c9-6724-428d-ac3b-6e8170d3607c
-filt_ruwe = apply_filter(all_stars_unfiltered, max_filter, :ruwe, 1.3)
-
-# ╔═╡ f6e14d18-a4b6-4df9-b2b9-de503c1013e7
-plot_sample(all_stars_unfiltered[filt_ruwe, :])
+plot_sample(all_stars)
 
 # ╔═╡ f74f597a-908b-4569-8de8-219abba31afd
-filt_parallax = apply_filter(all_stars_unfiltered, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
-
-# ╔═╡ 63bceb08-3f29-46eb-a9cf-eaeabec86845
-plot_sample(all_stars_unfiltered, all_stars_unfiltered[filt_parallax, :])
+filt_parallax = apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
 
 # ╔═╡ eab8e0d4-0a40-48b6-9689-0c102d883a96
-filt_pm = apply_filter(all_stars_unfiltered, pm_filter, params.pmra, params.pmdec, params.dpm)
+filt_pm = apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
 
-# ╔═╡ 9efe08e0-4b5d-4269-ac69-78b2481c6086
-plot_sample(all_stars_unfiltered, all_stars_unfiltered[filt_pm, :])
+# ╔═╡ c15d2045-f6c2-42d1-947e-fb4b31daeb99
+filt_ruwe = apply_filter(all_stars, max_filter, :ruwe, 1.3)
 
 # ╔═╡ b0e0a366-8bac-4cf6-8b40-33d517b41e47
-filt_cmd = apply_filter(all_stars_unfiltered, cmd_filter, params.cmd_cut)
-
-# ╔═╡ 84e0b255-ee28-43f5-af22-a6579c80fe81
-plot_sample(all_stars_unfiltered, all_stars_unfiltered[filt_cmd, :])
+filt_cmd = apply_filter(all_stars, cmd_filter, params.cmd_cut)
 
 # ╔═╡ 29dba8f1-b4a6-41da-8323-437447c9d888
 filt = filt_cmd .& filt_pm .& filt_parallax .& filt_ruwe
 
+# ╔═╡ 1a7953dc-2cd9-4d0b-9e06-5a476f48ac3b
+filt_good = all_stars.F_BEST .== 1
+
+# ╔═╡ e7847510-e9dc-4ca4-aa37-662d975b74dc
+sum(filt .& filt_good)
+
 # ╔═╡ 620aa7d7-0b02-475d-80a9-1e721d6144bf
-mymemb = all_stars_unfiltered[filt, :]
+mymemb = all_stars[filt, :]
 
 # ╔═╡ 686bd76e-893c-461e-bb50-a9d12492d123
-plot_sample(all_stars_unfiltered[filt, :], members, )
+plot_sample(all_stars[filt, :], members, )
 
 # ╔═╡ 39f615b4-b62c-493e-8d11-be45910d79a8
 md"""
@@ -360,57 +371,65 @@ md"""
 # Background density
 """
 
-# ╔═╡ d7984df8-84b1-41ff-b19b-dd17b1772d4a
-r_max = maximum(sqrt.(all_stars.xi .^ 2 + all_stars.eta .^ 2))
-
 # ╔═╡ 31096853-9eaa-40e2-90aa-b248df77f73f
 lguys.calc_properties
 
 # ╔═╡ 65a10161-cbeb-49fe-b8d1-075ffe346e43
 function get_density(df)
-	r, fl = lguys.calc_radii(df.ra, df.dec, ecc=params.ecc, PA=params.PA)
-	r = r[fl] * 60
-	props = lguys.calc_properties(r, "arcmin", bins=40)
+	r = df.r_ell
+	props = lguys.calc_properties(r, bins=40, normalization=false)
 
 	println("stars left ", length(r))
-	println("counts in first bin ", props.counts[1:3])
-
 	println("counts in last bin ", props.counts[end-2: end])
+	println("densities ", (props.log_Sigma .± props.log_Sigma_err)[end-5:end])
+	
 	return props.log_r, props.log_Sigma, props.log_Sigma_err
 end
 
-# ╔═╡ 3c0c0122-5e28-4596-a5d6-8398e29ad180
-function plot_density!(sample; kwargs...)
-	x, y, yerr = get_density(sample)
-
-	errscatter!(x, y, yerr=yerr; kwargs...)
-end
-
 # ╔═╡ 08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
-get_density(all_stars_unfiltered[filt, :])
+get_density(all_stars[filt, :])
 
-# ╔═╡ 209a2f95-594f-470e-bd61-45040dadb554
-Makie.histogram_plot_types
+# ╔═╡ 58c9941d-c70a-4eba-9eba-6f6909bf43dc
+log10(60b*2)
 
 # ╔═╡ b55d72b9-e957-4480-b6db-97c9798b4d68
-function plot_density_sample!(grid, all_stars, sample=nothing)
+function plot_density!(grid, all_stars, sample=nothing)
 	ax = Axis(grid,
 		xlabel="log radius / arcmin",
 		ylabel=L"\log\;\Sigma \, / \, \textrm{stars arcmin^{-2}}",
-		limits=(nothing, (-2, 3))
+		limits=((-1., 2.3), (-4, 2.2))
 	)
-	plot_density!(all_stars, color=:black)
+	x, y, yerr = get_density(all_stars)
+	errscatter!(x, y, yerr=yerr; color=:black)
+
+	
 	if sample !== nothing
-		plot_density!(sample, color=red)
+		x, y, yerr = get_density(sample)
+		errscatter!(x, y, yerr=yerr; color=red)
+
+	else
+		sample = all_stars
 	end
 
+	N = length(sample.r_ell)
+	y_end = (y .± yerr)[end-3:end]
+	y_end = minimum(y_end)
+	hlines!(value.(y_end))
+
+
+
+	text!(ax, 0.1, 0.1, space=:relative, 
+		text="$N stars ")
+
+	text!(ax, -1, value.(y_end), text=		
+		L"\log\Sigma_\textrm{bg} = %$y_end", fontsize=14)
 	return ax
 end
 
 # ╔═╡ d0c00f3e-f3d3-4cd1-8541-9ae239420174
-function plot_density_sample(all_stars, sample=nothing)
+function plot_density(all_stars, sample=nothing)
 	fig = Figure()
-	plot_density_sample!(fig[1,1], all_stars, sample)
+	plot_density!(fig[1,1], all_stars, sample)
 
 	return fig
 end
@@ -421,49 +440,69 @@ function plot_sample_w_dens(all_stars, sample=nothing)
 	plot_tangent!(fig[1,1], all_stars, sample)
 	plot_pms!(fig[1,2], all_stars, sample)
 	plot_cmd!(fig[2,1], all_stars, sample)
-	plot_density_sample!(fig[2,2], all_stars, sample)
+	plot_density!(fig[2,2], all_stars, sample)
 
 	fig
 end
 
-# ╔═╡ 498399c5-43f7-44db-bddd-03ec0f0fdd6b
+# ╔═╡ 289b5daa-a0a3-41c8-9d9c-3a3280139f2a
 plot_sample_w_dens(all_stars_unfiltered)
 
+# ╔═╡ 498399c5-43f7-44db-bddd-03ec0f0fdd6b
+plot_sample_w_dens(all_stars)
+
 # ╔═╡ fab13f99-662c-4385-b266-029ce2eea233
-plot_sample_w_dens(all_stars_unfiltered, 
-	all_stars_unfiltered[filt_ruwe, :]
+plot_sample_w_dens(all_stars, 
+	all_stars[filt_ruwe, :]
 )
 
 # ╔═╡ aac80d15-72c9-4091-befa-1b7fa7127c63
-plot_sample_w_dens(all_stars_unfiltered, 
-	all_stars_unfiltered[filt_parallax, :]
+plot_sample_w_dens(all_stars, 
+	all_stars[filt_parallax, :]
 )
 
 # ╔═╡ 4bfc9046-a5b2-4a72-82a7-3547066d7064
-plot_sample_w_dens(all_stars_unfiltered, 
-	all_stars_unfiltered[filt_cmd, :]
+plot_sample_w_dens(all_stars, 
+	all_stars[filt_cmd, :]
 )
 
 # ╔═╡ d74e062b-d7b0-422e-9f1b-102afee26d7b
-plot_sample_w_dens(all_stars_unfiltered, 
-	all_stars_unfiltered[filt_pm, :]
+plot_sample_w_dens(all_stars, 
+	all_stars[filt_pm, :]
 )
 
 # ╔═╡ 16bd1702-b471-44da-96df-aca63c46a604
-plot_sample_w_dens(all_stars_unfiltered, 
-	all_stars_unfiltered[filt, :]
+plot_sample_w_dens(all_stars, 
+	all_stars[filt, :]
 )
 
+# ╔═╡ a2cf1532-f8c9-40cf-9e65-cc446ca6db34
+plot_sample_w_dens(all_stars, 
+	all_stars[filt .& filt_good, :]
+)
+
+# ╔═╡ e2dc5d97-0c8f-49dd-bb1a-320b45132cca
+sum(all_stars.r_ell .< 4) / π /4^2
+
 # ╔═╡ 62f00571-a1d0-4f77-9f09-a4b87c5aa63f
-plot_sample_w_dens(all_stars_unfiltered, 
-	all_stars_unfiltered[all_stars_unfiltered.PSAT .> 0.2, :]
+plot_sample_w_dens(all_stars, 
+	all_stars[all_stars.PSAT .> 0.2, :]
 )
 
 # ╔═╡ fb95bc32-9cd2-485e-96f1-e8bebfbc8b59
-plot_density_sample(all_stars_unfiltered, all_stars_unfiltered[filt_cmd, :])
+let
+	fig = Figure()
+	
+	ax = plot_density!(fig[1,1], all_stars, all_stars[filt_cmd, :])
+
+	hlines!(-0.761)
+	text!(0, -0.761, text="hi")
+	text!(ax, 0.2, 0.2, space=:relative, text="100\nhi")
+	fig
+end
 
 # ╔═╡ b76fbfe9-8a0d-4816-ae81-6fb8597aaf80
-all_stars_unfiltered[filt_cmd, :]
+all_stars[filt_cmd, :]
 
 # ╔═╡ 12220e1c-9a98-447f-b3a4-b579b2989b68
 let
@@ -500,7 +539,7 @@ let
 
 	plot_density!(filt, label="all filters")
 
-	plot_density!(all_stars_unfiltered.PSAT .> 0.2, label="PSAT > 0.2")
+	plot_density!(all_stars.PSAT .> 0.2, label="PSAT > 0.2")
 
 	axislegend()
 
@@ -541,6 +580,11 @@ end
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
 # ╠═2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
+# ╠═ca19bba2-1797-4bac-8d60-c11d46ed7bb1
+# ╠═0307085b-816f-469f-8811-60af02cfcb67
+# ╠═29859854-0d17-42ba-8b1d-8788511840c9
+# ╠═6c092147-c295-4ee5-9ee3-6e04c2aaaf98
+# ╠═c403ee08-852b-4bbe-a2ee-05b52be35210
 # ╠═a53f9db4-df89-4717-8535-c06c989307bd
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
 # ╟─0c498087-0184-4da2-a079-e972dd987712
@@ -564,23 +608,14 @@ end
 # ╠═bbc4400c-66cc-42fb-95c3-f21c489ec316
 # ╠═18fd8d15-f64d-47fa-88e5-a449ca62f156
 # ╠═4d2cc8cc-8d8b-4582-b80c-a69a72bac9c1
-# ╠═5766153c-34d5-4796-b6b1-fa0ef165115c
-# ╠═d1c16c53-a4dd-4acd-82c8-ec61fbb97274
-# ╠═a340d775-deb9-47cb-a34b-bcddf4ae53af
-# ╠═44ba1999-de3e-4683-8e64-e17a88ada314
-# ╠═b1cbb6c5-c2ee-448b-bd10-a4457c8c3aaf
-# ╠═35bb3332-f457-4929-8c73-595f82c94b96
-# ╠═28881973-a203-424c-b4c4-63908fd04e38
 # ╠═c5ca7506-5952-4973-879e-e9848bb72d03
-# ╠═7b6c18c9-6724-428d-ac3b-6e8170d3607c
-# ╠═f6e14d18-a4b6-4df9-b2b9-de503c1013e7
 # ╠═f74f597a-908b-4569-8de8-219abba31afd
-# ╠═63bceb08-3f29-46eb-a9cf-eaeabec86845
 # ╠═eab8e0d4-0a40-48b6-9689-0c102d883a96
-# ╠═9efe08e0-4b5d-4269-ac69-78b2481c6086
+# ╠═c15d2045-f6c2-42d1-947e-fb4b31daeb99
 # ╠═b0e0a366-8bac-4cf6-8b40-33d517b41e47
-# ╠═84e0b255-ee28-43f5-af22-a6579c80fe81
 # ╠═29dba8f1-b4a6-41da-8323-437447c9d888
+# ╠═1a7953dc-2cd9-4d0b-9e06-5a476f48ac3b
+# ╠═e7847510-e9dc-4ca4-aa37-662d975b74dc
 # ╠═620aa7d7-0b02-475d-80a9-1e721d6144bf
 # ╠═686bd76e-893c-461e-bb50-a9d12492d123
 # ╟─39f615b4-b62c-493e-8d11-be45910d79a8
@@ -593,21 +628,22 @@ end
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
-# ╠═d7984df8-84b1-41ff-b19b-dd17b1772d4a
 # ╠═31096853-9eaa-40e2-90aa-b248df77f73f
 # ╠═65a10161-cbeb-49fe-b8d1-075ffe346e43
-# ╠═3c0c0122-5e28-4596-a5d6-8398e29ad180
 # ╠═08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
-# ╠═209a2f95-594f-470e-bd61-45040dadb554
 # ╠═d0c00f3e-f3d3-4cd1-8541-9ae239420174
+# ╠═58c9941d-c70a-4eba-9eba-6f6909bf43dc
 # ╠═b55d72b9-e957-4480-b6db-97c9798b4d68
 # ╠═1c06e13b-8f5d-414b-8f2a-3d6f051ad495
+# ╠═289b5daa-a0a3-41c8-9d9c-3a3280139f2a
 # ╠═498399c5-43f7-44db-bddd-03ec0f0fdd6b
 # ╠═fab13f99-662c-4385-b266-029ce2eea233
 # ╠═aac80d15-72c9-4091-befa-1b7fa7127c63
 # ╠═4bfc9046-a5b2-4a72-82a7-3547066d7064
 # ╠═d74e062b-d7b0-422e-9f1b-102afee26d7b
 # ╠═16bd1702-b471-44da-96df-aca63c46a604
+# ╠═a2cf1532-f8c9-40cf-9e65-cc446ca6db34
+# ╠═e2dc5d97-0c8f-49dd-bb1a-320b45132cca
 # ╠═62f00571-a1d0-4f77-9f09-a4b87c5aa63f
 # ╠═fb95bc32-9cd2-485e-96f1-e8bebfbc8b59
 # ╠═b76fbfe9-8a0d-4816-ae81-6fb8597aaf80
