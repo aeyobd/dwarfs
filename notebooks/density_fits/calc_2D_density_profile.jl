@@ -30,8 +30,8 @@ given a sample of points, can we centre and calculate the 2D density profile
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
-	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_stars_today.fits" # = "$(name)_sample.fits" 
-	samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
+	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_rs0.5_stars_i_today.fits" # = "$(name)_sample.fits" 
+	#samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 end
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
@@ -39,7 +39,7 @@ outname = splitext(samplename)[1]  * "_profile.toml"
 
 # ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 begin 
-	ecc = 0.37
+	ecc = 0.0
 	PA = 94
 	centre_method="mean"
 	mass_column = nothing
@@ -51,10 +51,17 @@ begin
 	f = FITS(samplename, "r")
 	sample = DataFrame(f[2])
 	close(f)
+	sample
+end
+
+# ╔═╡ d40e60a5-15fe-4d8e-a3e6-9561f26818b7
+begin 
+	weights = ones(length(sample.ra))
+	weights = sample.probability .^ 5
 end
 
 # ╔═╡ cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
-ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, ones(length(sample.ra)), centre_method)
+ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, weights , centre_method)
 
 # ╔═╡ 86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 xi, eta = lguys.to_tangent(sample.ra, sample.dec, ra0, dec0)
@@ -93,7 +100,7 @@ let
 		ylabel = "dec / degrees"
 	)
 	
-	scatter!(sample.ra, sample.dec, alpha=0.1)
+	hist2d!(sample.ra, sample.dec)
 	scatter!(ra0, dec0)
 	
 
@@ -156,7 +163,7 @@ end
 # ╔═╡ c4a1621e-1943-49f1-8d2f-27fa335a0a4f
 let
 	fig = Figure(size=(700, 300))
-	ax = Axis(fig[1, 1], limits=((-0.8, 2), (-10, 10)),
+	ax = Axis(fig[1, 1], limits=((-0.8, 3), (-10, 10)),
 		xlabel=log_r_label,
 		ylabel=L"\Gamma"
 	)
@@ -168,6 +175,7 @@ let
 	ax_lin = Axis(fig[1, 2],
 		xlabel="r / arcmin",
 		yticklabelsvisible=false,
+		limits=((0, 300), nothing)
 	)
 
 	
@@ -194,12 +202,8 @@ let
 end
 
 # ╔═╡ b87cf54b-2c4c-46c5-9336-c13e773e29ec
-begin 
-
-	open(outname, "w") do f
-		print(f, profile)
-	end
-
+open(outname, "w") do f
+	print(f, profile)
 	println("wrote data to ", outname)
 end
 
@@ -246,6 +250,7 @@ end
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 # ╠═72d975fe-9d97-474b-ba3f-f61ba12c7c80
+# ╠═d40e60a5-15fe-4d8e-a3e6-9561f26818b7
 # ╠═cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
 # ╠═86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 # ╠═ef19dcd1-fae0-4777-a0d8-d242435f892f

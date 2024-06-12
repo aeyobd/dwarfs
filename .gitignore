@@ -24,6 +24,7 @@ core.*
 *.out
 out*/
 *-usedvalues
+*_profile.toml
 
 .pytest_cache
 

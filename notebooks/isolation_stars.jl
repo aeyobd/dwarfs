@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -25,19 +25,19 @@ end
 modeldir = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_small"
+starsname = "exp2d_rs0.1"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "stars/$(starsname)_stars.hdf5"
 
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
-paramname = "stars/$(starsname).yml"
+paramname = "stars/$(starsname).toml"
 
 # ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
-import YAML
+import TOML
 
 # ╔═╡ 4445c2a1-3f00-42fa-8259-5d2b33e61d75
-params = YAML.load_file(joinpath(modeldir, paramname)); 
+params = TOML.parsefile(joinpath(modeldir, paramname)); 
 
 
 # ╔═╡ 051b314e-6cbc-405e-8873-b0288a93378d
@@ -52,9 +52,6 @@ profile = profile_class(;NamedTuple(params["profile_kwargs"])...)
 # ╔═╡ 0671aa68-3d02-4b6c-a238-adffede13bd8
 ρ_s(r) = lguys.calc_ρ(profile, r)
 
-# ╔═╡ fc7e58ec-ac03-40a4-99ae-2a16166402d3
-
-
 # ╔═╡ e32e2d66-2dad-4f09-84f1-a3081e3891a7
 begin 
 	out = lguys.Output("$modeldir/out/combined.hdf5")
@@ -68,7 +65,7 @@ end
 times = out.times * lguys.T0
 
 # ╔═╡ 2cc047db-ae05-42c5-898f-702ae3b83bd6
-idx_i = 30; idx_f = length(out)
+idx_i = 10 + 1; idx_f = length(out)
 
 # ╔═╡ 052d229a-0362-42eb-b03c-fdab0f0bc6b4
 begin
@@ -115,18 +112,28 @@ end
 
 # ╔═╡ de8ebcd0-d6e1-4b16-aaec-5bcd47cad1bd
 function plot_ρ_s!(snap; kwargs...)
-	pos = lguys.extract_vector(snap, :positions, pidx)
-	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=probabilities)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+	rs = lguys.calc_r(snap)
+	ps = probabilities[snap.index]
+	r, ρ = lguys.calc_ρ_hist(rs, 100, weights=ps)
+	x = log10.(lguys.midpoint(r))
+	lines!(x, log10.(ρ); kwargs...)
 end
+
+# ╔═╡ 98d2168c-f450-41e2-9b9d-2880a662f841
+sort(lguys.calc_r(snap_i))
+
+# ╔═╡ 8b69303d-c992-447a-aaf6-af5839173b1a
+snap_i.x_cen
+
+# ╔═╡ 7ad553e8-50ac-41c3-b461-3c9ba2cdef17
+snap_i.positions
 
 # ╔═╡ e76583dc-eea9-43c8-8051-a58a5c68a942
 let 
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
-		limits=((-1.9, 0.5), (-7, 2)))
+		limits=((-1.9, 1), (-15, 2)))
 
 	#vlines!(log10(r_s_s), label="r_s")
 
@@ -148,7 +155,7 @@ function find_radii_fracs(out, x_cen, probabilities)
 	Ms = Vector[]
 	rs_s = Vector[]
 
-	percens = [0.003, 0.01, .03, .1, .3, .9]
+	percens = [0.003, 0.01, .03, .1, .5, .9]
 	
 	for i in 1:length(out)
 		r = lguys.calc_r(out[i].positions .- x_cen[:, i])
@@ -225,7 +232,6 @@ end
 # ╠═c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
 # ╠═7dfc4066-eee5-4118-9d12-48861aa66e03
 # ╠═0671aa68-3d02-4b6c-a238-adffede13bd8
-# ╠═fc7e58ec-ac03-40a4-99ae-2a16166402d3
 # ╠═e32e2d66-2dad-4f09-84f1-a3081e3891a7
 # ╠═3150cdfd-7573-4db9-86b7-ef614150a7b9
 # ╠═2cc047db-ae05-42c5-898f-702ae3b83bd6
@@ -233,6 +239,9 @@ end
 # ╠═a888cc8f-e27c-4989-a535-6a2862c60c91
 # ╠═addf19a4-088b-4aff-89a9-df73e8049f2c
 # ╠═de8ebcd0-d6e1-4b16-aaec-5bcd47cad1bd
+# ╠═98d2168c-f450-41e2-9b9d-2880a662f841
+# ╠═8b69303d-c992-447a-aaf6-af5839173b1a
+# ╠═7ad553e8-50ac-41c3-b461-3c9ba2cdef17
 # ╠═e76583dc-eea9-43c8-8051-a58a5c68a942
 # ╠═341440a0-9567-4ebf-8acb-cf327edfa4fb
 # ╠═ab0b1a03-325c-489a-ac2f-309560541085

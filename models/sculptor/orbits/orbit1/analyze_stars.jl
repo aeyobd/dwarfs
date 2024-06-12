@@ -28,7 +28,7 @@ pwd()
 orbit_props = TOML.parsefile("orbital_properties.toml")
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "../../isolation/1e6/stars/king_stars.hdf5"
+starsfile = "../../isolation/1e6/stars/exp2d_rs0.5_stars.hdf5"
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
 begin 
@@ -48,11 +48,20 @@ Given a stellar probability file, calculates initial-final density profiles,
 and projects stars onto the sky
 """
 
+# ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
+paramsfile = "../../isolation/1e6/stars/exp2d_rs0.5.toml"
+
+# ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
+params = TOML.parsefile(paramsfile)
+
 # ╔═╡ 5e12d306-a430-4b15-b3a7-d4806a5856cd
 name = splitext(basename(starsfile))[1]
 
 # ╔═╡ ef3481f8-2505-4c04-a04a-29bdf34e9abb
 outfile = splitext(basename(starsfile))[1] * "_today.fits"
+
+# ╔═╡ a80d9e83-6b11-4c55-94ec-294d4247af42
+outfile_i = splitext(basename(starsfile))[1] * "_i_today.fits"
 
 # ╔═╡ 172588cc-ae22-440e-8488-f508aaf7ce96
 rel_p_cut = 1e-5
@@ -157,59 +166,154 @@ function plot_ρ_s!(snap; kwargs...)
 	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
 end
 
+# ╔═╡ 91daae57-94dc-4a8e-b981-75f1406e0768
+begin
+	profile_class = getproperty(lguys, Symbol(params["profile"]))
+	profile = profile_class(;lguys.dict_to_tuple(params["profile_kwargs"])...)
+	ρ_s(r) = lguys.calc_ρ(profile, r)
+end
+
 # ╔═╡ f5a3ea2f-4f19-4b0e-af55-74902f2c6485
 md"""
 # Sky projection
 """
 
-# ╔═╡ 1f722acb-f7b9-4d6c-900e-11eae85e0708
-begin 
-	p_min = rel_p_cut * maximum(probabilities)
-	snap_f_stars = snap_f[probabilities[snap_f.index] .> p_min]
-	println("number of final stars: ", length(snap_f_stars))
-	obs_pred = lguys.to_sky(snap_f_stars)
-	m_star_f = probabilities[snap_f_stars.index]
-end
+# ╔═╡ 01b5ad85-9f37-4d8b-a29d-e47526f112ec
+function make_sample(snap; cen, rel_p_cut=rel_p_cut, r_max=Inf)
 
-# ╔═╡ 2e03e2e9-86aa-419b-a1c8-b05da3abce61
-let
-	c = cens[idx_f, :]
+	ps = probabilities[snap.index]
 	
-	global obs_c_galcen = lguys.Galactocentric(x=c.x, y=c.y, z=c.z, 
-		v_x=c.vx, v_y=c.vy, v_z=c.vz)
-	global obs_c = lguys.transform(lguys.Observation, obs_c_galcen)
-end
+	p_min = rel_p_cut * maximum(ps)
+	println("adopting p_min = $p_min")
 
-# ╔═╡ fe56d883-1e4b-400c-b5f2-03ac058bb0ad
-begin
-	obs_df = DataFrame(
-		Dict(
-			String(key) => [getproperty(o, key) for o in obs_pred]
-			for key in [:ra, :dec, :pm_ra, :pm_dec, :distance, :radial_velocity]
-		)
+	filt = ps .> p_min
+	snap_stars = snap[filt]
+	ps = ps[filt]
+	println("sanity check: ", ps == probabilities[snap_stars.index])
+	
+	println("number of final stars: ", length(snap_stars))
+	obs_pred = lguys.to_sky(snap_stars)
+	
+	obs_df = DataFrame(; 
+	collect(key => [getproperty(o, key) for o in obs_pred]
+			for key in [:ra, :dec, :pm_ra, :pm_dec, :distance, :radial_velocity])...
+		
 	)
 
-	obs_df[!, "probability"] = m_star_f
+	obs_df[!, "index"] = snap_stars.index
 
+	obs_c_galcen = lguys.Galactocentric(x=cen.x, y=cen.y, z=cen.z, 
+		v_x=cen.v_x, v_y=cen.v_y, v_z=cen.v_z)
+	obs_c = lguys.transform(lguys.Observation, obs_c_galcen)
+
+	cen_df = DataFrame(ra=obs_c.ra, dec=obs_c.dec, pm_ra=obs_c.pm_ra, pm_dec=obs_c.pm_dec, radial_velocity=obs_c.radial_velocity, distance=obs_c.distance, index=-1)
+
+	obs_df = append!(cen_df, obs_df)
 	
+
+	obs_df[!, "probability"] = [0; ps]
+
+	obs_df[!, "xi"], obs_df[!, "eta"] = lguys.to_tangent(obs_df.ra, obs_df.dec, obs_c.ra, obs_c.dec)
+	obs_df[!, "r_ell"] = @. 60 * sqrt(obs_df.xi^2 + obs_df.eta^2)
+
+	rename!(obs_df, "pm_ra"=>"pmra")
+	rename!(obs_df, "pm_dec"=>"pmdec")
+
+
+	return obs_df[obs_df.r_ell .< r_max, :]
 end
 
-# ╔═╡ ead40db8-ab7c-4167-b2ca-b00b5cb3cde4
-df = Dict(String(name) => obs_df[:, name] for name in names(obs_df))
+# ╔═╡ 1f722acb-f7b9-4d6c-900e-11eae85e0708
+obs_df = make_sample(snap_f, cen = cens[idx_f, :])
+
+# ╔═╡ f87e4610-34ac-49f9-9858-0b3ef72eef15
+cen = (cens[idx_f, :])
+
+# ╔═╡ 51dea031-015b-4506-879d-9245c122d608
+begin
+	cens[!, "v_x"] .= cens.vx
+	cens[!, "v_y"] .= cens.vy
+	cens[!, "v_z"] .= cens.vz
+
+end
+
+# ╔═╡ c351295d-1fb9-4088-8a27-5c732924959e
+cen.vx
+
+# ╔═╡ 24636618-7310-4557-baac-01d3d5d076dd
+cen
+
+# ╔═╡ 46f1792a-53a4-4540-b8f3-93747f071ed0
+obs_c_galcen = lguys.Galactocentric(x=cen.x, y=cen.y, z=cen.z, 
+	v_x=cen.vx*lguys.V0, v_y=cen.vy*lguys.V0, v_z=cen.vz*lguys.V0)
+
+# ╔═╡ 0215fe76-f9c5-4274-ae43-89960a0caaef
+obs_c = obs_df[1, :]
 
 # ╔═╡ 7e588ae3-89f3-4b91-8963-f6bf4391a859
-FITS(outfile, "w") do f
-	write(f, df)
+function save_obs(obs_df, filename)
+	FITS(outfile, "w") do f
+		df = Dict(String(name) => obs_df[:, name] for name in names(obs_df))
+		write(f, df)
+	
+		println("written to $outfile")
+
+		df
+	end
 end
+
+# ╔═╡ 5e17bf16-2e3d-4372-8283-c43b8ad2550d
+save_obs(obs_df, outfile)
 
 # ╔═╡ 2612e3a2-6e6e-494e-b140-720dd2db6ec2
 obs = TOML.parsefile("../../mc_orbits/orbit1.toml")
+
+# ╔═╡ 21647076-5186-4d14-b8a0-c385be1cd698
+obs_o = lguys.Observation(
+		ra=obs["ra"], dec=obs["dec"],
+		distance=obs["distance"], pm_ra=obs["pm_ra"], pm_dec=obs["pm_dec"],
+		radial_velocity=obs["radial_velocity"]
+	)
+
+# ╔═╡ 8e32cd34-e97e-4cb7-95ba-67f4ed0c9aed
+obs_gc = lguys.transform(lguys.Galactocentric,
+	lguys.Observation(
+		ra=obs["ra"], dec=obs["dec"],
+		distance=obs["distance"], pm_ra=obs["pm_ra"], pm_dec=obs["pm_dec"],
+		radial_velocity=obs["radial_velocity"]
+	)
+)
+	
+
+# ╔═╡ 1ef7e0c1-56f3-4be7-a138-c088ff973ec6
+obs_gc.x
+
+# ╔═╡ 1b528c3f-877b-40f5-bc05-7b1c96c8d5c9
+let
+	global obs_df_i
+
+	snap_i_shifted = copy(snap_i)
+	x_c = [obs_gc.x, obs_gc.y, obs_gc.z]
+	v_c = [obs_gc.v_x, obs_gc.v_y, obs_gc.v_z] / lguys.V0
+
+	snap_i_shifted.positions .+= x_c .- snap_i.x_cen
+
+	snap_i_shifted.velocities .+= v_c .- snap_i.v_cen
+
+	obs_df_i = make_sample(snap_i_shifted, cen=obs_gc)
+end
+
+# ╔═╡ ff759ae0-35c3-460e-97df-f865e26a0f48
+save_obs(obs_df_i, outfile_i)
+
+# ╔═╡ 32852a2a-1742-4c37-9430-d1425e4f2521
+m_star_f = obs_df.probability
 
 # ╔═╡ 8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
 let 
 	fig = Figure()
 
-	dy = 2
+	dy = 5
 	dx = dy * 1/cosd(obs["dec"])
 	ax = Axis(fig[1,1],
 		xlabel="RA / degrees",
@@ -219,22 +323,41 @@ let
 		
 	)
 
-	x = [o.ra for o in obs_pred]
-	y = [o.dec for o in obs_pred]
+	x = obs_df.ra
+	y = obs_df.dec
 
 	
 	h = Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100, colorscale=log10, colorrange=(1e-10, nothing))
-	errscatter!([obs["ra"]], [obs["dec"]], color=COLORS[3], ms=50)
+	errscatter!([obs["ra"]], [obs["dec"]], color=COLORS[3], size=10)
 
 	Colorbar(fig[1, 2], h)
 	fig
 end
 
-# ╔═╡ ce1cc3f7-a421-4676-8531-496cb099c98e
-Heatmap
+# ╔═╡ 4537d2a8-dc90-4106-81c5-4a230734b182
+let 
+	fig = Figure()
 
-# ╔═╡ 76d3b8ee-94f3-4d8e-adeb-b7f7346a3c5b
-obs
+	dy = 5
+	dx = dy * 1/cosd(obs["dec"])
+	ax = Axis(fig[1,1],
+		xlabel="RA / degrees",
+		ylabel="dec / degrees",
+		limits=(obs["ra"] .+ (-dx, dx), obs["dec"] .+ (-dy, dy)),
+		aspect = 1,
+		
+	)
+
+	x = obs_df_i.ra
+	y = obs_df_i.dec
+
+	
+	h = Arya.hist2d!(ax, x, y, weights=obs_df_i.probability, bins=100, colorscale=log10, colorrange=(1e-10, nothing))
+	errscatter!([obs["ra"]], [obs["dec"]], color=COLORS[3], size=10)
+
+	Colorbar(fig[1, 2], h)
+	fig
+end
 
 # ╔═╡ 9d74ffbb-4c31-4062-9434-7755f53e4da0
 let
@@ -249,8 +372,8 @@ let
 	limits=limits,
 	aspect=DataAspect())
 
-	x = [o.pm_ra for o in obs_pred]
-	y = [o.pm_dec for o in obs_pred]
+	x = obs_df.pmra
+	y = obs_df.pmdec
 	
 	Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100, 
 		colorscale=log10, colorrange=(1e-4, nothing))
@@ -275,8 +398,8 @@ let
 
 
 	
-	x = [o.distance for o in obs_pred]
-	y = [o.radial_velocity for o in obs_pred]
+	x = obs_df.distance
+	y = obs_df.radial_velocity
 	
 	h = Arya.hist2d!(ax, x, y, weights=m_star_f, bins=100,
 		colorscale=log10, colorrange=(1e-5, nothing)
@@ -289,18 +412,40 @@ let
 	fig
 end
 
-# ╔═╡ 7d2bfa85-e364-4e60-8187-1ed63328427c
-heatmap
-
-# ╔═╡ a0a2e31d-7700-42ca-94f0-e6ae08da21ce
-obs
-
-# ╔═╡ 59202a69-fb7e-4b10-854d-5f37dbf1b1fa
+# ╔═╡ 25ccc096-1d27-43ce-8fe1-5a3a9d7cd54e
 let
 	fig = Figure()
-	ax = Axis(fig, limits=((1, 2), nothing))
-	ax.limits.val
+	dx = 4
+	dy = 20
+	limits = (obs["distance"] .+ (-dx, dx), obs["radial_velocity"] .+ (-dy, dy))
+	
+	ax = Axis(fig[1,1],
+		xlabel="distance / kpc",
+		ylabel = "radial velocity / km/s",
+		limits=limits
+	)
+
+
+	
+	x = obs_df_i.distance
+	y = obs_df_i.radial_velocity
+	
+	h = Arya.hist2d!(ax, x, y, weights=obs_df_i.probability, bins=100,
+		colorscale=log10, colorrange=(1e-10, nothing)
+	)
+
+	errscatter!([obs["distance"]], [obs["radial_velocity"]], xerr=[obs["distance_err"]], yerr=[obs["radial_velocity_err"]], color=:red)
+
+	Colorbar(fig[1, 2], h)
+	
+	fig
 end
+
+# ╔═╡ 55211531-6eb7-4689-9ecd-74854b8ad884
+hist(obs_df_i.radial_velocity)
+
+# ╔═╡ 487c6fda-5cb3-4ef4-a988-da2400c96cd4
+obs_df_i.radial_velocity
 
 # ╔═╡ e23e85f9-7667-4f6e-8af6-2516fa292e2b
 md"""
@@ -315,13 +460,10 @@ begin
 	ra0 = obs_c.ra
 	dec0 = obs_c.dec
 
-	xi, eta = lguys.to_tangent(df["ra"], df["dec"], ra0, dec0)
 	
-	r_ell = lguys.calc_r_ell(xi, eta, 1, 1, 0) * 60
+	r_ell = obs_df.r_ell
+	rv = obs_df.radial_velocity
 end
-
-# ╔═╡ f5e72ea1-0d69-4db6-921f-4d987f66d683
-df
 
 # ╔═╡ d32757d2-dc08-488c-9ddd-d3eefefa2db7
 function calc_σv(r_ell, rv, mass;  r_max = 30)
@@ -332,22 +474,26 @@ function calc_σv(r_ell, rv, mass;  r_max = 30)
 end
 
 # ╔═╡ 194ff30a-31a7-44bc-ac54-722a629457fc
-σv = calc_σv(r_ell, df["radial_velocity"], df["probability"], r_max=240)
+σv = calc_σv(r_ell, rv, m_star_f, r_max=240)
 
 # ╔═╡ fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 gaussian(x, μ, σ) = 1/sqrt(2π)* 1/σ * exp(-(x-μ)^2/(2σ^2))
 
 # ╔═╡ ed097e29-d2dc-4fa7-94e5-483b380600cc
 let
+	r_max = 240
+	
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="RV (km/s)",
-		ylabel="density"
+		ylabel="density",
+		title="within $r_max arcmin"
 	)
 	
-	filt = r_ell .< 240
-	rv = df["radial_velocity"][filt]
-	mass = df["probability"][filt]
+	filt = r_ell .< r_max
+	
+	rv = rv[filt]
+	mass = m_star_f[filt]
 
 	μ = Arya.mean(rv, Arya.sb.weights(mass))
 	
@@ -390,6 +536,13 @@ let
 
 	plot_ρ_s!(snap_i, label="initial")
 	plot_ρ_s!(snap_f, label="final")
+
+	x = LinRange(-2, 1, 1000)
+	r = 10 .^ x
+	y = log10.(ρ_s.(r))
+	
+	lines!(x, y)
+	
 	vlines!(log10.(r_b_kpc))
 	
 	axislegend(ax)
@@ -403,25 +556,6 @@ r_b_arcmin = 206265 / 60 * obs_c.distance / 1e3
 md"""
 # properties
 """
-
-# ╔═╡ f293b8ce-286f-430b-a8c9-9bf4ba44528d
-let
-	props_f = Dict(
-		"ra" => obs_c.ra,
-		"dec" => obs_c.dec,
-		"pm_ra" => obs_c.pm_ra,
-		"pm_dec" => obs_c.pm_dec,
-		"sigma_los" => σv,
-		"r_b" => r_b_arcmin,
-	)
-
-	filename = splitext(basename(starsfile))[1] * ".yml"
-	open(filename, "w") do f
-		TOML.print(f, props_f)
-	end
-
-	props_f
-end
 
 # ╔═╡ 6408828d-d570-4585-8fa8-24661857fb35
 function get_M_h(output::lguys.Output, radius; idxs=(1:10:length(output)))
@@ -453,6 +587,8 @@ r_h = 0.1
 probabilities
 
 # ╔═╡ cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	fig = Figure()
 
@@ -471,6 +607,7 @@ let
 	
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ f3db0a1d-78bc-4ac4-84b6-d53f27a28795
 out[10].x_cen
@@ -577,6 +714,8 @@ end
 calc_σ_v(snap_i) / sqrt(3)
 
 # ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	fig = Figure()
 
@@ -595,6 +734,7 @@ let
 	
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
 function v_rad_hist(snap, bins=40)
@@ -602,8 +742,12 @@ function v_rad_hist(snap, bins=40)
 	mass = probabilities[snap.index]
 	v_rad = calc_v_rad(snap)
 	logr = log10.(lguys.calc_r(snap))
-	x_bins, v_bins = lguys.calc_histogram(logr, bins, weights=v_rad .* mass)
-	_, counts = lguys.calc_histogram(logr, bins, weights=mass)
+	h1 = Arya.histogram(logr, bins, weights=v_rad .* mass)
+	h2 = Arya.histogram(logr, bins, weights=mass)
+
+	x_bins = h1.bins
+	v_bins = h1.values
+	counts = h2.values
 
 	return x_bins, v_bins ./ counts
 end
@@ -661,8 +805,11 @@ end
 # ╠═8ed2e715-1095-4c99-9ecb-54fecbc27d7f
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
+# ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
+# ╠═84dc77f7-14b3-4a2e-a556-c025d7df0095
 # ╠═5e12d306-a430-4b15-b3a7-d4806a5856cd
 # ╠═ef3481f8-2505-4c04-a04a-29bdf34e9abb
+# ╠═a80d9e83-6b11-4c55-94ec-294d4247af42
 # ╠═172588cc-ae22-440e-8488-f508aaf7ce96
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
@@ -676,38 +823,47 @@ end
 # ╠═8df71dd5-ba0b-4918-9dc0-791c6c3bad5f
 # ╟─c6ce37f4-09f6-43c2-9ee3-286d9e6baf7f
 # ╠═a1138e64-5fa5-4a0e-aeef-487ee78a7adc
+# ╠═91daae57-94dc-4a8e-b981-75f1406e0768
 # ╠═1866c280-89c3-4a71-9dbf-50b583360145
 # ╟─f5a3ea2f-4f19-4b0e-af55-74902f2c6485
+# ╠═01b5ad85-9f37-4d8b-a29d-e47526f112ec
 # ╠═1f722acb-f7b9-4d6c-900e-11eae85e0708
-# ╠═2e03e2e9-86aa-419b-a1c8-b05da3abce61
-# ╠═fe56d883-1e4b-400c-b5f2-03ac058bb0ad
+# ╠═f87e4610-34ac-49f9-9858-0b3ef72eef15
+# ╠═51dea031-015b-4506-879d-9245c122d608
+# ╠═c351295d-1fb9-4088-8a27-5c732924959e
+# ╠═21647076-5186-4d14-b8a0-c385be1cd698
+# ╠═8e32cd34-e97e-4cb7-95ba-67f4ed0c9aed
+# ╠═1ef7e0c1-56f3-4be7-a138-c088ff973ec6
+# ╠═24636618-7310-4557-baac-01d3d5d076dd
+# ╠═46f1792a-53a4-4540-b8f3-93747f071ed0
+# ╠═1b528c3f-877b-40f5-bc05-7b1c96c8d5c9
+# ╠═0215fe76-f9c5-4274-ae43-89960a0caaef
 # ╠═7e588ae3-89f3-4b91-8963-f6bf4391a859
+# ╠═5e17bf16-2e3d-4372-8283-c43b8ad2550d
+# ╠═ff759ae0-35c3-460e-97df-f865e26a0f48
 # ╠═cf6a7cbb-1034-4026-a3f3-1e854d2929e2
-# ╠═ead40db8-ab7c-4167-b2ca-b00b5cb3cde4
 # ╠═2612e3a2-6e6e-494e-b140-720dd2db6ec2
+# ╠═32852a2a-1742-4c37-9430-d1425e4f2521
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
-# ╠═ce1cc3f7-a421-4676-8531-496cb099c98e
-# ╠═76d3b8ee-94f3-4d8e-adeb-b7f7346a3c5b
+# ╠═4537d2a8-dc90-4106-81c5-4a230734b182
 # ╠═9d74ffbb-4c31-4062-9434-7755f53e4da0
 # ╠═6fe6deb4-ae44-4ca0-9617-95841fdaf791
-# ╠═7d2bfa85-e364-4e60-8187-1ed63328427c
-# ╠═a0a2e31d-7700-42ca-94f0-e6ae08da21ce
-# ╠═59202a69-fb7e-4b10-854d-5f37dbf1b1fa
+# ╠═25ccc096-1d27-43ce-8fe1-5a3a9d7cd54e
+# ╠═55211531-6eb7-4689-9ecd-74854b8ad884
+# ╠═487c6fda-5cb3-4ef4-a988-da2400c96cd4
 # ╟─e23e85f9-7667-4f6e-8af6-2516fa292e2b
 # ╠═0dd09c1e-67c0-4f23-bd12-41cbef62e4de
 # ╠═f348c1b6-5196-4546-ba22-72677611a420
-# ╠═f5e72ea1-0d69-4db6-921f-4d987f66d683
 # ╠═d32757d2-dc08-488c-9ddd-d3eefefa2db7
 # ╠═194ff30a-31a7-44bc-ac54-722a629457fc
 # ╠═fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
-# ╠═ed097e29-d2dc-4fa7-94e5-483b380600cc
+# ╟─ed097e29-d2dc-4fa7-94e5-483b380600cc
 # ╟─76438e61-d227-41cf-b9ea-e658bc389772
 # ╟─04629bcf-5c19-41eb-8903-72947c209cbf
 # ╟─b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
 # ╠═750185c9-a317-4978-aa04-486e5bfb7a63
 # ╠═02183d68-bf7a-4774-9b48-f50712eeb552
 # ╠═9b75409d-55f5-47c3-ab63-8168d31d3d54
-# ╠═f293b8ce-286f-430b-a8c9-9bf4ba44528d
 # ╠═6408828d-d570-4585-8fa8-24661857fb35
 # ╠═df2fc50f-3a03-424e-ae88-02ae207a04ee
 # ╠═b36b594c-23b4-4683-8a12-3fa1b4c8b0d9
