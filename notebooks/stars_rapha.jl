@@ -44,7 +44,7 @@ import TOML
 dir = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "king.toml"
+paramname = "exp2d_rs0.05.toml"
 
 # ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
 begin 
@@ -72,7 +72,7 @@ NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
 profile = profile_class(;NamedTuple(params["profile_kwargs"])...)
 
 # ╔═╡ aa69bde5-ab93-4105-9d48-ad0ace88e3f0
-r_h = params["profile_kwargs"]["R_s"]
+r_h = lguys.get_r_h(profile)
 
 # ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
 begin 
@@ -95,7 +95,7 @@ begin
 end
 
 # ╔═╡ d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
-cen = CSV.read(params["centres_file"], DataFrame)[params["snapshot"], :]
+cen = CSV.read(params["centres_file"], DataFrame)[params["snapshot"] + 1, :]
 
 # ╔═╡ cf50c4b4-a634-4310-8aa5-91ab653313a9
 cen
@@ -116,6 +116,7 @@ begin
 
 	snap_i = snap_i[sortperm(radii)]
 	radii = sort(radii)
+	print(radii[1:10])
 	vels = lguys.calc_r(snap_i.velocities)
 
 	# calculate energies
@@ -126,7 +127,7 @@ begin
 	# filter snapshot
 	idx = ϵs .> 0
 	if "R_t" in keys(params["profile_kwargs"])
-		idx .&= radii .< profile.R_t
+		#idx .&= radii .< profile.R_t / 1.3
 	end
 	idx_excluded = snap_i.index[map(!, idx)]
 	
@@ -138,6 +139,12 @@ begin
 	ϵs = ϵs[idx]
 	Φs = Φs[idx]
 end
+
+# ╔═╡ eb5ffa80-6959-4a2c-980f-f818f6a03c14
+radii
+
+# ╔═╡ 8af6b094-ea45-4f01-abb4-9b4686e81719
+snap.positions
 
 # ╔═╡ f79414b4-620e-440e-a421-7bc13d373546
 Mins = cumsum(snap_i.masses) ./ sum(snap_i.masses)
@@ -162,8 +169,13 @@ begin
 	log_radii = log10.(radii)
 	r_min = radii[1]
 	r_max = 1.8 #radii[end]
-	r_e = 10 .^ LinRange(log10.(r_min), log10.(r_max), Nr+1)
-	r_e = percentile(radii, LinRange(0, 100, Nr+1))
+	if params["bin_method"] == "equal_width"
+		r_e = 10 .^ LinRange(log10.(r_min), log10.(r_max), Nr+1)
+	elseif params["bin_method"] == "equal_number"
+		r_e = percentile(radii, LinRange(0, 100, Nr+1))
+	else
+		error("bin method unknown")
+	end
 	r = lguys.midpoint(r_e)
 end
 
@@ -197,17 +209,17 @@ begin
 
 end
 
-# ╔═╡ 64699f70-b872-4a14-b498-508537ce11d7
-ρ_s(2.9)
-
 # ╔═╡ 830faf5d-da17-4939-ad7c-080503b66990
 begin
 	M = lguys.lerp(radii, Mins).(r)
 	Ms = M_s.(r)
 end
 
+# ╔═╡ de614f3d-b3e4-41a0-886b-594b0c93cc5b
+r
+
 # ╔═╡ 20f858d6-a9f5-4880-a431-60b395cc7e50
-ν_s = ρ_s.(r) ./ M_s_tot
+ν_s = max.(ρ_s.(r) ./ M_s_tot, 0)
 
 # ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
 begin 
@@ -224,11 +236,12 @@ The density distribution of the stars (analytic) and dark matter (calculated) fr
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], #limits=(-1.2, 3, -15, 2),
+	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
 		xlabel="log r", ylabel="log density")
 	lines!(log10.(r), log10.(ν_dm), label="DM")
 	lines!(log10.(r), log10.(ν_s), label="stars (analytic)")
 
+	axislegend()
 	fig
 end
 
@@ -292,12 +305,15 @@ The calculated distribution function as a function of log specific binding energ
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="log f", limits=(nothing, (-15, 7)) )
-	lines!(log10.(E), nm.log10.(f_dm_e), label="DM")
 	lines!(log10.(E), nm.log10.(f_s_e), label="stars")
+	lines!(log10.(E), nm.log10.(f_dm_e), label="DM")
 
 	axislegend(ax, position=:lt)
 	fig
 end
+
+# ╔═╡ 49c6372d-4ac4-46e2-aace-4cae0564f9b5
+f_dm_e
 
 # ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
 begin 
@@ -401,44 +417,11 @@ md"""
 The main result. The reconstructed density profile
 """
 
-# ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
-let
-	fig = Figure(size=(700, 500))
-	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
-		limits=(0, 1, -15, 3)
-		)
-	lines!(log10.(r), nm.log10.(ν_s), label="stars")
-	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
-
-	ax2 = Axis(fig[2,1], 
-		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
-		limits=((log10(0.1r_h), log10(100r_h)), (-1, 1)))
-	
-	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
-	hlines!([0], color="black", label="")
-
-	linkxaxes!(ax, ax2, )
-	rowsize!(fig.layout, 2, Auto(0.3))
-	hidexdecorations!(ax, grid=false)
-	fig
-end
-
-# ╔═╡ 73752ab9-9a1d-4d30-bf95-376f894cafc3
-100r_h
-
-# ╔═╡ b2452dfe-f3af-4a4f-a5da-8301cbf3fbf1
-R = sqrt.(lguys.get_x(snap_i) .^2 .+  lguys.get_y(snap_i) .^2)
+# ╔═╡ c01a4635-dd57-4793-8893-1bf5fb6996b3
+nm.log10.(ν_s)
 
 # ╔═╡ 131bd303-4f0f-4b24-bd90-5c65cf342f4c
 radii
-
-# ╔═╡ 2fe5b16c-c8fd-4d7a-899e-43ee06a98722
-r_h_recon = round(R[findfirst(x->x>0.5, cumsum(ps))], digits=3)
-
-# ╔═╡ ee3e2851-860f-450b-85ff-611262577373
-md"""
-reconstructed half light radius = $r_h_recon kpc
-"""
 
 # ╔═╡ 52bf618a-5494-4cfb-9fd0-ee82f9682116
 radii[findfirst(x->x>0.5, cumsum(ps))]
@@ -453,9 +436,12 @@ A histogram of the stellar density
 
 # ╔═╡ 90856551-fff8-4d15-be66-6353091b5e50
 begin 
-	r_hist = 5
+	r_hist = 2
 	N_hist = 100
 end
+
+# ╔═╡ 9064b0ca-4d26-4cb8-bbc8-353da44ffc26
+profile
 
 # ╔═╡ cc231e78-cfc0-4876-9f8b-980139f7d27f
 let
@@ -477,7 +463,7 @@ let
 		colorrange=(1e-7, nothing)
 	)	
 
-	Colorbar(fig[1, 2],h )
+	Colorbar(fig[1, 2], h)
 	fig
 end
 
@@ -521,10 +507,17 @@ p_idx = snap_i.index
 begin
 	idx_all = vcat(p_idx, idx_excluded)
 	ps_all = vcat(ps, zeros(length(idx_excluded)))
+
+	_sort = sortperm(idx_all)
+	idx_all = idx_all[_sort]
+	ps_all = ps_all[_sort]
 end
 
 # ╔═╡ f66a4a6d-b31c-481b-bf7a-4801c783ceb4
-sort(idx_all) == sort(snap.index) # check we didn't lose any star particles
+idx_all == sort(snap.index) # check we didn't lose any star particles
+
+# ╔═╡ c18bc8b9-7ea1-47e2-8d7e-971a0943917a
+maximum(idx_all) == length(idx_all)
 
 # ╔═╡ 92798e2e-2356-43c2-a4a9-82a70619a5f5
 sum(ps_all[idx_excluded]) # should be zero
@@ -553,6 +546,79 @@ end
 # ╔═╡ f42cb7e1-64b7-47da-be05-dd50c2471fb3
 write_stars()
 
+# ╔═╡ 793f701e-376d-4ab3-ae74-6abe29e3c3ae
+lguys.get_r_h(profile)
+
+# ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
+let
+	fig = Figure(size=(700, 500))
+	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
+		limits=((0, 1), (-15, 3))
+		)
+	lines!(log10.(r), nm.log10.(ν_s), label="stars")
+	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
+
+	ax2 = Axis(fig[2,1], 
+		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
+		limits=((log10(0.1r_h), log10(100r_h)), (-1, 1)))
+	
+	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
+	hlines!([0], color="black", label="")
+
+	linkxaxes!(ax, ax2, )
+	rowsize!(fig.layout, 2, Auto(0.3))
+	hidexdecorations!(ax, grid=false)
+	fig
+end
+
+# ╔═╡ 76200404-16aa-4caf-b247-3bc330b82868
+function calc_r_h(rs, masses)
+	_sort = sortperm(rs)
+	M_in = cumsum(masses[_sort])
+	M_in ./= M_in[end]
+	idx_h = findfirst(M_in .> 0.5)
+	return rs[idx_h]
+end
+
+# ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
+let
+	r = lguys.calc_r(snap, [cen.x, cen.y, cen.z])
+	ms = ps_all[snap.index]
+	
+	r_h2 = calc_r_h(r, ms)
+	println(r_h2)
+	
+	r_e = 10 .^ LinRange(log10.(minimum(r)), log10(maximum(r)), 50)
+	r, ν_s_nbody = lguys.calc_ρ_hist(r, r_e, weights=ms)
+ 
+	r = lguys.midpoint(r)
+	ν_s = ρ_s.(r)
+	
+	fig = Figure(size=(700, 500))
+	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
+		limits=(nothing, (-15, 3))
+		)
+	
+	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
+	lines!(log10.(r), nm.log10.(ν_s), label="stars")
+	vlines!(log10(r_h), label="R_h")
+	vlines!(log10(r_h2), label="R_h2")
+
+	ax2 = Axis(fig[2,1], 
+		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
+		limits=((log10(0.01r_h), log10(100r_h)), (-1, 1)))
+
+
+	
+	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
+	hlines!([0], color="black", label="")
+
+	linkxaxes!(ax, ax2, )
+	rowsize!(fig.layout, 2, Auto(0.3))
+	hidexdecorations!(ax, grid=false)
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
@@ -573,6 +639,8 @@ write_stars()
 # ╠═cf50c4b4-a634-4310-8aa5-91ab653313a9
 # ╠═d43a1be5-7ecd-474b-9580-1191b669ff24
 # ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
+# ╠═eb5ffa80-6959-4a2c-980f-f818f6a03c14
+# ╠═8af6b094-ea45-4f01-abb4-9b4686e81719
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
 # ╠═45acc05f-85a8-4bbc-bd43-a34583c983b3
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
@@ -583,8 +651,8 @@ write_stars()
 # ╠═bd1bca1d-0982-47d8-823e-eadc05191b88
 # ╠═1fab14ec-6bfc-4243-bc48-915d1a129925
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
-# ╠═64699f70-b872-4a14-b498-508537ce11d7
 # ╠═830faf5d-da17-4939-ad7c-080503b66990
+# ╠═de614f3d-b3e4-41a0-886b-594b0c93cc5b
 # ╠═20f858d6-a9f5-4880-a431-60b395cc7e50
 # ╟─126c6825-723f-4d13-b5a3-64cba72fc867
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
@@ -602,6 +670,7 @@ write_stars()
 # ╠═78ce5a98-fd3f-4e39-981f-2bea58b117bf
 # ╟─8b66d00d-529b-4e8c-9386-b17117996579
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
+# ╠═49c6372d-4ac4-46e2-aace-4cae0564f9b5
 # ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
 # ╠═a389fde4-f05f-48ff-9a8c-8eb0643a849d
@@ -617,16 +686,13 @@ write_stars()
 # ╠═7d69e393-c4db-4ff0-ab5a-85ac50c785c2
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
 # ╟─b67a17dc-7a59-4b62-9120-4c2ada12298c
-# ╠═a9335e17-a410-455a-9a9e-d63706a026bd
-# ╠═73752ab9-9a1d-4d30-bf95-376f894cafc3
-# ╠═ee3e2851-860f-450b-85ff-611262577373
-# ╠═b2452dfe-f3af-4a4f-a5da-8301cbf3fbf1
+# ╠═c01a4635-dd57-4793-8893-1bf5fb6996b3
 # ╠═131bd303-4f0f-4b24-bd90-5c65cf342f4c
-# ╠═2fe5b16c-c8fd-4d7a-899e-43ee06a98722
 # ╠═52bf618a-5494-4cfb-9fd0-ee82f9682116
 # ╠═ec46946a-0bf7-4374-af44-8d8b2ab6a3df
 # ╟─06e1b872-ce52-434f-a8d1-3b0a5055eed2
 # ╠═90856551-fff8-4d15-be66-6353091b5e50
+# ╠═9064b0ca-4d26-4cb8-bbc8-353da44ffc26
 # ╠═cc231e78-cfc0-4876-9f8b-980139f7d27f
 # ╟─ee866164-c6f2-4f70-bde1-360abd5fd80e
 # ╠═a52e5e94-6068-4545-962f-e02a485b62f5
@@ -634,7 +700,12 @@ write_stars()
 # ╠═a483545a-42ea-474b-a2ca-6f1bd4c7275b
 # ╠═7bc02274-aa44-4609-b9a6-e409de5172af
 # ╠═f66a4a6d-b31c-481b-bf7a-4801c783ceb4
+# ╠═c18bc8b9-7ea1-47e2-8d7e-971a0943917a
 # ╠═92798e2e-2356-43c2-a4a9-82a70619a5f5
 # ╠═4671b864-470d-4181-993b-4e64d5687460
 # ╠═bd8489da-ac53-46c6-979e-06d5dc6e25d1
 # ╠═f42cb7e1-64b7-47da-be05-dd50c2471fb3
+# ╠═793f701e-376d-4ab3-ae74-6abe29e3c3ae
+# ╠═a9335e17-a410-455a-9a9e-d63706a026bd
+# ╠═76200404-16aa-4caf-b247-3bc330b82868
+# ╠═7f7d8cb9-761c-4f30-a336-ab5657144961
