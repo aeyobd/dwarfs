@@ -17,28 +17,23 @@ end
 # ╔═╡ 49dfa506-3ab2-44ad-949e-2ce709d393c4
 begin 
 	profiles = Dict(
-		"0.03" => lguys.ObsProfile("exp2d_rs0.03_stars_today_profile.toml"),
-		"0.05" => lguys.ObsProfile("exp2d_rs0.05_stars_today_profile.toml"),
-		"0.1" => lguys.ObsProfile("exp2d_rs0.1_stars_today_profile.toml"),
-		"0.2" => lguys.ObsProfile("exp2d_rs0.2_stars_today_profile.toml"),
+		"0.05" => lguys.ObsProfile("exp2d_rs0.05_today_profile.toml"),
+		"0.1" => lguys.ObsProfile("exp2d_rs0.1_today_profile.toml"),
+		"0.2" => lguys.ObsProfile("exp2d_rs0.2_today_profile.toml"),
 	) 
 end
 
 # ╔═╡ 787131ca-5d40-43f9-b48e-e8d19195f32a
 begin 
 	profiles_i = Dict(
-		"0.03" => lguys.ObsProfile("exp2d_rs0.03_stars_i_today_profile.toml"),
-
-		"0.05" => lguys.ObsProfile("exp2d_rs0.05_stars_i_today_profile.toml"),
-		"0.1" => lguys.ObsProfile("exp2d_rs0.1_stars_i_today_profile.toml"),
-		"0.2" => lguys.ObsProfile("exp2d_rs0.2_stars_i_today_profile.toml"),
-		"0.3" => lguys.ObsProfile("exp2d_rs0.3_stars_i_today_profile.toml"),
-		"0.5" => lguys.ObsProfile("exp2d_rs0.5_stars_i_today_profile.toml"),
+		"0.05" => lguys.ObsProfile("exp2d_rs0.05_i_today_profile.toml"),
+		"0.1" => lguys.ObsProfile("exp2d_rs0.1_i_today_profile.toml"),
+		"0.2" => lguys.ObsProfile("exp2d_rs0.2_i_today_profile.toml"),
 	)
 end
 
 # ╔═╡ 91ba945f-3b51-4e67-ba96-922b3a880d3c
-ks = ["0.03", "0.05", "0.1", "0.2"]
+ks = ["0.05", "0.1", "0.2"]
 
 # ╔═╡ 6d207751-695f-4247-94da-ced5a146092f
 prof_expected = lguys.ObsProfile("/cosma/home/durham/dc-boye1/sculptor/fiducial_sample_profile.toml")
@@ -74,6 +69,9 @@ let
 	fig
 end
 
+# ╔═╡ 88f31bfc-a67d-4654-af8b-46dc91500558
+r_b = 296
+
 # ╔═╡ c843b157-c95c-442d-8166-503bf0484fee
 let 
 	fig = Figure()
@@ -97,17 +95,42 @@ let
 	)
 	
 	
-	vlines!(log10(295))
+	vlines!(log10(r_b))
 	axislegend(ax)
 
 	fig
 end
 
-# ╔═╡ ddf6a3f5-a6ca-4274-89fa-76ff940c1abd
-arcmin_to_rad = 60/206265
+# ╔═╡ 09207e06-3ab5-41b2-a9af-e77d89b34f59
+let
+	profile = profiles["0.1"]
+	fig = Figure(size=(700, 300))
+	ax = Axis(fig[1, 1], limits=((-0.8, 2), (-12, 10)),
+		xlabel=log_r_label,
+		ylabel=L"\Gamma"
+	)
+
+	
+	errscatter!(profile.log_r, profile.Gamma, yerr=profile.Gamma_err)
+	
+	vlines!(log10(r_b))
+
+	ax_lin = Axis(fig[1, 2],
+		xlabel="r / arcmin",
+		yticklabelsvisible=false,
+	)
+
+	
+	errscatter!(value.(10 .^ profile.log_r), profile.Gamma, yerr=profile.Gamma_err)
+	vlines!((r_b))
+
+	linkyaxes!(ax, ax_lin)
+
+	fig
+end
 
 # ╔═╡ d3e934c2-cc73-4873-8157-8303161ceecf
-distance=0.3*86
+distance=86
 
 # ╔═╡ e0db88b5-b601-48d3-8c59-a8158736acfb
 let
@@ -127,16 +150,17 @@ let
 
 	R_s_kpc = 0.1
 
-	R_s = R_s_kpc / ( distance*arcmin_to_rad )
-	prof_a = lguys.Exp2D(R_s=R_s)
-	println(R_s)
+	R_s_arcmin = lguys.kpc_to_arcmin(R_s_kpc, distance)
+	println(R_s_arcmin)
 
-	x_model = LinRange(-0.5, 3, 1000)
-	r = 10 .^ x_model
-	Σ(r) = lguys.calc_Σ(prof_a, r)
-	y_model = log10.(Σ.(r))
+	profile2 = lguys.Exp2D(R_s = R_s_arcmin)
 
-	lines!(x_model, y_model)
+	log_Σ(r) = log10(lguys.calc_Σ(profile2, r))
+
+	log_R = LinRange(-2, 2, 1000)
+	y = log_Σ.(10 .^ log_R)
+	
+	lines!(log_R, y)
 
 
 	fig
@@ -162,7 +186,8 @@ md"""
 # ╠═de69d265-cda1-4543-ad02-2ee3091964d6
 # ╠═932c4fef-992b-4518-80d0-59c8e126ccb5
 # ╠═c843b157-c95c-442d-8166-503bf0484fee
-# ╠═ddf6a3f5-a6ca-4274-89fa-76ff940c1abd
+# ╠═88f31bfc-a67d-4654-af8b-46dc91500558
+# ╠═09207e06-3ab5-41b2-a9af-e77d89b34f59
 # ╠═d3e934c2-cc73-4873-8157-8303161ceecf
 # ╠═e0db88b5-b601-48d3-8c59-a8158736acfb
 # ╠═eebcdc5e-a755-45fe-a740-d2c77d647fa7

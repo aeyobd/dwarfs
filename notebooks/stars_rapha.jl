@@ -44,7 +44,7 @@ import TOML
 dir = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.05.toml"
+paramname = "king.toml"
 
 # ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
 begin 
@@ -72,7 +72,7 @@ NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
 profile = profile_class(;NamedTuple(params["profile_kwargs"])...)
 
 # ╔═╡ aa69bde5-ab93-4105-9d48-ad0ace88e3f0
-r_h = lguys.get_r_h(profile)
+r_h = profile.R_s #lguys.get_r_h(profile)
 
 # ╔═╡ 855fd729-22b6-4845-9d2b-e796d4a15811
 begin 
@@ -139,6 +139,9 @@ begin
 	ϵs = ϵs[idx]
 	Φs = Φs[idx]
 end
+
+# ╔═╡ f7f746c9-cd03-4391-988b-dffeb31b2842
+sum(radii .< r_h)
 
 # ╔═╡ eb5ffa80-6959-4a2c-980f-f818f6a03c14
 radii
@@ -619,6 +622,101 @@ let
 	fig
 end
 
+# ╔═╡ a2f72082-7145-42be-9f40-e00d18deb267
+
+
+# ╔═╡ bf8305f4-a5b8-4c79-8a01-e2aa18e4a5c5
+md"""
+## Testing 2D binning
+"""
+
+# ╔═╡ 6dd92ee1-374d-47fa-ad61-b54764b23240
+let
+	x = snap.positions[1, :] .- cen.x
+	y = snap.positions[2, :] .- cen.y
+	R = @. sqrt(x^2 + y^2)
+
+	prof = lguys.calc_properties(R, weights=ps_all[snap.index], bins=50)
+
+	
+	fig = Figure()
+	ax = Axis(fig[1,1], ylabel=L"\log \Sigma", 
+		xlabel="R / kpc",
+		limits=(nothing, (-15, 3))
+		)
+
+
+	profile2 = lguys.Exp2D(R_s = profile.R_s)
+
+	log_Σ(r) = log10(lguys.calc_Σ(profile2, r))
+
+	log_R = LinRange(-2, 2, 1000)
+	y = log_Σ.(10 .^ log_R)
+	
+	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err)
+	lines!(log_R, y)
+
+	fig
+end
+
+# ╔═╡ 99f274b4-91f3-41d0-b7d3-234badeb43d1
+md"""
+## and on the sky
+"""
+
+# ╔═╡ 4396bced-cae8-4107-ac83-48cc3c4146f2
+distance = 86
+
+# ╔═╡ 062cea41-3b51-474e-b877-7a4d96813fbc
+R_s_arcmin = lguys.kpc_to_arcmin(profile.R_s, distance)
+
+# ╔═╡ 3b585ba2-b9a1-45c4-b9d1-4fbdbd8ccfe6
+x_sun = [8.122, 0, 0]
+
+# ╔═╡ 87b5b241-db72-45ee-b3a7-a394f99510d9
+shift_vec = x_sun .+ lguys.rand_unit() * distance
+
+# ╔═╡ ff51f97d-2404-49c6-9339-4b201d6a94a9
+let
+	ms = ps_all[snap.index]
+	p_min = 1e-7
+	filt = p_min * maximum(ms) .< ms
+
+	ms = ms[filt]
+	snap_shift = copy(snap[filt])
+	snap_shift.positions .+= shift_vec
+
+	obs = lguys.to_sky(snap_shift)
+	ra = [o.ra for o in obs]
+	dec = [o.dec for o in obs]
+
+	ra0, dec0 = lguys.calc_centre2D(ra, dec, ms, "mean")
+	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
+	R = @. 60sqrt(xi^2 + eta^2)
+	
+	prof = lguys.calc_properties(R, weights=ms, bins=50)
+
+
+	fig = Figure()
+	ax = Axis(fig[1,1], ylabel=L"\log \Sigma", 
+		xlabel="R / arcmin",
+		limits=((-1, 2.5), (-15, 3))
+		)
+
+	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err)
+
+	
+	profile2 = lguys.Exp2D(R_s = R_s_arcmin)
+
+	log_Σ(r) = log10(lguys.calc_Σ(profile2, r))
+
+	log_R = LinRange(-2, 2, 1000)
+	y = log_Σ.(10 .^ log_R)
+	
+	lines!(log_R, y)
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
@@ -632,6 +730,7 @@ end
 # ╠═d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
 # ╠═46be1f99-6f64-476e-84cb-11d4b6504a86
 # ╠═aa69bde5-ab93-4105-9d48-ad0ace88e3f0
+# ╠═f7f746c9-cd03-4391-988b-dffeb31b2842
 # ╠═855fd729-22b6-4845-9d2b-e796d4a15811
 # ╠═4cb09115-143d-456f-9c6a-19656f638677
 # ╠═d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
@@ -709,3 +808,12 @@ end
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
 # ╠═76200404-16aa-4caf-b247-3bc330b82868
 # ╠═7f7d8cb9-761c-4f30-a336-ab5657144961
+# ╠═a2f72082-7145-42be-9f40-e00d18deb267
+# ╟─bf8305f4-a5b8-4c79-8a01-e2aa18e4a5c5
+# ╠═6dd92ee1-374d-47fa-ad61-b54764b23240
+# ╟─99f274b4-91f3-41d0-b7d3-234badeb43d1
+# ╠═4396bced-cae8-4107-ac83-48cc3c4146f2
+# ╠═062cea41-3b51-474e-b877-7a4d96813fbc
+# ╠═3b585ba2-b9a1-45c4-b9d1-4fbdbd8ccfe6
+# ╠═87b5b241-db72-45ee-b3a7-a394f99510d9
+# ╠═ff51f97d-2404-49c6-9339-4b201d6a94a9

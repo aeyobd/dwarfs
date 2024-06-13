@@ -30,9 +30,9 @@ given a sample of points, can we centre and calculate the 2D density profile
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
-	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_stars_today.fits" # = "$(name)_sample.fits" 
-	samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
-	samplename = "../test_sky_recon.fits"
+	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_rs0.3_today.fits" # = "$(name)_sample.fits" 
+	#samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
+	#samplename = "../test_sky_recon.fits"
 end
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
@@ -40,10 +40,10 @@ outname = splitext(samplename)[1]  * "_profile.toml"
 
 # ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 begin 
-	ecc = 0.37
+	ecc = 0.0
 	PA = 94
 	centre_method="mean"
-	mass_column = nothing
+	mass_column = :probability
 	normalize = true
 end
 
@@ -54,8 +54,15 @@ begin
 	close(f)
 end
 
+# ╔═╡ 8d276372-add5-4388-b713-b22e38d56f37
+if mass_column === nothing
+	weights = ones(size(sample, 1))
+else
+	weights = sample[:, mass_column]
+end
+
 # ╔═╡ cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
-ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, ones(length(sample.ra)), centre_method)
+ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, weights .^ 3, centre_method)
 
 # ╔═╡ 86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 xi, eta = lguys.to_tangent(sample.ra, sample.dec, ra0, dec0)
@@ -79,7 +86,7 @@ let
 end
 
 # ╔═╡ f476c859-ba4b-4343-8184-f6f41dc092ee
-profile = lguys.calc_properties(r_ell, bins=50, normalization=normalize)
+profile = lguys.calc_properties(r_ell, bins=50, weights=weights, normalization=normalize)
 
 # ╔═╡ 0b80353f-c698-4fae-b40f-1796f7c89792
 sum(profile.counts), size(sample)
@@ -94,7 +101,7 @@ let
 		ylabel = "dec / degrees"
 	)
 	
-	scatter!(sample.ra, sample.dec, alpha=0.1)
+	hist2d!(sample.ra, sample.dec, bins=100, weights=weights, alpha=0.1)
 	scatter!(ra0, dec0)
 	
 
@@ -134,14 +141,17 @@ let
 	ax = Axis(fig[1, 1],
 		xlabel=log_r_label,
 		ylabel = "counts / bin",
-		yscale = log10,
-		limits = (nothing, (0.9, nothing)),
+		#yscale = log10,
+		limits = (nothing, (0., nothing)),
 	)
 	
 	errscatter!(profile.log_r, profile.counts, yerr=sqrt.(profile.counts))
 
 	fig
 end
+
+# ╔═╡ d6a899a6-15e8-4fea-b1b7-849f65faac55
+profile.log_r
 
 # ╔═╡ 60a223f2-ac5c-4a6a-af79-4b314d7d5509
 let
@@ -250,6 +260,7 @@ end
 # ╠═cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
 # ╠═86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 # ╠═ef19dcd1-fae0-4777-a0d8-d242435f892f
+# ╠═8d276372-add5-4388-b713-b22e38d56f37
 # ╠═69018984-ef00-44ef-ba6e-7cccf930aef9
 # ╠═f476c859-ba4b-4343-8184-f6f41dc092ee
 # ╠═0b80353f-c698-4fae-b40f-1796f7c89792
@@ -258,6 +269,7 @@ end
 # ╠═91df1ddf-a197-4d43-b39c-e25409eef082
 # ╠═548d7186-59eb-4f08-81b6-a68127f0df6a
 # ╠═3589182c-ee3e-4a0d-ae1a-efc9ac98649a
+# ╠═d6a899a6-15e8-4fea-b1b7-849f65faac55
 # ╠═60a223f2-ac5c-4a6a-af79-4b314d7d5509
 # ╠═c4a1621e-1943-49f1-8d2f-27fa335a0a4f
 # ╠═59b2acc5-66b4-48c6-9507-045ea77e6914
