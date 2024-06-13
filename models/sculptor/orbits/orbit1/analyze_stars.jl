@@ -27,8 +27,11 @@ pwd()
 # ╔═╡ 436a5be3-f597-4fc4-80a8-dc5af302ad66
 orbit_props = TOML.parsefile("orbital_properties.toml")
 
+# ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
+starsname = "exp2d_rs0.3"
+
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "../../isolation/1e6/stars/exp2d_rs0.5_stars.hdf5"
+starsfile = "../../isolation/1e6/stars/$(starsname)_stars.hdf5"
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
 begin 
@@ -49,7 +52,7 @@ and projects stars onto the sky
 """
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
-paramsfile = "../../isolation/1e6/stars/exp2d_rs0.5.toml"
+paramsfile = "../../isolation/1e6/stars/$starsname.toml"
 
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
 params = TOML.parsefile(paramsfile)
@@ -58,10 +61,10 @@ params = TOML.parsefile(paramsfile)
 name = splitext(basename(starsfile))[1]
 
 # ╔═╡ ef3481f8-2505-4c04-a04a-29bdf34e9abb
-outfile = splitext(basename(starsfile))[1] * "_today.fits"
+outfile = "$(starsname)_today.fits"
 
 # ╔═╡ a80d9e83-6b11-4c55-94ec-294d4247af42
-outfile_i = splitext(basename(starsfile))[1] * "_i_today.fits"
+outfile_i = "$(starsname)_i_today.fits"
 
 # ╔═╡ 172588cc-ae22-440e-8488-f508aaf7ce96
 rel_p_cut = 1e-5
@@ -159,10 +162,10 @@ md"""
 """
 
 # ╔═╡ a1138e64-5fa5-4a0e-aeef-487ee78a7adc
-function plot_ρ_s!(snap; kwargs...)
+function plot_ρ_s!(snap; bins=40, kwargs...)
 	pos = lguys.extract_vector(snap, :positions, p_idx)
 	rs = lguys.calc_r(pos, snap.x_cen)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=probabilities)
+	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=probabilities)
 	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
 end
 
@@ -226,9 +229,6 @@ end
 # ╔═╡ 1f722acb-f7b9-4d6c-900e-11eae85e0708
 obs_df = make_sample(snap_f, cen = cens[idx_f, :])
 
-# ╔═╡ f87e4610-34ac-49f9-9858-0b3ef72eef15
-cen = (cens[idx_f, :])
-
 # ╔═╡ 51dea031-015b-4506-879d-9245c122d608
 begin
 	cens[!, "v_x"] .= cens.vx
@@ -236,6 +236,9 @@ begin
 	cens[!, "v_z"] .= cens.vz
 
 end
+
+# ╔═╡ f87e4610-34ac-49f9-9858-0b3ef72eef15
+cen = (cens[idx_f, :])
 
 # ╔═╡ c351295d-1fb9-4088-8a27-5c732924959e
 cen.vx
@@ -251,7 +254,7 @@ obs_c_galcen = lguys.Galactocentric(x=cen.x, y=cen.y, z=cen.z,
 obs_c = obs_df[1, :]
 
 # ╔═╡ 7e588ae3-89f3-4b91-8963-f6bf4391a859
-function save_obs(obs_df, filename)
+function save_obs(obs_df, outfile)
 	FITS(outfile, "w") do f
 		df = Dict(String(name) => obs_df[:, name] for name in names(obs_df))
 		write(f, df)
@@ -534,8 +537,8 @@ let
 	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
 		limits=((-1.9, 1), (-8, 2)))
 
-	plot_ρ_s!(snap_i, label="initial")
-	plot_ρ_s!(snap_f, label="final")
+	plot_ρ_s!(snap_i, bins=500, label="initial")
+	plot_ρ_s!(snap_f, bins=500, label="final")
 
 	x = LinRange(-2, 1, 1000)
 	r = 10 .^ x
@@ -611,6 +614,29 @@ end
 
 # ╔═╡ f3db0a1d-78bc-4ac4-84b6-d53f27a28795
 out[10].x_cen
+
+# ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
+# ╠═╡ disabled = true
+#=╠═╡
+let
+	fig = Figure()
+
+	n_rh = 10
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel=L"\langle v_{x,\,\star} \rangle_{r \leq 1\,\textrm{kpc}} \ / \ \textrm{km\,s^{-1}}",
+		# yscale=log10,
+		#yticks=[1, 0.1],
+	)
+
+	idx = 1:10:length(out)
+	vs = [calc_σ_v(out[i]) for i in idx]
+
+	scatter!(out.times[idx] * lguys.T0, vs)
+	
+	fig
+end
+  ╠═╡ =#
 
 # ╔═╡ a0391689-66a2-473f-9704-e12a3d033d13
 import LinearAlgebra: dot
@@ -713,29 +739,6 @@ end
 # ╔═╡ d664ab12-a2c1-4531-a4ff-250ffa3ce9eb
 calc_σ_v(snap_i) / sqrt(3)
 
-# ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
-# ╠═╡ disabled = true
-#=╠═╡
-let
-	fig = Figure()
-
-	n_rh = 10
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel=L"\langle v_{x,\,\star} \rangle_{r \leq 1\,\textrm{kpc}} \ / \ \textrm{km\,s^{-1}}",
-		# yscale=log10,
-		#yticks=[1, 0.1],
-	)
-
-	idx = 1:10:length(out)
-	vs = [calc_σ_v(out[i]) for i in idx]
-
-	scatter!(out.times[idx] * lguys.T0, vs)
-	
-	fig
-end
-  ╠═╡ =#
-
 # ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
 function v_rad_hist(snap, bins=40)
 
@@ -804,6 +807,7 @@ end
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
 # ╠═8ed2e715-1095-4c99-9ecb-54fecbc27d7f
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
+# ╠═29988108-b02c-418c-a720-5766f47c39ff
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
 # ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 # ╠═84dc77f7-14b3-4a2e-a556-c025d7df0095
@@ -828,8 +832,8 @@ end
 # ╟─f5a3ea2f-4f19-4b0e-af55-74902f2c6485
 # ╠═01b5ad85-9f37-4d8b-a29d-e47526f112ec
 # ╠═1f722acb-f7b9-4d6c-900e-11eae85e0708
-# ╠═f87e4610-34ac-49f9-9858-0b3ef72eef15
 # ╠═51dea031-015b-4506-879d-9245c122d608
+# ╠═f87e4610-34ac-49f9-9858-0b3ef72eef15
 # ╠═c351295d-1fb9-4088-8a27-5c732924959e
 # ╠═21647076-5186-4d14-b8a0-c385be1cd698
 # ╠═8e32cd34-e97e-4cb7-95ba-67f4ed0c9aed
