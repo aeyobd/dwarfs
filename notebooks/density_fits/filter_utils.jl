@@ -81,6 +81,7 @@ function plot_all_tangent!(grid::GridPosition, all_stars; scale=1, units="degree
         xlabel=L"\xi / \textrm{%$units}", ylabel=L"\eta / \textrm{%$units}",
         aspect=1,
         limits=(-r_max, r_max, -r_max, r_max)
+        xgridvisible=false, ygridvisible=false
     )
 
     plot_all_tangent!(ax, all_stars; scale=scale, kwargs...)

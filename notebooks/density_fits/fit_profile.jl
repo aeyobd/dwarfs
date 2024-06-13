@@ -41,13 +41,13 @@ We expect data as a
 """
 
 # ╔═╡ d0992dc9-08f1-487a-a96a-90996f29cefd
-name = "sculptor/fiducial"
+name = "../test_sky_recon" #"sculptor/fiducial"
 
 # ╔═╡ aa23a8ab-3cff-400b-bbc9-592183f2e695
-profile_name = name *  "_sample_profile.toml"
+profile_name = name *  "_profile.toml" #_sample
 
 # ╔═╡ 4f1a0765-4462-41a3-84e1-ec01caaae4e1
-r_max = 15
+r_max = 1500
 
 # ╔═╡ abeada6d-b74e-4769-90d6-3efe92dbbf1b
 distance = 89 ± 3
@@ -272,6 +272,8 @@ end
 let 
 	popt, pred, res = fit_profile(profile, p0=[10_000, 7], profile=lguys.Exp2D)
 
+	println(popt)
+	
 	label = "exp2d"
 	global popts[label] = popt
 	global preds[label] = pred
@@ -317,15 +319,21 @@ popts
 	arcmin_to_rad = 60 / 206265
 
 
+# ╔═╡ 5cd1ac71-c8f8-48bf-8f2f-46f0d3f526b6
+popts
+
 # ╔═╡ 0b694b57-5e1b-4df4-8807-6ae2b151231e
 for (label, popt) in popts
 	print(label, "\t" )
 	r_s_am = popt[2]
-	r_s = r_s_am * arcmin_to_rad * distance * 1e3
-	print("$r_s_am\t\t")
-	print(r_s)
+	r_s = r_s_am * arcmin_to_rad * distance
+	print("$r_s_am arcmin   \t\t")
+	print(r_s, " kpc")
 	println()
 end
+
+# ╔═╡ b0e73a76-e555-46c7-bd24-a0a22f2d6465
+distance
 
 # ╔═╡ 3b152248-0f9f-4fd0-aecc-5912a39f0ec2
 popts["king"]
@@ -381,7 +389,9 @@ end
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
 # ╠═c769d7b1-1b48-4a4a-aa02-ebc9a0658530
 # ╠═ba12cfef-a74d-4f4a-8acc-ca28b9ca5db0
+# ╠═5cd1ac71-c8f8-48bf-8f2f-46f0d3f526b6
 # ╠═0b694b57-5e1b-4df4-8807-6ae2b151231e
+# ╠═b0e73a76-e555-46c7-bd24-a0a22f2d6465
 # ╠═3b152248-0f9f-4fd0-aecc-5912a39f0ec2
 # ╠═696b6919-da98-4e84-8cfa-3b30711bfa76
 # ╠═6d8705f8-8580-4424-be21-809ea1a0b526
