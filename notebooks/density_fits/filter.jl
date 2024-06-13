@@ -16,7 +16,6 @@ begin
 	#using KernelDensity
 	
 	import SciPy
-	using QuadGK
 	
 	import LinearAlgebra: diag
 	
@@ -30,6 +29,9 @@ end
 # ╔═╡ 542dd574-194a-49a2-adfc-a56db2ebea31
 using Tables
 
+# ╔═╡ 4cae5cc6-f270-42bf-97a1-067b7f57a7da
+include("filter_utils.jl")
+
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
 Given a set of yaml parameters,
@@ -37,19 +39,6 @@ this notebook simply filters the J23 observations according to the specification
 
 Use the calc_density... and the fit_profile notebooks to then analyze the sample
 """
-
-# ╔═╡ 29836b14-ea34-4bf6-b881-7ea2ad40e2b3
-md"""
-Quality cuts
-
-- F_ASTROMETRIC: ruwe < 1.3
-- F_FLUXEXCESS
-- F_CPAR: 
-- F_NOTANAN
-"""
-
-# ╔═╡ 3065a8fc-c235-408f-ba2f-62c2cf0568b6
-isnannotstring(x) = (typeof(x) <: Real) && isnan(x)
 
 # ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 md"""
@@ -90,7 +79,7 @@ end
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
-	param_file = "$name.yml"
+	param_file = "$name.toml"
 
 	params_json =read_file(param_file)
 	params = DensityParams(params_json)
@@ -144,23 +133,6 @@ end
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
 all_stars, members = load_and_filter(params)
 
-# ╔═╡ fc0a43c1-d28e-434f-9eda-b8f9acc475a7
-all_stars
-
-# ╔═╡ c60d086c-5aab-45cb-942f-34a72681e7b8
-[any(isnannotstring.(values(row))) for row in eachrow(all_stars)]
-
-# ╔═╡ 08cdca06-0277-4bef-ac6b-985ad3f2f6a3
-begin
-	filt_nan = all_stars.F_BEST .== 1
-end
-
-# ╔═╡ 62a28931-6bb3-4a1c-8e47-9420c3632421
-sum(isnan.(all_stars.PSAT[filt_nan]))
-
-# ╔═╡ f826e98a-1eff-47fd-83d1-07b138c44430
-all_stars.F_ASTROMETRIC
-
 # ╔═╡ 0c498087-0184-4da2-a079-e972dd987712
 md"""
 The next three plots compare how different the r_ell and xi and eta calculated here are from what is (presumably) in the given catalogue.
@@ -183,6 +155,9 @@ end
 # ╔═╡ f890216a-2e4e-4f44-92ee-ded0eaa17a68
 params.rh
 
+# ╔═╡ 0c8fd415-01e6-4295-ab40-b8beb9c82e4c
+params
+
 # ╔═╡ d1cc0201-f5da-4747-ae20-b14a03f1abd6
 members
 
@@ -193,12 +168,12 @@ md"""
 
 # ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
 let 
-	fig, ax, p = plot_all_tangent(all_stars, markersize=2,
+
+	fig = plot_all_tangent(all_stars, markersize=2,
         color=(:grey, 0.2))
-	plot_all_tangent!(ax, members, markersize=2, color=red)
 	
-	ax.xgridvisible = false
-	ax.ygridvisible = false
+	plot_all_tangent!(current_axis(), members, markersize=2, color=red)
+
 	fig
 end
 
@@ -219,9 +194,9 @@ end
 
 # ╔═╡ d0c4ad68-2bd3-44e7-9f42-45795fb7ecee
 let 
-	fig, ax, p = plot_all_tangent(all_stars, markersize=5,
+	fig = plot_all_tangent(all_stars, markersize=5,
         color=(:grey, 0.2), r_max=30, scale=60, units="arcmin")
-	plot_all_tangent!(ax, members, scale=60, markersize=5, color=red)
+	plot_all_tangent!(current_axis(), members, scale=60, markersize=5, color=red)
 	fig
 end
 
@@ -350,21 +325,6 @@ dist = params.dist ± params.dist_err
 # ╔═╡ b20058a8-a9b6-49ff-b8ff-a2d45c76f645
 R_s_over_R_h = 1.6783
 
-# ╔═╡ 39cb37d9-f1d4-419e-9e19-c033bfba8556
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1], limits=(-0.8, 1.7, -8, 5))
-	scatter!(value.(obs.log_r), value.(obs.Γ),)
-	errorbars!(value.(obs.log_r), value.(obs.Γ), err.(obs.Γ) )
-	
-	lines!(pred.log_r, pred.Γ, label="exponential", color=COLORS[2])
-	
-	ax.xlabel = log_r_label
-	ax.ylabel = L"\Gamma = d\,\log \Sigma / d\,\log r"
-	
-	fig
-end
-
 # ╔═╡ 82d90218-f32e-4b72-a99a-bc2a264d7dce
 theme(:colorcycle)
 
@@ -447,180 +407,15 @@ let
 	fig
 end
 
-# ╔═╡ 49ae0572-5d6b-4935-bc95-0a845bb3df2f
-md"""
-# Background density
-"""
-
-# ╔═╡ d7984df8-84b1-41ff-b19b-dd17b1772d4a
-r_max = maximum(sqrt.(all_stars.xi .^ 2 + all_stars.eta .^ 2))
-
-# ╔═╡ e033e344-737e-46e8-ab85-5fe33d191f41
-"""
-A simple density calculation 
-"""
-function calc_offset_density(dra, ddec, r_cut; n_sigma_dist=3, dpm=1, cmd_cut=cmd_cut_umi)
-
-	
-	params = DensityParams(params_json, 
-		ra=params_json["ra"] + dra, dec=params_json["dec"] + ddec, PSAT_min=nothing, max_ang_dist=r_cut, ecc=0,
-		dpm=dpm,
-		cmd_cut=cmd_cut, n_sigma_dist=n_sigma_dist
-	)
-
-	_, memb = load_and_filter(params)
-	r = memb.r_ell * 60
-	
-	obs = calc_properties(r)
-	return obs
-end
-
-# ╔═╡ b6eaa6be-4a23-4357-9ce8-40aa9f16d7f6
-let 
-	fig = Figure(size=(900,500))
-
-	ax = Axis(fig[1, 1],
-		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
-		xlabel=log_r_label
-	)
-
-	r_shift = 0.75 * r_max
-	r_cut = r_max - r_shift
-
-	
-	dras = r_shift*[1, 0, -1, 0, 0]
-	ddecs = r_shift*[0, 1, 0, -1, 0]
-
-	Nc = length(dras) 
-
-	Σs = Measurement[]
-	
-	for i in 1:Nc
-		dra = dras[i]
-		ddec =  ddecs[i]
-		label = "$(round(dra, digits=1)), $(round(ddec, digits=1))"
-		obs = calc_offset_density(dra, ddec, r_cut)
-		scatter_dens!(obs, label=label)
-		if abs(dra^2 + ddec^2) > 0 
-			append!(Σs, obs.Σ * obs.N)
-		end
-	end
-
-	Σ_m = sum(Σs) / length(Σs)
-	println("log Sigma background = $(log10.(Σ_m))")
-	global log_Σ_bg
-	log_Σ_bg = log10(Σ_m)
-	hlines!(value.(log_Σ_bg))
-	hspan!(value.(log_Σ_bg) .- err.(log_Σ_bg), value.(log_Σ_bg) .+ err.(log_Σ_bg), alpha=0.1)
-	
-	Legend(fig[1,2], ax, "position offset \n(degrees)", merge=true)
-
-	fig
-end
-
-# ╔═╡ f832459e-edcb-48b4-ba3c-1d75a23f51e0
-let 
-	fig = Figure(size=(900,500))
-
-	ax = Axis(fig[1, 1],
-		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
-		xlabel=log_r_label
-	)
-
-	r_shift = 0.75 * r_max
-	r_cut = r_max - r_shift
-
-	
-	dras = r_shift*[1, 0, -1, 0, 0]
-	ddecs = r_shift*[0, 1, 0, -1, 0]
-
-	Nc = length(dras) 
-
-	Σs = Measurement[]
-	
-	for i in 1:Nc
-		dra = dras[i]
-		ddec =  ddecs[i]
-		label = "$(round(dra, digits=1)), $(round(ddec, digits=1))"
-		obs = calc_offset_density(dra, ddec, r_cut, dpm=nothing, cmd_cut=nothing, n_sigma_dist=nothing)
-		scatter_dens!(obs, label=label)
-		if abs(dra^2 + ddec^2) > 0 
-			append!(Σs, obs.Σ * obs.N)
-		end
-	end
-
-	Σ_m = sum(Σs) / length(Σs)
-	println("log Sigma background = $(log10.(Σ_m))")
-	global log_Σ_bg2
-	log_Σ_bg2 = log10(Σ_m)
-	hlines!(value.(log_Σ_bg2))
-	hspan!(value.(log_Σ_bg2) .- err.(log_Σ_bg2), value.(log_Σ_bg2) .+ err.(log_Σ_bg2), alpha=0.1)
-	
-	Legend(fig[1,2], ax, "position offset \n(degrees)", merge=true)
-
-	fig
-end
-
-# ╔═╡ 48e41a6f-775d-4d9f-850d-df9bd20dcf09
-let 
-	fig = Figure(size=(900,500))
-
-
-	ax = Axis(fig[1, 1],
-		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
-		xlabel=log_r_label,
-		
-	)
-	
-	params = DensityParams(params_json)
-	_, memb = load_and_filter(params)
-	r = memb.r_ell * 60
-	obs = calc_properties(r)
-	scatter_dens!(obs, label="fiducial")
-
-	obs = calc_offset_density(0, 0, 2)
-	scatter_dens!(obs, label="simple")
-
-	
-	params = DensityParams(params_json, PSAT_min=nothing, ecc=0, )
-	_, memb = load_and_filter(params)
-	r = memb.r_ell * 60
-	obs = calc_properties(r)
-	scatter_dens!(obs, label="all")
-
-
-	hlines!(value.(log_Σ_bg), label="background")
-	hspan!(value.(log_Σ_bg) .- err.(log_Σ_bg), value.(log_Σ_bg) .+ err.(log_Σ_bg), alpha=0.1)
-
-	hlines!(value.(log_Σ_bg2),  label="all backbround")
-	hspan!(value.(log_Σ_bg2) .- err.(log_Σ_bg2), value.(log_Σ_bg2) .+ err.(log_Σ_bg2), alpha=0.1)
-
-	vlines!(log10.(60r_max * (1-params.ecc^2)))
-	Legend(fig[1, 2], ax, merge=true)
-	fig
-end
-
-# ╔═╡ 44803049-4cc5-4a23-990a-322934ccb076
-params_json
-
-# ╔═╡ 45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
-params
-
 # ╔═╡ Cell order:
 # ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
-# ╠═fc0a43c1-d28e-434f-9eda-b8f9acc475a7
-# ╠═62a28931-6bb3-4a1c-8e47-9420c3632421
-# ╠═29836b14-ea34-4bf6-b881-7ea2ad40e2b3
-# ╠═c60d086c-5aab-45cb-942f-34a72681e7b8
-# ╠═3065a8fc-c235-408f-ba2f-62c2cf0568b6
-# ╠═08cdca06-0277-4bef-ac6b-985ad3f2f6a3
-# ╠═f826e98a-1eff-47fd-83d1-07b138c44430
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
+# ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
 # ╠═fc4efd97-a140-4997-b668-904aa7ff5d30
@@ -632,6 +427,7 @@ params
 # ╟─0c498087-0184-4da2-a079-e972dd987712
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╠═f890216a-2e4e-4f44-92ee-ded0eaa17a68
+# ╠═0c8fd415-01e6-4295-ab40-b8beb9c82e4c
 # ╠═d1cc0201-f5da-4747-ae20-b14a03f1abd6
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
@@ -651,18 +447,9 @@ params
 # ╠═a254083b-61f2-45ad-b678-c4df6f16964b
 # ╠═5c117b2f-a32c-4afd-9c66-943ab4634e71
 # ╠═b20058a8-a9b6-49ff-b8ff-a2d45c76f645
-# ╠═39cb37d9-f1d4-419e-9e19-c033bfba8556
 # ╠═82d90218-f32e-4b72-a99a-bc2a264d7dce
 # ╟─a7209445-84e9-435d-9144-90f8eb5e70cb
 # ╠═45422d53-317c-4824-a41a-4a80b1fbd102
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╠═c0b3c3f6-0450-4242-9e13-41f9af17e562
-# ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
-# ╠═d7984df8-84b1-41ff-b19b-dd17b1772d4a
-# ╠═e033e344-737e-46e8-ab85-5fe33d191f41
-# ╠═48e41a6f-775d-4d9f-850d-df9bd20dcf09
-# ╠═b6eaa6be-4a23-4357-9ce8-40aa9f16d7f6
-# ╠═f832459e-edcb-48b4-ba3c-1d75a23f51e0
-# ╠═44803049-4cc5-4a23-990a-322934ccb076
-# ╠═45ce7a5d-75d4-4c7f-8233-5b2f7dde3a95
