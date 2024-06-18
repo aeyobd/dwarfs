@@ -41,16 +41,17 @@ We expect data as a
 """
 
 # ╔═╡ d0992dc9-08f1-487a-a96a-90996f29cefd
-name = "../test_sky_recon" #"sculptor/fiducial"
-
-# ╔═╡ aa23a8ab-3cff-400b-bbc9-592183f2e695
-profile_name = name *  "_profile.toml" #_sample
+begin 
+	name = "../test_sky_recon" #
+	name = "sculptor/fiducial"
+	profile_name = name *  "_sample_profile.toml" 
+end
 
 # ╔═╡ 4f1a0765-4462-41a3-84e1-ec01caaae4e1
-r_max = 1500
+r_max = 20
 
 # ╔═╡ abeada6d-b74e-4769-90d6-3efe92dbbf1b
-distance = 89 ± 3
+distance = 86 ± 3
 
 # ╔═╡ 88f02d81-927c-405a-ada4-064157c7dbf0
 begin
@@ -283,6 +284,9 @@ let
 
 end
 
+# ╔═╡ 97c30296-cb40-4de3-8908-9acfb9471b8d
+lguys.arcmin_to_kpc(5.22, distance)
+
 # ╔═╡ 824fc065-8ad8-408c-a4f7-0c464ed7fa13
 let 
 	popt, pred, res = fit_profile(profile, profile=lguys.KingProfile, p0=[1, 35, 200])
@@ -364,7 +368,6 @@ end
 # ╠═34219d44-5c99-4756-a874-1286ade6659b
 # ╟─f93365e6-971d-4321-9d91-44e9e86610cb
 # ╠═d0992dc9-08f1-487a-a96a-90996f29cefd
-# ╠═aa23a8ab-3cff-400b-bbc9-592183f2e695
 # ╠═4f1a0765-4462-41a3-84e1-ec01caaae4e1
 # ╠═abeada6d-b74e-4769-90d6-3efe92dbbf1b
 # ╠═88f02d81-927c-405a-ada4-064157c7dbf0
@@ -384,6 +387,7 @@ end
 # ╠═0214c61c-336a-4ef2-876d-c2f3b7ec0180
 # ╠═0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
 # ╠═93cd5808-0e20-475a-8001-4e775d4ab4e7
+# ╠═97c30296-cb40-4de3-8908-9acfb9471b8d
 # ╠═824fc065-8ad8-408c-a4f7-0c464ed7fa13
 # ╠═1be3fa21-5945-4904-a23a-12c15cc4a485
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
