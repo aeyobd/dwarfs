@@ -48,7 +48,7 @@ function read_file(filename)
 	if "inherits" ∈ keys(f)
 		f1 = read_file(dirname(filename) * "/" * f["inherits"])
 		delete!(f, "inherits")
-		merge!(f, f1)
+        f = merge(f1, f)
 	end
 
 	return f
@@ -80,7 +80,7 @@ function plot_all_tangent!(grid::GridPosition, all_stars; scale=1, units="degree
     ax = Axis(grid,
         xlabel=L"\xi / \textrm{%$units}", ylabel=L"\eta / \textrm{%$units}",
         aspect=1,
-        limits=(-r_max, r_max, -r_max, r_max)
+        limits=(-r_max, r_max, -r_max, r_max),
         xgridvisible=false, ygridvisible=false
     )
 

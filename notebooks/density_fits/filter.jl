@@ -22,22 +22,19 @@ begin
 	import LilGuys as lguys
 	using Arya
 	
-	using JSON
-	import YAML
 end
-
-# ╔═╡ 542dd574-194a-49a2-adfc-a56db2ebea31
-using Tables
 
 # ╔═╡ 4cae5cc6-f270-42bf-97a1-067b7f57a7da
 include("filter_utils.jl")
 
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
-Given a set of yaml parameters,
-this notebook simply filters the J23 observations according to the specifications.
+# Introduction 
 
-Use the calc_density... and the fit_profile notebooks to then analyze the sample
+Given a set of TOML parameters,
+this notebook simply filters the J+24 or Gaia-like observations according to the specifications.
+
+Use the `calc_density`... and the `fit_profile` notebooks to then analyze the sample
 """
 
 # ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
@@ -59,31 +56,20 @@ md"""
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 name = "sculptor/fiducial"
 
-# ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
-md"""
-# functions
-"""
-
-# ╔═╡ fc4efd97-a140-4997-b668-904aa7ff5d30
-function read_file(filename)
-	f = YAML.load_file(filename)
-
-	if "inherits" ∈ keys(f)
-		f1 = read_file(dirname(filename) * "/" * f["inherits"])
-		delete!(f, "inherits")
-		merge!(f, f1)
-	end
-
-	return f
-end
-
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
 	param_file = "$name.toml"
 
-	params_json =read_file(param_file)
-	params = DensityParams(params_json)
+	params_raw = read_file(param_file)
 end
+
+# ╔═╡ f8779f92-3ae0-474e-907e-1067170b1531
+params = DensityParams(params_raw)
+
+# ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
+md"""
+# functions
+"""
 
 # ╔═╡ 695d532c-86d1-4b24-b7af-600a8ca29687
 function plot_all_tangent!(ax, all_stars; scale=1, kwargs...)
@@ -106,7 +92,9 @@ function plot_all_tangent(all_stars; scale=1, units="degrees", r_max=nothing, kw
     ax = Axis(fig[1,1], 
         xlabel=L"\xi / \textrm{%$units}", ylabel=L"\eta / \textrm{%$units}",
         aspect=1,
-        limits=(-r_max, r_max, -r_max, r_max)
+        limits=(-r_max, r_max, -r_max, r_max),
+		xgridvisible=false,
+		ygridvisible=false
     )
 
     p = plot_all_tangent!(ax, all_stars; scale=scale, kwargs...) 
@@ -296,16 +284,6 @@ let
 	df
 end
 
-# ╔═╡ 39f615b4-b62c-493e-8d11-be45910d79a8
-md"""
-# density calculation
-"""
-
-# ╔═╡ 9b3288b4-3c17-4325-9e2c-94f96328f3c3
-function plot_rh!()
-    vline!([log10.(r_h)], color="grey", s=:dash, z_order=1, label=L"r_h")
-end
-
 # ╔═╡ 62388099-b80b-4272-9bde-0c7315b15c19
 r = 60 * members.r_ell # arcminutes
 
@@ -314,24 +292,39 @@ let
 	fig = Figure()
 	ax = PolarAxis(fig[1,1])
 	ϕ = atan.(members.eta, members.xi)
-	scatter!(ax, ϕ, members.r_ell, markersize=5, alpha=0.1)
+	scatter!(ax, ϕ, log10.(members.r_ell), markersize=5, alpha=0.2)
 
 	fig
 end
-
-# ╔═╡ 5c117b2f-a32c-4afd-9c66-943ab4634e71
-dist = params.dist ± params.dist_err
-
-# ╔═╡ b20058a8-a9b6-49ff-b8ff-a2d45c76f645
-R_s_over_R_h = 1.6783
-
-# ╔═╡ 82d90218-f32e-4b72-a99a-bc2a264d7dce
-theme(:colorcycle)
 
 # ╔═╡ a7209445-84e9-435d-9144-90f8eb5e70cb
 md"""
 # Membership selection effects
 """
+
+# ╔═╡ 1610647f-7dcf-4ffc-8906-bf28d36ae529
+log_r_label = "log r / arcmin"
+
+# ╔═╡ 648439e3-a771-4c17-a8df-2374a5369109
+rs = lguys.calc_r_ell(members.xi, members.eta, params.ecc, params.PA)
+
+# ╔═╡ 2a377969-3658-4b05-87f7-7de33859a588
+xi = members.xi; eta = members.eta
+
+# ╔═╡ 50f5a1f7-7537-4166-a582-e9c3453de0e0
+x_p, y_p = lguys.shear_points_to_ellipse(xi, eta, params.ecc, params.PA)
+
+# ╔═╡ 0723118a-5685-4b81-9098-4e702c9f4d8b
+poly = lguys.convex_hull(x_p, y_p)
+
+# ╔═╡ 13fb3ebc-50c0-43aa-88e9-1a7543e4e202
+let
+	fig, ax = Arya.FigAxis(xlabel="G mag", ylabel="count")
+	
+	hist!(members.phot_g_mean_mag)
+
+	fig
+end
 
 # ╔═╡ 45422d53-317c-4824-a41a-4a80b1fbd102
 let 
@@ -342,49 +335,55 @@ let
 	)
 
 	g_cuts = [21.5, 20.5, 20, 19.5, 19, 10]
-	labels = []
 
-	ls = []
 	for i in 1:length(g_cuts) - 1
+		# filter by G mag
 		g_l = g_cuts[i+1]
 		g_h = g_cuts[i]
 		filt = g_cuts[i+1] .< members.phot_g_mean_mag .<= g_cuts[i]
-		push!(labels, "$g_l, $g_h")
+		
 		memb = members[filt, :]
-		println(size(memb, 1))
-		println(maximum(memb.r_ell))
-		r = memb.r_ell * 60
-		obs = calc_properties(r)
 
-		y = log10.(obs.Σ)
-		f2 = isfinite.(y)
-		y = y[f2]
-		x = obs.log_r[f2]
-		l = lines!(ax, x, value.(y), color=i, colorrange=(1, length(g_cuts) - 1))
-		push!(ls, l)
+		# calc properties
+		r, r_max = lguys.calc_r_ell_sky(memb.ra, memb.dec, params.ecc, params.PA)
+		println(r_max)
+		
+		obs = lguys.calc_properties(r[r .< r_max])
+
+		# plot
+		lines!(ax, obs.log_r, obs.log_Sigma, 
+			color=i, colorrange=(1, length(g_cuts) - 1),
+			label="$g_l, $g_h")
+
+		# diagnostics
+		println("$g_l, $g_h")
+		println("number of members ", size(memb, 1))
+		println("r_ell_max ", maximum(r))
+		println(maximum(memb.phot_g_mean_mag), " > G > ",  minimum(memb.phot_g_mean_mag))
+		println()
 	end
 
-	Legend(fig[1,2], ls, labels, "G magnitude")
+	Legend(fig[1,2], ax, "G magnitude")
 
 	fig
 end
 
-# ╔═╡ 13fb3ebc-50c0-43aa-88e9-1a7543e4e202
-hist(members.phot_g_mean_mag)
-
 # ╔═╡ 80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 size(members)
+
+# ╔═╡ edb7b9ff-4902-4004-b5b4-50a0f0b0ee52
+sort(members.PSAT)
 
 # ╔═╡ c0b3c3f6-0450-4242-9e13-41f9af17e562
 let 
 	fig = Figure(size=(900,500))
-	p_cuts = [nothing, 0.01, 0.05, 0.1, 0.2, 0.5, 0.99]
+	p_cuts = [nothing, 0.0, 0.0001, 0.1,0.9, 0.99, 0.9999]
 
 	Nc = length(p_cuts) 
 
 	ax = Axis(fig[1, 1],
 		ylabel=L"\log \Sigma\ / \textrm{(number/arcmin^2)}",
-		xlabel=log_r_label,
+		#xlabel=log_r_label,
 		limits=(nothing, (-4, 3))
 		
 	)
@@ -393,12 +392,14 @@ let
 
 	ls = []
 	for i in 1:Nc
-		params = DensityParams(params_json, PSAT_min=p_cuts[i])
+		params = DensityParams(params_raw, PSAT_min=p_cuts[i])
 		_, memb = load_and_filter(params)
-		r = memb.r_ell * 60
-		println(maximum(memb.r_ell))
-		obs = calc_properties(r)
-		l = lines!(ax, obs.log_r, log10.(value.(obs.Σ * obs.N)), color=i, colorrange=(1, Nc))
+		r, r_max = lguys.calc_r_ell_sky(memb.ra, memb.dec, params.ecc, params.PA)
+		println(r_max)
+		r = r[r .< r_max]
+		
+		obs = lguys.calc_properties(r, normalization=false)
+		l = lines!(ax, obs.log_r, log10.(obs.Sigma), color=i, colorrange=(1, Nc+1))
 		push!(ls, l)
 	end
 
@@ -407,9 +408,37 @@ let
 	fig
 end
 
+# ╔═╡ 556d5c09-d531-4ce0-ab01-1810c6db4deb
+pol = lguys.convex_hull(x_p, y_p)
+
+# ╔═╡ 8c882887-43df-472f-91db-4d9d8e201639
+r_max = lguys.min_distance_to_polygon(pol...)
+
+# ╔═╡ f9606772-d51d-4701-80dc-5637b3510627
+let
+	fig, ax = FigAxis(aspect=DataAspect(),
+		xlabel="a",
+		ylabel="b"
+	)
+
+
+	scatter!(x_p, y_p, alpha=0.2, markersize=5)
+	poly!(pol..., color=nothing, strokecolor=COLORS[2], strokewidth=2)
+
+	poly!(Circle(Point2f(0,0,), r_max), color=nothing, strokecolor=COLORS[3], strokewidth=2)
+
+	fig
+end
+
+# ╔═╡ a348b2db-b6c6-49fb-8207-a9e2f9cd7e87
+# ╠═╡ disabled = true
+#=╠═╡
+poly = Polyhedra.planar_hull(Polyhedra.convexhull(ps...))
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
-# ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
-# ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
+# ╠═48caecb2-180c-4ce4-a57b-6fed82328b01
+# ╠═47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
@@ -417,8 +446,8 @@ end
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
+# ╠═f8779f92-3ae0-474e-907e-1067170b1531
 # ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
-# ╠═fc4efd97-a140-4997-b668-904aa7ff5d30
 # ╠═07235d51-10e1-4408-a4d1-cd2079fadb75
 # ╠═695d532c-86d1-4b24-b7af-600a8ca29687
 # ╠═32fd9b79-1a8b-4a69-9115-9065dd61ced2
@@ -440,16 +469,20 @@ end
 # ╟─4873af32-c387-4d42-909d-d39a25f56e24
 # ╠═5a172f47-589f-4b2c-8180-108b293cebf7
 # ╠═28ff0827-dd3e-43ff-b210-9a45687dd1f8
-# ╠═542dd574-194a-49a2-adfc-a56db2ebea31
-# ╟─39f615b4-b62c-493e-8d11-be45910d79a8
-# ╠═9b3288b4-3c17-4325-9e2c-94f96328f3c3
 # ╠═62388099-b80b-4272-9bde-0c7315b15c19
 # ╠═a254083b-61f2-45ad-b678-c4df6f16964b
-# ╠═5c117b2f-a32c-4afd-9c66-943ab4634e71
-# ╠═b20058a8-a9b6-49ff-b8ff-a2d45c76f645
-# ╠═82d90218-f32e-4b72-a99a-bc2a264d7dce
 # ╟─a7209445-84e9-435d-9144-90f8eb5e70cb
-# ╠═45422d53-317c-4824-a41a-4a80b1fbd102
+# ╠═1610647f-7dcf-4ffc-8906-bf28d36ae529
+# ╠═648439e3-a771-4c17-a8df-2374a5369109
+# ╠═2a377969-3658-4b05-87f7-7de33859a588
+# ╠═50f5a1f7-7537-4166-a582-e9c3453de0e0
+# ╠═0723118a-5685-4b81-9098-4e702c9f4d8b
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
+# ╠═45422d53-317c-4824-a41a-4a80b1fbd102
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
+# ╠═edb7b9ff-4902-4004-b5b4-50a0f0b0ee52
 # ╠═c0b3c3f6-0450-4242-9e13-41f9af17e562
+# ╠═556d5c09-d531-4ce0-ab01-1810c6db4deb
+# ╠═8c882887-43df-472f-91db-4d9d8e201639
+# ╠═f9606772-d51d-4701-80dc-5637b3510627
+# ╠═a348b2db-b6c6-49fb-8207-a9e2f9cd7e87
