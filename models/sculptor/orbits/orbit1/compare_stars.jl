@@ -50,6 +50,13 @@ let
 		limits=((-1.5, 3), (-10, 0))
 	)
 
+	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
+		yerr=prof_expected.log_Sigma_err,
+		label="J+24",
+		color=:black
+	)
+
+	
 	for k in ks
 		profile = profiles[k]
 
@@ -57,11 +64,17 @@ let
 		lines!(profile.log_r, profile.log_Sigma, 
 			label=label)
 	end
-	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
-		yerr=prof_expected.log_Sigma_err,
-		label="J+24"
-	)
 	
+	for i in 1:length(ks)
+		k = ks[i]
+		profile = profiles_i[k]
+
+		label = "$k"
+		lines!(profile.log_r, profile.log_Sigma,
+			linestyle=:dash, color=COLORS[i]
+		)
+	end
+
 	
 	vlines!(log10(295))
 	axislegend("Rs / kpc")
