@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#SBATCH	 -J	sculptor_g2
+#SBATCH -n 16                #Number of cores
+#SBATCH -A durham				#Account name
+#SBATCH -t 2:00:00
+#SBATCH -p cosma			        #Queue name e.g. cosma, cosma6, etc.
+#SBATCH -o %J.out		#Standard output file
+
+
+rm -r out/*
+
+module unload gnu_comp
+
+module load intel_comp/2019
+module load intel_mpi/2019
+module load gsl/2.4
+module load fftw/2.1.5 
+module load hdf5 # /1.8.20 
+
+mpirun -np $SLURM_NTASKS /cosma/home/durham/dc-boru1/Gadget-RAPHAMW/source/Gadget2 params.txt
+
+scontrol show job $SLURM_JOB_ID

@@ -15,14 +15,42 @@ begin
 	using Arya
 end
 
+# ╔═╡ 8b41af50-9ae0-475b-bacc-3799e2949b30
+md"""
+Analyzes the orbit of a n-body halo in a gravitational potential.
+Requires the centres to be calculated prior.
+"""
+
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
 import TOML
 
-# ╔═╡ 96a57df5-a7b7-447a-a4a6-2b05e391a5c6
-obs_today = TOML.parsefile("properties.toml")
+# ╔═╡ 643cd0bf-77b3-4201-9ff7-09dd5aee277c
+md"""
+# inputs
+"""
+
+# ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
+dir = "../../models/sculptor/orbits/orbit1_g2/"
+
+# ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
+properties_file =  "../../models/sculptor/orbits/orbit1/properties.toml"
+
+# ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
+orbit_file = "../../models/sculptor/mc_orbits/orbit1.csv"
+
+# ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
+outfile = dir * "orbital_properties.toml"
 
 # ╔═╡ b75f0fb1-be59-416c-a61f-4109bada9ae9
 r_h = 0.11
+
+# ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
+md"""
+# File loading
+"""
+
+# ╔═╡ 96a57df5-a7b7-447a-a4a6-2b05e391a5c6
+obs_today = TOML.parsefile(properties_file)
 
 # ╔═╡ a609f221-0721-4b4b-a393-49b386393c66
 obs_today["ra_err"] = r_h 
@@ -32,18 +60,23 @@ obs_today["dec_err"] = r_h
 
 # ╔═╡ b250bf10-c228-4b14-938a-35561ae871d7
 begin 
-	cens = CSV.read("out/centres.csv", DataFrames.DataFrame)
+	cens = CSV.read(dir * "out/centres.csv", DataFrames.DataFrame)
 	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
 	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
 end
 
 # ╔═╡ bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
 begin 
-	orbit_expected = CSV.read("orbit.csv", DataFrame)
+	orbit_expected = CSV.read(orbit_file, DataFrame)
 	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
 	v_cen_exp = -transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
 
 end
+
+# ╔═╡ 08c3df42-738b-47c4-aa6b-fc39a9cfc02f
+md"""
+# plots
+"""
 
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
 lguys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
@@ -71,8 +104,12 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
 	r = lguys.calc_r(x_cen)
-	lines!(cens.t * lguys.T0, r)
-	lines!(lguys.T0*(orbit_expected.t .- orbit_expected.t[begin]), lguys.calc_r(x_cen_exp))
+	lines!(cens.t * lguys.T0, r, label="model")
+	lines!(lguys.T0*(orbit_expected.t .- orbit_expected.t[begin]), lguys.calc_r(x_cen_exp),
+		label="expected"
+	)
+
+	axislegend(ax)
 	fig
 end
 
@@ -106,7 +143,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="time",
-		ylabel="chi2",
+		ylabel="chi2 property fit",
 		yscale=log10
 	)
 	
@@ -165,9 +202,12 @@ idx_apo = find_last_peri(vr, idx_f, minima=false)
 # ╔═╡ c3d6b68e-1b2a-4f84-a620-fb8dbe02867a
 idx_anteperi = find_last_peri(vr, idx_apo, minima=true)
 
+# ╔═╡ a5ce5442-73ca-4aaf-915a-72fe9936e791
+d_idx = 20
+
 # ╔═╡ 7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
 begin
-	peri_filt = idx_f-200:idx_f
+	peri_filt = idx_f-d_idx:idx_f
 	t_last_peri_arg = argmin(r[peri_filt])
 	t_last_peri = cens.t[peri_filt[t_last_peri_arg]] * lguys.T0
 	delta_t_peri = cens.t[idx_f] * lguys.T0 - t_last_peri
@@ -204,12 +244,29 @@ end
 
 # ╔═╡ af8a50bd-e761-4439-9fc9-80048c264d5b
 begin 
-	t_peri = lguys.T0 * cens.t[idx_peri]
-	t_apo = lguys.T0 * cens.t[idx_apo]
-	t_anteperi = lguys.T0 * cens.t[idx_anteperi]
+	if idx_peri > 0
+		t_peri = lguys.T0 * cens.t[idx_peri]
+		r_peri = r[idx_peri]
 
-	r_peri = r[idx_peri]
-	r_apo = r[idx_apo]
+	else 
+		t_peri = NaN
+		r_peri = NaN
+	end
+
+	if idx_apo > 0
+		t_apo = lguys.T0 * cens.t[idx_apo]
+		r_apo = r[idx_apo]
+	else
+		t_apo = NaN
+		r_apo = NaN
+	end
+
+	if idx_anteperi > 0
+		t_anteperi = lguys.T0 * cens.t[idx_anteperi]
+	else
+		t_anteperi = NaN
+	end
+
 end
 
 # ╔═╡ 73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
@@ -261,7 +318,6 @@ begin
 		"t_last_peri" => t_f - t_peri
 	)
 
-	outfile = "orbital_properties.toml"
 
 	open(outfile, "w") do f
 		TOML.print(f, orbital_properties)
@@ -272,14 +328,22 @@ begin
 end
 
 # ╔═╡ Cell order:
+# ╠═8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
+# ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
+# ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2
+# ╠═d142b7bd-3002-4331-a725-577873c42f28
+# ╠═0dd476fd-be53-4e9b-a686-a4462485c64c
+# ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
+# ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
+# ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═a609f221-0721-4b4b-a393-49b386393c66
 # ╠═68d805a4-c5eb-4f2c-ba10-48c2a53f2874
-# ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
 # ╠═b250bf10-c228-4b14-938a-35561ae871d7
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
+# ╠═08c3df42-738b-47c4-aa6b-fc39a9cfc02f
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
@@ -299,6 +363,7 @@ end
 # ╠═efcbae60-cf7c-4e74-aae4-39d19b74b6fa
 # ╠═809095ae-0aee-47ec-9d54-9d314e2cc11d
 # ╠═c3d6b68e-1b2a-4f84-a620-fb8dbe02867a
+# ╠═a5ce5442-73ca-4aaf-915a-72fe9936e791
 # ╠═7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
 # ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
