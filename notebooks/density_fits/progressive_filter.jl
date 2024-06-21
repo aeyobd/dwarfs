@@ -54,7 +54,7 @@ end
 
 # ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
 md"""
-# functions
+# loading stars
 """
 
 # ╔═╡ 2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
@@ -90,11 +90,6 @@ begin
 	filt_r_ell = r_ell .< r_ell_max
 	all_stars = all_stars_unfiltered[filt_r_ell, :]
 end
-
-# ╔═╡ 0c498087-0184-4da2-a079-e972dd987712
-md"""
-The next three plots compare how different the r_ell and xi and eta calculated here are from what is (presumably) in the given catalogue.
-"""
 
 # ╔═╡ efc003db-c980-40ba-822f-23220f7e852e
 md"""
@@ -220,6 +215,11 @@ maximum(all_stars.parallax_over_error)
 # ╔═╡ c5ca7506-5952-4973-879e-e9848bb72d03
 plot_sample(all_stars)
 
+# ╔═╡ f3eac4e6-0b4b-4d54-83ac-213b78fcb522
+md"""
+# filters
+"""
+
 # ╔═╡ f74f597a-908b-4569-8de8-219abba31afd
 filt_parallax = apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
 
@@ -227,7 +227,10 @@ filt_parallax = apply_filter(all_stars, parallax_filter, params.dist, params.dis
 filt_pm = apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
 
 # ╔═╡ c15d2045-f6c2-42d1-947e-fb4b31daeb99
-filt_ruwe = apply_filter(all_stars, max_filter, :ruwe, 1.3)
+filt_ruwe = apply_filter(all_stars, max_filter, :ruwe, params.ruwe_max)
+
+# ╔═╡ 20fe601c-874c-4a37-b3fa-b229232a0f4f
+params.ruwe_max
 
 # ╔═╡ b0e0a366-8bac-4cf6-8b40-33d517b41e47
 filt_cmd = apply_filter(all_stars, cmd_filter, params.cmd_cut)
@@ -411,13 +414,12 @@ end
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
-# ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
+# ╠═4093a7d6-2f74-4c37-a4a8-270934ede924
 # ╠═2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
 # ╠═9371bcb3-0e26-4162-8a40-dc1bf1dacdda
 # ╠═0307085b-816f-469f-8811-60af02cfcb67
 # ╠═29859854-0d17-42ba-8b1d-8788511840c9
 # ╠═6c092147-c295-4ee5-9ee3-6e04c2aaaf98
-# ╟─0c498087-0184-4da2-a079-e972dd987712
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
 # ╠═d7d81ed8-0427-4ee5-8213-320ce5a6711f
@@ -430,9 +432,11 @@ end
 # ╠═b57a31e4-5394-4c32-9020-5ade8a1018c1
 # ╠═ab387f41-8d0f-4a1f-8dbf-b90396914c75
 # ╠═c5ca7506-5952-4973-879e-e9848bb72d03
+# ╠═f3eac4e6-0b4b-4d54-83ac-213b78fcb522
 # ╠═f74f597a-908b-4569-8de8-219abba31afd
 # ╠═eab8e0d4-0a40-48b6-9689-0c102d883a96
 # ╠═c15d2045-f6c2-42d1-947e-fb4b31daeb99
+# ╠═20fe601c-874c-4a37-b3fa-b229232a0f4f
 # ╠═b0e0a366-8bac-4cf6-8b40-33d517b41e47
 # ╠═29dba8f1-b4a6-41da-8323-437447c9d888
 # ╠═620aa7d7-0b02-475d-80a9-1e721d6144bf

@@ -13,7 +13,7 @@ Base.@kwdef struct DensityParams
     filename::String
     ra::Float64
     dec::Float64
-    ecc::F # can likely remove ecc, rh, PA
+    ellipticity::F
     rh::F
     PA::F
     dist::F
@@ -31,10 +31,36 @@ Base.@kwdef struct DensityParams
     cmd_cut::Union{Array,Nothing} = nothing
 end
 
+
+
 function DensityParams(dict::Dict; kwargs...)
     d2 =  NamedTuple{Tuple(Symbol.(keys(dict)))}(values(dict))
 
     return DensityParams(; d2..., kwargs...)
+end
+
+"""
+    load_stars(filename, params)
+
+Given a fits file, loads the stars and calculates the tangent plane
+"""
+function load_stars(filename, params)
+	all_stars_unfiltered = DataFrame(FITS(filename)[2])
+	xi, eta = lguys.to_tangent(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ra, params.dec)
+	
+	r_ell = 60lguys.calc_r_ell(xi, eta, params.ellipticity, params.PA)
+
+    for col in ["r_ell", "xi", "eta"]
+        if col ∈ names(all_stars_unfiltered)
+            all_stars_unfiltered[!, Symbol(col * "_original")] = all_stars_unfiltered[!, col]
+        end
+    end
+
+	all_stars_unfiltered[!, :r_ell] = r_ell
+	all_stars_unfiltered[!, :xi] = xi
+	all_stars_unfiltered[!, :eta] = eta
+
+	return all_stars_unfiltered
 end
 
 
@@ -50,6 +76,12 @@ function read_file(filename)
 		delete!(f, "inherits")
         f = merge(f1, f)
 	end
+
+    for (k, v) in f
+        if v === NaN
+            f[k] = nothing
+        end
+    end
 
 	return f
 end
@@ -160,7 +192,7 @@ function select_members(all_stars, params)
 	filt .&= apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
 
 	filt .&= apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
-	filt .&= apply_filter(all_stars, radius_filter, params.ecc)
+	# filt .&= apply_filter(all_stars, radius_filter, params.ellipticity)
 
 
 	println(sum(filt), " stars remaining")
@@ -174,8 +206,8 @@ function cmd_filter(all_stars, cmd_cut)
 	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.phot_g_mean_mag), [cmd_cut_m])
 end
 
-function rell_filter(all_stars, ecc, PA)
-    r_ell, filt = lguys.calc_radii(all_stars.ra, all_stars.dec, ecc=ecc, PA=PA)
+function rell_filter(all_stars, ellipticity, PA)
+    r_ell, filt = lguys.calc_radii(all_stars.ra, all_stars.dec, ell=ellipticity, PA=PA)
     return filt
 end
 
@@ -243,7 +275,7 @@ function parallax_filter(all_stars, dist, dist_err, n_sigma_dist)
 end
 
 
-function radius_filter(all_stars, ecc, r_max=maximum(all_stars.r_ell))
-	r_max = r_max * (1 - ecc)
+function radius_filter(all_stars, ellipticity, r_max=maximum(all_stars.r_ell))
+	r_max = r_max * (1 - ellipticity)
 	return all_stars.r_ell .< r_max
 end

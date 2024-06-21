@@ -31,7 +31,7 @@ given a sample of points, can we centre and calculate the 2D density profile
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
 	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_rs0.3_today.fits" # = "$(name)_sample.fits" 
-	#samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
+	samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 	#samplename = "../test_sky_recon.fits"
 end
 
@@ -40,10 +40,10 @@ outname = splitext(samplename)[1]  * "_profile.toml"
 
 # ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 begin 
-	ecc = 0.0
+	ecc = 0.37
 	PA = 94
 	centre_method="mean"
-	mass_column = :probability
+	mass_column = nothing #:probability
 	normalize = true
 end
 
@@ -62,7 +62,7 @@ else
 end
 
 # ╔═╡ cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
-ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, weights .^ 3, centre_method)
+ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, centre_method, weights .^ 3)
 
 # ╔═╡ 86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 xi, eta = lguys.to_tangent(sample.ra, sample.dec, ra0, dec0)
@@ -86,10 +86,25 @@ let
 end
 
 # ╔═╡ f476c859-ba4b-4343-8184-f6f41dc092ee
-profile = lguys.calc_properties(r_ell, bins=50, weights=weights, normalization=normalize)
+profile = lguys.calc_properties(r_ell, bins=50, weights=weights, normalization=:central, r_centre=3)
+
+# ╔═╡ b87cf54b-2c4c-46c5-9336-c13e773e29ec
+begin 
+
+	open(outname, "w") do f
+		print(f, profile)
+	end
+
+	println("wrote data to ", outname)
+end
 
 # ╔═╡ 0b80353f-c698-4fae-b40f-1796f7c89792
 sum(profile.counts), size(sample)
+
+# ╔═╡ e63df7b9-1fc1-4cc0-a91f-c0f1395d7ff4
+md"""
+# Plots
+"""
 
 # ╔═╡ d382b455-73ba-41d5-bbc8-eca53ea2166e
 let
@@ -182,7 +197,7 @@ let
 	)
 
 	
-	errscatter!(value.(10 .^ profile.log_r), profile.Gamma, yerr=profile.Gamma_err)
+	errscatter!(Arya.value.(10 .^ profile.log_r), profile.Gamma, yerr=profile.Gamma_err)
 
 	linkyaxes!(ax, ax_lin)
 
@@ -202,16 +217,6 @@ let
 	
 
 	fig
-end
-
-# ╔═╡ b87cf54b-2c4c-46c5-9336-c13e773e29ec
-begin 
-
-	open(outname, "w") do f
-		print(f, profile)
-	end
-
-	println("wrote data to ", outname)
 end
 
 # ╔═╡ 9bfe90a5-5969-4ebb-96af-72360bbced3b
@@ -251,8 +256,8 @@ end
 # end
 
 # ╔═╡ Cell order:
-# ╟─852717c0-aabf-4c03-9cf5-a6d91174e0f9
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
+# ╟─852717c0-aabf-4c03-9cf5-a6d91174e0f9
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
@@ -263,7 +268,9 @@ end
 # ╠═8d276372-add5-4388-b713-b22e38d56f37
 # ╠═69018984-ef00-44ef-ba6e-7cccf930aef9
 # ╠═f476c859-ba4b-4343-8184-f6f41dc092ee
+# ╠═b87cf54b-2c4c-46c5-9336-c13e773e29ec
 # ╠═0b80353f-c698-4fae-b40f-1796f7c89792
+# ╠═e63df7b9-1fc1-4cc0-a91f-c0f1395d7ff4
 # ╠═d382b455-73ba-41d5-bbc8-eca53ea2166e
 # ╠═619ca573-fd4b-4c65-8996-eab3869f2142
 # ╠═91df1ddf-a197-4d43-b39c-e25409eef082
@@ -273,7 +280,6 @@ end
 # ╠═60a223f2-ac5c-4a6a-af79-4b314d7d5509
 # ╠═c4a1621e-1943-49f1-8d2f-27fa335a0a4f
 # ╠═59b2acc5-66b4-48c6-9507-045ea77e6914
-# ╠═b87cf54b-2c4c-46c5-9336-c13e773e29ec
 # ╠═9bfe90a5-5969-4ebb-96af-72360bbced3b
 # ╠═8e75bc6b-2cb1-4993-92ad-037094092612
 # ╠═e081f84f-595f-4cbf-8613-dba2b8f69323
