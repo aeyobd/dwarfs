@@ -28,22 +28,25 @@ given a sample of points, can we centre and calculate the 2D density profile
 - Centring method
 """
 
+# ╔═╡ c4574ed3-f431-4c0e-a721-1c8d88dda10f
+name = "exp2d_rs0.16_i_today"
+
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
-	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/exp2d_rs0.3_today.fits" # = "$(name)_sample.fits" 
-	samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
+	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/stars/$name.fits" # = "$(name)_sample.fits" 
+	# samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 	#samplename = "../test_sky_recon.fits"
 end
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
-outname = splitext(samplename)[1]  * "_profile.toml"
+outname = dirname(samplename) * "/$(name)_profile.toml"
 
 # ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 begin 
-	ecc = 0.37
+	ecc = 0# 0.37
 	PA = 94
 	centre_method="mean"
-	mass_column = nothing #:probability
+	mass_column = :probability
 	normalize = true
 end
 
@@ -149,6 +152,9 @@ let
 
 	fig
 end
+
+# ╔═╡ dd139766-4281-4a27-af72-428dff73e4c4
+profile.counts
 
 # ╔═╡ 3589182c-ee3e-4a0d-ae1a-efc9ac98649a
 let
@@ -258,6 +264,7 @@ end
 # ╔═╡ Cell order:
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
 # ╟─852717c0-aabf-4c03-9cf5-a6d91174e0f9
+# ╠═c4574ed3-f431-4c0e-a721-1c8d88dda10f
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
@@ -275,6 +282,7 @@ end
 # ╠═619ca573-fd4b-4c65-8996-eab3869f2142
 # ╠═91df1ddf-a197-4d43-b39c-e25409eef082
 # ╠═548d7186-59eb-4f08-81b6-a68127f0df6a
+# ╠═dd139766-4281-4a27-af72-428dff73e4c4
 # ╠═3589182c-ee3e-4a0d-ae1a-efc9ac98649a
 # ╠═d6a899a6-15e8-4fea-b1b7-849f65faac55
 # ╠═60a223f2-ac5c-4a6a-af79-4b314d7d5509
