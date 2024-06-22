@@ -44,7 +44,7 @@ import TOML
 dir = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "king.toml"
+paramname = "exp2d_rs0.16.toml"
 
 # ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
 begin 
@@ -221,6 +221,9 @@ end
 # ╔═╡ de614f3d-b3e4-41a0-886b-594b0c93cc5b
 r
 
+# ╔═╡ bbd02922-37fc-459d-8702-451127d2b9a2
+sum(radii .< 0.1)
+
 # ╔═╡ 20f858d6-a9f5-4880-a431-60b395cc7e50
 ν_s = max.(ρ_s.(r) ./ M_s_tot, 0)
 
@@ -242,7 +245,7 @@ let
 	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
 		xlabel="log r", ylabel="log density")
 	lines!(log10.(r), log10.(ν_dm), label="DM")
-	lines!(log10.(r), log10.(ν_s), label="stars (analytic)")
+	scatter!(log10.(r), log10.(ν_s), label="stars (analytic)")
 
 	axislegend()
 	fig
@@ -559,7 +562,7 @@ let
 		limits=((0, 1), (-15, 3))
 		)
 	lines!(log10.(r), nm.log10.(ν_s), label="stars")
-	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
+	scatter!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
 
 	ax2 = Axis(fig[2,1], 
 		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
@@ -690,7 +693,7 @@ let
 	ra = [o.ra for o in obs]
 	dec = [o.dec for o in obs]
 
-	ra0, dec0 = lguys.calc_centre2D(ra, dec, ms, "mean")
+	ra0, dec0 = lguys.calc_centre2D(ra, dec, "mean", ms)
 	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 	R = @. 60sqrt(xi^2 + eta^2)
 	
@@ -752,6 +755,7 @@ end
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
 # ╠═830faf5d-da17-4939-ad7c-080503b66990
 # ╠═de614f3d-b3e4-41a0-886b-594b0c93cc5b
+# ╠═bbd02922-37fc-459d-8702-451127d2b9a2
 # ╠═20f858d6-a9f5-4880-a431-60b395cc7e50
 # ╟─126c6825-723f-4d13-b5a3-64cba72fc867
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
