@@ -9,12 +9,6 @@
 #SBATCH --mail-type=END				#Notifications for job done & fail
 #SBATCH -o %J.out		#Standard output file
 
-# these are defined in bash_profile
-module load gnu_comp
-module load openmpi
-module load fftw
-module load hdf5
-module load gsl
 
 rm -r out/*
 mpirun -np $SLURM_NTASKS $HOME/dwarfs/gadget/GadgetMW param.txt > log.out

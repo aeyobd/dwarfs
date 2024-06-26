@@ -15,7 +15,7 @@ if [ $# -ne 1 ]; then
 fi
 
 
-N=1024
+N=257
 
 filename=$1
 
@@ -23,9 +23,14 @@ halo_path=profiles/$filename.gsp
 txt_path=tmp/$filename.txt
 csv_path=profiles/$filename.csv
 
+echo "cleaning up"
 rm -f $halo_path
-#$ZENOPATH/bin/halogsp $halo_path m_a=1.0 a=1.0 npoint=$N rrange=1/16563:1024
-$ZENOPATH/bin/halogsp $halo_path #rrange=1/4096:512
 
+echo "making halo (saved to $halo_path)"
+$ZENOPATH/bin/halogsp $halo_path npoint=$N rrange=1/4096:64
+
+echo "converting to text > $txt_path"
 $ZENOPATH/bin/tsf $halo_path maxline=$N > $txt_path
+
+echo "parsing text > $csv_path"
 julia parse_profile.jl $txt_path $csv_path
