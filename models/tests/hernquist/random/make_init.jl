@@ -11,8 +11,8 @@ function main()
 
     pos = reshape(rs, 1, N) .* lguys.rand_unit(N)
     vel = reshape(vs, 1, N) .* lguys.rand_unit(N)
-
-    snap = lguys.Snapshot(positions=pos, velocities=vel, masses=zeros(N))
+    masses = zeros(N)
+    snap = lguys.Snapshot(pos, vel, masses)
     lguys.save("initial.hdf5", snap)
 end
 

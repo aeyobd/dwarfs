@@ -9,12 +9,9 @@
 
 
 source ~/slurm_header.sh
-rm Gadget GadgetMW GadgetMC
 
 #SCRIPT_DIR=$SLURM_SUBMIT_DIR
-SCRIPT_DIR=$(pwd)
+bash compile.sh
+bash compile_mc.sh
+bash compile_mw.sh
 
-cd ~/Gadget4
-make CONFIG=$SCRIPT_DIR/Config.sh BUILD_DIR=$SCRIPT_DIR/build EXEC=$SCRIPT_DIR/Gadget
-make CONFIG=$SCRIPT_DIR/ConfigMW.sh BUILD_DIR=$SCRIPT_DIR/build_mw EXEC=$SCRIPT_DIR/GadgetMW
-make CONFIG=$SCRIPT_DIR/ConfigMC.sh BUILD_DIR=$SCRIPT_DIR/build_mc EXEC=$SCRIPT_DIR/GadgetMC
