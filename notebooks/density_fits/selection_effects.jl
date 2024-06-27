@@ -147,6 +147,21 @@ let
 	fig
 end
 
+# ╔═╡ e64257c1-15bc-4693-9f90-f3952d3559f5
+let
+	fig, ax = FigAxis(
+		ylabel="relative error (jax / me transposed)"
+	)
+
+	r_ell_2 = 60lguys.calc_r_ell(df.xi, df.eta, params.ellipticity, -params.PA)
+
+	# jax is in terms of a
+	a = params.rh .* sqrt(1 - params.ellipticity)
+	scatter!(df.r_ell, a * df.r_ell_original ./ r_ell_2)
+
+	fig
+end
+
 # ╔═╡ efc003db-c980-40ba-822f-23220f7e852e
 md"""
 # Membership plots
@@ -354,6 +369,7 @@ end
 # ╠═933963cf-48e2-49d7-8c21-25c123bad456
 # ╠═cf741ca1-ad71-4ff6-925b-ad47c0cbde17
 # ╠═cad5e46d-0088-4a36-bab7-9cc3d6922876
+# ╠═e64257c1-15bc-4693-9f90-f3952d3559f5
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═b6424e6f-9b0d-4f29-b53d-0bd814a67139
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8

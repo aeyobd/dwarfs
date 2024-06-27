@@ -63,7 +63,7 @@ function load_stars(filename, params)
 	all_stars_unfiltered = DataFrame(FITS(filename)[2])
 	xi, eta = lguys.to_tangent(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ra, params.dec)
 	
-	r_ell = 60lguys.calc_r_ell(xi, eta, params.ecc, params.PA)
+	r_ell = 60lguys.calc_r_ell(xi, eta, params.ellipticity, params.PA)
 
 	if "r_ell" ∈ names(all_stars_unfiltered)
 		all_stars_unfiltered[!, :r_ell_original] = all_stars_unfiltered.r_ell
@@ -79,7 +79,7 @@ end
 function filter_r_ell(all_stars_unfiltered, params)
 	
 	r_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec,
-		params.ecc, params.PA
+		params.ellipticity, params.PA
 	)
 
 	filt_r_ell = all_stars_unfiltered.r_ell .< r_max
@@ -116,7 +116,7 @@ memb_simple = select_members(gaia_all, params_simple)
 let 
 	fig, ax = FigAxis(aspect=DataAspect())
 
-	xi_p, eta_p = lguys.shear_points_to_ellipse(all_stars.xi, all_stars.eta, params.ecc, params.PA)
+	xi_p, eta_p = lguys.shear_points_to_ellipse(all_stars.xi, all_stars.eta, params.ellipticity, params.PA)
 	scatter!(xi_p, eta_p, markersize=3, alpha=0.05, color=:black)
 
 	fig
@@ -133,9 +133,6 @@ end
 
 # ╔═╡ a53f9db4-df89-4717-8535-c06c989307bd
 filt_best = all_stars.F_BEST .== 1
-
-# ╔═╡ d4268549-41fa-483b-a11b-1fdd9f8009d5
-scatter(log10.(all_stars.r_ell), all_stars.r_ell_original ./ all_stars.r_ell, markersize=1)
 
 # ╔═╡ 75fadb00-d768-4dcc-a619-f0f71de30263
 names(all_stars)
@@ -422,7 +419,7 @@ lguys.calc_properties
 # ╔═╡ 65a10161-cbeb-49fe-b8d1-075ffe346e43
 function get_density(df)
 	r = df.r_ell
-	props = lguys.calc_properties(r, bins=40, normalization=false)
+	props = lguys.calc_properties(r, bins=40, normalization=:none)
 
 	println("stars left ", length(r))
 	println("counts in last bin ", props.counts[end-2: end])
@@ -433,6 +430,9 @@ end
 
 # ╔═╡ 08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
 get_density(all_stars[filt, :])
+
+# ╔═╡ 1fc6160b-17d1-4d98-ad63-d4894c5816c1
+Arya.histogram(randn(100), normalization=:none)
 
 # ╔═╡ 198ba5a6-9d04-49de-9726-4e1d9be9780f
 value = lguys.value
@@ -600,7 +600,9 @@ end
 
 # ╔═╡ ba6ac07c-94f1-4024-8838-9c4d9b1c6cb1
 let
-	fig, ax = FigAxis()
+	fig, ax = FigAxis(
+		limits=(-1, 1, -1, 1)
+	)
 
 	errscatter!(members.pmra, members.pmdec, xerr=members.pmra_error, yerr=members.pmdec_error, alpha=0.1)
 	fig
@@ -635,7 +637,7 @@ let
 end
 
 # ╔═╡ bf7aac44-e090-4453-bdb5-7ecca95564f8
-Arya.histogram(randn(100), weights=ones(100))
+Arya.histogram(randn(100), weights=ones(100), normalization=:none)
 
 # ╔═╡ e033e344-737e-46e8-ab85-5fe33d191f41
 """
@@ -679,7 +681,6 @@ end
 # ╠═c403ee08-852b-4bbe-a2ee-05b52be35210
 # ╠═6895c52d-9b93-48a3-b05f-87a6d66349b3
 # ╠═a53f9db4-df89-4717-8535-c06c989307bd
-# ╠═d4268549-41fa-483b-a11b-1fdd9f8009d5
 # ╠═75fadb00-d768-4dcc-a619-f0f71de30263
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
 # ╟─0c498087-0184-4da2-a079-e972dd987712
@@ -727,6 +728,7 @@ end
 # ╠═31096853-9eaa-40e2-90aa-b248df77f73f
 # ╠═65a10161-cbeb-49fe-b8d1-075ffe346e43
 # ╠═08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
+# ╠═1fc6160b-17d1-4d98-ad63-d4894c5816c1
 # ╠═d0c00f3e-f3d3-4cd1-8541-9ae239420174
 # ╠═198ba5a6-9d04-49de-9726-4e1d9be9780f
 # ╠═b55d72b9-e957-4480-b6db-97c9798b4d68

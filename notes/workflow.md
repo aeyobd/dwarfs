@@ -92,6 +92,31 @@ Zeno is a collection of scripts with documentation on [ifa](https://home.ifa.haw
 - `halogsp` generates a 1d density profile given the halo parameters. First argument is the outfile. Then the other parameters specify halo shape
 - `gspmodel` creates the actual model
 
+### Installation
+
+```
+wget https://github.com/joshuabarnes/zeno/archive/refs/tags/v0.10.0-beta.tar.gz
+```
+
+
+
+add to bashrc
+
+```
+	export ZENOPATH="/Users/<yourname>/zeno"
+	export ZCC="gcc"
+	export ZCCFLAGS="-std=gnu99 -DLINUX -I$ZENOPATH/inc"
+	export ZLDFLAGS="-L$ZENOPATH/lib"
+	export ZENO_SAFE_SELECT="true"
+	export ZENO_MSG_OPTION="all"
+```
+
+can comment out graphics part of makefile so does not depend on GLUT / openGL (much easier to build in some environments)
+
+and run `make -f Zeno >& zenomake.log`.
+
+
+
 ### Converting to HDF5
 
 Zeno produces a structured binary file, not useful for gadget.
