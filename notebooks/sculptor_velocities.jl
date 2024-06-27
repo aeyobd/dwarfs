@@ -4,462 +4,113 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 53f06974-1fcc-4c90-86a0-5dd0cec4e4b8
-begin
+# ╔═╡ 04bbc735-e0b4-4f0a-9a83-e50c8b923caf
+begin 
+	using CSV, DataFrames
 	using Arya
 	using GLMakie
-
-	using DataFrames
-	using Measurements
+	using FITSIO
 end
 
-# ╔═╡ de046588-5a2b-41d4-a8cc-90dac36318e6
-using Unitful
-
-# ╔═╡ 3d32bef6-de64-4d1e-93a8-46c921c86011
-using StatsBase: mean, std
-
-# ╔═╡ 72eb810c-114e-11ef-30ea-fd46e923ea49
+# ╔═╡ 6f2359d8-332b-11ef-0db9-f1f06474c561
 md"""
-# Observations of Sculptor
+From Fed
 
-A quick collection of past literature observations and measurments of the Sculptor DSph
+Here attached some tables that I used for my paper on Sculptor. The literature compilations are from the DART survey and APOGEE DR17. There are some member stars in common between the two compilations. Therefore, I have divided into 4 files, I guess that depending on your needs, they might give you the same results.  I think all of them has been crossmatched with the Jaclyn’s member list and probabilities. I selected stars with a probability of being members of > 40 percent.
+
+- The Sculptor_DARTS_BEST_psat40.csv contains all the DART members. 
+- The table Sculptor_DARTS_BEST_psat40_notAPOGEE is the same but without the stars that are also in APOGEE. 
+
+- sculptor_apogeeDR17_xmatch.csv has all the APOGEE stars,
+- while DARt stars are removed in sculptor_apogeeDR17_xmatch_notDART.csv. 
+
+The total members from DART and APOGEE (removing duplicates) should be 617 stars, either from Sculptor_DARTS_BEST_psat40 + sculptor_apogeeDR17_xmatch_notDART  or Sculptor_DARTS_BEST_psat40_notAPOGEE + sculptor_apogeeDR17_xmatch.
+
+Then, you should also include the stars observed with GMOS in the paper, they are in the table targets_stellar_met.csv. Since GMOS has relatively large systematics uncertainties on the RV, you should sum in quadrature to the RV_err the value 13.3 km/s (as in the paper).
+
+Let me know if you have questions on the tables or things in Sculptor.
 """
 
-# ╔═╡ 010b8c68-8ae1-4e18-b001-32c24c2e43e4
-function obs_row(study; ra=NaN, dec=NaN, pm_ra=NaN, pm_dec=NaN, distance=NaN, radial_velocity=NaN, fe_h=NaN)
-	return (study=study, ra=ra, dec=dec, pm_ra=pm_ra, pm_dec=pm_dec, distance=distance, radial_velocity=radial_velocity, fe_h=fe_h)
-end
+# ╔═╡ 23402e30-2064-494c-bd4a-8243cb474b61
+rv_meas = CSV.read("data/Sculptor_DARTS_BEST_psat40.csv", DataFrame)
 
-# ╔═╡ 4c164fa8-d0ce-4ee0-8fb1-46bca2a0907f
-function profile_row(study;)
-end
+# ╔═╡ 48c62811-136f-4962-a42c-b1dd1fc74f8c
+apogee = CSV.read("data/sculptor_apogeeDR17_xmatch_notDART.csv", DataFrame)
 
-# ╔═╡ 722bd144-d047-4abf-b82f-f733134d3eb7
-dm_to_d(dm) = 10 * 10^(dm / 5) / 1e3
+# ╔═╡ 834fc86c-8da2-48ce-a51e-f2c1d090fe19
+hist(rv_meas.vel)
 
-# ╔═╡ 26ae0d94-698c-4e9d-bac6-3e91d0d197ab
-md"""
-# References
-
-"""
-
-# ╔═╡ 351731df-8d84-41ba-83e7-793898b9a148
-md"""
-## Compilations
-- McChonnachie 2012: For sculptor distance: Pietrzy´nski 2008, Walker + 2009 for RV. 
-"""
-
-# ╔═╡ 0e1d8bc0-103a-4623-8546-aa7a32ee4504
-md"""
-## Kirby 2013
-Metallicity, SFR ??
-"""
-
-# ╔═╡ e8775a3e-afab-48c7-a781-1fcc877ddcc1
-md"""
-# battaglia + 2008
-VLT/FLAMES.
-
-Notices a velocity gradient along the major axis. Mass measurements
-
-- NFW c = 20, M = 2.2 \pm 1 x 10^9 Mo
-- M/L < 1.8 kpc = 150 pm 30
-"""
-
-# ╔═╡ 36d90fee-8368-465f-baba-e714bf141efc
-battaglia2008 = Dict(
-	:study => "battaglia+08",
-	:σ_v => (10.1 ± 0.3)*u"km/s",
-	:radial_velocity => (110.5 ± 0.5)*u"km/s",
-)
-
-# ╔═╡ f3525bab-9241-4484-9a0e-b1db0d986c07
-md"""
-## Armandroff and Da Costa 1986
-Radial velocities on 16 stars
-
-"""
-
-# ╔═╡ 5a27c2b9-add0-40dc-93c6-2530a60f927d
-ad86 = Dict(
-	:study => "A&DC86",
-	:σ_v => (6.3 ± 1.2)*u"km/s",
-	:radial_velocity => (107.4 ± 2)*u"km/s",
-)
-
-# ╔═╡ cb3ef5d8-8231-42f1-b54f-42a6b08694c1
-md"""
-## Tolstoy+2023
-VLT/FLAMES spectoscopic survey with Gaia DR3 proper motions (and parallax cuts)
-
-fe_h=-1.82 ± 0.45,
-"""
-
-# ╔═╡ 1ecf4404-caa5-418d-9170-2d539df69275
-tolstoy23 = Dict(
-	:study => "T+23",
-	:radial_velocity => (111.2 ± 0.25) * u"km/s",
-	:pm_ra => 0.097 ± 0.006,
-	:pm_dec => -0.148 ± 0.004 # is proper?
-)
-
-# ╔═╡ 8f9fe40c-dd18-437f-ae9e-f0a50fba8155
-md"""
-## Pietrzy´nski + 2008
-RR Lyrae stars in J and K to determine distance. Get a distance modulus of 19.67 pm 0.02 pm 0.12 (sys).
-Also mention Rizzi's 2002 thesis (not easy to find) which measures similar DM from TRGB (19.64pm0.08) and HB (19.66 pm 0.15)
-"""
-
-# ╔═╡ 750dd472-05e4-4c4b-b347-4f0581ec6f55
-pietryznski2008 = Dict(
-	:study => "P+08",
-	:distance => dm_to_d(19.67 ± 0.12)
-)
-
-# ╔═╡ 0ea649d4-c260-450f-a51c-7598da5bfe2e
-md"""
-## Walker + 2009
-https://ui.adsabs.harvard.edu/abs/2009AJ....137.3109W/abstract
-
-Use an algorithm with expectation maximum to determine memberships with RVs and metallicities from Mike. Also record a velocity dispersion of 9.2 \pm 1.1 km / s
-"""
-
-# ╔═╡ 6eed53c4-7798-4ced-ae58-59679f4cb380
-walker2009 =  Dict(
-	:study => "W+09",
-	:radial_velocity => (111.4 ± 0.1) * u"km/s"
-)
-
-# ╔═╡ b8055846-efa5-4bcc-a82e-e3b4cd40788d
-md"""
-## Martínez-Vázquez + 2015 
-RR Lyrae distance modulus
-"""
-
-# ╔═╡ f7132d82-eb69-4e56-b61b-dd60e6cf8fdb
-mv15 = Dict(
-	:study => "MV+15", 
-	:distance => dm_to_d(19.62±0.04)
-)
-
-# ╔═╡ 8a1832ae-6335-44c8-bc56-d8a05e3e301d
-md"""
-## Battaglia + 2022
-references for basic properties: Battaglia+2008, Martinez-Vazquez 2015, Muñoz + 2018
-
-With orbits in the perturbed (LMC) potential, find peries between44.3 to 51.1, and apos between 274.3 and 552.4m. The LMC is likely very important for the evolution of sculptor
-"""
-
-# ╔═╡ 30f6a515-76dc-47fc-abc0-a90e28f64d9f
-battaglia2022 = Dict(
-	:study => "B+22",
-	:pm_ra => 0.099±0.002,
-	:pm_dec => -0.159 ± 0.002
-)
-
-# ╔═╡ 7a5e54c2-6186-4975-9cd4-b971a982a8cf
-md"""
-## Muñoz + 2018
-
-Uses megacam to do photometric survey on dwarfs and globular clusters. Solve for ra, dec, r_h, PA, ecc, and sigma0, and background for each satalite using several different profiles. Also derive total magnitudes.
-"""
-
-# ╔═╡ ac92bf08-1a86-4964-951a-97c8f738ed1f
-muñoz2018 = Dict(
-	:study => "M+18",
-	:ra => 15.0183 ± 0.30 / 3600,
-	:dec => -33.7186 ± 2.6 / 3600,
-)
-
-# ╔═╡ 1bb5096a-575f-4f28-afd4-1fb81b47b825
-# log_Lv_Lv_sun = 6.262 ± 0.056
-
-# ╔═╡ abe5f1ff-d229-4c5f-b757-967599f3b374
-m18_exp = (
-	θ = 92 ± 1,
-	ecc = 0.36 ± 0.01,
-	r_h = 12.43 ± 0.18
-)
-
-# ╔═╡ 28fe217f-9bfb-450a-9e58-f552adb580d7
-md"""
-## McChonnachie & Venn 2020 (&2020a)
-
-The B versiun is just an update from DR2 to Gaia EDR3
-"""
-
-# ╔═╡ ab329391-9ed0-44f8-bf2b-520c87dab362
-mv2020 = Dict(
-	:study => "MV2020", 
-	:pm_ra => 0.081±0.005,
-	:pm_dec => -0.136±0.004
-)
-
-# ╔═╡ cde8a009-958e-4511-be4f-b903913e6b49
-mv2020a = Dict(
-	:study => "MV2020a", 
-	:pm_ra => 0.099±0.002,
-	:pm_dec => -0.160±0.002
-)
-
-# ╔═╡ 6a7761ba-cfe2-40e7-8d2d-78f7a47ff164
-md"""
-## Pace & Li
-"""
-
-# ╔═╡ dcf1884d-9f8a-4ff9-9437-acce8e447709
-md"""
-## Pace + 2022
-
-7k members
-
-"""
-
-# ╔═╡ 74531f13-33b5-4821-8991-13c57a44d956
-pace22 = Dict(
-	:study => "Pace+22",
-	:pm_ra => 0.100 ± 0.002,
-	:pm_dec => -0.158 ± 0.002
-)
-
-# ╔═╡ 202abcd8-1b8a-4f18-aca5-7b92fca82a56
-md"""
-## Strigari, Frenk, White 2018
-Gaia proper motion analysis + HST
- Measure tangential and radial dispersion..., in agreement.
-In general in agreement with Walker & Penarrubia 2011
-"""
-
-# ╔═╡ e078ea6f-9fd3-4bf5-a3ae-665a8d64e046
-md"""
-## Massari + 2018
-Also proper motion analysis of HST + Gaia. Find that for an orbit  r = 73+8 kpc and r = 222+170 kpc. 
-
-σR = 11.5 ± 4.3 km s−1 and σT = 8.5 ± 3.2 km s−1
-- β~0.86+0.12-0.83
-
-- absolute proper motions: (μα cos(δ), μδ )=(−0.20±0.14, −0.33±0.11) masyr−1. References several older studies...
-
-"""
-
-# ╔═╡ 5b435aac-7fcd-403f-8388-5f635bbadd9a
-massari18 = Dict(
-	:study => "M+18",
-	:pm_ra => 0.1615 ± 0.14,
-	:pm_dec => -0.805 ± 0.11
-)
-
-# ╔═╡ e5259562-c26f-48c5-87a1-36a48a04d9d0
-
-
-# ╔═╡ 5540a9a2-54b6-42cf-ad68-470cdc9fc667
-md"""
-# Comparisons
-"""
-
-# ╔═╡ 777ec196-e193-456d-8d44-cba200a366dd
-obs = [pietryznski2008, walker2009, battaglia2022, mv15, tolstoy23, muñoz2018, mv2020, mv2020a, pace22, battaglia2008,
-	ad86,
-	massari18
-]
-
-# ╔═╡ 38875deb-8013-46d7-b8c8-8fad98f44806
-obs[haskey.(obs, :ra)]
-
-# ╔═╡ 4a0bd7c4-9b37-4625-a31c-2f4f85087eed
-function get_properties(obs, key)
-	filt = haskey.(obs, key)
-	values = [v[key] for v in obs[filt]]
-	studies = string.([v[:study] for v in obs[filt]])
-	return studies, values
-end
-
-# ╔═╡ a1f7d351-4f25-475b-939f-8e03ba5a10a0
-md"""
-# Positions
-"""
-
-# ╔═╡ f41f6639-1523-47c7-96f8-82f1fdafb7a1
-md"""
-### Distances
-- Tully et al. (2013): Updates earlier Tully work: For sculptor, distance = 80 kpc +- 0.08  Tip of RGB measurement
-- 
-- McChonnachie & Venn 2012
-
-"""
-
-# ╔═╡ 5928daad-d96d-4228-8ec3-0315c1c3cf2d
-Arya.value(a::Measurement) = a.val
-
-# ╔═╡ 684841fb-4da5-4e9a-89e9-01b425feae5e
-Arya.err(a::Measurement) = a.err
-
-# ╔═╡ 4314e298-f4d3-41d5-88e3-d9e60ba966b1
-md"""
-
-### Proper motions
-
-"""
-
-# ╔═╡ 5f28c6a9-0efd-4afd-9881-a3eaefc98f35
-let
-	fig = Figure()
- 
-	ax = Axis(fig[1,1], 
-		xlabel=L"\mu_{\alpha*}\;/\;\textrm{mas\,yr^{-1}}", ylabel=L"\mu_\delta\;/\;\textrm{mas\,yr^{-1}}"
+# ╔═╡ 3a69f395-3c2d-4357-89af-5963d5fa79b8
+begin
+	fig, ax = FigAxis(
+		limits=(nothing, (50, 170)),
+		xlabel="r / rh",
+		ylabel = "rv"
 	)
+	
+	scatter!(rv_meas[:, "Elliptical radius"], rv_meas.vel)
 
-	study, pmra = get_properties(obs, :pm_ra)
-	study, pmdec = get_properties(obs, :pm_dec)
+	f_a = (!).(ismissing.(apogee.VHELIO_AVG))
+	y = apogee.VHELIO_AVG[f_a]
+	y = float.(y)
+	scatter!(apogee[f_a, "Elliptical half-light radii"], y)
 
-	N = length(pmra)
-	for i in 1:N
-		x = [pmra[i]]
-		y = [pmdec[i]]
-		errscatter!(ax, x, y, 
-			yerr=Arya.err.(y), xerr=Arya.err.(x),
-			color=Arya.COLORS[i], label=study[i])
-	end
-
-	axislegend(ax)
 	fig
 end
 
-# ╔═╡ bc848e9f-db31-457c-80d5-65cf5397e906
+# ╔═╡ a5e55f3e-de53-443c-9d28-e539aa6206a8
+errscatter(rv_meas[:, "Elliptical radius"], rv_meas.feh, yerr=collect(zip(rv_meas.feh .- rv_meas[:, "feh_lo"], rv_meas[:, "fe_hi"] .- rv_meas.feh)))
+
+# ╔═╡ d688d2e5-faca-4b14-801a-d58b08fd6654
 let
-	fig = Figure()
- 
-	ax = Axis(fig[1,1], 
-		xlabel=L"ra", ylabel=L"dec"
+	fig, ax = FigAxis()
+
+	p = scatter!(rv_meas.ra, rv_meas.dec, color=rv_meas.vel,
+		colorrange=(90, 130),
+		colormap=:bluesreds
 	)
 
-	study, ra = get_properties(obs, :ra)
-	study, dec = get_properties(obs, :dec)
-	
-	N = length(ra)
-	for i in 1:N
-		x = [ra[i]]
-		y = [dec[i]]
-		errscatter!(ax, x, y, 
-			yerr=Arya.err.(y), xerr=Arya.err.(x),
-			color=Arya.COLORS[i], label=study[i])
-	end
-
-	axislegend(ax)
+	Colorbar(fig[1, 2], p)
 	fig
 end
 
-# ╔═╡ c3f68bcf-7795-4bf6-95c6-8228d83ff79e
-md"""
-# Radial velocities
-
-"""
-
-# ╔═╡ 51d76b15-28d1-4871-a7dc-2a8a43802bff
+# ╔═╡ 7178e5b9-cc42-4933-970a-4707ba69dbe9
 let
-	
-	fig = Figure()
+	fig, ax = FigAxis()
 
-	x, y = get_properties(obs, :distance)
-	N = length(x)
-	println(y)
-
-	xt = collect(1:N)
-	
-	ax = Axis(fig[1,1],
-		xticks =(xt, x), 
-		xminorticksvisible=false,
-		xticklabelrotation=-0π/6,
-		ylabel="distance / kpc"
+	p = arrows!(rv_meas.ra, rv_meas.dec, rv_meas.pmra, rv_meas.pmdec, 		color=rv_meas.vel,
+		colorrange=(90, 130),
+		colormap=:bluesreds,
+		lengthscale=0.1
 	)
 
-	tight_xticklabel_spacing!(ax)
-
-	errscatter!(xt, Arya.value.(y), yerr=Arya.err.(y))
-
-	
+	Colorbar(fig[1, 2], p)
 	fig
-
 end
 
-# ╔═╡ 21bc8939-1e8e-420b-ae41-a465203aa2e3
-let
-	
-	fig = Figure()
+# ╔═╡ 75442700-8532-4f86-8469-555c162edb97
+Arya.std(rv_meas.vel)
 
-	x, y = get_properties(obs, :radial_velocity)
-	println(y)
-	y =  y ./ 1u"km/s"
-
-	N = length(x)
-	println(y)
-
-	xt = collect(1:N)
-	
-	ax = Axis(fig[1,1],
-		xticks =(xt, x), 
-		xminorticksvisible=false,
-		xticklabelrotation=-1π/6,
-		ylabel="radial velocity / km s"
-	)
-
-	tight_xticklabel_spacing!(ax)
-
-	errscatter!(xt, Arya.value.(y), yerr=Arya.err.(y))
-
-	
-	fig
-
-end
-
-# ╔═╡ c27b0327-b38b-4927-8e24-5a72deace5a7
-let
-	
-	fig = Figure()
-
-	x, y = get_properties(obs, :σ_v)
-	println(y)
-	y =  y ./ 1u"km/s"
-
-	N = length(x)
-	println(y)
-
-	xt = collect(1:N)
-	
-	ax = Axis(fig[1,1],
-		xticks =(xt, x), 
-		xminorticksvisible=false,
-		xticklabelrotation=-1π/6,
-		ylabel="velocity dispersion / km s"
-	)
-
-	tight_xticklabel_spacing!(ax)
-
-	errscatter!(xt, Arya.value.(y), yerr=Arya.err.(y))
-
-	
-	fig
-
+# ╔═╡ 643de1b9-b756-4dea-9fe6-fe1db15481ee
+all_stars = FITS("density_fits/data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits") do f
+	DataFrame(f[2])
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Arya = "415bc928-4679-4905-9aff-233f9524af88"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+FITSIO = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
-Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 Arya = "~0.1.4"
+CSV = "~0.10.14"
 DataFrames = "~1.6.1"
+FITSIO = "~0.17.1"
 GLMakie = "~0.10.3"
-Measurements = "~2.11.0"
-StatsBase = "~0.34.3"
-Unitful = "~1.20.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -468,7 +119,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "20f6a74faf4240bfd983c8b8c048822cd3531f17"
+project_hash = "116168d07297ee7c726779d9367db6eb76dd3a2c"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -520,10 +171,12 @@ deps = ["DocStringExtensions", "Makie", "MakieCore", "NearestNeighbors", "QuadGK
 git-tree-sha1 = "cad0e02a40c7af181e0355514c74d6d006475ba1"
 uuid = "415bc928-4679-4905-9aff-233f9524af88"
 version = "0.1.4"
-weakdeps = ["Measurements"]
 
     [deps.Arya.extensions]
     AryaMeasurementsExt = "Measurements"
+
+    [deps.Arya.weakdeps]
+    Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 
 [[deps.Automa]]
 deps = ["PrecompileTools", "TranscodingStreams"]
@@ -557,6 +210,18 @@ git-tree-sha1 = "389ad5c84de1ae7cf0e28e381131c98ea87d54fc"
 uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 version = "0.5.0"
 
+[[deps.CFITSIO]]
+deps = ["CFITSIO_jll"]
+git-tree-sha1 = "fc0abb338eb8d90bc186ccf0a47c90825952c950"
+uuid = "3b1b4be9-1499-4b22-8d78-7db3344d1961"
+version = "1.4.2"
+
+[[deps.CFITSIO_jll]]
+deps = ["Artifacts", "JLLWrappers", "LibCURL_jll", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "b90d32054fc88f97dd926022f554180e744e4d7d"
+uuid = "b3e40c51-02ae-5482-8a39-3ace5868dcf4"
+version = "4.4.0+0"
+
 [[deps.CRC32c]]
 uuid = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
 
@@ -565,6 +230,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
+
+[[deps.CSV]]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
+git-tree-sha1 = "6c834533dc1fabd820c1db03c839bf97e45a3fab"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.10.14"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -587,6 +258,12 @@ weakdeps = ["SparseArrays"]
 
     [deps.ChainRulesCore.extensions]
     ChainRulesCoreSparseArraysExt = "SparseArrays"
+
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "59939d8a997469ee05c4b4944560a820f9ba0d73"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.4"
 
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON", "Test"]
@@ -783,6 +460,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "c6033cc3892d0ef5bb9cd29b7f2f0331ea5184ea"
 uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
 version = "3.3.10+0"
+
+[[deps.FITSIO]]
+deps = ["CFITSIO", "Printf", "Reexport", "Tables"]
+git-tree-sha1 = "a8924c203d66d4c5d72980572c6810213422a59d"
+uuid = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
+version = "0.17.1"
 
 [[deps.FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
@@ -1265,26 +948,6 @@ version = "0.6.0"
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.2+1"
-
-[[deps.Measurements]]
-deps = ["Calculus", "LinearAlgebra", "Printf", "Requires"]
-git-tree-sha1 = "bdcde8ec04ca84aef5b124a17684bf3b302de00e"
-uuid = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-version = "2.11.0"
-
-    [deps.Measurements.extensions]
-    MeasurementsBaseTypeExt = "BaseType"
-    MeasurementsJunoExt = "Juno"
-    MeasurementsRecipesBaseExt = "RecipesBase"
-    MeasurementsSpecialFunctionsExt = "SpecialFunctions"
-    MeasurementsUnitfulExt = "Unitful"
-
-    [deps.Measurements.weakdeps]
-    BaseType = "7fbed51b-1ef5-4d67-9085-a4a9b26f478c"
-    Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d"
-    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.MeshIO]]
 deps = ["ColorTypes", "FileIO", "GeometryBasics", "Printf"]
@@ -1823,11 +1486,22 @@ version = "1.20.0"
     ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
     InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
+[[deps.WeakRefStrings]]
+deps = ["DataAPI", "InlineStrings", "Parsers"]
+git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
+uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
+version = "1.4.2"
+
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c1a7aa6219628fcd757dede0ca95e245c5cd9511"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "1.0.0"
+
+[[deps.WorkerUtilities]]
+git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
+uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
+version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
@@ -2001,58 +1675,16 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─72eb810c-114e-11ef-30ea-fd46e923ea49
-# ╠═53f06974-1fcc-4c90-86a0-5dd0cec4e4b8
-# ╠═de046588-5a2b-41d4-a8cc-90dac36318e6
-# ╠═3d32bef6-de64-4d1e-93a8-46c921c86011
-# ╠═010b8c68-8ae1-4e18-b001-32c24c2e43e4
-# ╠═4c164fa8-d0ce-4ee0-8fb1-46bca2a0907f
-# ╠═722bd144-d047-4abf-b82f-f733134d3eb7
-# ╟─26ae0d94-698c-4e9d-bac6-3e91d0d197ab
-# ╟─351731df-8d84-41ba-83e7-793898b9a148
-# ╠═0e1d8bc0-103a-4623-8546-aa7a32ee4504
-# ╠═e8775a3e-afab-48c7-a781-1fcc877ddcc1
-# ╠═36d90fee-8368-465f-baba-e714bf141efc
-# ╠═f3525bab-9241-4484-9a0e-b1db0d986c07
-# ╠═5a27c2b9-add0-40dc-93c6-2530a60f927d
-# ╟─cb3ef5d8-8231-42f1-b54f-42a6b08694c1
-# ╠═1ecf4404-caa5-418d-9170-2d539df69275
-# ╟─8f9fe40c-dd18-437f-ae9e-f0a50fba8155
-# ╠═750dd472-05e4-4c4b-b347-4f0581ec6f55
-# ╟─0ea649d4-c260-450f-a51c-7598da5bfe2e
-# ╠═6eed53c4-7798-4ced-ae58-59679f4cb380
-# ╟─b8055846-efa5-4bcc-a82e-e3b4cd40788d
-# ╠═f7132d82-eb69-4e56-b61b-dd60e6cf8fdb
-# ╟─8a1832ae-6335-44c8-bc56-d8a05e3e301d
-# ╠═30f6a515-76dc-47fc-abc0-a90e28f64d9f
-# ╟─7a5e54c2-6186-4975-9cd4-b971a982a8cf
-# ╠═ac92bf08-1a86-4964-951a-97c8f738ed1f
-# ╠═1bb5096a-575f-4f28-afd4-1fb81b47b825
-# ╠═abe5f1ff-d229-4c5f-b757-967599f3b374
-# ╠═28fe217f-9bfb-450a-9e58-f552adb580d7
-# ╠═ab329391-9ed0-44f8-bf2b-520c87dab362
-# ╠═cde8a009-958e-4511-be4f-b903913e6b49
-# ╠═6a7761ba-cfe2-40e7-8d2d-78f7a47ff164
-# ╠═dcf1884d-9f8a-4ff9-9437-acce8e447709
-# ╠═74531f13-33b5-4821-8991-13c57a44d956
-# ╠═202abcd8-1b8a-4f18-aca5-7b92fca82a56
-# ╠═e078ea6f-9fd3-4bf5-a3ae-665a8d64e046
-# ╠═5b435aac-7fcd-403f-8388-5f635bbadd9a
-# ╠═e5259562-c26f-48c5-87a1-36a48a04d9d0
-# ╟─5540a9a2-54b6-42cf-ad68-470cdc9fc667
-# ╠═777ec196-e193-456d-8d44-cba200a366dd
-# ╠═38875deb-8013-46d7-b8c8-8fad98f44806
-# ╠═4a0bd7c4-9b37-4625-a31c-2f4f85087eed
-# ╟─a1f7d351-4f25-475b-939f-8e03ba5a10a0
-# ╟─f41f6639-1523-47c7-96f8-82f1fdafb7a1
-# ╠═5928daad-d96d-4228-8ec3-0315c1c3cf2d
-# ╠═684841fb-4da5-4e9a-89e9-01b425feae5e
-# ╟─4314e298-f4d3-41d5-88e3-d9e60ba966b1
-# ╠═5f28c6a9-0efd-4afd-9881-a3eaefc98f35
-# ╠═bc848e9f-db31-457c-80d5-65cf5397e906
-# ╠═c3f68bcf-7795-4bf6-95c6-8228d83ff79e
-# ╠═51d76b15-28d1-4871-a7dc-2a8a43802bff
-# ╠═21bc8939-1e8e-420b-ae41-a465203aa2e3
-# ╠═c27b0327-b38b-4927-8e24-5a72deace5a7
+# ╠═6f2359d8-332b-11ef-0db9-f1f06474c561
+# ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
+# ╠═23402e30-2064-494c-bd4a-8243cb474b61
+# ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
+# ╠═834fc86c-8da2-48ce-a51e-f2c1d090fe19
+# ╠═3a69f395-3c2d-4357-89af-5963d5fa79b8
+# ╠═a5e55f3e-de53-443c-9d28-e539aa6206a8
+# ╠═d688d2e5-faca-4b14-801a-d58b08fd6654
+# ╠═7178e5b9-cc42-4933-970a-4707ba69dbe9
+# ╠═75442700-8532-4f86-8469-555c162edb97
+# ╠═643de1b9-b756-4dea-9fe6-fe1db15481ee
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

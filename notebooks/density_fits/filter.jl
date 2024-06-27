@@ -32,11 +32,6 @@ this notebook simply filters the J+24 or Gaia-like observations according to the
 Use the `calc_density`... and the `fit_profile` notebooks to then analyze the sample
 """
 
-# ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
-md"""
- # setup
-"""
-
 # ╔═╡ acb9ae92-924b-4723-8bd7-d775595b24c3
 COLORS = Arya.COLORS;
 
@@ -266,13 +261,12 @@ end
 
 # ╔═╡ Cell order:
 # ╠═48caecb2-180c-4ce4-a57b-6fed82328b01
-# ╠═47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
+# ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-# ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╠═f8779f92-3ae0-474e-907e-1067170b1531
 # ╠═6f4ee4fd-0fe9-4314-a2ec-8b0caa08e8af
