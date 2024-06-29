@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -16,30 +16,25 @@ begin
 end
 
 # ╔═╡ cf6a7cbb-1034-4026-a3f3-1e854d2929e2
-using FITSIO, Tables
+using FITSIO
 
-# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
-md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
-"""
+# ╔═╡ bc84a4bb-4a21-4dc7-9a60-10a6c1e87ae6
+using GLM
 
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
 
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
+# ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
+models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "../../models/sculptor/orbits/orbit1"
+model_dir = "/arc7/home/dboyea/sculptor/orbit1"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
 starsname = "exp2d_rs0.16"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "../../models/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
+starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
 begin 
@@ -52,6 +47,17 @@ begin
 	close(f)
 	
 end
+
+# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
+md"""
+Given a stellar probability file, calculates initial-final density profiles, 
+and projects stars onto the sky
+"""
+
+# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
+md"""
+# Inputs
+"""
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = "../../models/sculptor/isolation/1e6/stars/$starsname.toml"
@@ -196,22 +202,6 @@ begin
 	ρ_s(r) = lguys.calc_ρ(profile, r)
 end
 
-# ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
-function v_rad_hist(snap, bins=40)
-
-	mass = probabilities[snap.index]
-	v_rad = calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	h1 = Arya.histogram(logr, bins, weights=v_rad .* mass)
-	h2 = Arya.histogram(logr, bins, weights=mass)
-
-	x_bins = h1.bins
-	v_bins = h1.values
-	counts = h2.values
-
-	return x_bins, v_bins ./ counts
-end
-
 # ╔═╡ a0391689-66a2-473f-9704-e12a3d033d13
 import LinearAlgebra: dot
 
@@ -235,6 +225,22 @@ function calc_v_rad(snap)
 	v_rad = dropdims(v_rad, dims=1)
 	
 	return v_rad * lguys.V0 # km/s
+end
+
+# ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
+function v_rad_hist(snap, bins=40)
+
+	mass = probabilities[snap.index]
+	v_rad = calc_v_rad(snap)
+	logr = log10.(lguys.calc_r(snap))
+	h1 = Arya.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
+	h2 = Arya.histogram(logr, bins, weights=mass, normalization=:none)
+
+	x_bins = h1.bins
+	v_bins = h1.values
+	counts = h2.values
+
+	return x_bins, v_bins ./ counts
 end
 
 # ╔═╡ 227a4b71-afbd-4121-930b-696d06ccc9ba
@@ -290,7 +296,7 @@ md"""
 # ╔═╡ 12a30334-899e-4061-b7d2-af8c2346721d
 let 
 	x = log10.(probabilities[probabilities .> 0])
-	h = Arya.histogram(x)
+	h = Arya.histogram(x, normalization=:none)
 
 	barplot(h)
 end
@@ -396,6 +402,90 @@ end
 # ╔═╡ 1f722acb-f7b9-4d6c-900e-11eae85e0708
 obs_df = make_sample(snap_f, cen = cens[idx_f, :], Frame=frame)
 
+# ╔═╡ 2636d851-adc7-4f6a-b85b-96409fc673e7
+let	
+	mass = obs_df.probability
+	v_rad = obs_df.radial_velocity
+	x = obs_df.xi_p
+
+	limits = nothing #(-180, 3, -100, 100)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\tilde{v}_\textrm{los} / \textrm{km\,s^{-1}}"
+	)
+	
+	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=200, colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
+	)
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
+# ╔═╡ 9755f2e6-37d6-42e1-9c1c-394f4d7958a8
+let	
+	mass = obs_df.probability
+	v_rad = obs_df.pmra
+	x = obs_df.xi_p
+
+	limits = nothing #(-180, 3, -100, 100)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"$\tilde{\mu}_{\alpha*}$ / mas yr$^{-1}$"
+	)
+	
+	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=200, colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
+	)
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
+# ╔═╡ eb18d285-d4a0-4305-8b9d-71150e7c8303
+let	
+	mass = obs_df.probability
+	v_rad = obs_df.pmdec
+	x = obs_df.xi_p
+
+	limits = nothing #(-180, 3, -100, 100)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"$\tilde{\mu}_{\delta}$ / mas yr$^{-1}$"
+	)
+	
+	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=200, colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
+	)
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
+# ╔═╡ c746c0eb-a8a5-410f-bfd0-a178784b9421
+let	
+	mass = obs_df.probability
+	v_rad = obs_df.radial_velocity
+	x = obs_df.eta_p
+
+	limits = nothing #(-180, 3, -100, 100)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\eta'",
+		ylabel=L"v_\textrm{rad} / \textrm{km\,s^{-1}}"
+	)
+	
+	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=200, colorrange=(1e-10, 1), colorscale=log10,
+	)
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
 # ╔═╡ 0215fe76-f9c5-4274-ae43-89960a0caaef
 obs_c = obs_df[1, :]
 
@@ -491,8 +581,8 @@ function mean_2d(obs_df, values; bins=100, centre=false, limits=nothing)
 		val = values
 	end
 	
-	x = obs_df.ra
-	y = obs_df.dec
+	x = obs_df.xi_p
+	y = obs_df.eta_p
 	weights = obs_df.probability
 
 	h_vel = Arya.histogram2d(x, y, bins, weights=weights .* val, limits=limits)
@@ -516,6 +606,26 @@ function ra_dec_axis(ddeg=5; kwargs...)
 		ylabel="dec / degrees",
 		limits=limits,
 		aspect = 1,
+		xgridvisible=false,
+		ygridvisible=false
+		
+	)
+
+	return fig, ax
+end
+
+# ╔═╡ 6ebfff07-c43f-4d4d-8604-9fd4f1de5d25
+function xi_eta_axis(dx=10, dy=5; kwargs...)
+	fig = Figure(;kwargs...)
+	
+
+	limits = ((-dx, dx), (-dy, dy))
+
+	ax = Axis(fig[1,1],
+		xlabel=L"$\xi'$ / degrees",
+		ylabel=L"$\eta'$ / degrees",
+		limits=limits,
+		aspect = DataAspect(),
 		xgridvisible=false,
 		ygridvisible=false
 		
@@ -551,29 +661,141 @@ let
 	fig
 end
 
+# ╔═╡ 49935a58-4c2f-4476-8df9-df1c729f6698
+md"""
+# defining a stream coordinates system
+"""
+
+# ╔═╡ 6135e0f9-588b-46c0-890a-9b991f4dcc3f
+idx_orbit = idx_f-10:idx_f+10
+
+# ╔═╡ 1f04e864-1cd1-4c3b-ba28-00d9f408c955
+let
+	model = lm(@formula(dec ~ ra), sky_orbit[idx_orbit, :])
+	println(coef(model))
+
+	global PA_orbit = atand(coef(model)[2] / cosd(obs_today.dec))
+
+	model
+
+end
+
+# ╔═╡ 14fee18a-220e-4fda-932e-68d9795055cc
+"""
+Given the slope of an orbit in ddec/dra, calculates a rotated
+sky frame centred on RA, DEC and with the x-axis aligned with the orbit.
+"""
+function to_orbit_coords(ra, dec, ra0, dec0, PA)
+
+	# want to rotate to dec, ra of centre, then rotate 
+
+	α = deg2rad(ra0)
+	δ = deg2rad(dec0)
+	ϖ = deg2rad(90 - PA)
+	Rmat = lguys.Rx_mat(ϖ) * lguys.Ry_mat(δ) * lguys.Rz_mat(-α) 
+
+	coords = lguys.unit_vector(ra, dec)
+	coords =  Rmat * coords' 
+	skycoords = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])[:, 1:2]
+
+	ra = skycoords[:, 1] 
+	ra .-= 360 * (ra .> 180)
+	dec = skycoords[:, 2]
+
+	ra, dec
+end
+
+# ╔═╡ 688b6edd-67ec-40db-8ff8-ac08e1164dde
+PA = 90 - PA_orbit  - 180
+
+# ╔═╡ 70629e3f-03b6-4ceb-9fd4-eddf58856928
+coords = to_orbit_coords(obs_df.ra, obs_df.dec, obs_today.ra, obs_today.dec, PA)
+
+# ╔═╡ 853c9d4d-a717-4f18-9298-f73a04eded6e
+obs_df[!, "xi_p"] = coords[1]
+
+# ╔═╡ f6c70fb8-b98a-4a2d-862a-8ccbceef26a5
+obs_df[!, "eta_p"] = coords[2]
+
+# ╔═╡ 16bb8d9e-5c66-448c-9eb5-c318b7b8efd3
+coords_o = to_orbit_coords(sky_orbit.ra, sky_orbit.dec, obs_today.ra, obs_today.dec, PA)
+
+# ╔═╡ 8fa20d69-21d7-47ac-89b9-00a90ede35d6
+let
+	fig, ax = xi_eta_axis()
+
+	scatter!(coords[1], coords[2])
+	scatter!(coords_o[1][idx_orbit], coords_o[2][idx_orbit], color=idx_orbit)
+	fig
+end
+
+# ╔═╡ 20f6ceb1-c6df-498c-b172-e941d483609a
+let 
+	fig, ax = xi_eta_axis()
+	
+	bins = 100
+	limits = ax.limits.val
+	x = obs_df.xi_p
+	y = obs_df.eta_p
+
+
+	hi = Arya.histogram2d(x, y, bins, weights=obs_df.probability, limits=limits)
+	areas = diff(hi.xbins) .* (diff(hi.ybins)')
+	hi.values ./= areas
+	
+		
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10, maximum(hi.values)))
+
+	
+	Colorbar(fig[1, 2], h,
+		label="stellar density"
+	)
+	fig
+end
+
+# ╔═╡ aeda7369-a88a-469d-a4b2-9365fa90c4fe
+let 
+	fig, ax = ra_dec_axis()
+
+	bins = 100
+	limits = ax.limits.val
+	x = obs_df.ra
+	y = obs_df.dec
+	color = obs_df.xi_p
+	h = scatter!(x, y, color=color, colorrange=(-5, 5), colormap=:redsblues)
+	
+	Colorbar(fig[1, 2], h,
+		label=L"\xi'"
+	)
+	fig
+end
+
+# ╔═╡ e0f7d207-a934-4a60-a780-8f859dde351e
+let 
+	fig, ax = ra_dec_axis()
+
+	bins = 100
+	limits = ax.limits.val
+	x = obs_df.ra
+	y = obs_df.dec
+	color = obs_df.eta_p
+	h = scatter!(x, y, color=color, colorrange=(-5, 5), colormap=:redsblues)
+	
+	Colorbar(fig[1, 2], h,
+		label=L"\eta'"
+	)
+	fig
+end
+
 # ╔═╡ 55683ab7-3a54-4f90-a231-1a088b3bed55
 lguys.transform(lguys.ICRS_Cartesian, obs_today_icrs)
 
 # ╔═╡ 14112f42-4ef6-4449-bee6-a5c5b4da4078
 obs_today_icrs
 
-# ╔═╡ efcc8ed5-5bb2-440e-a952-b5facd1466d2
-let
-	fig, ax = ra_dec_axis()
-
-	idx = idx_f - 20: idx_f + 20
-	h = lines!(sky_orbit.ra[idx], sky_orbit.dec[idx], color=sky_orbit.radial_velocity[idx])
-
-	Colorbar(fig[1, 2], h,
-		label="RV"
-	)
-	fig
-end
-
-
 # ╔═╡ 45bf3eeb-f6bd-42dd-9427-22c5a05270e7
 let 
-	fig, ax = ra_dec_axis(size=(700, 500))
+	fig, ax = xi_eta_axis()
 	limits = ax.limits.val
 	bins = 50
 	lengthscale = 5
@@ -585,7 +807,7 @@ let
 	h_dec = mean_2d(obs_df, obs_df.pmdec, bins=bins, limits=limits, centre=true)
 	h_rv = mean_2d(obs_df, obs_df.radial_velocity, bins=bins, limits=limits, centre=true)
 
-	h_mass = Arya.histogram2d(obs_df.ra, obs_df.dec, bins, limits=limits, weights=obs_df.probability)
+	h_mass = Arya.histogram2d(obs_df.xi_p, obs_df.eta_p, bins, limits=limits, weights=obs_df.probability)
 
 
 	x = lguys.midpoint(h_ra.xbins)
@@ -640,7 +862,7 @@ end
 
 # ╔═╡ ccbb03ca-4db8-49b1-ae5a-32235c7f52ea
 let 
-	fig, ax = ra_dec_axis()
+	fig, ax = xi_eta_axis()
 	limits = ax.limits.val
 	bins = 50
 	lengthscale = 0.3
@@ -649,7 +871,7 @@ let
 	h_dec = mean_2d(obs_df, obs_df.pmdec, bins=bins, limits=limits, centre=false)
 	h_rv = mean_2d(obs_df, obs_df.radial_velocity, bins=bins, limits=limits, centre=false)
 
-	h_mass = Arya.histogram2d(obs_df.ra, obs_df.dec, bins, limits=limits, weights=obs_df.probability)
+	h_mass = Arya.histogram2d(obs_df.xi_p, obs_df.eta_p, bins, limits=limits, weights=obs_df.probability)
 
 
 	x = lguys.midpoint(h_ra.xbins)
@@ -684,7 +906,7 @@ end
 
 # ╔═╡ bb536813-4a9d-40d2-9ce1-b56474da2002
 let 
-	fig, ax = ra_dec_axis()
+	fig, ax = xi_eta_axis()
 	limits = ax.limits.val
 
 	h = mean_2d(obs_df, obs_df.radial_velocity, limits=limits, centre=true)
@@ -700,7 +922,7 @@ end
 
 # ╔═╡ 961e3752-5b41-4730-b874-ad221b360b4a
 let 
-	fig, ax = ra_dec_axis()
+	fig, ax = xi_eta_axis()
 	limits = ax.limits.val
 
 	h = mean_2d(obs_df, obs_df.distance, limits=limits, centre=true)
@@ -716,7 +938,7 @@ end
 
 # ╔═╡ 593850c1-34b8-41a2-bd46-e37656f61a09
 let 
-	fig, ax = ra_dec_axis()
+	fig, ax = xi_eta_axis()
 	limits = ax.limits.val
 
 	h = mean_2d(obs_df, obs_df.pmra, limits=limits, centre=true)
@@ -732,7 +954,7 @@ end
 
 # ╔═╡ 01d8afb9-4ed4-4a5e-85c3-cd37c589fa55
 let 
-	fig, ax = ra_dec_axis()
+	fig, ax = xi_eta_axis()
 	limits = ax.limits.val
 
 	h = mean_2d(obs_df, obs_df.pmdec, limits=limits, centre=true)
@@ -745,6 +967,44 @@ let
 	)
 	fig
 end
+
+# ╔═╡ 35c52910-089c-4507-956a-2b0649507495
+filt_cen = obs_df.r_ell .< 300
+
+# ╔═╡ 4da28282-0f0d-4790-8bd6-75f5ca714d4a
+not = !
+
+# ╔═╡ fcdac098-1c77-4d51-aeaf-1adaf907e7e1
+filt_leading = not.(filt_cen) .& (obs_df.xi_p .> 0)
+
+# ╔═╡ 7ebb792d-3244-4c56-8c0c-5a01f8584838
+filt_trailing = not.(filt_cen) .& (obs_df.xi_p .< 0)
+
+# ╔═╡ 6667230b-7d66-4b60-8782-95291e472bf7
+let 
+	fig, ax = ra_dec_axis(10)
+
+	bins = 100
+	limits = ax.limits.val
+	x = obs_df.ra
+	y = obs_df.dec
+	scatter!(x[filt_cen], y[filt_cen], label="centre", alpha=0.1)
+	scatter!(x[filt_trailing], y[filt_trailing], label="trailing arm", alpha=0.1)
+	scatter!(x[filt_leading], y[filt_leading], label="leading arm", alpha=0.1)
+
+	Legend(fig[1,2], ax)
+
+	fig
+end
+
+# ╔═╡ 0f22b6f7-f636-4020-bedc-1a832399d976
+sum(filt_leading), sum(obs_df.probability[filt_leading])
+
+# ╔═╡ d47d5317-0789-44b9-9644-6a9a8e8d5945
+sum(filt_trailing), sum(obs_df.probability[filt_trailing])
+
+# ╔═╡ 5019720c-970f-4079-a1ab-526221a56973
+sum(filt_cen), sum(obs_df.probability[filt_cen])
 
 # ╔═╡ 176d92cd-9161-4355-a2a0-0fffdbeb0557
 mean_2d(obs_df, obs_df.radial_velocity, bins=10).xbins
@@ -799,9 +1059,79 @@ sum(obs_df.probability[obs_df.r_ell .< r_cut])
 # ╔═╡ 6858dc1b-6f60-4ca1-b2a2-80b4ca345b8c
 sum(obs_df.probability[obs_df.r_ell .> r_cut])
 
+# ╔═╡ 7507c98f-638b-4150-986f-2672d25397af
+let
+	dr = 2
+	r_max = 100r_cut
+	
+	limits = (-2, 1, -1.5, 1.5)
+	
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		title="",
+	limits=limits,
+	aspect=DataAspect())
+
+	filt = obs_df_i.r_ell .< r_max
+
+	x = obs_df.pmra[filt]
+	y = obs_df.pmdec[filt]
+	
+	h = Arya.hist2d!(ax, x, y, weights=obs_df.probability[filt], bins=300, 
+		colorscale=log10, colorrange=(1e-20, nothing))
+	
+
+	Colorbar(fig[1, 2], h, label="stellar density")
+	
+	fig
+end
+
+# ╔═╡ 5455e264-5d35-4845-b5d3-1bb748b63c0e
+obs_c
+
+# ╔═╡ 770f680e-55d4-4682-9a3e-f69d68128449
+let
+		fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		title="leading arm",
+		aspect=DataAspect()
+	)
+	
+	hist2d!(obs_df.pmra[filt_leading], obs_df.pmdec[filt_leading], weights=obs_df.probability[filt_leading], colorscale=log10, colorrange=(1e-15, nothing), bins=100)
+
+	scatter!(obs_today.pm_ra, obs_today.pm_dec)
+	
+
+	fig
+end
+
+# ╔═╡ d28e4e6c-b6fe-44a4-b3d6-7dda721ee5d4
+let
+		fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		title="trailing arm",
+		aspect=DataAspect(),
+	)
+	
+	hist2d!(obs_df.pmra[filt_trailing], obs_df.pmdec[filt_trailing], weights=obs_df.probability[filt_trailing], colorscale=log10, colorrange=(1e-15, nothing), bins=100)
+	scatter!(obs_today.pm_ra, obs_today.pm_dec)
+
+
+	fig
+end
+
 # ╔═╡ b7cd6c89-4534-4222-bb27-1ff511692ee1
 let
-	dr = 0.1
+	dr = 0.2
 	r_max = r_cut
 	
 	limits = (obs_today.pm_ra .+ (-dr, dr), obs_today.pm_dec .+ (-dr, dr))
@@ -849,7 +1179,7 @@ let
 	y = obs_df.pmdec[filt]
 	
 	h = Arya.hist2d!(ax, x, y, weights=m_star_f[filt], bins=100, 
-		colorscale=log10, colorrange=(1e-8, nothing))
+		colorscale=log10, colorrange=(1e-10, nothing))
 	
 	errscatter!([obs_today.pm_ra], [obs_today.pm_dec], xerr=[obs_today_err.pm_ra], yerr=[obs_today_err.pm_ra], color=COLORS[3])
 	
@@ -987,7 +1317,8 @@ let
 
 	hist2d!(log10.(obs_df.r_ell), obs_df.radial_velocity, weights=obs_df.probability,
 		colorscale=log10,
-		colorrange=(1e-8, 0.3)
+		colorrange=(1e-8, 0.3),
+		bins=100
 	)
 	
 	fig
@@ -1355,6 +1686,7 @@ end
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
 # ╟─b3a16249-b8d9-4a6b-9294-cd654a17dc17
+# ╠═cb6a58a6-9ba9-44b5-95a6-062965c13259
 # ╠═0a73bf88-3f46-4864-97f5-41705ea6913d
 # ╠═29988108-b02c-418c-a720-5766f47c39ff
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
@@ -1382,6 +1714,10 @@ end
 # ╠═a1138e64-5fa5-4a0e-aeef-487ee78a7adc
 # ╠═91daae57-94dc-4a8e-b981-75f1406e0768
 # ╠═1866c280-89c3-4a71-9dbf-50b583360145
+# ╠═2636d851-adc7-4f6a-b85b-96409fc673e7
+# ╠═9755f2e6-37d6-42e1-9c1c-394f4d7958a8
+# ╠═eb18d285-d4a0-4305-8b9d-71150e7c8303
+# ╠═c746c0eb-a8a5-410f-bfd0-a178784b9421
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
 # ╠═57d5decd-8259-4ec2-87ac-44d28625cd7b
@@ -1419,16 +1755,38 @@ end
 # ╠═4537d2a8-dc90-4106-81c5-4a230734b182
 # ╠═d7fece88-3327-4435-ab61-b45ff62b3b2e
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780
+# ╠═6ebfff07-c43f-4d4d-8604-9fd4f1de5d25
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
+# ╠═49935a58-4c2f-4476-8df9-df1c729f6698
+# ╠═bc84a4bb-4a21-4dc7-9a60-10a6c1e87ae6
+# ╠═6135e0f9-588b-46c0-890a-9b991f4dcc3f
+# ╠═1f04e864-1cd1-4c3b-ba28-00d9f408c955
+# ╠═14fee18a-220e-4fda-932e-68d9795055cc
+# ╠═688b6edd-67ec-40db-8ff8-ac08e1164dde
+# ╠═70629e3f-03b6-4ceb-9fd4-eddf58856928
+# ╠═853c9d4d-a717-4f18-9298-f73a04eded6e
+# ╠═f6c70fb8-b98a-4a2d-862a-8ccbceef26a5
+# ╠═16bb8d9e-5c66-448c-9eb5-c318b7b8efd3
+# ╠═8fa20d69-21d7-47ac-89b9-00a90ede35d6
+# ╠═20f6ceb1-c6df-498c-b172-e941d483609a
+# ╠═aeda7369-a88a-469d-a4b2-9365fa90c4fe
+# ╠═e0f7d207-a934-4a60-a780-8f859dde351e
+# ╠═6667230b-7d66-4b60-8782-95291e472bf7
 # ╠═55683ab7-3a54-4f90-a231-1a088b3bed55
 # ╠═14112f42-4ef6-4449-bee6-a5c5b4da4078
-# ╠═efcc8ed5-5bb2-440e-a952-b5facd1466d2
 # ╠═45bf3eeb-f6bd-42dd-9427-22c5a05270e7
 # ╠═ccbb03ca-4db8-49b1-ae5a-32235c7f52ea
 # ╠═bb536813-4a9d-40d2-9ce1-b56474da2002
 # ╠═961e3752-5b41-4730-b874-ad221b360b4a
 # ╠═593850c1-34b8-41a2-bd46-e37656f61a09
 # ╠═01d8afb9-4ed4-4a5e-85c3-cd37c589fa55
+# ╠═35c52910-089c-4507-956a-2b0649507495
+# ╠═4da28282-0f0d-4790-8bd6-75f5ca714d4a
+# ╠═fcdac098-1c77-4d51-aeaf-1adaf907e7e1
+# ╠═7ebb792d-3244-4c56-8c0c-5a01f8584838
+# ╠═0f22b6f7-f636-4020-bedc-1a832399d976
+# ╠═d47d5317-0789-44b9-9644-6a9a8e8d5945
+# ╠═5019720c-970f-4079-a1ab-526221a56973
 # ╠═176d92cd-9161-4355-a2a0-0fffdbeb0557
 # ╠═2ef43371-bfae-4a65-8fa9-d1ab5ade32f1
 # ╠═1c242116-e66d-453b-ad62-b6a65cdbe284
@@ -1436,6 +1794,10 @@ end
 # ╠═52abcdc2-4b9e-408f-9c1f-9dc0678c60ca
 # ╠═15e303d8-6020-4cfd-ac01-419a253a4a0b
 # ╠═6858dc1b-6f60-4ca1-b2a2-80b4ca345b8c
+# ╠═7507c98f-638b-4150-986f-2672d25397af
+# ╠═5455e264-5d35-4845-b5d3-1bb748b63c0e
+# ╠═770f680e-55d4-4682-9a3e-f69d68128449
+# ╠═d28e4e6c-b6fe-44a4-b3d6-7dda721ee5d4
 # ╠═b7cd6c89-4534-4222-bb27-1ff511692ee1
 # ╠═9d74ffbb-4c31-4062-9434-7755f53e4da0
 # ╠═975a2008-cf02-4442-9ee9-0b1bbb20889d

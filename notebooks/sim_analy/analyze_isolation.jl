@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -45,10 +45,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-dirname1 = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6"
-
-# ╔═╡ 4bebb58e-9bf7-403f-ac48-57768d5b272b
-
+dirname1 = "/arc7/home/dboyea/sculptor/isolation/1e6"
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
 begin 
@@ -269,7 +266,16 @@ end
 sum(lguys.calc_r(snap_i) .< r_s_s)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
-hist(log10.(lguys.calc_r(snap_i)), ylabel="count", xlabel="log r / kpc", label="")
+let
+	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", )
+	
+	hist!(log10.(lguys.calc_r(snap_i)), label="")
+
+	fig
+end
+
+# ╔═╡ 1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
+println(sum(lguys.calc_r(snap_i) .< 0.05))
 
 # ╔═╡ fb0dec74-aaab-43a4-9b37-d13634c5dcad
 md"""
@@ -385,7 +391,6 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═82c76c56-e874-4eba-9367-569b656155a2
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
-# ╠═4bebb58e-9bf7-403f-ac48-57768d5b272b
 # ╠═79b07d75-fb05-4833-ac2c-ea0e9c24e791
 # ╠═ef3d1d5f-0979-44a7-8f0f-bf4638ea5612
 # ╠═9e9d463b-feaa-41bd-96c7-9c320d933b71
@@ -412,6 +417,7 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
+# ╠═1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
 # ╟─fb0dec74-aaab-43a4-9b37-d13634c5dcad
 # ╠═5b9a64a1-38c1-4f4d-aac3-d91663c368a3
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070

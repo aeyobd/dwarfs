@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -24,8 +24,14 @@ md"""
 A detailed analysis of the stars in sculptor
 """
 
+# ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
+models_dir = "/arc7/home/dboyea/sculptor"
+
+# ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
+iso_dir = "$models_dir/orbit1/"
+
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "stars/exp2d_rs0.13_today.fits"
+starsfile = "$iso_dir/stars/exp2d_rs0.13_today.fits"
 
 # ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
 FITS(starsfile, "r") do f
@@ -34,7 +40,7 @@ end
 
 # ╔═╡ 8dbc941f-287e-49f4-8bcf-123e3851f015
 begin 
-	cens = CSV.read(joinpath(".", "out/centres.csv"), DataFrames.DataFrame)
+	cens = CSV.read(joinpath(iso_dir, "out/centres.csv"), DataFrames.DataFrame)
 	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
 	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
 end
@@ -266,6 +272,8 @@ end
 # ╔═╡ Cell order:
 # ╠═9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 # ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
+# ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
+# ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
 # ╠═20ac4d7c-d835-4a7f-9600-261e43f4b290
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
