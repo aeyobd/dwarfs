@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -30,19 +30,19 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "../../models/sculptor/orbits/orbit1_g2/"
+dir = "/arc7/home/dboyea/sculptor/orbit1/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  "../../models/sculptor/orbits/orbit1/properties.toml"
+properties_file =  joinpath(dir, "properties.toml")
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = "../../models/sculptor/mc_orbits/orbit1.csv"
+orbit_file = joinpath(dir, "orbit.csv")
 
 # ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
-outfile = dir * "orbital_properties.toml"
+outfile = joinpath(dir, "orbital_properties.toml")
 
 # ╔═╡ b75f0fb1-be59-416c-a61f-4109bada9ae9
-r_h = 0.11
+r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
 md"""
