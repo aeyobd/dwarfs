@@ -10,7 +10,7 @@ function main()
     v2 = 0.8*v1
     v3 = 1.2*v1
 
-    pos = hcat(r, -r, r)
+    pos = [r -r r]
     vel = hcat(v1, v2, v3)
     m = 0
 

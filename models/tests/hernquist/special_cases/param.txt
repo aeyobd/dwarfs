@@ -39,20 +39,20 @@ UnitVelocity_in_cm_per_s 1.0
 GravityConstantInternal  1.0
 
 
-% the potential
-MWThinMass	    0
-MWThin_A	    3.944
-MWThin_B	    0.311
-MWThickMass	    0
-MWThick_A	    3.886
-MWThick_B	    0.918
-
-MWBulgeMass		1
-MWBulge_A	    1
-
-MWHaloMass	    0
-MWHalo_R		20.2
-MWHalo_C		9.545
+% % the potential
+% MWThinMass	    0
+% MWThin_A	    3.944
+% MWThin_B	    0.311
+% MWThickMass	    0
+% MWThick_A	    3.886
+% MWThick_B	    0.918
+% 
+% MWBulgeMass		1
+% MWBulge_A	    1
+% 
+% MWHaloMass	    0
+% MWHalo_R		20.2
+% MWHalo_C		9.545
 
 
 %---- Output frequency and output paramaters

@@ -1,7 +1,7 @@
 import LilGuys as lguys
 
 
-const obs = lguys.Observation(
+const obs = lguys.ICRS(
     ra = 15.03917,
     dec = -33.70917,
     distance = 86,
@@ -10,7 +10,7 @@ const obs = lguys.Observation(
     radial_velocity = 111.4,
 )
 
-const err = lguys.Observation(
+const err = lguys.ICRS(
     ra = 0,
     dec = 0,
     distance = 3,
