@@ -166,6 +166,14 @@ outputs in a text file
 
 `setInOrbit.py`
 
+
+
+
+
+# Agama
+
+
+
 # Gadget4
 
 documentation: https://wwwmpa.mpa-garching.mpg.de/gadget4/
@@ -186,11 +194,25 @@ make CONFIG=~/dwarfs/gadget/Config.sh DIR=~/dwarfs/gadget
 
 where Config.sh is the configfile
 
+### Agama patch
+
+run 
+
+```
+patch -r -u -N -d /path/to/gadget4/ -p 1 < example_nbody_simulation_gadget4.patch
+```
+
+from the `Agama/py` directory. This will apply the Agama 
+
 ### The Configfile
 
 Gadget contains many compile-time settings. For this run we don't need many
 
 I do add in a `EXTERNALGRAVITY_MW` option to the makefile which allows the specification of our four component milky way potential (discussed elsewhere)
+
+### Agama potential
+
+hard coded as "agama_potential.ini". 
 
 ## Running
 
