@@ -4,7 +4,7 @@
     # LEAN
     # SELFGRAVITY
     EXTERNALGRAVITY
-    EXTERNALGRAVITY_MW
+    EXTERNALGRAVITY_AGAMA
     
 # Gravity options
 
