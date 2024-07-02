@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -22,10 +22,10 @@ begin
 end
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = "/cosma/home/durham/dc-boye1/data/dwarfs/models/sculptor/isolation/1e6"
+modeldir = "/astro/dboyea/sculptor/isolation/1e6"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_rs0.1"
+starsname = "exp2d_rs0.05"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "stars/$(starsname)_stars.hdf5"
@@ -128,12 +128,15 @@ snap_i.x_cen
 # ╔═╡ 7ad553e8-50ac-41c3-b461-3c9ba2cdef17
 snap_i.positions
 
+# ╔═╡ b76c91ff-0928-40ad-9263-c455f804b6f5
+out.times[end] * lguys.T0
+
 # ╔═╡ e76583dc-eea9-43c8-8051-a58a5c68a942
 let 
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
-		limits=((-1.9, 1), (-15, 2)))
+		limits=((-0.8, 0.3), (-15, 2)))
 
 	#vlines!(log10(r_s_s), label="r_s")
 
@@ -196,19 +199,6 @@ let
 	fig
 end
 
-# ╔═╡ 1c83bf4c-12b2-4413-b4a9-87b75da1dcd8
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="log r containing stellar mass")
-	for i in eachindex(percens)
-		lines!(1:length(times), log10.(rs_s[i, :]), 
-			color=i, colorrange=(1, length(percens)),
-			label="$(percens[i])")
-	end
-	Legend(fig[1,2], ax, "fraction")
-	fig
-end
-
 # ╔═╡ 193273c9-5b13-4af6-a345-4326cdebcf04
 let
 	fig = Figure()
@@ -242,9 +232,9 @@ end
 # ╠═98d2168c-f450-41e2-9b9d-2880a662f841
 # ╠═8b69303d-c992-447a-aaf6-af5839173b1a
 # ╠═7ad553e8-50ac-41c3-b461-3c9ba2cdef17
+# ╠═b76c91ff-0928-40ad-9263-c455f804b6f5
 # ╠═e76583dc-eea9-43c8-8051-a58a5c68a942
 # ╠═341440a0-9567-4ebf-8acb-cf327edfa4fb
 # ╠═ab0b1a03-325c-489a-ac2f-309560541085
 # ╠═d8f546d3-9e2e-4703-b652-5bea7bbbbd26
-# ╠═1c83bf4c-12b2-4413-b4a9-87b75da1dcd8
 # ╠═193273c9-5b13-4af6-a345-4326cdebcf04

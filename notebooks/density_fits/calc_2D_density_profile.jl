@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -12,7 +12,6 @@ begin
 	using DataFrames, CSV
 	
 	using CairoMakie
-	using Measurements
 			
 	import LilGuys as lguys
 	using Arya
@@ -29,11 +28,14 @@ given a sample of points, can we centre and calculate the 2D density profile
 """
 
 # ╔═╡ c4574ed3-f431-4c0e-a721-1c8d88dda10f
-name = "exp2d_rs0.16_i_today"
+name = "exp2d_rs0.1_today"
+
+# ╔═╡ bb644db4-7fb4-43c8-abf9-7235aa279ad6
+r_centre = 3
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
-	samplename = "/cosma/home/durham/dc-boye1/sculptor/orbits/orbit1/stars/$name.fits" # = "$(name)_sample.fits" 
+	samplename = "/astro/dboyea/sculptor/orbit1/stars/$name.fits" # = "$(name)_sample.fits" 
 	# samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 	#samplename = "../test_sky_recon.fits"
 end
@@ -65,7 +67,7 @@ else
 end
 
 # ╔═╡ cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
-ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, centre_method, weights .^ 3)
+ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, centre_method, weights )
 
 # ╔═╡ 86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 xi, eta = lguys.to_tangent(sample.ra, sample.dec, ra0, dec0)
@@ -89,7 +91,7 @@ let
 end
 
 # ╔═╡ f476c859-ba4b-4343-8184-f6f41dc092ee
-profile = lguys.calc_properties(r_ell, bins=50, weights=weights, normalization=:central, r_centre=3)
+profile = lguys.calc_properties(r_ell, bins=50, weights=weights, normalization=:central, r_centre=r_centre)
 
 # ╔═╡ b87cf54b-2c4c-46c5-9336-c13e773e29ec
 begin 
@@ -265,6 +267,7 @@ end
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
 # ╟─852717c0-aabf-4c03-9cf5-a6d91174e0f9
 # ╠═c4574ed3-f431-4c0e-a721-1c8d88dda10f
+# ╠═bb644db4-7fb4-43c8-abf9-7235aa279ad6
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
