@@ -63,7 +63,7 @@ Parameters
 dir = "/astro/dboyea/sculptor/isolation/1e4/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.1.toml"
+paramname = "exp2d_rs0.15.toml"
 
 # ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 begin 
@@ -199,7 +199,7 @@ begin
 end
 
 # ╔═╡ f7f746c9-cd03-4391-988b-dffeb31b2842
-@info " $(sum(radii .< r_h)) stars within (3D) half-light radius" 
+println(" $(sum(radii .< r_h)) stars within (3D) half-light radius")
 
 # ╔═╡ 4fe0d79b-92f8-4766-808a-9bfbf4c5ab7f
 """
@@ -431,9 +431,17 @@ md"""
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radii", ylabel="PDF")
-	stephist!(log10.(radii), normalization=:pdf, label="dark matter")
-	stephist!(log10.(radii), weights=ps, normalization=:pdf, label="stars (nbody)")
+	stephist!(log10.(radii), bins=log10.(r_e), normalization=:pdf, label="dark matter")
+	stephist!(log10.(radii), bins=log10.(r_e), weights=ps, normalization=:pdf, label="stars (nbody)")
 	axislegend()
+	fig
+end
+
+# ╔═╡ 90bde4ba-56a2-47f8-bd42-7f7789e1dad4
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="log radii", ylabel="number / bin")
+	stephist!(log10.(radii), bins=log10.(r_e), label="dark matter")
 	fig
 end
 
@@ -467,6 +475,18 @@ let
 
 	axislegend(ax, position=:lb)
 
+	fig
+end
+
+# ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
+		xlabel="log r", ylabel="log density")
+	lines!(log10.(r), log10.(ν_dm), label="DM")
+	scatter!(log10.(r), log10.(ν_s), label="stars (analytic)")
+
+	axislegend()
 	fig
 end
 
@@ -529,26 +549,16 @@ let
 
 	ax2 = Axis(fig[2,1], 
 		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
-		limits=((log10(0.1r_h), log10(100r_h)), (-1, 1)))
+		limits=((log10(0.5r_h), log10(100r_h)), (-1, 1)))
 	
-	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
-	hlines!([0], color="black", label="")
+	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="",
+		color=COLORS[2]
+	)
+	hlines!([0], label="")
 
 	linkxaxes!(ax, ax2, )
 	rowsize!(fig.layout, 2, Auto(0.3))
 	hidexdecorations!(ax, grid=false)
-	fig
-end
-
-# ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
-		xlabel="log r", ylabel="log density")
-	lines!(log10.(r), log10.(ν_dm), label="DM")
-	scatter!(log10.(r), log10.(ν_s), label="stars (analytic)")
-
-	axislegend()
 	fig
 end
 
@@ -759,7 +769,7 @@ let
 	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 	R = @. 60sqrt(xi^2 + eta^2)
 	
-	prof = lguys.calc_properties(R, weights=ms, bins=100)
+	prof = lguys.calc_properties(R, weights=ms, bins=50)
 
 
 	fig = Figure()
@@ -899,7 +909,9 @@ save_obs(obs_mock, params["mock_file"])
 # ╟─4d1991ea-9496-48c7-a400-8fefbecefcd2
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
+# ╠═90bde4ba-56a2-47f8-bd42-7f7789e1dad4
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
+# ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
 # ╟─9e2f1606-46aa-4e06-a31f-b03a383cccda
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
@@ -908,7 +920,6 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═76200404-16aa-4caf-b247-3bc330b82868
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
-# ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═33a26663-0c08-411b-902b-a509b2afa5ad
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 # ╠═90856551-fff8-4d15-be66-6353091b5e50
