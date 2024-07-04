@@ -86,6 +86,8 @@ and $A(c)$ is as above. The characteristic density can also be written in terms 
 $$
 \rho_s =  \frac{M_s}{4\ \pi\, {r_s}^3}
 $$
+Note that this is the same as an alpha-beta-gamma profile where $\alpha=\gamma=1$ and $\beta =3$.
+
 ### Contained mass
 
 By integrating $\rho$, the contained mass interior to $r$ is

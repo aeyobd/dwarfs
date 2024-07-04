@@ -166,14 +166,6 @@ outputs in a text file
 
 `setInOrbit.py`
 
-
-
-
-
-# Agama
-
-
-
 # Gadget4
 
 documentation: https://wwwmpa.mpa-garching.mpg.de/gadget4/
@@ -194,25 +186,11 @@ make CONFIG=~/dwarfs/gadget/Config.sh DIR=~/dwarfs/gadget
 
 where Config.sh is the configfile
 
-### Agama patch
-
-run 
-
-```
-patch -r -u -N -d /path/to/gadget4/ -p 1 < example_nbody_simulation_gadget4.patch
-```
-
-from the `Agama/py` directory. This will apply the Agama 
-
 ### The Configfile
 
 Gadget contains many compile-time settings. For this run we don't need many
 
 I do add in a `EXTERNALGRAVITY_MW` option to the makefile which allows the specification of our four component milky way potential (discussed elsewhere)
-
-### Agama potential
-
-hard coded as "agama_potential.ini". 
 
 ## Running
 
@@ -325,24 +303,6 @@ Observationally, we know the 6D kinimatic and have estimated total stellar mass
 ## Orbits
 
 
-
-## Initial profile parameters
-
-to get the stellar mass, we need the absolute magnitude and stellar mass to light ratio. For example, Sculptor has an absolute magnitude of $M_V = -11.1$ [@mcconnachie2012], and the sun has an absolute magnitude of 4.83, so with a stellar mass to light ratio of 1.6, this gives a total stellar mass of $M_\star=3.8\times10^6\,$M$_\odot$ .
-
-Next, we use that
-$$
-M_\star = m_0\,\nu^\alpha \exp({-\nu^\gamma})
-$$
-where $m_0 = 3\times10^8 M_\odot$, $\alpha=3.36$, and $\gamma=-2.4$. $\nu = V_{\rm max}/$50km/s, from an emperical fit to @fattahi2018. For the example of Sculptor, $\nu=0.643$ solves the above equation, so $V_{\rm max}=32.2$km/s. 
-
-Finally, the characteristic radius is from @ludlow2016 (see their appendix C). The full equations are complex, but briefly, from a given M and z, you can calculate their fit to the expected concentration. We then need to solve for a value of $M_s$ which gives a value of $c$ which together predict the correct $V_{\rm circ, max}$. 
-
-Using that the maximum circular velocity occurs at $\alpha r_s$ where $\alpha = 2.163$ (is a numerical solution), and the equation for circular velocity (way back above but repeated here:)
-$$
-\left(V_c/V_{200}\right)^2 = \frac{c}{r/r_s}\frac{A(r/r_s)}{A(c)}
-$$
-where $V_{200} = \sqrt{G\ M_{200} / r_{200}}$. The solution here is $M_{200} = 5.4e9$ where $c=13.0$, and $r_s = 2.86$ and $M_s = 6.12e8$.  
 
 
 
