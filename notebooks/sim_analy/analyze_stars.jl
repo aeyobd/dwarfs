@@ -28,7 +28,7 @@ models_dir = "/arc7/home/dboyea/sculptor"
 model_dir = "/arc7/home/dboyea/sculptor/orbit1"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.13"
+starsname = "exp2d_rs0.05_ana"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
 starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"

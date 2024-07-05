@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ 53f06974-1fcc-4c90-86a0-5dd0cec4e4b8
 begin
 	using Arya
-	using GLMakie
+	using CairoMakie
 
 	using DataFrames
 	using Measurements
@@ -26,15 +26,6 @@ md"""
 A quick collection of past literature observations and measurments of the Sculptor DSph
 """
 
-# ╔═╡ 010b8c68-8ae1-4e18-b001-32c24c2e43e4
-function obs_row(study; ra=NaN, dec=NaN, pm_ra=NaN, pm_dec=NaN, distance=NaN, radial_velocity=NaN, fe_h=NaN)
-	return (study=study, ra=ra, dec=dec, pm_ra=pm_ra, pm_dec=pm_dec, distance=distance, radial_velocity=radial_velocity, fe_h=fe_h)
-end
-
-# ╔═╡ 4c164fa8-d0ce-4ee0-8fb1-46bca2a0907f
-function profile_row(study;)
-end
-
 # ╔═╡ 722bd144-d047-4abf-b82f-f733134d3eb7
 dm_to_d(dm) = 10 * 10^(dm / 5) / 1e3
 
@@ -50,6 +41,19 @@ md"""
 - McChonnachie 2012: For sculptor distance: Pietrzy´nski 2008, Walker + 2009 for RV. 
 """
 
+# ╔═╡ 7fa4817f-246d-4956-aee2-42ea577412f2
+md"""
+# Kirby + 2009
+DEIMOS of 388 stars?
+"""
+
+# ╔═╡ 47e8e035-f0a0-4f68-9296-12b7939d83b2
+kirby09 = Dict(
+	:study => "K+09",
+	:radial_velocity => (111.6 ± 0.5) * u"km/s",
+	:σ_r => (8 ± 0.7)
+)
+
 # ╔═╡ 0e1d8bc0-103a-4623-8546-aa7a32ee4504
 md"""
 ## Kirby 2013
@@ -59,12 +63,10 @@ Metallicity, SFR ??
 # ╔═╡ e8775a3e-afab-48c7-a781-1fcc877ddcc1
 md"""
 # battaglia + 2008
-VLT/FLAMES.
+VLT/FLAMES of 470 candidates. Notices a velocity gradient along the major axis. Mass measurements from kinimatics.
 
-Notices a velocity gradient along the major axis. Mass measurements
-
-- NFW c = 20, M = 2.2 \pm 1 x 10^9 Mo
-- M/L < 1.8 kpc = 150 pm 30
+- NFW: $c = 20$, $M(<1.8{\rm kpc}) = (2.2 \pm 1) \times 10^9 M_\odot$
+- M/L < 1.8 kpc = $150 \pm 30$
 """
 
 # ╔═╡ 36d90fee-8368-465f-baba-e714bf141efc
@@ -92,8 +94,14 @@ ad86 = Dict(
 md"""
 ## Tolstoy+2023
 VLT/FLAMES spectoscopic survey with Gaia DR3 proper motions (and parallax cuts)
+Contains a large sample of stars (1701 incdividual stars). Builds on Battaglia 2022.
+Claim that there is a gradient (decreasing) of velocity dispersion and radial velocity (increasing) in the outer regions. Do not see a rotation signature.
+
+
+## TODO: Have the velocity measurements: analyse the sample
 
 fe_h=-1.82 ± 0.45,
+
 """
 
 # ╔═╡ 1ecf4404-caa5-418d-9170-2d539df69275
@@ -122,13 +130,18 @@ md"""
 ## Walker + 2009
 https://ui.adsabs.harvard.edu/abs/2009AJ....137.3109W/abstract
 
-Use an algorithm with expectation maximum to determine memberships with RVs and metallicities from Mike. Also record a velocity dispersion of 9.2 \pm 1.1 km / s
+
+1,300 + RV measurements.
+Use an algorithm with expectation maximum to determine memberships with RVs and metallicities from Mike. Also record a velocity dispersion of 9.2 \pm 1.1 km / s.
+
+**TODO**: Have the sample, can recalculate their properties.
 """
 
 # ╔═╡ 6eed53c4-7798-4ced-ae58-59679f4cb380
 walker2009 =  Dict(
 	:study => "W+09",
-	:radial_velocity => (111.4 ± 0.1) * u"km/s"
+	:radial_velocity => (111.4 ± 0.1) * u"km/s",
+	:σ_v => (9.2 ± 1.1) * u"km / s"
 )
 
 # ╔═╡ b8055846-efa5-4bcc-a82e-e3b4cd40788d
@@ -229,6 +242,11 @@ md"""
 Gaia proper motion analysis + HST
  Measure tangential and radial dispersion..., in agreement.
 In general in agreement with Walker & Penarrubia 2011
+"""
+
+# ╔═╡ 73ed55db-165e-4fc4-9271-2ca4027a6268
+md"""
+## Strigari, Frenk, White 2017
 """
 
 # ╔═╡ e078ea6f-9fd3-4bf5-a3ae-665a8d64e046
@@ -447,16 +465,16 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Arya = "415bc928-4679-4905-9aff-233f9524af88"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 Arya = "~0.1.4"
+CairoMakie = "~0.12.3"
 DataFrames = "~1.6.1"
-GLMakie = "~0.10.3"
 Measurements = "~2.11.0"
 StatsBase = "~0.34.3"
 Unitful = "~1.20.0"
@@ -468,7 +486,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "20f6a74faf4240bfd983c8b8c048822cd3531f17"
+project_hash = "283ed332e6c3feef32b5d95c2b5b05cf7006cc27"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -565,6 +583,18 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
+
+[[deps.Cairo]]
+deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
+git-tree-sha1 = "d0b3f8b4ad16cb0a2988c6788646a5e6a17b6b1b"
+uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
+version = "1.0.5"
+
+[[deps.CairoMakie]]
+deps = ["CRC32c", "Cairo", "Cairo_jll", "Colors", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
+git-tree-sha1 = "3441d68ea63944a2b9b6de76603ec1c8b0fd4e3e"
+uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+version = "0.12.3"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -862,29 +892,11 @@ version = "1.0.14+0"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
-[[deps.GLFW]]
-deps = ["GLFW_jll"]
-git-tree-sha1 = "35dbc482f0967d8dceaa7ce007d16f9064072166"
-uuid = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
-version = "3.4.1"
-
-[[deps.GLFW_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
-git-tree-sha1 = "ff38ba61beff76b8f4acad8ab0c97ef73bb670cb"
-uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
-version = "3.3.9+0"
-
-[[deps.GLMakie]]
-deps = ["ColorTypes", "Colors", "FileIO", "FixedPointNumbers", "FreeTypeAbstraction", "GLFW", "GeometryBasics", "LinearAlgebra", "Makie", "Markdown", "MeshIO", "ModernGL", "Observables", "PrecompileTools", "Printf", "ShaderAbstractions", "StaticArrays"]
-git-tree-sha1 = "4e351a8ce824acea8dcefcd6cfe0cd8c2ea130e3"
-uuid = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
-version = "0.10.3"
-
 [[deps.GeoInterface]]
 deps = ["Extents"]
-git-tree-sha1 = "801aef8228f7f04972e596b09d4dba481807c913"
+git-tree-sha1 = "9fff8990361d5127b770e3454488360443019bb3"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "1.3.4"
+version = "1.3.5"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "Extents", "GeoInterface", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -903,6 +915,12 @@ deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libic
 git-tree-sha1 = "7c82e6a6cd34e9d935e9aa4051b66c6ff3af59ba"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.80.2+0"
+
+[[deps.Graphics]]
+deps = ["Colors", "LinearAlgebra", "NaNMath"]
+git-tree-sha1 = "d61890399bc535850c4bf08e4e0d3a7ad0f21cbd"
+uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
+version = "1.1.2"
 
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1169,12 +1187,6 @@ git-tree-sha1 = "9fd170c4bbfd8b935fdc5f8b7aa33532c991a673"
 uuid = "d4300ac3-e22c-5743-9152-c294e39db1e4"
 version = "1.8.11+0"
 
-[[deps.Libglvnd_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll", "Xorg_libXext_jll"]
-git-tree-sha1 = "6f73d1dd803986947b2c750138528a999a6c7733"
-uuid = "7e76a0d4-f3c7-5321-8279-8d96eeed0f29"
-version = "1.6.0+0"
-
 [[deps.Libgpg_error_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "fbb1f2bef882392312feb1ede3615ddc1e9b99ed"
@@ -1286,12 +1298,6 @@ version = "2.11.0"
     SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
-[[deps.MeshIO]]
-deps = ["ColorTypes", "FileIO", "GeometryBasics", "Printf"]
-git-tree-sha1 = "8c26ab950860dfca6767f2bbd90fdf1e8ddc678b"
-uuid = "7269a6da-0436-5bbc-96c2-40638cbb6118"
-version = "0.4.11"
-
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
@@ -1300,12 +1306,6 @@ version = "1.2.0"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
-
-[[deps.ModernGL]]
-deps = ["Libdl"]
-git-tree-sha1 = "b76ea40b5c0f45790ae09492712dd326208c28b2"
-uuid = "66fc600b-dfda-50eb-8b99-91cfa97b1301"
-version = "1.1.7"
 
 [[deps.MosaicViews]]
 deps = ["MappedArrays", "OffsetArrays", "PaddedViews", "StackViews"]
@@ -1432,6 +1432,12 @@ deps = ["OffsetArrays"]
 git-tree-sha1 = "0fac6313486baae819364c52b4f483450a9d793f"
 uuid = "5432bcbf-9aad-5242-b902-cca2824c8663"
 version = "0.5.12"
+
+[[deps.Pango_jll]]
+deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "cb5a2ab6763464ae0f19c86c56c63d4a2b0f5bda"
+uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
+version = "1.52.2+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -1666,9 +1672,9 @@ version = "0.1.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "6e00379a24597be4ae1ee6b2d882e15392040132"
+git-tree-sha1 = "20833c5b7f7edf0e5026f23db7f268e4f23ec577"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.5"
+version = "1.9.6"
 weakdeps = ["ChainRulesCore", "Statistics"]
 
     [deps.StaticArrays.extensions]
@@ -1831,15 +1837,15 @@ version = "1.0.0"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "52ff2af32e591541550bd753c0da8b9bc92bb9d9"
+git-tree-sha1 = "d9717ce3518dc68a99e6b96300813760d887a01d"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.12.7+0"
+version = "2.13.1+0"
 
 [[deps.XSLT_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "Pkg", "XML2_jll", "Zlib_jll"]
-git-tree-sha1 = "91844873c4085240b95e795f692c4cec4d805f8a"
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "XML2_jll", "Zlib_jll"]
+git-tree-sha1 = "a54ee957f4c86b526460a720dbc882fa5edcbefc"
 uuid = "aed1982a-8fda-507f-9586-7b0439959a61"
-version = "1.1.34+0"
+version = "1.1.41+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
@@ -1853,12 +1859,6 @@ git-tree-sha1 = "6035850dcc70518ca32f012e46015b9beeda49d8"
 uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
 version = "1.0.11+0"
 
-[[deps.Xorg_libXcursor_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXfixes_jll", "Xorg_libXrender_jll"]
-git-tree-sha1 = "12e0eb3bc634fa2080c1c37fccf56f7c22989afd"
-uuid = "935fb764-8cf2-53bf-bb30-45bb1f8bf724"
-version = "1.2.0+4"
-
 [[deps.Xorg_libXdmcp_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "34d526d318358a859d7de23da945578e8e8727b7"
@@ -1870,30 +1870,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "d2d1a5c49fae4ba39983f63de6afcbea47194e85"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
 version = "1.3.6+0"
-
-[[deps.Xorg_libXfixes_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll"]
-git-tree-sha1 = "0e0dc7431e7a0587559f9294aeec269471c991a4"
-uuid = "d091e8ba-531a-589c-9de9-94069b037ed8"
-version = "5.0.3+4"
-
-[[deps.Xorg_libXi_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXfixes_jll"]
-git-tree-sha1 = "89b52bc2160aadc84d707093930ef0bffa641246"
-uuid = "a51aa0fd-4e3c-5386-b890-e753decda492"
-version = "1.7.10+4"
-
-[[deps.Xorg_libXinerama_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll"]
-git-tree-sha1 = "26be8b1c342929259317d8b9f7b53bf2bb73b123"
-uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
-version = "1.1.4+4"
-
-[[deps.Xorg_libXrandr_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
-git-tree-sha1 = "34cea83cb726fb58f325887bf0612c6b3fb17631"
-uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
-version = "1.5.2+4"
 
 [[deps.Xorg_libXrender_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -1909,9 +1885,9 @@ version = "0.1.1+0"
 
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "XSLT_jll", "Xorg_libXau_jll", "Xorg_libXdmcp_jll", "Xorg_libpthread_stubs_jll"]
-git-tree-sha1 = "b4bfde5d5b652e22b9c790ad00af08b6d042b97d"
+git-tree-sha1 = "bcd466676fef0878338c61e655629fa7bbc69d8e"
 uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
-version = "1.15.0+0"
+version = "1.17.0+0"
 
 [[deps.Xorg_xtrans_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2005,21 +1981,21 @@ version = "3.5.0+0"
 # ╠═53f06974-1fcc-4c90-86a0-5dd0cec4e4b8
 # ╠═de046588-5a2b-41d4-a8cc-90dac36318e6
 # ╠═3d32bef6-de64-4d1e-93a8-46c921c86011
-# ╠═010b8c68-8ae1-4e18-b001-32c24c2e43e4
-# ╠═4c164fa8-d0ce-4ee0-8fb1-46bca2a0907f
 # ╠═722bd144-d047-4abf-b82f-f733134d3eb7
 # ╟─26ae0d94-698c-4e9d-bac6-3e91d0d197ab
 # ╟─351731df-8d84-41ba-83e7-793898b9a148
-# ╠═0e1d8bc0-103a-4623-8546-aa7a32ee4504
+# ╠═7fa4817f-246d-4956-aee2-42ea577412f2
+# ╠═47e8e035-f0a0-4f68-9296-12b7939d83b2
+# ╟─0e1d8bc0-103a-4623-8546-aa7a32ee4504
 # ╠═e8775a3e-afab-48c7-a781-1fcc877ddcc1
 # ╠═36d90fee-8368-465f-baba-e714bf141efc
-# ╠═f3525bab-9241-4484-9a0e-b1db0d986c07
+# ╟─f3525bab-9241-4484-9a0e-b1db0d986c07
 # ╠═5a27c2b9-add0-40dc-93c6-2530a60f927d
 # ╟─cb3ef5d8-8231-42f1-b54f-42a6b08694c1
 # ╠═1ecf4404-caa5-418d-9170-2d539df69275
 # ╟─8f9fe40c-dd18-437f-ae9e-f0a50fba8155
 # ╠═750dd472-05e4-4c4b-b347-4f0581ec6f55
-# ╟─0ea649d4-c260-450f-a51c-7598da5bfe2e
+# ╠═0ea649d4-c260-450f-a51c-7598da5bfe2e
 # ╠═6eed53c4-7798-4ced-ae58-59679f4cb380
 # ╟─b8055846-efa5-4bcc-a82e-e3b4cd40788d
 # ╠═f7132d82-eb69-4e56-b61b-dd60e6cf8fdb
@@ -2036,6 +2012,7 @@ version = "3.5.0+0"
 # ╠═dcf1884d-9f8a-4ff9-9437-acce8e447709
 # ╠═74531f13-33b5-4821-8991-13c57a44d956
 # ╠═202abcd8-1b8a-4f18-aca5-7b92fca82a56
+# ╠═73ed55db-165e-4fc4-9271-2ca4027a6268
 # ╠═e078ea6f-9fd3-4bf5-a3ae-665a8d64e046
 # ╠═5b435aac-7fcd-403f-8388-5f635bbadd9a
 # ╠═e5259562-c26f-48c5-87a1-36a48a04d9d0
