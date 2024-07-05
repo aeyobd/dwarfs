@@ -45,3 +45,5 @@ Gadget4
 gr-temp
 
 notebooks/density_fits/results
+
+*backup*.jl
