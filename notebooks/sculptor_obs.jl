@@ -14,7 +14,7 @@ begin
 end
 
 # ╔═╡ de046588-5a2b-41d4-a8cc-90dac36318e6
-using Unitful
+using Unitful, UnitfulAstro
 
 # ╔═╡ 3d32bef6-de64-4d1e-93a8-46c921c86011
 using StatsBase: mean, std
@@ -29,6 +29,11 @@ A quick collection of past literature observations and measurments of the Sculpt
 # ╔═╡ 722bd144-d047-4abf-b82f-f733134d3eb7
 dm_to_d(dm) = 10 * 10^(dm / 5) / 1e3
 
+# ╔═╡ 23022242-98d6-4509-bb60-b992c56a3bb0
+md"""
+# index
+"""
+
 # ╔═╡ 26ae0d94-698c-4e9d-bac6-3e91d0d197ab
 md"""
 # References
@@ -37,9 +42,64 @@ md"""
 
 # ╔═╡ 351731df-8d84-41ba-83e7-793898b9a148
 md"""
-## Compilations
-- McChonnachie 2012: For sculptor distance: Pietrzy´nski 2008, Walker + 2009 for RV. 
+## McChonnachie 2012
+For sculptor distance: Pietrzy´nski 2008, Walker + 2009 for RV. 
 """
+
+# ╔═╡ 39880bc6-3e37-46df-b0d8-742afe684075
+md"""
+## Hodge ....
+"""
+
+# ╔═╡ e5d18175-f4c8-4da5-9246-fd58bcbd344e
+md"""
+## Webbink 1985
+## Caldwell 1992
+"""
+
+# ╔═╡ 28941a38-1583-417d-aecf-5dfc0c4fccd8
+md"""
+## Pryor 1992
+"""
+
+# ╔═╡ f3525bab-9241-4484-9a0e-b1db0d986c07
+md"""
+## Armandroff and Da Costa 1986
+Radial velocities on 16 stars
+
+"""
+
+# ╔═╡ ae53cae7-d547-4d1d-9101-b064ec6616cf
+md"""
+## Kunkel & Demers 1977
+"""
+
+# ╔═╡ 5a27c2b9-add0-40dc-93c6-2530a60f927d
+ad1986 = Dict(
+	:study => "A&DC86",
+	:σ_v => (6.3 ± 1.2)*u"km/s",
+	:radial_velocity => (107.4 ± 2)*u"km/s",
+)
+
+# ╔═╡ 346f542f-d7dc-490f-aadb-32ba109e277d
+md"""
+## Mateo 1993
+"""
+
+# ╔═╡ 3e476519-94ae-4463-94a2-1d26e0a7969b
+md"""
+## Irwin & Hatzidimitriou 1995
+photometric structure of scolptor (and other dsph) by number density
+"""
+
+# ╔═╡ c522a3da-c394-4ab3-8a13-dcd1810a818f
+iw1995 = Dict(
+	:study => "I&W95",
+	:ell => 0.32 ± 0.03,
+	:PA => 99 ± 1, 
+	:r_h => 6.8, # double check this one
+	:L => (1.4 ± 0.6) * 1e6u"Lsun"
+)
 
 # ╔═╡ 7fa4817f-246d-4956-aee2-42ea577412f2
 md"""
@@ -48,17 +108,11 @@ DEIMOS of 388 stars?
 """
 
 # ╔═╡ 47e8e035-f0a0-4f68-9296-12b7939d83b2
-kirby09 = Dict(
+kirby2009 = Dict(
 	:study => "K+09",
 	:radial_velocity => (111.6 ± 0.5) * u"km/s",
 	:σ_r => (8 ± 0.7)
 )
-
-# ╔═╡ 0e1d8bc0-103a-4623-8546-aa7a32ee4504
-md"""
-## Kirby 2013
-Metallicity, SFR ??
-"""
 
 # ╔═╡ e8775a3e-afab-48c7-a781-1fcc877ddcc1
 md"""
@@ -76,19 +130,11 @@ battaglia2008 = Dict(
 	:radial_velocity => (110.5 ± 0.5)*u"km/s",
 )
 
-# ╔═╡ f3525bab-9241-4484-9a0e-b1db0d986c07
+# ╔═╡ 0e1d8bc0-103a-4623-8546-aa7a32ee4504
 md"""
-## Armandroff and Da Costa 1986
-Radial velocities on 16 stars
-
+## Kirby 2013
+Metallicity, SFR ??
 """
-
-# ╔═╡ 5a27c2b9-add0-40dc-93c6-2530a60f927d
-ad86 = Dict(
-	:study => "A&DC86",
-	:σ_v => (6.3 ± 1.2)*u"km/s",
-	:radial_velocity => (107.4 ± 2)*u"km/s",
-)
 
 # ╔═╡ cb3ef5d8-8231-42f1-b54f-42a6b08694c1
 md"""
@@ -97,15 +143,12 @@ VLT/FLAMES spectoscopic survey with Gaia DR3 proper motions (and parallax cuts)
 Contains a large sample of stars (1701 incdividual stars). Builds on Battaglia 2022.
 Claim that there is a gradient (decreasing) of velocity dispersion and radial velocity (increasing) in the outer regions. Do not see a rotation signature.
 
-
-## TODO: Have the velocity measurements: analyse the sample
-
 fe_h=-1.82 ± 0.45,
 
 """
 
 # ╔═╡ 1ecf4404-caa5-418d-9170-2d539df69275
-tolstoy23 = Dict(
+tolstoy2023 = Dict(
 	:study => "T+23",
 	:radial_velocity => (111.2 ± 0.25) * u"km/s",
 	:pm_ra => 0.097 ± 0.006,
@@ -132,9 +175,8 @@ https://ui.adsabs.harvard.edu/abs/2009AJ....137.3109W/abstract
 
 
 1,300 + RV measurements.
-Use an algorithm with expectation maximum to determine memberships with RVs and metallicities from Mike. Also record a velocity dispersion of 9.2 \pm 1.1 km / s.
+Use an algorithm with expectation maximum to determine memberships with RVs and metallicities from Mike.
 
-**TODO**: Have the sample, can recalculate their properties.
 """
 
 # ╔═╡ 6eed53c4-7798-4ced-ae58-59679f4cb380
@@ -144,6 +186,22 @@ walker2009 =  Dict(
 	:σ_v => (9.2 ± 1.1) * u"km / s"
 )
 
+# ╔═╡ d90a79bc-0f53-4e70-aba5-0253624f6049
+md"""
+# Łokas + 2009
+Dynamical analysis of Walker+2009 data.
+
+Adopt distances from Mateo 98 and shape fits from Irwin & Hatzidimitriou (1995). 
+Fit radial velocity dispersion profile and anisotropy using Jeans equations (?). 
+"""
+
+# ╔═╡ 1833bf84-f05d-461a-a84e-2f28efaffd17
+lokas2009 = Dict(
+	:study => "Ł+09",
+	:β => −0.09 ± 0.2,
+	:M_tot => (3.1 ± 0.2) * 1e7u"Msun"
+)
+
 # ╔═╡ b8055846-efa5-4bcc-a82e-e3b4cd40788d
 md"""
 ## Martínez-Vázquez + 2015 
@@ -151,7 +209,7 @@ RR Lyrae distance modulus
 """
 
 # ╔═╡ f7132d82-eb69-4e56-b61b-dd60e6cf8fdb
-mv15 = Dict(
+mv2015 = Dict(
 	:study => "MV+15", 
 	:distance => dm_to_d(19.62±0.04)
 )
@@ -180,33 +238,44 @@ Uses megacam to do photometric survey on dwarfs and globular clusters. Solve for
 
 # ╔═╡ ac92bf08-1a86-4964-951a-97c8f738ed1f
 muñoz2018 = Dict(
-	:study => "M+18",
-	:ra => 15.0183 ± 0.30 / 3600,
+	:study => "Muñoz+18",
+	:ra => 15.0183 ± 0.30 / 3600 * 360 / 24, # seconds to arcseconds
 	:dec => -33.7186 ± 2.6 / 3600,
+	:L => 10 .^ (6.262 ± 0.056) * u"Lsun",
+	:PA => 92 ± 1, # for exponential, includes several others
+	:ell => 0.36 ± 0.01,
+	:r_h => 12.43 ± 0.18
 )
 
-# ╔═╡ 1bb5096a-575f-4f28-afd4-1fb81b47b825
-# log_Lv_Lv_sun = 6.262 ± 0.056
+# ╔═╡ fe4b0fd5-55f1-4b82-9875-597ebbedab8a
+print(10 .^ (6.262 ±0.056) / 1e8 * 1.7)
 
-# ╔═╡ abe5f1ff-d229-4c5f-b757-967599f3b374
-m18_exp = (
-	θ = 92 ± 1,
-	ecc = 0.36 ± 0.01,
-	r_h = 12.43 ± 0.18
-)
+# ╔═╡ cf3af46c-99dd-460b-84b3-a094199bf925
+1 * 360 / 24
+
+# ╔═╡ 7c95b694-d86a-4e1e-81e7-02722a8507f7
+0.0012 * cosd(-33)
+
+# ╔═╡ 38e9075e-f827-4a0e-9e4b-06dd5b21f70e
+2.6 / 3600 / 360
+
+# ╔═╡ 7fdfd324-950e-4c81-9a43-c35e748594ac
+0.30 / 3600 / 24 * cosd(-33.7182)
 
 # ╔═╡ 28fe217f-9bfb-450a-9e58-f552adb580d7
 md"""
 ## McChonnachie & Venn 2020 (&2020a)
 
-The B versiun is just an update from DR2 to Gaia EDR3
+The B versiun is just an update from DR2 to Gaia EDR3.
+
+Other properties besides proper motions and profiles are simply updated from McChonnachie 2012
 """
 
 # ╔═╡ ab329391-9ed0-44f8-bf2b-520c87dab362
 mv2020 = Dict(
 	:study => "MV2020", 
 	:pm_ra => 0.081±0.005,
-	:pm_dec => -0.136±0.004
+	:pm_dec => -0.136±0.004,
 )
 
 # ╔═╡ cde8a009-958e-4511-be4f-b903913e6b49
@@ -230,11 +299,31 @@ md"""
 """
 
 # ╔═╡ 74531f13-33b5-4821-8991-13c57a44d956
-pace22 = Dict(
+pace2022 = Dict(
 	:study => "Pace+22",
 	:pm_ra => 0.100 ± 0.002,
 	:pm_dec => -0.158 ± 0.002
 )
+
+# ╔═╡ 777ec196-e193-456d-8d44-cba200a366dd
+obs = [
+	ad1986,
+	iw1995,
+	battaglia2008,
+	pietryznski2008, 
+	kirby2009,
+	walker2009, 
+	lokas2009,
+	mv2015, 
+	muñoz2018,
+	# massari18, not comparable to other proper motion estimates
+	mv2020, 
+	mv2020a, 
+	pace2022, 
+	battaglia2022,
+	tolstoy2023,
+
+]
 
 # ╔═╡ 202abcd8-1b8a-4f18-aca5-7b92fca82a56
 md"""
@@ -263,24 +352,15 @@ Also proper motion analysis of HST + Gaia. Find that for an orbit  r = 73+8 kpc 
 
 # ╔═╡ 5b435aac-7fcd-403f-8388-5f635bbadd9a
 massari18 = Dict(
-	:study => "M+18",
+	:study => "Massari+18",
 	:pm_ra => 0.1615 ± 0.14,
 	:pm_dec => -0.805 ± 0.11
 )
-
-# ╔═╡ e5259562-c26f-48c5-87a1-36a48a04d9d0
-
 
 # ╔═╡ 5540a9a2-54b6-42cf-ad68-470cdc9fc667
 md"""
 # Comparisons
 """
-
-# ╔═╡ 777ec196-e193-456d-8d44-cba200a366dd
-obs = [pietryznski2008, walker2009, battaglia2022, mv15, tolstoy23, muñoz2018, mv2020, mv2020a, pace22, battaglia2008,
-	ad86,
-	massari18
-]
 
 # ╔═╡ 38875deb-8013-46d7-b8c8-8fad98f44806
 obs[haskey.(obs, :ra)]
@@ -312,6 +392,34 @@ Arya.value(a::Measurement) = a.val
 
 # ╔═╡ 684841fb-4da5-4e9a-89e9-01b425feae5e
 Arya.err(a::Measurement) = a.err
+
+# ╔═╡ 30dd27e2-fe7b-4695-99d3-0ad0b769628f
+function compare_measurements(key, label; units=1, kwargs...)
+	fig = Figure()
+
+	x, y = get_properties(obs, key)
+	N = length(x)
+	y = y / units
+	println(y)
+
+	xt = collect(1:N)
+	
+	ax = Axis(fig[1,1],
+		xticks =(xt, x), 
+		xminorticksvisible=false,
+		xticklabelrotation=-0π/6,
+		ylabel=label, 
+		kwargs...
+	)
+
+	tight_xticklabel_spacing!(ax)
+
+	errscatter!(xt, Arya.value.(y), yerr=Arya.err.(y))
+
+	
+	fig
+
+end
 
 # ╔═╡ 4314e298-f4d3-41d5-88e3-d9e60ba966b1
 md"""
@@ -461,6 +569,23 @@ let
 
 end
 
+# ╔═╡ fae990a6-f3b8-486e-b12d-b6b2d4b50cf2
+md"""
+## Luminosities
+"""
+
+# ╔═╡ efac8358-96c8-4204-85e4-00ad25fae1a4
+compare_measurements(:L, "luminosity", units=u"Lsun")
+
+# ╔═╡ 23329577-3769-4f63-af49-c4d95ee1f476
+compare_measurements(:ell, "ellipticity")
+
+# ╔═╡ 3baa83fc-932d-4695-bd93-de162d3ef5df
+compare_measurements(:PA, "PA / degrees")
+
+# ╔═╡ 0457b20e-4b0d-4ec4-99fe-aac076361bf4
+compare_measurements(:r_h, ""rh")
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -470,6 +595,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 
 [compat]
 Arya = "~0.1.4"
@@ -478,6 +604,7 @@ DataFrames = "~1.6.1"
 Measurements = "~2.11.0"
 StatsBase = "~0.34.3"
 Unitful = "~1.20.0"
+UnitfulAstro = "~1.2.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -486,7 +613,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "283ed332e6c3feef32b5d95c2b5b05cf7006cc27"
+project_hash = "65c3cc211ba68fc4cdd8490eda0f8102af0fb01d"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1829,6 +1956,18 @@ version = "1.20.0"
     ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
     InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
+[[deps.UnitfulAngles]]
+deps = ["Dates", "Unitful"]
+git-tree-sha1 = "79875b1f2e4bf918f0702a5980816955066d9ae2"
+uuid = "6fb2a4bd-7999-5318-a3b2-8ad61056cd98"
+version = "0.7.2"
+
+[[deps.UnitfulAstro]]
+deps = ["Unitful", "UnitfulAngles"]
+git-tree-sha1 = "da7577e6a726959b14f7451674d00b78d10ca30f"
+uuid = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
+version = "1.2.1"
+
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c1a7aa6219628fcd757dede0ca95e245c5cd9511"
@@ -1982,29 +2121,43 @@ version = "3.5.0+0"
 # ╠═de046588-5a2b-41d4-a8cc-90dac36318e6
 # ╠═3d32bef6-de64-4d1e-93a8-46c921c86011
 # ╠═722bd144-d047-4abf-b82f-f733134d3eb7
+# ╠═23022242-98d6-4509-bb60-b992c56a3bb0
+# ╠═777ec196-e193-456d-8d44-cba200a366dd
 # ╟─26ae0d94-698c-4e9d-bac6-3e91d0d197ab
-# ╟─351731df-8d84-41ba-83e7-793898b9a148
-# ╠═7fa4817f-246d-4956-aee2-42ea577412f2
-# ╠═47e8e035-f0a0-4f68-9296-12b7939d83b2
-# ╟─0e1d8bc0-103a-4623-8546-aa7a32ee4504
-# ╠═e8775a3e-afab-48c7-a781-1fcc877ddcc1
-# ╠═36d90fee-8368-465f-baba-e714bf141efc
+# ╠═351731df-8d84-41ba-83e7-793898b9a148
+# ╟─39880bc6-3e37-46df-b0d8-742afe684075
+# ╟─e5d18175-f4c8-4da5-9246-fd58bcbd344e
+# ╟─28941a38-1583-417d-aecf-5dfc0c4fccd8
 # ╟─f3525bab-9241-4484-9a0e-b1db0d986c07
+# ╠═ae53cae7-d547-4d1d-9101-b064ec6616cf
 # ╠═5a27c2b9-add0-40dc-93c6-2530a60f927d
+# ╠═346f542f-d7dc-490f-aadb-32ba109e277d
+# ╠═3e476519-94ae-4463-94a2-1d26e0a7969b
+# ╠═c522a3da-c394-4ab3-8a13-dcd1810a818f
+# ╟─7fa4817f-246d-4956-aee2-42ea577412f2
+# ╠═47e8e035-f0a0-4f68-9296-12b7939d83b2
+# ╟─e8775a3e-afab-48c7-a781-1fcc877ddcc1
+# ╠═36d90fee-8368-465f-baba-e714bf141efc
+# ╟─0e1d8bc0-103a-4623-8546-aa7a32ee4504
 # ╟─cb3ef5d8-8231-42f1-b54f-42a6b08694c1
 # ╠═1ecf4404-caa5-418d-9170-2d539df69275
 # ╟─8f9fe40c-dd18-437f-ae9e-f0a50fba8155
 # ╠═750dd472-05e4-4c4b-b347-4f0581ec6f55
-# ╠═0ea649d4-c260-450f-a51c-7598da5bfe2e
+# ╟─0ea649d4-c260-450f-a51c-7598da5bfe2e
 # ╠═6eed53c4-7798-4ced-ae58-59679f4cb380
+# ╠═d90a79bc-0f53-4e70-aba5-0253624f6049
+# ╠═1833bf84-f05d-461a-a84e-2f28efaffd17
 # ╟─b8055846-efa5-4bcc-a82e-e3b4cd40788d
 # ╠═f7132d82-eb69-4e56-b61b-dd60e6cf8fdb
 # ╟─8a1832ae-6335-44c8-bc56-d8a05e3e301d
 # ╠═30f6a515-76dc-47fc-abc0-a90e28f64d9f
 # ╟─7a5e54c2-6186-4975-9cd4-b971a982a8cf
 # ╠═ac92bf08-1a86-4964-951a-97c8f738ed1f
-# ╠═1bb5096a-575f-4f28-afd4-1fb81b47b825
-# ╠═abe5f1ff-d229-4c5f-b757-967599f3b374
+# ╠═fe4b0fd5-55f1-4b82-9875-597ebbedab8a
+# ╠═cf3af46c-99dd-460b-84b3-a094199bf925
+# ╠═7c95b694-d86a-4e1e-81e7-02722a8507f7
+# ╠═38e9075e-f827-4a0e-9e4b-06dd5b21f70e
+# ╠═7fdfd324-950e-4c81-9a43-c35e748594ac
 # ╠═28fe217f-9bfb-450a-9e58-f552adb580d7
 # ╠═ab329391-9ed0-44f8-bf2b-520c87dab362
 # ╠═cde8a009-958e-4511-be4f-b903913e6b49
@@ -2015,11 +2168,10 @@ version = "3.5.0+0"
 # ╠═73ed55db-165e-4fc4-9271-2ca4027a6268
 # ╠═e078ea6f-9fd3-4bf5-a3ae-665a8d64e046
 # ╠═5b435aac-7fcd-403f-8388-5f635bbadd9a
-# ╠═e5259562-c26f-48c5-87a1-36a48a04d9d0
 # ╟─5540a9a2-54b6-42cf-ad68-470cdc9fc667
-# ╠═777ec196-e193-456d-8d44-cba200a366dd
 # ╠═38875deb-8013-46d7-b8c8-8fad98f44806
 # ╠═4a0bd7c4-9b37-4625-a31c-2f4f85087eed
+# ╠═30dd27e2-fe7b-4695-99d3-0ad0b769628f
 # ╟─a1f7d351-4f25-475b-939f-8e03ba5a10a0
 # ╟─f41f6639-1523-47c7-96f8-82f1fdafb7a1
 # ╠═5928daad-d96d-4228-8ec3-0315c1c3cf2d
@@ -2031,5 +2183,10 @@ version = "3.5.0+0"
 # ╠═51d76b15-28d1-4871-a7dc-2a8a43802bff
 # ╠═21bc8939-1e8e-420b-ae41-a465203aa2e3
 # ╠═c27b0327-b38b-4927-8e24-5a72deace5a7
+# ╟─fae990a6-f3b8-486e-b12d-b6b2d4b50cf2
+# ╠═efac8358-96c8-4204-85e4-00ad25fae1a4
+# ╠═23329577-3769-4f63-af49-c4d95ee1f476
+# ╠═3baa83fc-932d-4695-bd93-de162d3ef5df
+# ╠═0457b20e-4b0d-4ec4-99fe-aac076361bf4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
