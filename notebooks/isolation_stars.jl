@@ -25,7 +25,7 @@ end
 modeldir = "/astro/dboyea/sculptor/isolation/1e6"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_rs0.05"
+starsname = "exp2d_rs0.05_ana"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "stars/$(starsname)_stars.hdf5"
@@ -111,10 +111,10 @@ let
 end
 
 # ╔═╡ de8ebcd0-d6e1-4b16-aaec-5bcd47cad1bd
-function plot_ρ_s!(snap; kwargs...)
+function plot_ρ_s!(snap; bins=200, kwargs...)
 	rs = lguys.calc_r(snap)
 	ps = probabilities[snap.index]
-	r, ρ = lguys.calc_ρ_hist(rs, 100, weights=ps)
+	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=ps)
 	x = log10.(lguys.midpoint(r))
 	lines!(x, log10.(ρ); kwargs...)
 end
