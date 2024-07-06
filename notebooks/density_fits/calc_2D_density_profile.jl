@@ -27,6 +27,9 @@ given a sample of points, can we centre and calculate the 2D density profile
 - Centring method
 """
 
+# ╔═╡ 4cc4e2be-6bf6-4cbd-a2b1-121354a862bc
+simulation = false
+
 # ╔═╡ c4574ed3-f431-4c0e-a721-1c8d88dda10f
 name = "exp2d_rs0.1_today"
 
@@ -38,6 +41,9 @@ begin
 	samplename = "/astro/dboyea/sculptor/orbit1/stars/$name.fits" # = "$(name)_sample.fits" 
 	# samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 	#samplename = "../test_sky_recon.fits"
+	if !simulation
+		samplename = "sculptor/fiducial_sample.fits"
+	end
 end
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
@@ -45,10 +51,18 @@ outname = dirname(samplename) * "/$(name)_profile.toml"
 
 # ╔═╡ a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 begin 
-	ecc = 0# 0.37
-	PA = 94
+	if simulation
+		ell = 0
+	else
+		ell = 0.37
+	end
+	PA = 91
 	centre_method="mean"
-	mass_column = :probability
+	if simulation
+		mass_column = :probability
+	else
+		mass_column = nothing
+	end
 	normalize = true
 end
 
@@ -58,6 +72,21 @@ begin
 	sample = DataFrame(f[2])
 	close(f)
 end
+
+# ╔═╡ 305f79e0-a9bb-4c15-a9fd-09cb1c25db41
+import StatsBase: sem, mean
+
+# ╔═╡ 77e1461f-26c3-4b3a-8d16-a9dc095eb572
+sem(sample.ra)
+
+# ╔═╡ 3ade8bb5-8698-4d10-862c-e9685e54e570
+sem(sample.dec)
+
+# ╔═╡ 568162b2-ad89-4c72-92e4-ee3cc302bbb7
+mean(sample.pmra), sem(sample.pmra)
+
+# ╔═╡ 0272086f-ebeb-432b-b44e-7c35a17c1d58
+mean(sample.pmdec), sem(sample.pmdec)
 
 # ╔═╡ 8d276372-add5-4388-b713-b22e38d56f37
 if mass_column === nothing
@@ -78,7 +107,7 @@ r_max = sqrt(maximum(xi .^ 2 .+ eta .^ 2))
 # ╔═╡ 69018984-ef00-44ef-ba6e-7cccf930aef9
 let
 	global r_ell
-	b = sqrt(1-ecc)
+	b = sqrt(1-ell)
 	a = 1/b
 	
 	r_ell = lguys.calc_r_ell(xi, eta, a, b, PA-90)
@@ -266,6 +295,7 @@ end
 # ╔═╡ Cell order:
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
 # ╟─852717c0-aabf-4c03-9cf5-a6d91174e0f9
+# ╠═4cc4e2be-6bf6-4cbd-a2b1-121354a862bc
 # ╠═c4574ed3-f431-4c0e-a721-1c8d88dda10f
 # ╠═bb644db4-7fb4-43c8-abf9-7235aa279ad6
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
@@ -273,6 +303,11 @@ end
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 # ╠═72d975fe-9d97-474b-ba3f-f61ba12c7c80
 # ╠═cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
+# ╠═305f79e0-a9bb-4c15-a9fd-09cb1c25db41
+# ╠═77e1461f-26c3-4b3a-8d16-a9dc095eb572
+# ╠═3ade8bb5-8698-4d10-862c-e9685e54e570
+# ╠═568162b2-ad89-4c72-92e4-ee3cc302bbb7
+# ╠═0272086f-ebeb-432b-b44e-7c35a17c1d58
 # ╠═86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 # ╠═ef19dcd1-fae0-4777-a0d8-d242435f892f
 # ╠═8d276372-add5-4388-b713-b22e38d56f37

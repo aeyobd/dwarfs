@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -11,7 +11,7 @@ begin
 	using FITSIO
 	using DataFrames, CSV
 	
-	using GLMakie
+	using CairoMakie
 
 	
 	import LilGuys as lguys
@@ -101,7 +101,8 @@ function plot_all_tangent(all_stars; scale=1, units="degrees", r_max=nothing, kw
         aspect=1,
         limits=(-r_max, r_max, -r_max, r_max),
 		xgridvisible=false,
-		ygridvisible=false
+		ygridvisible=false,
+		xreversed=true,
     )
 
     p = plot_all_tangent!(ax, all_stars; scale=scale, kwargs...) 
@@ -260,7 +261,7 @@ let
 end
 
 # ╔═╡ Cell order:
-# ╠═48caecb2-180c-4ce4-a57b-6fed82328b01
+# ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
