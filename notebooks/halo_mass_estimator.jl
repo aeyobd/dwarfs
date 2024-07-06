@@ -574,9 +574,12 @@ md"""
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	M200_in = 0.6
-	c_in = 12
+	M200_in = 0.8
+	c_in = 13.0
 end
+
+# ╔═╡ da48951f-c47c-432a-9b6c-78bd670c1fec
+calc_c(M200_in, 0)
 
 # ╔═╡ ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 halo = NFW_from_M200_c(M200_in, c_in)
@@ -596,8 +599,81 @@ halo.r_s
 # ╔═╡ 6b8f8bb2-6aee-44b5-96c2-781fa7fdad05
 halo.M_s * lguys.A_NFW(1)
 
+# ╔═╡ 84892a5a-f816-450b-9757-e4135a40aebc
+lguys.calc_M(halo, halo.r_s)
+
+# ╔═╡ 3f4601ed-daec-48de-a681-b75970bb61bc
+lguys.A_NFW(1)
+
 # ╔═╡ 2afae40d-ce7e-4ebf-a1eb-7d2b1ff2f728
 M_s_from_vel(lguys.calc_V_circ_max(halo)) * 1e4
+
+# ╔═╡ c85ed71c-7579-4a43-98ab-7b28db041714
+let
+	fig, ax = FigAxis(
+		xlabel = "log r / kpc",
+		ylabel = "Vcirc"
+	)
+
+	lx = LinRange(-2, 1.5, 100)
+	
+	y = lguys.calc_V_circ.(halo, 10 .^ lx)
+
+	lines!(lx, y * lguys.V0)
+	fig
+end
+
+# ╔═╡ cb42028b-eeb0-48a7-b23d-5abe792eb4f0
+md"""
+# calculating H
+"""
+
+# ╔═╡ e582e62c-d851-4dd0-95d4-82fd1d97c26c
+function calc_h(halo, N=1e6)
+	return 4 * lguys.calc_R200(halo) / sqrt(N)
+end
+
+# ╔═╡ c3e1326c-772b-4d8c-aabe-a997b77bede4
+calc_h(halo)
+
+# ╔═╡ ba292975-8eea-4c3a-8b9c-23ff1b60c7ab
+Np = 1e6
+
+# ╔═╡ a75e163e-3489-4f82-901b-c511d1e44395
+m = lguys.calc_M200(halo) / Np
+
+# ╔═╡ 8b7f61d5-dcef-4889-8aab-a85b0ccdaf02
+let
+	fig, ax = FigAxis(
+		xlabel = "log r / kpc",
+		ylabel = "N ( r < r)"
+	)
+
+	lx = LinRange(-2, 2, 100)
+	
+	y = lguys.calc_M.(halo, 10 .^ lx) ./ m
+	
+
+	lines!(lx, log10.(y))
+	vlines!(log10.(h), label="softening")
+	vlines!(log10.(halo.r_s))
+	fig
+end
+
+# ╔═╡ 896ccd5d-8e92-4c26-944d-04d42550caef
+lguys.calc_R200(halo)
+
+# ╔═╡ 2ae19d4f-659f-4985-8fc2-98d94cc52730
+4^2 * lguys.G * m / calc_h(halo)^2
+
+# ╔═╡ b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
+lguys.G * lguys.calc_M200(halo) / lguys.calc_R200(halo)^2
+
+# ╔═╡ 93715b38-1790-4b1e-a551-17d69b68876f
+lguys.calc_M(halo , lguys.calc_R200(halo))
+
+# ╔═╡ 66185c44-0836-4ab8-b4fe-a550e87c870d
+M200_in
 
 # ╔═╡ Cell order:
 # ╟─07a710d8-0ae4-4d9f-9759-002750730010
@@ -665,10 +741,25 @@ M_s_from_vel(lguys.calc_V_circ_max(halo)) * 1e4
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
+# ╠═da48951f-c47c-432a-9b6c-78bd670c1fec
 # ╠═ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 # ╠═ab5bc36d-d203-45be-8e7d-d8c5c9473388
 # ╠═0dfffcda-bbbe-402f-8e6f-7f20e5cac46b
 # ╠═1840f4a4-beff-4ab1-8def-0c682a6675f7
 # ╠═dd5002c2-d9e8-4fdf-877a-2d6b558b0941
 # ╠═6b8f8bb2-6aee-44b5-96c2-781fa7fdad05
+# ╠═84892a5a-f816-450b-9757-e4135a40aebc
+# ╠═3f4601ed-daec-48de-a681-b75970bb61bc
 # ╠═2afae40d-ce7e-4ebf-a1eb-7d2b1ff2f728
+# ╠═c85ed71c-7579-4a43-98ab-7b28db041714
+# ╟─cb42028b-eeb0-48a7-b23d-5abe792eb4f0
+# ╠═e582e62c-d851-4dd0-95d4-82fd1d97c26c
+# ╠═c3e1326c-772b-4d8c-aabe-a997b77bede4
+# ╠═ba292975-8eea-4c3a-8b9c-23ff1b60c7ab
+# ╠═a75e163e-3489-4f82-901b-c511d1e44395
+# ╠═8b7f61d5-dcef-4889-8aab-a85b0ccdaf02
+# ╠═896ccd5d-8e92-4c26-944d-04d42550caef
+# ╠═2ae19d4f-659f-4985-8fc2-98d94cc52730
+# ╠═b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
+# ╠═93715b38-1790-4b1e-a551-17d69b68876f
+# ╠═66185c44-0836-4ab8-b4fe-a550e87c870d

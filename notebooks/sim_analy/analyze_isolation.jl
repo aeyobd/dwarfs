@@ -45,7 +45,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-dirname1 = "/arc7/home/dboyea/sculptor/isolation/1e6"
+dirname1 = "/arc7/home/dboyea/sculptor/isolation/1e4/fiducial"
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
 begin 
@@ -319,11 +319,11 @@ end
 # ╔═╡ e3a45a8e-cc52-4e9d-9db3-97109b59fc77
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="potential / kinetic energy")
+	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="-V / 2T (virial ratio approx 1)")
 	E_kin = [sum(0.5 * lguys.calc_v(snap) .^ 2) for snap in out]
 	E_pot = [0.5 * sum(snap.Φs) for snap in out]
 
-	lines!(E_pot ./ E_kin)
+	lines!(-E_pot ./ 2E_kin)
 	fig
 end
 
@@ -382,7 +382,7 @@ let
 end
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
+lguys.plot_xyz(lguys.extract_vector(out, :positions, 1_000))
 
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
