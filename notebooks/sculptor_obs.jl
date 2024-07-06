@@ -276,6 +276,8 @@ mv2020 = Dict(
 	:study => "MV2020", 
 	:pm_ra => 0.081±0.005,
 	:pm_dec => -0.136±0.004,
+	:ra => 15.0392,
+	:dec => -33.7092
 )
 
 # ╔═╡ cde8a009-958e-4511-be4f-b903913e6b49
@@ -457,7 +459,8 @@ let
 	fig = Figure()
  
 	ax = Axis(fig[1,1], 
-		xlabel=L"ra", ylabel=L"dec"
+		xlabel="RA / degrees", ylabel="Dec / degrees",
+		aspect=1/cosd(-33.72)
 	)
 
 	study, ra = get_properties(obs, :ra)
@@ -472,7 +475,7 @@ let
 			color=Arya.COLORS[i], label=study[i])
 	end
 
-	axislegend(ax)
+	axislegend(ax, position=:lt)
 	fig
 end
 
@@ -584,7 +587,7 @@ compare_measurements(:ell, "ellipticity")
 compare_measurements(:PA, "PA / degrees")
 
 # ╔═╡ 0457b20e-4b0d-4ec4-99fe-aac076361bf4
-compare_measurements(:r_h, ""rh")
+compare_measurements(:r_h, "rh")
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
