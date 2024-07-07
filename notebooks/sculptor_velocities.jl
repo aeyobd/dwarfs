@@ -143,9 +143,11 @@ let
 	gmos_rv_sys_err = 13.3
 	gmos.RV_err .= @. sqrt(gmos.RV_err^2 + gmos_rv_sys_err^2)
 
-	gmos[!, :source_id] = xmatch(gmos, j24)[2]
+	filt, idx = xmatch(gmos, j24)
+	println(filt)
+	gmos[!, :source_id] = j24.source_id[idx]
 
-	gmos = gmos[:, [:source_id, :ra, :dec, :RV, :RV_err]]
+	gmos = gmos
 end
 
 # ╔═╡ c31f9e07-c520-443b-94dc-787519021d01
@@ -220,9 +222,6 @@ function add_xmatch!(df, new, suffix)
 	leftjoin!(df, rename(n->"$(n)_$suffix", new), on="source_id"=>"source_id_$suffix")
 end
 
-# ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
-
-
 # ╔═╡ 89552b84-d12e-4d88-a58e-8b89ad4b2569
 md"""
 # Validation for xmatch
@@ -238,6 +237,20 @@ all_studies = ["dart", "gmos", "apogee", "w09", "t23"]
 
 # ╔═╡ 222bb254-8b65-44d3-b3d2-b08fbcbe9950
 all_studies
+
+# ╔═╡ c724e720-18ca-4905-a4b6-39fc47abe39d
+j24[j24.source_id .== 5006419626331394048, :]
+
+# ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
+
+
+# ╔═╡ c94b959d-2490-4a16-9ab7-c5c580316100
+
+
+# ╔═╡ 3655b6a0-ac9a-4a49-86fd-6a6484409819
+md"""
+## Check RV means make sense
+"""
 
 # ╔═╡ 6734991c-16c0-4424-a2bb-84bfa811121f
 md"""
@@ -293,14 +306,15 @@ function fit_rv_sigma(rv, rv_err; N=3_000, p=0.16, burn=0.2)
 end
 
 # ╔═╡ 9380d9d1-58b2-432d-8528-d247cf5724e9
-function plot_sample_normal_fit(sample, props)
+function plot_sample_normal_fit(sample, props; kwargs...)
 	fig, ax = FigAxis(
 		xlabel=L"radial velocity / km s$^{-1}$",
-		ylabel="density"
+		ylabel="density";
+		kwargs...
 	)
-	h = Arya.histogram(Float64.(sample.RV), 10, normalization=:pdf)
+	h = Arya.histogram(Float64.(sample.RV), normalization=:pdf)
 	
-	lines!(h)
+	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=:black)
 
 	μ, σ, _, _ = props
 	x_model = LinRange(80, 140, 1000)
@@ -308,6 +322,16 @@ function plot_sample_normal_fit(sample, props)
 	lines!(x_model, y_model)
 
 	fig
+end
+
+# ╔═╡ cfaafe3a-54bb-4e16-8b02-ef05fe7e4431
+function sesd(x)
+	k = kurtosis(x)
+	n = length(x)
+	s = var(x)
+	sev = sqrt(1/n * (k .- (n-3)/(n-1)) .* s .^2)
+
+	return 1 / 2sqrt(s) .* sev
 end
 
 # ╔═╡ 5bee3041-fe7f-4f67-a73d-fb60ed006959
@@ -384,6 +408,15 @@ function sigma_clip(x, nσ=5)
 	
 	return filt
 end
+
+# ╔═╡ 1864bc12-cbc2-4fd4-84a8-6bb300f17c1b
+filt_tolstoy = sigma_clip(tolstoy23_all.RV, 3)
+
+# ╔═╡ b36c2a37-2359-4a1a-98fc-3a1cd17fd790
+tolstoy23 = tolstoy23_all[filt_tolstoy, :]
+
+# ╔═╡ 1d01f9a2-2b77-4ad0-9893-b31562de7924
+filt_tolstoy .&= tolstoy23_all.Mem .== "m"
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 begin 
@@ -533,7 +566,7 @@ datasets = Dict(
 	:apogee => apogee,
 	:dart => dart,
 	:walker => walker09,
-	:tolstoy => tolstoy23_all
+	:tolstoy => tolstoy23
 )
 
 # ╔═╡ ec4bc80f-22e6-49f9-a589-5c5bc9e50a8b
@@ -569,7 +602,7 @@ let
 	fig, ax = FigAxis(
 		xticks=(x, string.(ks)),
 		xminorticksvisible=false,
-		ylabel=L"$\sigma_{v}$ / km s${^-1}$"
+		ylabel=L"$\sigma_{v}$ / km s$^{-1}$"
 	)
 
 
@@ -581,7 +614,7 @@ end
 for key in names(props)
 	println(key)
 	println(props[key])
-	@info plot_sample_normal_fit(datasets[key], props[key])
+	@info plot_sample_normal_fit(datasets[key], props[key], title=string(key))
 end
 
 # ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
@@ -620,6 +653,9 @@ rv_errs
 
 # ╔═╡ e3f05ee2-cc5f-437e-801d-3c7d842af709
 all_stars[:, "RV_w09"]
+
+# ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
+all_stars.RV_gmos[not.(ismissing.(all_stars.RV_gmos))]
 
 # ╔═╡ 1510b6de-09ae-474e-91c4-eea4e2cacdce
 sum(not.(ismissing.(all_stars.RV_dart))) == length(dart.RV)
@@ -663,6 +699,9 @@ plot_xmatch_radec("t23")
 
 # ╔═╡ c218cfa8-2f55-4957-bcdd-8b3970fe639a
 plot_xmatch_radec("w09")
+
+# ╔═╡ f7213298-3dcb-49ac-a9f0-a129a03423aa
+plot_xmatch_radec("gmos")
 
 # ╔═╡ 93d185f2-1eaa-4d35-87dd-b84f385483de
 function filt_missing(col, verbose=false; low=-Inf, high=Inf)
@@ -762,7 +801,12 @@ end
 sum(filt_is_meas)
 
 # ╔═╡ 9e63c171-394e-4c05-b237-189fba0274e2
-memb_stars = rv_meas[(rv_meas.PSAT .> 0.2) .& (150 .> rv_meas.RV .> 60), :]
+begin 
+	memb_stars = rv_meas[(rv_meas.PSAT .> 0.2) .& (150 .> rv_meas.RV .> 60), :]
+
+	# only Fed. data
+	# memb_stars = memb_stars[not.(ismissing.(memb_stars.RV_apogee)) .| not.(ismissing.(memb_stars.RV_dart)), :]
+end
 
 # ╔═╡ 7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 hist(memb_stars.RV)
@@ -814,16 +858,28 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = Arya.histogram(Float64.(memb_stars.RV), 25, normalization=:pdf)
+	h = Arya.histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
-	barplot!(h, color=COLORS[2])
-	plot_samples!(samples, LinRange(80, 140, 100))
+	plot_samples!(samples, LinRange(70, 150, 100), thin=15)
+	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
 
 	fig
 end
 
+# ╔═╡ 61e15c47-c454-48db-95f9-02abe052676e
+mean(memb_stars.RV)
+
+# ╔═╡ d5938fc3-9c8a-4e33-8401-500b4201df14
+sb.sem(memb_stars.RV)
+
+# ╔═╡ 6514815e-e1f3-44a1-8c0b-a90f13e0077e
+std(memb_stars.RV)
+
+# ╔═╡ b654f5d5-ff48-4bae-bd69-a9db2673282b
+sesd(memb_stars.RV)
+
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = Arya.bins_equal_number(memb_stars.r_ell, n=6)
+bins = Arya.bins_equal_number(memb_stars.r_ell, n=8)
 
 # ╔═╡ 1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 bin_errs = diff(bins) / 2
@@ -848,10 +904,37 @@ end
 let
 	fig, ax = FigAxis(
 		xlabel = "R / arcmin",
+		ylabel = L"RV / km s$^{-1}$",
+		limits=(nothing, (60, 150))
+	)
+
+	scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART")
+	scatter!(memb_stars.r_ell, memb_stars.RV_apogee, label="APOGEE")
+	scatter!(memb_stars.r_ell, memb_stars.RV_gmos, label="GMOS")
+	scatter!(memb_stars.r_ell, memb_stars.RV_w09, label="Walker+09")
+	scatter!(memb_stars.r_ell, memb_stars.RV_t23, label="tolstoy + 23")
+
+	errscatter!(midpoints(bins), μs, yerr=μ_errs, color=:black)
+	
+	errorbars!(midpoints(bins), μs .+ σs, bin_errs, direction = :x, color=:black)
+	errorbars!(midpoints(bins), μs .- σs, bin_errs, direction = :x, color=:black)
+
+	Legend(fig[1,2], ax)
+
+
+	fig
+end
+
+# ╔═╡ 86776e68-d47f-43ed-b37f-432c864050bb
+let
+	fig, ax = FigAxis(
+		xlabel = "R / arcmin",
 		ylabel = L"RV / km s$^{-1}$"
 	)
 
-	scatter!(memb_stars.r_ell, memb_stars.RV, color=COLORS[3], alpha=0.2)
+	scatter!(memb_stars.r_ell, memb_stars.RV, color=COLORS[3], alpha=0.1)
+
+
 	errscatter!(midpoints(bins), μs, yerr=μ_errs, color=:black)
 	
 	errorbars!(midpoints(bins), μs .+ σs, bin_errs, direction = :x, color=:black)
@@ -876,6 +959,67 @@ let
 
 	fig
 end
+
+# ╔═╡ 7f13339e-6a0c-4944-8a36-5ab136fd8415
+function compare_rv_mean(study1)
+	rv1  = rv_meas[:, "RV_$study1"]
+	rv1_err  = rv_meas[:, "RV_err_$study1"]
+	
+	rv2  = rv_meas[:, "RV"]
+	rv2_err  = rv_meas[:, "RV_err"]
+
+	filt = filt_missing(rv1, true; low=75, high=150) .& filt_missing(rv2, true;  low=75, high=150)
+
+	println("matched ", sum(filt), " stars")
+
+
+	if sum(filt) == 0
+		println("nothing to plot")
+		return
+	end
+	
+	println("plotting ", sum(filt), " stars")
+
+
+	fig, ax = FigAxis(
+		xlabel = "RV mean",
+		ylabel = "RV $study1 - RV mean",
+		aspect=DataAspect()
+	)
+
+	x = float.(rv2[filt])
+	y = float.(rv1[filt] .- rv2[filt])
+	xerr = float.(rv2_err[filt])
+	yerr = float.(rv1_err[filt])
+	errscatter!(x, y, xerr=xerr, yerr=yerr, alpha=0.1)
+	
+	hlines!(0, color=:black)
+	return fig
+end
+
+# ╔═╡ aaaf5ba2-c9ed-41ec-a22a-d78ed96fd84e
+compare_rv_mean("w09")
+
+# ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
+compare_rv_mean("apogee")
+
+# ╔═╡ 78e7aff0-3658-4d64-b117-58189a85307a
+compare_rv_mean("t23")
+
+# ╔═╡ f4f9dd06-1a1a-458b-be75-05d52623580c
+compare_rv_mean("gmos")
+
+# ╔═╡ 6b84c679-0532-465a-97dd-d62671077b61
+compare_rv_mean("dart")
+
+# ╔═╡ d11edca7-b9ae-4269-9e1b-661d59bd965e
+all_stars[not.(ismissing.(all_stars.RV_gmos)), :].source_id
+
+# ╔═╡ 74152829-27ef-4d8d-8b32-ed30a18f30e4
+rv_meas.RV_gmos[not.(ismissing.(rv_meas.RV_gmos))]
+
+# ╔═╡ 30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
+sum(not.(ismissing.(memb_stars.RV_gmos)))
 
 # ╔═╡ d688d2e5-faca-4b14-801a-d58b08fd6654
 let
@@ -939,6 +1083,9 @@ end
 # ╠═b7345279-4f80-47ad-a726-537571849eae
 # ╟─c31f9e07-c520-443b-94dc-787519021d01
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
+# ╠═b36c2a37-2359-4a1a-98fc-3a1cd17fd790
+# ╠═1864bc12-cbc2-4fd4-84a8-6bb300f17c1b
+# ╠═1d01f9a2-2b77-4ad0-9893-b31562de7924
 # ╠═180fac98-678c-4a14-966c-385387c60ac3
 # ╠═5dd59d8b-d3f1-448a-a63c-8dca9e27c18e
 # ╠═77830e77-50a4-48b7-b070-8fbd7508c173
@@ -967,6 +1114,7 @@ end
 # ╠═7091dc6b-dd77-4f92-bd35-def8c7384f00
 # ╠═4b305b83-1a3b-48a6-b19f-6f3ebed0768f
 # ╠═c218cfa8-2f55-4957-bcdd-8b3970fe639a
+# ╠═f7213298-3dcb-49ac-a9f0-a129a03423aa
 # ╠═f7ec8bba-9f45-435b-b67c-33182e992dfd
 # ╠═93d185f2-1eaa-4d35-87dd-b84f385483de
 # ╠═36d2d86f-6a75-46f4-b48f-36137e95e90d
@@ -987,9 +1135,21 @@ end
 # ╠═877706f1-08a0-496a-890d-622e3a2fd9ec
 # ╠═73bd1553-e2ae-4bfb-aac1-0880346f5054
 # ╠═01b3135f-7a72-4669-b586-4bc5894464ad
+# ╠═d11edca7-b9ae-4269-9e1b-661d59bd965e
+# ╠═c724e720-18ca-4905-a4b6-39fc47abe39d
+# ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═9e63c171-394e-4c05-b237-189fba0274e2
+# ╠═c94b959d-2490-4a16-9ab7-c5c580316100
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
+# ╠═3655b6a0-ac9a-4a49-86fd-6a6484409819
+# ╠═7f13339e-6a0c-4944-8a36-5ab136fd8415
+# ╠═aaaf5ba2-c9ed-41ec-a22a-d78ed96fd84e
+# ╠═a2370516-e7ec-4502-ae4b-b111bcf68d36
+# ╠═78e7aff0-3658-4d64-b117-58189a85307a
+# ╠═f4f9dd06-1a1a-458b-be75-05d52623580c
+# ╠═74152829-27ef-4d8d-8b32-ed30a18f30e4
+# ╠═6b84c679-0532-465a-97dd-d62671077b61
 # ╠═6734991c-16c0-4424-a2bb-84bfa811121f
 # ╠═1b97d0e5-7a77-44a5-b609-ed8945cd959c
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
@@ -1004,6 +1164,11 @@ end
 # ╠═b18e4622-41e0-4700-9e4b-3dbebeefea53
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f
+# ╠═61e15c47-c454-48db-95f9-02abe052676e
+# ╠═d5938fc3-9c8a-4e33-8401-500b4201df14
+# ╠═6514815e-e1f3-44a1-8c0b-a90f13e0077e
+# ╠═b654f5d5-ff48-4bae-bd69-a9db2673282b
+# ╠═cfaafe3a-54bb-4e16-8b02-ef05fe7e4431
 # ╟─5bee3041-fe7f-4f67-a73d-fb60ed006959
 # ╠═ebdf8cfc-ebff-4331-bab2-998a734f2cd1
 # ╠═ec4bc80f-22e6-49f9-a589-5c5bc9e50a8b
@@ -1015,7 +1180,9 @@ end
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
 # ╠═c50f68d7-74c3-4c36-90c5-a5262982ed9f
+# ╠═30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
 # ╠═33f54afc-cdb9-4eb8-887f-5a43281b837c
+# ╠═86776e68-d47f-43ed-b37f-432c864050bb
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 # ╠═b7ebd916-bffc-4ffc-a7f7-44ee315e2528
 # ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
