@@ -22,10 +22,10 @@ begin
 end
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = "/astro/dboyea/sculptor/isolation/1e6"
+modeldir = "/astro/dboyea/sculptor/isolation/1e6_M0.8_c13"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_rs0.05_ana"
+starsname = "exp2d_rs0.16"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "stars/$(starsname)_stars.hdf5"
@@ -136,7 +136,7 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
-		limits=((-0.8, 0.3), (-15, 2)))
+		limits=((-0.8, 0.8), (-15, 2)))
 
 	#vlines!(log10(r_s_s), label="r_s")
 
@@ -209,6 +209,45 @@ let
 	fig
 end
 
+# ╔═╡ 93abb048-2a1a-468c-86f5-abba3a0e92e5
+v_los = snap_f.velocities[1, :] .* lguys.V0
+
+# ╔═╡ 0f0275b6-473c-4b3e-8e3f-2be7903eec32
+r = @. sqrt((snap_f.positions[2, :] .- x_cen[2, end])^2 + (snap_f.positions[3, :] .- x_cen[3, end])^2)
+
+# ╔═╡ 1e7ac1c1-5d83-4d43-8949-0953a4ef098f
+m_los = probabilities[snap_f.index]
+
+# ╔═╡ 5b2f984b-a9cd-4c7f-a901-e2e6df26f5e4
+begin
+	r_filt = m_los .> 1e-15 * maximum(m_los)
+	r_filt .&= r .< 1
+end
+
+# ╔═╡ dd21570b-9ba5-44b3-a8c1-76251b492eef
+import StatsBase: std, weights, mean
+
+# ╔═╡ 95386397-7303-48a6-9720-c70384b8ec7a
+let
+	vs = v_los[r_filt]
+	w = m_los[r_filt]
+
+	global σ_v = std(vs, weights(w))
+	global μ_v = mean(vs, weights(w))
+
+	fig, ax = FigAxis()
+	
+	hist!(vs, weights=w, bins=50, normalization=:pdf)
+
+	x_mod = LinRange(-30, 30, 1000)
+	y_mod = lguys.gaussian.(x_mod, μ_v, σ_v)
+	lines!(x_mod, y_mod)
+	fig
+end
+
+# ╔═╡ fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7
+σ_v
+
 # ╔═╡ Cell order:
 # ╠═6238c3fa-1974-11ef-1539-2f50fb31fe9a
 # ╠═141d3b97-e344-4760-aa12-a48b1afb125c
@@ -238,3 +277,10 @@ end
 # ╠═ab0b1a03-325c-489a-ac2f-309560541085
 # ╠═d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 # ╠═193273c9-5b13-4af6-a345-4326cdebcf04
+# ╠═93abb048-2a1a-468c-86f5-abba3a0e92e5
+# ╠═0f0275b6-473c-4b3e-8e3f-2be7903eec32
+# ╠═1e7ac1c1-5d83-4d43-8949-0953a4ef098f
+# ╠═5b2f984b-a9cd-4c7f-a901-e2e6df26f5e4
+# ╠═dd21570b-9ba5-44b3-a8c1-76251b492eef
+# ╠═95386397-7303-48a6-9720-c70384b8ec7a
+# ╠═fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7
