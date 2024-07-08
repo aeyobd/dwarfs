@@ -450,7 +450,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel=L"$\epsilon$ (binding energy)", 
-		ylabel="asinh value", 
+		ylabel="asinh density", 
 		)
 
 
