@@ -60,10 +60,10 @@ Parameters
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6_M0.8_c13/stars"
+dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.16.toml"
+paramname = "exp2d_rs0.2.toml"
 
 # ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 begin 
@@ -792,6 +792,38 @@ let
 	fig
 end
 
+# ╔═╡ 03037c94-7f26-479c-9772-fa2682e3ba37
+import StatsBase: mean, std, weights
+
+# ╔═╡ 74845a4f-588b-44d3-a5e1-7155fd6a7b01
+let
+	x = obs_mock.radial_velocity
+	m = obs_mock.probability
+	μ = mean(x, weights(m))
+	σ = std(x, weights(m))
+	println(μ)
+	println(σ)
+
+	fig, ax = FigAxis()
+
+	stephist!(x, weights=m, normalization=:pdf)
+	x_model = LinRange(μ - 5σ, μ + 5σ, 1000)
+	y_model = lguys.gaussian.(x_model, μ, σ)
+
+	lines!(x_model, y_model)
+	
+	fig
+end
+
+# ╔═╡ e4c33671-744b-42bb-87be-2df7add03b96
+let
+	x = lguys.calc_r(snap_og.velocities, [cen.vx, cen.vy, cen.vz]) .^2 * lguys.V0^2
+	m = ps_all[snap_og.index]
+	
+	μ = mean(x, weights(m))
+	println(sqrt(μ)/ sqrt(3))
+end
+
 # ╔═╡ 895dfb3a-c8c4-493f-997e-bc3a41d99686
 function make_sample(snap; rel_p_cut=1e-15, r_max=Inf,
 	Frame=lguys.HelioRest
@@ -935,6 +967,9 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═87b5b241-db72-45ee-b3a7-a394f99510d9
 # ╠═7b7832d1-6739-453e-aaee-fa16a6000d26
 # ╠═ff51f97d-2404-49c6-9339-4b201d6a94a9
+# ╠═03037c94-7f26-479c-9772-fa2682e3ba37
+# ╠═74845a4f-588b-44d3-a5e1-7155fd6a7b01
+# ╠═e4c33671-744b-42bb-87be-2df7add03b96
 # ╠═895dfb3a-c8c4-493f-997e-bc3a41d99686
 # ╠═b89fbbb0-b161-4fa7-82ba-c06e3d32f8b8
 # ╠═d29baea8-0e5c-43e0-9aa2-987d6cc08e88
