@@ -15,6 +15,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ 42848dbe-293a-4b28-a954-3b1faea89c01
+using FITSIO
+
 # ╔═╡ 8b41af50-9ae0-475b-bacc-3799e2949b30
 md"""
 Analyzes the orbit of a n-body halo in a gravitational potential.
@@ -113,22 +116,26 @@ let
 	fig
 end
 
-# ╔═╡ 5e99f047-7eaa-4bd5-852a-a4beaeecec86
-begin
-		snap_cen = lguys.Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
-	
-		obs_c = lguys.to_sky(snap_cen)
-end
+# ╔═╡ 7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
+md"""
+# Sky Properties
+"""
 
-# ╔═╡ 89a1523b-d0c4-4b2f-b7c5-f1c4bafe01f5
-getfield(obs_c[1],Symbol("ra"))
+# ╔═╡ f134b3ce-53f0-47e9-84e9-1e73064d5191
+snap_cen = lguys.Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
+
+# ╔═╡ 64e558da-2928-4815-ad5a-7528516311f9
+obs_c_gr = lguys.to_sky(snap_cen, SkyFrame=lguys.HelioRest)
+
+# ╔═╡ defc4184-2613-4480-9adf-fa135f168382
+obs_c = lguys.to_sky(snap_cen)
 
 # ╔═╡ a179323f-4878-4021-b8d4-69ca733658cb
 function calc_χ2s(obs_c, obs_today)
-	χ2 = zeros(length(obs_c))
-	for name in ["ra", "dec", "pm_ra", "pm_dec", "distance", "radial_velocity"]
+	χ2 = zeros(size(obs_c, 1))
+	for name in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
 		μ = obs_today[name]
-		x = [getfield(o, Symbol(name)) for o in obs_c]
+		x = obs_c[:, name]
 		σ = obs_today[name * "_err"]
 		χ2 .+= @. (x -μ)^2/(σ)^2
 	end
@@ -279,7 +286,7 @@ md"""
 
 # ╔═╡ cdabdc7d-76a1-45f5-b83a-2454576d3964
 let
-	for (x, y) in [("ra", "dec"), ("pm_ra", "pm_dec"), ("distance", "radial_velocity")]
+	for (x, y) in [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")]
 		fig = Figure()
 		ax = Axis(fig[1,1],
 			xlabel=x,
@@ -288,9 +295,7 @@ let
 	
 		idx = idx_f-10:idx_f+10
 	
-		xs = [getfield(o, Symbol(x)) for o in obs_c]
-		ys = [getfield(o, Symbol(y)) for o in obs_c]
-		scatter!(xs[idx], ys[idx], color=log10.(χ2[idx]))
+		scatter!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		
 		errscatter!([obs_today[x]], [obs_today[y]],
 			xerr=[obs_today[x * "_err"]], yerr=[obs_today[y * "_err"]]
@@ -306,8 +311,44 @@ md"""
 note, these plots are not actually the motion across the sky, but the position on the sky by adopting different $t_0$ values. TODO: implement a static galactocentric frame which correctly transforms into a stationary solar observer, but not super necessary
 """
 
+# ╔═╡ 3448ffc5-41e6-4208-b11f-2c00168bf50a
+md"""
+# Stream Coordinate frame
+"""
+
+# ╔═╡ 66435478-0619-47aa-a659-c06089951f72
+ra0 = obs_c_gr.ra[idx_f]
+
+# ╔═╡ 78271e36-12b7-4edc-bfb0-20ecc597ab20
+dec0 = obs_c_gr.dec[idx_f]
+
+# ╔═╡ 661ca87c-c8da-49b1-b8a3-72c81050590b
+θ0 = 90 - atand(obs_c_gr.pmdec[idx_f], obs_c_gr.pmra[idx_f])
+
+# ╔═╡ afdb058a-ebbd-4f07-b0d8-a85bb1070737
+90 - atand(0, 1)
+
+# ╔═╡ 63d2d908-2f12-483b-bbad-833b2aecc4e3
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="ra",
+		ylabel="dec"
+	)
+	
+	idx = idx_f-10:idx_f+10
+
+	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=cens.t[idx] * lguys.T0)
+
+	arrows!([ra0], [dec0], [sind(θ0)], [cosd(θ0)])
+
+	Colorbar(fig[1, 2], h, label="time / Gyr")
+
+	fig
+end
+
 # ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
-begin
+let
 	
 	orbital_properties = Dict(
 		"pericentre" => r_peri,
@@ -315,7 +356,11 @@ begin
 		"period" => t_peri - t_anteperi,
 		"idx_f" => idx_f,
 		"idx_peri" => idx_peri,
-		"t_last_peri" => t_f - t_peri
+		"t_last_peri" => t_f - t_peri,
+		# these three are for the final stream coordinate frame
+		"ra0" => ra0,
+		"dec0" => dec0,
+		"theta0" => θ0,
 	)
 
 
@@ -326,6 +371,9 @@ begin
 	println("saved properties to $outfile")
 	orbital_properties
 end
+
+# ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
+lguys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╠═8b41af50-9ae0-475b-bacc-3799e2949b30
@@ -343,13 +391,15 @@ end
 # ╠═68d805a4-c5eb-4f2c-ba10-48c2a53f2874
 # ╠═b250bf10-c228-4b14-938a-35561ae871d7
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
-# ╠═08c3df42-738b-47c4-aa6b-fc39a9cfc02f
+# ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
-# ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
-# ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
-# ╠═5e99f047-7eaa-4bd5-852a-a4beaeecec86
-# ╠═89a1523b-d0c4-4b2f-b7c5-f1c4bafe01f5
+# ╟─aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
+# ╟─f88b909f-c3dc-41e0-bdb1-25e229964d27
+# ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
+# ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
+# ╠═64e558da-2928-4815-ad5a-7528516311f9
+# ╠═defc4184-2613-4480-9adf-fa135f168382
 # ╠═a179323f-4878-4021-b8d4-69ca733658cb
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9
@@ -368,7 +418,15 @@ end
 # ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
-# ╠═14eebce8-04f7-493b-824a-7808c7fa35dd
+# ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
-# ╠═7f2305c1-3431-4e0d-801f-a89afbc3b55b
+# ╟─7f2305c1-3431-4e0d-801f-a89afbc3b55b
+# ╟─3448ffc5-41e6-4208-b11f-2c00168bf50a
+# ╠═66435478-0619-47aa-a659-c06089951f72
+# ╠═78271e36-12b7-4edc-bfb0-20ecc597ab20
+# ╠═661ca87c-c8da-49b1-b8a3-72c81050590b
+# ╠═afdb058a-ebbd-4f07-b0d8-a85bb1070737
+# ╠═63d2d908-2f12-483b-bbad-833b2aecc4e3
 # ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
+# ╠═42848dbe-293a-4b28-a954-3b1faea89c01
+# ╠═fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67

@@ -25,7 +25,7 @@ end
 modeldir = "/astro/dboyea/sculptor/isolation/1e6_M0.8_c13"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_rs0.16"
+starsname = "exp2d_rs0.2"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "stars/$(starsname)_stars.hdf5"

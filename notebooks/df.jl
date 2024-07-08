@@ -32,16 +32,16 @@ md"""
 """
 
 # ╔═╡ 5287d506-2c6e-429c-90b9-9d1574784681
-M_s_halo = 0.06
+M_s_halo = 0.467
 
 # ╔═╡ 01c0a5fc-f020-4668-a21e-cbfccb9a8826
-r_s_halo = 2.76
+r_s_halo = 3.25
 
 # ╔═╡ 73bb13e4-4a36-42b3-a04d-f235a8b11362
 R_s_s = 0.2
 
 # ╔═╡ 64578172-da38-49ed-8777-51b538aa9b18
-prof_halo = lguys.NFW(M_s=M_s_halo/lguys.A_NFW(1), r_s = r_s_halo)
+prof_halo = lguys.NFW(M_s=M_s_halo, r_s = r_s_halo)
 
 # ╔═╡ 5a42e848-caee-4aea-a541-7812c4fbeb13
 profile = lguys.Exp2D(R_s = R_s_s)
@@ -84,7 +84,7 @@ function make_radius_bins(radii::AbstractVector, params::Dict)
 end
 
 # ╔═╡ deb46b0b-3504-4231-9f85-99f27caf924b
-r_e = 10 .^ LinRange(-4, 2, 1000)
+r_e = 10 .^ LinRange(-4, 4, 1000)
 
 # ╔═╡ 36b4adbd-d706-4e72-a922-53080c67946c
 r = lguys.midpoint(r_e)
@@ -185,7 +185,7 @@ end
 # ╔═╡ 75d23b44-71e7-4e28-ad3e-c537f3d4422f
 let
 	fig = Figure()
-	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="log f", limits=(nothing, (-15, 7)) )
+	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="log f", limits=(nothing, (-15, 10)) )
 	lines!(log10.(E), log10.(f_s_e), label="stars")
 	lines!(log10.(E), log10.(f_dm_e), label="DM")
 

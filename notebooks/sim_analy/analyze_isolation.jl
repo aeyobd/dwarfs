@@ -24,14 +24,6 @@ end
 # ╔═╡ 96c91860-f3cc-4531-a8cf-39c85887b394
 import TOML
 
-# ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
-md"""
-To make this both a cml utility and interactive, we take inputs in the following cells
-"""
-
-# ╔═╡ 82c76c56-e874-4eba-9367-569b656155a2
-
-
 # ╔═╡ 7eb3e35f-c2a5-499e-b884-85fb59060ec5
 md"""
 # Inputs
@@ -339,6 +331,18 @@ let
 	fig
 end
 
+# ╔═╡ 5f1c61f9-50d4-43cb-aa78-fa85314f26b7
+let
+	fig, ax = FigAxis( ylabel="count", xlabel="e spec", )
+
+	e = lguys.calc_E_spec(snap_i)
+	stephist!(log10.(e[e .> 0]), label="")
+	e = lguys.calc_E_spec(snap_f)
+	stephist!(log10.(e[e .> 0]), label="")
+	
+	fig
+end
+
 # ╔═╡ 1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
 println(sum(lguys.calc_r(snap_i) .< 0.05))
 
@@ -454,8 +458,6 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╠═374489bc-627f-4fc9-9734-7c49456710ac
 # ╠═96c91860-f3cc-4531-a8cf-39c85887b394
-# ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
-# ╠═82c76c56-e874-4eba-9367-569b656155a2
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
 # ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
@@ -492,6 +494,7 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
+# ╠═5f1c61f9-50d4-43cb-aa78-fa85314f26b7
 # ╠═1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
 # ╟─fb0dec74-aaab-43a4-9b37-d13634c5dcad
 # ╠═5b9a64a1-38c1-4f4d-aac3-d91663c368a3
