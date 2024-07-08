@@ -38,7 +38,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6_M0.8_c13/"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
@@ -96,11 +96,11 @@ let
 	rc, Vc = lguys.calc_V_circ(snap_f)
 	lines!(log10.(rc), Vc * lguys.V0, label="final")
 
-	V_nfw(x) = lguys.calc_V_circ(halo, x)
+	# V_nfw(x) = lguys.calc_V_circ(halo, x)
 
-	log_r = LinRange(-2, 2.5, 1000)
-	y = V_nfw.(10 .^ log_r)
-	lines!(log_r, y * lguys.V0)
+	# log_r = LinRange(-2, 2.5, 1000)
+	# y = V_nfw.(10 .^ log_r)
+	# lines!(log_r, y * lguys.V0)
 	fig
 end
 
@@ -112,6 +112,66 @@ phase space distribution of star particles initial and final snapshot
 # ╔═╡ 7d717638-1caf-4267-b9f5-c060c19e2849
 
 
+# ╔═╡ e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
+function calc_phase_dens(snap; bins=100)
+	rs = lguys.calc_r(snap)
+	vs = lguys.calc_v(snap)
+	xbins = 10 .^ Arya.make_bins(log10.(rs), Arya.calc_limits(log10.(rs)), bins)
+	ybins = Arya.make_bins(vs, Arya.calc_limits(vs), bins)
+	h = Arya.histogram2d(rs, vs, (xbins, ybins), weights=snap.masses, limits=(xbins[1], xbins[end], ybins[1], ybins[end]))
+
+	# since f is normalized to /dx/dy/dz, we do need to correct h by r^2 and v^2
+
+	h.values ./= diff(4π/3 * xbins .^ 3)
+	h.values ./= diff(4π/3 * ybins .^ 3)
+
+	h
+end
+
+# ╔═╡ 478e9ce6-58d0-4476-9673-a0813bb0b5dd
+h_p = calc_phase_dens(snap_i)
+
+# ╔═╡ e71faa28-ae0d-4d01-88d6-a14cc378b73d
+sum(h_p.values .*diff(4π / 3 .* h_p.ybins .^ 3) 
+.* diff(4π / 3 .* h_p.xbins .^ 3) )
+
+# ╔═╡ cc2aae46-e359-458f-a613-154da4419517
+nu_dm = dropdims(sum(
+		h_p.values .* diff(4π / 3 .* h_p.ybins .^ 3)
+	, dims=2), dims=2) 
+
+# ╔═╡ c20c4dff-1134-440c-b207-f81e0f53b704
+σ_v = sqrt(
+	sum(
+	 h_p.values .* midpoints(h_p.ybins) .^ 2 .* diff(4π / 3 .* h_p.ybins .^ 3) .* diff(4π / 3 .* h_p.xbins .^ 3)
+)
+) * lguys.V0
+
+# ╔═╡ bf80a88a-39ce-474b-bba1-89ef0fdb0127
+diff(4π / 3 .* h_p.ybins .^ 3)
+
+# ╔═╡ 1ba2009b-3800-4cb5-a6d9-f9a385ba4a5f
+midpoints(h_p.ybins) .^ 2 .* diff(4π .* h_p.ybins)
+
+# ╔═╡ 8a097a37-a903-4627-ba25-0a1f0289955f
+function plot_phase_dens!(snap)
+	h = calc_phase_dens(snap)
+
+	heatmap!(h, colorscale=log10, colorrange=(1e-15 * maximum(h.values), maximum(h.values)))
+end
+
+# ╔═╡ ff2b82f7-0b62-4dad-86fd-26a0eeca42b6
+let
+	fig, ax = FigAxis(
+		xscale=log10
+	)
+
+	h = plot_phase_dens!(snap_f)
+
+	Colorbar(fig[1, 2], h)
+	fig
+end
+
 # ╔═╡ 72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 let
 	fig = Figure(size=(700, 300))
@@ -119,15 +179,15 @@ let
 
 	hist_kwargs = (; bins=100, colorscale=log10, colorrange=(1, nothing))
 	
-	Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0; hist_kwargs...)
+	h = Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0; hist_kwargs...)
 
-	x = LinRange(0, 2, 1000)
-	e = lguys.calc_Φ.(halo, 10 .^ x)
-	y = sqrt.(-2e) .* lguys.V0
-	lines!(x, y)
+	# x = LinRange(0, 2, 1000)
+	# e = lguys.calc_Φ.(halo, 10 .^ x)
+	# y = sqrt.(-2e) .* lguys.V0
+	# lines!(x, y)
 
-	y = lguys.calc_V_circ.(halo, 10 .^ x) .* lguys.V0
-	lines!(x, y)
+	# y = lguys.calc_V_circ.(halo, 10 .^ x) .* lguys.V0
+	# lines!(x, y)
 
 	ax2 = Axis(fig[1,2] )
 	Arya.hist2d!(ax2, log10.(lguys.calc_r(snap_f.positions)), lguys.calc_r(snap_f.velocities) * lguys.V0;
@@ -135,6 +195,8 @@ let
 
 	linkaxes!(ax, ax2)
 	hideydecorations!(ax2)
+
+	Colorbar(fig[1, 3], h)
 
 	fig
 end
@@ -203,6 +265,18 @@ function plot_ρ_dm!(snap; kwargs...)
 	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
 end
 
+# ╔═╡ ac0dfd81-d040-4d45-97d0-a178ff9fb149
+let
+	fig, ax = FigAxis(
+		limits=(nothing, (-15, 5))
+	)
+	x = log10.(midpoints(h_p.xbins))
+	lines!(x, log10.(nu_dm))
+	plot_ρ_dm!(snap_f, label="final")
+
+fig
+end
+
 # ╔═╡ 27f8deff-96ae-4d9a-a110-d146ac34965a
 begin 
 	function plot_ρ_dm(snap)
@@ -222,9 +296,9 @@ let
 	plot_ρ_dm!(snap_f, label="final")
 
 
-	log_r = LinRange(-2, 3, 1000)
-	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
-	lines!(log_r, y, label="expected", color="black", linestyle=:dot)
+	# log_r = LinRange(-2, 3, 1000)
+	# y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
+	# lines!(log_r, y, label="expected", color="black", linestyle=:dot)
 
 	axislegend(ax)
 	fig
@@ -396,6 +470,16 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╠═a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═7d717638-1caf-4267-b9f5-c060c19e2849
+# ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
+# ╠═478e9ce6-58d0-4476-9673-a0813bb0b5dd
+# ╠═e71faa28-ae0d-4d01-88d6-a14cc378b73d
+# ╠═cc2aae46-e359-458f-a613-154da4419517
+# ╠═c20c4dff-1134-440c-b207-f81e0f53b704
+# ╠═bf80a88a-39ce-474b-bba1-89ef0fdb0127
+# ╠═1ba2009b-3800-4cb5-a6d9-f9a385ba4a5f
+# ╠═ac0dfd81-d040-4d45-97d0-a178ff9fb149
+# ╠═8a097a37-a903-4627-ba25-0a1f0289955f
+# ╠═ff2b82f7-0b62-4dad-86fd-26a0eeca42b6
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
