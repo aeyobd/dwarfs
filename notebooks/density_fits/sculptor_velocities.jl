@@ -24,7 +24,7 @@ using Turing
 using PairPlots
 
 # ╔═╡ d4123ffd-cb32-486e-a93d-f48d7112a831
-include("density_fits/filter_utils.jl")
+include("filter_utils.jl")
 
 # ╔═╡ 6f2359d8-332b-11ef-0db9-f1f06474c561
 md"""
@@ -48,25 +48,13 @@ Let me know if you have questions on the tables or things in Sculptor.
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median
 
-# ╔═╡ dd29be70-4918-47e4-98cf-3608df14e88a
-begin
-	ell = 0.37
-	PA = -94
-	ra0 = 15.039170
-	dec0 = -33.709180
-end
-
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
 # Loading data tables
 """
 
-# ╔═╡ 49e728ee-e545-4ee5-bd9f-b0a38c4eaf15
-function ang_dist(ra1, dec1, ra2, dec2)
-	dra = (ra1 .- ra2) .* cosd.(dec1)
-	ddec = dec1 .- dec2
-	return @. sqrt(dra^2 + ddec^2)
-end
+# ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
+data_dir = "../../data/"
 
 # ╔═╡ 3d8b3c55-153b-4a4a-9289-78f34df07abc
 """
@@ -74,7 +62,7 @@ Cross matches 2 dataframes given angular seperation in arcmin
 """
 function xmatch(df1::DataFrame, df2::DataFrame, max_sep=2)
 	max_sep = max_sep / 3600
-	dists = ang_dist.(df1.ra, df1.dec, Ref(df2.ra), Ref(df2.dec))
+	dists = lguys.angular_distance.(df1.ra, df1.dec, Ref(df2.ra), Ref(df2.dec))
 	filt = minimum.(dists) .< max_sep
 	idxs = argmin.(dists)
 	return filt, idxs
@@ -82,8 +70,8 @@ end
 
 # ╔═╡ 248c2d5f-85cc-44be-bc63-43d4af470182
 begin 
-	params = read_file("density_fits/sculptor/fiducial.toml")
-	params["filename"] = "../data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"
+	params = read_file("sculptor/fiducial.toml")
+	params["filename"] = "$data_dir/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"
 	params["PA"] = 92
 	params["ellipticity"] = 0.36
 	params["PSAT_min"] = nothing
@@ -100,9 +88,14 @@ md"""
 ## Dart
 """
 
+# ╔═╡ 97277013-a8fc-4f70-b016-ef7f9025ce97
+md"""
+DART sample from Federico.
+"""
+
 # ╔═╡ 23402e30-2064-494c-bd4a-8243cb474b61
 begin 
-	dart = CSV.read("../data/Sculptor_DARTS_BEST_psat40.csv", DataFrame)
+	dart = CSV.read("$data_dir/Sculptor_DARTS_BEST_psat40.csv", DataFrame)
 	rename!(dart, 
 		"vel"=>"RV",
 		"evel"=>"RV_err",
@@ -122,10 +115,28 @@ md"""
 ## Apogee
 """
 
+# ╔═╡ 45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
+md"""
+APOGEE sample from federico's paper
+"""
+
 # ╔═╡ 27063de7-01d4-48a8-a06f-cc24aec662d2
 md"""
 ### Check apogee-dart xmatch against fed
 """
+
+# ╔═╡ 7d94d7b0-1bf2-403c-945f-cf8c32cc61a8
+lguys.angular_distance(0.0, 0., 180., 180.)
+
+# ╔═╡ 0cf2d6b0-d1b9-42fb-8eca-0bc7bccfea70
+lguys.angular_distance.([14.479505360741172], [-33.99473291943769
+], [14.479505360741172], [-33.99473291943769])
+
+# ╔═╡ 4dec130d-d325-4cc8-9be5-8771366878b5
+14.479505360741172 == 14.479505360741172
+
+# ╔═╡ 5de5206d-c746-40fd-9089-5ca0e1b14dbc
+println(dart[435, :dec])
 
 # ╔═╡ b6de4afb-9362-4618-a114-df460031e4f9
 md"""
@@ -134,7 +145,7 @@ md"""
 
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
 let
-	global gmos = CSV.read("../data/targets_stellar_met.csv", DataFrame)
+	global gmos = CSV.read("$data_dir/targets_stellar_met.csv", DataFrame)
 	rename!(gmos,
 		"RA"=>"ra",
 		"Dec"=>"dec"
@@ -158,7 +169,7 @@ md"""
 # ╔═╡ 15f2a8e2-90df-48a9-a7bf-e86955f566ce
 
 begin 
-	FITS("../data/tolstoy_2023.fits", "r") do f
+	FITS("$data_dir/tolstoy_2023.fits", "r") do f
 		global tolstoy23_all = DataFrame(f[2])
 	end
 
@@ -186,7 +197,7 @@ Weighted mean of measurements for repeated stars
 # ╔═╡ 77830e77-50a4-48b7-b070-8fbd7508c173
 let 
 	global walker09_single
-	FITS("../data/walker_2009.fits", "r") do f
+	FITS("$data_dir/walker_2009.fits", "r") do f
 		global walker09_single = DataFrame(f[2])
 	end
 	walker09_single[!, "Galaxy"] = [s[1:3] for s in walker09_single.Target]
@@ -196,7 +207,7 @@ end
 # ╔═╡ dee71790-ffeb-477d-adbe-112731dfe134
 let 
 	global walker09_averaged
-	FITS("../data/walker+09.fits", "r") do f
+	FITS("$data_dir/walker+09.fits", "r") do f
 		global walker09_averaged = DataFrame(f[2])
 	end
 
@@ -240,12 +251,6 @@ all_studies
 
 # ╔═╡ c724e720-18ca-4905-a4b6-39fc47abe39d
 j24[j24.source_id .== 5006419626331394048, :]
-
-# ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
-
-
-# ╔═╡ c94b959d-2490-4a16-9ab7-c5c580316100
-
 
 # ╔═╡ 3655b6a0-ac9a-4a49-86fd-6a6484409819
 md"""
@@ -420,7 +425,7 @@ filt_tolstoy .&= tolstoy23_all.Mem .== "m"
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 begin 
-	apogee_all = CSV.read("../data/sculptor_apogeeDR17_xmatch.csv", DataFrame)
+	apogee_all = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
 
 	rename!(apogee_all, 
 		"Elliptical half-light radii"=>"r_h",
@@ -467,9 +472,21 @@ end
 # ╔═╡ 1bc2541c-69ac-40aa-94f5-743707ca5a66
 hist(apogee.RV)
 
+# ╔═╡ a3784287-7e92-4010-bb22-a64139477f64
+xmatch(apogee_all[5:5, :], dart[435:435, :])
+
+# ╔═╡ 3c89754e-e6e4-4de1-b31b-678676bd21a5
+lguys.angular_distance.(apogee_all[5:5, :].ra, apogee_all[5:5, :].dec, Ref(dart[435:435, :].ra), Ref(dart[435:435, :].dec))
+
+# ╔═╡ 83cb3df5-813b-4fb6-b22a-08742105b919
+apogee_all[5:5, :].ra == [14.479505360741172]
+
+# ╔═╡ 854dd3cf-7c8d-4a9c-bb86-cd5bfb775c4b
+dart[435:435, :].dec == apogee_all[5:5, :].dec
+
 # ╔═╡ 48c62811-136f-4962-a42c-b1dd1fc74f8c
 begin 
-	apogee_notdart = CSV.read("../data/sculptor_apogeeDR17_xmatch_notDART.csv", DataFrame)
+	apogee_notdart = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch_notDART.csv", DataFrame)
 
 	rename!(apogee_notdart, 
 		"Elliptical half-light radii"=>"r_h",
@@ -491,9 +508,6 @@ end
 
 # ╔═╡ 2e7ce524-573e-45c9-b0f4-ce9fea68e026
 a2 = apogee_all[not.(xmatch(apogee_all, dart)[1]), :];
-
-# ╔═╡ fcf50b2c-5703-4101-b3a7-45e5fb8e072f
-size(a2, 1) + size(dart, 1) # should be 617
 
 # ╔═╡ f8775eb1-2cb9-4d81-8c02-39c43ceb9b45
 sort(a2.source_id) == sort(apogee_notdart.source_id)
@@ -800,13 +814,28 @@ end
 # ╔═╡ 01b3135f-7a72-4669-b586-4bc5894464ad
 sum(filt_is_meas)
 
-# ╔═╡ 9e63c171-394e-4c05-b237-189fba0274e2
+# ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
 begin 
-	memb_stars = rv_meas[(rv_meas.PSAT .> 0.2) .& (150 .> rv_meas.RV .> 60), :]
+	memb_filt = rv_meas.PSAT .> 0.2
+	memb_filt .&= 150 .> rv_meas.RV .> 60
 
-	# only Fed. data
-	# memb_stars = memb_stars[not.(ismissing.(memb_stars.RV_apogee)) .| not.(ismissing.(memb_stars.RV_dart)), :]
+	quality_score = rv_meas.RV_std ./ rv_meas.RV_err
+	quality_score[isnan.(rv_meas.RV_std)] .= 0
+
+	memb_filt .&= quality_score .< 5
 end
+
+# ╔═╡ 74b10a3e-1342-454f-8eed-77b371f81edf
+lines(Arya.histogram(quality_score, normalization=:none))
+
+# ╔═╡ d8800a31-1ed3-422f-ac51-90f18cf61c29
+sum(quality_score .< Inf)
+
+# ╔═╡ 015f2345-74d4-4296-b0dc-35d6e13ad8cc
+sum(quality_score .< 5)
+
+# ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
+memb_stars = rv_meas[memb_filt, :]
 
 # ╔═╡ 7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 hist(memb_stars.RV)
@@ -852,6 +881,9 @@ pairplot(samples[:, [:μ, :σ]])
 # ╔═╡ 319bd778-7e17-4bd7-856f-d6785b287219
 quantile(samples.σ, [0.16, 0.84]) .- σ_m
 
+# ╔═╡ e93c66f7-394a-46bf-96c9-475494979548
+memb_stars
+
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
 	fig, ax = FigAxis(
@@ -879,7 +911,7 @@ std(memb_stars.RV)
 sesd(memb_stars.RV)
 
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = Arya.bins_equal_number(memb_stars.r_ell, n=8)
+bins = Arya.bins_equal_number(memb_stars.r_ell, n=10)
 
 # ╔═╡ 1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 bin_errs = diff(bins) / 2
@@ -961,7 +993,7 @@ let
 end
 
 # ╔═╡ 7f13339e-6a0c-4944-8a36-5ab136fd8415
-function compare_rv_mean(study1)
+function compare_rv_mean(study1, rv_meas=rv_meas)
 	rv1  = rv_meas[:, "RV_$study1"]
 	rv1_err  = rv_meas[:, "RV_err_$study1"]
 	
@@ -998,22 +1030,27 @@ function compare_rv_mean(study1)
 end
 
 # ╔═╡ aaaf5ba2-c9ed-41ec-a22a-d78ed96fd84e
-compare_rv_mean("w09")
+compare_rv_mean("w09", memb_stars)
 
 # ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
-compare_rv_mean("apogee")
+compare_rv_mean("apogee", memb_stars)
 
 # ╔═╡ 78e7aff0-3658-4d64-b117-58189a85307a
-compare_rv_mean("t23")
+compare_rv_mean("t23", memb_stars)
 
 # ╔═╡ f4f9dd06-1a1a-458b-be75-05d52623580c
-compare_rv_mean("gmos")
+compare_rv_mean("gmos", )
 
 # ╔═╡ 6b84c679-0532-465a-97dd-d62671077b61
-compare_rv_mean("dart")
+compare_rv_mean("dart", )
 
 # ╔═╡ d11edca7-b9ae-4269-9e1b-661d59bd965e
 all_stars[not.(ismissing.(all_stars.RV_gmos)), :].source_id
+
+# ╔═╡ 9e63c171-394e-4c05-b237-189fba0274e2
+begin 
+	fed_stars = memb_stars[not.(ismissing.(memb_stars.RV_apogee)) .| not.(ismissing.(memb_stars.RV_dart)), :]
+end
 
 # ╔═╡ 74152829-27ef-4d8d-8b32-ed30a18f30e4
 rv_meas.RV_gmos[not.(ismissing.(rv_meas.RV_gmos))]
@@ -1053,23 +1090,23 @@ end
 
 # ╔═╡ Cell order:
 # ╟─6f2359d8-332b-11ef-0db9-f1f06474c561
-# ╠═fcf50b2c-5703-4101-b3a7-45e5fb8e072f
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═9070c811-550c-4c49-9c58-0943b0f808b2
 # ╠═e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
-# ╠═dd29be70-4918-47e4-98cf-3608df14e88a
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
-# ╠═49e728ee-e545-4ee5-bd9f-b0a38c4eaf15
+# ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═da5a3b57-72bc-46e1-b1a0-6c02eb101626
 # ╠═3d8b3c55-153b-4a4a-9289-78f34df07abc
 # ╠═d4123ffd-cb32-486e-a93d-f48d7112a831
 # ╠═248c2d5f-85cc-44be-bc63-43d4af470182
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
 # ╟─7db47590-b82b-4822-8a01-eaff96c9389f
+# ╟─97277013-a8fc-4f70-b016-ef7f9025ce97
 # ╠═23402e30-2064-494c-bd4a-8243cb474b61
 # ╠═baacb491-9dff-4ff4-b62c-5842d79794da
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
+# ╠═45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═fcc95615-f24a-40fa-a7d1-9e474df9f798
@@ -1077,7 +1114,15 @@ end
 # ╠═1bc2541c-69ac-40aa-94f5-743707ca5a66
 # ╟─27063de7-01d4-48a8-a06f-cc24aec662d2
 # ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
+# ╠═7d94d7b0-1bf2-403c-945f-cf8c32cc61a8
 # ╠═2e7ce524-573e-45c9-b0f4-ce9fea68e026
+# ╠═a3784287-7e92-4010-bb22-a64139477f64
+# ╠═3c89754e-e6e4-4de1-b31b-678676bd21a5
+# ╠═0cf2d6b0-d1b9-42fb-8eca-0bc7bccfea70
+# ╠═4dec130d-d325-4cc8-9be5-8771366878b5
+# ╠═83cb3df5-813b-4fb6-b22a-08742105b919
+# ╠═854dd3cf-7c8d-4a9c-bb86-cd5bfb775c4b
+# ╠═5de5206d-c746-40fd-9089-5ca0e1b14dbc
 # ╠═f8775eb1-2cb9-4d81-8c02-39c43ceb9b45
 # ╟─b6de4afb-9362-4618-a114-df460031e4f9
 # ╠═b7345279-4f80-47ad-a726-537571849eae
@@ -1138,8 +1183,11 @@ end
 # ╠═d11edca7-b9ae-4269-9e1b-661d59bd965e
 # ╠═c724e720-18ca-4905-a4b6-39fc47abe39d
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
+# ╠═74b10a3e-1342-454f-8eed-77b371f81edf
+# ╠═d8800a31-1ed3-422f-ac51-90f18cf61c29
+# ╠═015f2345-74d4-4296-b0dc-35d6e13ad8cc
+# ╠═cc6c65db-ef57-4745-8ada-e11427274a77
 # ╠═9e63c171-394e-4c05-b237-189fba0274e2
-# ╠═c94b959d-2490-4a16-9ab7-c5c580316100
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
 # ╠═3655b6a0-ac9a-4a49-86fd-6a6484409819
@@ -1163,6 +1211,7 @@ end
 # ╠═318d29b9-4c84-4d38-af6d-048518952970
 # ╠═b18e4622-41e0-4700-9e4b-3dbebeefea53
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
+# ╠═e93c66f7-394a-46bf-96c9-475494979548
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f
 # ╠═61e15c47-c454-48db-95f9-02abe052676e
 # ╠═d5938fc3-9c8a-4e33-8401-500b4201df14
