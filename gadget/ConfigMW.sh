@@ -30,3 +30,6 @@
     OUTPUT_POTENTIAL
     OUTPUT_ACCELERATION
     EVALPOTENTIAL
+
+# Parallel options, not needed except for niagara
+    NUMBER_OF_MPI_LISTENERS_PER_NODE=2

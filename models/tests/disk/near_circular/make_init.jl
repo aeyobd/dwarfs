@@ -25,7 +25,7 @@ function main()
 
     m = 0
 
-    snap = lguys.Snapshot(positions=pos, velocities=vel, masses=zeros(N))
+    snap = lguys.Snapshot(pos, vel, zeros(N))
     lguys.save("initial.hdf5", snap)
 end
 
