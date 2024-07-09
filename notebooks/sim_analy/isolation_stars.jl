@@ -22,10 +22,10 @@ begin
 end
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = "/astro/dboyea/sculptor/isolation/1e6_M0.8_c13"
+modeldir = "/astro/dboyea/sculptor/isolation/1e6/M0.5_c13.1"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_rs0.2"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "stars/$(starsname)_stars.hdf5"
@@ -153,7 +153,7 @@ let
 end
 
 # ╔═╡ 341440a0-9567-4ebf-8acb-cf327edfa4fb
-function find_radii_fracs(out, x_cen, probabilities) 
+function find_radii_fracs(out, x_cen, probabilities; skip=10) 
 	rs = Vector[]
 	Ms = Vector[]
 	rs_s = Vector[]
@@ -189,7 +189,7 @@ percens, rs, rs_s = find_radii_fracs(out, x_cen, probabilities)
 # ╔═╡ d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 let 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r containing stellar mass")
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r / kpc containing stellar mass")
 	for i in eachindex(percens)
 		lines!(times, log10.(rs_s[i, :]), 
 			color=i, colorrange=(1, length(percens)),
@@ -245,6 +245,31 @@ let
 	fig
 end
 
+# ╔═╡ ae8e1425-343d-45b0-a24b-920294954596
+function calc_σv_x(snap)
+	vs = lguys.get_v_x(snap)
+	w = probabilities[snap.index]
+	return std(vs, weights(w))
+end
+
+# ╔═╡ 2f6da0ff-eef1-407d-a5e4-c3035d049688
+let
+	skip = 1
+
+	idx = 1:skip:length(out)
+	ts = out.times[idx] * lguys.T0
+
+	sigmas = [calc_σv_x(out[i]) for i in idx]
+
+	fig, ax = FigAxis(
+		xlabel = "time / Gyr",
+		ylabel = L"\sigma_v / \textrm{km s^{-1}}",
+	)
+	scatter!(ts, sigmas * lguys.V0)
+
+	fig
+end
+
 # ╔═╡ fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7
 σ_v
 
@@ -283,4 +308,6 @@ end
 # ╠═5b2f984b-a9cd-4c7f-a901-e2e6df26f5e4
 # ╠═dd21570b-9ba5-44b3-a8c1-76251b492eef
 # ╠═95386397-7303-48a6-9720-c70384b8ec7a
+# ╠═ae8e1425-343d-45b0-a24b-920294954596
+# ╠═2f6da0ff-eef1-407d-a5e4-c3035d049688
 # ╠═fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7

@@ -60,10 +60,10 @@ Parameters
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
+dir = "/astro/dboyea/sculptor/isolation/1e6/M0.5_c13.1/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.2.toml"
+paramname = "exp2d_rs0.13.toml"
 
 # ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 begin 
@@ -84,10 +84,6 @@ automatically populate the centres file and output files
 """
 function load_params(paramname)
 	params = TOML.parsefile(paramname); 
-
-	if "centres_file" ∉ keys(params)
-		params["centres_file"] = params["snapshot_dir"] * "/centres.csv"
-	end
 
 	if "output_file" ∉ keys(params)
 		params["output_file"] = splitext(paramname)[1] * "_stars.hdf5"
@@ -123,18 +119,19 @@ r_h = lguys.get_r_h(profile)
 # ╔═╡ 1b9f3101-4891-4a8c-8c73-41a222b6c26f
 ρ_s(r) = lguys.calc_ρ(profile, r)
 
-# ╔═╡ d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
-cen = CSV.read(params["centres_file"], DataFrame)[params["snapshot"] + 1, :]
-
 # ╔═╡ 4cb09115-143d-456f-9c6a-19656f638677
 begin 
-	snapname = params["snapshot_dir"] * "/snapshot_" * lpad(params["snapshot"], 3, "0") * ".hdf5"
+	snapname = params["snapshot"]
 	println("loading snap ", snapname)
 	snap_og = lguys.Snapshot(snapname)
 
-	snap_og.x_cen = [cen.x, cen.y, cen.z ]
-	snap_og.v_cen = [cen.vx, cen.vy, cen.vz]
+	cen = lguys.calc_centre(lguys.StaticState, snap_og)
+	
+	snap_og.x_cen = cen.position
+	snap_og.v_cen = cen.velocity
 
+	println(cen)
+	
 	snap_og
 end
 
@@ -188,15 +185,20 @@ function filter_and_sort(snap_og)
 	snap = snap[filt_snap]
 end
 
-# ╔═╡ 0f5671e6-deb4-11ee-3178-4d3f920f23a2
-begin
-	# centre snapshot
-	snap = filter_and_sort(snap_og)
-	# calculate energies
-	Φs = calc_phi(snap)
-	ϵs = calc_eps(snap, Φs)
-	radii = lguys.calc_r(snap)
-end
+# ╔═╡ f0b0e4f2-2061-4725-86a6-7179ea552c92
+snap = filter_and_sort(snap_og)
+
+# ╔═╡ 3d2cd818-454c-400d-8dbb-f7c6405266fe
+snap
+
+# ╔═╡ e155f30d-e176-4faa-84f1-819553ea456e
+Φs = calc_phi(snap)
+
+# ╔═╡ c7b92f65-67f8-4d91-ab6f-5077258dbacc
+ϵs = calc_eps(snap, Φs)
+
+# ╔═╡ e797fe86-7361-4c7a-b1d4-2f3b6b6b0ef9
+radii = lguys.calc_r(snap)
 
 # ╔═╡ f7f746c9-cd03-4391-988b-dffeb31b2842
 println(" $(sum(radii .< r_h)) stars within (3D) half-light radius")
@@ -604,7 +606,7 @@ let
 		colorrange=(1e-2, nothing)
 	)	
 
-	scatter!(cen.x, cen.y)
+	scatter!(cen.position[1], cen.position[2])
 
 	Colorbar(fig[1, 2],h )
 
@@ -631,7 +633,7 @@ let
 		colorrange=(1e-7, nothing)
 	)	
 
-	scatter!(cen.x, cen.y)
+	scatter!(cen.position[1], cen.position[2])
 
 	Colorbar(fig[1, 2], h)
 	fig
@@ -639,7 +641,7 @@ end
 
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
-	r = lguys.calc_r(snap_og, [cen.x, cen.y, cen.z])
+	r = lguys.calc_r(snap_og)
 	ms = ps_all[snap_og.index]
 	
 	r_h2 = calc_r_h(r, ms)
@@ -686,8 +688,8 @@ md"""
 
 # ╔═╡ 6dd92ee1-374d-47fa-ad61-b54764b23240
 let
-	x = snap_og.positions[1, :] .- cen.x
-	y = snap_og.positions[2, :] .- cen.y
+	x = snap_og.positions[1, :] .- cen.position[1]
+	y = snap_og.positions[2, :] .- cen.position[2]
 	R = @. sqrt(x^2 + y^2)
 
 	prof = lguys.calc_properties(R, weights=ps_all[snap_og.index], bins=100)
@@ -737,23 +739,9 @@ function mock_obs(snap_og, ps_all; distance=86)
 	snap_shift = copy(snap_og[filt])
 	snap_shift.positions .+= shift_vec
 
+	snap_shift.weights = ps
 	obs = lguys.to_sky(snap_shift)
-
-	println("number of final stars: ", length(snap_shift))
-		
-	obs_df = DataFrame(; 
-	collect(key => [getproperty(o, key) for o in obs]
-			for key in [:ra, :dec, :pm_ra, :pm_dec, :distance, :radial_velocity])...
-		
-	)
-
-	obs_df[!, "index"] = snap_shift.index
-	obs_df[!, "probability"] = ps
-	
-	rename!(obs_df, "pm_ra"=>"pmra")
-	rename!(obs_df, "pm_dec"=>"pmdec")
-
-	return obs_df
+	return obs
 end
 
 # ╔═╡ 87b5b241-db72-45ee-b3a7-a394f99510d9
@@ -763,7 +751,7 @@ obs_mock = mock_obs(snap_og, ps_all)
 let
 	ra = obs_mock.ra
 	dec = obs_mock.dec
-	ms = obs_mock.probability
+	ms = obs_mock.weights
 
 	ra0, dec0 = lguys.calc_centre2D(ra, dec, "mean", ms)
 	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
@@ -798,63 +786,33 @@ import StatsBase: mean, std, weights
 # ╔═╡ 74845a4f-588b-44d3-a5e1-7155fd6a7b01
 let
 	x = obs_mock.radial_velocity
-	m = obs_mock.probability
+	m = obs_mock.weights
 	μ = mean(x, weights(m))
 	σ = std(x, weights(m))
 	println(μ)
 	println(σ)
 
-	fig, ax = FigAxis()
+	fig, ax = FigAxis(
+		xlabel=L"radial velocity / km s$^{-1}$",
+		ylabel="density"
+	)
 
-	stephist!(x, weights=m, normalization=:pdf)
+	stephist!(x, weights=m, normalization=:pdf, bins=50)
 	x_model = LinRange(μ - 5σ, μ + 5σ, 1000)
 	y_model = lguys.gaussian.(x_model, μ, σ)
 
-	lines!(x_model, y_model)
+	lines!(x_model, y_model, color=COLORS[2])
 	
 	fig
 end
 
 # ╔═╡ e4c33671-744b-42bb-87be-2df7add03b96
 let
-	x = lguys.calc_r(snap_og.velocities, [cen.vx, cen.vy, cen.vz]) .^2 * lguys.V0^2
+	x = lguys.calc_r(snap_og.velocities, cen.velocity) .^2 * lguys.V0^2
 	m = ps_all[snap_og.index]
 	
 	μ = mean(x, weights(m))
 	println(sqrt(μ)/ sqrt(3))
-end
-
-# ╔═╡ 895dfb3a-c8c4-493f-997e-bc3a41d99686
-function make_sample(snap; rel_p_cut=1e-15, r_max=Inf,
-	Frame=lguys.HelioRest
-)
-
-	ps = probabilities[snap.index]
-	
-	p_min = rel_p_cut * maximum(ps)
-	println("adopting p_min = $p_min")
-
-	filt = ps .> p_min
-	snap_stars = snap[filt]
-	ps = ps[filt]
-	println("sanity check: ", ps == probabilities[snap_stars.index])
-	println("number of final stars: ", length(snap_stars))
-	
-	obs_pred = lguys.to_sky(snap_stars, SkyFrame=Frame)
-	
-	obs_df = DataFrame(; 
-	collect(key => [getproperty(o, key) for o in obs_pred]
-			for key in [:ra, :dec, :pm_ra, :pm_dec, :distance, :radial_velocity])...
-		
-	)
-
-	obs_df[!, "index"] = snap_stars.index
-	obs_df[!, "probability"] = ps
-	
-	rename!(obs_df, "pm_ra"=>"pmra")
-	rename!(obs_df, "pm_dec"=>"pmdec")
-
-	return obs_df
 end
 
 # ╔═╡ b89fbbb0-b161-4fa7-82ba-c06e3d32f8b8
@@ -893,15 +851,18 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═aa69bde5-ab93-4105-9d48-ad0ace88e3f0
 # ╠═f7f746c9-cd03-4391-988b-dffeb31b2842
 # ╠═1b9f3101-4891-4a8c-8c73-41a222b6c26f
-# ╠═d77557e5-f7d8-40e9-ae40-a4b6b8df16cd
 # ╠═4cb09115-143d-456f-9c6a-19656f638677
+# ╠═3d2cd818-454c-400d-8dbb-f7c6405266fe
 # ╟─620a617b-c1d7-4718-a1b8-f4c3c18285d5
 # ╠═9cce4cf5-2371-492d-950a-fd963db80738
 # ╠═9af14bf8-bd18-48a9-af1e-62f9dab095b7
 # ╠═5851e36f-9376-4445-9bac-da3ce9d5ac7e
 # ╠═2c2b5c87-1e5e-4c32-ba64-e6d24323007c
 # ╠═d4a0bd79-5d5e-48e8-bd8c-8865663423e1
-# ╠═0f5671e6-deb4-11ee-3178-4d3f920f23a2
+# ╠═f0b0e4f2-2061-4725-86a6-7179ea552c92
+# ╠═e155f30d-e176-4faa-84f1-819553ea456e
+# ╠═c7b92f65-67f8-4d91-ab6f-5077258dbacc
+# ╠═e797fe86-7361-4c7a-b1d4-2f3b6b6b0ef9
 # ╟─4fe0d79b-92f8-4766-808a-9bfbf4c5ab7f
 # ╟─e935a80a-7f4f-4143-ae6c-bee62b82c30e
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
@@ -970,6 +931,5 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═03037c94-7f26-479c-9772-fa2682e3ba37
 # ╠═74845a4f-588b-44d3-a5e1-7155fd6a7b01
 # ╠═e4c33671-744b-42bb-87be-2df7add03b96
-# ╠═895dfb3a-c8c4-493f-997e-bc3a41d99686
 # ╠═b89fbbb0-b161-4fa7-82ba-c06e3d32f8b8
 # ╠═d29baea8-0e5c-43e0-9aa2-987d6cc08e88

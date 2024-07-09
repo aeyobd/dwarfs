@@ -19,6 +19,9 @@ using PairPlots
 # ╔═╡ ef991557-7bf7-4add-b29f-f16187297e46
 using DataFrames
 
+# ╔═╡ e7ab194c-63a4-4274-aaba-43c3d369ce0d
+using KernelDensity
+
 # ╔═╡ 07a710d8-0ae4-4d9f-9759-002750730010
 md"""
 # Estimation of halo mass
@@ -83,7 +86,7 @@ MV_sol = 4.83 # solar magnitude
 # ╔═╡ aec3d9a7-d447-4e9f-aa83-fa5b20541b5c
 begin
 	# mass to lig
-	M_L_star = 1.4
+	M_L_star = 1.5
 	M_L_star_err = 0.3
 	MV = -10.82
 	MV_err = 0.14
@@ -115,7 +118,7 @@ function M_s_from_vel(v_max)
 end
 
 # ╔═╡ 2ec0b911-6338-4364-a250-90664e90f1a6
-lMs_to_lVc_err = 0.05
+lMs_to_lVc_err = 0.1
 
 # ╔═╡ 40694bea-0b6e-4235-ac1b-6b25dd91ac38
 md"""
@@ -339,7 +342,7 @@ begin
 	M200_samples = 10 .^ ( -1 .+ 2 * rand(N_samples))
 	
 	σ_c = 0.1 #uncertainty from paper, approx 0.09 scatter + 0.03 model -> fitting function
-	c_samples = 10 .^ (log10.(calc_c.(M200_samples, 0)) .+ σ_c .* randn(N_samples))
+	c_samples = calc_c.(M200_samples, 0) .* 10 .^ (0 .+ σ_c .* randn(N_samples))
 end
 
 # ╔═╡ c9e713c8-74b9-4b3d-bc7d-071955dc4615
@@ -390,6 +393,24 @@ let
 	
 	y = [h.c for h in halo_mean]
 	lines!(M200_mean, y)
+
+	fig
+end
+
+# ╔═╡ d2d4f204-11f1-4a5f-ac28-5b054bfa7035
+let
+	fig = Figure()
+
+	ax_c = Axis(fig[1, 1];
+		ylabel = "log concentration",
+		ax_M200_kwargs...
+	)
+
+	y = [h.c for h in halo_samples]
+	scatter!(M200_samples, log10.(y), color=:black, alpha=0.01)
+	
+	y = [h.c for h in halo_mean]
+	lines!(M200_mean, log10.(y))
 
 	fig
 end
@@ -502,7 +523,7 @@ let
 		ylabel = "log difference in Vcirc"
 	)
 
-	scatter!(Vc_samples * lguys.V0, log10.(Vc_samples) .- lllerp_ms_vc.(log10.(Ms_samples)), alpha=0.05, color=:black, markersize=5)
+	scatter!(Vc_samples * lguys.V0, log10.(Vc_samples) .- lMs_to_lVc.(log10.(Ms_samples)), alpha=0.05, color=:black, markersize=5)
 
 	fig
 end
@@ -511,6 +532,16 @@ end
 md"""
 ## Monte Carlo mass estimates
 """
+
+# ╔═╡ fa6b2468-164f-42b7-88f5-6eff0a9c5ce1
+function solve_M200_c(Vcmax, σ_c=σ_c)
+	dc = 10 ^ (0 + σ_c * randn())
+
+	f(M200) = lguys.calc_V_circ_max(NFW_from_M200_c(M200, dc * calc_c(M200, 0.))) - Vcmax
+
+	M200 = find_zero(f, [0.001, 100])
+	return M200, calc_c(M200, 0.) * dc
+end
 
 # ╔═╡ bbd5e178-eddc-4e75-b4c5-252048b75fb4
 begin 
@@ -526,10 +557,13 @@ begin
 	)
 
 	samples[!, :Vc] = 10 .^ samples.log_Vc
-	samples[!, :log_M200] = lVc_to_lM200.(samples.log_Vc)
-	samples[!, :M200] = 10 .^ samples.log_M200
+	Mcs = [solve_M200_c(x) for x in samples.Vc]
+	samples[!, :M200] = first.(Mcs)
+	samples[!, :log_M200] = log10.(samples.M200)
 
-	samples[!, :c] = calc_c.(samples.M200, 0) .* 10 .^ (0 .+ randn(N_samples) .* σ_c)
+	samples[!, :c] = last.(Mcs)
+
+	samples[!, :Ms2] = samples.Ms * 1e4
 
 	samples
 end
@@ -538,13 +572,36 @@ end
 pairplot(samples[:, [:MV, :L, :Ms]])
 
 # ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
-pairplot(samples[:, [:Ms, :M200, :c]])
+pairplot(samples[:, [:Ms2, :log_M200, :c]], labels=Dict(
+	:Ms2 => L"$M_s$", 
+	:log_M200 => L"\log M_{200} / 10^{10}\,\textrm{M}_\odot ", 
+	:c => L"c"))
+
+# ╔═╡ 4e1290b5-171e-4715-a87b-28a2cfcb4325
+samples.Ms * 1e10
 
 # ╔═╡ 9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
 lc_err = 0.01
 
 # ╔═╡ 7d1ba57d-4332-4d6e-872b-42925c14ecfb
 c_mean = [h.c for h in halo_mean]
+
+# ╔═╡ a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
+let
+	fig = Figure()
+
+	ax_c = Axis(fig[1, 1];
+		ylabel = L"V_c",
+		yscale=log10, 
+		yticks=[20, 30, 40, 50, 60, 70, 80],
+		ax_M200_kwargs...
+	)
+
+	scatter!(c_samples, Vc_samples * lguys.V0,  color=:black, alpha=0.1, markersize=3)
+	lines!(c_mean, Vc_mean * lguys.V0)
+
+	fig
+end
 
 # ╔═╡ d2616939-fba8-42ff-921a-8b0bcaf7acb9
 function describe(x::Array; p=0.16)
@@ -555,14 +612,14 @@ function describe(x::Array; p=0.16)
 	return p1-m, m, p2-m
 end
 
-# ╔═╡ 0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
-describe(samples.M200)
-
-# ╔═╡ 10aac004-8c52-4c91-944a-0002bdffa99d
-describe(samples.Ms) .* lguys.M0
-
 # ╔═╡ 4c0c93ad-5471-45d4-b44a-2d15a782491b
 describe(samples.L)
+
+# ╔═╡ 10aac004-8c52-4c91-944a-0002bdffa99d
+describe(samples.Ms) .* lguys.M0 ./ 1e6
+
+# ╔═╡ 0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
+describe(samples.M200)
 
 # ╔═╡ ecade01b-f703-4780-bc5d-ccc4c448b676
 describe(samples.c)
@@ -574,21 +631,36 @@ md"""
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	M200_in = 0.8
-	c_in = 13.0
+	M200_in = 1.0
+	c_in = 12.6
+end
+
+# ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
+let
+	fig, ax = FigAxis(
+		xlabel="log M200",
+		ylabel="c",
+	)
+
+	x = log10.(samples.M200)
+	y = samples.c
+	k = kde([x y])
+
+	h = hexbin!(x, y, bins=50, colorscale=log10)
+
+	c = contour!(k, colormap=:bluesgreens)
+
+	scatter!(log10.(M200_in), c_in)
+
+	
+	fig
 end
 
 # ╔═╡ da48951f-c47c-432a-9b6c-78bd670c1fec
-calc_c(M200_in, 0)
+calc_c(M200_in, 0) .* ((1-10^lc_err), 1, (10^lc_err-1))
 
 # ╔═╡ ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 halo = NFW_from_M200_c(M200_in, c_in)
-
-# ╔═╡ ab5bc36d-d203-45be-8e7d-d8c5c9473388
-lguys.calc_c(halo)
-
-# ╔═╡ 0dfffcda-bbbe-402f-8e6f-7f20e5cac46b
-lguys.calc_V_circ_max(halo) * lguys.V0
 
 # ╔═╡ 1840f4a4-beff-4ab1-8def-0c682a6675f7
 halo.M_s
@@ -596,14 +668,17 @@ halo.M_s
 # ╔═╡ dd5002c2-d9e8-4fdf-877a-2d6b558b0941
 halo.r_s
 
+# ╔═╡ ab5bc36d-d203-45be-8e7d-d8c5c9473388
+lguys.calc_c(halo), (1-10^lc_err)*lguys.calc_c(halo)
+
+# ╔═╡ 0dfffcda-bbbe-402f-8e6f-7f20e5cac46b
+lguys.calc_V_circ_max(halo) * lguys.V0
+
 # ╔═╡ 6b8f8bb2-6aee-44b5-96c2-781fa7fdad05
 halo.M_s * lguys.A_NFW(1)
 
 # ╔═╡ 84892a5a-f816-450b-9757-e4135a40aebc
 lguys.calc_M(halo, halo.r_s)
-
-# ╔═╡ 3f4601ed-daec-48de-a681-b75970bb61bc
-lguys.A_NFW(1)
 
 # ╔═╡ 2afae40d-ce7e-4ebf-a1eb-7d2b1ff2f728
 M_s_from_vel(lguys.calc_V_circ_max(halo)) * 1e4
@@ -660,6 +735,12 @@ let
 	fig
 end
 
+# ╔═╡ 93715b38-1790-4b1e-a551-17d69b68876f
+lguys.calc_M(halo , lguys.calc_R200(halo))
+
+# ╔═╡ 66185c44-0836-4ab8-b4fe-a550e87c870d
+M200_in
+
 # ╔═╡ 896ccd5d-8e92-4c26-944d-04d42550caef
 lguys.calc_R200(halo)
 
@@ -668,12 +749,6 @@ lguys.calc_R200(halo)
 
 # ╔═╡ b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
 lguys.G * lguys.calc_M200(halo) / lguys.calc_R200(halo)^2
-
-# ╔═╡ 93715b38-1790-4b1e-a551-17d69b68876f
-lguys.calc_M(halo , lguys.calc_R200(halo))
-
-# ╔═╡ 66185c44-0836-4ab8-b4fe-a550e87c870d
-M200_in
 
 # ╔═╡ Cell order:
 # ╟─07a710d8-0ae4-4d9f-9759-002750730010
@@ -721,35 +796,40 @@ M200_in
 # ╠═90d563f3-d9a4-4e50-82b9-e37eecff87d9
 # ╠═a620cbcc-5ac1-4f2a-ae93-6c345ee5f5ce
 # ╠═736c8755-6ae5-44c9-aa17-44a783c819d5
+# ╠═d2d4f204-11f1-4a5f-ac28-5b054bfa7035
 # ╠═d0a5efe1-b0d3-4804-93a0-a98124452a1a
 # ╠═77315496-903c-491a-becc-c31c0bf4c88f
 # ╠═4f3b2cb5-8855-4521-895c-accea0f9c115
+# ╠═a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
 # ╠═1edd1d75-3cbf-49be-a80b-425feff7c73e
 # ╠═023f12d0-317a-46db-b5c5-81a7d2216c55
 # ╠═e6995206-ebf2-40aa-ae7e-cc101e07f8ac
 # ╠═22b0843a-a90c-40ab-8edc-d82a982abd43
 # ╟─122794fb-82ab-4f3c-a458-29462fbab1fd
+# ╠═fa6b2468-164f-42b7-88f5-6eff0a9c5ce1
 # ╠═bbd5e178-eddc-4e75-b4c5-252048b75fb4
 # ╠═5cdc46ec-6d1b-403f-a3a2-a15b2c82ee16
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
+# ╠═4e1290b5-171e-4715-a87b-28a2cfcb4325
 # ╠═9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
 # ╠═7d1ba57d-4332-4d6e-872b-42925c14ecfb
 # ╠═d2616939-fba8-42ff-921a-8b0bcaf7acb9
-# ╠═0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
-# ╠═10aac004-8c52-4c91-944a-0002bdffa99d
 # ╠═4c0c93ad-5471-45d4-b44a-2d15a782491b
+# ╠═10aac004-8c52-4c91-944a-0002bdffa99d
+# ╠═0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
+# ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
+# ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
+# ╠═1840f4a4-beff-4ab1-8def-0c682a6675f7
+# ╠═dd5002c2-d9e8-4fdf-877a-2d6b558b0941
 # ╠═da48951f-c47c-432a-9b6c-78bd670c1fec
 # ╠═ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 # ╠═ab5bc36d-d203-45be-8e7d-d8c5c9473388
 # ╠═0dfffcda-bbbe-402f-8e6f-7f20e5cac46b
-# ╠═1840f4a4-beff-4ab1-8def-0c682a6675f7
-# ╠═dd5002c2-d9e8-4fdf-877a-2d6b558b0941
 # ╠═6b8f8bb2-6aee-44b5-96c2-781fa7fdad05
 # ╠═84892a5a-f816-450b-9757-e4135a40aebc
-# ╠═3f4601ed-daec-48de-a681-b75970bb61bc
 # ╠═2afae40d-ce7e-4ebf-a1eb-7d2b1ff2f728
 # ╠═c85ed71c-7579-4a43-98ab-7b28db041714
 # ╟─cb42028b-eeb0-48a7-b23d-5abe792eb4f0
@@ -758,8 +838,8 @@ M200_in
 # ╠═ba292975-8eea-4c3a-8b9c-23ff1b60c7ab
 # ╠═a75e163e-3489-4f82-901b-c511d1e44395
 # ╠═8b7f61d5-dcef-4889-8aab-a85b0ccdaf02
+# ╠═93715b38-1790-4b1e-a551-17d69b68876f
+# ╠═66185c44-0836-4ab8-b4fe-a550e87c870d
 # ╠═896ccd5d-8e92-4c26-944d-04d42550caef
 # ╠═2ae19d4f-659f-4985-8fc2-98d94cc52730
 # ╠═b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
-# ╠═93715b38-1790-4b1e-a551-17d69b68876f
-# ╠═66185c44-0836-4ab8-b4fe-a550e87c870d

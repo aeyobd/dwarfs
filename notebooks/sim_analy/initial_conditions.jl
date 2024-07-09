@@ -28,13 +28,19 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-dirname = "/arc7/home/dboyea/sculptor/isolation/1e6_M0.8_c13"
+dirname = "/arc7/home/dboyea/sculptor/isolation/1e6/M0.5_c13.1"
+
+# ╔═╡ 920546bd-4838-413c-b687-f891a7f5e985
+import TOML
+
+# ╔═╡ 900fda29-c87e-41e4-a46c-b7faea21c0ce
+params = TOML.parsefile(joinpath(dirname, "halo.toml"))
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
 begin 
-	R_s = 3.25
-	M_s = 0.4677
-	c = 13
+	R_s = params["r_s"]
+	M_s = params["M_s"]
+	c = 13.1
 end
 
 # ╔═╡ ef3d1d5f-0979-44a7-8f0f-bf4638ea5612
@@ -55,10 +61,13 @@ md"""
 # ╔═╡ 367095eb-1821-4947-a00e-10b35fbc82d2
 halo = lguys.NFW(M_s = M_s, r_s=R_s)
 
+# ╔═╡ e47f633f-2e46-4ffd-82c9-b762980d7b07
+lguys.calc_M(halo, R_s)
+
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
 	rc, Vc = lguys.calc_V_circ(snap)
 	lines!(log10.(rc), Vc * lguys.V0, label="initial")
@@ -104,7 +113,7 @@ let
 	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
 
 	bins = LinRange(-10, 10, 100)
-	Arya.hist2d!(ax, snap.positions[1, :], snap.positions[2, :], bins = bins)
+	Arya.hist2d!(ax, snap.positions[1, :], snap.positions[2, :], bins = bins, colorscale=log10)
 
 	fig
 end
@@ -175,9 +184,6 @@ let
 	fig
 end
 
-# ╔═╡ e33d56a7-7a0e-4fa9-8f0d-041b43584d59
-sum(lguys.calc_r(snap) .< r_s_s)
-
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
 	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", )
@@ -187,23 +193,23 @@ let
 	fig
 end
 
-# ╔═╡ 1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
-println(sum(lguys.calc_r(snap) .< 0.05))
-
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╠═82c76c56-e874-4eba-9367-569b656155a2
 # ╠═7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
+# ╠═920546bd-4838-413c-b687-f891a7f5e985
+# ╠═900fda29-c87e-41e4-a46c-b7faea21c0ce
 # ╠═79b07d75-fb05-4833-ac2c-ea0e9c24e791
 # ╠═ef3d1d5f-0979-44a7-8f0f-bf4638ea5612
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═367095eb-1821-4947-a00e-10b35fbc82d2
-# ╠═0e89851e-763f-495b-b677-b664501a17ef
-# ╠═a49d1735-203b-47dd-81e1-500ef42b054e
-# ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
+# ╠═e47f633f-2e46-4ffd-82c9-b762980d7b07
+# ╟─0e89851e-763f-495b-b677-b664501a17ef
+# ╟─a49d1735-203b-47dd-81e1-500ef42b054e
+# ╟─72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
@@ -211,6 +217,4 @@ println(sum(lguys.calc_r(snap) .< 0.05))
 # ╠═27f8deff-96ae-4d9a-a110-d146ac34965a
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
-# ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
-# ╠═1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
