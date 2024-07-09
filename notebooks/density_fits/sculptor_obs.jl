@@ -55,12 +55,27 @@ myobs = Dict(
 	:dec => -33.7127 ± 0.0018,
 	:pm_ra => 0.111299 ± 0.0078,
 	:pm_dec => -0.148202 ± 0.00586,
+	:σ_v => (9.61 ± 0.16)*u"km/s",
+	:radial_velocity => (111.03 ± 0.23)*u"km/s",
 )
 
 # ╔═╡ 39880bc6-3e37-46df-b0d8-742afe684075
 md"""
 ## Hodge ....
 """
+
+# ╔═╡ 3e9a4212-8735-4483-b1fd-97e5d5196546
+md"""
+# 1982 ESO/Uppsala survey of the ESO(B) atlas
+
+"""
+
+# ╔═╡ 2392b8d8-a763-4efd-b0df-735466731001
+uppsala = Dict(
+	:study => "ESO82",
+	:ra => 015.03899 ± 4e-5,
+	:dec => -33.70903 ± 3e-5
+)
 
 # ╔═╡ e5d18175-f4c8-4da5-9246-fd58bcbd344e
 md"""
@@ -422,6 +437,7 @@ tolstoy2023 = Dict(
 # ╔═╡ 777ec196-e193-456d-8d44-cba200a366dd
 obs = [
 	myobs,
+	uppsala,
 	ad1986,
 	iw1995,
 	battaglia2008,
@@ -2103,6 +2119,8 @@ version = "3.5.0+0"
 # ╠═fef51bf1-0022-478c-ac62-0ffd127c1bd0
 # ╠═d13c99eb-2cb2-4093-85bb-19a3dd18675d
 # ╟─39880bc6-3e37-46df-b0d8-742afe684075
+# ╠═3e9a4212-8735-4483-b1fd-97e5d5196546
+# ╠═2392b8d8-a763-4efd-b0df-735466731001
 # ╟─e5d18175-f4c8-4da5-9246-fd58bcbd344e
 # ╟─28941a38-1583-417d-aecf-5dfc0c4fccd8
 # ╟─f3525bab-9241-4484-9a0e-b1db0d986c07

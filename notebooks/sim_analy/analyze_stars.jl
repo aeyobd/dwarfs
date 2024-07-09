@@ -18,8 +18,19 @@ end
 # ╔═╡ cf6a7cbb-1034-4026-a3f3-1e854d2929e2
 using FITSIO
 
+# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
+md"""
+Given a stellar probability file, calculates initial-final density profiles, 
+and projects stars onto the sky
+"""
+
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
+
+# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
+md"""
+# Inputs
+"""
 
 # ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
 models_dir = "/arc7/home/dboyea/sculptor"
@@ -44,17 +55,6 @@ begin
 	close(f)
 	
 end
-
-# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
-md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
-"""
-
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = "/astro/dboyea/sculptor/isolation/1e6/stars/$starsname.toml"
@@ -227,6 +227,22 @@ begin
 	ρ_s(r) = lguys.calc_ρ(profile, r)
 end
 
+# ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
+function v_rad_hist(snap, bins=40)
+
+	mass = snap.weights
+	v_rad = calc_v_rad(snap)
+	logr = log10.(lguys.calc_r(snap))
+	h1 = Arya.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
+	h2 = Arya.histogram(logr, bins, weights=mass, normalization=:none)
+
+	x_bins = h1.bins
+	v_bins = h1.values
+	counts = h2.values
+
+	return x_bins, v_bins ./ counts
+end
+
 # ╔═╡ a0391689-66a2-473f-9704-e12a3d033d13
 import LinearAlgebra: dot
 
@@ -250,22 +266,6 @@ function calc_v_rad(snap)
 	v_rad = dropdims(v_rad, dims=1)
 	
 	return v_rad 
-end
-
-# ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
-function v_rad_hist(snap, bins=40)
-
-	mass = snap.weights
-	v_rad = calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	h1 = Arya.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
-	h2 = Arya.histogram(logr, bins, weights=mass, normalization=:none)
-
-	x_bins = h1.bins
-	v_bins = h1.values
-	counts = h2.values
-
-	return x_bins, v_bins ./ counts
 end
 
 # ╔═╡ 227a4b71-afbd-4121-930b-696d06ccc9ba

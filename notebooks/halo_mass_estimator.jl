@@ -298,6 +298,7 @@ begin
 	c_mean2 = calc_c.(M200_mean, 0)
 	halo_mean = NFW.(M200_mean)
 	Vc_mean = lguys.calc_V_circ_max.(halo_mean)
+	Rc_mean = lguys.calc_r_circ_max.(halo_mean)
 	Ms_mean = M_s_from_vel.(Vc_mean)
 end
 
@@ -351,6 +352,9 @@ halo_samples = NFW_from_M200_c.(M200_samples, c_samples)
 # ╔═╡ d9db5c56-b8d6-4e08-aa47-979c191496b0
 Vc_samples = lguys.calc_V_circ_max.(halo_samples)
 
+# ╔═╡ 9695b55c-ff53-4369-9d12-324dd35ab021
+Rc_samples = lguys.calc_r_circ_max.(halo_samples)
+
 # ╔═╡ d8c978f3-57e9-48cb-b20a-6f441a241f7e
 begin 
 	Ms_samples = M_s_from_vel.(
@@ -363,122 +367,26 @@ ax_M200_kwargs = (xscale=log10,
 xlabel="M200 [code units]",
 xticks = [0.1, 1, 10])
 
-# ╔═╡ a620cbcc-5ac1-4f2a-ae93-6c345ee5f5ce
-let
-	fig = Figure()
-	ax_ms = Axis(fig[1, 1];
-		ylabel = "stellar mass [code units]",
-		yscale = log10, 
-		ax_M200_kwargs...
-	)
+# ╔═╡ 4f971234-565a-43a4-a4bf-94a9415e6d7e
+Vc_label = L"V_\textrm{circ,\,max}\  / \textrm{km\,s^{-1}}";
 
+# ╔═╡ 4bb1dcef-04e2-4aa5-aa8f-d76a21502e01
+rc_label = L"r_\textrm{circ,\,max}\  / \textrm{kpc}"
 
-	scatter!(M200_samples, Ms_samples, color=:black, alpha=0.05)
-	lines!(M200_mean, Ms_mean)
-	
-	fig
-end
-
-# ╔═╡ 736c8755-6ae5-44c9-aa17-44a783c819d5
+# ╔═╡ a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
 let
 	fig = Figure()
 
 	ax_c = Axis(fig[1, 1];
-		ylabel = "concentration",
-		ax_M200_kwargs...
-	)
-
-	y = [h.c for h in halo_samples]
-	scatter!(M200_samples, y, color=:black, alpha=0.01)
-	
-	y = [h.c for h in halo_mean]
-	lines!(M200_mean, y)
-
-	fig
-end
-
-# ╔═╡ d2d4f204-11f1-4a5f-ac28-5b054bfa7035
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		ylabel = "log concentration",
-		ax_M200_kwargs...
-	)
-
-	y = [h.c for h in halo_samples]
-	scatter!(M200_samples, log10.(y), color=:black, alpha=0.01)
-	
-	y = [h.c for h in halo_mean]
-	lines!(M200_mean, log10.(y))
-
-	fig
-end
-
-# ╔═╡ d0a5efe1-b0d3-4804-93a0-a98124452a1a
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		ylabel = L"M_s",
-		yscale=log10,
-	#yticks=[0.1, 1],
-		ax_M200_kwargs...
-	)
-	y = [h.M_s for h in halo_mean]
-	lines!(M200_mean, y)
-
-	fig
-end
-
-# ╔═╡ 77315496-903c-491a-becc-c31c0bf4c88f
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		ylabel = L"r_s",
-		ax_M200_kwargs...
-	)
-
-	y = [h.r_s for h in halo_samples]
-
-	scatter!(M200_samples, y,  color=:black, alpha=0.1, markersize=3)
-
-	y = [h.r_s for h in halo_mean]
-	lines!(M200_mean, y)
-	fig
-end
-
-# ╔═╡ 4f3b2cb5-8855-4521-895c-accea0f9c115
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		ylabel = L"V_c",
+		ylabel = Vc_label,
+		xlabel = rc_label,
 		yscale=log10, 
-		yticks=[20, 30, 40, 50, 60, 70, 80],
-		ax_M200_kwargs...
-	)
-
-	scatter!(M200_samples, Vc_samples * lguys.V0,  color=:black, alpha=0.1, markersize=3)
-	lines!(M200_mean, Vc_mean * lguys.V0)
-
-	fig
-end
-
-# ╔═╡ 1edd1d75-3cbf-49be-a80b-425feff7c73e
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		yscale=log10,
+		yticks=[10, 30, 100],
 		xscale=log10,
-		xlabel="Vc / km/s",
-		ylabel = "stellar mass [code units]"
 	)
 
-	scatter!(Vc_samples * lguys.V0, Ms_samples, alpha=0.05, color=:black, markersize=5)
-	lines!(Vc_mean * lguys.V0, Ms_mean)
+	scatter!(Rc_samples, Vc_samples * lguys.V0,  color=:black, alpha=0.1, markersize=3)
+	lines!(Rc_mean, Vc_mean * lguys.V0)
 
 	fig
 end
@@ -489,12 +397,12 @@ let
 
 	fig = Figure()
 	ax = Axis(fig[1, 1],
-		xlabel = "v_circ_max / km s",
-		ylabel = "M_s",
+		xlabel = Vc_label,
+		ylabel = L"M_\star",
 		yscale=log10,
 		xscale=log10,
-		limits=((1, 100), (1e-8, 1e0)),
-		xticks=[1, 10, 100],
+		limits=((10, 100), (1e-8, 1e0)),
+		xticks=[10, 100],
 		xminorticks=IntervalsBetween(9),
 		aspect=1
 	)
@@ -507,26 +415,29 @@ let
 
 end
 
+# ╔═╡ be32e183-a0c4-4261-a3a8-3486db0734b7
+let
+	fig = Figure()
+
+	ax_c = Axis(fig[1, 1];
+		ylabel = L"M_\star",
+		xlabel = L"r_\textrm{max}",
+		yscale=log10, 
+		xscale=log10,
+		limits=(nothing, (1e-8, 1))
+	)
+
+	scatter!(Rc_samples, Ms_samples,  color=:black, alpha=0.1, markersize=3)
+	lines!(Rc_mean, Ms_mean)
+
+	fig
+end
+
 # ╔═╡ e6995206-ebf2-40aa-ae7e-cc101e07f8ac
 # ╠═╡ disabled = true
 #=╠═╡
 
   ╠═╡ =#
-
-# ╔═╡ 22b0843a-a90c-40ab-8edc-d82a982abd43
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		#xscale=log10,
-		xlabel="Vc / km/s",
-		ylabel = "log difference in Vcirc"
-	)
-
-	scatter!(Vc_samples * lguys.V0, log10.(Vc_samples) .- lMs_to_lVc.(log10.(Ms_samples)), alpha=0.05, color=:black, markersize=5)
-
-	fig
-end
 
 # ╔═╡ 122794fb-82ab-4f3c-a458-29462fbab1fd
 md"""
@@ -541,6 +452,12 @@ function solve_M200_c(Vcmax, σ_c=σ_c)
 
 	M200 = find_zero(f, [0.001, 100])
 	return M200, calc_c(M200, 0.) * dc
+end
+
+# ╔═╡ 197cbbf0-beb9-45e4-99dc-5d9baa58c696
+function solve_rmax(Vcmax, σ_c=0)
+	M200, c = solve_M200_c(Vcmax, σ_c)
+	return lguys.calc_r_circ_max(lguys.NFW(M200=M200, c=c))
 end
 
 # ╔═╡ bbd5e178-eddc-4e75-b4c5-252048b75fb4
@@ -562,7 +479,11 @@ begin
 	samples[!, :log_M200] = log10.(samples.M200)
 
 	samples[!, :c] = last.(Mcs)
+	halos = NFW_from_M200_c.(samples.M200, samples.c)
 
+	halos = [lguys.NFW(M200=m, c=c) for (m, c) in zip(samples.M200, samples.c)]
+	samples[!, :r_max] = lguys.calc_r_circ_max.(halos)
+	samples[!, :V_max] = lguys.calc_V_circ_max.(halos)
 	samples[!, :Ms2] = samples.Ms * 1e4
 
 	samples
@@ -572,10 +493,10 @@ end
 pairplot(samples[:, [:MV, :L, :Ms]])
 
 # ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
-pairplot(samples[:, [:Ms2, :log_M200, :c]], labels=Dict(
+pairplot(samples[:, [:Ms2, :V_max, :r_max]], labels=Dict(
 	:Ms2 => L"$M_s$", 
 	:log_M200 => L"\log M_{200} / 10^{10}\,\textrm{M}_\odot ", 
-	:c => L"c"))
+	:c => L"c", ))
 
 # ╔═╡ 4e1290b5-171e-4715-a87b-28a2cfcb4325
 samples.Ms * 1e10
@@ -585,23 +506,6 @@ lc_err = 0.01
 
 # ╔═╡ 7d1ba57d-4332-4d6e-872b-42925c14ecfb
 c_mean = [h.c for h in halo_mean]
-
-# ╔═╡ a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
-let
-	fig = Figure()
-
-	ax_c = Axis(fig[1, 1];
-		ylabel = L"V_c",
-		yscale=log10, 
-		yticks=[20, 30, 40, 50, 60, 70, 80],
-		ax_M200_kwargs...
-	)
-
-	scatter!(c_samples, Vc_samples * lguys.V0,  color=:black, alpha=0.1, markersize=3)
-	lines!(c_mean, Vc_mean * lguys.V0)
-
-	fig
-end
 
 # ╔═╡ d2616939-fba8-42ff-921a-8b0bcaf7acb9
 function describe(x::Array; p=0.16)
@@ -631,72 +535,79 @@ md"""
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	M200_in = 1.0
-	c_in = 12.6
+	V_max_in = 33 / lguys.V0
+	r_max_in = 6.4
 end
+
+# ╔═╡ 5e71b022-bd95-4c3c-8930-51100fb9ab1c
+r_max_exp = solve_rmax(V_max_in, 0)
 
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
 let
 	fig, ax = FigAxis(
-		xlabel="log M200",
-		ylabel="c",
+		xlabel="V max",
+		ylabel="r max / kpc",
+		limits=((00, 70), (0, 20))
 	)
 
-	x = log10.(samples.M200)
-	y = samples.c
+	x = samples.Vc * lguys.V0
+	y = samples.r_max
 	k = kde([x y])
 
 	h = hexbin!(x, y, bins=50, colorscale=log10)
 
 	c = contour!(k, colormap=:bluesgreens)
 
-	scatter!(log10.(M200_in), c_in)
+	scatter!(V_max_in * lguys.V0, r_max_in)
 
+	lines!(Vc_mean * lguys.V0, Rc_mean)
 	
 	fig
 end
 
-# ╔═╡ da48951f-c47c-432a-9b6c-78bd670c1fec
-calc_c(M200_in, 0) .* ((1-10^lc_err), 1, (10^lc_err-1))
-
-# ╔═╡ ecda5f20-27cd-41a8-8545-9f3a6b91a80e
-halo = NFW_from_M200_c(M200_in, c_in)
-
-# ╔═╡ 1840f4a4-beff-4ab1-8def-0c682a6675f7
-halo.M_s
-
-# ╔═╡ dd5002c2-d9e8-4fdf-877a-2d6b558b0941
-halo.r_s
-
-# ╔═╡ ab5bc36d-d203-45be-8e7d-d8c5c9473388
-lguys.calc_c(halo), (1-10^lc_err)*lguys.calc_c(halo)
-
-# ╔═╡ 0dfffcda-bbbe-402f-8e6f-7f20e5cac46b
-lguys.calc_V_circ_max(halo) * lguys.V0
-
-# ╔═╡ 6b8f8bb2-6aee-44b5-96c2-781fa7fdad05
-halo.M_s * lguys.A_NFW(1)
-
-# ╔═╡ 84892a5a-f816-450b-9757-e4135a40aebc
-lguys.calc_M(halo, halo.r_s)
-
-# ╔═╡ 2afae40d-ce7e-4ebf-a1eb-7d2b1ff2f728
-M_s_from_vel(lguys.calc_V_circ_max(halo)) * 1e4
-
-# ╔═╡ c85ed71c-7579-4a43-98ab-7b28db041714
+# ╔═╡ 6baff9d8-a96d-4d1b-898f-089003459c19
 let
-	fig, ax = FigAxis(
-		xlabel = "log r / kpc",
-		ylabel = "Vcirc"
+	v_1 = LinRange(18, 100, 1000) ./ lguys.V0
+
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = Vc_label,
+		ylabel = L"M_\star",
+		yscale=log10,
+		xscale=log10,
+		limits=((10, 100), (1e-5, 1e-3)),
+		xticks=[10, 100],
+		xminorticks=IntervalsBetween(9),
+		aspect=1
 	)
 
-	lx = LinRange(-2, 1.5, 100)
-	
-	y = lguys.calc_V_circ.(halo, 10 .^ lx)
+	x = samples.Vc * lguys.V0
+	y = samples.Ms
+	k = kde([x y])
 
-	lines!(lx, y * lguys.V0)
+	c = contour!(k, colormap=:bluesgreens)
+	
+	
+	lines!(v_1 * lguys.V0, M_s_from_vel.(v_1))
+
+	lines!(Vc_mean * lguys.V0, Ms_mean)
+
+	vlines!(V_max_in * lguys.V0)
 	fig
+
 end
+
+# ╔═╡ 2b1d7ec9-b3f7-4230-9f5a-80ece86f709d
+halo_in = lguys.NFW(V_circ_max=V_max_in, r_circ_max=r_max_in)
+
+# ╔═╡ ecda5f20-27cd-41a8-8545-9f3a6b91a80e
+lguys.calc_M200(halo_in)
+
+# ╔═╡ ab5bc36d-d203-45be-8e7d-d8c5c9473388
+lguys.calc_R200(halo_in)
+
+# ╔═╡ 84892a5a-f816-450b-9757-e4135a40aebc
+lguys.calc_V_circ_max(halo_in) * lguys.V0
 
 # ╔═╡ cb42028b-eeb0-48a7-b23d-5abe792eb4f0
 md"""
@@ -709,13 +620,13 @@ function calc_h(halo, N=1e6)
 end
 
 # ╔═╡ c3e1326c-772b-4d8c-aabe-a997b77bede4
-calc_h(halo)
+calc_h(halo_in)
 
 # ╔═╡ ba292975-8eea-4c3a-8b9c-23ff1b60c7ab
 Np = 1e6
 
 # ╔═╡ a75e163e-3489-4f82-901b-c511d1e44395
-m = lguys.calc_M200(halo) / Np
+m = lguys.calc_M200(halo_in) / Np
 
 # ╔═╡ 8b7f61d5-dcef-4889-8aab-a85b0ccdaf02
 let
@@ -726,29 +637,27 @@ let
 
 	lx = LinRange(-2, 2, 100)
 	
-	y = lguys.calc_M.(halo, 10 .^ lx) ./ m
+	y = lguys.calc_M.(halo_in, 10 .^ lx) ./ m
 	
 
 	lines!(lx, log10.(y))
 	vlines!(log10.(h), label="softening")
-	vlines!(log10.(halo.r_s))
+	vlines!(log10.(r_max_in), label="rmax")
+	axislegend()
 	fig
 end
 
 # ╔═╡ 93715b38-1790-4b1e-a551-17d69b68876f
-lguys.calc_M(halo , lguys.calc_R200(halo))
-
-# ╔═╡ 66185c44-0836-4ab8-b4fe-a550e87c870d
-M200_in
+lguys.calc_M(halo_in, lguys.calc_R200(halo_in))
 
 # ╔═╡ 896ccd5d-8e92-4c26-944d-04d42550caef
-lguys.calc_R200(halo)
+lguys.calc_R200(halo_in)
 
 # ╔═╡ 2ae19d4f-659f-4985-8fc2-98d94cc52730
-4^2 * lguys.G * m / calc_h(halo)^2
+4^2 * lguys.G * m / calc_h(halo_in)^2
 
 # ╔═╡ b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
-lguys.G * lguys.calc_M200(halo) / lguys.calc_R200(halo)^2
+lguys.G * lguys.calc_M200(halo_in) / lguys.calc_R200(halo_in)^2
 
 # ╔═╡ Cell order:
 # ╟─07a710d8-0ae4-4d9f-9759-002750730010
@@ -792,21 +701,18 @@ lguys.G * lguys.calc_M200(halo) / lguys.calc_R200(halo)^2
 # ╠═aeebdad1-552e-44f3-9b25-37b752ee5e69
 # ╠═c9e713c8-74b9-4b3d-bc7d-071955dc4615
 # ╠═d9db5c56-b8d6-4e08-aa47-979c191496b0
+# ╠═9695b55c-ff53-4369-9d12-324dd35ab021
 # ╠═d8c978f3-57e9-48cb-b20a-6f441a241f7e
 # ╠═90d563f3-d9a4-4e50-82b9-e37eecff87d9
-# ╠═a620cbcc-5ac1-4f2a-ae93-6c345ee5f5ce
-# ╠═736c8755-6ae5-44c9-aa17-44a783c819d5
-# ╠═d2d4f204-11f1-4a5f-ac28-5b054bfa7035
-# ╠═d0a5efe1-b0d3-4804-93a0-a98124452a1a
-# ╠═77315496-903c-491a-becc-c31c0bf4c88f
-# ╠═4f3b2cb5-8855-4521-895c-accea0f9c115
 # ╠═a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
-# ╠═1edd1d75-3cbf-49be-a80b-425feff7c73e
+# ╠═4f971234-565a-43a4-a4bf-94a9415e6d7e
+# ╠═4bb1dcef-04e2-4aa5-aa8f-d76a21502e01
 # ╠═023f12d0-317a-46db-b5c5-81a7d2216c55
+# ╠═be32e183-a0c4-4261-a3a8-3486db0734b7
 # ╠═e6995206-ebf2-40aa-ae7e-cc101e07f8ac
-# ╠═22b0843a-a90c-40ab-8edc-d82a982abd43
 # ╟─122794fb-82ab-4f3c-a458-29462fbab1fd
 # ╠═fa6b2468-164f-42b7-88f5-6eff0a9c5ce1
+# ╠═197cbbf0-beb9-45e4-99dc-5d9baa58c696
 # ╠═bbd5e178-eddc-4e75-b4c5-252048b75fb4
 # ╠═5cdc46ec-6d1b-403f-a3a2-a15b2c82ee16
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
@@ -820,18 +726,14 @@ lguys.G * lguys.calc_M200(halo) / lguys.calc_R200(halo)^2
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
-# ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
-# ╠═1840f4a4-beff-4ab1-8def-0c682a6675f7
-# ╠═dd5002c2-d9e8-4fdf-877a-2d6b558b0941
-# ╠═da48951f-c47c-432a-9b6c-78bd670c1fec
+# ╠═5e71b022-bd95-4c3c-8930-51100fb9ab1c
+# ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
+# ╠═6baff9d8-a96d-4d1b-898f-089003459c19
+# ╠═2b1d7ec9-b3f7-4230-9f5a-80ece86f709d
 # ╠═ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 # ╠═ab5bc36d-d203-45be-8e7d-d8c5c9473388
-# ╠═0dfffcda-bbbe-402f-8e6f-7f20e5cac46b
-# ╠═6b8f8bb2-6aee-44b5-96c2-781fa7fdad05
 # ╠═84892a5a-f816-450b-9757-e4135a40aebc
-# ╠═2afae40d-ce7e-4ebf-a1eb-7d2b1ff2f728
-# ╠═c85ed71c-7579-4a43-98ab-7b28db041714
 # ╟─cb42028b-eeb0-48a7-b23d-5abe792eb4f0
 # ╠═e582e62c-d851-4dd0-95d4-82fd1d97c26c
 # ╠═c3e1326c-772b-4d8c-aabe-a997b77bede4
@@ -839,7 +741,6 @@ lguys.G * lguys.calc_M200(halo) / lguys.calc_R200(halo)^2
 # ╠═a75e163e-3489-4f82-901b-c511d1e44395
 # ╠═8b7f61d5-dcef-4889-8aab-a85b0ccdaf02
 # ╠═93715b38-1790-4b1e-a551-17d69b68876f
-# ╠═66185c44-0836-4ab8-b4fe-a550e87c870d
 # ╠═896ccd5d-8e92-4c26-944d-04d42550caef
 # ╠═2ae19d4f-659f-4985-8fc2-98d94cc52730
 # ╠═b97bdec3-2dbe-4a1d-bad9-4116b2d2e614

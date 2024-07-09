@@ -1,0 +1,10 @@
+profile = "Exp2D"
+num_radial_bins = 40
+num_energy_bins = 1000
+snapshot_dir = "../out"
+snapshot = 10
+bin_method = "equal_number"
+
+[profile_kwargs]
+M = 1
+R_s = 1

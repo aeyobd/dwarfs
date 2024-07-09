@@ -21,6 +21,9 @@ begin
 	import NaNMath as nm
 end
 
+# ╔═╡ acb20956-3339-414a-91fb-6003ad385242
+using LsqFit: curve_fit
+
 # ╔═╡ 96c91860-f3cc-4531-a8cf-39c85887b394
 import TOML
 
@@ -30,13 +33,19 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6/M0.5_c13.1"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
-halo = lguys.NFW(; lguys.dict_to_tuple(halo_params)...)
+begin 
+	halo = lguys.NFW(; lguys.dict_to_tuple(halo_params)...)
+	halo = lguys.NFW(V_circ_max=0.153194, r_circ_max=5.63)
+end
+
+# ╔═╡ 5f5dc5a8-8230-4301-b59b-46f2dc55e580
+lguys.calc_V_circ_max(halo) * lguys.V0
 
 # ╔═╡ 46ce993c-50a1-43a5-8d55-132fac90de33
 lguys.calc_M200(halo)
@@ -77,6 +86,37 @@ begin
 
 end
 
+# ╔═╡ f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
+quadratic(x, p) = @. p[2] * (log10(x) - p[1])^2
+
+# ╔═╡ 7299dbaf-b332-4e53-85de-7acbfa0c3853
+import StatsBase: percentile
+
+# ╔═╡ 7d717638-1caf-4267-b9f5-c060c19e2849
+function Vc_model(r, param)
+	Rmx,Vmx =param
+	x = r ./ Rmx .* lguys.α_nfw
+	inner = @. (nm.log(1+x) - x/(1+x)) / x
+	return @. Vmx / 0.46499096281742197 * nm.sqrt(inner)
+end
+
+# ╔═╡ 69cf741e-efc0-4031-a17f-a8126a77580b
+function fit_v_r_max(rc, Vc; percen=80)
+	filt = Vc .> percentile(Vc, percen)
+	fit = curve_fit(Vc_model, rc[filt], Vc[filt], [6., 30.])
+	
+	return (; r_c=fit.param[1], V_c=fit.param[2], fit=fit,
+	r_min=minimum(rc[filt]),
+	r_max=maximum(rc[filt])
+	)
+end
+
+# ╔═╡ 036cdd2f-1856-463d-bbbd-9707ee7c2605
+plot(LinRange(0, 10, 1000), Vc_model(LinRange(0, 10, 1000), [1, 1]))
+
+# ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
+fit = fit_v_r_max(lguys.calc_V_circ(snap_i)...)
+
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
 	fig = Figure()
@@ -88,11 +128,13 @@ let
 	rc, Vc = lguys.calc_V_circ(snap_f)
 	lines!(log10.(rc), Vc * lguys.V0, label="final")
 
-	# V_nfw(x) = lguys.calc_V_circ(halo, x)
+	V_nfw(x) = lguys.calc_V_circ(halo, x)
 
-	# log_r = LinRange(-2, 2.5, 1000)
-	# y = V_nfw.(10 .^ log_r)
-	# lines!(log_r, y * lguys.V0)
+	scatter!(log10.(fit[:r_c]), fit[:V_c] * lguys.V0)
+
+	log_r = LinRange(-2, 2.5, 1000)
+	y = V_nfw.(10 .^ log_r)
+	lines!(log_r, y * lguys.V0)
 	fig
 end
 
@@ -100,9 +142,6 @@ end
 md"""
 phase space distribution of star particles initial and final snapshot
 """
-
-# ╔═╡ 7d717638-1caf-4267-b9f5-c060c19e2849
-
 
 # ╔═╡ e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 function calc_phase_dens(snap; bins=100)
@@ -164,6 +203,9 @@ let
 	fig
 end
 
+# ╔═╡ 9d8bb78f-2a73-471a-8c44-87d668c007a9
+lguys.calc_v_rad(snap_i)
+
 # ╔═╡ 72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 let
 	fig = Figure(size=(700, 300))
@@ -187,6 +229,50 @@ let
 
 	linkaxes!(ax, ax2)
 	hideydecorations!(ax2)
+
+	Colorbar(fig[1, 3], h)
+
+	fig
+end
+
+# ╔═╡ 9b88e37a-93eb-4c03-b654-0cd9284fc811
+function plot_phase_rvr!(snap; bins=100)
+	x = log10.(lguys.calc_r(snap))
+	v = lguys.calc_v_rad(snap)
+
+	h = Arya.histogram2d(x, v * lguys.V0, bins)
+
+	heatmap!(h, colorscale=log10, colorrange=(1, maximum(h.values)))
+end
+
+# ╔═╡ 564c6bcb-04be-4a1c-8f01-f7d76be74eb8
+function plot_phase_xvx!(snap; bins=100)
+	x = asinh.(snap.positions[1, :])
+	v = snap.velocities[1, :]
+
+	h = Arya.histogram2d(x, v * lguys.V0, bins)
+
+	heatmap!(h, colorscale=log10, colorrange=(1, maximum(h.values)))
+end
+
+# ╔═╡ 1a320f74-5cb7-44c5-8a59-c6fced771f52
+let
+	fig = Figure(size=(700, 300))
+	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="radial velocity (km/s)" )
+
+	h = plot_phase_rvr!(snap_f)
+
+	Colorbar(fig[1, 3], h)
+
+	fig
+end
+
+# ╔═╡ c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
+let
+	fig = Figure(size=(700, 300))
+	ax = Axis(fig[1,1], xlabel="asinh x / kpc", ylabel="x velocity (km/s)" )
+
+	h = plot_phase_xvx!(snap_i)
 
 	Colorbar(fig[1, 3], h)
 
@@ -288,9 +374,9 @@ let
 	plot_ρ_dm!(snap_f, label="final")
 
 
-	# log_r = LinRange(-2, 3, 1000)
-	# y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
-	# lines!(log_r, y, label="expected", color="black", linestyle=:dot)
+	log_r = LinRange(-2, 3, 1000)
+	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
+	lines!(log_r, y, label="expected", color="black", linestyle=:dot)
 
 	axislegend(ax)
 	fig
@@ -463,6 +549,7 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 # ╠═4710d1b5-fd6f-4369-8398-64e9123c8b41
 # ╠═79b07d75-fb05-4833-ac2c-ea0e9c24e791
+# ╠═5f5dc5a8-8230-4301-b59b-46f2dc55e580
 # ╠═46ce993c-50a1-43a5-8d55-132fac90de33
 # ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
 # ╠═7a43ee65-0fce-4e4b-9226-714f4cb0e106
@@ -470,8 +557,14 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═c5672da9-0dad-4d22-abe5-9e186ccde02d
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
-# ╠═a49d1735-203b-47dd-81e1-500ef42b054e
+# ╠═acb20956-3339-414a-91fb-6003ad385242
+# ╠═f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
+# ╠═7299dbaf-b332-4e53-85de-7acbfa0c3853
+# ╠═69cf741e-efc0-4031-a17f-a8126a77580b
 # ╠═7d717638-1caf-4267-b9f5-c060c19e2849
+# ╠═036cdd2f-1856-463d-bbbd-9707ee7c2605
+# ╠═9a9f4dc1-3573-41ee-be1a-eee39d3371b0
+# ╠═a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 # ╠═478e9ce6-58d0-4476-9673-a0813bb0b5dd
 # ╠═e71faa28-ae0d-4d01-88d6-a14cc378b73d
@@ -482,7 +575,12 @@ lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═ac0dfd81-d040-4d45-97d0-a178ff9fb149
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f
 # ╠═ff2b82f7-0b62-4dad-86fd-26a0eeca42b6
+# ╠═9d8bb78f-2a73-471a-8c44-87d668c007a9
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
+# ╠═9b88e37a-93eb-4c03-b654-0cd9284fc811
+# ╠═564c6bcb-04be-4a1c-8f01-f7d76be74eb8
+# ╠═1a320f74-5cb7-44c5-8a59-c6fced771f52
+# ╠═c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
 # ╠═82a8514e-c1de-4446-918b-9156734c213e

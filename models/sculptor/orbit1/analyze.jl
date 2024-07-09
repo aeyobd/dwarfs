@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -11,7 +11,6 @@ begin
 	using CSV, DataFrames
 
 	import LilGuys as lguys
-	import TOML
 
 	using Arya
 end
@@ -19,27 +18,11 @@ end
 # ╔═╡ a227ef84-a874-4176-9253-36bc36a743fa
 using LsqFit: curve_fit
 
-# ╔═╡ bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
-md"""
-Analyzes the dark matter particles and profiles for the simulation.
-"""
-
-# ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
-md"""
-Inputs
-"""
-
-# ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "../../models/sculptor/orbits/orbit1_g2/"
-
-# ╔═╡ d971556d-8b66-4b2d-9dc0-31799f94b10a
-skip = 1
-
 # ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 begin 
-	out =  lguys.Output(model_dir * "out/combined.hdf5")
+	out =  lguys.Output("out/combined.hdf5")
 	
-	cens = CSV.read(model_dir * "out/centres.csv", DataFrames.DataFrame)
+	cens = CSV.read("out/centres.csv", DataFrames.DataFrame)
 	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
 	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
 	out.x_cen .= x_cen
@@ -75,8 +58,11 @@ end
 # ╔═╡ 807c46f6-56e0-4ab4-b31f-ac4a3fec9761
 collect(1:4:10)
 
+# ╔═╡ e4ffb45d-a7e2-4c57-b050-01483010fc4a
+import YAML
+
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
-orbit_props = TOML.parsefile(model_dir * "orbital_properties.toml")
+orbit_props = YAML.load_file("obital_properties.yml")
 
 # ╔═╡ 53641449-c5b3-45ff-a692-a5cd717c8369
 idx_f = orbit_props["idx_f"]
@@ -89,6 +75,39 @@ snap_i = out[idx_i]
 
 # ╔═╡ 8d127679-401c-439d-913d-e2020df1c600
 snap_f = out[idx_f]
+
+# ╔═╡ 78d93a01-7048-4a97-b9ae-727be0e223d7
+r_h = 0.11
+
+# ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="normalized mass within 100 rh",
+		yscale=log10,
+		yticks=[1, 0.1]
+	)
+
+	M_dm_h = get_M_h(out, Inf)
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="all")
+
+	
+	M_dm_h = get_M_h(out, 100r_h)
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="100")
+
+
+
+	M_dm_h = get_M_h(out, 10r_h)
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="10")
+
+	M_dm_h = get_M_h(out, 1r_h)
+	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="1")
+	
+	Legend(fig[1, 2], ax)
+	
+	fig
+end
 
 # ╔═╡ e14fa4a1-6175-4b9f-ad01-525c1617fe63
 md"""
@@ -157,6 +176,53 @@ function get_Vh(snap, r_h)
 	return sqrt(lguys.G * m / r_h) * lguys.V0
 end
 
+# ╔═╡ 9a8a5ad2-6aff-4d37-9748-7a415568f751
+function get_V_r_max(output::lguys.Output; skip=1)
+	V_maxs = Float64[]
+	r_maxs = Float64[]
+	V_hs = Float64[]
+
+	for i in 1:skip:length(output)
+		snap = output[i]
+		rc, Vc = get_Vc(snap)
+		fit = fit_Vc(rc, Vc)
+		r_max, V_max = V_r_max(fit.r_c, fit.V_c)
+
+		Vh = get_Vh(snap, r_h)
+		
+		push!(V_maxs, V_max)
+		push!(r_maxs, r_max)
+		push!(V_hs, Vh)
+	end
+
+	return r_maxs, V_maxs, V_hs
+end
+
+# ╔═╡ 9418347c-e49f-4483-be0f-98a3b9578bac
+r_max, V_max, V_h = get_V_r_max(out, skip=10)
+
+# ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
+
+	plot_Vc!(snap_i, label="initial")
+
+	plot_Vc!(snap_f, label="final")
+
+	α = 0.4
+	β = 0.65
+	x = LinRange(1, 0.1, 100)
+
+	y = @. 2^α * x^β * (1 + x^2)^(-α)
+	lines!(log10.(x .* r_max[1]), y .* V_max[1], lw=10, label="EN21")
+
+	scatter!(log10.(r_max), V_max, color=Arya.COLORS[4], label="Vmax")
+
+	axislegend(ax)
+	fig
+end
+
 # ╔═╡ c068c177-e879-4b8e-b1af-18690af9b334
 let 
 	i = length(out)
@@ -191,6 +257,19 @@ let
 	vlines!(r_max)
 	
     rowsize!(fig.layout, 2, Relative(1/4))
+	
+	fig
+end
+
+# ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"V_\text{circ} / \text{km\,s^{-1}}",
+	limits=(nothing, (0, nothing)))
+	x = out.times[1:10:end] * lguys.T0
+	scatter!(x, V_max, label=L"maximum $V_\text{circ}$")
+	scatter!(x, V_h, label=L"r=r_h")
+	axislegend(ax)
 	
 	fig
 end
@@ -287,9 +366,8 @@ let
 	limits=(-r_max, r_max, -r_max, r_max))
 	bins = LinRange(-r_max, r_max, 100)
 	
-	h = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-1, nothing))
+	Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=mlog10)
 
-	Colorbar(fig[1, 2], h)
 	fig
 end
 
@@ -307,127 +385,19 @@ let
 
 end
 
-# ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
-#=╠═╡
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="normalized mass within 100 rh",
-		yscale=log10,
-		yticks=[1, 0.1]
-	)
-
-	M_dm_h = get_M_h(out, Inf)
-	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="all")
-
-	
-	M_dm_h = get_M_h(out, 100r_h)
-	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="100")
-
-
-
-	M_dm_h = get_M_h(out, 10r_h)
-	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="10")
-
-	M_dm_h = get_M_h(out, 1r_h)
-	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1], label="1")
-	
-	Legend(fig[1, 2], ax)
-	
-	fig
-end
-  ╠═╡ =#
-
-# ╔═╡ 9a8a5ad2-6aff-4d37-9748-7a415568f751
-#=╠═╡
-function get_V_r_max(output::lguys.Output; skip=1)
-	V_maxs = Float64[]
-	r_maxs = Float64[]
-	V_hs = Float64[]
-
-	for i in 1:skip:length(output)
-		snap = output[i]
-		rc, Vc = get_Vc(snap)
-		fit = fit_Vc(rc, Vc)
-		r_max, V_max = V_r_max(fit.r_c, fit.V_c)
-
-		Vh = get_Vh(snap, r_h)
-		
-		push!(V_maxs, V_max)
-		push!(r_maxs, r_max)
-		push!(V_hs, Vh)
-	end
-
-	return r_maxs, V_maxs, V_hs
-end
-  ╠═╡ =#
-
-# ╔═╡ 9418347c-e49f-4483-be0f-98a3b9578bac
-#=╠═╡
-r_max, V_max, V_h = get_V_r_max(out, skip=skip)
-  ╠═╡ =#
-
-# ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
-#=╠═╡
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
-
-	plot_Vc!(snap_i, label="initial")
-
-	plot_Vc!(snap_f, label="final")
-
-	α = 0.4
-	β = 0.65
-	x = LinRange(1, 0.1, 100)
-
-	y = @. 2^α * x^β * (1 + x^2)^(-α)
-	lines!(log10.(x .* r_max[1]), y .* V_max[1],  label="EN21")
-
-	scatter!(log10.(r_max), V_max, color=Arya.COLORS[4], label="Vmax")
-
-	axislegend(ax)
-	fig
-end
-  ╠═╡ =#
-
-# ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
-#=╠═╡
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"V_\text{circ} / \text{km\,s^{-1}}",
-	limits=(nothing, (0, nothing)))
-	x = out.times[1:skip:end] * lguys.T0
-	scatter!(x, V_max, label=L"maximum $V_\text{circ}$")
-	scatter!(x, V_h, label=L"r=r_h")
-	axislegend(ax)
-	
-	fig
-end
-  ╠═╡ =#
-
 # ╔═╡ 743d20cd-9636-4384-9bf2-b2d7e259ae7d
 # ╠═╡ disabled = true
 #=╠═╡
 r_h = 0.308
   ╠═╡ =#
 
-# ╔═╡ 78d93a01-7048-4a97-b9ae-727be0e223d7
-#=╠═╡
-r_h = 0.11
-  ╠═╡ =#
-
 # ╔═╡ Cell order:
-# ╠═bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
-# ╠═9c4d9492-64bc-4212-a99d-67cc507e99e0
-# ╠═14279a79-bf66-4b34-bf9f-735ff2886ea5
-# ╠═d971556d-8b66-4b2d-9dc0-31799f94b10a
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 # ╟─a9e79439-16a4-4908-bfe0-f0770cdb26df
 # ╠═dfa506e2-095a-47a2-9f14-baa04dd45d2d
 # ╠═807c46f6-56e0-4ab4-b31f-ac4a3fec9761
+# ╠═e4ffb45d-a7e2-4c57-b050-01483010fc4a
 # ╠═510706ac-ffbd-4996-af9e-67f1b910d51c
 # ╠═53641449-c5b3-45ff-a692-a5cd717c8369
 # ╠═7e3df305-9678-447e-a48e-f102cf6ebced
