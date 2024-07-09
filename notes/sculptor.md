@@ -4,45 +4,44 @@ The Sculptor DSph
 
 ### Observations
 
-| parameter                | value                            | Source                                 |
-| ------------------------ | -------------------------------- | -------------------------------------- |
-| $M_V$                    | -11.1 $\pm 0.5$                  | mcconnachie2012                        |
-| $\Upsilon_\star$         | 1.2                              | assumed                                |
-| $\alpha$                 | 15.03917                         | mcconnachie2012                        |
-| $\delta$                 | -33.70917                        | mcconnachie2012                        |
-| $1/\pi$                  | $86 \pm 3$ kpc                   |                                        |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | mcconnachie2020                        |
-| $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | mcconnachie2020                        |
-| RV                       | $111.4 \pm 0.37$ km s$^{-1}$     | mcconnachie2012 ?, sigmaV from MV2020a |
-| r_h                      | xxx$94\pm1$ arcmin               | MV20                                   |
-| ecc                      | 0.37                             | ?                                      |
-| PA                       | 94                               |                                        |
-
-also compiled in sestito 2023
+| parameter                | value                            | Source       |
+| ------------------------ | -------------------------------- | ------------ |
+| $\alpha$                 | $15.0183 \pm 0.0012$˚            | M+18         |
+| $\delta$                 | $-33.7186 \pm 0.00072$˚          | M+18         |
+| distance                 | $83.2 \pm 2$ kpc                 | Tran+22      |
+| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | MV20a        |
+| $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | MV20a        |
+| RV                       | $111.4 \pm 0.1$ km s$^{-1}$      | Walker 2009* |
+| $\sigma_v$               | $9.2\pm1.4$ km s$^{-1}$          | Walker 2009* |
+| $r_h$                    | $12.33 \pm 0.05$ arcmin          | MV20*        |
+| ell                      | $0.36 \pm 0.01$                  | M+18         |
+| PA                       | $92\pm1$                         | M+18         |
+| $M_V$                    | $-10.82\pm0.14$                  | M+18         |
+| $\Upsilon_\star$         | $1.5 \pm 0.3$                    | assumed      |
 
 ### Derived
 
-| parameter            | value                         |
-| -------------------- | ----------------------------- |
-| $M_\star$            | $2.8\times 10^6\,\rm M_\odot$ |
-| $M_{200}$            | 0.497 \M0                     |
-| $r_{200}$            | 36.13 kpc                     |
-| $V_{\rm circ,\ max}$ | 31.3 km s$^{-1}$              |
-| $r_{\rm circ,\ max}$ | 5.97 kpc                      |
-| $c_{\rm NFW}$        | 13.1                          |
-| $r_s$                | 2.76 kpc                      |
-| $M_s$                | 0.290 \M0                     |
-| $M(r<r_s)$           | 0.056 \M0                     |
+MCMC on $M_V$ + M/L stars + uncertainties on Vcirc (0.1dex)  => M200 + uncertainties on c (0.1dex).
+
+| parameter     | value                                         |
+| ------------- | --------------------------------------------- |
+| $L_\star$     | $1.82_{-0.22}^{+0.25}\times10^6\ L_\odot$     |
+| $M_\star$     | $2.7_{-0.6}^{+0.7} \times10^6\ {\rm M}_\odot$ |
+| $M_{200}$     | $0.48_{-0.25}^{+0.52}\ M_0$                   |
+| $c_{\rm NFW}$ | $13.1_{-2.8}^{+3.6}$                          |
 
 
 
-stellar profile
+### Haloes
 
-$R_s = 0.174$​ kpc (2D)
+| halo    | $M_{200} / M_0$ | $c$   | $V_{\rm circ,\ max}$ | $M_s/M_0$ | $r_s/{\rm kpc}$ | $h  / {\rm kpc}$ | $\sigma_v$ |
+| ------- | --------------- | ----- | -------------------- | --------- | --------------- | ---------------- | ---------- |
+| average | 0.5             | 13.1  | 31.3                 | 0.29      | 2.76            | 0.14             | 9.25       |
+| compact | 0.5             | 16.25 | 33.1                 | 0.262     | 2.23            | 0.15             | 10.5       |
+| heavy   | 0.8             | 12.6  | 36.3                 | 0.47517   | 3.3579          | 0.17             |            |
+| mixed   | 0.75            | 15    | 37.1                 | 0.4087    | 2.76            | 0.17             |            |
 
-$r_s=0.109$​ kpc (3D)
-
-
+last column: velocity dispersion assuming exp2d with Rs=0.13 kpc.
 
 softening
 $$
