@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -44,28 +44,26 @@ begin
 	apos = df[df_idx, :apocenter];
 end
 
+# ╔═╡ 9c259aa6-bc9e-4351-ac68-eccd05ff4c3d
+115/lguys.A_NFW(9.545)
+
 # ╔═╡ 4d4a18fc-8990-4dcc-97c5-c9e01708ea2e
 begin 
 	snap = out[1]
 	snap = snap[sortperm(snap.index)]
 end
 
+# ╔═╡ fb6debf2-0161-477f-b29b-5a0f1f70f340
+[snap.positions[:, 1]; snap.velocities[:, 1]]
+
 # ╔═╡ fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
-# ╠═╡ disabled = true
-#=╠═╡
-begin
-	plots[] = []
-	p1 = histogram(peris)
-	xlabel!("pericenter")
-	push!(plots[], p1)
-
-	p1 = histogram(apos, bins=20)
-	xlabel!("apocenter")
-	push!(plots[], p1)
-
-	plots[]
+let
+	hist(peris)
 end
-  ╠═╡ =#
+
+# ╔═╡ 46b4242b-8af7-4233-8ecf-d86740b4c884
+	hist(apos)
+
 
 # ╔═╡ e10615ab-0ece-4ebb-81d0-47ffdd6ea6c5
 begin
@@ -86,11 +84,6 @@ hist(lguys.calc_r(snap.positions),
 	axis=(; xlabel="radius")
 )
 
-# ╔═╡ 5a5ca70c-286f-4325-ac4a-143713a844c4
-hist(snap.Φs_ext,
-	axis=(; xlabel="potential")
-)
-
 # ╔═╡ 2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
 ϵ = lguys.calc_E_spec_kin(out[1]) + out[1].Φs_ext
 
@@ -100,7 +93,7 @@ maximum(ϵ)
 # ╔═╡ 5f11f6ab-c9ab-4600-acca-a0bb84d81a12
 begin
 	points = [lguys.Galactocentric(snap.positions[:, i]*lguys.R0, -snap.velocities[:, i]*lguys.V0) for i in 1:length(snap)]
-	observations = lguys.transform.(lguys.Observation, points)
+	observations = lguys.transform.(lguys.ICRS, points)
 end
 
 
@@ -110,23 +103,28 @@ dists = getproperty.(observations, :distance)
 # ╔═╡ ede3836c-740d-4ac7-bbc7-3165981a1878
 normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
 
+# ╔═╡ 44660b2f-6220-473b-bb2f-07e23b176491
+columns = [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
+
 # ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
 let
 
-	for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity]
-
+	for sym in columns
+	
+	    μ = getproperty(obs, sym)
+	    σ = getproperty(err, sym)
+		
 		fig = Figure()
 		ax = Axis(fig[1,1], 
 			xlabel=String(sym),
-			ylabel="density"
+			ylabel="density",
+			#limits=((μ - 5σ, μ + 5σ), nothing),
 		)
 		
 	    x = getproperty.(observations, sym)
 		
 	    stephist!(x, normalization=:pdf)
-	
-	    μ = getproperty(obs, sym)
-	    σ = getproperty(err, sym)
+
 	    
 	    x_mod = LinRange(μ - 3σ, μ + 3σ, 1000)
 	    y_mod = normal_dist.(x_mod, μ, σ)
@@ -140,7 +138,7 @@ end
 # ╔═╡ d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 let
 	
-	for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity,]
+	for sym in columns
 	    x = [getproperty(o, sym) for o in observations]
 	    y = peris
 
@@ -156,7 +154,7 @@ end
 # ╔═╡ 43d43f63-4c13-4b23-950e-ada59aa86bc9
 let
 	
-	for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity,]
+	for sym in columns
 	    x = [getproperty(o, sym) for o in observations]
 	    y = peris
 
@@ -176,14 +174,14 @@ begin
 
 	idx_s = @. peri1 < peris < peri2
 
-	for sym in [:distance, :pm_ra, :pm_dec, :radial_velocity, :ra, :dec]
+	for sym in [:distance, :pmra, :pmdec, :radial_velocity, :ra, :dec]
 		md = median(getproperty.(observations[idx_s], sym))
 		println("d $sym = $(md - getproperty(obs, sym))")
 	end
 end
 
 # ╔═╡ e5825c4a-b446-44a3-8fd5-d94664965aca
-for f in fieldnames(lguys.Observation)
+for f in fieldnames(lguys.ICRS)
 	a = getproperty(observations[1], f)
 	b = getproperty(obs, f)
 	println("error of $f:\t", (a-b)/b)
@@ -237,11 +235,18 @@ positions
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
 lguys.plot_xyz(positions...)
 
+# ╔═╡ 57a8d1c8-3940-4430-8b46-375fb2bf1695
+let
+	x = positions[1][1, :]
+	y = positions[1][2, :]
+	z = positions[1][3, :]
+	R = @. sqrt(x^2 + y^2)
+
+	plot(R, z)
+end
+
 # ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
 lguys.plot_xyz(velocities...)
-
-# ╔═╡ 127c1123-29cf-45a7-b7ab-7f57b4d6e58f
-lguys.plot_xyz(accelerations...)
 
 # ╔═╡ ad078920-225d-436e-835b-d87a9db53c49
 let
@@ -325,12 +330,12 @@ for i in 1:length(idx)
 		"ra" => o.ra,
 		"dec" => o.dec,
 		"distance" => o.distance,
-		"pm_ra" => o.pm_ra,
-		"pm_dec" => o.pm_dec,
+		"pmra" => o.pmra,
+		"pmdec" => o.pmdec,
 		"radial_velocity" => o.radial_velocity,
 		"distance_err" => err.distance,
-		"pm_ra_err" => err.pm_ra,
-		"pm_dec_err" => err.pm_dec,
+		"pmra_err" => err.pmra,
+		"pmdec_err" => err.pmdec,
 		"radial_velocity_err" => err.radial_velocity
 	)
 
@@ -398,15 +403,15 @@ begin
 		@printf "time of first apocentre: %f \n" out.times[end] - out.times[t]
 		@printf "radius of first apocentre: %f\n" rs[i][t]
 		@printf "intial position: [%f, %f, %f]\n" positions[i][:, t]...
-		@printf "intial velocity: [%f, %f, %f]\n" -velocities[i][:, t]...
+		@printf "intial velocity: [%f, %f, %f]\n" -lguys.V0 * velocities[i][:, t]...
 		@printf "final position: [%f, %f, %f]\n" positions[i][:, 1]...
-		@printf "final velocity: [%f, %f, %f]\n" -velocities[i][:, 1]...
+		@printf "final velocity: [%f, %f, %f]\n" -lguys.V0 * velocities[i][:, 1]...
 
 		o = observations[idx[i]]
 		@printf "ra: \t %f\n" o.ra
 		@printf "dec: \t %f\n" o.dec
-		@printf "pmra: \t %f\n" o.pm_ra
-		@printf "pmdec: \t %f\n" o.pm_dec
+		@printf "pmra: \t %f\n" o.pmra
+		@printf "pmdec: \t %f\n" o.pmdec
 		@printf "dist: \t %f\n" o.distance
 		@printf "rv: \t %f\n" o.radial_velocity
 
@@ -419,20 +424,23 @@ end
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 # ╠═cd9dea36-93f8-4461-85b1-87030d9367bb
 # ╠═9c7e5bb4-8db0-4527-a8ec-331e2aed958b
+# ╠═fb6debf2-0161-477f-b29b-5a0f1f70f340
 # ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f
+# ╠═9c259aa6-bc9e-4351-ac68-eccd05ff4c3d
 # ╠═4d4a18fc-8990-4dcc-97c5-c9e01708ea2e
 # ╠═fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
+# ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
 # ╠═e10615ab-0ece-4ebb-81d0-47ffdd6ea6c5
 # ╠═9fad353f-751e-4577-b704-aa2eadeb0969
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═92b28dd8-c353-4959-b181-a843367b3223
 # ╠═471a5501-bc7b-4114-be1a-9088b4e674cd
-# ╠═5a5ca70c-286f-4325-ac4a-143713a844c4
 # ╠═2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
 # ╠═8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
 # ╠═5f11f6ab-c9ab-4600-acca-a0bb84d81a12
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
+# ╠═44660b2f-6220-473b-bb2f-07e23b176491
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
@@ -444,8 +452,8 @@ end
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
+# ╠═57a8d1c8-3940-4430-8b46-375fb2bf1695
 # ╠═34efe422-e672-4d17-a558-ce32fb704a8e
-# ╠═127c1123-29cf-45a7-b7ab-7f57b4d6e58f
 # ╠═ad078920-225d-436e-835b-d87a9db53c49
 # ╠═8f8ea990-6ae8-45c2-a4f5-b7fc7a425b1d
 # ╠═5d5f719c-e5b7-4e05-94b0-71523da46b66

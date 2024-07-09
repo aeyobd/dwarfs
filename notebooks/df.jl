@@ -32,13 +32,13 @@ md"""
 """
 
 # ╔═╡ 5287d506-2c6e-429c-90b9-9d1574784681
-M_s_halo = 0.467
+M_s_halo = 0.29
 
 # ╔═╡ 01c0a5fc-f020-4668-a21e-cbfccb9a8826
-r_s_halo = 3.25
+r_s_halo = 2.76
 
 # ╔═╡ 73bb13e4-4a36-42b3-a04d-f235a8b11362
-R_s_s = 0.2
+R_s_s = 0.13
 
 # ╔═╡ 64578172-da38-49ed-8777-51b538aa9b18
 prof_halo = lguys.NFW(M_s=M_s_halo, r_s = r_s_halo)
