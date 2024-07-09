@@ -2,21 +2,21 @@ import LilGuys as lguys
 
 
 const obs = lguys.ICRS(
-    ra = 15.03917,
-    dec = -33.70917,
-    distance = 86,
-    pm_ra = 0.099,
-    pm_dec = -0.160,
+    ra = 15.0183,
+    dec = -33.7186,
+    distance = 83.2,
+    pmra = 0.099,
+    pmdec = -0.160,
     radial_velocity = 111.4,
 )
 
 const err = lguys.ICRS(
-    ra = 0,
-    dec = 0,
-    distance = 3,
-    pm_ra = 0.02,
-    pm_dec = 0.02,
-    radial_velocity = 1,
+    ra = 0.0012,
+    dec = 0.00072,
+    distance = 2,
+    pmra = 0.02,
+    pmdec = 0.02,
+    radial_velocity = 0.2,
 )
 
 

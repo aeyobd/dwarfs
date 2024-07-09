@@ -10,11 +10,11 @@
 #SBATCH -o %J.out		#Standard output file
 
 # these are defined in bash_profile
-module load gnu_comp
-module load openmpi
-module load fftw
-module load hdf5
-module load gsl
-
+# module load gnu_comp
+# module load openmpi
+# module load fftw
+# module load hdf5
+# module load gsl
+# 
 rm -r out/*
-mpirun -np $SLURM_NTASKS $GADGET_DIR/GadgetMW param.txt > log.out
+mpirun -np $SLURM_NTASKS $GADGET_PATH/GadgetMW param.txt > log.out

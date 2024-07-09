@@ -43,7 +43,7 @@ index 9930c4b..40654db 100644
  TreePM Options                                             {#treepm}
  ==============
 diff --git a/src/gravity/grav_external.cc b/src/gravity/grav_external.cc
-index b51c0dd..7cab8f6 100644
+index b51c0dd..3c8ee22 100644
 --- a/src/gravity/grav_external.cc
 +++ b/src/gravity/grav_external.cc
 @@ -33,6 +33,13 @@
@@ -68,7 +68,7 @@ index b51c0dd..7cab8f6 100644
 +#ifdef EXTERNALGRAVITY_AGAMA
 +      {
 +        vector<double> pos;
-+        Sp.nearest_image_intpos_to_pos(Sp.P[target].IntPos, intpos_center, pos.da);
++        Sp.intpos_to_pos(Sp.P[target].IntPos, pos.da);
 +        double deriv[3];
 +#if defined(EVALPOTENTIAL) || defined(OUTPUT_POTENTIAL)
 +        Sp.P[target].ExtPotential +=
@@ -82,6 +82,24 @@ index b51c0dd..7cab8f6 100644
      }
  }
  
+diff --git a/src/io/snap_io.cc b/src/io/snap_io.cc
+index 94197e8..4c4a390 100644
+--- a/src/io/snap_io.cc
++++ b/src/io/snap_io.cc
+@@ -161,6 +161,13 @@ void snap_io::init_basic(simparticles *Sp_ptr)
+   init_field("POT ", "Potential", MEM_MY_FLOAT, FILE_MY_IO_FLOAT, READ_IF_PRESENT, 1, A_P, &Sp->P[0].Potential, 0,
+              ALL_TYPES, /* potential */
+              1, -1., 0., 0., 0., 2., All.UnitVelocity_in_cm_per_s * All.UnitVelocity_in_cm_per_s);
++
++#ifdef EXTERNALGRAVITY
++  init_field("EPOT ", "ExtPotential", MEM_MY_FLOAT, FILE_MY_IO_FLOAT, READ_IF_PRESENT, 1, A_P, &Sp->P[0].ExtPotential, 0,
++             ALL_TYPES, /* external potential */
++             1, -1., 0., 0., 0., 2., All.UnitVelocity_in_cm_per_s * All.UnitVelocity_in_cm_per_s);
++
++#endif
+ #endif
+ 
+ #ifdef OUTPUT_CHANGEOFENTROPY
 diff --git a/src/main/begrun.cc b/src/main/begrun.cc
 index 30e0421..d47d0b1 100644
 --- a/src/main/begrun.cc
