@@ -33,7 +33,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6/M0.5_c13.1"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6_s0.014"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
@@ -61,7 +61,7 @@ begin
 end
 
 # ╔═╡ 4710d1b5-fd6f-4369-8398-64e9123c8b41
-idx_i = 10; idx_f = length(out)
+idx_i = 1; idx_f = length(out)
 
 # ╔═╡ 97f89831-00e6-49a2-a712-ac47fd2dee47
 out.times[idx_f] * lguys.T0

@@ -60,7 +60,7 @@ Parameters
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/M0.5_c13.1/stars"
+dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = "exp2d_rs0.13.toml"
