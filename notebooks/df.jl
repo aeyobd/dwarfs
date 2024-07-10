@@ -20,6 +20,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ cc14b21c-4690-4ae9-a14b-586174cb3feb
+using LilGuys
+
 # ╔═╡ 17ffde4b-5796-4915-9741-d594cf0c5ca7
 md"""
 # Distribution functions
@@ -31,17 +34,11 @@ md"""
 # Inputs
 """
 
-# ╔═╡ 5287d506-2c6e-429c-90b9-9d1574784681
-M_s_halo = 0.29
-
-# ╔═╡ 01c0a5fc-f020-4668-a21e-cbfccb9a8826
-r_s_halo = 2.76
-
 # ╔═╡ 73bb13e4-4a36-42b3-a04d-f235a8b11362
-R_s_s = 0.13
+R_s_s = 0.19
 
 # ╔═╡ 64578172-da38-49ed-8777-51b538aa9b18
-prof_halo = lguys.NFW(M_s=M_s_halo, r_s = r_s_halo)
+prof_halo = NFW(V_circ_max=50/V2KMS, r_circ_max=10.783)
 
 # ╔═╡ 5a42e848-caee-4aea-a541-7812c4fbeb13
 profile = lguys.Exp2D(R_s = R_s_s)
@@ -59,8 +56,8 @@ md"""
 
 # ╔═╡ 23158c79-d35c-411a-a35a-950f04214e19
 begin 
-	M_s_tot = lguys.calc_M(profile, Inf)
-	M_s(r) = lguys.calc_M(profile, r)
+	M_s_tot = calc_M(profile, Inf)
+	M_s(r) = calc_M(profile, r)
 end
 
 # ╔═╡ 29619cc3-1be3-4b24-92e0-ceccfd4a3f59
@@ -230,10 +227,10 @@ end
 let
 	fig, ax = FigAxis()
 	
-	heatmap!(log10.(xs), lguys.V0 * vs, Z,
+	heatmap!(log10.(xs), V2KMS * vs, Z,
 	colorscale=log10, colorrange=(1e-12, maximum(Z))
 	)
-	y = sqrt.( - 2lguys.calc_Φ.(prof_halo, xs)) .* lguys.V0
+	y = sqrt.( - 2lguys.calc_Φ.(prof_halo, xs)) .* V2KMS
 	lines!(log10.(xs), y)
 
 	fig
@@ -250,10 +247,10 @@ let
 		limits=((-2, 3), nothing)
 	)
 	
-	h = heatmap!(log10.(xs), lguys.V0 * vs, Z_dm,
+	h = heatmap!(log10.(xs), V2KMS * vs, Z_dm,
 	colorscale=log10, colorrange=( 1e-15 * maximum(Z), maximum(Z))
 	)
-	y = sqrt.( - 2lguys.calc_Φ.(prof_halo, xs)) .* lguys.V0
+	y = sqrt.( - 2lguys.calc_Φ.(prof_halo, xs)) .* V2KMS
 	lines!(log10.(xs), y)
 
 	Colorbar(fig[1, 2], h)
@@ -372,13 +369,13 @@ v_dens_dm = dropdims(sum(
 )
 
 # ╔═╡ 22291d60-6f67-4960-a3f9-ca3cc2220674
-σ_v * lguys.V0
+σ_v * V2KMS
 
 # ╔═╡ e7ee66a4-f783-4f72-b6d2-02dfec7f6977
-σ_v_dm * lguys.V0
+σ_v_dm * V2KMS
 
 # ╔═╡ c9a5a155-d588-4d74-9bbc-fd8103eecc8b
-σ_v * lguys.V0 / sqrt(3) # average x-velocity dispersion
+σ_v * V2KMS / sqrt(3) # average x-velocity dispersion
 
 # ╔═╡ 04d5ec93-ec4c-4c83-bf03-5fb7456bb0f4
 let
@@ -387,7 +384,7 @@ let
 		ylabel = "density / dv^3"
 	)
 
-	lines!(vs * lguys.V0, v_dens / lguys.V0)
+	lines!(vs * V2KMS, v_dens / V2KMS)
 	fig
 end
 
@@ -395,9 +392,8 @@ end
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
 # ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
+# ╠═cc14b21c-4690-4ae9-a14b-586174cb3feb
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
-# ╠═5287d506-2c6e-429c-90b9-9d1574784681
-# ╠═01c0a5fc-f020-4668-a21e-cbfccb9a8826
 # ╠═73bb13e4-4a36-42b3-a04d-f235a8b11362
 # ╠═64578172-da38-49ed-8777-51b538aa9b18
 # ╠═5a42e848-caee-4aea-a541-7812c4fbeb13

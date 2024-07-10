@@ -14,13 +14,6 @@ begin
 	import LilGuys as lguys
 end
 
-# ╔═╡ d3313f08-7e4e-43b8-b55d-ea099d031bfe
-begin 
-	using DataFrames, CSV
-
-	zeno_prof = CSV.read("/astro/dboyea/dwarfs/zeno/profiles/nfw.csv", DataFrame)
-end
-
 # ╔═╡ f979f2a8-3420-4ede-a739-7d727dfdf818
 md"""
 # Initial conditions
@@ -41,19 +34,26 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/isolation/1e7/"
+model_dir = "/arc7/home/dboyea/sculptor/isolation/1e6_s0.014/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 begin 
-	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))
-	#halo = lguys.NFW(; lguys.dict_to_tuple(params)...)
+	params = TOML.parsefile(joinpath(model_dir, "halo.toml"))
+	halo = lguys.NFW(; lguys.dict_to_tuple(params)...)
 
-	halo = lguys.NFW(; M_s=1/lguys.A_NFW(1), r_s=1)
-	halo = lguys.NFW(M_s=0.289934, r_s=2.76)
+	# halo = lguys.NFW(; M_s=1/lguys.A_NFW(1), r_s=1)
+	# halo = lguys.NFW(M_s=0.289934, r_s=2.76)
 end
+
+# ╔═╡ d3313f08-7e4e-43b8-b55d-ea099d031bfe
+# begin 
+# 	using DataFrames, CSV
+
+# 	zeno_prof = CSV.read("/astro/dboyea/dwarfs/zeno/profiles/nfw.csv", DataFrame)
+# end
 
 # ╔═╡ 0ccb9018-d88c-4cec-a8da-625be1289bfe
 
