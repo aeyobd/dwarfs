@@ -1,17 +1,15 @@
 #!/bin/bash
 #
 #SBATCH	 -J	 isolation
-#SBATCH --ntasks=2				#Number of cores
-#SBATCH -t 1:00:00
-#SBATCH --mem-per-cpu=4G		#Memory per core
+#SBATCH -t 5:00:00
 #SBATCH -o %J.out		#Standard output file
-#SBATCH -p cosma
-#SBATCH -A durham
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=80
 
-source ~/slurm_header.sh
 set -x 
 rm -r out/* 
-export OMP_NUM_THREADS=$SLURM_NTASKS
-mpirun -np $SLURM_NTASKS $GADGET_DIR/Gadget param.txt > log.out
+
+source $HOME/slurm_header.sh
+mpirun -np $SLURM_NTASKS $GADGET_PATH/Gadget param.txt > log.out
 
 scontrol show job=$SLURM_JOB_ID

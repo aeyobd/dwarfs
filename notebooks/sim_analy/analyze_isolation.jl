@@ -33,16 +33,13 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6_s0.014"
+name = "/arc7/home/dboyea/sculptor/isolation/1e7"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
-begin 
-	halo = lguys.NFW(; lguys.dict_to_tuple(halo_params)...)
-	halo = lguys.NFW(V_circ_max=0.153194, r_circ_max=5.63)
-end
+halo = lguys.NFW(; lguys.dict_to_tuple(halo_params)...)
 
 # ╔═╡ 5f5dc5a8-8230-4301-b59b-46f2dc55e580
 lguys.calc_V_circ_max(halo) * lguys.V0
@@ -487,10 +484,10 @@ let
 end
 
 # ╔═╡ 91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
-lguys.plot_xyz(x_cen)
+lguys.Plots.plot_xyz(x_cen)
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
-lguys.plot_xyz(v_cen * lguys.V0)
+lguys.Plots.plot_xyz(v_cen * lguys.V0)
 
 # ╔═╡ dc221349-eb61-4ace-8de3-a6c50249aca0
 function find_radii_fracs(out, x_cen) 
@@ -538,7 +535,7 @@ let
 end
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lguys.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
+lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 1000_000))
 
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5

@@ -538,9 +538,9 @@ md"""
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	V_max_in = 42 / lguys.V0
+	V_max_in = 50 / lguys.V0
 	# fiducial is 31.3
-	r_max_in = 8.65
+	r_max_in = 10.783
 
 	V_max_in
 end
