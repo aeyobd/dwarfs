@@ -367,6 +367,9 @@ ax_M200_kwargs = (xscale=log10,
 xlabel="M200 [code units]",
 xticks = [0.1, 1, 10])
 
+# ╔═╡ a2ca4b2b-b198-4026-ac67-4aad70cdf1fa
+0.15*lguys.V0
+
 # ╔═╡ 4f971234-565a-43a4-a4bf-94a9415e6d7e
 Vc_label = L"V_\textrm{circ,\,max}\  / \textrm{km\,s^{-1}}";
 
@@ -535,8 +538,11 @@ md"""
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	V_max_in = 33 / lguys.V0
-	r_max_in = 6.4
+	V_max_in = 42 / lguys.V0
+	# fiducial is 31.3
+	r_max_in = 8.65
+
+	V_max_in
 end
 
 # ╔═╡ 5e71b022-bd95-4c3c-8930-51100fb9ab1c
@@ -704,6 +710,7 @@ lguys.G * lguys.calc_M200(halo_in) / lguys.calc_R200(halo_in)^2
 # ╠═9695b55c-ff53-4369-9d12-324dd35ab021
 # ╠═d8c978f3-57e9-48cb-b20a-6f441a241f7e
 # ╠═90d563f3-d9a4-4e50-82b9-e37eecff87d9
+# ╠═a2ca4b2b-b198-4026-ac67-4aad70cdf1fa
 # ╠═a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
 # ╠═4f971234-565a-43a4-a4bf-94a9415e6d7e
 # ╠═4bb1dcef-04e2-4aa5-aa8f-d76a21502e01

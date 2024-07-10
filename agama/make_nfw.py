@@ -13,6 +13,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Create NFW potential')
     parser.add_argument('-n', '--N', type=float, default=1e4, help='Number of particles')
     parser.add_argument('-o', '--output', type=str, default='nfw.fits', help='Output file name')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('-t', '--truncation_radius', type=float, default=16, help='Truncation radius over scale radius')
+
     return parser.parse_args()
 
 
@@ -32,7 +35,7 @@ def sample_nfw(N=1e4):
     N = int(N)
     scaleRadius = 1
     mass = 1
-    cutoff = 100
+    cutoff = 16
 
     rho0 = mass / (4*pi * scaleRadius**3 ) / 3
 

@@ -12,7 +12,7 @@ function rescale(snap::lguys.Snapshot, m_scale::Float64, r_scale::Float64)
     velocities = snap.velocities * v_scale
     masses = snap.masses * m_scale
 
-    return lguys.Snapshot(positions, velocities, masses)
+    return lguys.Snapshot(positions=positions, velocities=velocities, masses=masses, index=snap.index, header=snap.header)
 end
 
 
