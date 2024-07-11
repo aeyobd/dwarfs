@@ -43,6 +43,21 @@ md"""
 # inputs
 """
 
+# ╔═╡ daac0dde-fe80-44e3-9e6c-d00384769710
+md"""
+Code snips
+Gaia
+```
+SELECT * FROM gaiadr3.gaia_source WHERE 1 = CONTAINS( POINT(15.03917, -33.70917), CIRCLE(ra, dec, 3))
+```
+
+Aladin
+```
+15.03917, -33.70917	
+zoom 20 arcmin
+```
+"""
+
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 name = "sculptor/fiducial"
 
@@ -267,6 +282,7 @@ end
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
+# ╟─daac0dde-fe80-44e3-9e6c-d00384769710
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╠═f8779f92-3ae0-474e-907e-1067170b1531

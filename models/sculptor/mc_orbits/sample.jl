@@ -7,16 +7,16 @@ const obs = lguys.ICRS(
     distance = 83.2,
     pmra = 0.099,
     pmdec = -0.160,
-    radial_velocity = 111.4,
+    radial_velocity = 111.03,
 )
 
 const err = lguys.ICRS(
-    ra = 0.0012,
-    dec = 0.00072,
+    ra = 0.02, #0.0012,
+    dec = 0.01, #0.00072,
     distance = 2,
     pmra = 0.02,
     pmdec = 0.02,
-    radial_velocity = 0.2,
+    radial_velocity = 0.3, #0.2,
 )
 
 
@@ -28,8 +28,8 @@ function sample(N = 10000)
     pos = hcat([p.position for p in mc_phase]...)
     vel = hcat([p.velocity for p in mc_phase]...)
 
-    pos ./= lguys.R0
-    vel ./= lguys.V0
+    pos ./= lguys.R2KPC
+    vel ./= lguys.V2KMS
     vel .*= -1 # reverse velocities to go backwards in time
 
     m = 0

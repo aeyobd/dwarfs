@@ -117,9 +117,6 @@ the dark matter distribution of  the snapshot (initial and final)
 # ╔═╡ d57fdbe3-d610-41d0-a613-d8ac3ed42ede
 lguys.Plots.ProjectedDensity(snap, limits=((-1., 1.), (-1, 1)), bins=50)
 
-# ╔═╡ b2597e2f-eebf-4a80-9e61-552a46f3b771
-lguys.calc_E_tot(snap)
-
 # ╔═╡ 4769a811-c89a-4b37-9e1f-599e2d1e8afa
 virial_ratio = -2 * sum(lguys.calc_E_spec_kin(snap)) ./ sum(0.5 * lguys.calc_radial_discrete_Φ(snap))
 
@@ -206,7 +203,8 @@ lguys.calc_M(halo, 2)
 let
 	fig, ax = FigAxis(
 		xlabel = "vx / km s",
-		ylabel = "density"
+		ylabel = "density",
+		limits=((-50, 50), nothing)
 	)
 	
 	lguys.Plots.vx_hist_fit!(snap, bins=50, direction=2)
@@ -220,7 +218,7 @@ let
 	ax = lguys.Plots.Axis_rho(fig[1, 1], limits=((-1, 2), (-25, 5)))
 
 	lguys.Plots.plot_ρ_s!(snap)
-	x = LinRange(-1, 1, 1000)
+	x = LinRange(-1, 1.5, 1000)
 
 	y = log10.(lguys.calc_ρ.(prof, 10 .^ x))
 
@@ -258,7 +256,6 @@ TOML.print
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═d57fdbe3-d610-41d0-a613-d8ac3ed42ede
-# ╠═b2597e2f-eebf-4a80-9e61-552a46f3b771
 # ╠═4769a811-c89a-4b37-9e1f-599e2d1e8afa
 # ╠═6550afcc-40fa-4386-a414-b87825ab6a12
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9

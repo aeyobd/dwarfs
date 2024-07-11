@@ -23,6 +23,9 @@ Check the initial DM halo. Loads a snapshot and checks if the halo has the expec
 # ╔═╡ 920546bd-4838-413c-b687-f891a7f5e985
 import TOML
 
+# ╔═╡ 4833d7f7-2c0a-4e15-a47b-cb2474351283
+12 * 3600
+
 # ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 md"""
 To make this both a cml utility and interactive, we take inputs in the following cells
@@ -34,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/isolation/1e6_s0.014/"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
@@ -42,7 +45,7 @@ name = "initial"
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 begin 
 	params = TOML.parsefile(joinpath(model_dir, "halo.toml"))
-	halo = lguys.NFW(; lguys.dict_to_tuple(params)...)
+	halo = lguys.NFW(; lguys.dict_to_tuple(params["profile"])...)
 
 	# halo = lguys.NFW(; M_s=1/lguys.A_NFW(1), r_s=1)
 	# halo = lguys.NFW(M_s=0.289934, r_s=2.76)
@@ -55,9 +58,6 @@ end
 # 	zeno_prof = CSV.read("/astro/dboyea/dwarfs/zeno/profiles/nfw.csv", DataFrame)
 # end
 
-# ╔═╡ 0ccb9018-d88c-4cec-a8da-625be1289bfe
-
-
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 lguys.calc_M(halo, 1)
 
@@ -69,7 +69,26 @@ begin
 	println("loading model from $model_dir")
 	snap = lguys.Snapshot(joinpath(model_dir, "$name.hdf5"))
 
+	snap.x_cen = lguys.centroid(snap.positions)
+	snap.v_cen = lguys.centroid(snap.velocities)
+
+	println(snap.x_cen)
+	println(snap.v_cen)
+
+	snap.positions .-= snap.x_cen
+	snap.velocities .-= snap.v_cen
+
+	snap.x_cen = zeros(3)
+	snap.v_cen = zeros(3)
+	
+	lguys.calc_r(snap)
 end
+
+# ╔═╡ 0ccb9018-d88c-4cec-a8da-625be1289bfe
+snap.x_cen
+
+# ╔═╡ 5ebe92b8-602e-42be-8751-58898b7323b0
+snap.v_cen
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
@@ -77,7 +96,7 @@ let
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
 	rc, Vc = lguys.calc_V_circ(snap)
-	lines!(log10.(rc), Vc * lguys.V0, label="initial")
+	lines!(log10.(rc), Vc * lguys.V2KMS, label="initial")
 
 
 	# A(x) = log(1+x)  - x/(1+x)
@@ -89,9 +108,9 @@ let
 	# y = V_nfw.(10 .^ log_r ./ R_s)
 	# lines!(log_r, y * lguys.V0)
 
-	lines!(log_r, lguys.V0 * lguys.calc_V_circ.(halo, 10 .^ log_r))
+	lines!(log_r, lguys.V2KMS * lguys.calc_V_circ.(halo, 10 .^ log_r))
 
-	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_V_circ_max(halo) * lguys.V0)
+	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_V_circ_max(halo) * lguys.V2KMS)
 	fig
 end
 
@@ -104,7 +123,7 @@ phase space distribution of star particles initial and final snapshot
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="velocity (km/s)" )
-	Arya.hist2d!(ax, log10.(lguys.calc_r(snap.positions)), lguys.calc_r(snap.velocities) * lguys.V0, bins=100)
+	Arya.hist2d!(ax, log10.(lguys.calc_r(snap.positions)), lguys.calc_r(snap.velocities) * lguys.V2KMS, bins=100)
 
 
 	fig
@@ -229,6 +248,7 @@ end
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╠═920546bd-4838-413c-b687-f891a7f5e985
+# ╠═4833d7f7-2c0a-4e15-a47b-cb2474351283
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
@@ -236,6 +256,7 @@ end
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 # ╠═d3313f08-7e4e-43b8-b55d-ea099d031bfe
 # ╠═0ccb9018-d88c-4cec-a8da-625be1289bfe
+# ╠═5ebe92b8-602e-42be-8751-58898b7323b0
 # ╠═54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 # ╠═ef3d1d5f-0979-44a7-8f0f-bf4638ea5612
 # ╠═9104ed25-9bc8-4582-995b-37595b539281

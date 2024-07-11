@@ -54,7 +54,7 @@ begin
 end
 
 # ╔═╡ fb6debf2-0161-477f-b29b-5a0f1f70f340
-[snap.positions[:, 1]; snap.velocities[:, 1]]
+[snap.positions[:, 1]; snap.velocities[:, 1] * lguys.V2KMS]
 
 # ╔═╡ fcadcc96-1da1-4e6f-9d3b-2c56e55488b7
 let
@@ -92,7 +92,7 @@ maximum(ϵ)
 
 # ╔═╡ 5f11f6ab-c9ab-4600-acca-a0bb84d81a12
 begin
-	points = [lguys.Galactocentric(snap.positions[:, i]*lguys.R0, -snap.velocities[:, i]*lguys.V0) for i in 1:length(snap)]
+	points = [lguys.Galactocentric(snap.positions[:, i]*lguys.R2KPC, -snap.velocities[:, i]*lguys.V2KMS) for i in 1:length(snap)]
 	observations = lguys.transform.(lguys.ICRS, points)
 end
 
@@ -403,9 +403,9 @@ begin
 		@printf "time of first apocentre: %f \n" out.times[end] - out.times[t]
 		@printf "radius of first apocentre: %f\n" rs[i][t]
 		@printf "intial position: [%f, %f, %f]\n" positions[i][:, t]...
-		@printf "intial velocity: [%f, %f, %f]\n" -lguys.V0 * velocities[i][:, t]...
+		@printf "intial velocity: [%f, %f, %f]\n" -1* velocities[i][:, t]...
 		@printf "final position: [%f, %f, %f]\n" positions[i][:, 1]...
-		@printf "final velocity: [%f, %f, %f]\n" -lguys.V0 * velocities[i][:, 1]...
+		@printf "final velocity: [%f, %f, %f]\n" -lguys.V2KMS * velocities[i][:, 1]...
 
 		o = observations[idx[i]]
 		@printf "ra: \t %f\n" o.ra
@@ -418,6 +418,9 @@ begin
 		println()
 	end
 end
+
+# ╔═╡ 8e6959cf-b93e-48e8-adf4-5578fe43ab53
+lguys.T2GYR
 
 # ╔═╡ Cell order:
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
@@ -471,3 +474,4 @@ end
 # ╠═519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 # ╠═5316884b-3971-4ca7-9106-f638241d3388
 # ╠═de1e5245-0946-47cd-8e2c-ba1914cfeb74
+# ╠═8e6959cf-b93e-48e8-adf4-5578fe43ab53

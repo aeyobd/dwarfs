@@ -10,13 +10,10 @@ begin
 	using CairoMakie;
 	using CSV, DataFrames
 
-	import LilGuys as lguys
+	using LilGuys
 
 	using Arya
 end
-
-# ╔═╡ 42848dbe-293a-4b28-a954-3b1faea89c01
-using FITSIO
 
 # ╔═╡ 8b41af50-9ae0-475b-bacc-3799e2949b30
 md"""
@@ -82,10 +79,10 @@ md"""
 """
 
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
-lguys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
+LilGuys.Plots.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
 
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
-lguys.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
+LilGuys.Plots.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
 
 # ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 let 
@@ -102,13 +99,16 @@ let
 	fig
 end
 
+# ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
+T2GYR = LilGuys.T2GYR
+
 # ╔═╡ f88b909f-c3dc-41e0-bdb1-25e229964d27
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = lguys.calc_r(x_cen)
-	lines!(cens.t * lguys.T0, r, label="model")
-	lines!(lguys.T0*(orbit_expected.t .- orbit_expected.t[begin]), lguys.calc_r(x_cen_exp),
+	r = calc_r(x_cen)
+	lines!(cens.t * T2GYR, r, label="model")
+	lines!(T2GYR*(orbit_expected.t .- orbit_expected.t[begin]), calc_r(x_cen_exp),
 		label="expected"
 	)
 
@@ -122,13 +122,13 @@ md"""
 """
 
 # ╔═╡ f134b3ce-53f0-47e9-84e9-1e73064d5191
-snap_cen = lguys.Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
+snap_cen = Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
 
 # ╔═╡ 64e558da-2928-4815-ad5a-7528516311f9
-obs_c_gr = lguys.to_sky(snap_cen, SkyFrame=lguys.HelioRest)
+obs_c_gr = LilGuys.to_sky(snap_cen, SkyFrame=LilGuys.HelioRest)
 
 # ╔═╡ defc4184-2613-4480-9adf-fa135f168382
-obs_c = lguys.to_sky(snap_cen)
+obs_c = LilGuys.to_sky(snap_cen)
 
 # ╔═╡ a179323f-4878-4021-b8d4-69ca733658cb
 function calc_χ2s(obs_c, obs_today)
@@ -163,7 +163,7 @@ end
 idx_f = argmin(χ2)
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
-r = lguys.calc_r(x_cen)
+r = calc_r(x_cen)
 
 # ╔═╡ 882d4fc5-07ae-4b06-8da5-67f0894595db
 import LinearAlgebra: dot
@@ -216,32 +216,32 @@ d_idx = 20
 begin
 	peri_filt = idx_f-d_idx:idx_f
 	t_last_peri_arg = argmin(r[peri_filt])
-	t_last_peri = cens.t[peri_filt[t_last_peri_arg]] * lguys.T0
-	delta_t_peri = cens.t[idx_f] * lguys.T0 - t_last_peri
+	t_last_peri = cens.t[peri_filt[t_last_peri_arg]] * T2GYR
+	delta_t_peri = cens.t[idx_f] * T2GYR - t_last_peri
 end
 
 # ╔═╡ 04d29fcb-70a0-414b-a487-7a18c44b9d58
 let
 	fig = Figure(size=(700, 300))
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = lguys.calc_r(x_cen)
-	lines!(cens.t * lguys.T0, r)
-	scatter!(cens.t[idx_f] * lguys.T0, r[idx_f], 
+	r = calc_r(x_cen)
+	lines!(cens.t * T2GYR, r)
+	scatter!(cens.t[idx_f] * T2GYR, r[idx_f], 
 		label="adpoted end", marker=:rect
 	)
-	scatter!(cens.t[idx_f] * lguys.T0, lguys.calc_r(x_cen_exp)[end], 
+	scatter!(cens.t[idx_f] * T2GYR, calc_r(x_cen_exp)[end], 
 		marker=:+, markersize=10, label="expected"
 	)
 	
-	scatter!(cens.t[idx_peri] * lguys.T0, r[idx_peri], 
+	scatter!(cens.t[idx_peri] * T2GYR, r[idx_peri], 
 		label="last pericentre"
 	)
 
-	scatter!(cens.t[idx_apo] * lguys.T0, r[idx_apo], 
+	scatter!(cens.t[idx_apo] * T2GYR, r[idx_apo], 
 		label="last apocentre"
 	)
 	
-	scatter!(cens.t[idx_anteperi] * lguys.T0, r[idx_anteperi], 
+	scatter!(cens.t[idx_anteperi] * T2GYR, r[idx_anteperi], 
 		label="last last pericentre"
 	)
 	
@@ -252,7 +252,7 @@ end
 # ╔═╡ af8a50bd-e761-4439-9fc9-80048c264d5b
 begin 
 	if idx_peri > 0
-		t_peri = lguys.T0 * cens.t[idx_peri]
+		t_peri = T2GYR * cens.t[idx_peri]
 		r_peri = r[idx_peri]
 
 	else 
@@ -261,7 +261,7 @@ begin
 	end
 
 	if idx_apo > 0
-		t_apo = lguys.T0 * cens.t[idx_apo]
+		t_apo = T2GYR * cens.t[idx_apo]
 		r_apo = r[idx_apo]
 	else
 		t_apo = NaN
@@ -269,7 +269,7 @@ begin
 	end
 
 	if idx_anteperi > 0
-		t_anteperi = lguys.T0 * cens.t[idx_anteperi]
+		t_anteperi = T2GYR * cens.t[idx_anteperi]
 	else
 		t_anteperi = NaN
 	end
@@ -277,7 +277,7 @@ begin
 end
 
 # ╔═╡ 73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
-t_f = cens.t[idx_f] * lguys.T0
+t_f = cens.t[idx_f] * T2GYR
 
 # ╔═╡ 14eebce8-04f7-493b-824a-7808c7fa35dd
 md"""
@@ -328,19 +328,44 @@ dec0 = obs_c_gr.dec[idx_f]
 # ╔═╡ afdb058a-ebbd-4f07-b0d8-a85bb1070737
 90 - atand(0, 1)
 
+# ╔═╡ 31a11704-1dad-4007-b704-9312b81a5bad
+begin
+	dr = 5
+	dθ = 180
+	ra1 = ra0 + sind(θ0 + dθ) * dr / cosd(dec0)
+	dec1 = dec0 + cosd(θ0 + dθ) * dr
+
+	ra1 = round(ra1, digits=3)
+	dec1 = round(dec1, digits=3)
+end
+
+# ╔═╡ bc1a33f4-cf2e-44a6-a20b-1344f47e75c6
+md"""
+Blue point below is at 
+
+
+( $ra1, $dec1 )
+
+"""
+
+# ╔═╡ 2d1017a9-03a0-4aa2-829f-72174eaaa363
+θ0
+
 # ╔═╡ 63d2d908-2f12-483b-bbad-833b2aecc4e3
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="ra",
-		ylabel="dec"
+		ylabel="dec",
+		xreversed=true
 	)
 	
 	idx = idx_f-10:idx_f+10
 
-	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=cens.t[idx] * lguys.T0)
+	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=cens.t[idx] * T2GYR)
 
 	arrows!([ra0], [dec0], [sind(θ0)], [cosd(θ0)])
+	scatter!(ra1, dec1)
 
 	Colorbar(fig[1, 2], h, label="time / Gyr")
 
@@ -372,8 +397,19 @@ let
 	orbital_properties
 end
 
+# ╔═╡ 179c3c32-1368-4a58-b4b8-26d9d3f19f8c
+md"""
+## Identification of interesting locations to search....
+- for this project, want to find stars between 2 and 10 degrees away along stream path.
+"""
+
+# ╔═╡ 5704daca-a8c4-4292-a6c0-ea294f4373fd
+md"""
+## Saving
+"""
+
 # ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
-lguys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrite=true)
+LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╠═8b41af50-9ae0-475b-bacc-3799e2949b30
@@ -395,6 +431,7 @@ lguys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrite=
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╟─aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
+# ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
 # ╟─f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
 # ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
@@ -426,7 +463,11 @@ lguys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrite=
 # ╠═78271e36-12b7-4edc-bfb0-20ecc597ab20
 # ╠═661ca87c-c8da-49b1-b8a3-72c81050590b
 # ╠═afdb058a-ebbd-4f07-b0d8-a85bb1070737
+# ╠═31a11704-1dad-4007-b704-9312b81a5bad
+# ╠═bc1a33f4-cf2e-44a6-a20b-1344f47e75c6
+# ╠═2d1017a9-03a0-4aa2-829f-72174eaaa363
 # ╠═63d2d908-2f12-483b-bbad-833b2aecc4e3
 # ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
-# ╠═42848dbe-293a-4b28-a954-3b1faea89c01
+# ╟─179c3c32-1368-4a58-b4b8-26d9d3f19f8c
+# ╠═5704daca-a8c4-4292-a6c0-ea294f4373fd
 # ╠═fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
