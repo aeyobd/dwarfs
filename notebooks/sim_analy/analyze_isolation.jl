@@ -33,7 +33,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e7"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6_s0.014"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
@@ -58,13 +58,19 @@ begin
 end
 
 # ╔═╡ 4710d1b5-fd6f-4369-8398-64e9123c8b41
-idx_i = 1; idx_f = length(out)
+idx_i = 10; idx_f = length(out)
 
 # ╔═╡ 97f89831-00e6-49a2-a712-ac47fd2dee47
 out.times[idx_f] * lguys.T0
 
 # ╔═╡ 7a43ee65-0fce-4e4b-9226-714f4cb0e106
 out.times[idx_i] * lguys.T0
+
+# ╔═╡ c4fc0a87-c75f-4528-aa20-75cc7aff856c
+figure_dir = joinpath(name, "figures/")
+
+# ╔═╡ 327f790d-e652-48b2-92e5-e2dffd5b15e2
+mkdir(figure_dir)
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -129,9 +135,13 @@ let
 
 	scatter!(log10.(fit[:r_c]), fit[:V_c] * lguys.V0)
 
+	axislegend()
+	
 	log_r = LinRange(-2, 2.5, 1000)
 	y = V_nfw.(10 .^ log_r)
 	lines!(log_r, y * lguys.V0)
+
+	save(figure_dir * "v_circ.pdf", fig)
 	fig
 end
 
@@ -234,7 +244,7 @@ end
 
 # ╔═╡ 9b88e37a-93eb-4c03-b654-0cd9284fc811
 function plot_phase_rvr!(snap; bins=100)
-	x = log10.(lguys.calc_r(snap))
+	x = lguys.calc_r(snap)
 	v = lguys.calc_v_rad(snap)
 
 	h = Arya.histogram2d(x, v * lguys.V0, bins)
@@ -254,24 +264,24 @@ end
 
 # ╔═╡ 1a320f74-5cb7-44c5-8a59-c6fced771f52
 let
-	fig = Figure(size=(700, 300))
+	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="radial velocity (km/s)" )
 
 	h = plot_phase_rvr!(snap_f)
 
-	Colorbar(fig[1, 3], h)
+	Colorbar(fig[1, 2], h)
 
 	fig
 end
 
 # ╔═╡ c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 let
-	fig = Figure(size=(700, 300))
+	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="asinh x / kpc", ylabel="x velocity (km/s)" )
 
 	h = plot_phase_xvx!(snap_i)
 
-	Colorbar(fig[1, 3], h)
+	Colorbar(fig[1, 2], h)
 
 	fig
 end
@@ -297,6 +307,8 @@ let
 	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :]; hist_kwargs...)
 	hideydecorations!(ax2)
 	linkaxes!(ax, ax2)
+
+	
 	fig
 end
 
@@ -366,7 +378,7 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
-	limits=(-3, 3, -12, 0))
+	limits=(-1, 2.5, -10, -2))
 	plot_ρ_dm!(snap_i, label="initial")
 	plot_ρ_dm!(snap_f, label="final")
 
@@ -376,6 +388,9 @@ let
 	lines!(log_r, y, label="expected", color="black", linestyle=:dot)
 
 	axislegend(ax)
+	
+	save(figure_dir * "dm_density.pdf", fig)
+
 	fig
 
 end
@@ -484,7 +499,14 @@ let
 end
 
 # ╔═╡ 91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
-lguys.Plots.plot_xyz(x_cen)
+let
+	fig = lguys.Plots.plot_xyz(x_cen)
+	fig.content[1].title = "centre"
+
+	save(figure_dir * "centre.pdf", fig)
+	
+	fig
+end
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
 lguys.Plots.plot_xyz(v_cen * lguys.V0)
@@ -531,11 +553,14 @@ let
 	end
 
 	Legend(fig[1,2], ax, "f = ")
+
+	save(figure_dir * "mass_fraction_w_time.pdf", fig)
+
 	fig
 end
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 1000_000))
+lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
@@ -551,6 +576,8 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 1000_000))
 # ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
 # ╠═7a43ee65-0fce-4e4b-9226-714f4cb0e106
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
+# ╠═c4fc0a87-c75f-4528-aa20-75cc7aff856c
+# ╠═327f790d-e652-48b2-92e5-e2dffd5b15e2
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═c5672da9-0dad-4d22-abe5-9e186ccde02d
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
