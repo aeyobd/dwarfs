@@ -30,7 +30,7 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbit1/"
+dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  joinpath(dir, "properties.toml")
