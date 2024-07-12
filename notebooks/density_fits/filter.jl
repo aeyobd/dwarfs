@@ -19,6 +19,9 @@ begin
 	
 end
 
+# ╔═╡ 26e401fa-aa9f-41ae-88fa-815deb6427c7
+using KernelDensity
+
 # ╔═╡ 4cae5cc6-f270-42bf-97a1-067b7f57a7da
 include("filter_utils.jl")
 
@@ -34,6 +37,9 @@ Use the `calc_density`... and the `fit_profile` notebooks to then analyze the sa
 
 # ╔═╡ acb9ae92-924b-4723-8bd7-d775595b24c3
 COLORS = Arya.COLORS;
+
+# ╔═╡ 72e2ad11-8883-4396-9cce-929c4a7ce8e2
+0.9^40
 
 # ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
 red = COLORS[6]
@@ -58,8 +64,11 @@ zoom 20 arcmin
 ```
 """
 
+# ╔═╡ bdef32be-2748-48c4-85ed-1d0d68c38b28
+galaxy_dir = "sculptor"
+
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "sculptor/fiducial"
+name = "$galaxy_dir/centre"
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
@@ -77,13 +86,13 @@ md"""
 """
 
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
-all_stars_unfiltered = load_stars(params.filename, params)
+all_stars_unfiltered = load_stars("$galaxy_dir/" *params.filename, params)
 
 # ╔═╡ ce3cead5-b49e-41ff-ae3f-bdcaab68e858
 r_ell_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ellipticity, params.PA)
 
 # ╔═╡ c3641354-58d7-42e1-97d8-98db1c0bf0ac
-all_stars = all_stars_unfiltered[all_stars_unfiltered.r_ell .< r_ell_max, :]
+all_stars = all_stars_unfiltered
 
 # ╔═╡ 103b8a58-0d23-42df-a2d8-4ec508c0246a
 members = select_members(all_stars, params)
@@ -130,19 +139,56 @@ md"""
 # Membership plots
 """
 
+# ╔═╡ 42fe651b-34b0-43f0-a76d-ab3829544073
+bw_fd = Arya.bandwidth_freedman_diaconis(members.xi), Arya.bandwidth_freedman_diaconis(members.eta)
+
+# ╔═╡ 7c7c360b-cc11-43a5-b6ee-f6347aa9ae32
+bw = (0.05, 0.05)
+
+# ╔═╡ c4b92086-db8c-421d-8ce2-f55863b1df18
+kd = kde([members.xi members.eta]; bandwidth=bw)
+
+# ╔═╡ 603fc81f-66af-4cc3-954b-2cf1e310a2b1
+begin 
+	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/skyorbit.fits")
+	
+	orbit[!, :xi], orbit[!, :eta] = lguys.to_tangent(orbit.ra, orbit.dec, params.ra, params.dec)
+end
+
+# ╔═╡ 3a555897-1d4d-4391-bf9a-a92c317ca34f
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], aspect=DataAspect(),
+		xlabel = L"$\xi$ / degrees",
+		ylabel = L"$\eta$ / degrees",
+		xreversed = true,
+		#limits=(-r_ell_max, r_ell_max, -r_ell_max, r_ell_max) ./ 60
+	)
+	scale = 0.05
+
+
+	h = heatmap!(kd.x, kd.y, asinh.(kd.density ./ scale))
+
+	#lines!(orbit.xi, orbit.eta)
+	Colorbar(fig[1, 2], h, label="asinh density / $scale")
+	fig
+end
+
 # ╔═╡ 52bb6b36-736a-45a8-b1e1-7f174b366ec8
 let
-	f = Figure()
-	ax = Axis(f[1, 1],
-		xlabel="probability", 
-		ylabel="count",
-		yscale=log10)
-
-	hist!(ax, all_stars.PSAT[all_stars.PSAT .>= 0], 
-		bins=20, label="j24")
-	vlines!(params.PSAT_min)
-	#stephist!(b22.Pmemb, label="b22")
-	f
+	if :PSAT in names(all_stars)
+		f = Figure()
+		ax = Axis(f[1, 1],
+			xlabel="probability", 
+			ylabel="count",
+			yscale=log10)
+	
+		hist!(ax, all_stars.PSAT[all_stars.PSAT .>= 0], 
+			bins=20, label="j24")
+		vlines!(params.PSAT_min)
+		#stephist!(b22.Pmemb, label="b22")
+		f
+	end
 end
 
 # ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
@@ -259,7 +305,7 @@ out_name = "$(name)_sample.fits"
 
 # ╔═╡ 28ff0827-dd3e-43ff-b210-9a45687dd1f8
 let
-	f1 = FITS(params.filename)
+	f1 = FITS(joinpath(galaxy_dir, params.filename))
 	header = read_header(f1[2])
 
 	cols = FITSIO.colnames(f1[2])
@@ -279,14 +325,16 @@ end
 # ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
+# ╠═72e2ad11-8883-4396-9cce-929c4a7ce8e2
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
 # ╟─daac0dde-fe80-44e3-9e6c-d00384769710
+# ╠═bdef32be-2748-48c4-85ed-1d0d68c38b28
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╠═f8779f92-3ae0-474e-907e-1067170b1531
-# ╠═6f4ee4fd-0fe9-4314-a2ec-8b0caa08e8af
+# ╟─6f4ee4fd-0fe9-4314-a2ec-8b0caa08e8af
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
 # ╠═ce3cead5-b49e-41ff-ae3f-bdcaab68e858
 # ╠═c3641354-58d7-42e1-97d8-98db1c0bf0ac
@@ -295,6 +343,11 @@ end
 # ╠═07235d51-10e1-4408-a4d1-cd2079fadb75
 # ╠═695d532c-86d1-4b24-b7af-600a8ca29687
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
+# ╠═42fe651b-34b0-43f0-a76d-ab3829544073
+# ╠═7c7c360b-cc11-43a5-b6ee-f6347aa9ae32
+# ╠═c4b92086-db8c-421d-8ce2-f55863b1df18
+# ╠═603fc81f-66af-4cc3-954b-2cf1e310a2b1
+# ╠═3a555897-1d4d-4391-bf9a-a92c317ca34f
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
 # ╠═0010dffc-9717-4747-b7c2-2e396097399b
@@ -303,6 +356,7 @@ end
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
 # ╠═0f002b56-8b8f-4025-8d7b-fb51423e8da0
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
+# ╠═26e401fa-aa9f-41ae-88fa-815deb6427c7
 # ╟─4873af32-c387-4d42-909d-d39a25f56e24
 # ╠═5a172f47-589f-4b2c-8180-108b293cebf7
 # ╠═28ff0827-dd3e-43ff-b210-9a45687dd1f8

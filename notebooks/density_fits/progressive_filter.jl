@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -12,7 +12,7 @@ begin
 	using DataFrames
 	using Measurements
 	
-	using GLMakie
+	using CairoMakie
 	import TOML
 		
 	import LilGuys as lguys
@@ -41,12 +41,15 @@ md"""
 # inputs
 """
 
+# ╔═╡ c15da236-6c47-4144-b17a-a28578ba619a
+galaxy_dir = "sculptor"
+
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "sculptor/simple"
+name = "background"
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
-	param_file = "$name.toml"
+	param_file = joinpath(galaxy_dir, "$name.toml")
 
 	params_json = read_file(param_file)
 	params = DensityParams(params_json)
@@ -59,10 +62,10 @@ md"""
 
 # ╔═╡ 2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
 begin
-	all_stars_unfiltered = DataFrame(FITS(params.filename)[2])
+	all_stars_unfiltered = DataFrame(FITS(joinpath(galaxy_dir, params.filename))[2])
 	xi, eta = lguys.to_tangent(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ra, params.dec)
 	
-	r_ell = 60lguys.calc_r_ell(xi, eta, params.ecc, params.PA)
+	r_ell = 60lguys.calc_r_ell(xi, eta, params.ellipticity, params.PA)
 
 	all_stars_unfiltered[!, :r_ell] = r_ell
 	all_stars_unfiltered[!, :xi] = xi
@@ -72,24 +75,18 @@ begin
 end
 
 # ╔═╡ 9371bcb3-0e26-4162-8a40-dc1bf1dacdda
-r_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec,
-	params.ecc, params.PA
+r_ell_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec,
+	params.ellipticity, params.PA, centre=(params.ra, params.dec)
 )
 
-# ╔═╡ 0307085b-816f-469f-8811-60af02cfcb67
-# ╠═╡ disabled = true
-#=╠═╡
-r_max = 60*sqrt(maximum(xi .^ 2 .+ eta .^ 2))
-  ╠═╡ =#
+# ╔═╡ 5e80e0ad-9ed9-467d-a5d6-fb585bfecf18
+maximum(all_stars_unfiltered.r_ell)
 
-# ╔═╡ 29859854-0d17-42ba-8b1d-8788511840c9
-r_ell_max = r_max * (1 - params.ecc^2)^(1/4)
+# ╔═╡ f14e8857-340f-4f30-85da-28560361360f
+filt_r_ell = apply_filter(all_stars_unfiltered, r_ell_filter, params) .& ang_dist_filter(all_stars_unfiltered, params)
 
 # ╔═╡ 6c092147-c295-4ee5-9ee3-6e04c2aaaf98
-begin 
-	filt_r_ell = r_ell .< r_ell_max
-	all_stars = all_stars_unfiltered[filt_r_ell, :]
-end
+all_stars = all_stars_unfiltered[filt_r_ell, :]
 
 # ╔═╡ efc003db-c980-40ba-822f-23220f7e852e
 md"""
@@ -97,14 +94,14 @@ md"""
 """
 
 # ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
-function plot_tangent(all_stars, members=nothing) 
+function plot_tangent(all_stars, members=nothing; markersize=2, kwargs...) 
 	fig = Figure()
 
 	ax = plot_all_tangent!(fig[1,1], all_stars, markersize=2,
         color=(:black, 0.2))
 
 	if !isnothing(members )
-		plot_all_tangent!(ax, members, markersize=2, color=red)
+		plot_all_tangent!(ax, members; markersize=markersize, color=red, kwargs...)
 	end
 	
 	ax.xgridvisible = false
@@ -114,12 +111,12 @@ function plot_tangent(all_stars, members=nothing)
 end
 
 # ╔═╡ d7d81ed8-0427-4ee5-8213-320ce5a6711f
-function plot_tangent!(grid, all_stars, members=nothing)
+function plot_tangent!(grid, all_stars, members=nothing; markersize=2, kwargs...)
 	ax = plot_all_tangent!(grid, all_stars, markersize=2,
         color=(:black, 0.2))
 
 	if !isnothing(members )
-		plot_all_tangent!(ax, members, markersize=2, color=red)
+		plot_all_tangent!(ax, members; markersize=markersize, color=red, kwargs...)
 	end
 	
 	ax.xgridvisible = false
@@ -129,7 +126,7 @@ function plot_tangent!(grid, all_stars, members=nothing)
 end
 
 # ╔═╡ 75701b7d-e1f1-47f2-800e-c07eec01a4ff
-function plot_pms!(grid, all_stars, members=nothing; da=10)
+function plot_pms!(grid, all_stars, members=nothing; da=10, markersize=2, kwargs...)
 	ax = Axis(grid, limits=(-da, da, -da, da), aspect=1,
 	    xlabel=L"\mu_{\alpha *} / \mathrm{ mas\, yr^{-1}}", 
 	    ylabel=L"\mu_\delta / \mathrm{ mas\, yr^{-1}}")
@@ -138,31 +135,31 @@ function plot_pms!(grid, all_stars, members=nothing; da=10)
 
 	if !isnothing(members)
 		scatter!(ax, members.pmra, members.pmdec, 
-		    color=(red, 1), markersize=1)
+		    color=red, markersize=markersize; kwargs...)
 	end
 
 	ax
 end
 
 # ╔═╡ bffe11bd-4233-4a7c-9411-0dfb1ac79077
-function plot_pms(all_stars, members=nothing)
+function plot_pms(all_stars, members=nothing; kwargs...)
 	fig = Figure()
-	plot_pms!(fig[1, 1], all_stars, members)
+	plot_pms!(fig[1, 1], all_stars, members; kwargs...)
 	fig
 end
 
 # ╔═╡ 0f002b56-8b8f-4025-8d7b-fb51423e8da0
-function plot_cmd!(grid, all_stars, members=nothing)
+function plot_cmd!(grid, all_stars, members=nothing; markersize=2, kwargs...)
 	ax = Axis(grid, aspect=1,
-	    limits=(-0.5, 3, 10, 22), yreversed=true,
+	    limits=(-0.5, 3, 15, 22), yreversed=true,
 	    xlabel="bp - rp", 
 	    ylabel="G",)
 	scatter!(ax, all_stars.bp_rp, all_stars.phot_g_mean_mag, 
 	    color=(:black, 0.2), markersize=1)
 
 	if !isnothing(members)
-		scatter!(ax, members.bp_rp, members.phot_g_mean_mag, 
-		    color=(red, 1), markersize=1)
+		scatter!(ax, members.bp_rp, members.phot_g_mean_mag;
+		    color=red, markersize=markersize, kwargs...)
 	end
 	
 	ax.xgridvisible = false
@@ -172,14 +169,14 @@ function plot_cmd!(grid, all_stars, members=nothing)
 end
 
 # ╔═╡ ca345f40-6743-4d43-b1d4-f509b120512a
-function plot_cmd(all_stars, members=nothing)
+function plot_cmd(all_stars, members=nothing; kwargs...)
 	fig = Figure()
-	ax = plot_cmd!(fig[1,1], all_stars, members)
+	ax = plot_cmd!(fig[1,1], all_stars, members; kwargs...)
 	return fig
 end
 
 # ╔═╡ 049ff11e-c04c-41d9-abf1-ec040b799649
-function plot_parallax!(grid, all_stars, members=nothing)
+function plot_parallax!(grid, all_stars, members=nothing; markersize=2, kwargs...)
 	da = 15
 	ax = Axis(grid, aspect=1, limits=(-10, 10, 0, 4),
 	    xlabel=L"\varpi / \mathrm{ mas }", 
@@ -188,25 +185,25 @@ function plot_parallax!(grid, all_stars, members=nothing)
 	    color=(:grey, 0.2), markersize=1)
 
 	if !isnothing(members)
-		scatter!(ax, members.parallax, members.parallax_error, 
-		    color=(red, 1), markersize=1)
+		scatter!(ax, members.parallax, members.parallax_error; 
+		    color=red, markersize=markersize, kwargs...)
 	end
 	ax
 end
 
 # ╔═╡ 2ec0ac71-8bb4-4459-a5a7-049ab711075e
-function plot_parallax(all_stars, members=nothing)
+function plot_parallax(all_stars, members=nothing; kwargs...)
 	fig = Figure()
-	plot_parallax!(fig[1,1], all_stars, members)
+	plot_parallax!(fig[1,1], all_stars, members; kwargs...)
 	fig
 end
 
 # ╔═╡ b57a31e4-5394-4c32-9020-5ade8a1018c1
-function plot_sample(all_stars, members=nothing)
-	@info plot_tangent(all_stars, members)
-	@info plot_parallax(all_stars, members)
-	@info plot_cmd(all_stars, members)
-	@info plot_pms(all_stars, members)
+function plot_sample(all_stars, members=nothing; kwargs...)
+	@info plot_tangent(all_stars, members; kwargs...)
+	@info plot_parallax(all_stars, members; kwargs...)
+	@info plot_cmd(all_stars, members; kwargs...)
+	@info plot_pms(all_stars, members; kwargs...)
 end
 
 # ╔═╡ ab387f41-8d0f-4a1f-8dbf-b90396914c75
@@ -214,6 +211,9 @@ maximum(all_stars.parallax_over_error)
 
 # ╔═╡ c5ca7506-5952-4973-879e-e9848bb72d03
 plot_sample(all_stars)
+
+# ╔═╡ 933be42e-c33d-4afe-a40d-f016d1839519
+params
 
 # ╔═╡ f3eac4e6-0b4b-4d54-83ac-213b78fcb522
 md"""
@@ -224,10 +224,13 @@ md"""
 filt_parallax = apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
 
 # ╔═╡ eab8e0d4-0a40-48b6-9689-0c102d883a96
-filt_pm = apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm)
+filt_pm = apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm, params.n_sigma_pm)
 
 # ╔═╡ c15d2045-f6c2-42d1-947e-fb4b31daeb99
 filt_ruwe = apply_filter(all_stars, max_filter, :ruwe, params.ruwe_max)
+
+# ╔═╡ 6ee77988-5d0b-49db-87cb-a041c1ed4a28
+plot_sample(all_stars, all_stars[filt_pm .& filt_parallax .& filt_ruwe, :]; markersize=5, alpha=0.3)
 
 # ╔═╡ 20fe601c-874c-4a37-b3fa-b229232a0f4f
 params.ruwe_max
@@ -238,8 +241,121 @@ filt_cmd = apply_filter(all_stars, cmd_filter, params.cmd_cut)
 # ╔═╡ 29dba8f1-b4a6-41da-8323-437447c9d888
 filt = filt_cmd .& filt_pm .& filt_parallax .& filt_ruwe
 
-# ╔═╡ 620aa7d7-0b02-475d-80a9-1e721d6144bf
-mymemb = all_stars[filt, :]
+# ╔═╡ 99726828-62ad-465a-a961-4340b143cf6a
+plot_sample(all_stars, all_stars[filt, :]; markersize=5, alpha=0.3)
+
+# ╔═╡ cf7b3e70-2a92-4fe3-928f-6f842899893c
+md"""
+# Filter verification
+"""
+
+# ╔═╡ 8775835f-3e50-4a88-a3fe-6439a1bcbd22
+let 
+	fig = plot_tangent(all_stars_unfiltered, all_stars)
+	if params.max_ang_dist !== nothing
+		arc!(Point2f(0), params.max_ang_dist, 0, 2π)
+	end
+	fig
+end
+
+# ╔═╡ 740a8f04-5f19-466b-9fcd-767de3ad06b9
+let 
+	fig, ax = FigAxis(
+		xlabel = "ruwe",
+		ylabel = "count",
+		xscale=log10,
+		limits=((0.5, 100), nothing)
+	)
+
+	nan_filt = (!).(isnan.(all_stars.ruwe))
+	println(sum( @. filt_ruwe & ! nan_filt))
+	
+	h = Arya.histogram(all_stars.ruwe[nan_filt], normalization=:none)
+	h1 = Arya.histogram(all_stars.ruwe[filt_ruwe .& nan_filt], normalization=:none)
+	lines!(h)
+	lines!(h1)
+	vlines!(params.ruwe_max, color=:black)
+	fig
+end
+
+# ╔═╡ 1823b424-5e65-49d7-b1a1-75035b2006df
+let
+	fig = plot_parallax(all_stars, all_stars[filt_parallax, :])
+
+	x = [-5, 0, 5]
+	y = abs.(1/params.n_sigma_dist .* x)
+	lines!(x, y)
+
+	fig
+end
+
+# ╔═╡ daad6357-9231-4025-a084-267ecc28eac2
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], aspect=1, #limits=(-10, 10, 0, 4),
+	    xlabel=L"\mu_{\alpha*} / \mathrm{ mas\, yr^{-1}}", 
+	    ylabel=L"\delta\mu_{\alpha*} / \mathrm{ mas\, yr^{-1} }",
+		limits=(-5, 5, nothing, nothing),
+		xgridvisible=false,
+		ygridvisible=false,
+	)
+	
+	scatter!(ax, all_stars.pmra, all_stars.pmra_error, 
+	    color=(:grey, 0.2), markersize=1)
+
+
+	scatter!(ax, all_stars[filt, :pmra], all_stars[filt, :pmra_error]; 
+		color=red, markersize=2)
+
+	x = [-5, 0, 5]
+	y = abs.(1/params.n_sigma_pm .* x)
+	lines!(x, y)
+	
+	fig
+end
+
+# ╔═╡ 03636b4c-6d14-4ae3-8f72-411eddc60eaa
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], aspect=1, #limits=(-10, 10, 0, 4),
+	    xlabel=L"\mu_\delta / \mathrm{ mas\, yr^{-1}}", 
+	    ylabel=L"\delta\mu_\delta / \mathrm{ mas\, yr^{-1} }",
+		limits=(-5, 5, nothing, nothing),
+		xgridvisible=false,
+		ygridvisible=false,
+	)
+
+	
+	scatter!(ax, all_stars.pmdec, all_stars.pmdec_error, 
+	    color=(:grey, 0.2), markersize=1)
+
+
+	scatter!(ax, all_stars[filt, :pmdec], all_stars[filt, :pmdec_error]; 
+		color=red, markersize=2)
+
+	x = [-5, 0, 5]
+	y = abs.(1/params.n_sigma_pm .* x)
+	lines!(x, y)
+	
+	fig
+end
+
+# ╔═╡ dbc48359-f4a2-41a3-a26d-57dadf0bb3e4
+import StatsBase: median
+
+# ╔═╡ 70aad4cf-0a09-46c2-999e-a9bec307a4f4
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], aspect=1, #limits=(-10, 10, 0, 4),
+	    xlabel=L"\delta\mu_{\alpha*} / \mathrm{ mas\, yr^{-1}}", 
+		title="PM, CMD, and parallax filters",
+		ylabel="count"
+	)
+
+	hist!(all_stars[filt, :].pmdec_error, bins=40)
+	println(median(all_stars[filt, :].pmdec_error))
+	fig
+end
 
 # ╔═╡ 49ae0572-5d6b-4935-bc95-0a845bb3df2f
 md"""
@@ -252,7 +368,7 @@ lguys.calc_properties
 # ╔═╡ 65a10161-cbeb-49fe-b8d1-075ffe346e43
 function get_density(df)
 	r = df.r_ell
-	props = lguys.calc_properties(r, bins=40, normalization=false)
+	props = lguys.calc_properties(r, bins=40, normalization=:none)
 
 	println("stars left ", length(r))
 	println("counts in last bin ", props.counts[end-2: end])
@@ -356,6 +472,11 @@ plot_sample_w_dens(all_stars,
 	all_stars[filt_pm, :]
 )
 
+# ╔═╡ 8e52c3d5-aef1-4b13-9316-dd13f76e2ab3
+plot_sample_w_dens(all_stars, 
+	all_stars[filt_pm .& filt_parallax, :]
+)
+
 # ╔═╡ 16bd1702-b471-44da-96df-aca63c46a604
 plot_sample_w_dens(all_stars, 
 	all_stars[filt, :]
@@ -363,18 +484,6 @@ plot_sample_w_dens(all_stars,
 
 # ╔═╡ e2dc5d97-0c8f-49dd-bb1a-320b45132cca
 sum(all_stars.r_ell .< 4) / π /4^2
-
-# ╔═╡ fb95bc32-9cd2-485e-96f1-e8bebfbc8b59
-let
-	fig = Figure()
-	
-	ax = plot_density!(fig[1,1], all_stars, all_stars[filt_cmd, :])
-
-	hlines!(-0.761)
-	text!(0, -0.761, text="hi")
-	text!(ax, 0.2, 0.2, space=:relative, text="100\nhi")
-	fig
-end
 
 # ╔═╡ b76fbfe9-8a0d-4816-ae81-6fb8597aaf80
 all_stars[filt_cmd, :]
@@ -412,13 +521,14 @@ end
 # ╠═91d87251-c9c6-467f-9cae-4f30bfea8acc
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
+# ╠═c15da236-6c47-4144-b17a-a28578ba619a
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╠═4093a7d6-2f74-4c37-a4a8-270934ede924
 # ╠═2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
 # ╠═9371bcb3-0e26-4162-8a40-dc1bf1dacdda
-# ╠═0307085b-816f-469f-8811-60af02cfcb67
-# ╠═29859854-0d17-42ba-8b1d-8788511840c9
+# ╠═5e80e0ad-9ed9-467d-a5d6-fb585bfecf18
+# ╠═f14e8857-340f-4f30-85da-28560361360f
 # ╠═6c092147-c295-4ee5-9ee3-6e04c2aaaf98
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
@@ -432,14 +542,24 @@ end
 # ╠═b57a31e4-5394-4c32-9020-5ade8a1018c1
 # ╠═ab387f41-8d0f-4a1f-8dbf-b90396914c75
 # ╠═c5ca7506-5952-4973-879e-e9848bb72d03
-# ╠═f3eac4e6-0b4b-4d54-83ac-213b78fcb522
+# ╠═6ee77988-5d0b-49db-87cb-a041c1ed4a28
+# ╠═99726828-62ad-465a-a961-4340b143cf6a
+# ╠═933be42e-c33d-4afe-a40d-f016d1839519
+# ╟─f3eac4e6-0b4b-4d54-83ac-213b78fcb522
 # ╠═f74f597a-908b-4569-8de8-219abba31afd
 # ╠═eab8e0d4-0a40-48b6-9689-0c102d883a96
 # ╠═c15d2045-f6c2-42d1-947e-fb4b31daeb99
 # ╠═20fe601c-874c-4a37-b3fa-b229232a0f4f
 # ╠═b0e0a366-8bac-4cf6-8b40-33d517b41e47
 # ╠═29dba8f1-b4a6-41da-8323-437447c9d888
-# ╠═620aa7d7-0b02-475d-80a9-1e721d6144bf
+# ╟─cf7b3e70-2a92-4fe3-928f-6f842899893c
+# ╠═8775835f-3e50-4a88-a3fe-6439a1bcbd22
+# ╠═740a8f04-5f19-466b-9fcd-767de3ad06b9
+# ╠═1823b424-5e65-49d7-b1a1-75035b2006df
+# ╠═daad6357-9231-4025-a084-267ecc28eac2
+# ╠═03636b4c-6d14-4ae3-8f72-411eddc60eaa
+# ╠═70aad4cf-0a09-46c2-999e-a9bec307a4f4
+# ╠═dbc48359-f4a2-41a3-a26d-57dadf0bb3e4
 # ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
 # ╠═31096853-9eaa-40e2-90aa-b248df77f73f
 # ╠═65a10161-cbeb-49fe-b8d1-075ffe346e43
@@ -455,9 +575,9 @@ end
 # ╠═aac80d15-72c9-4091-befa-1b7fa7127c63
 # ╠═4bfc9046-a5b2-4a72-82a7-3547066d7064
 # ╠═d74e062b-d7b0-422e-9f1b-102afee26d7b
+# ╠═8e52c3d5-aef1-4b13-9316-dd13f76e2ab3
 # ╠═16bd1702-b471-44da-96df-aca63c46a604
 # ╠═e2dc5d97-0c8f-49dd-bb1a-320b45132cca
-# ╠═fb95bc32-9cd2-485e-96f1-e8bebfbc8b59
 # ╠═b76fbfe9-8a0d-4816-ae81-6fb8597aaf80
 # ╠═81de6949-c021-49ea-82f5-b300c03a2cc0
 # ╠═12220e1c-9a98-447f-b3a4-b579b2989b68

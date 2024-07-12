@@ -459,7 +459,7 @@ let
 		fig = Figure()
 
 	dr = 0.1
-	limits = (obs_today.pmra - dr, obs_today.pmra + dr, obs_today.pmdec - dr, obs_today.pmdec + dr)
+	limits = (obs_cen.pmra - dr, obs_cen.pmra + dr, obs_cen.pmdec - dr, obs_cen.pmdec + dr)
 	
 	ax = Axis(fig[1,1],
 		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
@@ -471,18 +471,21 @@ let
 	filt = filt_leading .& filt_dist
 	hist2d!(stars.pmra[filt], stars.pmdec[filt], weights=stars.weights[filt], limits=limits, colorscale=log10, colorrange=(1e-15, nothing), bins=100)
 
-	scatter!(obs_today.pmra, obs_today.pmdec)
+	scatter!(obs_cen.pmra, obs_cen.pmdec)
 	
 
 	fig
 end
+
+# ╔═╡ fc3a1a85-c317-4b45-b9c4-50d15e0eb9da
+obs_cen.pmra
 
 # ╔═╡ 79dd7e3d-8564-4389-960b-05512b0143c0
 let
 	fig = Figure()
 	
 	dr = 0.1
-	limits = (obs_today.pmra - dr, obs_today.pmra + dr, obs_today.pmdec - dr, obs_today.pmdec + dr)
+	limits = (obs_cen.pmra - dr, obs_cen.pmra + dr, obs_cen.pmdec - dr, obs_cen.pmdec + dr)
 	
 	ax = Axis(fig[1,1],
 		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
@@ -494,7 +497,7 @@ let
 	filt = filt_trailing .& filt_dist
 	hist2d!(stars.pmra[filt], stars.pmdec[filt], weights=stars.weights[filt], colorscale=log10, colorrange=(1e-15, nothing), bins=100, limits=limits)
 
-	scatter!(obs_today.pmra, obs_today.pmdec)
+	scatter!(obs_cen.pmra, obs_cen.pmdec)
 	
 
 	fig
@@ -683,6 +686,7 @@ end
 # ╠═e098260a-718a-4f43-b12c-cab0a1302b90
 # ╠═be0158cf-c322-4147-8f01-8b6a715bc0dc
 # ╠═5eb22695-57c4-4ebf-b412-588f5e366bf5
+# ╠═fc3a1a85-c317-4b45-b9c4-50d15e0eb9da
 # ╠═79dd7e3d-8564-4389-960b-05512b0143c0
 # ╠═65ca1318-8f62-4133-ab14-f3d3e1190029
 # ╠═1b31eabc-3b6f-4d82-9cbb-62f1c53408de
