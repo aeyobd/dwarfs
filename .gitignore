@@ -47,3 +47,5 @@ gr-temp
 notebooks/density_fits/results
 
 *backup*.jl
+
+*.cov
