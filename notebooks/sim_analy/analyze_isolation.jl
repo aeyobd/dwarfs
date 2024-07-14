@@ -14,6 +14,9 @@ begin
 	import LilGuys as lguys
 end
 
+# ╔═╡ 07ce4cef-df87-494b-8f16-02489e88bca6
+using LilGuys
+
 # ╔═╡ 374489bc-627f-4fc9-9734-7c49456710ac
 begin 
 	import DataFrames, CSV
@@ -27,25 +30,22 @@ using LsqFit: curve_fit
 # ╔═╡ 96c91860-f3cc-4531-a8cf-39c85887b394
 import TOML
 
+# ╔═╡ 6dc6b811-5993-42d1-a6ac-07920aa4f564
+save = CairoMakie.save
+
 # ╔═╡ 7eb3e35f-c2a5-499e-b884-85fb59060ec5
 md"""
 # Inputs
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6_s0.014"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6_rescaled"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
 
 # ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
-halo = lguys.NFW(; lguys.dict_to_tuple(halo_params)...)
-
-# ╔═╡ 5f5dc5a8-8230-4301-b59b-46f2dc55e580
-lguys.calc_V_circ_max(halo) * lguys.V0
-
-# ╔═╡ 46ce993c-50a1-43a5-8d55-132fac90de33
-lguys.calc_M200(halo)
+halo = lguys.NFW(; lguys.dict_to_tuple(halo_params["profile"])...)
 
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
 begin 
@@ -55,16 +55,19 @@ begin
 	cens = CSV.read(joinpath(name, "out/centres.csv"), DataFrames.DataFrame)
 	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
 	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
+
+	out.x_cen .= x_cen
+	out.v_cen .= v_cen
 end
 
-# ╔═╡ 4710d1b5-fd6f-4369-8398-64e9123c8b41
-idx_i = 10; idx_f = length(out)
+# ╔═╡ dd31d3ee-7fdf-46f5-b213-45faae93ae5e
+idxs = [1, 10, length(out)]
+
+# ╔═╡ 38ab4838-960e-4321-b70c-6f14584e9e27
+snaps = [out[i] for i in idxs]
 
 # ╔═╡ 97f89831-00e6-49a2-a712-ac47fd2dee47
-out.times[idx_f] * lguys.T0
-
-# ╔═╡ 7a43ee65-0fce-4e4b-9226-714f4cb0e106
-out.times[idx_i] * lguys.T0
+out.times[idxs] * lguys.T2GYR
 
 # ╔═╡ c4fc0a87-c75f-4528-aa20-75cc7aff856c
 figure_dir = joinpath(name, "figures/")
@@ -77,16 +80,31 @@ md"""
 # Initial/Final
 """
 
-# ╔═╡ c5672da9-0dad-4d22-abe5-9e186ccde02d
-begin
-	snap_i = out[idx_i]
-	snap_i.x_cen = x_cen[:, idx_i]
-	snap_i.v_cen = v_cen[:, idx_i]
+# ╔═╡ c1e80233-9b33-4e36-b6f1-788b392c9236
+snaps[1].x_cen
 
-	snap_f = out[idx_f]
-	snap_f.x_cen = x_cen[:, idx_f]
-	snap_f.v_cen = v_cen[:, idx_f]
+# ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
 
+
+	for i in eachindex(snaps)
+		rc, Vc = lguys.calc_V_circ(snaps[i])
+		lines!(log10.(rc), Vc * V2KMS, label="$i")
+	end
+
+	# V_nfw(x) = lguys.calc_V_circ(halo, x)
+
+	# scatter!(log10.(fit[:r_c]), fit[:V_c] * V2KMS)
+	# axislegend()
+	
+	# log_r = LinRange(-2, 2.5, 1000)
+	# y = V_nfw.(10 .^ log_r)
+	# lines!(log_r, y * V2KMS)
+
+	save(figure_dir * "v_circ.pdf", fig)
+	fig
 end
 
 # ╔═╡ f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
@@ -114,36 +132,8 @@ function fit_v_r_max(rc, Vc; percen=80)
 	)
 end
 
-# ╔═╡ 036cdd2f-1856-463d-bbbd-9707ee7c2605
-plot(LinRange(0, 10, 1000), Vc_model(LinRange(0, 10, 1000), [1, 1]))
-
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
-fit = fit_v_r_max(lguys.calc_V_circ(snap_i)...)
-
-# ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
-
-	rc, Vc = lguys.calc_V_circ(snap_i)
-	lines!(log10.(rc), Vc * lguys.V0, label="initial")
-
-	rc, Vc = lguys.calc_V_circ(snap_f)
-	lines!(log10.(rc), Vc * lguys.V0, label="final")
-
-	V_nfw(x) = lguys.calc_V_circ(halo, x)
-
-	scatter!(log10.(fit[:r_c]), fit[:V_c] * lguys.V0)
-
-	axislegend()
-	
-	log_r = LinRange(-2, 2.5, 1000)
-	y = V_nfw.(10 .^ log_r)
-	lines!(log_r, y * lguys.V0)
-
-	save(figure_dir * "v_circ.pdf", fig)
-	fig
-end
+fit = fit_v_r_max(lguys.calc_V_circ(snaps[end])...)
 
 # ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
 md"""
@@ -166,31 +156,6 @@ function calc_phase_dens(snap; bins=100)
 	h
 end
 
-# ╔═╡ 478e9ce6-58d0-4476-9673-a0813bb0b5dd
-h_p = calc_phase_dens(snap_i)
-
-# ╔═╡ e71faa28-ae0d-4d01-88d6-a14cc378b73d
-sum(h_p.values .*diff(4π / 3 .* h_p.ybins .^ 3) 
-.* diff(4π / 3 .* h_p.xbins .^ 3) )
-
-# ╔═╡ cc2aae46-e359-458f-a613-154da4419517
-nu_dm = dropdims(sum(
-		h_p.values .* diff(4π / 3 .* h_p.ybins .^ 3)
-	, dims=2), dims=2) 
-
-# ╔═╡ c20c4dff-1134-440c-b207-f81e0f53b704
-σ_v = sqrt(
-	sum(
-	 h_p.values .* midpoints(h_p.ybins) .^ 2 .* diff(4π / 3 .* h_p.ybins .^ 3) .* diff(4π / 3 .* h_p.xbins .^ 3)
-)
-) * lguys.V0
-
-# ╔═╡ bf80a88a-39ce-474b-bba1-89ef0fdb0127
-diff(4π / 3 .* h_p.ybins .^ 3)
-
-# ╔═╡ 1ba2009b-3800-4cb5-a6d9-f9a385ba4a5f
-midpoints(h_p.ybins) .^ 2 .* diff(4π .* h_p.ybins)
-
 # ╔═╡ 8a097a37-a903-4627-ba25-0a1f0289955f
 function plot_phase_dens!(snap)
 	h = calc_phase_dens(snap)
@@ -198,56 +163,46 @@ function plot_phase_dens!(snap)
 	heatmap!(h, colorscale=log10, colorrange=(1e-15 * maximum(h.values), maximum(h.values)))
 end
 
-# ╔═╡ ff2b82f7-0b62-4dad-86fd-26a0eeca42b6
-let
+# ╔═╡ 9996a264-743f-4d39-a5fe-1cda5b99930b
+function plot_phase_dens(snap)
 	fig, ax = FigAxis(
 		xscale=log10
 	)
 
-	h = plot_phase_dens!(snap_f)
+	h = plot_phase_dens!(snap)
 
 	Colorbar(fig[1, 2], h)
 	fig
 end
 
-# ╔═╡ 9d8bb78f-2a73-471a-8c44-87d668c007a9
-lguys.calc_v_rad(snap_i)
+# ╔═╡ 97b87dc9-1fcc-4b8c-a6bb-80cd573ed45a
+for snap in snaps
+	@info plot_phase_dens(snap)
+end
 
 # ╔═╡ 72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
-let
+function plot_rv_dens(snap_i)
 	fig = Figure(size=(700, 300))
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="velocity (km/s)" )
 
 	hist_kwargs = (; bins=100, colorscale=log10, colorrange=(1, nothing))
 	
-	h = Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * lguys.V0; hist_kwargs...)
+	h = Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * V2KMS; hist_kwargs...)
 
-	# x = LinRange(0, 2, 1000)
-	# e = lguys.calc_Φ.(halo, 10 .^ x)
-	# y = sqrt.(-2e) .* lguys.V0
-	# lines!(x, y)
-
-	# y = lguys.calc_V_circ.(halo, 10 .^ x) .* lguys.V0
-	# lines!(x, y)
-
-	ax2 = Axis(fig[1,2] )
-	Arya.hist2d!(ax2, log10.(lguys.calc_r(snap_f.positions)), lguys.calc_r(snap_f.velocities) * lguys.V0;
-	hist_kwargs...)
-
-	linkaxes!(ax, ax2)
-	hideydecorations!(ax2)
-
-	Colorbar(fig[1, 3], h)
+	Colorbar(fig[1, 2], h)
 
 	fig
 end
+
+# ╔═╡ 3f625247-0d7d-4f6d-bf84-a40f19f1849a
+plot_rv_dens(snaps[1])
 
 # ╔═╡ 9b88e37a-93eb-4c03-b654-0cd9284fc811
 function plot_phase_rvr!(snap; bins=100)
 	x = lguys.calc_r(snap)
 	v = lguys.calc_v_rad(snap)
 
-	h = Arya.histogram2d(x, v * lguys.V0, bins)
+	h = Arya.histogram2d(x, v *V2KMS, bins)
 
 	heatmap!(h, colorscale=log10, colorrange=(1, maximum(h.values)))
 end
@@ -257,7 +212,7 @@ function plot_phase_xvx!(snap; bins=100)
 	x = asinh.(snap.positions[1, :])
 	v = snap.velocities[1, :]
 
-	h = Arya.histogram2d(x, v * lguys.V0, bins)
+	h = Arya.histogram2d(x, v * V2KMS, bins)
 
 	heatmap!(h, colorscale=log10, colorrange=(1, maximum(h.values)))
 end
@@ -267,7 +222,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="radial velocity (km/s)" )
 
-	h = plot_phase_rvr!(snap_f)
+	h = plot_phase_rvr!(snaps[end])
 
 	Colorbar(fig[1, 2], h)
 
@@ -279,7 +234,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="asinh x / kpc", ylabel="x velocity (km/s)" )
 
-	h = plot_phase_xvx!(snap_i)
+	h = plot_phase_xvx!(snaps[1])
 
 	Colorbar(fig[1, 2], h)
 
@@ -292,56 +247,27 @@ the dark matter distribution of  the snapshot (initial and final)
 """
 
 # ╔═╡ b9746093-0f2f-4478-82ba-00911c8fcceb
-let
+function plot_xy_dens(snap_i)
 	fig = Figure()
 	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+	xlabel = "x / kpc", ylabel="y/kpc")
 
 	bins = LinRange(-10, 10, 100)
 	hist_kwargs = (; bins=bins, colorscale=log10, colorrange=(1, nothing))
 	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :]; hist_kwargs...)
-
-	ax2 = Axis(fig[1,2], aspect=1,
-	title="final")
-	
-	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :]; hist_kwargs...)
-	hideydecorations!(ax2)
-	linkaxes!(ax, ax2)
-
 	
 	fig
 end
 
-# ╔═╡ 82a8514e-c1de-4446-918b-9156734c213e
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "vx / kpc", ylabel="vy/kpc", title="initial")
-
-	bins = LinRange(-60, 60, 100)
-	hist_kwargs = (; bins=bins, colorscale=log10, colorrange=(1, nothing))
-	Arya.hist2d!(ax, snap_i.velocities[1, :] .* lguys.V0, snap_i.velocities[2, :] .* lguys.V0; hist_kwargs...)
-
-	ax2 = Axis(fig[1,2], aspect=1,
-	title="final")
-	
-	Arya.hist2d!(ax2, snap_f.velocities[1, :] .* lguys.V0, snap_f.velocities[2, :] .* lguys.V0; hist_kwargs...)
-	hideydecorations!(ax2)
-	linkaxes!(ax, ax2)
-	fig
+# ╔═╡ 3cc0df1f-dca3-4355-a969-3874aa414d1a
+for snap in snaps
+	@info plot_xy_dens(snap)
 end
 
 # ╔═╡ 24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 md"""
 stellar distribution of initial and final snapshot
 """
-
-# ╔═╡ 106cbda4-57e0-459b-868b-b44339c944fc
-begin 
-	ps = lguys.extract_vector(snap_f, :positions)
-	radii = lguys.calc_r(ps)
-
-end
 
 # ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 function plot_ρ_dm!(snap; kwargs...)
@@ -352,36 +278,16 @@ function plot_ρ_dm!(snap; kwargs...)
 	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
 end
 
-# ╔═╡ ac0dfd81-d040-4d45-97d0-a178ff9fb149
-let
-	fig, ax = FigAxis(
-		limits=(nothing, (-15, 5))
-	)
-	x = log10.(midpoints(h_p.xbins))
-	lines!(x, log10.(nu_dm))
-	plot_ρ_dm!(snap_f, label="final")
-
-fig
-end
-
-# ╔═╡ 27f8deff-96ae-4d9a-a110-d146ac34965a
-begin 
-	function plot_ρ_dm(snap)
-		plot()
-		plot_ρ_dm!(snap)
-	end
-
-end
-
 # ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 let 
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
 	limits=(-1, 2.5, -10, -2))
-	plot_ρ_dm!(snap_i, label="initial")
-	plot_ρ_dm!(snap_f, label="final")
 
+	for i in eachindex(snaps)
+		plot_ρ_dm!(snaps[i], label="$i")
+	end
 
 	log_r = LinRange(-2, 3, 1000)
 	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
@@ -398,7 +304,7 @@ end
 # ╔═╡ 4e45e756-8a9c-43b4-aac7-2016347f5afb
 let
 	skip = 10
-	snap = snap_i
+	snap = snaps[1]
 	idx = 1:skip:length(snap)
 	r = sort(lguys.calc_r(snap))[idx]
 	
@@ -418,13 +324,13 @@ let
 end
 
 # ╔═╡ e33d56a7-7a0e-4fa9-8f0d-041b43584d59
-sum(lguys.calc_r(snap_i) .< 0.1)
+sum(lguys.calc_r(snaps[end]) .< 0.1)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
 	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", )
 	
-	hist!(log10.(lguys.calc_r(snap_i)), label="")
+	hist!(log10.(lguys.calc_r(snaps[1])), label="")
 
 	fig
 end
@@ -433,28 +339,28 @@ end
 let
 	fig, ax = FigAxis( ylabel="count", xlabel="e spec", )
 
-	e = lguys.calc_E_spec(snap_i)
-	stephist!(log10.(e[e .> 0]), label="")
-	e = lguys.calc_E_spec(snap_f)
-	stephist!(log10.(e[e .> 0]), label="")
+	for i in eachindex(snaps)
+		e = lguys.calc_E_spec(snaps[i])
+		stephist!(log10.(e[e .> 0]), label="$i")
+	end
 	
 	fig
 end
 
 # ╔═╡ 1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
-println(sum(lguys.calc_r(snap_i) .< 0.05))
+println(sum(lguys.calc_r(snaps[end]) .< 0.05))
 
 # ╔═╡ fb0dec74-aaab-43a4-9b37-d13634c5dcad
 md"""
 # Time variation
 """
 
-# ╔═╡ 5b9a64a1-38c1-4f4d-aac3-d91663c368a3
-lguys.calc_L_tot(snap_i)
+# ╔═╡ 8e87001c-4bc0-4580-a0b4-43fe24d92c99
+skip = 1
 
 # ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 let 
-	idx = 1:10:length(out)
+	idx = 1:skip:length(out)
 
 	Ls = hcat([lguys.calc_L_tot(snap) for snap in out[idx]]...)
 
@@ -464,7 +370,7 @@ let
 		ylabel="total angular momentum component"
 	)
 
-	t = out.times[idx] * lguys.T0
+	t = out.times[idx] * T2GYR
 	
 	for i in 1:3
 		lines!(t, Ls[i, :], label=["x", "y", "z"][i])
@@ -478,9 +384,12 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="relative change in energy")
-	idx = 1:10:length(out)
+	idx = 1:skip:length(out)
 	Es = [lguys.calc_E_tot(snap) for snap in out[idx]]
-	lines!((Es ./ Es[1]))
+	scatter!((Es ./ Es[1]))
+
+	save(figure_dir * "energy.pdf", fig)
+
 	fig
 end
 
@@ -489,12 +398,15 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="-V / 2T (virial ratio approx 1)")
 
-	idx = 1:10:length(out)
+	idx = 1:1skip:length(out)
 	
 	E_kin = [sum(0.5 * lguys.calc_v(snap) .^ 2) for snap in out[idx]]
 	E_pot = [0.5 * sum(snap.Φs) for snap in out[idx]]
 
-	lines!(-E_pot ./ 2E_kin)
+	scatter!(-E_pot ./ 2E_kin)
+
+	save(figure_dir * "virial.pdf", fig)
+
 	fig
 end
 
@@ -509,21 +421,24 @@ let
 end
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
-lguys.Plots.plot_xyz(v_cen * lguys.V0)
+lguys.Plots.plot_xyz(v_cen * V2KMS, units=L" / $km s^{-1}$")
+
+# ╔═╡ b5c71290-d2de-424d-b026-f1ae15d7d86e
+percentile(lguys.calc_r(out[1]), [5, 10, 50, 90, 95])
 
 # ╔═╡ dc221349-eb61-4ace-8de3-a6c50249aca0
-function find_radii_fracs(out, x_cen) 
+function find_radii_fracs(out, x_cen; skip=10) 
 	rs = Vector[]
 	Ms = Vector[]
 	rs_s = Vector[]
 
-	percens = [0.003, 0.01, .03, .1, .3, .9]
+	percens = [0.1, 1, 3, 10, 50, 90, 97]
 	
-	for i in 1:length(out)
-		r = lguys.calc_r(out[i].positions .- x_cen[:, i])
-		s_idx = sortperm(r)
-		push!(rs, r[s_idx])
-			end
+	for i in 1:skip:length(out)
+		r = lguys.calc_r(out[i])
+		
+		push!(rs, percentile(r, percens))
+	end
 
 	rs = hcat(rs...)
 	rs_s = hcat(rs_s...)
@@ -533,10 +448,10 @@ function find_radii_fracs(out, x_cen)
 end
 
 # ╔═╡ 34244a2e-9501-451c-bd77-bebfebde2a78
-percens, rs, rs_s = find_radii_fracs(out, x_cen)
+percens, rs, rs_s = find_radii_fracs(out, x_cen, skip=skip)
 
 # ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
-times = out.times * lguys.T0
+times = out.times * T2GYR
 
 # ╔═╡ f21cfe22-95f3-485d-902b-b022a41548c2
 let 
@@ -544,10 +459,9 @@ let
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r containing fraction of DM")
 	
 	for i in eachindex(percens)
-		Npoints = round.(Int, length(out[1]) * percens[i])
-		label = "$(round(Npoints/length(out[1]), digits=3))"
-		y = log10.(rs[Npoints, :])
-		lines!(times, y, 				
+		label = "$(percens[i]) "
+		y = log10.(rs[i, :])
+		lines!(times[1:skip:end], y, 				
 			label=label, color=i, colorrange=(1, length(percens))
 		)
 	end
@@ -564,54 +478,45 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
+# ╠═07ce4cef-df87-494b-8f16-02489e88bca6
 # ╠═374489bc-627f-4fc9-9734-7c49456710ac
 # ╠═96c91860-f3cc-4531-a8cf-39c85887b394
+# ╠═6dc6b811-5993-42d1-a6ac-07920aa4f564
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
-# ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
-# ╠═4710d1b5-fd6f-4369-8398-64e9123c8b41
 # ╠═79b07d75-fb05-4833-ac2c-ea0e9c24e791
-# ╠═5f5dc5a8-8230-4301-b59b-46f2dc55e580
-# ╠═46ce993c-50a1-43a5-8d55-132fac90de33
+# ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
+# ╠═dd31d3ee-7fdf-46f5-b213-45faae93ae5e
+# ╠═38ab4838-960e-4321-b70c-6f14584e9e27
 # ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
-# ╠═7a43ee65-0fce-4e4b-9226-714f4cb0e106
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═c4fc0a87-c75f-4528-aa20-75cc7aff856c
 # ╠═327f790d-e652-48b2-92e5-e2dffd5b15e2
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
-# ╠═c5672da9-0dad-4d22-abe5-9e186ccde02d
+# ╠═c1e80233-9b33-4e36-b6f1-788b392c9236
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╠═acb20956-3339-414a-91fb-6003ad385242
 # ╠═f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
 # ╠═7299dbaf-b332-4e53-85de-7acbfa0c3853
 # ╠═69cf741e-efc0-4031-a17f-a8126a77580b
 # ╠═7d717638-1caf-4267-b9f5-c060c19e2849
-# ╠═036cdd2f-1856-463d-bbbd-9707ee7c2605
 # ╠═9a9f4dc1-3573-41ee-be1a-eee39d3371b0
 # ╠═a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
-# ╠═478e9ce6-58d0-4476-9673-a0813bb0b5dd
-# ╠═e71faa28-ae0d-4d01-88d6-a14cc378b73d
-# ╠═cc2aae46-e359-458f-a613-154da4419517
-# ╠═c20c4dff-1134-440c-b207-f81e0f53b704
-# ╠═bf80a88a-39ce-474b-bba1-89ef0fdb0127
-# ╠═1ba2009b-3800-4cb5-a6d9-f9a385ba4a5f
-# ╠═ac0dfd81-d040-4d45-97d0-a178ff9fb149
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f
-# ╠═ff2b82f7-0b62-4dad-86fd-26a0eeca42b6
-# ╠═9d8bb78f-2a73-471a-8c44-87d668c007a9
+# ╠═9996a264-743f-4d39-a5fe-1cda5b99930b
+# ╠═97b87dc9-1fcc-4b8c-a6bb-80cd573ed45a
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
+# ╠═3f625247-0d7d-4f6d-bf84-a40f19f1849a
 # ╠═9b88e37a-93eb-4c03-b654-0cd9284fc811
 # ╠═564c6bcb-04be-4a1c-8f01-f7d76be74eb8
 # ╠═1a320f74-5cb7-44c5-8a59-c6fced771f52
 # ╠═c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
-# ╠═82a8514e-c1de-4446-918b-9156734c213e
+# ╠═3cc0df1f-dca3-4355-a969-3874aa414d1a
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
-# ╠═106cbda4-57e0-459b-868b-b44339c944fc
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
-# ╠═27f8deff-96ae-4d9a-a110-d146ac34965a
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
@@ -619,12 +524,13 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═5f1c61f9-50d4-43cb-aa78-fa85314f26b7
 # ╠═1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
 # ╟─fb0dec74-aaab-43a4-9b37-d13634c5dcad
-# ╠═5b9a64a1-38c1-4f4d-aac3-d91663c368a3
+# ╠═8e87001c-4bc0-4580-a0b4-43fe24d92c99
 # ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═e3a45a8e-cc52-4e9d-9db3-97109b59fc77
 # ╠═91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
+# ╠═b5c71290-d2de-424d-b026-f1ae15d7d86e
 # ╠═dc221349-eb61-4ace-8de3-a6c50249aca0
 # ╠═34244a2e-9501-451c-bd77-bebfebde2a78
 # ╠═f21cfe22-95f3-485d-902b-b022a41548c2
