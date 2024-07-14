@@ -33,7 +33,7 @@ md"""
 dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  joinpath(dir, "properties.toml")
+properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
 orbit_file = joinpath(dir, "orbit.csv")
@@ -145,6 +145,18 @@ end
 # ╔═╡ ecf7c820-81a4-4cb7-a794-b7835c77811e
 χ2 = calc_χ2s(obs_c, obs_today)
 
+# ╔═╡ 319b905c-2d08-4a95-9d95-9cd26e2f5b1f
+times = cens.t * T2GYR
+
+# ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
+t_min = 5
+
+# ╔═╡ 9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
+t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
+
+# ╔═╡ d9df3376-6ca1-4701-afb5-2df994bb3442
+idx_f = searchsortedfirst(times, t_end)
+
 # ╔═╡ cdde517a-1b3e-4d96-9156-4a8f72b795e9
 let
 	fig = Figure()
@@ -155,12 +167,10 @@ let
 	)
 	
 	lines!(cens.t, χ2,)
+	scatter!(cens.t[idx_f], χ2[idx_f])
 
 	fig
 end
-
-# ╔═╡ ddd5821b-5e65-4220-831f-886b6713d026
-idx_f = argmin(χ2)
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = calc_r(x_cen)
@@ -440,7 +450,10 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╠═a179323f-4878-4021-b8d4-69ca733658cb
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9
-# ╠═ddd5821b-5e65-4220-831f-886b6713d026
+# ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
+# ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
+# ╠═9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
+# ╠═d9df3376-6ca1-4701-afb5-2df994bb3442
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
 # ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
 # ╠═7a30bd90-946e-418c-8339-be64c37cda76
