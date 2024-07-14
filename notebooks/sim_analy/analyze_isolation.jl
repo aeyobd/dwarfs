@@ -39,7 +39,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6_rescaled"
+name = "/arc7/home/dboyea/sculptor/isolation/1e4/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
@@ -48,17 +48,7 @@ halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
 halo = lguys.NFW(; lguys.dict_to_tuple(halo_params["profile"])...)
 
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
-begin 
-	println("loading model from $name")
-	out = lguys.Output(joinpath(name, "out/combined.hdf5"))
-
-	cens = CSV.read(joinpath(name, "out/centres.csv"), DataFrames.DataFrame)
-	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
-	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
-
-	out.x_cen .= x_cen
-	out.v_cen .= v_cen
-end
+out = lguys.Output(joinpath(name, "out/combined.hdf5"))
 
 # ╔═╡ dd31d3ee-7fdf-46f5-b213-45faae93ae5e
 idxs = [1, 10, length(out)]
@@ -90,7 +80,7 @@ let
 
 
 	for i in eachindex(snaps)
-		rc, Vc = lguys.calc_V_circ(snaps[i])
+		rc, Vc = lguys.calc_v_circ(snaps[i])
 		lines!(log10.(rc), Vc * V2KMS, label="$i")
 	end
 
@@ -133,7 +123,7 @@ function fit_v_r_max(rc, Vc; percen=80)
 end
 
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
-fit = fit_v_r_max(lguys.calc_V_circ(snaps[end])...)
+fit = lguys.fit_v_r_max(snaps[end])
 
 # ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
 md"""
@@ -412,7 +402,7 @@ end
 
 # ╔═╡ 91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
 let
-	fig = lguys.Plots.plot_xyz(x_cen)
+	fig = lguys.Plots.plot_xyz(out.x_cen)
 	fig.content[1].title = "centre"
 
 	save(figure_dir * "centre.pdf", fig)
@@ -421,7 +411,7 @@ let
 end
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
-lguys.Plots.plot_xyz(v_cen * V2KMS, units=L" / $km s^{-1}$")
+lguys.Plots.plot_xyz(out.v_cen * V2KMS, units=L" / $km s^{-1}$")
 
 # ╔═╡ b5c71290-d2de-424d-b026-f1ae15d7d86e
 percentile(lguys.calc_r(out[1]), [5, 10, 50, 90, 95])
@@ -448,7 +438,7 @@ function find_radii_fracs(out, x_cen; skip=10)
 end
 
 # ╔═╡ 34244a2e-9501-451c-bd77-bebfebde2a78
-percens, rs, rs_s = find_radii_fracs(out, x_cen, skip=skip)
+percens, rs, rs_s = find_radii_fracs(out, out.x_cen, skip=skip)
 
 # ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
 times = out.times * T2GYR
@@ -501,7 +491,7 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═69cf741e-efc0-4031-a17f-a8126a77580b
 # ╠═7d717638-1caf-4267-b9f5-c060c19e2849
 # ╠═9a9f4dc1-3573-41ee-be1a-eee39d3371b0
-# ╠═a49d1735-203b-47dd-81e1-500ef42b054e
+# ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f
 # ╠═9996a264-743f-4d39-a5fe-1cda5b99930b

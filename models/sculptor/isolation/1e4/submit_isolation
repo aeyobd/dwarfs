@@ -9,7 +9,7 @@
 # #SBATCH -p              cosma
 
 
-source $HOME/slurm_header.sh
+# source $HOME/slurm_header.sh
 
 rm out/* 
 rm data/* 
