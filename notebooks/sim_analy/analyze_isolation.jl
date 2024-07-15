@@ -63,7 +63,7 @@ out.times[idxs] * lguys.T2GYR
 figure_dir = joinpath(name, "figures/")
 
 # ╔═╡ 327f790d-e652-48b2-92e5-e2dffd5b15e2
-mkdir(figure_dir)
+mkpath(figure_dir)
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -72,30 +72,6 @@ md"""
 
 # ╔═╡ c1e80233-9b33-4e36-b6f1-788b392c9236
 snaps[1].x_cen
-
-# ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
-
-
-	for i in eachindex(snaps)
-		rc, Vc = lguys.calc_v_circ(snaps[i])
-		lines!(log10.(rc), Vc * V2KMS, label="$i")
-	end
-
-	# V_nfw(x) = lguys.calc_V_circ(halo, x)
-
-	# scatter!(log10.(fit[:r_c]), fit[:V_c] * V2KMS)
-	# axislegend()
-	
-	# log_r = LinRange(-2, 2.5, 1000)
-	# y = V_nfw.(10 .^ log_r)
-	# lines!(log_r, y * V2KMS)
-
-	save(figure_dir * "v_circ.pdf", fig)
-	fig
-end
 
 # ╔═╡ f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
 quadratic(x, p) = @. p[2] * (log10(x) - p[1])^2
@@ -124,6 +100,30 @@ end
 
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
 fit = lguys.fit_v_r_max(snaps[end])
+
+# ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
+
+
+	for i in eachindex(snaps)
+		rc, Vc = lguys.calc_v_circ(snaps[i])
+		lines!(log10.(rc), Vc * V2KMS, label="$i")
+	end
+
+	V_nfw(x) = lguys.calc_V_circ(halo, x)
+
+	scatter!(log10.(fit[:r_c]), fit[:V_c] * V2KMS)
+	axislegend()
+	
+	log_r = LinRange(-2, 2.5, 1000)
+	y = V_nfw.(10 .^ log_r)
+	lines!(log_r, y * V2KMS)
+
+	save(figure_dir * "v_circ.pdf", fig)
+	fig
+end
 
 # ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
 md"""
