@@ -21,20 +21,31 @@ using LilGuys
 # ╔═╡ cf6a7cbb-1034-4026-a3f3-1e854d2929e2
 using FITSIO
 
+# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
+md"""
+Given a stellar probability file, calculates initial-final density profiles, 
+and projects stars onto the sky
+"""
+
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
+
+# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
+md"""
+# Inputs
+"""
 
 # ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1_V50"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
 starsname = "exp2d_rs0.1"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
-r_scale = 1.5
+r_scale = 1
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
 starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
@@ -50,17 +61,6 @@ begin
 	close(f)
 	
 end
-
-# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
-md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
-"""
-
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = "/astro/dboyea/sculptor/isolation/1e6/stars/$starsname.toml"
@@ -1186,8 +1186,6 @@ end
   ╠═╡ =#
 
 # ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
-# ╠═╡ disabled = true
-#=╠═╡
 let
 	fig = Figure()
 
@@ -1200,13 +1198,12 @@ let
 	)
 
 	idx = 1:10:length(out)
-	vs = [calc_σ_v(out[i]) for i in idx]
+	vs = [calc_σv(out[i]) for i in idx]
 
-	scatter!(out.times[idx] * lguys.T0, vs)
+	scatter!(out.times[idx] * T2GYR, vs)
 	
 	fig
 end
-  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╠═377284f2-dcee-44d3-9a04-728605cea92a

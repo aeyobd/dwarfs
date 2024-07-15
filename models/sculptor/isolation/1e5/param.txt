@@ -20,7 +20,7 @@ MaxMemSize                2400    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax	                  50
+TimeMax	                  1176
 
 %---- Cosmological parameters
 Omega0	                  0

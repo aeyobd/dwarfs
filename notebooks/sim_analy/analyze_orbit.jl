@@ -15,6 +15,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ 2c702eb7-ebb6-44c9-8e01-ca52d011c014
+using HDF5
+
 # ╔═╡ 8b41af50-9ae0-475b-bacc-3799e2949b30
 md"""
 Analyzes the orbit of a n-body halo in a gravitational potential.
@@ -30,7 +33,7 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
+dir = "/arc7/home/dboyea/sculptor/orbits/orbit1_V50/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
@@ -59,10 +62,11 @@ obs_today["ra_err"] = r_h
 obs_today["dec_err"] = r_h 
 
 # ╔═╡ b250bf10-c228-4b14-938a-35561ae871d7
-begin 
-	cens = CSV.read(dir * "out/centres.csv", DataFrames.DataFrame)
-	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
-	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
+h5open(dir * "out/centres.hdf5", "r") do  f
+	global x_cen, v_cen, t
+	x_cen = read(f["positions"])
+	v_cen = read(f["velocities"])
+	t = read(f["times"])
 end
 
 # ╔═╡ bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
@@ -107,7 +111,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
 	r = calc_r(x_cen)
-	lines!(cens.t * T2GYR, r, label="model")
+	lines!(t * T2GYR, r, label="model")
 	lines!(T2GYR*(orbit_expected.t .- orbit_expected.t[begin]), calc_r(x_cen_exp),
 		label="expected"
 	)
@@ -146,7 +150,7 @@ end
 χ2 = calc_χ2s(obs_c, obs_today)
 
 # ╔═╡ 319b905c-2d08-4a95-9d95-9cd26e2f5b1f
-times = cens.t * T2GYR
+times = t * T2GYR
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
 t_min = 5
@@ -166,8 +170,8 @@ let
 		yscale=log10
 	)
 	
-	lines!(cens.t, χ2,)
-	scatter!(cens.t[idx_f], χ2[idx_f])
+	lines!(t, χ2,)
+	scatter!(t[idx_f], χ2[idx_f])
 
 	fig
 end
@@ -185,7 +189,7 @@ vr = [dot(x_cen[:, i], v_cen[:, i]) / r[i] for i in 1:size(x_cen, 2)]
 v_cen
 
 # ╔═╡ d95c457b-c9be-4570-bc90-b4bbb7de56e2
-plot(cens.t, vr)
+plot(t, vr)
 
 # ╔═╡ 5ee77968-567a-49c4-8e19-4d88bb930558
 function find_last_peri(vr, idx_f; minima=true)
@@ -226,8 +230,8 @@ d_idx = 20
 begin
 	peri_filt = idx_f-d_idx:idx_f
 	t_last_peri_arg = argmin(r[peri_filt])
-	t_last_peri = cens.t[peri_filt[t_last_peri_arg]] * T2GYR
-	delta_t_peri = cens.t[idx_f] * T2GYR - t_last_peri
+	t_last_peri = t[peri_filt[t_last_peri_arg]] * T2GYR
+	delta_t_peri = t[idx_f] * T2GYR - t_last_peri
 end
 
 # ╔═╡ 04d29fcb-70a0-414b-a487-7a18c44b9d58
@@ -235,23 +239,23 @@ let
 	fig = Figure(size=(700, 300))
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
 	r = calc_r(x_cen)
-	lines!(cens.t * T2GYR, r)
-	scatter!(cens.t[idx_f] * T2GYR, r[idx_f], 
+	lines!(t * T2GYR, r)
+	scatter!(t[idx_f] * T2GYR, r[idx_f], 
 		label="adpoted end", marker=:rect
 	)
-	scatter!(cens.t[idx_f] * T2GYR, calc_r(x_cen_exp)[end], 
+	scatter!(t[idx_f] * T2GYR, calc_r(x_cen_exp)[end], 
 		marker=:+, markersize=10, label="expected"
 	)
 	
-	scatter!(cens.t[idx_peri] * T2GYR, r[idx_peri], 
+	scatter!(t[idx_peri] * T2GYR, r[idx_peri], 
 		label="last pericentre"
 	)
 
-	scatter!(cens.t[idx_apo] * T2GYR, r[idx_apo], 
+	scatter!(t[idx_apo] * T2GYR, r[idx_apo], 
 		label="last apocentre"
 	)
 	
-	scatter!(cens.t[idx_anteperi] * T2GYR, r[idx_anteperi], 
+	scatter!(t[idx_anteperi] * T2GYR, r[idx_anteperi], 
 		label="last last pericentre"
 	)
 	
@@ -262,7 +266,7 @@ end
 # ╔═╡ af8a50bd-e761-4439-9fc9-80048c264d5b
 begin 
 	if idx_peri > 0
-		t_peri = T2GYR * cens.t[idx_peri]
+		t_peri = T2GYR * t[idx_peri]
 		r_peri = r[idx_peri]
 
 	else 
@@ -271,7 +275,7 @@ begin
 	end
 
 	if idx_apo > 0
-		t_apo = T2GYR * cens.t[idx_apo]
+		t_apo = T2GYR * t[idx_apo]
 		r_apo = r[idx_apo]
 	else
 		t_apo = NaN
@@ -279,7 +283,7 @@ begin
 	end
 
 	if idx_anteperi > 0
-		t_anteperi = T2GYR * cens.t[idx_anteperi]
+		t_anteperi = T2GYR * t[idx_anteperi]
 	else
 		t_anteperi = NaN
 	end
@@ -287,7 +291,7 @@ begin
 end
 
 # ╔═╡ 73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
-t_f = cens.t[idx_f] * T2GYR
+t_f = t[idx_f] * T2GYR
 
 # ╔═╡ 14eebce8-04f7-493b-824a-7808c7fa35dd
 md"""
@@ -315,11 +319,6 @@ let
 		@info fig
 	end
 end
-
-# ╔═╡ 7f2305c1-3431-4e0d-801f-a89afbc3b55b
-md"""
-note, these plots are not actually the motion across the sky, but the position on the sky by adopting different $t_0$ values. TODO: implement a static galactocentric frame which correctly transforms into a stationary solar observer, but not super necessary
-"""
 
 # ╔═╡ 3448ffc5-41e6-4208-b11f-2c00168bf50a
 md"""
@@ -372,7 +371,7 @@ let
 	
 	idx = idx_f-10:idx_f+10
 
-	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=cens.t[idx] * T2GYR)
+	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=t[idx] * T2GYR)
 
 	arrows!([ra0], [dec0], [sind(θ0)], [cosd(θ0)])
 	scatter!(ra1, dec1)
@@ -435,6 +434,7 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═a609f221-0721-4b4b-a393-49b386393c66
 # ╠═68d805a4-c5eb-4f2c-ba10-48c2a53f2874
+# ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
 # ╠═b250bf10-c228-4b14-938a-35561ae871d7
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
@@ -470,7 +470,6 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
 # ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
-# ╟─7f2305c1-3431-4e0d-801f-a89afbc3b55b
 # ╟─3448ffc5-41e6-4208-b11f-2c00168bf50a
 # ╠═66435478-0619-47aa-a659-c06089951f72
 # ╠═78271e36-12b7-4edc-bfb0-20ecc597ab20
