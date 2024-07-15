@@ -44,7 +44,9 @@ name = "initial"
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 begin 
+	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))
 	params = TOML.parsefile(joinpath(model_dir, "halo.toml"))
+	
 	halo = lguys.NFW(; lguys.dict_to_tuple(params["profile"])...)
 
 	# halo = lguys.NFW(; M_s=1/lguys.A_NFW(1), r_s=1)
@@ -95,7 +97,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
-	rc, Vc = lguys.calc_V_circ(snap)
+	rc, Vc = lguys.calc_v_circ(snap)
 	lines!(log10.(rc), Vc * lguys.V2KMS, label="initial")
 
 
@@ -108,9 +110,9 @@ let
 	# y = V_nfw.(10 .^ log_r ./ R_s)
 	# lines!(log_r, y * lguys.V0)
 
-	lines!(log_r, lguys.V2KMS * lguys.calc_V_circ.(halo, 10 .^ log_r))
+	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r))
 
-	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_V_circ_max(halo) * lguys.V2KMS)
+	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS)
 	fig
 end
 
@@ -140,7 +142,7 @@ let
 	ax = Axis(fig[1,1], aspect=1,
 	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
 
-	bins = LinRange(-10, 10, 100)
+	bins = LinRange(-10, 10, 30)
 	Arya.hist2d!(ax, snap.positions[1, :], snap.positions[2, :], bins = bins, colorscale=log10)
 
 	fig

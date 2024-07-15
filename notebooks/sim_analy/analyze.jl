@@ -10,22 +10,25 @@ begin
 	using CairoMakie;
 	using CSV, DataFrames
 
-	import LilGuys as lguys
 	import TOML
 
+	using LilGuys
 	using Arya
 end
 
-# ╔═╡ 26c26378-76a2-4b69-90ea-fb24df1ba59e
-using LilGuys
-
-# ╔═╡ a227ef84-a874-4176-9253-36bc36a743fa
-using LsqFit: curve_fit
+# ╔═╡ d7aaba0e-1ba9-4349-b2f0-c047bb49bcd7
+using KernelDensity
 
 # ╔═╡ bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 md"""
 Analyzes the dark matter particles and profiles for the simulation.
 """
+
+# ╔═╡ 589f2e18-d697-4fa1-a1bc-eb3c83ad73bf
+save = CairoMakie.save
+
+# ╔═╡ 7f29d14d-0e3f-4e64-b726-6b8fd5bb7548
+LP = LilGuys.Plots
 
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
 md"""
@@ -33,53 +36,30 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/orbit1/"
+model_dir = "/astro/dboyea/sculptor/orbits/1e5/V50_r0.5"
+
+# ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
+halo = NFW(; LilGuys.dict_to_tuple(TOML.parsefile(joinpath(model_dir, "halo.toml"))["profile"])...)
 
 # ╔═╡ d971556d-8b66-4b2d-9dc0-31799f94b10a
 skip = 10
 
 # ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
-begin 
-	out =  lguys.Output(model_dir * "out/combined.hdf5")
-	
-	cens = CSV.read(model_dir * "out/centres.csv", DataFrames.DataFrame)
-	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
-	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
-	out.x_cen .= x_cen
-	out.v_cen .= v_cen
+out =  Output(model_dir)
 
-	out
-end
+# ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
+figures_dir = joinpath(model_dir, "figures")
+
+# ╔═╡ 63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
+mkpath(figures_dir)
+
+# ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
+orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
 # ╔═╡ a9e79439-16a4-4908-bfe0-f0770cdb26df
 md"""
 # Mass evolution
 """
-
-# ╔═╡ dfa506e2-095a-47a2-9f14-baa04dd45d2d
-function get_M_h(output::lguys.Output, radius; idxs=(1:10:length(output)))
-	N = length(idxs)
-	M = Vector{Float64}(undef, N)
-	
-	for i in eachindex(idxs)
-		snap = output[idxs[i]]
-		ϵ = lguys.calc_ϵ(snap)
-		filt = ϵ .> 0
-		
-		rs = lguys.calc_r(snap[filt])
-		filt2 = rs .< radius
-
-		M[i] = sum(filt2)
-	end
-
-	return M
-end
-
-# ╔═╡ 807c46f6-56e0-4ab4-b31f-ac4a3fec9761
-collect(1:4:10)
-
-# ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
-orbit_props = TOML.parsefile(model_dir * "orbital_properties.toml")
 
 # ╔═╡ 53641449-c5b3-45ff-a692-a5cd717c8369
 idx_f = orbit_props["idx_f"]
@@ -93,8 +73,17 @@ snap_i = out[idx_i]
 # ╔═╡ 8d127679-401c-439d-913d-e2020df1c600
 snap_f = out[idx_f]
 
-# ╔═╡ 78d93a01-7048-4a97-b9ae-727be0e223d7
-r_h = 0.11
+# ╔═╡ 8dae2e01-652b-4afc-b040-dd2ba1c6eedb
+prof_i = LilGuys.calc_profile(snap_i)
+
+# ╔═╡ b64c1caf-9ee0-4633-bd52-0258557b8847
+prof_f = LilGuys.calc_profile(snap_f)
+
+# ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
+profiles = [LilGuys.calc_profile(snap) for snap in out[1:skip:end]]
+
+# ╔═╡ e8956092-e811-4af8-bcb0-2fc9829ca817
+LilGuys.calc_profile(out[140])
 
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
@@ -104,25 +93,17 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
-		ylabel=L"Bound mass within # $r_h$",
+		ylabel=L"Bound mass within $r$ kpc",
 		yscale=log10,
-		yticks=[1, 0.1]
+		#limits=(nothing, (1e-3, 2)),
 	)
 
-	M_dm_h = get_M_h(out, Inf)
-	scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="all")
+	#ax.yticks = [0.1:0.1:1;]
 
-	
-	M_dm_h = get_M_h(out, 100r_h)
-	scatter!(times[1:10:end] , M_dm_h ./ M_dm_h[1], label="100")
-
-
-
-	M_dm_h = get_M_h(out, 10r_h)
-	scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="10")
-
-	M_dm_h = get_M_h(out, 1r_h)
-	scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="1")
+	for r in [0.3, 1, 10, Inf]
+		M_dm_h = LilGuys.get_M_h(out, r)
+		scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="$r")
+	end
 	
 	Legend(fig[1, 2], ax)
 	
@@ -135,117 +116,49 @@ md"""
 # Evolution of circular Velocity
 """
 
-# ╔═╡ d2491f4d-f2b3-47c0-894c-94529b8cbe55
-function get_Vc(snap, skip=10)
-	ϵ = lguys.calc_ϵ(snap)
-	filt = ϵ .> 0
-	r = lguys.calc_r(snap[filt])
-	ms = snap.masses[filt][sortperm(r)]
-	r = sort(r)
+# ╔═╡ e6fc3297-c1b7-40a4-b2bb-98490a42604a
+v_max = [f.v_circ_max for f in profiles]
 
-	r = r[1:skip:end]
-	M = cumsum(ms)[1:skip:end]
-
-	Vc = @. sqrt(lguys.G * M / r) * V2KMS
-	r, Vc 
-end
-
-# ╔═╡ 3b044830-d631-4379-8401-cba29523e2f0
-function plot_Vc!(snap; kwargs...)
-
-	rc, Vc = get_Vc(snap)
-	lines!(log10.(rc), Vc; kwargs...)
-end
-
-# ╔═╡ 86877090-cfc9-4621-9187-d3da81f0428f
-import NaNMath as nm
-
-# ╔═╡ 1ace0815-7dc6-486f-b4c4-95fb41bc4313
-import StatsBase: percentile
-
-# ╔═╡ b7492731-148e-4445-a35b-23c9a444ef48
-function Vc_model(r, param)
-	Rs,scale =param
-	x = r ./ Rs
-	inner = @. (nm.log(1+x) - x/(1+x)) / x
-	return @. scale *nm.sqrt(inner)
-end
-
-# ╔═╡ 93e0c066-0229-4b49-95dc-f0a9a9f742e0
-function fit_Vc(rc, Vc; percen=80)
-	filt = Vc .> percentile(Vc, percen)
-	fit = curve_fit(Vc_model, rc[filt], Vc[filt], [2., 30.])
-	
-	return (; r_c=fit.param[1], V_c=fit.param[2], fit=fit,
-	r_min=minimum(rc[filt]),
-	r_max=maximum(rc[filt])
-	)
-end
-
-# ╔═╡ 8547a5a2-7170-47a3-8110-cc2a5d49c070
-function V_r_max(Rs, Vs)
-
-	r = 2.16258 * Rs
-	return r, Vc_model(r, [Rs, Vs])
-end
-
-# ╔═╡ 086b4aa9-5671-4c31-9a01-f5585464bb8a
-function get_Vh(snap, r_h)
-	r = lguys.calc_r(snap)
-	m = sum(snap.masses[r .< r_h])
-	return sqrt(lguys.G * m / r_h) * V2KMS
-end
-
-# ╔═╡ 9a8a5ad2-6aff-4d37-9748-7a415568f751
-function get_V_r_max(output::lguys.Output; skip=1)
-	V_maxs = Float64[]
-	r_maxs = Float64[]
-	V_hs = Float64[]
-
-	for i in 1:skip:length(output)
-		snap = output[i]
-		rc, Vc = get_Vc(snap)
-		fit = fit_Vc(rc, Vc)
-		r_max, V_max = V_r_max(fit.r_c, fit.V_c)
-
-		Vh = get_Vh(snap, r_h)
-		
-		push!(V_maxs, V_max)
-		push!(r_maxs, r_max)
-		push!(V_hs, Vh)
-	end
-
-	return r_maxs, V_maxs, V_hs
-end
-
-# ╔═╡ 9418347c-e49f-4483-be0f-98a3b9578bac
-r_max, V_max, V_h = get_V_r_max(out, skip=skip)
+# ╔═╡ d57501a1-4764-4b23-962f-2d37547d7bcc
+r_max = [f.r_circ_max for f in profiles]
 
 # ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
 let 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
+	ax = Axis(fig[1,1], 
+		xlabel=L"\log \; r / \textrm{kpc}", 
+		ylabel=L"$v_\textrm{circ}$ / km s$^{-1}$",
+		#limits=((-1, 2), (0, 60))
+	)
 
-	plot_Vc!(snap_i, label="initial")
+	r_model = 10 .^ LinRange(-2, 2, 1000)
+	v_model = calc_v_circ.(halo, r_model)
+	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="NFW")
+	
+	lines!(prof_i.log_r, prof_i.v_circ * V2KMS, label="initial")
 
-	plot_Vc!(snap_f, label="final")
+	lines!(prof_f.log_r, prof_f.v_circ * V2KMS, label="final")
+
 
 	α = 0.4
 	β = 0.65
 	x = LinRange(1, 0.1, 100)
 
 	y = @. 2^α * x^β * (1 + x^2)^(-α)
-	lines!(log10.(x .* r_max[1]), y .* V_max[1],  label="EN21")
+	lines!(log10.(x .* r_max[1]), y .* v_max[1] * V2KMS,  label="EN21",
+	color=:black, linestyle=:dash)
 
-	scatter!(log10.(r_max), V_max, color=Arya.COLORS[4], label="Vmax")
+	scatter!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
 
+		
 	axislegend(ax)
+	save(joinpath(figures_dir, "v_circ_profiles.pdf"), fig)
 	fig
 end
 
 # ╔═╡ c068c177-e879-4b8e-b1af-18690af9b334
 let 
-	i = length(out) 
+	i = length(out) - 80
 	snap = out[i]
 
 	
@@ -254,29 +167,28 @@ let
 		ylabel=L"V_\textrm{circ}",
 	title="time = $(out.times[i]  * T2GYR) Gyr")
 
-	plot_Vc!(snap, label="initial")
-	r, V = get_Vc(snap)
-	fit = fit_Vc(r, V)
-	r_max, V_max = V_r_max(fit.r_c, fit.V_c)
+	r, v = LilGuys.calc_v_circ(snap)
+	scatter!(log10.(r), v * V2KMS)
 
-
-
+	fit = LilGuys.fit_v_r_circ_max(snap)
 	r_fit = LinRange(fit.r_min, fit.r_max, 100)
-	V_fit = Vc_model(r_fit, [fit.r_c, fit.V_c])
+	v_fit = LilGuys.v_circ_max_model(r_fit, [fit.r_circ_max, fit.v_circ_max])
 
-	lines!(log10.(r_fit), V_fit, linewidth=3)
+	lines!(log10.(r_fit), v_fit * V2KMS, linewidth=3)
 	
-	scatter!(log10.(r_max), V_max, color=Arya.COLORS[3])
+	scatter!(log10.(fit.r_circ_max), fit.v_circ_max * V2KMS, color=Arya.COLORS[3])
 
 
 	ax2 = Axis(fig[2, 1], xlabel="r/kpc", ylabel="residual")
 
 	filt = fit.r_min .<= r .<= fit.r_max
-	dV = V[filt] .- Vc_model(r[filt], [fit.r_c, fit.V_c])
-	scatter!(r[filt], dV)
-	vlines!(r_max)
+	dv = v[filt] .- LilGuys.v_circ_max_model(r[filt], [fit.r_circ_max, fit.v_circ_max])
+	scatter!(log10.(r[filt]), dv * V2KMS)
+	vlines!(log10(fit.r_circ_max))
 	
     rowsize!(fig.layout, 2, Relative(1/4))
+
+	linkxaxes!(ax, ax2)
 	
 	fig
 end
@@ -284,13 +196,15 @@ end
 # ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"V_\text{circ} / \text{km\,s^{-1}}",
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"v_\text{circ} / \text{km\,s^{-1}}",
 	limits=(nothing, (0, nothing)))
 	x = out.times[1:skip:end] * T2GYR
-	scatter!(x, V_max, label=L"maximum $V_\text{circ}$")
-	scatter!(x, V_h, label=L"r=r_h")
+	scatter!(x, v_max * V2KMS, label=L"maximum $v_\text{circ}$")
+	#scatter!(x, v_h, label=L"r=r_h")
 	axislegend(ax)
-	
+
+	save(joinpath(figures_dir, "v_circ_time.pdf"), fig)
+
 	fig
 end
 
@@ -298,41 +212,6 @@ end
 md"""
 # Density evolution
 """
-
-# ╔═╡ f563cbc7-655b-46e3-8686-2e4561b2467a
-function plot_ρ_dm!(snap, x_cen; kwargs...)
-	pos = lguys.extract_vector(snap, :positions)
-	pos .-= x_cen
-	mass = lguys.extract(snap, :masses)
-	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=mass)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
-end
-
-# ╔═╡ abe6f9cd-2b49-4826-ba9c-56244a10bff0
-let 
-	i = 15
-
-	snap = out[i]
-
-	fig = Figure()
-	ax = Axis(fig[1,1], 
-		xlabel=L"\log \; r / \textrm{kpc}", 
-		ylabel=L"V_\textrm{circ}",
-		title="circular velocity at snap$i"
-	)
-
-
-	plot_Vc!(snap)
-
-	fig
-
-	rc, Vc = get_Vc(snap)
-	fit_Vc(rc, Vc)
-end
-
-# ╔═╡ 94692a8a-137f-4528-ad1d-2895eebec7a1
-snap_other = Snapshot("/astro/dboyea/sculptor/isolation/1e6/halos/fiducial.hdf5")
 
 # ╔═╡ 6cc4868a-8ef6-4d29-9d7d-f04504d6b157
 snap_i.masses
@@ -342,42 +221,71 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\log\rho_\textrm{DM}",
 	limits=(nothing, (-13, 0)))
-	
-	plot_ρ_dm!(snap_i, x_cen[:, idx_i], label="initial")
-	plot_ρ_dm!(snap_f, x_cen[:, idx_f], label="final")
-	plot_ρ_dm!(snap_other, zeros(3), label="Vmax = 32")
-	
+
+	lines!(prof_i.log_r, log10.(prof_i.ρ), label="initial")
+	lines!(prof_f.log_r, log10.(prof_f.ρ), label="final")
+
+	LP.plot_ρ_dm!(snap_f, label="final (all particles)", filt_bound=false, color=COLORS[2], linestyle=:dash)
+
+	LP.plot_ρ!(halo, linestyle=:dot, label="NFW")
+
 	axislegend(ax)
 	#lines!([0, 0] .+ log10.(r_break), [-11.5, -10],  color=:black)
 	#scatter!(log10.(r_break), -10, marker=:utriangle, color=:black)
 
 	#text!(L"r_\textrm{break}", position=(log10.(r_break),-11.5), space=:data, rotation=π/2, align=(:left, :baseline))
+	save(joinpath(figures_dir, "density.pdf"), fig)
+
 	fig
 	# only include bound points in profile...
 end
 
-# ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+# ╔═╡ 4cd952f3-555d-401b-aa31-8b79a23ca42e
+let 
+	fig, ax = LP.xy_axis()
 
 	bins = LinRange(-10, 10, 100)
-	colorrange=(1e1, 1e3)
+	colorrange=(1e-6, nothing)
+
+	LP.projected_density!(snap_f, centre=false, r_max=130, 
+		colorrange=colorrange, colorscale=log10,
+		direction1=2, direction2=3
+	)
+	fig
+end
+
+# ╔═╡ 8c0c017d-647d-49ed-95ce-1bc85725ca79
+[1,2,3][[2,3]]
+
+# ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
+let
+	fig, ax = LP.xy_axis()
+	ax.title = "initial"
+
+	bins = LinRange(-10, 10, 100)
+	colorrange=(1e-3, 1e3)
+
+	LP.projected_density!(out[1], centre=true)
 	
-	bins = (x_cen[1, idx_i]  .+ bins,  x_cen[2, idx_i]  .+bins)
+	bins = (out.x_cen[1, idx_i]  .+ bins,  out.x_cen[2, idx_i]  .+bins)
 	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], bins = bins, colorscale=log10, colorrange=colorrange)
 
 	ax2 = Axis(fig[1,2], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc",
+	xlabel = "x / kpc",
 	title="final")
 
 	bins = LinRange(-10, 10, 100)
-	bins = (x_cen[1, idx_f]  .+ bins,  x_cen[2, idx_f]  .+bins)
+	bins = (out.x_cen[1, idx_f]  .+ bins,  out.x_cen[2, idx_f]  .+bins)
 	hm = Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], bins = bins, colorscale=log10, colorrange=colorrange)
 	
-	Colorbar(fig[:, end+1], hm)
+	Colorbar(fig[:, end+1], hm, label="DM density")
 	
+    rowsize!(fig.layout, 1, ax.scene.viewport[].widths[2])
+
+	resize_to_layout!(fig)
+
+	save(joinpath(figures_dir, "xy_cen_projection.pdf"), fig)
+
 	fig
 end
 
@@ -388,12 +296,28 @@ let
 	ax = Axis(fig[1,1], aspect=1,
 	xlabel = "y / kpc", ylabel="z / kpc", title="dark matter",
 	limits=(-r_max, r_max, -r_max, r_max))
-	bins = LinRange(-r_max, r_max, 100)
+	bins = LinRange(-r_max, r_max, 200)
 	
 	h = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-1, nothing))
 
-	#scatter!(x_cen[2, idx_f,], x_cen[3, idx_f])
-	Colorbar(fig[1, 2], h)
+	#scatter!(snap_f.x_cen[2], snap_f.x_cen[3])
+	Colorbar(fig[1, 2], h, label="DM density")
+
+	save(joinpath(figures_dir, "xy_projection.pdf"), fig)
+	fig
+end
+
+# ╔═╡ 6f2ce26c-37fa-4a93-83b2-81192f48c1df
+let
+	fig = Figure(size=(900, 900))
+	ax = Axis(fig[1,1], aspect=DataAspect())
+	r_max = 200
+	hidedecorations!(ax)
+	bins = LinRange(-r_max, r_max, 200)
+	
+	h = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-1, nothing))
+
+	resize_to_layout!(fig)
 	fig
 end
 
@@ -402,62 +326,52 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e2, 1e6)),
 		xlabel=L"\epsilon", ylabel="count")
-	stephist!(lguys.calc_ϵ(snap_i), )
-	es = lguys.calc_ϵ(snap_f)
+	stephist!(LilGuys.calc_ϵ(snap_i), )
+	es = LilGuys.calc_ϵ(snap_f)
 	es = es[es .> 0]
 	stephist!(es)
 
+	save(joinpath(figures_dir, "energy distribution.pdf"), fig)
 	fig
-
 end
 
-# ╔═╡ 743d20cd-9636-4384-9bf2-b2d7e259ae7d
-# ╠═╡ disabled = true
-#=╠═╡
-r_h = 0.308
-  ╠═╡ =#
-
 # ╔═╡ Cell order:
-# ╠═bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
+# ╟─bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
-# ╠═26c26378-76a2-4b69-90ea-fb24df1ba59e
-# ╠═9c4d9492-64bc-4212-a99d-67cc507e99e0
+# ╠═589f2e18-d697-4fa1-a1bc-eb3c83ad73bf
+# ╠═7f29d14d-0e3f-4e64-b726-6b8fd5bb7548
+# ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
 # ╠═14279a79-bf66-4b34-bf9f-735ff2886ea5
+# ╠═d010a230-7331-4afd-86dc-380da0e0f720
 # ╠═d971556d-8b66-4b2d-9dc0-31799f94b10a
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
-# ╟─a9e79439-16a4-4908-bfe0-f0770cdb26df
-# ╠═dfa506e2-095a-47a2-9f14-baa04dd45d2d
-# ╠═807c46f6-56e0-4ab4-b31f-ac4a3fec9761
+# ╠═1b87d662-da3c-4438-98eb-72dc93e32f6a
+# ╠═63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
 # ╠═510706ac-ffbd-4996-af9e-67f1b910d51c
+# ╟─a9e79439-16a4-4908-bfe0-f0770cdb26df
 # ╠═53641449-c5b3-45ff-a692-a5cd717c8369
 # ╠═7e3df305-9678-447e-a48e-f102cf6ebced
 # ╠═9c3f79ee-89db-4fe1-aa62-4e706bdd73f8
 # ╠═8d127679-401c-439d-913d-e2020df1c600
-# ╠═78d93a01-7048-4a97-b9ae-727be0e223d7
+# ╠═8dae2e01-652b-4afc-b040-dd2ba1c6eedb
+# ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
+# ╠═2470e05f-9215-45e4-88fc-daab0638272f
+# ╠═e8956092-e811-4af8-bcb0-2fc9829ca817
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
 # ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
-# ╠═d2491f4d-f2b3-47c0-894c-94529b8cbe55
-# ╠═93e0c066-0229-4b49-95dc-f0a9a9f742e0
-# ╠═3b044830-d631-4379-8401-cba29523e2f0
-# ╠═a227ef84-a874-4176-9253-36bc36a743fa
-# ╠═86877090-cfc9-4621-9187-d3da81f0428f
-# ╠═1ace0815-7dc6-486f-b4c4-95fb41bc4313
-# ╠═b7492731-148e-4445-a35b-23c9a444ef48
-# ╠═8547a5a2-7170-47a3-8110-cc2a5d49c070
-# ╠═086b4aa9-5671-4c31-9a01-f5585464bb8a
-# ╠═9a8a5ad2-6aff-4d37-9748-7a415568f751
-# ╠═9418347c-e49f-4483-be0f-98a3b9578bac
+# ╠═e6fc3297-c1b7-40a4-b2bb-98490a42604a
+# ╠═d57501a1-4764-4b23-962f-2d37547d7bcc
 # ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
-# ╠═c068c177-e879-4b8e-b1af-18690af9b334
+# ╟─c068c177-e879-4b8e-b1af-18690af9b334
 # ╠═245721a6-01aa-43e7-922d-ed5da02207c1
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
-# ╠═f563cbc7-655b-46e3-8686-2e4561b2467a
-# ╠═abe6f9cd-2b49-4826-ba9c-56244a10bff0
-# ╠═94692a8a-137f-4528-ad1d-2895eebec7a1
 # ╠═6cc4868a-8ef6-4d29-9d7d-f04504d6b157
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
+# ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
+# ╠═8c0c017d-647d-49ed-95ce-1bc85725ca79
 # ╠═4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
+# ╠═d7aaba0e-1ba9-4349-b2f0-c047bb49bcd7
+# ╠═6f2ce26c-37fa-4a93-83b2-81192f48c1df
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
-# ╠═743d20cd-9636-4384-9bf2-b2d7e259ae7d

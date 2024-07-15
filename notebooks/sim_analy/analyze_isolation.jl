@@ -24,9 +24,6 @@ begin
 	import NaNMath as nm
 end
 
-# ╔═╡ acb20956-3339-414a-91fb-6003ad385242
-using LsqFit: curve_fit
-
 # ╔═╡ 96c91860-f3cc-4531-a8cf-39c85887b394
 import TOML
 
@@ -39,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e4/fiducial"
+name = "/arc7/home/dboyea/sculptor/isolation/1e5"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
@@ -73,33 +70,14 @@ md"""
 # ╔═╡ c1e80233-9b33-4e36-b6f1-788b392c9236
 snaps[1].x_cen
 
-# ╔═╡ f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
-quadratic(x, p) = @. p[2] * (log10(x) - p[1])^2
-
 # ╔═╡ 7299dbaf-b332-4e53-85de-7acbfa0c3853
 import StatsBase: percentile
 
-# ╔═╡ 7d717638-1caf-4267-b9f5-c060c19e2849
-function Vc_model(r, param)
-	Rmx,Vmx =param
-	x = r ./ Rmx .* lguys.α_nfw
-	inner = @. (nm.log(1+x) - x/(1+x)) / x
-	return @. Vmx / 0.46499096281742197 * nm.sqrt(inner)
-end
-
-# ╔═╡ 69cf741e-efc0-4031-a17f-a8126a77580b
-function fit_v_r_max(rc, Vc; percen=80)
-	filt = Vc .> percentile(Vc, percen)
-	fit = curve_fit(Vc_model, rc[filt], Vc[filt], [6., 30.])
-	
-	return (; r_c=fit.param[1], V_c=fit.param[2], fit=fit,
-	r_min=minimum(rc[filt]),
-	r_max=maximum(rc[filt])
-	)
-end
-
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
-fit = lguys.fit_v_r_max(snaps[end])
+fit = lguys.fit_v_r_circ_max(snaps[end])
+
+# ╔═╡ a35d9f4b-6bb9-4e8b-8d9e-3718037c7881
+fit
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
@@ -112,9 +90,9 @@ let
 		lines!(log10.(rc), Vc * V2KMS, label="$i")
 	end
 
-	V_nfw(x) = lguys.calc_V_circ(halo, x)
+	V_nfw(x) = lguys.calc_v_circ(halo, x)
 
-	scatter!(log10.(fit[:r_c]), fit[:V_c] * V2KMS)
+	scatter!(log10.(fit.r_circ_max), fit.v_circ_max * V2KMS)
 	axislegend()
 	
 	log_r = LinRange(-2, 2.5, 1000)
@@ -484,13 +462,10 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═327f790d-e652-48b2-92e5-e2dffd5b15e2
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═c1e80233-9b33-4e36-b6f1-788b392c9236
-# ╠═0e89851e-763f-495b-b677-b664501a17ef
-# ╠═acb20956-3339-414a-91fb-6003ad385242
-# ╠═f58680ef-60f6-4ee8-bd6e-2a11c22b9d3f
-# ╠═7299dbaf-b332-4e53-85de-7acbfa0c3853
-# ╠═69cf741e-efc0-4031-a17f-a8126a77580b
-# ╠═7d717638-1caf-4267-b9f5-c060c19e2849
+# ╠═a35d9f4b-6bb9-4e8b-8d9e-3718037c7881
 # ╠═9a9f4dc1-3573-41ee-be1a-eee39d3371b0
+# ╠═0e89851e-763f-495b-b677-b664501a17ef
+# ╠═7299dbaf-b332-4e53-85de-7acbfa0c3853
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f
