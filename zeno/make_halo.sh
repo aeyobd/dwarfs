@@ -17,6 +17,8 @@ echo using $N particles
 model_path=models/$filename.gsp
 txt_path=tmp/$filename.txt
 #hdf5_path=${filename}_uncentred.hdf5
+
+unscaled=tmp/$filename.hdf5
 out_path=models/$filename.hdf5
 
 
@@ -33,7 +35,10 @@ echo writing $model_path to text file $txt_path
 $ZENOPATH/bin/tsf $model_path maxline=$N > $txt_path
 
 echo converting $txt_path to hdf5 file $out_path
-julia parse_zeno.jl $txt_path $out_path
+julia parse_zeno.jl $txt_path $unscaled
+
+echo rescaling inplace so M_s = 1, r_s = 1
+rescale.jl -m 0.1931471805599453 $unscaled $out_path
 
 # echo centreing $hdf5_path and writing to $out_path
 # ../scripts/centre_snapshot.jl $hdf5_path $out_path -m com 
