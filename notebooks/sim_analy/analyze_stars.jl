@@ -301,7 +301,7 @@ let
 
 	filt = lguys.get_z(snap) .< 1e-2
 	filt .&= lguys.get_v_z(snap) .< 1e-2
-	filt .&= snap.weights .> 0.1*maximum(ps)
+	filt .&= snap.weights .> 0.1*maximum(snap.weights)
 	println(sum(filt))
 
 	snap = snap[filt]
@@ -581,7 +581,7 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10, maximum(hi.values)))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-5, maximum(hi.values)))
 	errscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], size=10)
 
 	idx = idx_f - 20: idx_f + 20

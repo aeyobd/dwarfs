@@ -281,7 +281,7 @@ md"""
 
 # ╔═╡ 8787c646-68d7-4277-b044-8a8aee0497cd
 begin 
-	M200_mean = 10 .^ LinRange(-2, 1, 1000)
+	M200_mean = 10 .^ LinRange(-2, 1.5, 1000)
 	c_mean2 = calc_c.(M200_mean, 0)
 	halo_mean = [NFW(M200=M200_mean[i], c=c_mean2[i]) for i in eachindex(M200_mean)]
 	Vc_mean = calc_v_circ_max.(halo_mean)
@@ -330,7 +330,7 @@ N_samples = 10000
 
 # ╔═╡ aeebdad1-552e-44f3-9b25-37b752ee5e69
 begin 
-	M200_samples = 10 .^ ( -1 .+ 2 * rand(N_samples))
+	M200_samples = 10 .^ ( -1 .+ 3 * rand(N_samples))
 	
 	σ_c = 0.1 #uncertainty from paper, approx 0.09 scatter + 0.03 model -> fitting function
 	c_samples = calc_c.(M200_samples, 0) .* 10 .^ (0 .+ σ_c .* randn(N_samples))
@@ -360,34 +360,39 @@ xticks = [0.1, 1, 10])
 # ╔═╡ a2ca4b2b-b198-4026-ac67-4aad70cdf1fa
 0.15*V2KMS
 
-# ╔═╡ 4f971234-565a-43a4-a4bf-94a9415e6d7e
-Vc_label = L"V_\textrm{circ,\,max}\  / \textrm{km\,s^{-1}}";
-
-# ╔═╡ 4bb1dcef-04e2-4aa5-aa8f-d76a21502e01
-rc_label = L"r_\textrm{circ,\,max}\  / \textrm{kpc}"
-
 # ╔═╡ a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
 let
 	fig = Figure()
 
 	ax_c = Axis(fig[1, 1];
-		ylabel = Vc_label,
-		xlabel = rc_label,
-		# yscale=log10, 
-		# yticks=[10, 30, 100],
-		# xscale=log10,
+		ylabel = L"$\log\, v_\textrm{circ\,max}$ / km\,s$^{-1}$",
+		xlabel = L"$\log \,r_\textrm{circ\,max}$ / kpc",
 	)
 
-	scatter!(Rc_samples, Vc_samples * V2KMS,  color=:black, alpha=0.1, markersize=3)
-	lines!(Rc_mean, Vc_mean * V2KMS)
+
+
+	scatter!(log10.(Rc_samples), log10.(Vc_samples * V2KMS),
+		color=:black, alpha=0.1, markersize=3)
+	lines!(log10.(Rc_mean), log10.(Vc_mean * V2KMS))
+	v = log10.(Vc_mean * V2KMS)
 
 	y = LilGuys.Ludlow.solve_rmax.(Vc_mean, 0.1)
-	lines!(y, Vc_mean * V2KMS)
+	lines!(log10.(y), v, color=COLORS[1], linestyle=:dash)
 
 	y = LilGuys.Ludlow.solve_rmax.(Vc_mean, -0.1)
-	lines!(y, Vc_mean * V2KMS)
+	lines!(log10.(y), v, color=COLORS[1], linestyle=:dash)
+	hlines!(log10(50))
 	fig
 end
+
+# ╔═╡ 60c1f90f-6604-464e-bc77-d182a8cc8785
+argmin(abs.(Vc_mean .- 50 / V2KMS))
+
+# ╔═╡ 4f971234-565a-43a4-a4bf-94a9415e6d7e
+Vc_label = L"V_\textrm{circ,\,max}\  / \textrm{km\,s^{-1}}";
+
+# ╔═╡ 4bb1dcef-04e2-4aa5-aa8f-d76a21502e01
+rc_label = L"r_\textrm{circ,\,max}\  / \textrm{kpc}"
 
 # ╔═╡ 023f12d0-317a-46db-b5c5-81a7d2216c55
 let
@@ -542,6 +547,12 @@ end
 
 # ╔═╡ 5e71b022-bd95-4c3c-8930-51100fb9ab1c
 r_max_exp = solve_rmax(V_max_in, 0)
+
+# ╔═╡ f335d286-04d3-4248-b9bd-4bb6d8e82e33
+r_max_exp, (LilGuys.Ludlow.solve_rmax.(V_max_in, 0.1), LilGuys.Ludlow.solve_rmax.(V_max_in, -0.1)) .- r_max_exp
+
+# ╔═╡ b5a53e42-ef26-47b0-82f9-d404a4d3a544
+log10(1 + 3.726 / r_max_exp)
 
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
 let
@@ -708,6 +719,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═90d563f3-d9a4-4e50-82b9-e37eecff87d9
 # ╠═a2ca4b2b-b198-4026-ac67-4aad70cdf1fa
 # ╠═a5ed13a2-41f1-40dc-8eff-27fcb7e5aca9
+# ╠═60c1f90f-6604-464e-bc77-d182a8cc8785
 # ╠═4f971234-565a-43a4-a4bf-94a9415e6d7e
 # ╠═4bb1dcef-04e2-4aa5-aa8f-d76a21502e01
 # ╠═023f12d0-317a-46db-b5c5-81a7d2216c55
@@ -730,6 +742,8 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
+# ╠═f335d286-04d3-4248-b9bd-4bb6d8e82e33
+# ╠═b5a53e42-ef26-47b0-82f9-d404a4d3a544
 # ╠═5e71b022-bd95-4c3c-8930-51100fb9ab1c
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═6baff9d8-a96d-4d1b-898f-089003459c19
