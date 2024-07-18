@@ -28,23 +28,26 @@ given a sample of points, can we centre and calculate the 2D density profile
 """
 
 # ╔═╡ 4cc4e2be-6bf6-4cbd-a2b1-121354a862bc
-simulation = false
+simulation = true
 
 # ╔═╡ c4574ed3-f431-4c0e-a721-1c8d88dda10f
-name = "exp2d_rs0.1_today"
+name = "exp2d_rs0.05_i_today"
 
 # ╔═╡ bb644db4-7fb4-43c8-abf9-7235aa279ad6
 r_centre = 3
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
-	samplename = "/astro/dboyea/sculptor/orbit1/stars/$name.fits" # = "$(name)_sample.fits" 
+	samplename = "/astro/dboyea/sculptor/orbits/V50_r0.5/stars/$name.fits" # = "$(name)_sample.fits" 
 	# samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 	#samplename = "../test_sky_recon.fits"
 	if !simulation
 		samplename = "sculptor/fiducial_sample.fits"
 	end
 end
+
+# ╔═╡ 52cfca17-9daf-462b-b50f-51540eea1a2e
+bins = 50
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 outname = dirname(samplename) * "/$(name)_profile.toml"
@@ -59,7 +62,7 @@ begin
 	PA = 91
 	centre_method="mean"
 	if simulation
-		mass_column = :probability
+		mass_column = :weights
 	else
 		mass_column = nothing
 	end
@@ -102,7 +105,11 @@ ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, centre_method, weights )
 xi, eta = lguys.to_tangent(sample.ra, sample.dec, ra0, dec0)
 
 # ╔═╡ ef19dcd1-fae0-4777-a0d8-d242435f892f
-r_max = sqrt(maximum(xi .^ 2 .+ eta .^ 2))
+if simulation
+	r_max = 15 * 60
+else
+	r_max = sqrt(maximum(xi .^ 2 .+ eta .^ 2))
+end
 
 # ╔═╡ 69018984-ef00-44ef-ba6e-7cccf930aef9
 let
@@ -120,7 +127,7 @@ let
 end
 
 # ╔═╡ f476c859-ba4b-4343-8184-f6f41dc092ee
-profile = lguys.calc_properties(r_ell, bins=50, weights=weights, normalization=:central, r_centre=r_centre)
+profile = lguys.calc_properties(r_ell, bins=bins, weights=weights, normalization=:central, r_centre=r_centre)
 
 # ╔═╡ b87cf54b-2c4c-46c5-9336-c13e773e29ec
 begin 
@@ -153,17 +160,6 @@ let
 	hist2d!(sample.ra, sample.dec, bins=100, weights=weights, alpha=0.1)
 	scatter!(ra0, dec0)
 	
-
-	fig
-end
-
-# ╔═╡ 619ca573-fd4b-4c65-8996-eab3869f2142
-let 
-	fig = Figure()
-	ax = PolarAxis(fig[1,1])
-
-	ϕ = atan.(sample.eta, sample.xi) .- deg2rad(PA)
-	scatter!(ϕ, sample.r_ell, alpha=0.1)
 
 	fig
 end
@@ -299,6 +295,7 @@ end
 # ╠═c4574ed3-f431-4c0e-a721-1c8d88dda10f
 # ╠═bb644db4-7fb4-43c8-abf9-7235aa279ad6
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
+# ╠═52cfca17-9daf-462b-b50f-51540eea1a2e
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 # ╠═72d975fe-9d97-474b-ba3f-f61ba12c7c80
@@ -317,7 +314,6 @@ end
 # ╠═0b80353f-c698-4fae-b40f-1796f7c89792
 # ╠═e63df7b9-1fc1-4cc0-a91f-c0f1395d7ff4
 # ╠═d382b455-73ba-41d5-bbc8-eca53ea2166e
-# ╠═619ca573-fd4b-4c65-8996-eab3869f2142
 # ╠═91df1ddf-a197-4d43-b39c-e25409eef082
 # ╠═548d7186-59eb-4f08-81b6-a68127f0df6a
 # ╠═dd139766-4281-4a27-af72-428dff73e4c4

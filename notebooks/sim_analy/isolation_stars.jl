@@ -22,16 +22,16 @@ begin
 end
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = "/astro/dboyea/sculptor/isolation/1e6/M0.5_c13.1"
+modeldir = "/astro/dboyea/sculptor/isolation/1e6/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "exp2d_rs0.13"
+starsname = "halos/V50_r0.5/stars/exp2d_rs0.1"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
-starsfile = "stars/$(starsname)_stars.hdf5"
+starsfile = "$(starsname)_stars.hdf5"
 
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
-paramname = "stars/$(starsname).toml"
+paramname = "$(starsname).toml"
 
 # ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
 import TOML
@@ -62,7 +62,7 @@ begin
 end
 
 # ╔═╡ 3150cdfd-7573-4db9-86b7-ef614150a7b9
-times = out.times * lguys.T0
+times = out.times * lguys.T2GYR
 
 # ╔═╡ 2cc047db-ae05-42c5-898f-702ae3b83bd6
 idx_i = 10 + 1; idx_f = length(out)
@@ -115,7 +115,7 @@ function plot_ρ_s!(snap; bins=200, kwargs...)
 	rs = lguys.calc_r(snap)
 	ps = probabilities[snap.index]
 	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=ps)
-	x = log10.(lguys.midpoint(r))
+	x = log10.(lguys.midpoints(r))
 	lines!(x, log10.(ρ); kwargs...)
 end
 
@@ -129,7 +129,7 @@ snap_i.x_cen
 snap_i.positions
 
 # ╔═╡ b76c91ff-0928-40ad-9263-c455f804b6f5
-out.times[end] * lguys.T0
+out.times[end] * lguys.T2GYR
 
 # ╔═╡ e76583dc-eea9-43c8-8051-a58a5c68a942
 let 
@@ -210,7 +210,7 @@ let
 end
 
 # ╔═╡ 93abb048-2a1a-468c-86f5-abba3a0e92e5
-v_los = snap_f.velocities[1, :] .* lguys.V0
+v_los = snap_f.velocities[1, :] .* lguys.V2KMS
 
 # ╔═╡ 0f0275b6-473c-4b3e-8e3f-2be7903eec32
 r = @. sqrt((snap_f.positions[2, :] .- x_cen[2, end])^2 + (snap_f.positions[3, :] .- x_cen[3, end])^2)
@@ -257,7 +257,7 @@ let
 	skip = 1
 
 	idx = 1:skip:length(out)
-	ts = out.times[idx] * lguys.T0
+	ts = times[idx]
 
 	sigmas = [calc_σv_x(out[i]) for i in idx]
 

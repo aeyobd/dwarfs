@@ -6,4 +6,4 @@ if [ "$#" -ne 1 ];
 fi
 
 
-rescale_nfw.jl fiducial.hdf5 -o $1.hdf5 -n fiducial.toml -p $1.toml 
+rescale_nfw.jl fiducial.hdf5 -o $1/isolation.hdf5 -n fiducial.toml -p $1/halo.toml 

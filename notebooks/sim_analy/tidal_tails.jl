@@ -31,16 +31,13 @@ models_dir = "/arc7/home/dboyea/sculptor"
 r_b_arcmin = 64
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/orbit1/"
+model_dir = "$models_dir/orbits/V50_r0.5/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.13_today.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.08_today.fits"
 
 # ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
 stars = lguys.load_fits(starsfile)
-
-# ╔═╡ 6c611b16-a7db-44ad-8656-2fc76f7c989c
-scatter(stars.xi_p, stars.eta_p)
 
 # ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
 obs_cen = stars[1, :]
@@ -70,7 +67,7 @@ obs_today_icrs = lguys.ICRS(;
 )
 
 # ╔═╡ c3a3129e-18c6-4348-81c0-b03c5836b785
-frame = lguys.HelioRest
+frame = lguys.GSR
 
 # ╔═╡ 910267ee-aa39-4f04-961b-70f0862d27e2
 obs_today = lguys.transform(frame, obs_today_icrs)
@@ -98,11 +95,6 @@ end
 
 # ╔═╡ 6d0cff99-3efb-4405-a11d-f13200fa5334
 idx_f = orbit_props["idx_f"]
-
-# ╔═╡ 12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
-md"""
-# Transform to stream coordinates
-"""
 
 # ╔═╡ 816b9db9-26c6-4ac8-9a46-82209d2cdc85
 idx_orbit = idx_f - 20: idx_f + 20
@@ -132,6 +124,11 @@ let
 
 	fig
 end
+
+# ╔═╡ 12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
+md"""
+# Transform to stream coordinates
+"""
 
 # ╔═╡ 6b516488-80d7-4904-9331-6161e5829638
 """
@@ -248,17 +245,6 @@ filt_trailing = not.(filt_cen) .& (stars.xi_p .< 0)
 # ╔═╡ aa157085-0705-44ed-9d65-5626658d71e7
 filt_dist = stars.r_ell .< r_max
 
-# ╔═╡ 7178c98a-15d1-4f10-9850-2079a6fdaa27
-let
-	fig = Figure()
-	ax = PolarAxis(fig[1, 1])
-	
-	scatter!(deg2rad.(stars.xi_p), stars.distance, alpha=0.1)
-	scatter!(deg2rad.(stars.xi_p[filt_dist]), stars.distance[filt_dist], alpha=0.1)
-
-	fig
-end
-
 # ╔═╡ d4d5c328-b135-4ddb-8d12-f8f13ba1da3d
 scatter(stars.xi_p[filt_dist], stars.eta_p[filt_dist])
 
@@ -273,6 +259,11 @@ sum(filt_trailing .& filt_dist), sum(stars.weights[filt_trailing .& filt_dist])
 
 # ╔═╡ 9c1839d6-1076-4598-8da6-49c02ec10580
 sum(stars.weights[filt_cen])
+
+# ╔═╡ c57edba1-09f9-4fe9-bc73-5746884ee7c2
+md"""
+Below, we plot our defined filters.
+"""
 
 # ╔═╡ 119040e2-ef45-4fc2-809d-aec333e276d0
 let 
@@ -296,15 +287,6 @@ let
 	scatter!(x[filt], y[filt], label="excluded", alpha=0.1, markersize=5)
 	Legend(fig[1,2], ax)
 
-	fig
-end
-
-# ╔═╡ 84e4a23c-c926-4c86-ab11-07a08ef7d1b3
-let
-	fig, ax = xi_eta_axis()
-
-	scatter!(xi_p, eta_p)
-	scatter!(xi_p_orbit[idx_orbit], eta_p_orbit[idx_orbit], color=idx_orbit)
 	fig
 end
 
@@ -503,41 +485,6 @@ let
 	fig
 end
 
-# ╔═╡ 65ca1318-8f62-4133-ab14-f3d3e1190029
-let 
-	fig, ax = ra_dec_axis()
-
-	bins = 100
-	limits = ax.limits.val
-	x = stars.ra
-	y = stars.dec
-	color = stars.eta_p
-	h = scatter!(x, y, color=color, colorrange=(-5, 5), colormap=:redsblues)
-	
-	Colorbar(fig[1, 2], h,
-		label=L"\eta'"
-	)
-	fig
-end
-
-# ╔═╡ 1b31eabc-3b6f-4d82-9cbb-62f1c53408de
-let 
-	fig, ax = ra_dec_axis()
-
-	bins = 100
-	limits = ax.limits.val
-	x = stars.ra[filt_dist]
-	y = stars.dec[filt_dist]
-	color = stars.xi_p[filt_dist]
-	h = scatter!(x, y, color=color, #colorrange=(-5, 5),
-	colormap=:redsblues)
-	
-	Colorbar(fig[1, 2], h,
-		label=L"\xi'"
-	)
-	fig
-end
-
 # ╔═╡ d4d50209-e9a8-40dc-9f45-4e8000f70b39
 md"""
 # Functions of orbital coordinates
@@ -631,12 +578,104 @@ let
 	fig
 end
 
+# ╔═╡ ae9d8d21-1269-4053-89a3-3a8287a4ca70
+md"""
+# Validation
+"""
+
+# ╔═╡ 4c8b9b51-5e72-42a7-a919-ca2c2d1c5294
+md"""
+Below is a scatter plot of all stars in polar coordinates wrt ``\xi'`` and distance. The highlighted region (orange) is all stars within the specified distance of the centre for further analysis. This is just to make sure nothing crazy is left in the filter
+"""
+
+# ╔═╡ 7178c98a-15d1-4f10-9850-2079a6fdaa27
+let
+	fig = Figure()
+	ax = PolarAxis(fig[1, 1])
+	
+	scatter!(deg2rad.(stars.xi_p), stars.distance, alpha=0.1)
+	scatter!(deg2rad.(stars.xi_p[filt_dist]), stars.distance[filt_dist], alpha=0.1)
+
+	fig
+end
+
+# ╔═╡ 90e0d677-a837-4a17-8c64-68ed350dd3c8
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel=L"$\eta'$ / degrees",
+		ylabel="distance / kpc"
+	)
+	
+	scatter!(stars.eta_p, stars.distance, alpha=0.1)
+	scatter!(eta_p[filt_dist], stars.distance[filt_dist], alpha=0.1)
+
+	fig
+end
+
+# ╔═╡ 26d120cb-0bd4-432d-9ce1-fc9a23a5067d
+md"""
+The next two plots validate the rotated coordinate system.
+"""
+
+# ╔═╡ 65ca1318-8f62-4133-ab14-f3d3e1190029
+let 
+	fig, ax = ra_dec_axis()
+
+	bins = 100
+	limits = ax.limits.val
+	x = stars.ra
+	y = stars.dec
+	color = stars.eta_p
+	h = scatter!(x, y, color=color, colorrange=(-5, 5), colormap=:redsblues)
+	
+	Colorbar(fig[1, 2], h,
+		label=L"\eta'"
+	)
+	fig
+end
+
+# ╔═╡ 1b31eabc-3b6f-4d82-9cbb-62f1c53408de
+let 
+	fig, ax = ra_dec_axis()
+
+	bins = 100
+	limits = ax.limits.val
+	x = stars.ra[filt_dist]
+	y = stars.dec[filt_dist]
+	color = stars.xi_p[filt_dist]
+	h = scatter!(x, y, color=color, #colorrange=(-5, 5),
+	colormap=:redsblues)
+	
+	Colorbar(fig[1, 2], h,
+		label=L"\xi'"
+	)
+	fig
+end
+
+# ╔═╡ 7ec71b3a-4c34-4803-923f-2effeff7cfcf
+md"""
+The orbit in the rotated coordinate system. We expect the orbit to be ~ a horizontal line and increasing (lighter color) going to positive ``\xi'``
+"""
+
+# ╔═╡ 84e4a23c-c926-4c86-ab11-07a08ef7d1b3
+let
+	fig, ax = xi_eta_axis()
+
+	scatter!(xi_p, eta_p)
+	p = scatter!(xi_p_orbit[idx_orbit], eta_p_orbit[idx_orbit], color=idx_orbit)
+
+	Colorbar(fig[1, 2], p, label="time / Gyr")
+	fig
+end
+
+# ╔═╡ 6c611b16-a7db-44ad-8656-2fc76f7c989c
+scatter(stars.xi_p, stars.eta_p)
+
 # ╔═╡ Cell order:
-# ╠═9c7035e7-c1e7-40d5-8ab6-38f0bb682111
+# ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 # ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
 # ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-# ╠═7178c98a-15d1-4f10-9850-2079a6fdaa27
-# ╠═6c611b16-a7db-44ad-8656-2fc76f7c989c
 # ╠═82e8f2e4-d3ea-43c5-8813-aaebbca71cda
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
@@ -654,8 +693,8 @@ end
 # ╠═4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 # ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
 # ╠═e9e35643-168e-4e87-a880-6831b46145c7
-# ╠═12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
 # ╠═816b9db9-26c6-4ac8-9a46-82209d2cdc85
+# ╟─12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
 # ╠═6b516488-80d7-4904-9331-6161e5829638
 # ╠═8dd15727-d9b0-47b2-a031-d7765ebd3fba
 # ╠═a8a4442e-b180-4ffe-8f91-522e45cac47e
@@ -676,10 +715,10 @@ end
 # ╠═d240246d-f79a-4f95-a5b9-b355e7bc092f
 # ╠═cb8c2e79-a5c2-4a59-af40-393b83f64bc7
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
-# ╠═119040e2-ef45-4fc2-809d-aec333e276d0
-# ╠═84e4a23c-c926-4c86-ab11-07a08ef7d1b3
+# ╟─c57edba1-09f9-4fe9-bc73-5746884ee7c2
+# ╟─119040e2-ef45-4fc2-809d-aec333e276d0
 # ╠═443ac755-70fc-4193-945d-0e98622c5919
-# ╠═1d35a894-1eca-4ee0-9d1a-6ac4704b912c
+# ╟─1d35a894-1eca-4ee0-9d1a-6ac4704b912c
 # ╠═6b0a0ea3-f6f7-4cee-be11-bce6872ab870
 # ╠═54205139-3c7b-4beb-b9cb-c87b272df58a
 # ╠═19bdc540-63a8-46ad-8d6f-a425d64cdd81
@@ -688,10 +727,18 @@ end
 # ╠═5eb22695-57c4-4ebf-b412-588f5e366bf5
 # ╠═fc3a1a85-c317-4b45-b9c4-50d15e0eb9da
 # ╠═79dd7e3d-8564-4389-960b-05512b0143c0
-# ╠═65ca1318-8f62-4133-ab14-f3d3e1190029
-# ╠═1b31eabc-3b6f-4d82-9cbb-62f1c53408de
 # ╠═d4d50209-e9a8-40dc-9f45-4e8000f70b39
 # ╠═92b761ba-dc5d-4b99-9462-2c9b6faf680d
 # ╠═f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
 # ╠═302b3ac4-94cc-44d9-a5e6-314460e76a9f
 # ╠═b79ea320-c652-4850-a617-58bfb0c09be8
+# ╟─ae9d8d21-1269-4053-89a3-3a8287a4ca70
+# ╟─4c8b9b51-5e72-42a7-a919-ca2c2d1c5294
+# ╟─7178c98a-15d1-4f10-9850-2079a6fdaa27
+# ╟─90e0d677-a837-4a17-8c64-68ed350dd3c8
+# ╟─26d120cb-0bd4-432d-9ce1-fc9a23a5067d
+# ╟─65ca1318-8f62-4133-ab14-f3d3e1190029
+# ╟─1b31eabc-3b6f-4d82-9cbb-62f1c53408de
+# ╟─7ec71b3a-4c34-4803-923f-2effeff7cfcf
+# ╟─84e4a23c-c926-4c86-ab11-07a08ef7d1b3
+# ╠═6c611b16-a7db-44ad-8656-2fc76f7c989c

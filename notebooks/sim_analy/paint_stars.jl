@@ -60,10 +60,10 @@ Parameters
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
+dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V70_r0.4/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.13.toml"
+paramname = "exp2d_rs0.07.toml"
 
 # ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 begin 
@@ -156,7 +156,7 @@ end
 
 # ╔═╡ 5851e36f-9376-4445-9bac-da3ce9d5ac7e
 function calc_eps(snap, Φs)
-	ke = lguys.calc_E_spec_kin(snap)
+	ke = lguys.calc_K_spec(snap)
 	ϵs = @. -Φs - ke
 
 	return ϵs
@@ -227,6 +227,47 @@ begin
 	M_s(r) = 4π * quadgk(r-> r^2 * ρ_s(r) / M_s_tot, 1e-5, r)[1]
 end
 
+# ╔═╡ 075e869e-cb2b-457c-adf2-cc310ea422a4
+import StatsBase as sb
+
+# ╔═╡ 6e5d6ff7-974c-41a6-aa30-5ac0319c387a
+function bins_min_width_equal_number(a, dx_min, N_per_bin_min)
+	if dx_min <= 0 && N < 1
+		throw(ArgumentError("either dx_min or N must be positive"))
+	end
+	dq = N_per_bin_min / length(a)
+	println(dq)
+
+	bins = []
+	x = minimum(a)
+	push!(bins, x)
+
+	dx = 0
+
+	while x + dx < maximum(a)
+		q = sb.quantilerank(a, x)
+		if q + dq > 1
+			break
+		end
+		
+		dx = sb.quantile(a, q + dq) - x
+		dx = max(dx, dx_min)
+
+		x += dx
+
+		push!(bins, x)
+	end
+
+    if sum(a .> bins[end]) < N_per_bin_min
+        pop!(bins)
+    end
+
+	push!(bins, maximum(a))
+
+	return bins
+	
+end
+
 # ╔═╡ 29619cc3-1be3-4b24-92e0-ceccfd4a3f59
 """
 given the radii and parameters for stellar profile, returns the
@@ -242,12 +283,16 @@ function make_radius_bins(radii::AbstractVector, params::Dict)
 	
 	r_min = radii[1]
 	r_max = radii[end]
-	Nr = params["num_radial_bins"]
 	
 	if params["bin_method"] == "equal_width"
+		Nr = params["num_radial_bins"]
+
 		r_e = 10 .^ LinRange(log10.(r_min), log10.(r_max), Nr+1)
 	elseif params["bin_method"] == "equal_number"
+		Nr = params["num_radial_bins"]
 		r_e = percentile(radii, LinRange(0, 100, Nr+1))
+	elseif params["bin_method"] == "both"
+		r_e = 10 .^ bins_min_width_equal_number(log10.(radii), params["dr_min"], params["N_per_bin_min"], )
 	else
 		error("bin method unknown")
 	end
@@ -256,11 +301,17 @@ function make_radius_bins(radii::AbstractVector, params::Dict)
 	
 end
 
+# ╔═╡ 0d25988d-870a-482b-aa29-aedf137daa5d
+log10.(radii)
+
+# ╔═╡ 2b79f0d1-d7fb-4e53-8e3f-ff2e774608a0
+bins_min_width_equal_number(log10.(radii), 0.01, 0)
+
 # ╔═╡ deb46b0b-3504-4231-9f85-99f27caf924b
 r_e = make_radius_bins(radii, params)
 
 # ╔═╡ 36b4adbd-d706-4e72-a922-53080c67946c
-r = lguys.midpoint(r_e)
+r = lguys.midpoints(r_e)
 
 # ╔═╡ f79414b4-620e-440e-a421-7bc13d373546
 M = calc_M_in(radii, snap.masses, r)
@@ -429,6 +480,16 @@ md"""
 ## Distributions and intermediate quantities
 """
 
+# ╔═╡ 2aa9c02e-621e-4ba2-b69e-a9ed66d834b8
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="log radii", ylabel="counts")
+	h = Arya.histogram(log10.(radii), log10.(r_e), normalization=:none)
+	scatter!(h)
+
+	fig
+end
+
 # ╔═╡ a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
 let
 	fig = Figure()
@@ -436,14 +497,6 @@ let
 	stephist!(log10.(radii), bins=log10.(r_e), normalization=:pdf, label="dark matter")
 	stephist!(log10.(radii), bins=log10.(r_e), weights=ps, normalization=:pdf, label="stars (nbody)")
 	axislegend()
-	fig
-end
-
-# ╔═╡ 90bde4ba-56a2-47f8-bd42-7f7789e1dad4
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="log radii", ylabel="number / bin")
-	stephist!(log10.(radii), bins=log10.(r_e), label="dark matter")
 	fig
 end
 
@@ -485,7 +538,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
 		xlabel="log r", ylabel="log density")
-	lines!(log10.(r), log10.(ν_dm), label="DM")
+	scatter!(log10.(r), log10.(ν_dm), label="DM")
 	scatter!(log10.(r), log10.(ν_s), label="stars (analytic)")
 
 	axislegend()
@@ -639,6 +692,9 @@ let
 	fig
 end
 
+# ╔═╡ 89b7d969-2294-4d07-a6a3-fcfa92498d48
+lguys.arcmin_to_kpc(14, 83.2)
+
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
 	r = lguys.calc_r(snap_og)
@@ -650,7 +706,7 @@ let
 	r_e = 10 .^ LinRange(log10.(minimum(r)), log10(maximum(r)), 50)
 	r, ν_s_nbody = lguys.calc_ρ_hist(r, r_e, weights=ms)
  
-	r = lguys.midpoint(r)
+	r = lguys.midpoints(r)
 	ν_s = ρ_s.(r)
 	
 	fig = Figure(size=(700, 500))
@@ -736,7 +792,7 @@ function mock_obs(snap_og, ps_all; distance=86)
 	filt = p_min * maximum(ps) .< ps
 
 	ps = ps[filt]
-	snap_shift = copy(snap_og[filt])
+	snap_shift = deepcopy(snap_og[filt])
 	snap_shift.positions .+= shift_vec
 
 	snap_shift.weights = ps
@@ -808,7 +864,7 @@ end
 
 # ╔═╡ e4c33671-744b-42bb-87be-2df7add03b96
 let
-	x = lguys.calc_r(snap_og.velocities, cen.velocity) .^2 * lguys.V0^2
+	x = lguys.calc_r(snap_og.velocities, cen.velocity) .^2 * lguys.V2KMS^2
 	m = ps_all[snap_og.index]
 	
 	μ = mean(x, weights(m))
@@ -867,7 +923,11 @@ save_obs(obs_mock, params["mock_file"])
 # ╟─e935a80a-7f4f-4143-ae6c-bee62b82c30e
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
-# ╟─29619cc3-1be3-4b24-92e0-ceccfd4a3f59
+# ╠═075e869e-cb2b-457c-adf2-cc310ea422a4
+# ╠═6e5d6ff7-974c-41a6-aa30-5ac0319c387a
+# ╠═29619cc3-1be3-4b24-92e0-ceccfd4a3f59
+# ╠═0d25988d-870a-482b-aa29-aedf137daa5d
+# ╠═2b79f0d1-d7fb-4e53-8e3f-ff2e774608a0
 # ╠═deb46b0b-3504-4231-9f85-99f27caf924b
 # ╠═36b4adbd-d706-4e72-a922-53080c67946c
 # ╟─f3e95cfc-0087-4afa-8e88-a4e1628c50a0
@@ -901,8 +961,8 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═f42cb7e1-64b7-47da-be05-dd50c2471fb3
 # ╟─4d1991ea-9496-48c7-a400-8fefbecefcd2
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
+# ╠═2aa9c02e-621e-4ba2-b69e-a9ed66d834b8
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
-# ╠═90bde4ba-56a2-47f8-bd42-7f7789e1dad4
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
@@ -918,6 +978,7 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═90856551-fff8-4d15-be66-6353091b5e50
 # ╠═a52e5e94-6068-4545-962f-e02a485b62f5
 # ╠═cc231e78-cfc0-4876-9f8b-980139f7d27f
+# ╠═89b7d969-2294-4d07-a6a3-fcfa92498d48
 # ╠═7f7d8cb9-761c-4f30-a336-ab5657144961
 # ╠═a2f72082-7145-42be-9f40-e00d18deb267
 # ╟─bf8305f4-a5b8-4c79-8a01-e2aa18e4a5c5

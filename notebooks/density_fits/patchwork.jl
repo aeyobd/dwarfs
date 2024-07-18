@@ -58,20 +58,38 @@ unique(allstars.source_id)
 # ╔═╡ 4683ce6c-4fce-4e05-afde-b50f2cbb3c9c
 xi, eta = lguys.to_tangent(allstars.ra, allstars.dec, scl_props["ra"], scl_props["dec"])
 
+# ╔═╡ ec2fea08-c8b6-4bbd-88d6-972a079d5cd8
+obs_props = TOML.parsefile("/astro/dboyea/dwarfs/sculptor_obs_properties.toml")
+
+# ╔═╡ 5eef7ffe-b473-4cc1-95d5-eeb887b97d8a
+begin 
+	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/skyorbit.fits")
+
+	orbit[!, :xi], orbit[!, :eta] = lguys.to_tangent(orbit.ra, orbit.dec, obs_props["ra"], obs_props["dec"])
+end
+
 # ╔═╡ f328d46f-8ede-4c91-97f5-724dac51064d
 bandwidth = (0.05, 0.05)
 
 # ╔═╡ 7e9fd578-2789-428f-acb9-aa700b8569b4
 kd = kde([xi eta], bandwidth=bandwidth)
 
+# ╔═╡ 680c83c4-ebae-446c-8171-224b180370cc
+idx_orbit=1775:1800
+
 # ╔═╡ 146894f9-0da8-4be5-90be-677566abdfcf
 let
 	fig = Figure()
-	ax = Axis(fig[1, 1])
+	ax = Axis(fig[1, 1],
+		xreversed = true,
+		xlabel="ra / degrees",
+		ylabel="dec / degrees"
+	)
 
 
 	scatter!(ra_all, dec_all, alpha=0.05)
 
+	lines!(orbit.ra[idx_orbit], orbit.dec[idx_orbit], color=COLORS[2])
 	fig
 end
 
@@ -89,8 +107,10 @@ let
 
 	h = heatmap!(kd.x, kd.y, asinh.(kd.density ./ scale))
 
-	#lines!(orbit.xi, orbit.eta)
+	lines!(orbit.xi[idx_orbit], orbit.eta[idx_orbit])
 	Colorbar(fig[1, 2], h, label="asinh density / $scale")
+
+	resize_to_layout!(fig)
 	fig
 end
 
@@ -109,6 +129,9 @@ end
 # ╠═b5593f3c-bc6d-4e8a-acc4-22eef851859f
 # ╠═4683ce6c-4fce-4e05-afde-b50f2cbb3c9c
 # ╠═7e9fd578-2789-428f-acb9-aa700b8569b4
+# ╠═ec2fea08-c8b6-4bbd-88d6-972a079d5cd8
+# ╠═5eef7ffe-b473-4cc1-95d5-eeb887b97d8a
 # ╠═f328d46f-8ede-4c91-97f5-724dac51064d
+# ╠═680c83c4-ebae-446c-8171-224b180370cc
 # ╠═146894f9-0da8-4be5-90be-677566abdfcf
 # ╠═d7edb06b-e54a-46cc-9b74-0914931ac507

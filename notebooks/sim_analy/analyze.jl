@@ -36,7 +36,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/1e5/V50_r0.5"
+model_dir = "/astro/dboyea/sculptor/orbits/V50_r0.5"
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
 halo = NFW(; LilGuys.dict_to_tuple(TOML.parsefile(joinpath(model_dir, "halo.toml"))["profile"])...)
@@ -128,7 +128,12 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L"\log \; r / \textrm{kpc}", 
 		ylabel=L"$v_\textrm{circ}$ / km s$^{-1}$",
-		#limits=((-1, 2), (0, 60))
+		yscale=log10,
+		yticks=[1, 10, 20, 30, 40, 50, 60],
+		yminorticks=[1:9; 10:2:60],
+		limits=(nothing, (1, 60)),
+		xgridvisible=false,
+		ygridvisible=false
 	)
 
 	r_model = 10 .^ LinRange(-2, 2, 1000)
@@ -148,10 +153,10 @@ let
 	lines!(log10.(x .* r_max[1]), y .* v_max[1] * V2KMS,  label="EN21",
 	color=:black, linestyle=:dash)
 
-	scatter!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
+	lines!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
 
 		
-	axislegend(ax)
+	axislegend(ax, position=:rb)
 	save(joinpath(figures_dir, "v_circ_profiles.pdf"), fig)
 	fig
 end
@@ -222,8 +227,8 @@ let
 	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\log\rho_\textrm{DM}",
 	limits=(nothing, (-13, 0)))
 
-	lines!(prof_i.log_r, log10.(prof_i.ρ), label="initial")
-	lines!(prof_f.log_r, log10.(prof_f.ρ), label="final")
+	lines!(prof_i.log_r, log10.(prof_i.rho), label="initial")
+	lines!(prof_f.log_r, log10.(prof_f.rho), label="final")
 
 	LP.plot_ρ_dm!(snap_f, label="final (all particles)", filt_bound=false, color=COLORS[2], linestyle=:dash)
 

@@ -38,9 +38,6 @@ Use the `calc_density`... and the `fit_profile` notebooks to then analyze the sa
 # ╔═╡ acb9ae92-924b-4723-8bd7-d775595b24c3
 COLORS = Arya.COLORS;
 
-# ╔═╡ 72e2ad11-8883-4396-9cce-929c4a7ce8e2
-0.9^40
-
 # ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
 red = COLORS[6]
 
@@ -68,7 +65,7 @@ zoom 20 arcmin
 galaxy_dir = "sculptor"
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "$galaxy_dir/centre"
+name = "$galaxy_dir/background"
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
@@ -206,7 +203,7 @@ end
 let 
 	fig, ax, p = scatter(members.ra, members.dec, markersize=3,
         color=(:grey, 0.2))
-	dra = 1
+	dra = 6
 	ax.limits = (params.ra .+ dra * [-1, 1] ./ cosd(params.dec), params.dec .+ dra*[-1, 1])
 	ax.aspect =  1 #cosd(params.dec)
 	
@@ -261,6 +258,15 @@ let
 	fig
 end
 
+# ╔═╡ 390ee4b1-9da8-4ac1-b9f4-905462115c38
+x_poly = params.cmd_cut[1:2:end]
+
+# ╔═╡ f1e9e618-ecc3-4d32-a23f-9f8e9ff388ba
+y_poly = params.cmd_cut[2:2:end]
+
+# ╔═╡ 6fad2fb0-6ba1-4359-83dd-7a342d1c0db8
+[x_poly; x_poly[1]]
+
 # ╔═╡ 0f002b56-8b8f-4025-8d7b-fb51423e8da0
 let
 	fig = Figure()
@@ -273,7 +279,8 @@ let
 	
 	scatter!(ax, members.bp_rp, members.phot_g_mean_mag, 
 	    color=(red, 1), markersize=1)
-	
+
+	lines!(ax, [x_poly; x_poly[1]], [y_poly; y_poly[1]])
 	ax.xgridvisible = false
 	ax.ygridvisible = false
 	
@@ -325,7 +332,6 @@ end
 # ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═acb9ae92-924b-4723-8bd7-d775595b24c3
-# ╠═72e2ad11-8883-4396-9cce-929c4a7ce8e2
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
@@ -354,6 +360,9 @@ end
 # ╠═d0c4ad68-2bd3-44e7-9f42-45795fb7ecee
 # ╠═b6424e6f-9b0d-4f29-b53d-0bd814a67139
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
+# ╠═390ee4b1-9da8-4ac1-b9f4-905462115c38
+# ╠═f1e9e618-ecc3-4d32-a23f-9f8e9ff388ba
+# ╠═6fad2fb0-6ba1-4359-83dd-7a342d1c0db8
 # ╠═0f002b56-8b8f-4025-8d7b-fb51423e8da0
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
 # ╠═26e401fa-aa9f-41ae-88fa-815deb6427c7
