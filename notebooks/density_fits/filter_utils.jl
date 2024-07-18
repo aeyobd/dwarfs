@@ -1,6 +1,7 @@
 import TOML
 using Arya
 using Makie
+using FITSIO
 
 OptF = Union{Float64, Nothing}
 F = Float64

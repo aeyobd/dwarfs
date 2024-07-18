@@ -21,34 +21,23 @@ using LilGuys
 # ╔═╡ cf6a7cbb-1034-4026-a3f3-1e854d2929e2
 using FITSIO
 
-# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
-md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
-"""
-
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
-
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
 
 # ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1_V50"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/V50_r0.5"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.1"
+starsname = "exp2d_rs0.07"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 r_scale = 1
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
+starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/halos/V50_r0.5/stars/$(starsname)_stars.hdf5"
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
 begin 
@@ -62,8 +51,19 @@ begin
 	
 end
 
+# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
+md"""
+Given a stellar probability file, calculates initial-final density profiles, 
+and projects stars onto the sky
+"""
+
+# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
+md"""
+# Inputs
+"""
+
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
-paramsfile = "/astro/dboyea/sculptor/isolation/1e6/stars/$starsname.toml"
+paramsfile = "/astro/dboyea/sculptor/isolation/1e6/halos/V50_r0.5/stars/$starsname.toml"
 
 # ╔═╡ 172588cc-ae22-440e-8488-f508aaf7ce96
 rel_p_cut = 1e-20
@@ -106,7 +106,6 @@ length(probabilities)
 # ╔═╡ 6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
 begin 
 	out =  lguys.Output(model_dir * "/out", weights=probabilities)
-	
 	out
 end
 
@@ -126,9 +125,6 @@ md"""
 
 # ╔═╡ 1fd7b586-75ad-42a8-b752-ea82b290cb47
 out.weights
-
-# ╔═╡ 3551293c-84f3-410e-8688-55b4528620ee
-
 
 # ╔═╡ 77479cd4-513c-4603-9aa0-1acd964c403a
 let
@@ -223,7 +219,7 @@ md"""
 function plot_ρ_s!(snap; bins=100, kwargs...)
 	rs = lguys.calc_r(snap.positions, snap.x_cen)
 	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=snap.weights)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+	lines!(log10.(lguys.midpoints(r)), log10.(ρ); kwargs...)
 end
 
 # ╔═╡ 91daae57-94dc-4a8e-b981-75f1406e0768
@@ -376,6 +372,9 @@ function save_obs(obs_df, outfile)
 	end
 end
 
+# ╔═╡ 77918cc8-bfd7-4a84-a1d2-b7d5c721f5ba
+mkpath(joinpath(model_dir,"stars") )
+
 # ╔═╡ 7c4c5136-17d5-4dc5-9e5c-25e2348d2a84
 obs_today_icrs = lguys.ICRS(;
 	ra=obs_today_file["ra"], dec=obs_today_file["dec"],
@@ -395,7 +394,7 @@ obs_today_err = lguys.ICRS(;
 )
 
 # ╔═╡ d2de33be-b037-4255-b9f4-da29abb23754
-frame = lguys.HelioRest
+frame = lguys.GSR
 
 # ╔═╡ 01b5ad85-9f37-4d8b-a29d-e47526f112ec
 function make_sample(snap; 
@@ -410,7 +409,7 @@ function make_sample(snap;
 
 	obs_df[!, :r_ell] = 60lguys.calc_r_ell(obs_df.xi, obs_df.eta, 0, 0)
 
-	return obs_df
+	return obs_df[:, Not(:frame)]
 end
 
 # ╔═╡ 1f722acb-f7b9-4d6c-900e-11eae85e0708
@@ -503,16 +502,16 @@ end
 # ╔═╡ d7fece88-3327-4435-ab61-b45ff62b3b2e
 function mean_2d(obs_df, values; bins=100, centre=false, limits=nothing)
 	if centre
-		val_mean = lguys.mean(values, lguys.weights(obs_df.probability))
+		val_mean = lguys.mean(values, lguys.weights(obs_df.weights))
 		println("centre: ", val_mean)
 		val = values .- val_mean
 	else
 		val = values
 	end
 	
-	x = obs_df.xi_p
-	y = obs_df.eta_p
-	weights = obs_df.probability
+	x = obs_df.xi
+	y = obs_df.eta
+	weights = obs_df.weights
 
 	h_vel = Arya.histogram2d(x, y, bins, weights=weights .* val, limits=limits)
 	h_mass = Arya.histogram2d(x, y, bins, weights=weights, limits=limits)
@@ -581,7 +580,7 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-5, maximum(hi.values)))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-12, maximum(hi.values)))
 	errscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], size=10)
 
 	idx = idx_f - 20: idx_f + 20
@@ -590,6 +589,56 @@ let
 	Colorbar(fig[1, 2], h,
 		label="stellar density"
 	)
+	fig
+end
+
+# ╔═╡ edf68b42-4fe9-4e14-b7ed-739e89a1541a
+let
+	dr = 10
+	fig, ax = xi_eta_axis(dr, dr)
+
+	bins = LinRange(-dr, dr, 100)
+
+	h = Arya.histogram2d(obs_df.xi, obs_df.eta, bins, weights=obs_df.weights)
+
+	p = heatmap!(h.xbins, h.ybins, h.values, colorscale=log10, colorrange=(1e-20, maximum(h.values)))
+
+	Colorbar(fig[1, 2], p)
+
+	fig
+end
+
+# ╔═╡ 7fa19be2-4014-4df0-821e-4c509eca4f28
+let
+	dr = 10
+	fig, ax = xi_eta_axis(dr, dr)
+
+	bins = LinRange(-dr, dr, 100)
+
+	h = mean_2d(obs_df,  obs_df.radial_velocity, bins=bins)
+
+	p = heatmap!(h.xbins, h.ybins, h.values, 
+	colormap=:redsblues,  colorrange=(50, 80))
+
+	Colorbar(fig[1, 2], p)
+
+	fig
+end
+
+# ╔═╡ 96307998-07a0-45bf-bf10-cd14bfcfe20a
+let
+	dr = 1
+	fig, ax = xi_eta_axis(dr, dr)
+
+	bins = LinRange(-dr, dr, 100)
+
+	h = mean_2d(obs_df,  obs_df.radial_velocity, bins=bins)
+
+	p = heatmap!(h.xbins, h.ybins, h.values, 
+	colormap=:redsblues,  colorrange=(50, 80))
+
+	Colorbar(fig[1, 2], p)
+
 	fig
 end
 
@@ -905,10 +954,10 @@ let
 		Ns[i] = N
 	end
 
-	errscatter!(lguys.midpoint(r_bins), σs, yerr=err)
+	errscatter!(lguys.midpoints(r_bins), σs, yerr=err)
 
 	# ax2 = Axis(fig[1, 1], ylabel="count / bin")
-	# scatter!(ax2, lguys.midpoint(r_bins), Ns)
+	# scatter!(ax2, lguys.midpoints(r_bins), Ns)
 	# hidexdecorations!(ax2, grid=false)
 
 	# linkxaxes!(ax, ax2)
@@ -964,7 +1013,7 @@ let
 		ylabel="stellar density"
 	)
 	
-	scatter!(lguys.midpoint(h.bins), h.values)
+	scatter!(lguys.midpoints(h.bins), h.values)
 
 	σ = calc_σv(snap)
 	x_model = LinRange(-20, 20, 100)
@@ -993,7 +1042,7 @@ let
 	
 	h = Arya.histogram(rv, weights=mass, normalization=:pdf)
 
-	scatter!(lguys.midpoint(h.bins), h.values)
+	scatter!(lguys.midpoints(h.bins), h.values)
 
 	x_model = LinRange(μ - 3σv, μ+3σv, 100)
 	y_model = gaussian.(x_model, μ, σv)
@@ -1016,7 +1065,7 @@ end
 
 # ╔═╡ 76438e61-d227-41cf-b9ea-e658bc389772
 let
-	snap = snap_f
+	snap = snap_i
 	
 	mass = snap.weights
 	v_rad = (snap.velocities[1, :] .- snap.v_cen[1]) * V2KMS
@@ -1033,7 +1082,7 @@ let
 		ylabel="stellar density"
 	)
 	
-	scatter!(lguys.midpoint(h.bins), h.values)
+	scatter!(lguys.midpoints(h.bins), h.values)
 
 	x_model = LinRange(-20, 20, 100)
 	y_model = gaussian.(x_model, 0, σv)
@@ -1074,7 +1123,7 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
-		limits=((-1.9, 1), (-8, 2)))
+		limits=((-1.9, 1), (-12, 2)))
 
 	plot_ρ_s!(snap_i, bins=500, label="initial")
 	plot_ρ_s!(snap_f, bins=500, label="final")
@@ -1125,7 +1174,7 @@ let
 	)
 	
 	x, y= v_rad_hist(snap_f, 50)
-	scatter!(lguys.midpoint(x), y * V2KMS)
+	scatter!(lguys.midpoints(x), y * V2KMS)
 
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
 	fig
@@ -1236,7 +1285,6 @@ end
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
 # ╟─5ee4f95d-0587-44ab-b543-9b7039d545e6
 # ╠═1fd7b586-75ad-42a8-b752-ea82b290cb47
-# ╠═3551293c-84f3-410e-8688-55b4528620ee
 # ╟─77479cd4-513c-4603-9aa0-1acd964c403a
 # ╠═7bc2c15c-33f7-43f3-a47f-ca39ffc22071
 # ╠═8df71dd5-ba0b-4918-9dc0-791c6c3bad5f
@@ -1271,6 +1319,7 @@ end
 # ╠═0215fe76-f9c5-4274-ae43-89960a0caaef
 # ╠═7e588ae3-89f3-4b91-8963-f6bf4391a859
 # ╠═5e17bf16-2e3d-4372-8283-c43b8ad2550d
+# ╠═77918cc8-bfd7-4a84-a1d2-b7d5c721f5ba
 # ╠═ff759ae0-35c3-460e-97df-f865e26a0f48
 # ╠═cf6a7cbb-1034-4026-a3f3-1e854d2929e2
 # ╠═7c4c5136-17d5-4dc5-9e5c-25e2348d2a84
@@ -1286,6 +1335,9 @@ end
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780
 # ╠═6ebfff07-c43f-4d4d-8604-9fd4f1de5d25
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
+# ╠═edf68b42-4fe9-4e14-b7ed-739e89a1541a
+# ╠═7fa19be2-4014-4df0-821e-4c509eca4f28
+# ╠═96307998-07a0-45bf-bf10-cd14bfcfe20a
 # ╠═35c52910-089c-4507-956a-2b0649507495
 # ╠═2ef43371-bfae-4a65-8fa9-d1ab5ade32f1
 # ╠═1c242116-e66d-453b-ad62-b6a65cdbe284

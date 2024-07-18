@@ -1,0 +1,12 @@
+profile = "Exp2D"
+snapshot = "../isolation.hdf5"
+num_energy_bins = 1000
+
+bin_method = "both"
+dr_min = 0.03
+N_per_bin_min = 500
+
+
+[profile_kwargs]
+M = 1
+R_s = 0.05

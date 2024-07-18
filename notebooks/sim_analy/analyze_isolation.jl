@@ -36,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e5"
+name = "/arc7/home/dboyea/sculptor/isolation/1e7"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
@@ -62,6 +62,9 @@ figure_dir = joinpath(name, "figures/")
 # ╔═╡ 327f790d-e652-48b2-92e5-e2dffd5b15e2
 mkpath(figure_dir)
 
+# ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
+profs = LilGuys.Profiles3D(joinpath(name, "out/profiles.hdf5"))
+
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
 # Initial/Final
@@ -69,9 +72,6 @@ md"""
 
 # ╔═╡ c1e80233-9b33-4e36-b6f1-788b392c9236
 snaps[1].x_cen
-
-# ╔═╡ 7299dbaf-b332-4e53-85de-7acbfa0c3853
-import StatsBase: percentile
 
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
 fit = lguys.fit_v_r_circ_max(snaps[end])
@@ -90,6 +90,7 @@ let
 		lines!(log10.(rc), Vc * V2KMS, label="$i")
 	end
 
+	lines!(profs[1].log_r, profs[1].v_circ * V2KMS, linestyle=:dot)
 	V_nfw(x) = lguys.calc_v_circ(halo, x)
 
 	scatter!(log10.(fit.r_circ_max), fit.v_circ_max * V2KMS)
@@ -102,6 +103,9 @@ let
 	save(figure_dir * "v_circ.pdf", fig)
 	fig
 end
+
+# ╔═╡ 7299dbaf-b332-4e53-85de-7acbfa0c3853
+import StatsBase: percentile
 
 # ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
 md"""
@@ -215,12 +219,12 @@ the dark matter distribution of  the snapshot (initial and final)
 """
 
 # ╔═╡ b9746093-0f2f-4478-82ba-00911c8fcceb
-function plot_xy_dens(snap_i)
+function plot_xy_dens(snap_i; r_max=10)
 	fig = Figure()
 	ax = Axis(fig[1,1], aspect=1,
 	xlabel = "x / kpc", ylabel="y/kpc")
 
-	bins = LinRange(-10, 10, 100)
+	bins = LinRange(-r_max, r_max, 100)
 	hist_kwargs = (; bins=bins, colorscale=log10, colorrange=(1, nothing))
 	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :]; hist_kwargs...)
 	
@@ -232,26 +236,35 @@ for snap in snaps
 	@info plot_xy_dens(snap)
 end
 
+# ╔═╡ 2dedc9e1-9b68-4c76-97da-4aba767de32d
+for snap in snaps
+	@info plot_xy_dens(snap, r_max=300)
+end
+
 # ╔═╡ 24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 md"""
 stellar distribution of initial and final snapshot
 """
 
 # ╔═╡ e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
-function plot_ρ_dm!(snap; kwargs...)
+function plot_ρ_dm!(snap; N=100, kwargs...)
 	pos = lguys.extract_vector(snap, :positions)
 	mass = lguys.extract(snap, :masses)
 	rs = lguys.calc_r(pos)
-	r, ρ = lguys.calc_ρ_hist(rs, 40, weights=mass)
-	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
+	bins = 10 .^ LinRange(log10(minimum(rs)), log10(maximum(rs)), N)
+	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=mass)
+	lines!(log10.(lguys.midpoints(r)), log10.(ρ); kwargs...)
 end
+
+# ╔═╡ 2edbc22e-1432-441a-9fba-ef256321fe25
+Arya.bayesian_blocks(randn(10000))
 
 # ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 let 
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
-	limits=(-1, 2.5, -10, -2))
+	limits=(-1.5, 2.5, -10, 1))
 
 	for i in eachindex(snaps)
 		plot_ρ_dm!(snaps[i], label="$i")
@@ -324,7 +337,7 @@ md"""
 """
 
 # ╔═╡ 8e87001c-4bc0-4580-a0b4-43fe24d92c99
-skip = 1
+skip = 30
 
 # ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 let 
@@ -341,6 +354,7 @@ let
 	t = out.times[idx] * T2GYR
 	
 	for i in 1:3
+		scatter!(t, Ls[i, :], label=["x", "y", "z"][i])
 		lines!(t, Ls[i, :], label=["x", "y", "z"][i])
 	end
 
@@ -442,7 +456,7 @@ let
 end
 
 # ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
+#lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 
 # ╔═╡ Cell order:
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
@@ -460,6 +474,7 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═c4fc0a87-c75f-4528-aa20-75cc7aff856c
 # ╠═327f790d-e652-48b2-92e5-e2dffd5b15e2
+# ╠═5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═c1e80233-9b33-4e36-b6f1-788b392c9236
 # ╠═a35d9f4b-6bb9-4e8b-8d9e-3718037c7881
@@ -480,8 +495,10 @@ lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
 # ╠═3cc0df1f-dca3-4355-a969-3874aa414d1a
+# ╠═2dedc9e1-9b68-4c76-97da-4aba767de32d
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
+# ╠═2edbc22e-1432-441a-9fba-ef256321fe25
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59

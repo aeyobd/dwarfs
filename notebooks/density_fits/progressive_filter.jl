@@ -45,7 +45,7 @@ md"""
 galaxy_dir = "sculptor"
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "background"
+name = "centre"
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 

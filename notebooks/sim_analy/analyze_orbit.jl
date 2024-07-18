@@ -33,7 +33,7 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/orbit1_V50/"
+dir = "/arc7/home/dboyea/sculptor/orbits/V50_r0.5/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
@@ -88,20 +88,8 @@ LilGuys.Plots.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
 LilGuys.Plots.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
 
-# ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="R / kpc", ylabel="z / kpc",
-		aspect=DataAspect()
-	)
-	x = x_cen[1, :]
-	y = x_cen[2, :]
-	z = x_cen[3, :]
-	R = @. sqrt(x^2 + y^2)
-	lines!(R, z)
-	fig
-end
+# ╔═╡ d9669fcb-b3da-4720-b509-8d5a9d8a1a35
+available_marker_symbols()
 
 # ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
 T2GYR = LilGuys.T2GYR
@@ -129,7 +117,7 @@ md"""
 snap_cen = Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
 
 # ╔═╡ 64e558da-2928-4815-ad5a-7528516311f9
-obs_c_gr = LilGuys.to_sky(snap_cen, SkyFrame=LilGuys.HelioRest)
+obs_c_gr = LilGuys.to_sky(snap_cen, SkyFrame=LilGuys.GSR)
 
 # ╔═╡ defc4184-2613-4480-9adf-fa135f168382
 obs_c = LilGuys.to_sky(snap_cen)
@@ -160,6 +148,26 @@ t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
 
 # ╔═╡ d9df3376-6ca1-4701-afb5-2df994bb3442
 idx_f = searchsortedfirst(times, t_end)
+
+# ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="R / kpc", ylabel="z / kpc",
+		aspect=DataAspect(),
+		xgridvisible=false,
+		ygridvisible=false,
+	)
+	x = x_cen[1, :]
+	y = x_cen[2, :]
+	z = x_cen[3, :]
+	R = @. sqrt(x^2 + y^2)
+	lines!(R, z, color=times)
+
+	scatter!(R[idx_f], z[idx_f], color=COLORS[2])
+	scatter!(R[1], z[1], color = COLORS[3], marker=:rtriangle, )
+	fig
+end
 
 # ╔═╡ cdde517a-1b3e-4d96-9156-4a8f72b795e9
 let
@@ -440,7 +448,8 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
-# ╟─aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
+# ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
+# ╠═d9669fcb-b3da-4720-b509-8d5a9d8a1a35
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
 # ╟─f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
