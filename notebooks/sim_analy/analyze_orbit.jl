@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -33,7 +33,7 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/V50_r0.5/"
+dir = "/arc7/home/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"

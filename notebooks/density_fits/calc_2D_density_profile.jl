@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -30,24 +30,28 @@ given a sample of points, can we centre and calculate the 2D density profile
 # ╔═╡ 4cc4e2be-6bf6-4cbd-a2b1-121354a862bc
 simulation = true
 
-# ╔═╡ c4574ed3-f431-4c0e-a721-1c8d88dda10f
-name = "exp2d_rs0.05_i_today"
-
 # ╔═╡ bb644db4-7fb4-43c8-abf9-7235aa279ad6
-r_centre = 3
+r_centre = 5
+
+# ╔═╡ f15cc000-9b4e-4a0f-9e50-9f135dd6d6d8
+N_per_bin_min = 200
+
+# ╔═╡ e13c9238-fa25-4eb1-abb3-1cec3bb32dc8
+dlogr_min = 0.05
 
 # ╔═╡ 73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
 begin 
-	samplename = "/astro/dboyea/sculptor/orbits/V50_r0.5/stars/$name.fits" # = "$(name)_sample.fits" 
+	name = "exp2d_rs0.1_i_today"
+	
+	samplename = "/astro/dboyea/sculptor/orbits/orbit1/stars/$name.fits" # = "$(name)_sample.fits" 
 	# samplename = "sculptor/fiducial_sample.fits" # = "$(name)_sample.fits" 
 	#samplename = "../test_sky_recon.fits"
 	if !simulation
 		samplename = "sculptor/fiducial_sample.fits"
+
+		name = "fiducial"
 	end
 end
-
-# ╔═╡ 52cfca17-9daf-462b-b50f-51540eea1a2e
-bins = 50
 
 # ╔═╡ a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 outname = dirname(samplename) * "/$(name)_profile.toml"
@@ -74,6 +78,11 @@ begin
 	f = FITS(samplename, "r")
 	sample = DataFrame(f[2])
 	close(f)
+
+	if simulation
+		cen = sample[1, :]
+		sample = sample[2:end, :]
+	end
 end
 
 # ╔═╡ 305f79e0-a9bb-4c15-a9fd-09cb1c25db41
@@ -91,6 +100,9 @@ mean(sample.pmra), sem(sample.pmra)
 # ╔═╡ 0272086f-ebeb-432b-b44e-7c35a17c1d58
 mean(sample.pmdec), sem(sample.pmdec)
 
+# ╔═╡ 8063df24-cefe-4985-958b-27f609492afa
+sample.ra
+
 # ╔═╡ 8d276372-add5-4388-b713-b22e38d56f37
 if mass_column === nothing
 	weights = ones(size(sample, 1))
@@ -99,17 +111,17 @@ else
 end
 
 # ╔═╡ cb38c9f9-d6ff-4bcd-a819-9b442776ccfc
-ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, centre_method, weights )
+if simulation && true
+	ra0 = cen.ra
+	dec0 = cen.dec
+
+	ra0, dec0
+else
+	ra0, dec0 = lguys.calc_centre2D(sample.ra, sample.dec, centre_method, weights .^ 3 )
+end
 
 # ╔═╡ 86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 xi, eta = lguys.to_tangent(sample.ra, sample.dec, ra0, dec0)
-
-# ╔═╡ ef19dcd1-fae0-4777-a0d8-d242435f892f
-if simulation
-	r_max = 15 * 60
-else
-	r_max = sqrt(maximum(xi .^ 2 .+ eta .^ 2))
-end
 
 # ╔═╡ 69018984-ef00-44ef-ba6e-7cccf930aef9
 let
@@ -117,14 +129,17 @@ let
 	b = sqrt(1-ell)
 	a = 1/b
 	
-	r_ell = lguys.calc_r_ell(xi, eta, a, b, PA-90)
+	r_ell = 60 * lguys.calc_r_ell(xi, eta, a, b, PA-90)
 
 	r_ell_max = r_max .* b
+	println(r_ell_max)
 	r_ell = r_ell[r_ell .< r_ell_max]
 
 
-	r_ell .*= 60 # to arcmin
 end
+
+# ╔═╡ 52cfca17-9daf-462b-b50f-51540eea1a2e
+bins =  Arya.bins_min_width_equal_number(log10.(r_ell), N_per_bin_min=N_per_bin_min, dx_min=dlogr_min)
 
 # ╔═╡ f476c859-ba4b-4343-8184-f6f41dc092ee
 profile = lguys.calc_properties(r_ell, bins=bins, weights=weights, normalization=:central, r_centre=r_centre)
@@ -136,8 +151,11 @@ begin
 		print(f, profile)
 	end
 
-	println("wrote data to ", outname)
+	println("wrote data to ", abspath(outname))
 end
+
+# ╔═╡ ea541217-fb14-4f53-8b83-d18ce852bca1
+pwd()
 
 # ╔═╡ 0b80353f-c698-4fae-b40f-1796f7c89792
 sum(profile.counts), size(sample)
@@ -288,14 +306,28 @@ end
 # 	fig
 # end
 
+# ╔═╡ ef19dcd1-fae0-4777-a0d8-d242435f892f
+# ╠═╡ disabled = true
+#=╠═╡
+if simulation
+	r_max = 15 * 60
+else
+	r_max = sqrt(maximum(xi .^ 2 .+ eta .^ 2))
+end
+  ╠═╡ =#
+
+# ╔═╡ f0787d00-eb04-433a-86ef-8fff70c20219
+r_max = 300
+
 # ╔═╡ Cell order:
 # ╠═142a5ace-1432-4093-bee7-4a85c19b0d72
 # ╟─852717c0-aabf-4c03-9cf5-a6d91174e0f9
 # ╠═4cc4e2be-6bf6-4cbd-a2b1-121354a862bc
-# ╠═c4574ed3-f431-4c0e-a721-1c8d88dda10f
 # ╠═bb644db4-7fb4-43c8-abf9-7235aa279ad6
+# ╠═f0787d00-eb04-433a-86ef-8fff70c20219
+# ╠═f15cc000-9b4e-4a0f-9e50-9f135dd6d6d8
+# ╠═e13c9238-fa25-4eb1-abb3-1cec3bb32dc8
 # ╠═73f0b3a1-a4b6-422d-9f7e-be816c4a9cfc
-# ╠═52cfca17-9daf-462b-b50f-51540eea1a2e
 # ╠═a2465c61-ce25-42aa-8b5c-57ad7ffe16f6
 # ╠═a82d8fa5-32db-42d1-8b0a-d54ae47dc7be
 # ╠═72d975fe-9d97-474b-ba3f-f61ba12c7c80
@@ -305,12 +337,15 @@ end
 # ╠═3ade8bb5-8698-4d10-862c-e9685e54e570
 # ╠═568162b2-ad89-4c72-92e4-ee3cc302bbb7
 # ╠═0272086f-ebeb-432b-b44e-7c35a17c1d58
+# ╠═8063df24-cefe-4985-958b-27f609492afa
 # ╠═86dd90bc-83dd-4b1a-8e98-1bb0333c6610
 # ╠═ef19dcd1-fae0-4777-a0d8-d242435f892f
 # ╠═8d276372-add5-4388-b713-b22e38d56f37
 # ╠═69018984-ef00-44ef-ba6e-7cccf930aef9
+# ╠═52cfca17-9daf-462b-b50f-51540eea1a2e
 # ╠═f476c859-ba4b-4343-8184-f6f41dc092ee
 # ╠═b87cf54b-2c4c-46c5-9336-c13e773e29ec
+# ╠═ea541217-fb14-4f53-8b83-d18ce852bca1
 # ╠═0b80353f-c698-4fae-b40f-1796f7c89792
 # ╠═e63df7b9-1fc1-4cc0-a91f-c0f1395d7ff4
 # ╠═d382b455-73ba-41d5-bbc8-eca53ea2166e

@@ -93,6 +93,9 @@ let
 	fig
 end
 
+# ╔═╡ e3bf65f5-a59f-4696-940a-fde472cb080a
+0.33 * V2KMS
+
 # ╔═╡ e4328247-467a-417a-9cd9-f8b6d1bb9985
 let
 	fig, ax = FigAxis(
@@ -141,5 +144,6 @@ end
 # ╠═13a22e15-2ef3-47a4-8b9d-f93228aa09db
 # ╠═c3e1e662-b169-4ea9-98d6-eab65b164be6
 # ╠═cdcdb9d4-ea44-4c2b-af34-c9a548a35e70
+# ╠═e3bf65f5-a59f-4696-940a-fde472cb080a
 # ╠═e4328247-467a-417a-9cd9-f8b6d1bb9985
 # ╠═9f0ebcb4-de65-47a6-be00-f5bae00f72ac
