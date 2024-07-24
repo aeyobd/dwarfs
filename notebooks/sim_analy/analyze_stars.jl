@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -21,6 +21,9 @@ using LilGuys
 # ╔═╡ cf6a7cbb-1034-4026-a3f3-1e854d2929e2
 using FITSIO
 
+# ╔═╡ 33a75908-3d98-4006-a8ef-833d9a161b01
+using KernelDensity
+
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
 
@@ -28,16 +31,16 @@ import TOML
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/V50_r0.5"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.07"
+starsname = "exp2d_rs0.1"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 r_scale = 1
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/halos/V50_r0.5/stars/$(starsname)_stars.hdf5"
+starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
 begin 
@@ -63,7 +66,10 @@ md"""
 """
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
-paramsfile = "/astro/dboyea/sculptor/isolation/1e6/halos/V50_r0.5/stars/$starsname.toml"
+paramsfile = "/astro/dboyea/sculptor/isolation/1e6/stars/$starsname.toml"
+
+# ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
+fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
 
 # ╔═╡ 172588cc-ae22-440e-8488-f508aaf7ce96
 rel_p_cut = 1e-20
@@ -399,10 +405,14 @@ frame = lguys.GSR
 # ╔═╡ 01b5ad85-9f37-4d8b-a29d-e47526f112ec
 function make_sample(snap; 
 	cen=nothing, rel_p_cut=rel_p_cut, r_max=Inf,
-	frame=frame
+	frame=frame,
+	filt_bound = false
 )
-	filt = snap.weights .> rel_p_cut * maximum(snap.weights)
-	
+	filt = snap.weights .>= rel_p_cut * maximum(snap.weights)
+
+	if filt_bound 
+		filt .&= lguys.get_bound(snap)
+	end
 	obs_df = lguys.to_sky(snap[filt], SkyFrame=frame, add_centre=true)
 
 	obs_df[!, :xi], obs_df[!, :eta] = lguys.to_tangent(obs_df.ra, obs_df.dec, obs_df.ra[1], obs_df.dec[1])
@@ -413,13 +423,16 @@ function make_sample(snap;
 end
 
 # ╔═╡ 1f722acb-f7b9-4d6c-900e-11eae85e0708
-obs_df = make_sample(snap_f)
+obs_df = make_sample(snap_f, filt_bound=false )
 
 # ╔═╡ 0215fe76-f9c5-4274-ae43-89960a0caaef
 obs_c = obs_df[1, :]
 
 # ╔═╡ 5e17bf16-2e3d-4372-8283-c43b8ad2550d
 lguys.write_fits(model_dir * "/" * outfile, obs_df)
+
+# ╔═╡ 0ad37255-665b-4a7f-b6c7-d7af73ec48de
+obs_df_all = make_sample(snap_f, rel_p_cut=0, r_max=Inf)
 
 # ╔═╡ 249351c0-6fb6-49ee-ab44-e464f34a1bbe
 sky_orbit = lguys.to_sky(snap_cen, SkyFrame=frame)
@@ -601,12 +614,19 @@ let
 
 	h = Arya.histogram2d(obs_df.xi, obs_df.eta, bins, weights=obs_df.weights)
 
-	p = heatmap!(h.xbins, h.ybins, h.values, colorscale=log10, colorrange=(1e-20, maximum(h.values)))
+	p = heatmap!(h.xbins, h.ybins, h.values, 
+		colorscale=log10, colorrange=(1e-20, maximum(h.values)))
 
 	Colorbar(fig[1, 2], p)
 
 	fig
 end
+
+# ╔═╡ b4778d19-cb91-4f0f-97fa-4ef69448f849
+save = CairoMakie.save
+
+# ╔═╡ e3fdb5b0-acf1-4ee1-bd3f-56fbfd60f646
+abspath(fig_dir)
 
 # ╔═╡ 7fa19be2-4014-4df0-821e-4c509eca4f28
 let
@@ -627,15 +647,16 @@ end
 
 # ╔═╡ 96307998-07a0-45bf-bf10-cd14bfcfe20a
 let
-	dr = 1
+	dr = 2
 	fig, ax = xi_eta_axis(dr, dr)
 
-	bins = LinRange(-dr, dr, 100)
+	bins = LinRange(-dr, dr, 20)
 
 	h = mean_2d(obs_df,  obs_df.radial_velocity, bins=bins)
 
 	p = heatmap!(h.xbins, h.ybins, h.values, 
-	colormap=:redsblues,  colorrange=(50, 80))
+	colormap=:redsblues, # colorrange=(50, 80)
+	)
 
 	Colorbar(fig[1, 2], p)
 
@@ -932,7 +953,7 @@ let
 	prob = prob[filt]
 	v = v[filt]
 
-	bins = 50
+	bins = 20
 	
 	r_bins = Arya.make_bins(x, (-0.5, 2.3), Arya.bins_equal_number, n=bins)
 
@@ -1266,6 +1287,7 @@ end
 # ╠═d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
 # ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
+# ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
 # ╠═172588cc-ae22-440e-8488-f508aaf7ce96
 # ╠═ef3481f8-2505-4c04-a04a-29bdf34e9abb
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
@@ -1308,6 +1330,7 @@ end
 # ╠═01b5ad85-9f37-4d8b-a29d-e47526f112ec
 # ╠═12a30334-899e-4061-b7d2-af8c2346721d
 # ╠═1f722acb-f7b9-4d6c-900e-11eae85e0708
+# ╠═0ad37255-665b-4a7f-b6c7-d7af73ec48de
 # ╠═51dea031-015b-4506-879d-9245c122d608
 # ╠═249351c0-6fb6-49ee-ab44-e464f34a1bbe
 # ╠═f87e4610-34ac-49f9-9858-0b3ef72eef15
@@ -1335,7 +1358,10 @@ end
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780
 # ╠═6ebfff07-c43f-4d4d-8604-9fd4f1de5d25
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
+# ╠═33a75908-3d98-4006-a8ef-833d9a161b01
 # ╠═edf68b42-4fe9-4e14-b7ed-739e89a1541a
+# ╠═b4778d19-cb91-4f0f-97fa-4ef69448f849
+# ╠═e3fdb5b0-acf1-4ee1-bd3f-56fbfd60f646
 # ╠═7fa19be2-4014-4df0-821e-4c509eca4f28
 # ╠═96307998-07a0-45bf-bf10-cd14bfcfe20a
 # ╠═35c52910-089c-4507-956a-2b0649507495

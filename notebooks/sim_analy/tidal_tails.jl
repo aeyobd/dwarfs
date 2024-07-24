@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -31,10 +31,10 @@ models_dir = "/arc7/home/dboyea/sculptor"
 r_b_arcmin = 64
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/orbits/V50_r0.5/"
+model_dir = "$models_dir/orbits/orbit1/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.08_today.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.1_today.fits"
 
 # ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
 stars = lguys.load_fits(starsfile)
@@ -495,8 +495,9 @@ let
 	mass = stars.weights
 	v_rad = stars.radial_velocity
 	x = stars.xi_p
+	r_max = 120
 
-	limits = (-r_max / 60, r_max/60, 30, 110)
+	limits = (-r_max / 60, r_max/60, 20, 110)
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,

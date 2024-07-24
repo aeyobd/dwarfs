@@ -289,7 +289,7 @@ end
 
 
 function pm_filter(all_stars, params::DensityParams)
-    pm_filter(all_stars, params.pmra, params.pmdec, params.dpm, params.n_sigma_pm)
+    return apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm, params.n_sigma_pm)
 end
 
 

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -18,16 +18,22 @@ end
 import TOML
 
 # ╔═╡ 96ae7f95-886b-4fd6-a1a0-3d4f0790cc34
-cd("/astro/dboyea/sculptor/orbits/V50_r0.5/stars")
+cd("/astro/dboyea/sculptor/orbits/1e6/orbit1//V70_r0.4/stars")
 
 # ╔═╡ c64b9fe9-b3ff-498f-85dd-55e227443b63
 name = "exp2d_rs0.07"
 
 # ╔═╡ 6d207751-695f-4247-94da-ced5a146092f
-prof_expected = lguys.ObsProfile("/astro/dboyea/sculptor/fiducial_sample_profile.toml")
+prof_expected = lguys.ObsProfile("/arc7/home/dboyea/dwarfs/notebooks/density_fits/sculptor/fiducial_profile.toml")
 
 # ╔═╡ 88f31bfc-a67d-4654-af8b-46dc91500558
-r_b = 76
+r_b = 68
+
+# ╔═╡ de26b439-d9dd-449e-9289-9d3daed87cc7
+fig_dir = "figures"
+
+# ╔═╡ b00d8ca9-f080-46a5-883d-1aa45a683e3f
+mkpath(fig_dir)
 
 # ╔═╡ 9e8f7fab-fdbf-4af3-afec-09b65da4d019
 md"""
@@ -35,7 +41,7 @@ md"""
 """
 
 # ╔═╡ e032f8e2-28b5-46c4-896e-27da9dfff22f
-params = TOML.parsefile("/astro/dboyea/sculptor/isolation/1e6/halos/V50_r0.5/stars/$name.toml")
+params = TOML.parsefile("/astro/dboyea/sculptor/isolation/1e6/halos/V70_r0.4/stars/$name.toml")
 
 # ╔═╡ 41d07a5b-32a7-43f2-9a34-eab54c8ab4e0
 R_s = params["profile_kwargs"]["R_s"]
@@ -87,7 +93,7 @@ function plot_model_and_exp!(prof, R_s_kpc;
 end
 
 # ╔═╡ de69d265-cda1-4543-ad02-2ee3091964d6
-log_r_label = "log r / arcmin"
+log_r_label = "log R / arcmin"
 
 # ╔═╡ bfab4ae8-a94b-4a81-aad3-9b706f2474bb
 function sigma_axis(; kwargs...) 
@@ -103,11 +109,14 @@ end
 
 # ╔═╡ 932c4fef-992b-4518-80d0-59c8e126ccb5
 let 
-	fig = Figure()
+	fig = Figure(
+		backgroundcolor=:transparent
+	)
 	ax = Axis(fig[1,1], 
 		xlabel=log_r_label,
 		ylabel = L"\log\, \Sigma\,/\,\Sigma_0",
-		limits=((-1, 2.1), (-5, 1))
+		limits=((-1, 2.1), (-4.5, 0.5)),
+		backgroundcolor=(:black, 0.)
 	)
 
 	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
@@ -128,10 +137,17 @@ let
 
 	
 	vlines!(log10(r_b), color=:grey, label="break radius")
-	axislegend()
+	axislegend(position=:lb,
+		backgroundcolor=:transparent
+	)
+
+	save(joinpath(fig_dir, "density_i_f.pdf"), fig)
 
 	fig
 end
+
+# ╔═╡ 693cb85b-8f19-414f-8a26-da2035232df0
+abspath(fig_dir)
 
 # ╔═╡ 09207e06-3ab5-41b2-a9af-e77d89b34f59
 let
@@ -204,6 +220,8 @@ end
 # ╠═c64b9fe9-b3ff-498f-85dd-55e227443b63
 # ╠═6d207751-695f-4247-94da-ced5a146092f
 # ╠═88f31bfc-a67d-4654-af8b-46dc91500558
+# ╠═de26b439-d9dd-449e-9289-9d3daed87cc7
+# ╠═b00d8ca9-f080-46a5-883d-1aa45a683e3f
 # ╠═9e8f7fab-fdbf-4af3-afec-09b65da4d019
 # ╠═e032f8e2-28b5-46c4-896e-27da9dfff22f
 # ╠═41d07a5b-32a7-43f2-9a34-eab54c8ab4e0
@@ -217,6 +235,7 @@ end
 # ╠═bfab4ae8-a94b-4a81-aad3-9b706f2474bb
 # ╠═de69d265-cda1-4543-ad02-2ee3091964d6
 # ╠═932c4fef-992b-4518-80d0-59c8e126ccb5
+# ╠═693cb85b-8f19-414f-8a26-da2035232df0
 # ╠═09207e06-3ab5-41b2-a9af-e77d89b34f59
 # ╟─b23c5630-fb8d-4132-a29d-d2d408e247ab
 # ╠═67f4b666-184a-4276-9306-e85a72b399a3

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -36,7 +36,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/V50_r0.5"
+model_dir = "/astro/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4"
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
 halo = NFW(; LilGuys.dict_to_tuple(TOML.parsefile(joinpath(model_dir, "halo.toml"))["profile"])...)
@@ -131,7 +131,7 @@ let
 		yscale=log10,
 		yticks=[1, 10, 20, 30, 40, 50, 60],
 		yminorticks=[1:9; 10:2:60],
-		limits=(nothing, (1, 60)),
+		limits=(nothing, (1, 75)),
 		xgridvisible=false,
 		ygridvisible=false
 	)
@@ -260,7 +260,7 @@ let
 end
 
 # ╔═╡ 8c0c017d-647d-49ed-95ce-1bc85725ca79
-[1,2,3][[2,3]]
+
 
 # ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
 let
@@ -309,20 +309,6 @@ let
 	Colorbar(fig[1, 2], h, label="DM density")
 
 	save(joinpath(figures_dir, "xy_projection.pdf"), fig)
-	fig
-end
-
-# ╔═╡ 6f2ce26c-37fa-4a93-83b2-81192f48c1df
-let
-	fig = Figure(size=(900, 900))
-	ax = Axis(fig[1,1], aspect=DataAspect())
-	r_max = 200
-	hidedecorations!(ax)
-	bins = LinRange(-r_max, r_max, 200)
-	
-	h = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-1, nothing))
-
-	resize_to_layout!(fig)
 	fig
 end
 
@@ -378,5 +364,4 @@ end
 # ╠═4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
 # ╠═d7aaba0e-1ba9-4349-b2f0-c047bb49bcd7
-# ╠═6f2ce26c-37fa-4a93-83b2-81192f48c1df
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf

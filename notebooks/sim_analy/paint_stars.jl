@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -60,10 +60,10 @@ Parameters
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V70_r0.4/stars"
+dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.07.toml"
+paramname = "exp2d_rs0.05.toml"
 
 # ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 begin 
@@ -230,44 +230,6 @@ end
 # ╔═╡ 075e869e-cb2b-457c-adf2-cc310ea422a4
 import StatsBase as sb
 
-# ╔═╡ 6e5d6ff7-974c-41a6-aa30-5ac0319c387a
-function bins_min_width_equal_number(a, dx_min, N_per_bin_min)
-	if dx_min <= 0 && N < 1
-		throw(ArgumentError("either dx_min or N must be positive"))
-	end
-	dq = N_per_bin_min / length(a)
-	println(dq)
-
-	bins = []
-	x = minimum(a)
-	push!(bins, x)
-
-	dx = 0
-
-	while x + dx < maximum(a)
-		q = sb.quantilerank(a, x)
-		if q + dq > 1
-			break
-		end
-		
-		dx = sb.quantile(a, q + dq) - x
-		dx = max(dx, dx_min)
-
-		x += dx
-
-		push!(bins, x)
-	end
-
-    if sum(a .> bins[end]) < N_per_bin_min
-        pop!(bins)
-    end
-
-	push!(bins, maximum(a))
-
-	return bins
-	
-end
-
 # ╔═╡ 29619cc3-1be3-4b24-92e0-ceccfd4a3f59
 """
 given the radii and parameters for stellar profile, returns the
@@ -292,7 +254,8 @@ function make_radius_bins(radii::AbstractVector, params::Dict)
 		Nr = params["num_radial_bins"]
 		r_e = percentile(radii, LinRange(0, 100, Nr+1))
 	elseif params["bin_method"] == "both"
-		r_e = 10 .^ bins_min_width_equal_number(log10.(radii), params["dr_min"], params["N_per_bin_min"], )
+		r_e = 10 .^ Arya.bins_min_width_equal_number(log10.(radii);
+		dx_min=params["dr_min"], N_per_bin_min=params["N_per_bin_min"], )
 	else
 		error("bin method unknown")
 	end
@@ -303,9 +266,6 @@ end
 
 # ╔═╡ 0d25988d-870a-482b-aa29-aedf137daa5d
 log10.(radii)
-
-# ╔═╡ 2b79f0d1-d7fb-4e53-8e3f-ff2e774608a0
-bins_min_width_equal_number(log10.(radii), 0.01, 0)
 
 # ╔═╡ deb46b0b-3504-4231-9f85-99f27caf924b
 r_e = make_radius_bins(radii, params)
@@ -703,7 +663,7 @@ let
 	r_h2 = calc_r_h(r, ms)
 	println(r_h2)
 	
-	r_e = 10 .^ LinRange(log10.(minimum(r)), log10(maximum(r)), 50)
+	r_e = 10 .^ Arya.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.1)
 	r, ν_s_nbody = lguys.calc_ρ_hist(r, r_e, weights=ms)
  
 	r = lguys.midpoints(r)
@@ -748,7 +708,9 @@ let
 	y = snap_og.positions[2, :] .- cen.position[2]
 	R = @. sqrt(x^2 + y^2)
 
-	prof = lguys.calc_properties(R, weights=ps_all[snap_og.index], bins=100)
+	bins = Arya.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.1)
+
+	prof = lguys.calc_properties(R, weights=ps_all[snap_og.index], bins=bins)
 
 	
 	fig = Figure()
@@ -777,7 +739,7 @@ md"""
 """
 
 # ╔═╡ 4396bced-cae8-4107-ac83-48cc3c4146f2
-distance = 86
+distance = 83.2
 
 # ╔═╡ 062cea41-3b51-474e-b877-7a4d96813fbc
 R_s_arcmin = lguys.kpc_to_arcmin(profile.R_s, distance)
@@ -812,8 +774,9 @@ let
 	ra0, dec0 = lguys.calc_centre2D(ra, dec, "mean", ms)
 	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 	R = @. 60sqrt(xi^2 + eta^2)
-	
-	prof = lguys.calc_properties(R, weights=ms, bins=50)
+	bins = 	 Arya.bins_min_width_equal_number(log10.(R), N_per_bin_min=30, dx_min=0.1)
+
+	prof = lguys.calc_properties(R, weights=ms, bins=bins)
 
 
 	fig = Figure()
@@ -924,10 +887,8 @@ save_obs(obs_mock, params["mock_file"])
 # ╠═f79414b4-620e-440e-a421-7bc13d373546
 # ╠═23158c79-d35c-411a-a35a-950f04214e19
 # ╠═075e869e-cb2b-457c-adf2-cc310ea422a4
-# ╠═6e5d6ff7-974c-41a6-aa30-5ac0319c387a
 # ╠═29619cc3-1be3-4b24-92e0-ceccfd4a3f59
 # ╠═0d25988d-870a-482b-aa29-aedf137daa5d
-# ╠═2b79f0d1-d7fb-4e53-8e3f-ff2e774608a0
 # ╠═deb46b0b-3504-4231-9f85-99f27caf924b
 # ╠═36b4adbd-d706-4e72-a922-53080c67946c
 # ╟─f3e95cfc-0087-4afa-8e88-a4e1628c50a0

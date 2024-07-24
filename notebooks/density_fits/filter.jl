@@ -65,7 +65,7 @@ zoom 20 arcmin
 galaxy_dir = "sculptor"
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "$galaxy_dir/background"
+name = "$galaxy_dir/fiducial"
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 begin 
@@ -90,6 +90,9 @@ r_ell_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec
 
 # ╔═╡ c3641354-58d7-42e1-97d8-98db1c0bf0ac
 all_stars = all_stars_unfiltered
+
+# ╔═╡ bfca40e9-7889-408b-a2ab-d13c22f6891b
+sum(all_stars.PSAT .> 0.2)
 
 # ╔═╡ 103b8a58-0d23-42df-a2d8-4ec508c0246a
 members = select_members(all_stars, params)
@@ -344,6 +347,7 @@ end
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
 # ╠═ce3cead5-b49e-41ff-ae3f-bdcaab68e858
 # ╠═c3641354-58d7-42e1-97d8-98db1c0bf0ac
+# ╠═bfca40e9-7889-408b-a2ab-d13c22f6891b
 # ╠═103b8a58-0d23-42df-a2d8-4ec508c0246a
 # ╟─4093a7d6-2f74-4c37-a4a8-270934ede924
 # ╠═07235d51-10e1-4408-a4d1-cd2079fadb75
