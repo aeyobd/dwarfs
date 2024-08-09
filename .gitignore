@@ -52,3 +52,5 @@ notebooks/density_fits/results
 
 *-used.toml
 coverage
+
+*.svg
