@@ -4,20 +4,20 @@ The Sculptor DSph
 
 ### Observations
 
-| parameter                | value                            | Source       |
-| ------------------------ | -------------------------------- | ------------ |
-| $\alpha$                 | $15.0183 \pm 0.0012$˚            | M+18         |
-| $\delta$                 | $-33.7186 \pm 0.00072$˚          | M+18         |
-| distance                 | $83.2 \pm 2$ kpc                 | Tran+22      |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | MV20a        |
-| $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | MV20a        |
-| RV                       | $111.4 \pm 0.1$ km s$^{-1}$      | Walker 2009* |
-| $\sigma_v$               | $9.2\pm1.4$ km s$^{-1}$          | Walker 2009* |
-| $r_h$                    | $12.33 \pm 0.05$ arcmin          | MV20*        |
-| ell                      | $0.36 \pm 0.01$                  | M+18         |
-| PA                       | $92\pm1$                         | M+18         |
-| $M_V$                    | $-10.82\pm0.14$                  | M+18         |
-| $\Upsilon_\star$         | $1.5 \pm 0.3$                    | assumed      |
+| parameter                | value                            | Source    |
+| ------------------------ | -------------------------------- | --------- |
+| $\alpha$                 | $15.0183 \pm 0.0012$˚            | M+18      |
+| $\delta$                 | $-33.7186 \pm 0.00072$˚          | M+18      |
+| distance                 | $83.2 \pm 2$ kpc                 | Tran+22   |
+| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | MV20a     |
+| $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | MV20a     |
+| RV                       | $111.03 \pm 0.23$                | This work |
+| $\sigma_v$               | $9.61\pm0.16$                    | This work |
+| $r_h$                    | $12.33 \pm 0.05$ arcmin          | MV20*     |
+| ell                      | $0.36 \pm 0.01$                  | M+18      |
+| PA                       | $92\pm1$                         | M+18      |
+| $M_V$                    | $-10.82\pm0.14$                  | M+18      |
+| $\Upsilon_\star$         | $1.5 \pm 0.3$                    | assumed   |
 
 ### Derived
 
@@ -34,12 +34,10 @@ MCMC on $M_V$ + M/L stars + uncertainties on Vcirc (0.1dex)  => M200 + uncertain
 
 ### Haloes
 
-| halo    | $M_{200} / M_0$ | $c$   | $V_{\rm circ,\ max}$ | $M_s/M_0$ | $r_s/{\rm kpc}$ | $h  / {\rm kpc}$ | $\sigma_v$ |
-| ------- | --------------- | ----- | -------------------- | --------- | --------------- | ---------------- | ---------- |
-| average | 0.5             | 13.1  | 31.3                 | 0.29      | 2.76            | 0.14             | 9.25       |
-| compact | 0.5             | 16.25 | 33.1                 | 0.262     | 2.23            | 0.15             | 10.5       |
-| heavy   | 0.8             | 12.6  | 36.3                 | 0.47517   | 3.3579          | 0.17             |            |
-| mixed   | 0.75            | 15    | 37.1                 | 0.4087    | 2.76            | 0.17             |            |
+| halo    | $M_{200} / M_0$ | $c$    | $V_{\rm circ,\ max}$ | $r_{\rm max}$ | $h  / {\rm kpc}$ | $\sigma_v$ |
+| ------- | --------------- | ------ | -------------------- | ------------- | ---------------- | ---------- |
+| average | 0.5             | 13.1   | 31.3                 | 2.76          | 0.14             | 9.25       |
+| heavy   | 2.18            | 11.866 | 50                   | 10.783        | 0.24             |            |
 
 last column: velocity dispersion assuming exp2d with Rs=0.13 kpc.
 

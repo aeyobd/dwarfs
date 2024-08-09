@@ -37,6 +37,18 @@ Given a density profile, the contained mass is $M(r) = \int_0^r \rho dV$. The ac
 
 ## NFW (Halo)
 
+### Source definition
+
+From the @nfw1996 paper, eqns. 3 & 4
+$$
+\frac{\rho}{\rho_c} = \frac{\delta_c}{(r/r_s)(1+r/r_s)^2}
+$$
+where 
+$$
+\delta_c = \frac{200}{3}\frac{c^3}{[\ln(1+c)-c/(1+c)]}
+$$
+$c$ is some concentration parameter, $\rho_c$ is the critical density of the universe, and $r_s$ is the characteristic scale length of the halo.
+
 ### Aside:Defined quantities
 
 The NFW is parameterized in terms of 
@@ -74,7 +86,9 @@ For example, Asya uses $M_{200} = 1.04e10$ and $c=12.5$ for Fornax, giving $M_s 
 
 ### Density
 
-From the @nfw1996 paper, 
+A simple substitution to the definition gives
+
+
 $$
 \rho(x) =  \frac{\rho_s/3}{x\ (1+x)^2}
 $$
@@ -84,7 +98,7 @@ $$
 $$
 and $A(c)$ is as above. The characteristic density can also be written in terms of scale mass,  $M_s = M_{200}/{A(c)}$  (see below), giving
 $$
-\rho_s =  \frac{M_s}{4\ \pi\, {r_s}^3}
+\rho_s = \frac{c^3}{A(c)} \frac{M_{200}}{(4\pi/3)\ r_{200}^3}  = \frac{3M_s}{4\pi\, {r_s}^3}
 $$
 Note that this is the same as an alpha-beta-gamma profile where $\alpha=\gamma=1$ and $\beta =3$.
 
