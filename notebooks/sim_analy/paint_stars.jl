@@ -20,6 +20,7 @@ begin
 	using NaNMath; nm = NaNMath
 	using Arya
 	using HDF5
+	import DensityEstimators
 end
 
 # ╔═╡ 631a70f3-5284-4c3f-81ef-714455b876ee
@@ -63,372 +64,32 @@ Parameters
 dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = "exp2d_rs0.05.toml"
+paramname = joinpath(dir, "exp2d_rs0.1")
+
+# ╔═╡ 8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
+params = TOML.parsefile(paramname * ".toml")
+
+# ╔═╡ 0ede2af5-a572-41c8-b3f0-cb0a24318c5f
+profile = lguys.load_profile(paramname * ".toml")
+
+# ╔═╡ 159aa60d-563b-4c85-b75d-502ac944b99c
+df_E = lguys.load_fits(paramname * "_energy.fits")
 
 # ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
+df_density = lguys.load_fits(paramname * "_density.fits")
+
+# ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
+df_probs = lguys.load_hdf5_table(paramname * "_stars.hdf5")
+
+# ╔═╡ 578c6196-db59-4d5c-96a7-9a8487bbeaae
 begin 
-	# expiremental parameters 
-	
-	overwrite = true
+	snap = lguys.Snapshot(joinpath(dir, params["snapshot"]))
+	snap.weights = df_probs.probability[snap.index]
+	snap
 end
 
-# ╔═╡ 0a2916d6-36f1-4fd7-b0db-d5f68e288283
-md"""
-# File Loading
-"""
-
-# ╔═╡ f1459790-10c5-4538-82d5-23e86dfe3f33
-"""
-loads in the parameterfile and will 
-automatically populate the centres file and output files
-"""
-function load_params(paramname)
-	params = TOML.parsefile(paramname); 
-
-	if "output_file" ∉ keys(params)
-		params["output_file"] = splitext(paramname)[1] * "_stars.hdf5"
-	end
-	
-	if "mock_file" ∉ keys(params)
-		params["mock_file"] = splitext(paramname)[1] * "_mock_stars.fits"
-	end
-	
-	params
-end
-
-# ╔═╡ 9326c8a6-8b9b-4406-b00f-9febb3dcca46
-cd(dir); params=load_params(paramname)
-
-# ╔═╡ 43d45dea-af35-487d-bc37-18bd93b09a1f
-"""
-Loads in the instance of lguys.Profile from the parameter file.
-"""
-function load_profile(params)
-	profile_class = getproperty(lguys, Symbol(params["profile"]))
-	profile = profile_class(;lguys.dict_to_tuple(params["profile_kwargs"])...)
-
-	return profile
-end
-
-# ╔═╡ d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
-profile = load_profile(params)
-
-# ╔═╡ aa69bde5-ab93-4105-9d48-ad0ace88e3f0
+# ╔═╡ 29930595-5255-4454-8550-22ac6a96f609
 r_h = lguys.get_r_h(profile)
-
-# ╔═╡ 1b9f3101-4891-4a8c-8c73-41a222b6c26f
-ρ_s(r) = lguys.calc_ρ(profile, r)
-
-# ╔═╡ 4cb09115-143d-456f-9c6a-19656f638677
-begin 
-	snapname = params["snapshot"]
-	println("loading snap ", snapname)
-	snap_og = lguys.Snapshot(snapname)
-
-	cen = lguys.calc_centre(lguys.StaticState, snap_og)
-	
-	snap_og.x_cen = cen.position
-	snap_og.v_cen = cen.velocity
-
-	println(cen)
-	
-	snap_og
-end
-
-# ╔═╡ 620a617b-c1d7-4718-a1b8-f4c3c18285d5
-md"""
-## Preprocessing snapshot
-"""
-
-# ╔═╡ 9cce4cf5-2371-492d-950a-fd963db80738
-function sort_snapshot(snap_i)
-	radii = lguys.calc_r(snap_i)
-	return snap_i[sortperm(radii)]
-end
-
-# ╔═╡ 9af14bf8-bd18-48a9-af1e-62f9dab095b7
-function calc_phi(snap)
-	radii = lguys.calc_r(snap)
-	Φs = lguys.calc_radial_discrete_Φ(radii, snap.masses)
-	
-	return Φs
-end
-
-# ╔═╡ 5851e36f-9376-4445-9bac-da3ce9d5ac7e
-function calc_eps(snap, Φs)
-	ke = lguys.calc_K_spec(snap)
-	ϵs = @. -Φs - ke
-
-	return ϵs
-end
-
-# ╔═╡ 2c2b5c87-1e5e-4c32-ba64-e6d24323007c
-function make_filter(ϵs, radii, params)
-	filt = ϵs .> 0
-	if "R_t" in keys(params["profile_kwargs"])
-		filt .&= radii .< params["profile_kwargs"]["R_t"]
-	end
-	return filt
-end
-
-# ╔═╡ d4a0bd79-5d5e-48e8-bd8c-8865663423e1
-function filter_and_sort(snap_og)
-	snap = sort_snapshot(snap_og)
-
-	# calculate energies
-	Φs = calc_phi(snap)
-
-	ϵs = calc_eps(snap, Φs)
-	radii = lguys.calc_r(snap)
-	filt_snap = make_filter(ϵs, radii, params)
-
-	snap = snap[filt_snap]
-end
-
-# ╔═╡ f0b0e4f2-2061-4725-86a6-7179ea552c92
-snap = filter_and_sort(snap_og)
-
-# ╔═╡ 3d2cd818-454c-400d-8dbb-f7c6405266fe
-snap
-
-# ╔═╡ e155f30d-e176-4faa-84f1-819553ea456e
-Φs = calc_phi(snap)
-
-# ╔═╡ c7b92f65-67f8-4d91-ab6f-5077258dbacc
-ϵs = calc_eps(snap, Φs)
-
-# ╔═╡ e797fe86-7361-4c7a-b1d4-2f3b6b6b0ef9
-radii = lguys.calc_r(snap)
-
-# ╔═╡ f7f746c9-cd03-4391-988b-dffeb31b2842
-println(" $(sum(radii .< r_h)) stars within (3D) half-light radius")
-
-# ╔═╡ 4fe0d79b-92f8-4766-808a-9bfbf4c5ab7f
-"""
-Given radii, masses, and radii to evaluate at, returns lerp'ed interior mass
-"""
-function calc_M_in(radii, masses, r)
-	Min = cumsum(masses) ./ sum(masses)
-
-	Min_lerp = lguys.lerp(radii, Min)
-	M = Min_lerp.(r)
-	
-	return M
-end
-
-# ╔═╡ e935a80a-7f4f-4143-ae6c-bee62b82c30e
-md"""
-# Core calculation
-"""
-
-# ╔═╡ 23158c79-d35c-411a-a35a-950f04214e19
-begin 
-	M_s_tot = 4π * quadgk(r-> r^2 * ρ_s(r), 1e-5, 1.9)[1]
-	M_s(r) = 4π * quadgk(r-> r^2 * ρ_s(r) / M_s_tot, 1e-5, r)[1]
-end
-
-# ╔═╡ 075e869e-cb2b-457c-adf2-cc310ea422a4
-import StatsBase as sb
-
-# ╔═╡ 29619cc3-1be3-4b24-92e0-ceccfd4a3f59
-"""
-given the radii and parameters for stellar profile, returns the
-radial bins used in the calculation. 
-
-"""
-function make_radius_bins(radii::AbstractVector, params::Dict)
-	log_radii = log10.(radii)
-
-	if !issorted(radii)
-		error("radii must be sorted")
-	end
-	
-	r_min = radii[1]
-	r_max = radii[end]
-	
-	if params["bin_method"] == "equal_width"
-		Nr = params["num_radial_bins"]
-
-		r_e = 10 .^ LinRange(log10.(r_min), log10.(r_max), Nr+1)
-	elseif params["bin_method"] == "equal_number"
-		Nr = params["num_radial_bins"]
-		r_e = percentile(radii, LinRange(0, 100, Nr+1))
-	elseif params["bin_method"] == "both"
-		r_e = 10 .^ Arya.bins_min_width_equal_number(log10.(radii);
-		dx_min=params["dr_min"], N_per_bin_min=params["N_per_bin_min"], )
-	else
-		error("bin method unknown")
-	end
-
-	return r_e
-	
-end
-
-# ╔═╡ 0d25988d-870a-482b-aa29-aedf137daa5d
-log10.(radii)
-
-# ╔═╡ deb46b0b-3504-4231-9f85-99f27caf924b
-r_e = make_radius_bins(radii, params)
-
-# ╔═╡ 36b4adbd-d706-4e72-a922-53080c67946c
-r = lguys.midpoints(r_e)
-
-# ╔═╡ f79414b4-620e-440e-a421-7bc13d373546
-M = calc_M_in(radii, snap.masses, r)
-
-# ╔═╡ f3e95cfc-0087-4afa-8e88-a4e1628c50a0
-"""
-Given the stellar mass function M_s, returns total missing stars
-"""
-function print_missing(r_bins, M_s)
-	N_s_out = 1 - M_s(r_e[end])
-	N_s_in = M_s(r_e[1])
-	println("missing $N_s_out stars outside")
-	println("missing $N_s_in stars inside")
-end
-
-# ╔═╡ 41a08be6-d822-4a19-afe5-62c7dc9ff118
-print_missing(r_e, M_s)
-
-# ╔═╡ dfa675d6-aa32-45c3-a16c-626e16f36083
-ψ = lguys.lerp(radii, -Φs).(r)
-
-# ╔═╡ ab4d4458-fd1d-417a-8a74-5e06f41af166
-ν_dm = lguys.calc_ρ_hist(radii, r_e)[2] ./ length(snap)
-
-# ╔═╡ 20f858d6-a9f5-4880-a431-60b395cc7e50
-ν_s = max.(ρ_s.(r) ./ M_s_tot, 0)
-
-# ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
-begin 
-	f_dm = lguys.calc_fϵ(ν_dm, ψ, r)
-	f_s = lguys.calc_fϵ(ν_s, ψ, r)
-end
-
-# ╔═╡ 126c6825-723f-4d13-b5a3-64cba72fc867
-md"""
-The density distribution of the stars (analytic) and dark matter (calculated) from the snapsho
-"""
-
-# ╔═╡ 7481f47a-2b8a-45a3-9b4e-31ea14e9d331
-md"""
-The potential $\psi = -\Phi$ as a function of log radii (for the spherically calculated & interpolated and actual snapshot from Gadget 4)
-"""
-
-# ╔═╡ 1c0899c6-2692-45ab-b9e6-668dc576d679
-function make_energy_bins(ψ, params)
-	E_max = ψ[1]
-	E_min = ψ[end]
-	E = LinRange(E_min, E_max, params["num_energy_bins"] + 1)
-end
-
-# ╔═╡ 3025546e-3ce1-4a78-824d-24f644238e32
-E = make_energy_bins(ψ, params)
-
-# ╔═╡ 500c67b2-8c4a-4d03-b4e4-39beff43a46c
-f_dm_e = f_dm.(E)
-
-# ╔═╡ 9e492a55-7b20-4eca-aead-c7afeee63f11
-f_s_e = f_s.(E)
-
-# ╔═╡ 8b66d00d-529b-4e8c-9386-b17117996579
-md"""
-The calculated distribution function as a function of log specific binding energy $\epsilon =  -\Phi - T$
-"""
-
-# ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
-begin 
-	probs = f_s_e ./ f_dm_e
-	probs ./= sum(probs .* lguys.gradient(E)) # pdf, dN/dE
-	prob = lguys.lerp(E, probs)
-end
-
-# ╔═╡ 3b229c8e-9320-4c07-b948-c34a0c082341
-begin 
-	ps = prob.(ϵs)
-	print(sum(ps .< 0), " negative probabilities")
-	ps[ps .< 0] .= 0
-	ps[isnan.(ps)] .= 0
-	ps ./= sum(ps)
-end
-
-# ╔═╡ daf54cb4-06a3-4a8e-a533-354ca8740aec
-md"""
-A histogram of the assigned (positive) stellar weights. See the number of negative probabilities above
-"""
-
-# ╔═╡ b67a17dc-7a59-4b62-9120-4c2ada12298c
-md"""
-The main result. The reconstructed density profile
-"""
-
-# ╔═╡ 06e1b872-ce52-434f-a8d1-3b0a5055eed2
-md"""
-A histogram of the stellar density
-"""
-
-# ╔═╡ ee866164-c6f2-4f70-bde1-360abd5fd80e
-md"""
-Histogram of same region in dark matter only (over a smaller dynamic range). Dark matter is much more extended (as expected)
-"""
-
-# ╔═╡ a3071af2-beff-408d-b109-d4f289f8f7f4
-md"""
-## Last checks and saving profile
-"""
-
-# ╔═╡ 15c911ae-679e-4f0f-aad5-9f3fe51bdeab
-p_idx = snap.index
-
-# ╔═╡ 54d6ca0d-a1f8-44b3-895d-a45ad72ff42c
-idx_excluded = setdiff(snap_og.index, snap.index)
-
-# ╔═╡ 7bc02274-aa44-4609-b9a6-e409de5172af
-begin
-	
-	idx_all = vcat(p_idx, idx_excluded)
-	ps_all = vcat(ps, zeros(length(idx_excluded)))
-
-	_sort = sortperm(idx_all)
-	idx_all = idx_all[_sort]
-	ps_all = ps_all[_sort]
-end
-
-# ╔═╡ f66a4a6d-b31c-481b-bf7a-4801c783ceb4
-idx_all == sort(snap_og.index) # check we didn't lose any star particles
-
-# ╔═╡ c18bc8b9-7ea1-47e2-8d7e-971a0943917a
-maximum(idx_all) == length(idx_all)
-
-# ╔═╡ 92798e2e-2356-43c2-a4a9-82a70619a5f5
-0 == sum(ps_all[idx_excluded]) # should be zero
-
-# ╔═╡ 4671b864-470d-4181-993b-4e64d5687460
-sum(ps_all) # should be 1
-
-# ╔═╡ bd8489da-ac53-46c6-979e-06d5dc6e25d1
-"""
-Writes the stars to an hdf5 file
-"""
-function write_stars()
-	outname = params["output_file"]
-	if isfile(outname)
-		if overwrite
-			rm(outname)
-		else
-			println("file already exists")
-			return
-		end
-	end
-
-
-	h5write(outname, "/index", idx_all)
-	h5write(outname, "/probabilities", ps_all)
-	println("probabilities written to $outname")
-end
-
-# ╔═╡ f42cb7e1-64b7-47da-be05-dd50c2471fb3
-write_stars()
 
 # ╔═╡ 4d1991ea-9496-48c7-a400-8fefbecefcd2
 md"""
@@ -443,8 +104,8 @@ md"""
 # ╔═╡ 2aa9c02e-621e-4ba2-b69e-a9ed66d834b8
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="log radii", ylabel="counts")
-	h = Arya.histogram(log10.(radii), log10.(r_e), normalization=:none)
+	ax = Axis(fig[1,1], xlabel="log radii / kpc", ylabel="counts")
+	h = lguys.histogram(log10.(df_probs.radii), log10.(df_density.r), normalization=:none)
 	scatter!(h)
 
 	fig
@@ -454,8 +115,8 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radii", ylabel="PDF")
-	stephist!(log10.(radii), bins=log10.(r_e), normalization=:pdf, label="dark matter")
-	stephist!(log10.(radii), bins=log10.(r_e), weights=ps, normalization=:pdf, label="stars (nbody)")
+	stephist!(log10.(df_probs.radii), bins=log10.(df_density.r), normalization=:pdf, label="dark matter")
+	stephist!(log10.(df_probs.radii), bins=log10.(df_density.r), weights=df_probs.probability, normalization=:pdf, label="stars (nbody)")
 	axislegend()
 	fig
 end
@@ -468,21 +129,21 @@ let
 		ylabel="asinh density", 
 		)
 
-
 	scale = 1e-10
 
 	y_trans(x) =  asinh.(x / scale)
+	ϵs = df_probs.eps
+	ps = df_probs.probability
+
 	
-	h1 = Arya.histogram(ϵs, normalization=:pdf)
+	h1 = lguys.histogram(ϵs, 20, normalization=:pdf)
 	h1.values .= y_trans(h1.values)
 
-	h_s = Arya.histogram(ϵs, weights=ps, normalization=:pdf)
+	h_s = lguys.histogram(ϵs, 20, weights=ps, normalization=:pdf)
 	h_s.values .= y_trans(h_s.values)
 
-	probs = prob.(E)
-	probs = y_trans(probs)
 	
-	lines!((E), probs, color=Arya.COLORS[3], label="f_s / f_dm")
+	lines!(df_E.E, df_E.probs, color=Arya.COLORS[3], label="f_s / f_dm")
 	
 	lines!(h1, label="dark matter")
 	lines!(h_s, label="stars (nbody)")
@@ -498,8 +159,8 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
 		xlabel="log r", ylabel="log density")
-	scatter!(log10.(r), log10.(ν_dm), label="DM")
-	scatter!(log10.(r), log10.(ν_s), label="stars (analytic)")
+	scatter!(log10.(df_density.r), log10.(df_density.nu_dm), label="DM")
+	scatter!(log10.(df_density.r), log10.(df_density.nu_s), label="stars (analytic)")
 
 	axislegend()
 	fig
@@ -509,8 +170,8 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="log f", limits=(nothing, (-15, 7)) )
-	lines!(log10.(E), nm.log10.(f_s_e), label="stars")
-	lines!(log10.(E), nm.log10.(f_dm_e), label="DM")
+	lines!(log10.(df_E.E), nm.log10.(df_E.f_s_e), label="stars")
+	lines!(log10.(df_E.E), nm.log10.(df_E.f_dm_e), label="DM")
 
 	axislegend(ax, position=:lt)
 	fig
@@ -525,8 +186,12 @@ The calculated energy distribution function for both stars and dark matter (samp
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"\log\ r / \textrm{kpc}", ylabel=L"\Psi(r)")
-	lines!(log10.(r), ψ, label="interpolated")
-	lines!(log10.(radii), -snap.Φs, label="snapshot")
+
+	idx = sortperm(df_probs.radii)
+	lines!(log10.(df_probs.radii[idx]), df_probs.phi[idx], label="interpolated")
+
+	idx = sortperm(lguys.calc_r(snap))
+	lines!(log10.(lguys.calc_r(snap)[idx]), snap.Φs[idx], label="snapshot")
 	axislegend()
 	fig
 end
@@ -550,8 +215,17 @@ function calc_r_h(rs, masses)
 	return rs[idx_h]
 end
 
+# ╔═╡ 65c7cb79-1246-493d-b6d6-4d836746e396
+df_density.r
+
+# ╔═╡ 406c942e-d5a5-4ab7-806c-27ce79cefffb
+r_e = [df_density.r[1] - df_density.dr[1]; df_density.r .+ df_density.dr]
+
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
-ν_s_nbody = lguys.calc_ρ_hist(radii, r_e, weights=ps)[2]
+ν_s_nbody = lguys.calc_ρ_hist(df_probs.radii, r_e, weights=df_probs.probability)[2]
+
+# ╔═╡ c5fa22bf-6090-4014-85e6-6681b2bb10a7
+df_density.r .- df_density.dr .- r_e[1:end-1]
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 let
@@ -559,14 +233,14 @@ let
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
 		limits=((0, 1), (-15, 3))
 		)
-	lines!(log10.(r), nm.log10.(ν_s), label="stars")
-	scatter!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
+	lines!(log10.(df_density.r), nm.log10.(df_density.nu_s), label="stars")
+	scatter!(log10.(df_density.r) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
 
 	ax2 = Axis(fig[2,1], 
-		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
+		xlabel=L"\log\,r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
 		limits=((log10(0.5r_h), log10(100r_h)), (-1, 1)))
 	
-	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="",
+	scatter!(log10.(df_density.r), nm.log10.(ν_s_nbody) .- nm.log10.(df_density.nu_s), label="",
 		color=COLORS[2]
 	)
 	hlines!([0], label="")
@@ -582,7 +256,7 @@ let
 	fig = Figure()
 	Axis(fig[1,1], xlabel="log radii", ylabel="pstar > 0.025")
 
-	hist!(log10.(radii[ps .> 2e-6]))
+	hist!(log10.(lguys.calc_r(snap)[snap.weights .> 2e-6]))
 
 	fig
 end
@@ -591,7 +265,7 @@ end
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="stellar weights", ylabel="frequency", yscale=log10)
-	hist!(ps, bins=100)
+	hist!(snap.weights, bins=100)
 	fig
 end
 
@@ -619,7 +293,7 @@ let
 		colorrange=(1e-2, nothing)
 	)	
 
-	scatter!(cen.position[1], cen.position[2])
+	#scatter!(cen.position[1], cen.position[2])
 
 	Colorbar(fig[1, 2],h )
 
@@ -629,7 +303,7 @@ end
 # ╔═╡ cc231e78-cfc0-4876-9f8b-980139f7d27f
 let
 	fig = Figure()
-	filt = ps .> 0
+	filt = snap.weights .> 0
 	
 	ax = Axis(fig[1,1], 
 		limits=(-r_hist, r_hist, -r_hist, r_hist), 
@@ -641,12 +315,12 @@ let
 	
 	h = Arya.hist2d!(ax, 
 		lguys.get_x(snap)[filt], lguys.get_y(snap)[filt], 
-		weights=ps[filt], bins=N_hist,
+		weights=snap.weights[filt], bins=N_hist,
 		colorscale=log10,
 		colorrange=(1e-7, nothing)
 	)	
 
-	scatter!(cen.position[1], cen.position[2])
+	#scatter!(cen.position[1], cen.position[2])
 
 	Colorbar(fig[1, 2], h)
 	fig
@@ -657,17 +331,18 @@ lguys.arcmin_to_kpc(14, 83.2)
 
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
-	r = lguys.calc_r(snap_og)
-	ms = ps_all[snap_og.index]
+	r = lguys.calc_r(snap)
+	ms = snap.weights
+
 	
 	r_h2 = calc_r_h(r, ms)
 	println(r_h2)
 	
-	r_e = 10 .^ Arya.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.1)
+	r_e = 10 .^ DensityEstimators.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.1)
 	r, ν_s_nbody = lguys.calc_ρ_hist(r, r_e, weights=ms)
  
 	r = lguys.midpoints(r)
-	ν_s = ρ_s.(r)
+	ν_s = lguys.calc_ρ.(profile, r)
 	
 	fig = Figure(size=(700, 500))
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
@@ -704,13 +379,13 @@ md"""
 
 # ╔═╡ 6dd92ee1-374d-47fa-ad61-b54764b23240
 let
-	x = snap_og.positions[1, :] .- cen.position[1]
-	y = snap_og.positions[2, :] .- cen.position[2]
+	x = snap.positions[1, :] 
+	y = snap.positions[2, :] 
 	R = @. sqrt(x^2 + y^2)
 
-	bins = Arya.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.1)
+	bins = DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.1)
 
-	prof = lguys.calc_properties(R, weights=ps_all[snap_og.index], bins=bins)
+	prof = lguys.calc_properties(R, weights=snap.weights, bins=bins)
 
 	
 	fig = Figure()
@@ -745,11 +420,11 @@ distance = 83.2
 R_s_arcmin = lguys.kpc_to_arcmin(profile.R_s, distance)
 
 # ╔═╡ 7b7832d1-6739-453e-aaee-fa16a6000d26
-function mock_obs(snap_og, ps_all; distance=86)
+function mock_obs(snap_og; distance=86)
 	x_sun = [8.122, 0, 0]
 	shift_vec = x_sun .+ lguys.rand_unit() * distance
 	
-	ps = ps_all[snap_og.index]
+	ps = snap.weights
 	p_min = 1e-25
 	filt = p_min * maximum(ps) .< ps
 
@@ -763,7 +438,7 @@ function mock_obs(snap_og, ps_all; distance=86)
 end
 
 # ╔═╡ 87b5b241-db72-45ee-b3a7-a394f99510d9
-obs_mock = mock_obs(snap_og, ps_all)
+obs_mock = mock_obs(snap)
 
 # ╔═╡ ff51f97d-2404-49c6-9339-4b201d6a94a9
 let
@@ -774,7 +449,7 @@ let
 	ra0, dec0 = lguys.calc_centre2D(ra, dec, "mean", ms)
 	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 	R = @. 60sqrt(xi^2 + eta^2)
-	bins = 	 Arya.bins_min_width_equal_number(log10.(R), N_per_bin_min=30, dx_min=0.1)
+	bins = 	 DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=30, dx_min=0.1)
 
 	prof = lguys.calc_properties(R, weights=ms, bins=bins)
 
@@ -816,19 +491,21 @@ let
 		ylabel="density"
 	)
 
-	stephist!(x, weights=m, normalization=:pdf, bins=50)
+	stephist!(x, weights=m, normalization=:pdf, bins=50, label="n-body stellar density")
 	x_model = LinRange(μ - 5σ, μ + 5σ, 1000)
 	y_model = lguys.gaussian.(x_model, μ, σ)
 
-	lines!(x_model, y_model, color=COLORS[2])
+	lines!(x_model, y_model, color=COLORS[2], label="N($(round(μ, digits=2)), $(round(σ, digits=2)))")
+
+	axislegend()
 	
 	fig
 end
 
 # ╔═╡ e4c33671-744b-42bb-87be-2df7add03b96
 let
-	x = lguys.calc_r(snap_og.velocities, cen.velocity) .^2 * lguys.V2KMS^2
-	m = ps_all[snap_og.index]
+	x = lguys.calc_r(snap.velocities) .^2 * lguys.V2KMS^2
+	m = snap.weights
 	
 	μ = mean(x, weights(m))
 	println(sqrt(μ)/ sqrt(3))
@@ -861,65 +538,13 @@ save_obs(obs_mock, params["mock_file"])
 # ╟─da38359e-f138-41ee-9b8f-9cc8a38f77a2
 # ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
+# ╠═8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
+# ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
+# ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
+# ╠═159aa60d-563b-4c85-b75d-502ac944b99c
 # ╠═f1a7fa1f-bdcd-408c-ab27-b52916b1892f
-# ╟─0a2916d6-36f1-4fd7-b0db-d5f68e288283
-# ╠═f1459790-10c5-4538-82d5-23e86dfe3f33
-# ╠═9326c8a6-8b9b-4406-b00f-9febb3dcca46
-# ╟─43d45dea-af35-487d-bc37-18bd93b09a1f
-# ╠═d88cbe6a-b87b-45a2-8a3f-c5ef0b7a8935
-# ╠═aa69bde5-ab93-4105-9d48-ad0ace88e3f0
-# ╠═f7f746c9-cd03-4391-988b-dffeb31b2842
-# ╠═1b9f3101-4891-4a8c-8c73-41a222b6c26f
-# ╠═4cb09115-143d-456f-9c6a-19656f638677
-# ╠═3d2cd818-454c-400d-8dbb-f7c6405266fe
-# ╟─620a617b-c1d7-4718-a1b8-f4c3c18285d5
-# ╠═9cce4cf5-2371-492d-950a-fd963db80738
-# ╠═9af14bf8-bd18-48a9-af1e-62f9dab095b7
-# ╠═5851e36f-9376-4445-9bac-da3ce9d5ac7e
-# ╠═2c2b5c87-1e5e-4c32-ba64-e6d24323007c
-# ╠═d4a0bd79-5d5e-48e8-bd8c-8865663423e1
-# ╠═f0b0e4f2-2061-4725-86a6-7179ea552c92
-# ╠═e155f30d-e176-4faa-84f1-819553ea456e
-# ╠═c7b92f65-67f8-4d91-ab6f-5077258dbacc
-# ╠═e797fe86-7361-4c7a-b1d4-2f3b6b6b0ef9
-# ╟─4fe0d79b-92f8-4766-808a-9bfbf4c5ab7f
-# ╟─e935a80a-7f4f-4143-ae6c-bee62b82c30e
-# ╠═f79414b4-620e-440e-a421-7bc13d373546
-# ╠═23158c79-d35c-411a-a35a-950f04214e19
-# ╠═075e869e-cb2b-457c-adf2-cc310ea422a4
-# ╠═29619cc3-1be3-4b24-92e0-ceccfd4a3f59
-# ╠═0d25988d-870a-482b-aa29-aedf137daa5d
-# ╠═deb46b0b-3504-4231-9f85-99f27caf924b
-# ╠═36b4adbd-d706-4e72-a922-53080c67946c
-# ╟─f3e95cfc-0087-4afa-8e88-a4e1628c50a0
-# ╠═41a08be6-d822-4a19-afe5-62c7dc9ff118
-# ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
-# ╠═ab4d4458-fd1d-417a-8a74-5e06f41af166
-# ╠═20f858d6-a9f5-4880-a431-60b395cc7e50
-# ╠═1fab14ec-6bfc-4243-bc48-915d1a129925
-# ╟─126c6825-723f-4d13-b5a3-64cba72fc867
-# ╟─7481f47a-2b8a-45a3-9b4e-31ea14e9d331
-# ╠═1c0899c6-2692-45ab-b9e6-668dc576d679
-# ╠═3025546e-3ce1-4a78-824d-24f644238e32
-# ╠═500c67b2-8c4a-4d03-b4e4-39beff43a46c
-# ╠═9e492a55-7b20-4eca-aead-c7afeee63f11
-# ╟─8b66d00d-529b-4e8c-9386-b17117996579
-# ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
-# ╠═3b229c8e-9320-4c07-b948-c34a0c082341
-# ╟─daf54cb4-06a3-4a8e-a533-354ca8740aec
-# ╟─b67a17dc-7a59-4b62-9120-4c2ada12298c
-# ╟─06e1b872-ce52-434f-a8d1-3b0a5055eed2
-# ╟─ee866164-c6f2-4f70-bde1-360abd5fd80e
-# ╟─a3071af2-beff-408d-b109-d4f289f8f7f4
-# ╠═15c911ae-679e-4f0f-aad5-9f3fe51bdeab
-# ╠═54d6ca0d-a1f8-44b3-895d-a45ad72ff42c
-# ╠═7bc02274-aa44-4609-b9a6-e409de5172af
-# ╠═f66a4a6d-b31c-481b-bf7a-4801c783ceb4
-# ╠═c18bc8b9-7ea1-47e2-8d7e-971a0943917a
-# ╠═92798e2e-2356-43c2-a4a9-82a70619a5f5
-# ╠═4671b864-470d-4181-993b-4e64d5687460
-# ╠═bd8489da-ac53-46c6-979e-06d5dc6e25d1
-# ╠═f42cb7e1-64b7-47da-be05-dd50c2471fb3
+# ╠═1066a445-600d-4508-96a2-aa9b90460097
+# ╠═29930595-5255-4454-8550-22ac6a96f609
 # ╟─4d1991ea-9496-48c7-a400-8fefbecefcd2
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
 # ╠═2aa9c02e-621e-4ba2-b69e-a9ed66d834b8
@@ -933,6 +558,9 @@ save_obs(obs_mock, params["mock_file"])
 # ╟─ffca9cd9-a2d7-4f52-8467-8f4757ddf445
 # ╠═76200404-16aa-4caf-b247-3bc330b82868
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
+# ╠═65c7cb79-1246-493d-b6d6-4d836746e396
+# ╠═406c942e-d5a5-4ab7-806c-27ce79cefffb
+# ╠═c5fa22bf-6090-4014-85e6-6681b2bb10a7
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
 # ╠═33a26663-0c08-411b-902b-a509b2afa5ad
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
