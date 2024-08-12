@@ -24,8 +24,22 @@ using FITSIO
 # ╔═╡ 33a75908-3d98-4006-a8ef-833d9a161b01
 using KernelDensity
 
+# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
+md"""
+Given a stellar probability file, calculates initial-final density profiles, 
+and projects stars onto the sky
+"""
+
+# ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
+import DensityEstimators
+
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
+
+# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
+md"""
+# Inputs
+"""
 
 # ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
 models_dir = "/arc7/home/dboyea/sculptor"
@@ -41,29 +55,6 @@ r_scale = 1
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
 starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
-
-# ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
-begin 
-	using HDF5
-
-	f = h5open(starsfile)
-	p_idx = f["index"][:]
-	probabilities = f["probabilities"][:][sortperm(p_idx)]
-	p_idx = sort(p_idx)
-	close(f)
-	
-end
-
-# ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
-md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
-"""
-
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = "/astro/dboyea/sculptor/isolation/1e6/stars/$starsname.toml"
@@ -106,14 +97,17 @@ params = TOML.parsefile(paramsfile)
 # ╔═╡ 2612e3a2-6e6e-494e-b140-720dd2db6ec2
 obs_today_file = TOML.parsefile(obs_today_filename)
 
+# ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
+df_probs = lguys.load_hdf5_table(starsfile)
+
+# ╔═╡ e76a6fa2-c020-48bf-b065-bc7ca51ecd98
+p_idx = df_probs.index; probabilities = df_probs.probability
+
 # ╔═╡ 07defcc4-8dca-4caf-a34a-a341818d80ad
 length(probabilities)
 
 # ╔═╡ 6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
-begin 
-	out =  lguys.Output(model_dir * "/out", weights=probabilities)
-	out
-end
+out =  lguys.Output(model_dir * "/out", weights=probabilities)
 
 # ╔═╡ 396a53a3-de0f-4d97-9693-40f3757d66f9
 snap_i = out[idx_i]
@@ -267,8 +261,8 @@ function v_rad_hist(snap, bins=40)
 	mass = snap.weights
 	v_rad = calc_v_rad(snap)
 	logr = log10.(lguys.calc_r(snap))
-	h1 = Arya.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
-	h2 = Arya.histogram(logr, bins, weights=mass, normalization=:none)
+	h1 = DensityEstimators.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
+	h2 = DensityEstimators.histogram(logr, bins, weights=mass, normalization=:none)
 
 	x_bins = h1.bins
 	v_bins = h1.values
@@ -347,7 +341,7 @@ md"""
 # ╔═╡ 12a30334-899e-4061-b7d2-af8c2346721d
 let 
 	x = log10.(out.weights[out.weights .> 0])
-	h = Arya.histogram(x, normalization=:none)
+	h = DensityEstimators.histogram(x, nothing, bandwidth=DensityEstimators.bandwidth_freedman_diaconis, normalization=:none)
 
 	barplot(h)
 end
@@ -796,7 +790,7 @@ let
 	x = obs_df.pmra[filt]
 	y = obs_df.pmdec[filt]
 	
-	h = Arya.histogram(x, bins, weights=obs_df.weights[filt], normalization=:pdf)
+	h = DensityEstimators.histogram(x, bins, weights=obs_df.weights[filt], normalization=:pdf)
 
 	
 	barplot!(h)
@@ -955,7 +949,7 @@ let
 
 	bins = 20
 	
-	r_bins = Arya.make_bins(x, (-0.5, 2.3), Arya.bins_equal_number, n=bins)
+	r_bins = DensityEstimators.make_bins(x, (-0.5, 2.3), DensityEstimators.bins_equal_number, n=bins)
 
 	println(r_bins)
 	
@@ -1024,7 +1018,7 @@ let
 	logr = log10.(lguys.calc_r(snap))
 	filt = logr .< 1
 
-	h = Arya.histogram(v_rad[filt] * V2KMS, 
+	h = DensityEstimators.histogram(v_rad[filt] * V2KMS, 
 		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
 
 
@@ -1059,9 +1053,9 @@ let
 	rv = obs_df.radial_velocity[filt]
 	mass = obs_df.weights[filt]
 
-	μ = Arya.mean(rv, Arya.sb.weights(mass))
+	μ = DensityEstimators.mean(rv, DensityEstimators.sb.weights(mass))
 	
-	h = Arya.histogram(rv, weights=mass, normalization=:pdf)
+	h = DensityEstimators.histogram(rv, weights=mass, normalization=:pdf)
 
 	scatter!(lguys.midpoints(h.bins), h.values)
 
@@ -1093,7 +1087,7 @@ let
 	logr = log10.(lguys.calc_r(snap))
 	filt = logr .< 1
 
-	h = Arya.histogram(v_rad[filt], 
+	h = DensityEstimators.histogram(v_rad[filt], 
 		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
 
 
@@ -1278,6 +1272,7 @@ end
 # ╔═╡ Cell order:
 # ╠═377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
+# ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
 # ╟─b3a16249-b8d9-4a6b-9294-cd654a17dc17
@@ -1300,6 +1295,7 @@ end
 # ╠═84dc77f7-14b3-4a2e-a556-c025d7df0095
 # ╠═2612e3a2-6e6e-494e-b140-720dd2db6ec2
 # ╠═f9fe37ef-de81-4d69-9308-cda968851ed2
+# ╠═e76a6fa2-c020-48bf-b065-bc7ca51ecd98
 # ╠═07defcc4-8dca-4caf-a34a-a341818d80ad
 # ╠═44cbb2ce-5f43-4bc9-a4c4-c0b9df692cd2
 # ╠═6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
