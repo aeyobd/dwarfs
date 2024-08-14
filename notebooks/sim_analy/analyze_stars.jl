@@ -216,35 +216,11 @@ function plot_ρ_s!(snap; bins=100, kwargs...)
 	lines!(log10.(lguys.midpoints(r)), log10.(ρ); kwargs...)
 end
 
+# ╔═╡ 04e315d5-8684-4206-bc8f-a9483d721b2a
+profile = lguys.load_profile(params)
+
 # ╔═╡ 91daae57-94dc-4a8e-b981-75f1406e0768
-begin
-	profile_class = getproperty(lguys, Symbol(params["profile"]))
-	params["profile_kwargs"]["R_s"] *= r_scale
-	profile = profile_class(;lguys.dict_to_tuple(params["profile_kwargs"])...)
-	ρ_s(r) = lguys.calc_ρ(profile, r)
-end
-
-# ╔═╡ 1866c280-89c3-4a71-9dbf-50b583360145
-let 
-	fig = Figure()
-
-	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
-		limits=((-1.9, 1), (-12, 2)))
-
-	plot_ρ_s!(snap_i, bins=500, label="initial")
-	plot_ρ_s!(snap_f, bins=500, label="final")
-
-	x = LinRange(-2, 1, 1000)
-	r = 10 .^ x
-	y = log10.(ρ_s.(r))
-	
-	lines!(x, y)
-	
-	vlines!(log10.(r_b_kpc))
-	
-	axislegend(ax)
-	fig
-end
+ρ_s(r) = lguys.calc_ρ(profile, r)
 
 # ╔═╡ a0391689-66a2-473f-9704-e12a3d033d13
 import LinearAlgebra: dot
@@ -271,30 +247,6 @@ function calc_v_rad(snap)
 	return v_rad 
 end
 
-# ╔═╡ 0c26f965-0381-4f79-a6ce-0772ae922b3f
-let
-	snap = snap_f
-	
-	mass = snap.weights
-	v_rad = calc_v_rad(snap) 
-	logr = log10.(lguys.calc_r(snap))
-
-	limits = (-2, 3, -100, 100)
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		limits=limits,
-		xlabel=L"\log r / \textrm{kpc}",
-		ylabel=L"v_\textrm{rad} / \textrm{km\,s^{-1}}"
-	)
-	
-	h = Arya.hist2d!(ax, logr, v_rad * V2KMS, weights=mass, bins=200, colorrange=(1e-10, 1), colorscale=log10,
-	)
-	vlines!(log10.(r_b_kpc))
-
-	Colorbar(fig[1, 2], h, label="stellar mass density")
-	fig
-end
-
 # ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
 function v_rad_hist(snap, bins=40)
 
@@ -309,22 +261,6 @@ function v_rad_hist(snap, bins=40)
 	counts = h2.values
 
 	return x_bins, v_bins ./ counts
-end
-
-# ╔═╡ 57d5decd-8259-4ec2-87ac-44d28625cd7b
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="log r",
-		ylabel="mean 3D radial velocity (km / s)",
-		limits=((nothing, 2), (-40, 50))
-	)
-	
-	x, y= v_rad_hist(snap_f, 50)
-	scatter!(lguys.midpoints(x), y * V2KMS)
-
-	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
-	fig
 end
 
 # ╔═╡ 227a4b71-afbd-4121-930b-696d06ccc9ba
@@ -596,6 +532,71 @@ function calc_rb(σ, delta_t)
 	return 0.55 * σ * (delta_t) * kpc_per_Gyr_per_kms
 end
 
+# ╔═╡ 13a87549-1318-494c-9147-3f71095bf2ef
+r_b_kpc = calc_rb(σv, orbit_props["t_last_peri"])
+
+# ╔═╡ 1866c280-89c3-4a71-9dbf-50b583360145
+let 
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
+		limits=((-1.9, 1), (-12, 2)))
+
+	plot_ρ_s!(snap_i, bins=500, label="initial")
+	plot_ρ_s!(snap_f, bins=500, label="final")
+
+	x = LinRange(-2, 1, 1000)
+	r = 10 .^ x
+	y = log10.(ρ_s.(r))
+	
+	lines!(x, y)
+	
+	vlines!(log10.(r_b_kpc))
+	
+	axislegend(ax)
+	fig
+end
+
+# ╔═╡ 0c26f965-0381-4f79-a6ce-0772ae922b3f
+let
+	snap = snap_f
+	
+	mass = snap.weights
+	v_rad = calc_v_rad(snap) 
+	logr = log10.(lguys.calc_r(snap))
+
+	limits = (-2, 3, -100, 100)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		limits=limits,
+		xlabel=L"\log r / \textrm{kpc}",
+		ylabel=L"v_\textrm{rad} / \textrm{km\,s^{-1}}"
+	)
+	
+	h = Arya.hist2d!(ax, logr, v_rad * V2KMS, weights=mass, bins=200, colorrange=(1e-10, 1), colorscale=log10,
+	)
+	vlines!(log10.(r_b_kpc))
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
+# ╔═╡ 57d5decd-8259-4ec2-87ac-44d28625cd7b
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="log r",
+		ylabel="mean 3D radial velocity (km / s)",
+		limits=((nothing, 2), (-40, 50))
+	)
+	
+	x, y= v_rad_hist(snap_f, 50)
+	scatter!(lguys.midpoints(x), y * V2KMS)
+
+	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
+	fig
+end
+
 # ╔═╡ 54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 orbit_props["t_last_peri"]
 
@@ -709,6 +710,7 @@ end
 # ╠═8df71dd5-ba0b-4918-9dc0-791c6c3bad5f
 # ╟─c6ce37f4-09f6-43c2-9ee3-286d9e6baf7f
 # ╠═a1138e64-5fa5-4a0e-aeef-487ee78a7adc
+# ╠═04e315d5-8684-4206-bc8f-a9483d721b2a
 # ╠═91daae57-94dc-4a8e-b981-75f1406e0768
 # ╠═1866c280-89c3-4a71-9dbf-50b583360145
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
@@ -739,6 +741,7 @@ end
 # ╠═c2ccf9de-e3cd-4950-9a4d-6f425d261ccb
 # ╠═76438e61-d227-41cf-b9ea-e658bc389772
 # ╟─b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
+# ╠═13a87549-1318-494c-9147-3f71095bf2ef
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
 # ╠═6408828d-d570-4585-8fa8-24661857fb35
