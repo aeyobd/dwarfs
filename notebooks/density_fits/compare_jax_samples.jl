@@ -93,30 +93,30 @@ md"""
 - `r_ell` elliptical radius
 - `dG` uncertainty on gaia_phot_g_mean_mag in dex ?
 - `dBp`
-- "dRP"
-- "PSAT"
-- "PSAT_S"
-- "PSAT_CMD"
-- "PSAT_PM"
-- "PSAT_NOSPACE"
+- `dRP`
+- `PSAT` The satalite probability considering spatial, CMD, and PM information
+- `PSAT_S`
+- `PSAT_CMD`
+- `PSAT_PM`
+- `PSAT_NOSPACE`
 - `F_CPAR` flag for consistent parallax with galaxy
 - `F_NOTANAN` flag for no NANs in COLUMNS?
 - `F_ASTROMETRIC` flag for pmra/pmdec less than 10?
 - `F_FLUXEXCESS` formula in ...
 - `F_INGRID` inside CMD grid (i.e.)
 - `F_BEST` stars which satisfy the above flags
-- "L_SAT"
-- "L_BKD"
-- "L_S_SAT"
-- "L_S_SAT_Inner"
-- "L_S_SAT_Outer"
-- "L_S_BKD"
-- "L_PM_SAT"
-- "L_PM_BKD"
-- "L_CMD_SAT"
-- "L_CMD_SAT_HB"
-- "L_CMD_SAT_RGB"
-- "L_CMD_BKD"
+- `L_SAT`
+- `L_BKD`
+- `L_S_SAT`
+- `L_S_SAT_Inner`
+- `L_S_SAT_Outer`
+- `L_S_BKD`
+- `L_PM_SAT`
+- `L_PM_BKD`
+- `L_CMD_SAT`
+- `L_CMD_SAT_HB`
+- `L_CMD_SAT_RGB`
+- `L_CMD_BKD`
 
 """
 
@@ -267,7 +267,7 @@ let
 		markersize=3, colorscale=log10, colorrange=(1e-1, 1e1)
 	)
 
-	Colorbar(fig[1, 2], p, label="CMD likelihood", )
+	Colorbar(fig[1, 2], p, label="spatial likelihood for MW", )
 
 	fig
 end
@@ -284,31 +284,83 @@ let
 		markersize=3, colorscale=log10, colorrange=(1e-1, 1e1)
 	)
 
-	Colorbar(fig[1, 2], p, label="CMD likelihood", )
+	Colorbar(fig[1, 2], p, label="spatial likelihood for satalite", )
 
 	fig
 end
 
 # ╔═╡ 326619b2-01ca-4f60-8619-516dadc58b98
-rs = 0.317 * 60
+rs = 0.28 * 60 
 
 # ╔═╡ 0e336f85-16ec-44f5-a664-35dc569a3af8
-re = 12.33 / 1.68
+re = 10.09/ 1.68
 
 # ╔═╡ e9516503-2ef9-4ac3-97f5-b1c705bdd579
-B = 0 # 0.015
+B = 0.015
+
+# ╔═╡ b0ec46b5-8fbe-4514-9505-df638c534354
+1/re
 
 # ╔═╡ ffc1a8a8-3851-43d7-b017-0c17ee991b6f
-l_s_sat_model(r) = re^2 * exp(-r / re) + B * 10^(-r / rs)
+l_s_sat_model(r) =  exp(-r / re) + B * exp(-r / rs) 
 
 # ╔═╡ cc1e4080-93a4-4616-bdfe-74f23a8b3bf2
-scatter(r_ell, l_s_sat_model.(r_ell) ./ scl_1comp.L_S_SAT)
+let
+	fig, ax = FigAxis(
+		yscale=log10,
+		limits=(0, 150, 0.1, 10)
+	)
+	
+	scatter!(r_ell, l_s_sat_model.(r_ell) ./ df.L_S_SAT .* maximum(df.L_S_SAT))
+	hlines!(1)
+
+	fig
+end
 
 # ╔═╡ bb030f67-ab58-40e8-83b8-e2dd7dbba3b3
-scatter(r_ell, df.L_S_SAT)
+let
+	fig, ax = FigAxis(
+		xlabel = "r ell",
+		ylabel = "L sat",
+		yscale=log10,
+	)
+	
+	scatter!(r_ell, df.L_S_SAT ./ maximum(df.L_S_SAT))
+	scatter!(r_ell, l_s_sat_model.(r_ell))
 
-# ╔═╡ 88dfd3ad-c79a-48ff-b62b-e1a74303ae07
-scatter(r_ell, l_s_sat_model.(r_ell))
+	fig
+end
+
+# ╔═╡ 61d1658a-57be-4ff1-a8a3-4fcfa98924d4
+let
+	fig, ax = FigAxis(
+		limits=(nothing, nothing, 0, 1)
+	)
+	
+	scatter!(r_ell, (maximum(log.(df.L_S_SAT)) .- log.(df.L_S_SAT)) ./ r_ell)
+	fig
+end
+
+
+# ╔═╡ 4df3119c-b230-479d-bcaa-d38109e8536c
+let
+	fig, ax = FigAxis(
+		limits=(nothing, nothing, -1, 1)
+	)
+	
+	scatter!(r_ell, scl_1comp.L_S_SAT ./ maximum(scl_1comp.L_S_SAT) .- exp.(-0.1664 * r_ell))
+
+	scatter!(r_ell, scl_1comp.L_S_SAT ./ maximum(scl_1comp.L_S_SAT) .- l_s_sat_model.(r_ell))
+	
+	fig
+end
+
+
+# ╔═╡ 73dbaf23-156b-4d2f-a4e0-e4ed80913306
+1/0.166428 * 1.68 
+
+# ╔═╡ a585a4c1-40dc-49ec-92cc-217484d82ee1
+(maximum(log.(scl_1comp.L_S_SAT)) .- log.(scl_1comp.L_S_SAT)) ./ r_ell
 
 # ╔═╡ 7e945f83-36f6-47d8-ae2b-7f0e2c3b1f57
 md"""
@@ -316,39 +368,85 @@ md"""
 """
 
 # ╔═╡ 75512420-ee17-4786-8adc-c239b1df1e7b
-pmra =  0.099
+pmra =  0.099 #.+ 0.004
 
 # ╔═╡ 29a3794e-0fe2-4613-8b41-c3ff02229926
 pmdec = -0.15
 
 # ╔═╡ 53517031-31bc-488e-96e4-cd55069320ff
-dpm = 0.1
+dpm = 0.000
+
+# ╔═╡ d0ce4a42-2253-479f-a221-493ce2b16185
+pmra_err = dpm .+ df.pmra_error 
+
+# ╔═╡ da80d829-28ec-4cd8-93b6-831dc10a38a7
+pmdec_err = dpm .+ df.pmdec_error 
+
+# ╔═╡ a43555aa-ce37-4a98-8d29-e154c41f6f1a
+mean(df.pmra_pmdec_corr[isfinite.(df.pmra_pmdec_corr)])
+
+# ╔═╡ 1753360f-d8ea-4056-99f9-0b629a371fab
+pm_ρ = df.pmra_pmdec_corr
 
 # ╔═╡ 7c8854af-73dd-4a42-aa95-ba907ca8cf61
-pm_x = @. sqrt((pmra - df.pmra)^2 / (dpm^2 + df.pmra_error^2) )
+pm_dx = @. (pmra - df.pmra) ./ pmra_err
 
-# ╔═╡ 50ce9f3a-dbd5-4848-b088-5395b7c0865d
-pm_y = @. sqrt((pmdec - df.pmdec)^2 / (dpm^2 + df.pmdec_error^2) )
+# ╔═╡ bf247e8c-39f6-4355-a3ad-0870ea1a9803
+pm_dy = @. (pmdec - df.pmdec) ./ pmdec_err
+
+# ╔═╡ 828c7416-4e43-4fc9-975c-fc04cb0ecc77
+pm_num = @. (pm_dx^2 + pm_dy^2 - 2*pm_ρ * pm_dx * pm_dy
+)
+
+# ╔═╡ 41958113-1ba5-4018-9386-dfb42a1f2dd8
+n_sigma_pm = @. pm_num / (2*(1-pm_ρ^2))
 
 # ╔═╡ 41a60b57-e722-4315-9caf-d823da4d45c9
 df.L_PM_SAT
 
-# ╔═╡ 1753360f-d8ea-4056-99f9-0b629a371fab
-correlation = @. df.pmra_pmdec_corr #/ (df.pmra_error * df.pmdec_error)
+# ╔═╡ 0e006ab4-e87c-41c7-a43c-79022fbe9df2
+pm_factor = 0.5
 
-# ╔═╡ 828c7416-4e43-4fc9-975c-fc04cb0ecc77
-n_sigma_pm = @. (pm_x ^ 2 + pm_y ^ 2 
-	- 2*correlation * pm_x * pm_y
-)
+# ╔═╡ 29386139-c2a6-4ecc-8d95-35a5f2fd78f9
+@doc raw"""
+	bivariate_normal(x, y, μx, μy, σx, σy, ρ)
+
+A bivariate normal distribution on input vectors x, y assuming a mean (μx, μy), standard deviations of (σx, σy), and a correlation ρ ∈ [-1, 1].
+
+``
+\frac{1}{2\pi \sigma_x \sigma_y \sqrt{1 - \rho^2}} \exp\left[-\frac{1}{2(1-\rho^2)}\left(\frac{(x-\mu_x)^2}{\sigma_x^2} + \frac{(y-\mu_y)^2}{\sigma_y^2} - 2\rho \frac{(x-\mu_x)(y-\mu_y)}{\sigma_x\sigma_y}\right)\right]
+``
+
+"""
+function bivariate_normal(x, y, μx, μy, σx, σy, ρ)
+	A = 1 / (2π * σx * σy * √(1 - ρ^2))
+
+	zx = (x - μx) / σx
+	zy = (y - μy) / σy
+
+	return A * exp(-1/(2*(1 - ρ^2)) * (
+		zx^2 + zy^2 - 2ρ * zx * zy
+	))
+end
+
+# ╔═╡ 8c90b632-8c17-4468-9d9c-e19d8f86fa58
+"""
+	⊕(x, y)
+
+Add x and y in quadrature
+"""
+function ⊕(x, y)
+	return sqrt(x^2 + y^2)
+end
 
 # ╔═╡ e965e22c-ef55-410f-8cf9-28403f01239e
-L_pm = @. 1 / (2π*sqrt(1-correlation^2)) * exp(- 1 / (2*(1-correlation^2)) * n_sigma_pm)
+L_pm = bivariate_normal.(df.pmra, df.pmdec, pmra, pmdec, df.pmra_error .⊕ dpm, df.pmdec_error .⊕ dpm, df.pmra_pmdec_corr)
 
 # ╔═╡ 81aaaaef-8fff-41b9-981b-cd4b08dc62cd
-scatter(n_sigma_pm, L_pm ./ df.L_PM_SAT;
+scatter(df.L_PM_SAT, L_pm;
 	alpha=0.1,
 	markersize=5, 
-	axis=(; limits=(-1, 25, -2, 15))
+	axis=(; limits=(-0.1, 4, -0.1, 4))
 )
 
 # ╔═╡ 4accc157-bf98-42b9-b8bf-8395bff5f49f
@@ -361,8 +459,11 @@ let
 		ylabel = "pmdec",
 		limits=(-5, 5, -5, 5)
 	)
-	
-	p = scatter!(scl_ell.pmra, scl_ell.pmdec, color=scl_ell.L_PM_SAT, 
+
+	df = scl_ell
+	filt = df.L_PM_SAT .> 0e-10
+	# filt .&= isfinite.(scl_ell.L_PM_SAT)
+	p = scatter!(df.pmra[filt], df.pmdec[filt], color=df.L_PM_SAT[filt], 
 		markersize=3, colorscale=log10, colorrange=(1e-2, 1e1)
 	)
 
@@ -370,6 +471,9 @@ let
 
 	fig
 end
+
+# ╔═╡ 34dc5d88-16ce-49e7-912f-0e6f36c81bd3
+pmra, pmdec
 
 # ╔═╡ c6dda910-7ade-4668-9592-899264248339
 let
@@ -383,7 +487,7 @@ let
 		markersize=3, colorscale=log10, colorrange=(1e-2, 1e1)
 	)
 
-	Colorbar(fig[1, 2], p, label="CMD likelihood", )
+	Colorbar(fig[1, 2], p, label="PM likelihood", )
 
 	fig
 end
@@ -521,6 +625,37 @@ end
 # ╔═╡ ad6cf0cc-42c5-414d-bf07-27311d7716c2
 scatter(scl_ell.r_ell, scl_circ.PSAT_S .- scl_ell.PSAT_S, color=scl_ell.PSAT)
 
+# ╔═╡ 8486d28e-5ae8-40f2-9a93-ce81606f1496
+md"""
+# Combining properties
+"""
+
+# ╔═╡ 0a48ae68-348b-4494-9c81-d11c9bbe87a0
+begin 
+	df_out = copy(df)
+
+	df_out[!, :L_S_SAT_1C] .= scl_1comp.L_S_SAT
+	df_out[!, :PSAT_S_1C] .= scl_1comp.PSAT_S
+	df_out[!, :PSAT_1C] .= scl_1comp.PSAT
+
+	df_out[!, :L_S_SAT_CIRC] .= scl_circ.L_S_SAT
+	df_out[!, :PSAT_S_CIRC] .= scl_circ.PSAT_S
+	df_out[!, :PSAT_CIRC] .= scl_circ.PSAT
+
+end
+
+# ╔═╡ dd1bbf56-4d9a-445c-9722-5541b63d227d
+scatter(df_out.PSAT_CIRC, df_out.PSAT_1C)
+
+# ╔═╡ d39d9fba-288f-48fc-8db5-eb10854cb4a7
+scatter(df_out.PSAT_CIRC, df_out.PSAT)
+
+# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
+@assert all(scl_1comp.source_id .== df.source_id)
+
+# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
+@assert all(scl_circ.source_id .== df.source_id)
+
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
 # ╟─0a497022-a1c0-497c-ae34-aee52cba4679
@@ -559,7 +694,7 @@ scatter(scl_ell.r_ell, scl_circ.PSAT_S .- scl_ell.PSAT_S, color=scl_ell.PSAT)
 # ╠═52bd977c-cec6-4483-bd0c-470a3a8f071f
 # ╠═f5547f0a-b4ad-4d98-97a6-953a7be11950
 # ╟─737a2243-f7da-4441-9c2f-2472c6b65faf
-# ╠═df988526-ffa2-4c92-8a90-89f13204a115
+# ╟─df988526-ffa2-4c92-8a90-89f13204a115
 # ╠═a66757cf-a936-436c-8315-045fffe4fca3
 # ╠═04903a00-c480-4ba5-8852-9b7c100e285a
 # ╠═8550a1f6-8f54-43ee-9c9b-51e4ddd093b5
@@ -569,25 +704,37 @@ scatter(scl_ell.r_ell, scl_circ.PSAT_S .- scl_ell.PSAT_S, color=scl_ell.PSAT)
 # ╠═326619b2-01ca-4f60-8619-516dadc58b98
 # ╠═0e336f85-16ec-44f5-a664-35dc569a3af8
 # ╠═e9516503-2ef9-4ac3-97f5-b1c705bdd579
+# ╠═b0ec46b5-8fbe-4514-9505-df638c534354
 # ╠═ffc1a8a8-3851-43d7-b017-0c17ee991b6f
 # ╠═cc1e4080-93a4-4616-bdfe-74f23a8b3bf2
 # ╠═bb030f67-ab58-40e8-83b8-e2dd7dbba3b3
-# ╠═88dfd3ad-c79a-48ff-b62b-e1a74303ae07
+# ╠═61d1658a-57be-4ff1-a8a3-4fcfa98924d4
+# ╠═4df3119c-b230-479d-bcaa-d38109e8536c
+# ╠═73dbaf23-156b-4d2f-a4e0-e4ed80913306
+# ╠═a585a4c1-40dc-49ec-92cc-217484d82ee1
 # ╟─7e945f83-36f6-47d8-ae2b-7f0e2c3b1f57
 # ╠═75512420-ee17-4786-8adc-c239b1df1e7b
 # ╠═29a3794e-0fe2-4613-8b41-c3ff02229926
 # ╠═53517031-31bc-488e-96e4-cd55069320ff
-# ╠═7c8854af-73dd-4a42-aa95-ba907ca8cf61
-# ╠═50ce9f3a-dbd5-4848-b088-5395b7c0865d
-# ╠═828c7416-4e43-4fc9-975c-fc04cb0ecc77
-# ╠═41a60b57-e722-4315-9caf-d823da4d45c9
+# ╠═d0ce4a42-2253-479f-a221-493ce2b16185
+# ╠═da80d829-28ec-4cd8-93b6-831dc10a38a7
+# ╠═a43555aa-ce37-4a98-8d29-e154c41f6f1a
 # ╠═1753360f-d8ea-4056-99f9-0b629a371fab
+# ╠═7c8854af-73dd-4a42-aa95-ba907ca8cf61
+# ╠═bf247e8c-39f6-4355-a3ad-0870ea1a9803
+# ╠═828c7416-4e43-4fc9-975c-fc04cb0ecc77
+# ╠═41958113-1ba5-4018-9386-dfb42a1f2dd8
+# ╠═41a60b57-e722-4315-9caf-d823da4d45c9
+# ╠═0e006ab4-e87c-41c7-a43c-79022fbe9df2
+# ╟─29386139-c2a6-4ecc-8d95-35a5f2fd78f9
+# ╟─8c90b632-8c17-4468-9d9c-e19d8f86fa58
 # ╠═e965e22c-ef55-410f-8cf9-28403f01239e
 # ╠═81aaaaef-8fff-41b9-981b-cd4b08dc62cd
 # ╠═4accc157-bf98-42b9-b8bf-8395bff5f49f
 # ╠═54e97bc1-593b-4b74-8f77-433f5cad7b8b
+# ╠═34dc5d88-16ce-49e7-912f-0e6f36c81bd3
 # ╠═c6dda910-7ade-4668-9592-899264248339
-# ╠═ee79b752-fcdd-4742-af23-e40eb86edbe9
+# ╟─ee79b752-fcdd-4742-af23-e40eb86edbe9
 # ╠═60deb437-7803-4ce3-b2eb-c2f3c78f4bc2
 # ╠═43271a93-c879-425d-8896-dd3ab856a98b
 # ╠═8cacb247-4a07-43d7-9344-156c283a9cf5
@@ -600,3 +747,9 @@ scatter(scl_ell.r_ell, scl_circ.PSAT_S .- scl_ell.PSAT_S, color=scl_ell.PSAT)
 # ╠═793c845e-92b6-4aba-8fdc-4bd88f65bc0a
 # ╠═a79814b3-3b9d-4e26-9001-9e84cbe67bec
 # ╠═ad6cf0cc-42c5-414d-bf07-27311d7716c2
+# ╟─8486d28e-5ae8-40f2-9a93-ce81606f1496
+# ╠═0a48ae68-348b-4494-9c81-d11c9bbe87a0
+# ╠═dd1bbf56-4d9a-445c-9722-5541b63d227d
+# ╠═d39d9fba-288f-48fc-8db5-eb10854cb4a7
+# ╠═b546c73a-823b-4f19-a9a3-d01946c4982f
+# ╠═ff29e7c1-5aa4-4295-b114-e38fc3a208c7
