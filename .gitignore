@@ -54,3 +54,6 @@ notebooks/density_fits/results
 coverage
 
 *.svg
+
+*.txz
+*.iso.cmd
