@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,12 @@ import StatsBase: quantile, mean, std, median, kurtosis, sem
 
 # ╔═╡ dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 not = !
+
+# ╔═╡ ef1bb6f5-00b8-405b-8702-244eca618644
+import DensityEstimators: histogram, calc_limits, make_bins
+
+# ╔═╡ 61c3321f-29dc-43cc-9bd7-b0bd4b74e2f1
+
 
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
@@ -72,7 +78,7 @@ end
 # ╔═╡ 248c2d5f-85cc-44be-bc63-43d4af470182
 begin 
 	params = read_file("sculptor/fiducial.toml")
-	params["filename"] = "$data_dir/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"
+	params["filename"] = "$data_dir/j24_sculptor_all.fits"
 	params["PA"] = 92
 	params["ellipticity"] = 0.36
 	params["PSAT_min"] = nothing
@@ -665,7 +671,7 @@ begin
 end
 
 # ╔═╡ 74b10a3e-1342-454f-8eed-77b371f81edf
-lines(Arya.histogram(quality_score, normalization=:none))
+lines(histogram(quality_score, normalization=:none))
 
 # ╔═╡ d8800a31-1ed3-422f-ac51-90f18cf61c29
 sum(quality_score .< Inf)
@@ -745,12 +751,12 @@ xlabel = L"radial velocity / km s$^{-1}$"
 # ╔═╡ 5f71b8e9-5540-4431-8028-4ce14c8d7856
 let 
 	fig, ax = FigAxis(xlabel=xlabel)
-	bins = Arya.make_bins(apogee_all.RV, Arya.calc_limits(apogee_all.RV), bandwidth=1)
+	bins = make_bins(apogee_all.RV, calc_limits(apogee_all.RV), bandwidth=1)
 
-	h = Arya.histogram(apogee.RV, bins, normalization=:none)
+	h = histogram(apogee.RV, bins, normalization=:none)
 	scatter!(h)
 	
-	h = Arya.histogram(apogee_all.RV, bins, normalization=:none)
+	h = histogram(apogee_all.RV, bins, normalization=:none)
 
 	scatter!(h, markersize=5)
 
@@ -761,15 +767,15 @@ end
 # ╔═╡ 9d1495e8-5f8a-4892-b5b5-b22f3eb6ab7c
 let 
 	fig, ax = FigAxis(xlabel=xlabel)
-	bins = Arya.make_bins(walker09_all.RV, Arya.calc_limits(walker09_all.RV), bandwidth=3)
+	bins = make_bins(walker09_all.RV, calc_limits(walker09_all.RV), bandwidth=3)
 
 
 	
-	h = Arya.histogram(walker09_all.RV, bins, normalization=:none)
+	h = histogram(walker09_all.RV, bins, normalization=:none)
 
 	lines!(h, label="all")
 	
-	h = Arya.histogram(walker09.RV, bins, normalization=:none)
+	h = histogram(walker09.RV, bins, normalization=:none)
 	lines!(h, label="selected")
 
 	axislegend()
@@ -802,7 +808,7 @@ function plot_sample_normal_fit(sample, props; kwargs...)
 		ylabel="density";
 		kwargs...
 	)
-	h = Arya.histogram(Float64.(sample.RV), normalization=:pdf)
+	h = histogram(Float64.(sample.RV), normalization=:pdf)
 	
 	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=:black)
 
@@ -820,7 +826,7 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = Arya.histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
+	h = histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
 	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
 
@@ -937,7 +943,7 @@ let
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
 	scatter!(memb_stars.r_ell, memb_stars.RV_apogee, label="APOGEE", markersize=5)
-	scatter!(rv_meas.r_ell, rv_meas.RV_gmos, label="GMOS", markersize=10)
+	scatter!(memb_stars.r_ell, memb_stars.RV_gmos, label="GMOS", markersize=10)
 	scatter!(memb_stars.r_ell, memb_stars.RV_w09, label="Walker+09", markersize=5)
 	scatter!(memb_stars.r_ell, memb_stars.RV_t23, label="tolstoy + 23", markersize=3)
 
@@ -968,6 +974,9 @@ end
 # ╔═╡ 62301344-869a-4ec0-8299-29f0ff5d1c15
 sum(sum(eachcol(ismissing.(out_df))))
 
+# ╔═╡ 1deb1520-194a-40b5-8968-bf73b756ba3d
+memb_stars[ .! ismissing.(memb_stars.RV_gmos), :PSAT]
+
 # ╔═╡ 70290654-394f-4679-aaab-38345874e2e3
 sum(sum(eachcol(ismissing.(rv_meas))))
 
@@ -990,6 +999,8 @@ lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
 # ╠═202e0f8b-b417-4597-a737-7c60c0575fd3
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
+# ╠═ef1bb6f5-00b8-405b-8702-244eca618644
+# ╠═61c3321f-29dc-43cc-9bd7-b0bd4b74e2f1
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═da5a3b57-72bc-46e1-b1a0-6c02eb101626
@@ -1122,6 +1133,7 @@ lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
 # ╠═33f54afc-cdb9-4eb8-887f-5a43281b837c
 # ╠═725b9c7d-93f9-48c3-b97b-8a1147a16f78
 # ╠═62301344-869a-4ec0-8299-29f0ff5d1c15
+# ╠═1deb1520-194a-40b5-8968-bf73b756ba3d
 # ╠═70290654-394f-4679-aaab-38345874e2e3
 # ╠═f1912692-d890-4f97-ba98-7b226f29e9c8
 # ╠═4fdccf0a-adfa-4f05-bb48-df8a1efba940

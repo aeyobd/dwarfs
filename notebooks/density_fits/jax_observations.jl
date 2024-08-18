@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -36,33 +36,21 @@ begin
 end
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
-begin 
-	f = FITS("./data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits")
-	all_stars = DataFrame(f[2])
-end
+all_stars = lguys.load_fits("../../data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-circ.fits")
+
+# ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
+cen = lguys.calc_centre2D(all_stars.xi, all_stars.eta, "mean")
 
 # ╔═╡ 88fbdd09-30be-4fc3-95ae-acce6e0018e1
 members = all_stars[all_stars.PSAT .> 0.2, :]
 
-# ╔═╡ f3606421-b7a1-40cc-a743-8bd28169779f
-xi0 = mean(members.xi)
-
-# ╔═╡ 89b03ca3-c25c-4dc8-9710-7137e02e8d2c
-eta0 = mean(members.eta)
-
 # ╔═╡ 731ea468-5003-44e9-95b8-7fa7ef4b475b
 Nmemb = size(members, 1)
 
-# ╔═╡ bf1d1b84-1d11-4997-b083-32e94a01ea68
-snap = lguys.Snapshot(hcat(members.xi, members.eta, zeros(Nmemb))', zeros(3, Nmemb), ones(Nmemb))
-
-# ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
-cen = lguys.Centres.calc_centre(lguys.Centres.SS_State, snap)
-
 # ╔═╡ 3e40a3f8-efbc-4807-b185-22fbb2e99adf
 begin 
-	xi = members.xi .- cen.position[1]
-	eta = members.eta .- cen.position[2]
+	xi = members.xi .- cen[1]
+	eta = members.eta .- cen[2]
 end
 
 # ╔═╡ 02d19c07-411f-40d6-9ac3-010ebfd4bdfe
@@ -127,11 +115,8 @@ end
 # ╔═╡ 042f8215-b6fe-49db-a166-055567da4bb0
 begin 
 	θ_bins = LinRange(-π, π, 15)
-	θ_bm = lguys.midpoint(θ_bins)
+	θ_bm = lguys.midpoints(θ_bins)
 end
-
-# ╔═╡ d84e9494-bf96-4dd4-b6c9-6317d6ac24a7
-lguys.calc_histogram(vec(kde_theta), θ_bins , weights=vec(Σ_kde))
 
 # ╔═╡ 81374c1a-cf4a-4504-b669-7a2bbe5a6b5c
 let
@@ -320,6 +305,12 @@ hist(log10.(members.r_ell))
 # ╔═╡ a37b2c44-9976-4bf8-8392-891f352a5da0
 ecdfplot(members.r_ell)
 
+# ╔═╡ db1264b7-02c3-4b55-ae2b-9ce78aa1304a
+import DensityEstimators: histogram
+
+# ╔═╡ d84e9494-bf96-4dd4-b6c9-6317d6ac24a7
+histogram(vec(kde_theta), θ_bins , weights=vec(Σ_kde))
+
 # ╔═╡ ebb24519-ee2d-4781-a2bd-16ccbc957060
 let
 	f = Figure(size=(1200, 500))
@@ -331,9 +322,11 @@ let
 		filt = r_cuts[i] .<= radii .<= r_cuts[i+1] 
 		println(sum(filt))
 		if sum(filt) > 0
-			bins, counts = lguys.calc_histogram(ϕ[filt], bins)
+			h = histogram(ϕ[filt], bins)
+			bins = h.bins
+			counts = h.values
 			counts .*= 1/sum(diff(bins) .* counts) * sum(diff(bins))
- 			p = lines!(ax, lguys.midpoint(bins), counts, color=i, colorrange=(1, N_cuts))
+ 			p = lines!(ax, lguys.midpoints(bins), counts, color=i, colorrange=(1, N_cuts))
 			push!(ps, p)
 
 			r_l = round(r_cuts[i], digits=3)
@@ -346,9 +339,6 @@ let
 	f
 end
 
-# ╔═╡ 9d58a063-a995-44eb-877a-6e8c62b377eb
-
-
 # ╔═╡ 7af6fd4f-a7f4-4e7f-a1e3-8899717dd2cd
 let
 	f = Figure(size=(1200, 500))
@@ -360,9 +350,9 @@ let
 		filt = r_cuts[i] .<= members.r_ell * rh .<= r_cuts[i+1] 
 		println(sum(filt))
 		if sum(filt) > 0
-			bins, counts = lguys.calc_histogram(ϕ[filt], bins)
-			counts .*= 1/sum(diff(bins) .* counts) * sum(diff(bins))
- 			p = lines!(ax, lguys.midpoint(bins), counts, color=i, colorrange=(1, N_cuts))
+			h = histogram(ϕ[filt], bins)
+			h.values .*= 1/sum(diff(h.bins) .* h.values) * sum(diff(h.bins))
+ 			p = lines!(ax, lguys.midpoints(h.bins), h.values, color=i, colorrange=(1, N_cuts))
 			push!(ps, p)
 
 			r_l = round(r_cuts[i], digits=3)
@@ -390,13 +380,10 @@ end
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
+# ╠═223abc41-5158-49c2-96bf-df55b7be1114
+# ╠═731ea468-5003-44e9-95b8-7fa7ef4b475b
 # ╠═6bb8fe50-d7c0-4d76-9d05-a403b7e3239f
 # ╠═6ddd0b7b-6c51-442e-97c4-ddc321899da1
-# ╠═f3606421-b7a1-40cc-a743-8bd28169779f
-# ╠═89b03ca3-c25c-4dc8-9710-7137e02e8d2c
-# ╠═731ea468-5003-44e9-95b8-7fa7ef4b475b
-# ╠═bf1d1b84-1d11-4997-b083-32e94a01ea68
-# ╠═223abc41-5158-49c2-96bf-df55b7be1114
 # ╠═3e40a3f8-efbc-4807-b185-22fbb2e99adf
 # ╠═4ff675ef-8609-49df-bfac-4070f14e3c25
 # ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
@@ -433,7 +420,7 @@ end
 # ╠═75b8cbb1-519e-4174-a7b9-22e661cbde5c
 # ╠═4a6f9b97-3e14-4683-b338-e1bd67a07ea2
 # ╠═a37b2c44-9976-4bf8-8392-891f352a5da0
+# ╠═db1264b7-02c3-4b55-ae2b-9ce78aa1304a
 # ╠═ebb24519-ee2d-4781-a2bd-16ccbc957060
-# ╠═9d58a063-a995-44eb-877a-6e8c62b377eb
 # ╠═7af6fd4f-a7f4-4e7f-a1e3-8899717dd2cd
 # ╠═49a5de24-907c-49e1-9747-8be5bb28b64d

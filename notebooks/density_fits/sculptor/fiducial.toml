@@ -1,5 +1,5 @@
 PSAT_min = 0.2
-filename = "../../../data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"
+filename = "../../../data/j24_sculptor_all.fits"
 PA = 94
 dist = 86
 ra = 15.03917

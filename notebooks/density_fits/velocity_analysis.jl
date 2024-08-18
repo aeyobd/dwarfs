@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -22,8 +22,16 @@ using Turing
 # ╔═╡ e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 using PairPlots
 
+# ╔═╡ 6bec7416-40c8-4e2b-9d3d-14aa19e5642d
+md"""
+This notebook takes the dataset created from velocity_xmatch.jl and analyzes it using MCMC to estimate the velocity dispersion and search for any possible velocity gradients.
+"""
+
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, sem
+
+# ╔═╡ c3298b45-7c5d-4937-8e4c-c87de36a1354
+import DensityEstimators: histogram, bins_equal_number
 
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
@@ -57,12 +65,10 @@ function to_orbit_coords(ra, dec, ra0, dec0, PA)
 	Rmat = lguys.Rx_mat(ϖ) * lguys.Ry_mat(δ) * lguys.Rz_mat(-α) 
 
 	coords = lguys.unit_vector(ra, dec)
-	coords =  Rmat * coords' 
-	skycoords = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])[:, 1:2]
+	coords =  Rmat * coords
+	ra, dec, _ = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])
 
-	ra = skycoords[:, 1] 
 	ra .-= 360 * (ra .> 180)
-	dec = skycoords[:, 2]
 
 	ra, dec
 end
@@ -101,7 +107,7 @@ begin
 end
 
 # ╔═╡ 74b10a3e-1342-454f-8eed-77b371f81edf
-lines(Arya.histogram(quality_score, normalization=:none))
+lines(histogram(quality_score, normalization=:none))
 
 # ╔═╡ d8800a31-1ed3-422f-ac51-90f18cf61c29
 sum(quality_score .< Inf)
@@ -272,7 +278,7 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = Arya.histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
+	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
 	
 	plot_samples!(samples_gsr, LinRange(40, 110, 100), thin=15)
 	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
@@ -319,7 +325,7 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 end	
 
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = Arya.bins_equal_number(memb_stars.r_ell, n=10)
+bins = bins_equal_number(memb_stars.r_ell, n=10)
 
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
 df_r_ell = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.RV, memb_stars.RV_err, bins)
@@ -347,7 +353,7 @@ let
 end
 
 # ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
-df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.radial_velocity_gsr, memb_stars.RV_err, Arya.bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
+df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.radial_velocity_gsr, memb_stars.RV_err, bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
 
 # ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
 let
@@ -367,10 +373,22 @@ end
 let
 	fig, ax = FigAxis(
 		xlabel = L"$\xi'$",
-		ylabel = L"$\mu{v, \textrm{los}}$ / km s$^{-1}$"
+		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
 	errscatter!(df_xi_p.x, df_xi_p.μ, yerr=df_xi_p.μ_err, xerr=df_xi_p.x_err, color=:black)
+
+	fig
+end
+
+# ╔═╡ d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
+let
+	fig, ax = FigAxis(
+		xlabel = L"$\xi'$",
+		ylabel = L"$\sigma_{v, \textrm{gsr}}$ / km s$^{-1}$"
+	)
+
+	errscatter!(df_xi_p.x, df_xi_p.σ, yerr=df_xi_p.σ_err, xerr=df_xi_p.x_err, color=:black)
 
 	fig
 end
@@ -456,7 +474,7 @@ let
 		markersize = 600 ./ memb_stars.RV
 	)
 
-	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
+	Colorbar(fig[1, 2], p, label=L"\eta'")
 	fig
 end
 
@@ -622,11 +640,13 @@ end
 
 
 # ╔═╡ Cell order:
+# ╠═6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═9070c811-550c-4c49-9c58-0943b0f808b2
 # ╠═e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
+# ╠═c3298b45-7c5d-4937-8e4c-c87de36a1354
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
@@ -677,6 +697,7 @@ end
 # ╠═2f5db664-fc99-41ac-a726-f21dd5d88ad4
 # ╠═fd0a74a1-6513-4612-8181-745d5b7c3f4c
 # ╠═3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
+# ╠═d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 # ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
 # ╠═319bd778-7e17-4bd7-856f-d6785b287219

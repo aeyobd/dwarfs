@@ -38,7 +38,7 @@ end
 
 
 function Base.getindex(isocmd::ISOCMD, log_age::Real)::DataFrame
-    log_age = parse(Float64, log_age)
+    log_age = convert(Float64, log_age)
     idx = age_index(isocmd, log_age)
 
     return isocmd.isocmds[idx]

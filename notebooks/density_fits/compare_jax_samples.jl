@@ -13,6 +13,9 @@ begin
 	using LilGuys
 end
 
+# ╔═╡ 73f523e3-39eb-49ea-92d1-39e9d5e91d16
+include("../../data/MIST_v1.2_vvcrit0.4_UBVRIplus/read_iso.jl")
+
 # ╔═╡ b653409b-fa89-4399-98d2-09c794aa88dc
 md"""
 # A comparison of J+24 samples
@@ -95,19 +98,19 @@ md"""
 - `dBp`
 - `dRP`
 - `PSAT` The satalite probability considering spatial, CMD, and PM information
-- `PSAT_S`
-- `PSAT_CMD`
-- `PSAT_PM`
-- `PSAT_NOSPACE`
+- `PSAT_S` The satalite probability only considering spatial likelihoods
+- `PSAT_CMD` The satalite probability only considering CMD likelihoods
+- `PSAT_PM` The satalite probability only considering proper motion likelihoods
+- `PSAT_NOSPACE` The satalite probability only considering PM and CMD (no spatial) likelihoods
 - `F_CPAR` flag for consistent parallax with galaxy
 - `F_NOTANAN` flag for no NANs in COLUMNS?
 - `F_ASTROMETRIC` flag for pmra/pmdec less than 10?
 - `F_FLUXEXCESS` formula in ...
 - `F_INGRID` inside CMD grid (i.e.)
 - `F_BEST` stars which satisfy the above flags
-- `L_SAT`
-- `L_BKD`
-- `L_S_SAT`
+- `L_SAT` The total likelihood for satalite membership (CMD * PM * S)
+- `L_BKD` The total likelihood for MW membership
+- `L_S_SAT` The spatial likelihood for the satalite
 - `L_S_SAT_Inner`
 - `L_S_SAT_Outer`
 - `L_S_BKD`
@@ -230,6 +233,26 @@ md"""
 I do not think that it is worth rederiving the CMD likelihood, so here is a figure which matches with the heatmap in the paper.
 """
 
+# ╔═╡ 4243c523-edfd-40a1-9e91-a2563c0ea3a0
+isocmd = ISOCMD("../../data/MIST_v1.2_vvcrit0.4_UBVRIplus/MIST_v1.2_feh_m2.00_afe_p0.0_vvcrit0.4_UBVRIplus.iso.cmd")
+
+# ╔═╡ 93d499d2-4744-4613-878c-de4e425f7bfd
+isocmd[9]
+
+# ╔═╡ 502ad3a7-2589-4346-80bb-c0184356de9f
+begin
+	iso = isocmd[10.]
+	iso[!, :G] = iso.Gaia_G_EDR3
+	iso[!, :b_r] = iso.Gaia_BP_EDR3 .- iso.Gaia_RP_EDR3
+	iso = iso[iso.phase .<= 3., :]
+end
+
+# ╔═╡ bfc412eb-ccae-4ae3-942a-ef8f8ea22fca
+A_v = 0.0
+
+# ╔═╡ b2ac5282-d503-4c97-b7f3-8f92e043bcaf
+DM = 20.2
+
 # ╔═╡ a66757cf-a936-436c-8315-045fffe4fca3
 let
 	fig, ax = FigAxis(
@@ -242,6 +265,26 @@ let
 	p = scatter!(df.bp_rp, df.phot_g_mean_mag, color=(df.L_CMD_SAT), markersize=3)
 
 	Colorbar(fig[1, 2], p, label="CMD likelihood")
+
+
+	lines!(iso.b_r .- A_v, iso.G .+ DM)
+
+	fig
+end
+
+# ╔═╡ 30c7bf30-2d50-4527-981e-d28acde0df5e
+let
+	fig, ax = FigAxis(
+		xlabel = "delta bp - rp",
+		ylabel = "G",
+		yreversed=true,
+		limits=(-0.01, 1, 15, 22)
+	)
+	
+	p = scatter!(df.dBP, df.phot_g_mean_mag, color=(df.L_CMD_SAT), markersize=3)
+
+	Colorbar(fig[1, 2], p, label="CMD likelihood")
+
 
 	fig
 end
@@ -648,13 +691,25 @@ end
 scatter(df_out.PSAT_CIRC, df_out.PSAT_1C)
 
 # ╔═╡ d39d9fba-288f-48fc-8db5-eb10854cb4a7
-scatter(df_out.PSAT_CIRC, df_out.PSAT)
+let
+	fig, ax = FigAxis()
+	
+	scatter!(df_out.PSAT_CIRC, df_out.PSAT)
+
+	fig
+end
 
 # ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
 @assert all(scl_1comp.source_id .== df.source_id)
 
 # ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
 @assert all(scl_circ.source_id .== df.source_id)
+
+# ╔═╡ 1d0ef71c-e584-4612-8685-09e6bb79423b
+convert(Float64, 1)
+
+# ╔═╡ 9b57518d-98b0-4cb6-a290-9b9ea22cefac
+LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out)
 
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
@@ -665,7 +720,7 @@ scatter(df_out.PSAT_CIRC, df_out.PSAT)
 # ╠═4d967c49-4074-4e07-b175-841dde78f609
 # ╠═ed4b328a-59a1-11ef-2a75-092fdb7659b8
 # ╠═2dacbd3e-b027-44cd-bb39-d3bfcf99366f
-# ╠═27d01941-3d40-4447-847f-e21191a20dd1
+# ╟─27d01941-3d40-4447-847f-e21191a20dd1
 # ╟─0d9da520-3d03-4d9a-8bb0-6d698e819abc
 # ╠═d452a47a-22a2-4523-a7cf-f7b668cc7dda
 # ╠═330a4e01-59e0-4eb6-9900-d23db1159dd5
@@ -695,7 +750,14 @@ scatter(df_out.PSAT_CIRC, df_out.PSAT)
 # ╠═f5547f0a-b4ad-4d98-97a6-953a7be11950
 # ╟─737a2243-f7da-4441-9c2f-2472c6b65faf
 # ╟─df988526-ffa2-4c92-8a90-89f13204a115
+# ╠═73f523e3-39eb-49ea-92d1-39e9d5e91d16
+# ╠═4243c523-edfd-40a1-9e91-a2563c0ea3a0
+# ╠═93d499d2-4744-4613-878c-de4e425f7bfd
+# ╠═502ad3a7-2589-4346-80bb-c0184356de9f
+# ╠═bfc412eb-ccae-4ae3-942a-ef8f8ea22fca
+# ╠═b2ac5282-d503-4c97-b7f3-8f92e043bcaf
 # ╠═a66757cf-a936-436c-8315-045fffe4fca3
+# ╠═30c7bf30-2d50-4527-981e-d28acde0df5e
 # ╠═04903a00-c480-4ba5-8852-9b7c100e285a
 # ╠═8550a1f6-8f54-43ee-9c9b-51e4ddd093b5
 # ╠═da5b85b2-6406-4ef0-9c53-15555a795fd7
@@ -753,3 +815,5 @@ scatter(df_out.PSAT_CIRC, df_out.PSAT)
 # ╠═d39d9fba-288f-48fc-8db5-eb10854cb4a7
 # ╠═b546c73a-823b-4f19-a9a3-d01946c4982f
 # ╠═ff29e7c1-5aa4-4295-b114-e38fc3a208c7
+# ╠═1d0ef71c-e584-4612-8685-09e6bb79423b
+# ╠═9b57518d-98b0-4cb6-a290-9b9ea22cefac

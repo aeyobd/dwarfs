@@ -15,3 +15,11 @@ DataFiles:
 
 These files are based on GaiaDR3, but applying J+24 membership selection to the stars. Ask J+24 for data access.
 
+
+
+### Mist isochrones
+- `mist_v1.2_vvcrit0.4_UBVRIplus/`
+- `mist_v1.2_vvcrit0.0_UBVRIplus`
+Downloaded from MIST website; version 1.2. 
+See information at XXXX
+script to read in isochornes at ...
