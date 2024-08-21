@@ -326,6 +326,12 @@ function parallax_filter(all_stars, params::DensityParams)
 end
 
 
+
+"""
+    is_point_in_polygon(point, polygon
+
+returns if the given point is inside the polygon specified as a 2xN matrix of points in 2D.
+"""
 function is_point_in_polygon(point, polygon)
     x, y = point
     inside = false
@@ -343,4 +349,48 @@ function is_point_in_polygon(point, polygon)
         j = i
     end
     return inside
+end
+
+
+
+@doc raw"""
+	bivariate_normal(x, y, μx, μy, σx, σy, ρ)
+
+A bivariate normal distribution on input vectors x, y assuming a mean (μx, μy), standard deviations of (σx, σy), and a correlation ρ ∈ [-1, 1].
+
+``
+\frac{1}{2\pi \sigma_x \sigma_y \sqrt{1 - \rho^2}} \exp\left[-\frac{1}{2(1-\rho^2)}\left(\frac{(x-\mu_x)^2}{\sigma_x^2} + \frac{(y-\mu_y)^2}{\sigma_y^2} - 2\rho \frac{(x-\mu_x)(y-\mu_y)}{\sigma_x\sigma_y}\right)\right]
+``
+
+"""
+function bivariate_normal(x, y, μx, μy, σx, σy, ρ)
+	A = 1 / (2π * σx * σy * √(1 - ρ^2))
+
+	zx = (x - μx) / σx
+	zy = (y - μy) / σy
+
+	return A * exp(-1/(2*(1 - ρ^2)) * (
+		zx^2 + zy^2 - 2ρ * zx * zy
+	))
+end
+
+
+
+function bivariate_z(x, y, μx, μy, σx, σy, ρ)
+	zx = (x - μx) / σx
+	zy = (y - μy) / σy
+
+	return 1/(1 - ρ^2) * (
+		zx^2 + zy^2 - 2ρ * zx * zy
+	)
+end
+
+
+"""
+	⊕(x, y)
+
+Add x and y in quadrature
+"""
+function ⊕(x, y)
+	return sqrt(x^2 + y^2)
 end

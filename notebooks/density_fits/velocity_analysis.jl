@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -50,34 +50,11 @@ import TOML
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 obs_properties = TOML.parsefile("/astro/dboyea/dwarfs/sculptor_obs_properties.toml")
 
-# ╔═╡ 74eaf133-6fcb-4a5d-8c89-246353b5bb03
-"""
-Given the slope of an orbit in ddec/dra, calculates a rotated
-sky frame centred on RA, DEC and with the x-axis aligned with the orbit.
-"""
-function to_orbit_coords(ra, dec, ra0, dec0, PA)
-
-	# want to rotate to dec, ra of centre, then rotate 
-
-	α = deg2rad(ra0)
-	δ = deg2rad(dec0)
-	ϖ = deg2rad(90 - PA)
-	Rmat = lguys.Rx_mat(ϖ) * lguys.Ry_mat(δ) * lguys.Rz_mat(-α) 
-
-	coords = lguys.unit_vector(ra, dec)
-	coords =  Rmat * coords
-	ra, dec, _ = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])
-
-	ra .-= 360 * (ra .> 180)
-
-	ra, dec
-end
-
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
 begin
 	rv_meas = lguys.load_fits(joinpath(data_dir, "sculptor_all_rv.fits"))
 
-	rv_meas[!, :xi_p], rv_meas[!, :eta_p] = to_orbit_coords(rv_meas.ra, rv_meas.dec, obs_properties["ra"], obs_properties["dec"], θ_orbit)
+	rv_meas[!, :xi_p], rv_meas[!, :eta_p] = lguys.to_orbit_coords(rv_meas.ra, rv_meas.dec, obs_properties["ra"], obs_properties["dec"], θ_orbit)
 
 
 	obs = [lguys.ICRS(r.ra, r.dec, obs_properties["distance"], 
@@ -653,7 +630,6 @@ end
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
-# ╠═74eaf133-6fcb-4a5d-8c89-246353b5bb03
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═74b10a3e-1342-454f-8eed-77b371f81edf
 # ╠═d8800a31-1ed3-422f-ac51-90f18cf61c29
