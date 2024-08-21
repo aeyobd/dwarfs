@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -20,8 +20,7 @@ using LilGuys
 
 # ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
 md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
+Given the stellar probabilty file, makes plots based on the 3D properties of the stars in the sample.
 """
 
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
@@ -39,19 +38,19 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.1"
+starsname = "halos/V70_r0.4/stars/exp2d_rs0.07"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 r_scale = 1
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/stars/$(starsname)_stars.hdf5"
+starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/$(starsname)_stars.hdf5"
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
-paramsfile = "/astro/dboyea/sculptor/isolation/1e6/stars/$starsname.toml"
+paramsfile = "/astro/dboyea/sculptor/isolation/1e6/$starsname.toml"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -279,43 +278,6 @@ let
 	scatter(x, y, color=vs[filt])
 end
 
-# ╔═╡ 7a94107d-2a45-4458-8d26-5cf836501a1e
-let
-	snap = snap_f
-	xc = snap.x_cen
-	vc = snap.v_cen
-
-	dx = 0.1
-
-	filt = lguys.get_z(snap) .< 1e-2
-	filt .&= lguys.get_v_z(snap) .< 1e-2
-	filt .&= snap.weights .> 0.1*maximum(snap.weights)
-	println(sum(filt))
-
-	snap = snap[filt]
-	vs = calc_v_rad(snap)
-
-	
-	fig, ax = FigAxis(
-		aspect=DataAspect(),
-		limits=dx .* (-1, 1, -1, 1),
-		xlabel="x/kpc",
-		ylabel="y/kpc"
-	)
-
-	vx = lguys.get_v_x(snap) .- vc[1]
-	vy = lguys.get_v_y(snap) .- vc[2]
-
-	x = lguys.get_x(snap) .- xc[1]
-	y = lguys.get_y(snap) .- xc[2]
-	h = arrows!(x, y, vx, vy, color=vs * V2KMS, colorrange=(-1, 1), colormap=:bluesreds,
-	label="3D radial velocity km/s")
-
-	Colorbar(fig[1, 2], h)
-
-	fig
-end
-
 # ╔═╡ 17b8f17b-0801-45ca-a86b-bba1d78f9ecd
 lguys.calc_r(snap_f)
 
@@ -455,7 +417,7 @@ let
 	logr = log10.(lguys.calc_r(snap))
 	filt = logr .< 1
 
-	h = DensityEstimators.histogram(v_rad[filt] * V2KMS, 
+	h = DensityEstimators.histogram(v_rad[filt] * V2KMS, 20, 
 		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
 
 
@@ -492,7 +454,7 @@ let
 	logr = log10.(lguys.calc_r(snap))
 	filt = logr .< 1
 
-	h = DensityEstimators.histogram(v_rad[filt], 
+	h = DensityEstimators.histogram(v_rad[filt], 15,
 		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
 
 
@@ -600,6 +562,9 @@ end
 # ╔═╡ 54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 orbit_props["t_last_peri"]
 
+# ╔═╡ d53669fc-84a1-4138-8445-5f31c3ec44a5
+@info lguys.kpc_to_arcmin(r_b_kpc, stars)
+
 # ╔═╡ 9b75409d-55f5-47c3-ab63-8168d31d3d54
 md"""
 # Evolutionary Properties
@@ -663,7 +628,7 @@ let
 		#yticks=[1, 0.1],
 	)
 
-	idx = 1:10:length(out)
+	idx = 1:30:length(out)
 	vs = [calc_σv(out[i]) for i in idx]
 
 	scatter!(out.times[idx] * T2GYR, vs)
@@ -720,7 +685,6 @@ end
 # ╠═44ab0a25-ab4c-4e90-8619-2a068a285755
 # ╟─227a4b71-afbd-4121-930b-696d06ccc9ba
 # ╠═253e43df-58fc-4dee-b1c4-35e273499ab7
-# ╠═7a94107d-2a45-4458-8d26-5cf836501a1e
 # ╠═17b8f17b-0801-45ca-a86b-bba1d78f9ecd
 # ╠═51ba2a8e-6f6f-43bd-ac5f-5d238bd41165
 # ╠═56be7b5a-3e46-4162-94cb-3f5783efd183
@@ -743,6 +707,7 @@ end
 # ╟─b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
 # ╠═13a87549-1318-494c-9147-3f71095bf2ef
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
+# ╠═d53669fc-84a1-4138-8445-5f31c3ec44a5
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
 # ╠═6408828d-d570-4585-8fa8-24661857fb35
 # ╠═b36b594c-23b4-4683-8a12-3fa1b4c8b0d9

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -23,8 +23,7 @@ using KernelDensity
 
 # ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
 md"""
-Given a stellar probability file, calculates initial-final density profiles, 
-and projects stars onto the sky
+Makes some basic plots of a projected stellar file
 """
 
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
@@ -42,10 +41,10 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.05_stars.fits"
+starsname = "exp2d_rs0.07_stars.fits"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -174,8 +173,8 @@ function xi_eta_axis(dx=10, dy=5; kwargs...)
 	limits = ((-dx, dx), (-dy, dy))
 
 	ax = Axis(fig[1,1],
-		xlabel=L"$\xi'$ / degrees",
-		ylabel=L"$\eta'$ / degrees",
+		xlabel=L"$\xi$ / degrees",
+		ylabel=L"$\eta$ / degrees",
 		limits=limits,
 		aspect = DataAspect(),
 		xgridvisible=false,
@@ -364,35 +363,6 @@ let
 	fig
 end
 
-# ╔═╡ 25ccc096-1d27-43ce-8fe1-5a3a9d7cd54e
-let
-	fig = Figure()
-	dx = 4
-	dy = 20
-	# limits = (obs["distance"] .+ (-dx, dx), obs["radial_velocity"] .+ (-dy, dy))
-	
-	ax = Axis(fig[1,1],
-		xlabel="distance / kpc",
-		ylabel = "radial velocity / km/s",
-		# limits=limits,
-		title="initial",
-	)
-
-
-	
-	x = stars.distance
-	y = stars.radial_velocity
-	
-	h = Arya.hist2d!(ax, x, y, weights=stars.weights, bins=100,
-		colorscale=log10, colorrange=(1e-10, nothing)
-	)
-
-	
-	Colorbar(fig[1, 2], h)
-	
-	fig
-end
-
 # ╔═╡ 4eae6b35-e71d-47da-bde9-d67b30ce143a
 hist(stars.radial_velocity, weights=stars.weights, bins=100)
 
@@ -448,7 +418,7 @@ import StatsBase: weights, std
 # ╔═╡ 5355bcc3-2494-473d-9da7-fc38930b8ee7
 let
 	fig, ax = FigAxis(
-		limits = (-1, 2.5, 30, 100),
+		limits = (-1, 2.5, 10, 100),
 		xlabel = "log r",
 		ylabel="radial velocity"
 		
@@ -577,9 +547,9 @@ let
 
 	μ = DensityEstimators.mean(rv, DensityEstimators.sb.weights(mass))
 	
-	h = DensityEstimators.histogram(rv, weights=mass, normalization=:pdf)
+	h = DensityEstimators.histogram(rv, 60, weights=mass, normalization=:pdf)
 
-	scatter!(lguys.midpoints(h.bins), h.values)
+	errscatter!(lguys.midpoints(h.bins), h.values, h.err)
 
 	x_model = LinRange(μ - 3σv, μ+3σv, 100)
 	y_model = gaussian.(x_model, μ, σv)
@@ -623,11 +593,96 @@ orbit_props["t_last_peri"]
 # ╔═╡ 750185c9-a317-4978-aa04-486e5bfb7a63
 r_b_kpc = calc_rb(σv, orbit_props["t_last_peri"]) # kpc
 
+# ╔═╡ 9eb85c51-cf51-4fb4-b95b-7ba74fad9f8d
+ lguys.kpc_to_arcmin(calc_rb(9.6, orbit_props["t_last_peri"]), obs_today.distance) # kpc
+
 # ╔═╡ 02183d68-bf7a-4774-9b48-f50712eeb552
 r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, obs_today.distance)
 
+# ╔═╡ 3b3f3219-fae4-4f3c-be82-27759b7fece7
+@info "r break = $r_b_arcmin"
+
+# ╔═╡ a1578e05-dc0e-4ed3-b291-af59254e5eab
+md"""
+# Quick density profile 
+"""
+
+# ╔═╡ 9f681472-2a32-4078-9f17-0a8403aa946d
+stars.weights
+
+# ╔═╡ f0f20466-6ea6-4c02-9ce9-13b6caa23de1
+stars.r_ell
+
+# ╔═╡ 5fcd4b8c-7eb6-4d30-885d-25b857f1263c
+nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
+
+# ╔═╡ 7426cb6f-58d4-4e49-9470-16ce82250555
+maximum(stars.r_ell[nan_filt])
+
+# ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
+prof = lguys.calc_properties(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=30)
+
+# ╔═╡ 63ec3cae-09e2-469f-a7fa-15c2af40c517
+DensityEstimators.histogram(stars.r_ell[nan_filt])
+
+# ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
+prof_expected = lguys.ObsProfile("/astro/dboyea/dwarfs/notebooks/density_fits/sculptor/fiducial_sample_profile.toml")
+
+# ╔═╡ b5fd1bcd-b554-48d3-8472-024cb0bd0792
+lguys.GalactocentricFrame().d
+
+# ╔═╡ 901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel=L"\log r \ / \textrm{kpc}",
+		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
+		limits=((-1.5, 3), (-5, 1))
+	)
+
+	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
+		yerr=prof_expected.log_Sigma_err,
+		label="J+24",
+		color=:black
+	)
+
+	
+
+	lines!(prof.log_r, prof.log_Sigma, 
+			label="model")
+
+
+	
+	vlines!(log10(r_b_arcmin), color=:grey, label="break radius")
+	fig
+end
+
+# ╔═╡ c901bf9d-46bf-4cd7-af11-227d477663b4
+r_b_arcmin
+
+# ╔═╡ b6dff4d6-a89b-4b46-858a-5d490c47eeb7
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel=L" r \ / \textrm{kpc}",
+		ylabel = L"\Gamma",
+		limits=((0, 300), (-50, 2))
+	)
+
+
+	
+
+	errscatter!(10 .^ prof.log_r, prof.Gamma, yerr=prof.Gamma_err, 
+			label="model")
+
+
+	
+	vlines!((r_b_arcmin), color=:grey, label="break radius")
+	fig
+end
+
 # ╔═╡ Cell order:
-# ╠═377284f2-dcee-44d3-9a04-728605cea92a
+# ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
@@ -668,7 +723,6 @@ r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, obs_today.distance)
 # ╠═b3e68e32-c058-467d-b214-aab6a4cd1e19
 # ╠═9d74ffbb-4c31-4062-9434-7755f53e4da0
 # ╠═975a2008-cf02-4442-9ee9-0b1bbb20889d
-# ╠═25ccc096-1d27-43ce-8fe1-5a3a9d7cd54e
 # ╠═4eae6b35-e71d-47da-bde9-d67b30ce143a
 # ╠═6fe6deb4-ae44-4ca0-9617-95841fdaf791
 # ╟─e23e85f9-7667-4f6e-8af6-2516fa292e2b
@@ -686,4 +740,18 @@ r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, obs_today.distance)
 # ╟─b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 # ╠═750185c9-a317-4978-aa04-486e5bfb7a63
+# ╠═9eb85c51-cf51-4fb4-b95b-7ba74fad9f8d
 # ╠═02183d68-bf7a-4774-9b48-f50712eeb552
+# ╠═3b3f3219-fae4-4f3c-be82-27759b7fece7
+# ╟─a1578e05-dc0e-4ed3-b291-af59254e5eab
+# ╠═9f681472-2a32-4078-9f17-0a8403aa946d
+# ╠═f0f20466-6ea6-4c02-9ce9-13b6caa23de1
+# ╠═5fcd4b8c-7eb6-4d30-885d-25b857f1263c
+# ╠═7426cb6f-58d4-4e49-9470-16ce82250555
+# ╠═a8688258-e818-4b7a-b238-5629d99413ed
+# ╠═63ec3cae-09e2-469f-a7fa-15c2af40c517
+# ╠═1fde438a-ad46-4b60-bc9f-fddc533d9cdb
+# ╠═b5fd1bcd-b554-48d3-8472-024cb0bd0792
+# ╠═901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
+# ╠═c901bf9d-46bf-4cd7-af11-227d477663b4
+# ╠═b6dff4d6-a89b-4b46-858a-5d490c47eeb7

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -15,9 +15,6 @@ begin
 	using Arya
 end
 
-# ╔═╡ 20ac4d7c-d835-4a7f-9600-261e43f4b290
-using FITSIO
-
 # ╔═╡ 9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 md"""
 # Tidal Tails
@@ -28,13 +25,13 @@ A detailed analysis of the stars in sculptor
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 82e8f2e4-d3ea-43c5-8813-aaebbca71cda
-r_b_arcmin = 64
+r_b_arcmin = 120
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/orbits/orbit1/"
+model_dir = "$models_dir/orbits/1e6/orbit1/V70_r0.4//"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.1_today.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.07_stars.fits"
 
 # ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
 stars = lguys.load_fits(starsfile)
@@ -145,13 +142,11 @@ function to_orbit_coords(ra, dec, ra0, dec0, PA)
 	Rmat = lguys.Rx_mat(ϖ) * lguys.Ry_mat(δ) * lguys.Rz_mat(-α) 
 
 	coords = lguys.unit_vector(ra, dec)
-	coords =  Rmat * coords' 
-	skycoords = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])[:, 1:2]
+	coords =  Rmat * coords
+	ra, dec, _ = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])
 
-	ra = skycoords[:, 1] 
 	ra .-= 360 * (ra .> 180)
-	dec = skycoords[:, 2]
-
+	
 	ra, dec
 end
 
@@ -239,8 +234,14 @@ filt_cen = stars.r_ell .< 120
 # ╔═╡ 2cb76b38-b768-4184-b73c-e8fb350351d8
 filt_leading = not.(filt_cen) .& (stars.xi_p .> 0)
 
+# ╔═╡ 74df5002-cabe-4d00-996d-6e82bcfc36b0
+
+
 # ╔═╡ c0166054-7c1f-474f-a4bc-3b122034e923
 filt_trailing = not.(filt_cen) .& (stars.xi_p .< 0)
+
+# ╔═╡ 76257252-4af8-4d4e-a11e-f9ac90ad873b
+
 
 # ╔═╡ aa157085-0705-44ed-9d65-5626658d71e7
 filt_dist = stars.r_ell .< r_max
@@ -289,6 +290,9 @@ let
 
 	fig
 end
+
+# ╔═╡ 26ca4789-de4b-48c0-9501-ed7bafd45144
+
 
 # ╔═╡ 443ac755-70fc-4193-945d-0e98622c5919
 let 
@@ -412,6 +416,9 @@ let
 
 	fig
 end
+
+# ╔═╡ 1e9117f0-dc0b-446c-a7f3-9e71274089ac
+
 
 # ╔═╡ be0158cf-c322-4147-8f01-8b6a715bc0dc
 let
@@ -670,9 +677,6 @@ let
 	fig
 end
 
-# ╔═╡ 6c611b16-a7db-44ad-8656-2fc76f7c989c
-scatter(stars.xi_p, stars.eta_p)
-
 # ╔═╡ Cell order:
 # ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 # ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
@@ -680,7 +684,6 @@ scatter(stars.xi_p, stars.eta_p)
 # ╠═82e8f2e4-d3ea-43c5-8813-aaebbca71cda
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-# ╠═20ac4d7c-d835-4a7f-9600-261e43f4b290
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
 # ╠═6c76cfae-928b-47b3-babe-b0b9a5d68e65
 # ╠═075ae901-bbbd-4d10-9d91-c393fc86a8e7
@@ -710,7 +713,9 @@ scatter(stars.xi_p, stars.eta_p)
 # ╠═d4d5c328-b135-4ddb-8d12-f8f13ba1da3d
 # ╠═82b9c535-4991-486b-9fb7-d98159bfda8f
 # ╠═2cb76b38-b768-4184-b73c-e8fb350351d8
+# ╠═74df5002-cabe-4d00-996d-6e82bcfc36b0
 # ╠═c0166054-7c1f-474f-a4bc-3b122034e923
+# ╠═76257252-4af8-4d4e-a11e-f9ac90ad873b
 # ╠═aa157085-0705-44ed-9d65-5626658d71e7
 # ╠═dd6faf9c-8206-46f8-bd6f-4c2e7a4b3887
 # ╠═d240246d-f79a-4f95-a5b9-b355e7bc092f
@@ -718,12 +723,14 @@ scatter(stars.xi_p, stars.eta_p)
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
 # ╟─c57edba1-09f9-4fe9-bc73-5746884ee7c2
 # ╟─119040e2-ef45-4fc2-809d-aec333e276d0
+# ╠═26ca4789-de4b-48c0-9501-ed7bafd45144
 # ╠═443ac755-70fc-4193-945d-0e98622c5919
 # ╟─1d35a894-1eca-4ee0-9d1a-6ac4704b912c
 # ╠═6b0a0ea3-f6f7-4cee-be11-bce6872ab870
 # ╠═54205139-3c7b-4beb-b9cb-c87b272df58a
 # ╠═19bdc540-63a8-46ad-8d6f-a425d64cdd81
 # ╠═e098260a-718a-4f43-b12c-cab0a1302b90
+# ╠═1e9117f0-dc0b-446c-a7f3-9e71274089ac
 # ╠═be0158cf-c322-4147-8f01-8b6a715bc0dc
 # ╠═5eb22695-57c4-4ebf-b412-588f5e366bf5
 # ╠═fc3a1a85-c317-4b45-b9c4-50d15e0eb9da
@@ -742,4 +749,3 @@ scatter(stars.xi_p, stars.eta_p)
 # ╟─1b31eabc-3b6f-4d82-9cbb-62f1c53408de
 # ╟─7ec71b3a-4c34-4803-923f-2effeff7cfcf
 # ╟─84e4a23c-c926-4c86-ab11-07a08ef7d1b3
-# ╠═6c611b16-a7db-44ad-8656-2fc76f7c989c

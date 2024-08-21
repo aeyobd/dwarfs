@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -24,8 +24,11 @@ using Arya
 
 # ╔═╡ 47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 md"""
-Do observations from different sources ll agree?
+Some qualitative plots to understand the sample.
 """
+
+# ╔═╡ da9ca7a7-18b8-49cb-a041-ab1c667920ff
+import DensityEstimators: histogram2d
 
 # ╔═╡ 489f6d21-9e9a-4b1e-b05c-c63a44ba1951
 import StatsBase: percentile, mean
@@ -36,7 +39,7 @@ begin
 end
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
-all_stars = lguys.load_fits("../../data/Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-circ.fits")
+all_stars = lguys.load_fits("../../data/j24_sculptor_all.fits")
 
 # ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
 cen = lguys.calc_centre2D(all_stars.xi, all_stars.eta, "mean")
@@ -51,6 +54,25 @@ Nmemb = size(members, 1)
 begin 
 	xi = members.xi .- cen[1]
 	eta = members.eta .- cen[2]
+end
+
+# ╔═╡ 60d0e593-88fd-4b4c-9009-cc24a597c6d5
+members_nospace = all_stars[all_stars.PSAT_NOSPACE .> 0.2, :]
+
+# ╔═╡ 722a1f29-be6b-4fca-a9b3-8c304b6c4eb6
+let 
+	dθ = 120
+	fig = Figure()
+	ax = Axis(fig[1, 1], xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}", aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
+
+
+	scatter!(60members_nospace.xi, 60members_nospace.eta, alpha=1, markersize=3)
+	scatter!(60members.xi, 60members.eta, alpha=1, markersize=3)
+
+
+
+	fig
+
 end
 
 # ╔═╡ 02d19c07-411f-40d6-9ac3-010ebfd4bdfe
@@ -131,19 +153,27 @@ let
 end
 
 # ╔═╡ 83b506bb-f385-464e-8f5c-7adfff45105a
-begin 
-	scatter(members.bp_rp, members.phot_g_mean_mag, color=log10.(members.r_ell), 
+let 
+	f = Figure()
+	ax =  Axis(f[1,1], yreversed=true,
+	xlabel="bp - rp",
+	ylabel = "G",
+	title = "sculptor members")
+
+	
+	scatter!(members.bp_rp, members.phot_g_mean_mag, color=log10.(members.r_ell), 
 	)
 
+	f
 end
 
 # ╔═╡ b057629d-cc8a-48bd-ba5b-6d2203f988ba
-begin 
+let 
 	Arya.hist2d(members.parallax, members.parallax_error, bins=100)
 end
 
 # ╔═╡ a4e857c0-39d9-4fa0-871f-ccc66cb17c25
-begin 
+let 
 	#plot(colorbar_scale=:log10, xlabel=L"\varpi / \rm mas", ylabel=L"\delta\varpi/\rm mas"
 	#)
 	Arya.hist2d(all_stars.parallax, all_stars.parallax_error, bins=100)
@@ -373,9 +403,97 @@ let
 	fig
 end
 
+# ╔═╡ caab0c3c-df05-48d2-b889-4bb566f33df5
+let
+	fig, ax = FigAxis(
+		xlabel=L"\xi",
+		ylabel=L"\eta",
+		aspect=DataAspect()
+	)
+
+	bins = 15
+	dc = 1
+	df = members_nospace
+	w = 1 ./ df.pmra_error .^ 2
+	pmra_mean = lguys.mean(df.pmra, lguys.weights(w))
+		
+	k1 = histogram2d(df.xi, df.eta, bins, weights=df.pmra .* w)
+	k2 = histogram2d(df.xi, df.eta, bins, weights=w)
+
+	k1.values ./= k2.values
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=(pmra_mean - dc, pmra_mean + dc)
+	)
+
+	@info pmra_mean
+	
+	Colorbar(fig[1, 2], p, label="proper motion in ra / mas/yr")
+
+	fig
+end
+
+# ╔═╡ 2b4f3f3d-7d05-4962-9ed1-5befb19a72a7
+let
+	fig, ax = FigAxis(
+		xlabel=L"$\xi$ / degrees",
+		ylabel=L"$\eta$ / degrees",
+		aspect=DataAspect()
+	)
+
+	bins = 15
+	dc = 1
+	df = members_nospace
+	w = 1 ./ df.pmdec_error .^ 2
+	pmdec_mean = lguys.mean(df.pmdec, lguys.weights(w))
+	@info pmdec_mean
+		
+	k1 = histogram2d(df.xi, df.eta, bins, weights=df.pmdec .* w)
+	k2 = histogram2d(df.xi, df.eta, bins, weights=w)
+
+	k1.values ./= k2.values
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=(pmdec_mean - dc, pmdec_mean + dc)
+	)
+
+	Colorbar(fig[1, 2], p, label="proper motion in dec / mas/yr")
+
+	fig
+end
+
+# ╔═╡ 91be1799-a915-497d-a67c-37747e0ddd12
+let
+	fig, ax = FigAxis(
+		xlabel=L"$\xi$ / degrees",
+		ylabel=L"$\eta$ / degrees",
+		aspect=DataAspect()
+	)
+
+	bins = 15
+	dc = 1
+	df = members_nospace
+	w = 1 ./ df.pmra_error .^ 2
+	pmdec_mean = lguys.mean(df.pmra, lguys.weights(w))
+	@info pmdec_mean
+		
+	k1 = histogram2d(df.xi, df.eta, bins, weights=w)
+
+	p = heatmap!(k1.xbins, k1.ybins, 1 ./ k1.values, 
+		colorrange=(0, 0.5)
+	)
+
+	Colorbar(fig[1, 2], p, label="proper motion in dec / mas/yr")
+
+	fig
+end
+
 # ╔═╡ Cell order:
-# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
+# ╠═da9ca7a7-18b8-49cb-a041-ab1c667920ff
 # ╠═489f6d21-9e9a-4b1e-b05c-c63a44ba1951
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
@@ -387,6 +505,8 @@ end
 # ╠═3e40a3f8-efbc-4807-b185-22fbb2e99adf
 # ╠═4ff675ef-8609-49df-bfac-4070f14e3c25
 # ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
+# ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
+# ╠═722a1f29-be6b-4fca-a9b3-8c304b6c4eb6
 # ╠═02d19c07-411f-40d6-9ac3-010ebfd4bdfe
 # ╠═c54224d3-c528-41bb-bce6-c910fc680b55
 # ╠═4f538de6-8827-454f-a97f-8f6c2cd7ea3f
@@ -424,3 +544,6 @@ end
 # ╠═ebb24519-ee2d-4781-a2bd-16ccbc957060
 # ╠═7af6fd4f-a7f4-4e7f-a1e3-8899717dd2cd
 # ╠═49a5de24-907c-49e1-9747-8be5bb28b64d
+# ╠═caab0c3c-df05-48d2-b889-4bb566f33df5
+# ╠═2b4f3f3d-7d05-4962-9ed1-5befb19a72a7
+# ╠═91be1799-a915-497d-a67c-37747e0ddd12

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -21,14 +21,22 @@ begin
 	import NaNMath as nm
 end
 
+# ╔═╡ 2845abc7-53cd-4996-a04b-e062ca3e63b7
+md"""
+Explores the properties and evolution of the stars in an isolation run.
+"""
+
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
 modeldir = "/astro/dboyea/sculptor/isolation/1e6/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "halos/V50_r0.5/stars/exp2d_rs0.1"
+starsname = "halos/V70_r0.4/stars/exp2d_rs0.07"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"
+
+# ╔═╡ f13d237d-ce33-43aa-a1c7-796ac502c9fe
+halo_factor = 0.24108 / 0.153194 
 
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
 paramname = "$(starsname).toml"
@@ -36,18 +44,11 @@ paramname = "$(starsname).toml"
 # ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
 import TOML
 
-# ╔═╡ 4445c2a1-3f00-42fa-8259-5d2b33e61d75
-params = TOML.parsefile(joinpath(modeldir, paramname)); 
-
-
-# ╔═╡ 051b314e-6cbc-405e-8873-b0288a93378d
-profile_class = getproperty(lguys, Symbol(params["profile"]))
+# ╔═╡ c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
+profile = lguys.load_profile(joinpath(modeldir, paramname))
 
 # ╔═╡ 7dfc4066-eee5-4118-9d12-48861aa66e03
 NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
-
-# ╔═╡ c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
-profile = profile_class(;NamedTuple(params["profile_kwargs"])...)
 
 # ╔═╡ 0671aa68-3d02-4b6c-a238-adffede13bd8
 ρ_s(r) = lguys.calc_ρ(profile, r)
@@ -79,14 +80,11 @@ begin
 
 end
 
+# ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
+prob_df = lguys.load_hdf5_table(joinpath(modeldir, starsfile))
+
 # ╔═╡ a888cc8f-e27c-4989-a535-6a2862c60c91
-begin
-	f = h5open(joinpath(modeldir, starsfile))
-	pidx = f["index"][:]
-	probabilities = f["probabilities"][:][sortperm(pidx)]
-	pidx = sort(pidx)
-	close(f)
-end
+probabilities = prob_df.probability
 
 # ╔═╡ addf19a4-088b-4aff-89a9-df73e8049f2c
 let
@@ -235,7 +233,9 @@ let
 	global σ_v = std(vs, weights(w))
 	global μ_v = mean(vs, weights(w))
 
-	fig, ax = FigAxis()
+	fig, ax = FigAxis(
+		xlabel = L"$v_\textrm{los}$ / km\,s$^{-1}$"
+	)
 	
 	hist!(vs, weights=w, bins=50, normalization=:pdf)
 
@@ -265,24 +265,24 @@ let
 		xlabel = "time / Gyr",
 		ylabel = L"\sigma_v / \textrm{km s^{-1}}",
 	)
-	scatter!(ts, sigmas * lguys.V0)
+	scatter!(ts, sigmas * lguys.V2KMS)
 
 	fig
 end
 
 # ╔═╡ fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7
-σ_v
+σ_v * halo_factor
 
 # ╔═╡ Cell order:
+# ╠═2845abc7-53cd-4996-a04b-e062ca3e63b7
 # ╠═6238c3fa-1974-11ef-1539-2f50fb31fe9a
 # ╠═141d3b97-e344-4760-aa12-a48b1afb125c
 # ╠═5b1dd353-a437-47cd-94be-7da9684581da
 # ╠═28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
 # ╠═21adbbe7-c8cc-4094-9e75-b68d97fa211a
+# ╠═f13d237d-ce33-43aa-a1c7-796ac502c9fe
 # ╠═312576e2-16da-4285-9c19-a7a8005acf25
 # ╠═feb6cc17-a25d-4ba8-a152-78412f422b80
-# ╠═4445c2a1-3f00-42fa-8259-5d2b33e61d75
-# ╠═051b314e-6cbc-405e-8873-b0288a93378d
 # ╠═c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
 # ╠═7dfc4066-eee5-4118-9d12-48861aa66e03
 # ╠═0671aa68-3d02-4b6c-a238-adffede13bd8
@@ -290,6 +290,7 @@ end
 # ╠═3150cdfd-7573-4db9-86b7-ef614150a7b9
 # ╠═2cc047db-ae05-42c5-898f-702ae3b83bd6
 # ╠═052d229a-0362-42eb-b03c-fdab0f0bc6b4
+# ╠═b4e107d1-5b14-4e64-80ce-a02ece3b41b7
 # ╠═a888cc8f-e27c-4989-a535-6a2862c60c91
 # ╠═addf19a4-088b-4aff-89a9-df73e8049f2c
 # ╠═de8ebcd0-d6e1-4b16-aaec-5bcd47cad1bd

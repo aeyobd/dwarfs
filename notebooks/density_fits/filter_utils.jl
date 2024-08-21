@@ -2,6 +2,7 @@ import TOML
 using Arya
 using Makie
 using FITSIO
+import LilGuys as lguys
 
 OptF = Union{Float64, Nothing}
 F = Float64

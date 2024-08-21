@@ -1,9 +1,0 @@
-profile = "Exp2D"
-num_radial_bins = 300
-num_energy_bins = 1000
-snapshot = "../out/snapshot_010.hdf5"
-bin_method = "equal_number"
-
-[profile_kwargs]
-M = 1
-R_s = 0.13

@@ -1,10 +1,11 @@
-profile = "Exp2D"
-num_radial_bins = 300
 num_energy_bins = 1000
 # snapshot = "../initial.hdf5" 
 snapshot = "../isolation.hdf5"
-bin_method = "equal_number"
 
-[profile_kwargs]
+bin_method = "both"
+dr_min = 0.03
+N_per_bin_min = 500
+
+[profile.Exp2D]
 M = 1
 R_s = 0.13

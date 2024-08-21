@@ -1,4 +1,3 @@
-profile = "Exp2D"
 num_energy_bins = 1000
 snapshot = "../halos/fiducial.hdf5"
 
@@ -7,6 +6,6 @@ dr_min = 0.03
 N_per_bin_min = 200
 
 
-[profile_kwargs]
+[profile.Exp2D]
 M = 1
 R_s = 0.05

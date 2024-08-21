@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -26,9 +26,6 @@ Check the initial DM halo. Loads a snapshot and checks if the halo has the expec
 # ╔═╡ 920546bd-4838-413c-b687-f891a7f5e985
 import TOML
 
-# ╔═╡ 4833d7f7-2c0a-4e15-a47b-cb2474351283
-12 * 3600
-
 # ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 md"""
 To make this both a cml utility and interactive, we take inputs in the following cells
@@ -40,20 +37,23 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/isolation/1e5/"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r5"
+
+# ╔═╡ 56e5c255-c0f1-44ec-80ca-e6049eb42b7f
+
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "out/snapshot_101"
+name = "initial"
+
+# ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
+md"""
+# File loading
+"""
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 begin 
-	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))
-	params = TOML.parsefile(joinpath(model_dir, "halo.toml"))
-	
-	halo = lguys.NFW(; lguys.dict_to_tuple(params["profile"])...)
-
-	# halo = lguys.NFW(; M_s=1/lguys.A_NFW(1), r_s=1)
-	# halo = lguys.NFW(M_s=0.289934, r_s=2.76)
+	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
+	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
 end
 
 # ╔═╡ d3313f08-7e4e-43b8-b55d-ea099d031bfe
@@ -70,6 +70,12 @@ begin
 
 	zeno_prof
 end
+
+# ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
+halo.r_s
+
+# ╔═╡ 2c5f63ca-88ab-468f-9a6f-839adf5c0955
+
 
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 lguys.calc_M(halo, 1)
@@ -102,6 +108,12 @@ snap.v_cen
 
 # ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
 prof = lguys.calc_profile(snap, filt_bound=false)
+
+# ╔═╡ 9fb58f1b-c98b-4a93-9683-ab478e44e2d7
+prof.v_circ_max * V2KMS
+
+# ╔═╡ 2e293959-9c05-4d9b-b889-a68584ca88f0
+prof.r_circ_max 
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
@@ -252,23 +264,59 @@ let
 	fig
 end
 
+# ╔═╡ fddeb921-468b-4f00-b4cb-a6fc4faec555
+R200 = lguys.calc_R200(halo)
+
+# ╔═╡ da55fc43-69f7-4375-b8fc-c61dd606fb24
+N200 = sum(lguys.calc_r(snap) .< R200)
+
+# ╔═╡ d841539a-f755-460f-9994-16229aadca6a
+grav_softening = 4R200 / sqrt(N200)
+
+# ╔═╡ 5d5d72d6-8272-40c9-bce8-d7d90c670052
+md"""
+# Softening
+
+From @power2003, we can estimate the ideal softening length with 
+
+``
+h = \frac{4R_{200}}{\sqrt{N_{200}}}
+``
+
+In our case, 
+- R200 = $R200
+- N200 = $N200
+- so h= $grav_softening kpc
+"""
+
+# ╔═╡ ddea90f9-90f5-4624-a292-e7007da4247b
+0.959 * 0.14
+
+# ╔═╡ 98a01aea-7d8b-4978-b8cf-2865d6d04e28
+
+
 # ╔═╡ Cell order:
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╠═01165464-35b2-43e9-9d52-d06fa9edf3cf
 # ╠═920546bd-4838-413c-b687-f891a7f5e985
-# ╠═4833d7f7-2c0a-4e15-a47b-cb2474351283
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
+# ╠═56e5c255-c0f1-44ec-80ca-e6049eb42b7f
 # ╠═d7a04cc7-369e-4687-b423-deda779f1c57
+# ╟─eb17e47b-b650-4362-ba29-77344e37bc48
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
+# ╠═7f9db45f-38ea-4427-9af1-d5431429f612
+# ╠═2c5f63ca-88ab-468f-9a6f-839adf5c0955
 # ╠═d3313f08-7e4e-43b8-b55d-ea099d031bfe
 # ╠═0ccb9018-d88c-4cec-a8da-625be1289bfe
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
 # ╠═54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═14e3b593-17b9-4acd-a9cb-d5923662a02c
+# ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
+# ╠═2e293959-9c05-4d9b-b889-a68584ca88f0
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╟─72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
@@ -282,3 +330,9 @@ end
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═f01efc63-c4ac-45ae-8dac-209819a6249e
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
+# ╟─5d5d72d6-8272-40c9-bce8-d7d90c670052
+# ╠═fddeb921-468b-4f00-b4cb-a6fc4faec555
+# ╠═da55fc43-69f7-4375-b8fc-c61dd606fb24
+# ╠═d841539a-f755-460f-9994-16229aadca6a
+# ╠═ddea90f9-90f5-4624-a292-e7007da4247b
+# ╠═98a01aea-7d8b-4978-b8cf-2865d6d04e28

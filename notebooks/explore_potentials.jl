@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -7,10 +7,10 @@ using InteractiveUtils
 # ╔═╡ d324513e-4268-11ef-1cdd-c712289bd296
 begin
 	import Pkg; Pkg.activate()
+	using CairoMakie
 
 	using LilGuys
 	using Arya
-	using CairoMakie
 end
 
 # ╔═╡ 57474fd0-6ee8-4a76-b018-9df5ad087367
@@ -23,7 +23,7 @@ LilGuys.Ludlow.solve_rmax(V0)
 R0 = 5.938
 
 # ╔═╡ 45cc3ae0-0c2f-415e-ade8-9415ae4795d8
-V = 70/ V2KMS
+V = 60/ V2KMS
 
 # ╔═╡ 53af1c45-d189-4b87-a28c-f1d18b3f3746
 n_sigma_R = -3
@@ -33,6 +33,9 @@ R = LilGuys.Ludlow.solve_rmax(V) * 10 ^ (0.135 * n_sigma_R)
 
 # ╔═╡ 03769904-cc37-4847-8cad-fb96f9f611dd
 LilGuys.Ludlow.solve_rmax(V, -0.1 * n_sigma_R)
+
+# ╔═╡ 40a60cce-0ec8-405f-b8df-78e8b3ee0f8b
+LilGuys.Ludlow.solve_rmax(V)
 
 # ╔═╡ 1c7e2102-6905-42c3-9f3a-237e99c3c1a2
 0.44 * R / R0
@@ -82,13 +85,14 @@ end
 let
 	fig, ax = FigAxis(
 		xscale=log10,
-		yscale=log10,
+		#yscale=log10,
 		xlabel="r",
 		ylabel="v circ"
 	)
 
-	lines!(r_model, LilGuys.calc_v_circ.(p0, r_model))
-	lines!(r_model, LilGuys.calc_v_circ.(p1, r_model))
+	lines!(r_model, LilGuys.calc_v_circ.(p0, r_model) *V2KMS)
+	lines!(r_model, LilGuys.calc_v_circ.(p1, r_model) * V2KMS)
+	vlines!(0.1)
 
 	fig
 end
@@ -135,6 +139,7 @@ end
 # ╠═53af1c45-d189-4b87-a28c-f1d18b3f3746
 # ╠═4e846290-ffeb-4b5d-b6f4-ac8831c1a8be
 # ╠═03769904-cc37-4847-8cad-fb96f9f611dd
+# ╠═40a60cce-0ec8-405f-b8df-78e8b3ee0f8b
 # ╠═1c7e2102-6905-42c3-9f3a-237e99c3c1a2
 # ╠═1e641adf-1147-4606-bfb4-693a81892031
 # ╠═c9a564e4-35ad-413e-b336-1eb7936d7cd3

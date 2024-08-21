@@ -1,10 +1,10 @@
-profile = "Exp2D"
-num_radial_bins = 200
 num_energy_bins = 1000
-snapshot_dir = "../out"
-snapshot = 10
-bin_method = "equal_number"
+snapshot = "../halos/fiducial.hdf5"
 
-[profile_kwargs]
+bin_method = "both"
+dr_min = 0.03
+N_per_bin_min = 200
+
+[profile.Exp2D]
 M = 1
 R_s = 0.16

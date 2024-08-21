@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -11,8 +11,9 @@ begin
 	using FITSIO
 	using DataFrames, CSV
 	
-	using GLMakie
-	
+	using CairoMakie
+
+	using Polyhedra
 	import LilGuys as lguys
 	using Arya
 end
@@ -32,8 +33,11 @@ md"""
 # inputs
 """
 
+# ╔═╡ 3aa7e2b8-d51c-46d0-b961-f8e5d015aa57
+cd("sculptor")
+
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "sculptor/fiducial"
+name = "fiducial"
 
 # ╔═╡ 9edb0794-5d2f-4070-9801-5b10a3a2cbc8
 param_file = "$name.toml"
@@ -275,6 +279,45 @@ let
 	fig
 end
 
+# ╔═╡ 858a2f19-393f-45cd-8aeb-2602c4cbae05
+let 
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
+		xlabel=log_r_label,
+		limits=((-1, 2.3), nothing)
+	)
+
+	memb = all_stars[all_stars.PSAT_1C .> 0.2, :]
+
+	obs = lguys.calc_properties(memb.r_ell)
+	lines!(ax, obs.log_r, obs.log_Sigma, 
+		label="1 component")
+
+	
+	memb = all_stars[all_stars.PSAT_CIRC .> 0.2, :]
+	r = @. sqrt(memb.xi^2 + memb.eta^2) * 60
+	obs = lguys.calc_properties(r)
+	lines!(ax, obs.log_r, obs.log_Sigma, 
+		label="2 component, circ")
+
+
+	memb = all_stars[all_stars.PSAT .> 0.2, :]
+	obs = lguys.calc_properties(memb.r_ell)
+	lines!(ax, obs.log_r, obs.log_Sigma, 
+		label="2 component, ell")
+
+
+	memb = all_stars[all_stars.PSAT_NOSPACE .> 0.2, :]
+	obs = lguys.calc_properties(memb.r_ell)
+	lines!(ax, obs.log_r, obs.log_Sigma, 
+		label="no spatial prior")
+	
+	axislegend(position=:lb)
+	
+	fig
+end
+
 # ╔═╡ 80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 size(members)
 
@@ -314,17 +357,22 @@ let
 	fig
 end
 
+# ╔═╡ 82881a33-8302-472f-80b7-c4040f8fc1e2
+md"""
+## Convex hull test
+"""
+
 # ╔═╡ 50f5a1f7-7537-4166-a582-e9c3453de0e0
 x_p, y_p = 60 .* lguys.shear_points_to_ellipse(all_stars_unfiltered.xi, all_stars_unfiltered.eta, params.ellipticity, params.PA)
-
-# ╔═╡ 0723118a-5685-4b81-9098-4e702c9f4d8b
-poly = lguys.convex_hull(x_p, y_p)
 
 # ╔═╡ 556d5c09-d531-4ce0-ab01-1810c6db4deb
 pol = lguys.convex_hull(x_p, y_p)
 
 # ╔═╡ 8c882887-43df-472f-91db-4d9d8e201639
 r_max = lguys.min_distance_to_polygon(pol...)
+
+# ╔═╡ 0723118a-5685-4b81-9098-4e702c9f4d8b
+poly = lguys.convex_hull(x_p, y_p)
 
 # ╔═╡ f9606772-d51d-4701-80dc-5637b3510627
 let
@@ -339,9 +387,9 @@ let
 	filt = all_stars_unfiltered.r_ell .< r_ell_max
 	scatter!(x_p[filt], y_p[filt], alpha=0.2, markersize=5)
 
-	poly!(pol..., color=nothing, strokecolor=COLORS[2], strokewidth=2)
+	poly!(pol..., color=:transparent, strokecolor=COLORS[2], strokewidth=2)
 
-	poly!(Circle(Point2f(0,0,), r_max), color=nothing, strokecolor=COLORS[3], strokewidth=2)
+	poly!(Circle(Point2f(0,0,), r_max), color=:transparent, strokecolor=COLORS[3], strokewidth=2)
 
 	fig
 end
@@ -351,6 +399,7 @@ end
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
+# ╠═3aa7e2b8-d51c-46d0-b961-f8e5d015aa57
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 # ╠═9edb0794-5d2f-4070-9801-5b10a3a2cbc8
 # ╠═f8779f92-3ae0-474e-907e-1067170b1531
@@ -376,13 +425,15 @@ end
 # ╠═0aae7fec-f003-4ebc-be9b-8028408c121e
 # ╟─a7209445-84e9-435d-9144-90f8eb5e70cb
 # ╠═1610647f-7dcf-4ffc-8906-bf28d36ae529
-# ╠═0723118a-5685-4b81-9098-4e702c9f4d8b
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
 # ╠═45422d53-317c-4824-a41a-4a80b1fbd102
+# ╠═858a2f19-393f-45cd-8aeb-2602c4cbae05
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╠═edb7b9ff-4902-4004-b5b4-50a0f0b0ee52
 # ╠═c0b3c3f6-0450-4242-9e13-41f9af17e562
+# ╟─82881a33-8302-472f-80b7-c4040f8fc1e2
 # ╠═556d5c09-d531-4ce0-ab01-1810c6db4deb
+# ╠═0723118a-5685-4b81-9098-4e702c9f4d8b
 # ╠═8c882887-43df-472f-91db-4d9d8e201639
 # ╠═50f5a1f7-7537-4166-a582-e9c3453de0e0
 # ╠═f9606772-d51d-4701-80dc-5637b3510627
