@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -36,10 +36,13 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4"
+model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6/V60_r5.4"
+
+# ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
+readdir(model_dir)
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
-halo = NFW(; LilGuys.dict_to_tuple(TOML.parsefile(joinpath(model_dir, "halo.toml"))["profile"])...)
+halo = LilGuys.load_profile(joinpath(model_dir, "halo.toml"))
 
 # ╔═╡ d971556d-8b66-4b2d-9dc0-31799f94b10a
 skip = 10
@@ -80,10 +83,7 @@ prof_i = LilGuys.calc_profile(snap_i)
 prof_f = LilGuys.calc_profile(snap_f)
 
 # ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
-profiles = [LilGuys.calc_profile(snap) for snap in out[1:skip:end]]
-
-# ╔═╡ e8956092-e811-4af8-bcb0-2fc9829ca817
-LilGuys.calc_profile(out[140])
+profiles = LilGuys.Profiles3D(joinpath(model_dir, "out/profiles.hdf5"))
 
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
@@ -117,10 +117,10 @@ md"""
 """
 
 # ╔═╡ e6fc3297-c1b7-40a4-b2bb-98490a42604a
-v_max = [f.v_circ_max for f in profiles]
+v_max = [f.v_circ_max for f in profiles.profiles]
 
 # ╔═╡ d57501a1-4764-4b23-962f-2d37547d7bcc
-r_max = [f.r_circ_max for f in profiles]
+r_max = [f.r_circ_max for f in profiles.profiles]
 
 # ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
 let 
@@ -259,9 +259,6 @@ let
 	fig
 end
 
-# ╔═╡ 8c0c017d-647d-49ed-95ce-1bc85725ca79
-
-
 # ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
 let
 	fig, ax = LP.xy_axis()
@@ -333,6 +330,7 @@ end
 # ╠═7f29d14d-0e3f-4e64-b726-6b8fd5bb7548
 # ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
 # ╠═14279a79-bf66-4b34-bf9f-735ff2886ea5
+# ╠═c260ee35-7eed-43f4-b07a-df4371397195
 # ╠═d010a230-7331-4afd-86dc-380da0e0f720
 # ╠═d971556d-8b66-4b2d-9dc0-31799f94b10a
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
@@ -347,7 +345,6 @@ end
 # ╠═8dae2e01-652b-4afc-b040-dd2ba1c6eedb
 # ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
 # ╠═2470e05f-9215-45e4-88fc-daab0638272f
-# ╠═e8956092-e811-4af8-bcb0-2fc9829ca817
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
 # ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
@@ -360,7 +357,6 @@ end
 # ╠═6cc4868a-8ef6-4d29-9d7d-f04504d6b157
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 # ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
-# ╠═8c0c017d-647d-49ed-95ce-1bc85725ca79
 # ╠═4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
 # ╠═d7aaba0e-1ba9-4349-b2f0-c047bb49bcd7

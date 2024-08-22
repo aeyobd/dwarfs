@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -22,6 +22,8 @@ using HDF5
 md"""
 Analyzes the orbit of a n-body halo in a gravitational potential.
 Requires the centres to be calculated prior.
+
+We would like to check if the orbit is 
 """
 
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
@@ -33,13 +35,13 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4/"
+dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V60_r5.4/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = joinpath(dir, "orbit.csv")
+orbit_file = joinpath(dir, "../orbit.csv")
 
 # ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 outfile = joinpath(dir, "orbital_properties.toml")
@@ -114,13 +116,19 @@ md"""
 """
 
 # ╔═╡ f134b3ce-53f0-47e9-84e9-1e73064d5191
-snap_cen = Snapshot(x_cen, v_cen, zeros(size(x_cen, 1)))
+snap_cen = Snapshot(x_cen, v_cen, zeros(size(x_cen, 2)))
 
 # ╔═╡ 64e558da-2928-4815-ad5a-7528516311f9
-obs_c_gr = LilGuys.to_sky(snap_cen, SkyFrame=LilGuys.GSR)
+obs_c_gr = LilGuys.to_gaia(snap_cen, SkyFrame=LilGuys.GSR, add_centre=false)
 
 # ╔═╡ defc4184-2613-4480-9adf-fa135f168382
-obs_c = LilGuys.to_sky(snap_cen)
+obs_c = LilGuys.to_gaia(snap_cen, add_centre=false)
+
+# ╔═╡ 71ef4c9b-1284-4451-bcdd-eff79d334539
+
+
+# ╔═╡ 5ec062c3-3815-4cf7-b45a-f97332d1b800
+snap_cen.masses
 
 # ╔═╡ a179323f-4878-4021-b8d4-69ca733658cb
 function calc_χ2s(obs_c, obs_today)
@@ -145,6 +153,9 @@ t_min = 5
 
 # ╔═╡ 9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
 t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
+
+# ╔═╡ 7646ea5b-f1b1-4934-be68-330139f7f838
+length(χ2)
 
 # ╔═╡ d9df3376-6ca1-4701-afb5-2df994bb3442
 idx_f = searchsortedfirst(times, t_end)
@@ -456,12 +467,15 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
 # ╠═64e558da-2928-4815-ad5a-7528516311f9
 # ╠═defc4184-2613-4480-9adf-fa135f168382
+# ╠═71ef4c9b-1284-4451-bcdd-eff79d334539
+# ╠═5ec062c3-3815-4cf7-b45a-f97332d1b800
 # ╠═a179323f-4878-4021-b8d4-69ca733658cb
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 # ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
 # ╠═9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
+# ╠═7646ea5b-f1b1-4934-be68-330139f7f838
 # ╠═d9df3376-6ca1-4701-afb5-2df994bb3442
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
 # ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
