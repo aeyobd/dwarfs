@@ -1,11 +1,13 @@
-profile = "KingProfile"
-num_radial_bins = 1000
-num_energy_bins = 1000
-snapshot_dir = "../out"
-snapshot = 10
-bin_method = "equal_number"
+snapshot = "../halos/fiducial.hdf5"
 
-[profile_kwargs]
+bin_method = "both"
+dr_min = 0.02
+N_per_bin_min = 100
+
+num_energy_bins = 1000
+
+
+[profile.KingProfile]
 M = 1
-R_s = 0.2
-R_t = 1
+R_s = 0.5
+R_t = 2.5
