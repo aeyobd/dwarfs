@@ -15,16 +15,17 @@ begin
 end
 
 # ╔═╡ 96ae7f95-886b-4fd6-a1a0-3d4f0790cc34
-cd("/astro/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4/stars/")
+cd("/astro/dboyea/sculptor/orbits/orbit1/1e6//V32_r5/stars/")
 
 # ╔═╡ 88f31bfc-a67d-4654-af8b-46dc91500558
 r_b = 76
 
 # ╔═╡ 658ea28e-b0c9-433f-80e6-71d868f882a8
 Rs = [
-	"0.02",
-	"0.07", 
-	"0.13"
+	#"0.02",
+	#"0.1", 
+	"0.13",
+	#"0.15",
 ]
 
 # ╔═╡ 51af74d4-2643-4d20-a0da-01f3cd0ff264
@@ -85,6 +86,45 @@ let
 	
 	vlines!(log10(r_b), color=:grey, label="break radius")
 	axislegend("Rs / kpc")
+
+	fig
+end
+
+# ╔═╡ e929bc3d-3edc-4e46-983b-75395c1d40cd
+prof_fit = lguys.KingProfile(M=1, R_s=11, R_t=25)
+
+# ╔═╡ b8115f84-38c9-4479-b0ef-13c8bb23ec39
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel=log_r_label,
+		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
+		limits=((-1, 2.5), (-5, 1)),
+		xgridvisible=false,
+		ygridvisible=false
+	)
+
+	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
+		yerr=prof_expected.log_Sigma_err,
+		color=:black
+	)
+
+	x = LinRange(-1, 2, 1000)
+	r = 10 .^ x
+	y = lguys.calc_ρ.(prof_fit, r)
+
+	y ./= y[1]
+
+	#lines!(x, log10.(y))
+
+	i = 1
+	lines!(profiles_i[i].log_r, profiles_i[i].log_Sigma, 
+			label="initial", linestyle=:dot)
+	
+	lines!(profiles[i].log_r, profiles[i].log_Sigma, 
+			label="final")
+
+	axislegend()
 
 	fig
 end
@@ -160,6 +200,8 @@ md"""
 # ╠═6d207751-695f-4247-94da-ced5a146092f
 # ╠═de69d265-cda1-4543-ad02-2ee3091964d6
 # ╠═932c4fef-992b-4518-80d0-59c8e126ccb5
+# ╠═e929bc3d-3edc-4e46-983b-75395c1d40cd
+# ╠═b8115f84-38c9-4479-b0ef-13c8bb23ec39
 # ╠═91dcf440-0660-445c-874d-9ebdef4b36ab
 # ╠═64baeb89-4cbf-421c-97f6-d2a624b30882
 # ╟─5d03ccd2-2dd6-45d9-8ec1-1af9bea3475b

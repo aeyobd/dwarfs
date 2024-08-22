@@ -41,10 +41,10 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4/"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r5//"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.07_stars.fits"
+starsname = "exp2d_rs0.13_stars.fits"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -212,6 +212,32 @@ let
 	fig
 end
 
+# ╔═╡ 9a5e143b-2295-4db9-a945-642fd6adeef0
+let 
+	fig, ax = ra_dec_axis(10)
+
+	bins = 100
+	limits = ax.limits.val
+	x = stars.ra
+	y = stars.dec
+
+
+	hi = Arya.histogram2d(x, y, bins, weights=stars.weights, limits=limits)
+	areas = diff(hi.xbins) .* (diff(hi.ybins)')
+	hi.values ./= areas
+	
+		
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10*maximum(hi.values), maximum(hi.values)), colormap=Reverse(:greys))
+
+	# idx = idx_f - 20: idx_f + 20
+	# lines!(sky_orbit.ra[idx], sky_orbit.dec[idx])
+	
+	Colorbar(fig[1, 2], h,
+		label="stellar density"
+	)
+	fig
+end
+
 # ╔═╡ edf68b42-4fe9-4e14-b7ed-739e89a1541a
 let
 	dr = 10
@@ -222,7 +248,7 @@ let
 	h = Arya.histogram2d(stars.xi, stars.eta, bins, weights=stars.weights)
 
 	p = heatmap!(h.xbins, h.ybins, h.values, 
-		colorscale=log10, colorrange=(1e-20, maximum(h.values)))
+		colorscale=log10, colorrange=(1e-20*maximum(h.values), maximum(h.values)))
 
 	Colorbar(fig[1, 2], p)
 
@@ -637,7 +663,7 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L"\log r \ / \textrm{kpc}",
 		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((-1.5, 3), (-5, 1))
+		limits=((-1, 3), (-5, 1))
 	)
 
 	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
@@ -657,6 +683,9 @@ let
 	fig
 end
 
+# ╔═╡ ed8d9709-1904-4ea1-acef-48ea8bf9c801
+
+
 # ╔═╡ c901bf9d-46bf-4cd7-af11-227d477663b4
 r_b_arcmin
 
@@ -666,7 +695,7 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L" r \ / \textrm{kpc}",
 		ylabel = L"\Gamma",
-		limits=((0, 300), (-50, 2))
+		limits=((0, 120), (-35, 2))
 	)
 
 
@@ -675,7 +704,11 @@ let
 	errscatter!(10 .^ prof.log_r, prof.Gamma, yerr=prof.Gamma_err, 
 			label="model")
 
-
+	errscatter!(10 .^ prof_expected.log_r, prof_expected.Gamma,
+		yerr=prof_expected.Gamma_err,
+		label="J+24",
+		color=:black
+	)
 	
 	vlines!((r_b_arcmin), color=:grey, label="break radius")
 	fig
@@ -712,6 +745,7 @@ end
 # ╠═6ebfff07-c43f-4d4d-8604-9fd4f1de5d25
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
 # ╠═33a75908-3d98-4006-a8ef-833d9a161b01
+# ╠═9a5e143b-2295-4db9-a945-642fd6adeef0
 # ╠═edf68b42-4fe9-4e14-b7ed-739e89a1541a
 # ╠═b4778d19-cb91-4f0f-97fa-4ef69448f849
 # ╠═e3fdb5b0-acf1-4ee1-bd3f-56fbfd60f646
@@ -753,5 +787,6 @@ end
 # ╠═1fde438a-ad46-4b60-bc9f-fddc533d9cdb
 # ╠═b5fd1bcd-b554-48d3-8472-024cb0bd0792
 # ╠═901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
+# ╠═ed8d9709-1904-4ea1-acef-48ea8bf9c801
 # ╠═c901bf9d-46bf-4cd7-af11-227d477663b4
 # ╠═b6dff4d6-a89b-4b46-858a-5d490c47eeb7

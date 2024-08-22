@@ -47,10 +47,10 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V70_r0.4/stars/"
+dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V60_r5.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_rs0.05")
+paramname = joinpath(dir, "exp2d_rs0.07")
 
 # ╔═╡ 8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
 params = TOML.parsefile(paramname * ".toml")
