@@ -47,10 +47,15 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V60_r5.4/stars/"
+dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_rs0.07")
+paramname = joinpath(dir, "king")
+
+# ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
+md"""
+# File loading
+"""
 
 # ╔═╡ 8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
 params = TOML.parsefile(paramname * ".toml")
@@ -73,6 +78,9 @@ begin
 	snap.weights = df_probs.probability[snap.index]
 	snap
 end
+
+# ╔═╡ 0a4521ac-7e35-4976-8781-bdbd4f7242c7
+lguys.get_M_tot(profile)
 
 # ╔═╡ 29930595-5255-4454-8550-22ac6a96f609
 r_h = lguys.calc_r_h(profile)
@@ -112,10 +120,10 @@ let
 	ps = df_probs.probability
 
 	
-	h1 = lguys.histogram(ϵs, 20, normalization=:pdf)
+	h1 = lguys.histogram(ϵs, 200, normalization=:pdf)
 	h1.values .= y_trans(h1.values)
 
-	h_s = lguys.histogram(ϵs, 20, weights=ps, normalization=:pdf)
+	h_s = lguys.histogram(ϵs, 200, weights=ps, normalization=:pdf)
 	h_s.values .= y_trans(h_s.values)
 
 	
@@ -129,6 +137,12 @@ let
 
 	fig
 end
+
+# ╔═╡ 587d3017-15e2-4f81-9729-e9eb02de3b4d
+minimum(df_probs.phi)
+
+# ╔═╡ 30fdd463-5cb6-43f9-9348-543ee0dd385c
+maximum(df_probs.phi)
 
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 let
@@ -163,12 +177,16 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"\log\ r / \textrm{kpc}", ylabel=L"\Psi(r)")
 
-	idx = sortperm(df_probs.radii)
-	lines!(log10.(df_probs.radii[idx]), df_probs.phi[idx], label="interpolated")
+	skip=100
 
-	idx = sortperm(lguys.calc_r(snap))
-	lines!(log10.(lguys.calc_r(snap)[idx]), snap.Φs[idx], label="snapshot")
-	axislegend()
+	radii = df_probs.radii[1:skip:end]
+	phi = df_probs.phi[1:skip:end]
+	scatter!(log10.(radii), phi, label="interpolated", markersize=5)
+
+	radii = lguys.calc_r(snap)[1:skip:end]
+	phi = snap.Φs[1:skip:end]
+	scatter!(log10.(radii), phi, label="snapshot", markersize=3)
+	axislegend(position=:rb)
 	fig
 end
 
@@ -314,7 +332,7 @@ let
 	r_h2 = calc_r_h(r, ms)
 	println(r_h2)
 	
-	r_e = 10 .^ DensityEstimators.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.1)
+	r_e = 10 .^ DensityEstimators.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.03)
 	r, ν_s_nbody = lguys.calc_ρ_hist(r, r_e, weights=ms)
  
 	r = lguys.midpoints(r)
@@ -355,11 +373,11 @@ md"""
 
 # ╔═╡ 6dd92ee1-374d-47fa-ad61-b54764b23240
 let
-	x = snap.positions[1, :] 
-	y = snap.positions[2, :] 
+	x = snap.positions[3, :] 
+	y = snap.positions[1, :] 
 	R = @. sqrt(x^2 + y^2)
 
-	bins = DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.1)
+	bins = DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.03)
 
 	prof = lguys.calc_properties(R, weights=snap.weights, bins=bins)
 
@@ -371,9 +389,7 @@ let
 		)
 
 
-	profile2 = lguys.Exp2D(R_s = profile.R_s)
-
-	log_Σ(r) = log10(lguys.calc_Σ(profile2, r))
+	log_Σ(r) = log10(lguys.calc_Σ(profile, r))
 
 	log_R = LinRange(-2, 2, 1000)
 	y = log_Σ.(10 .^ log_R)
@@ -392,11 +408,8 @@ md"""
 # ╔═╡ 4396bced-cae8-4107-ac83-48cc3c4146f2
 distance = 83.2
 
-# ╔═╡ 062cea41-3b51-474e-b877-7a4d96813fbc
-R_s_arcmin = lguys.kpc_to_arcmin(profile.R_s, distance)
-
 # ╔═╡ 7b7832d1-6739-453e-aaee-fa16a6000d26
-function mock_obs(snap_og; distance=86)
+function mock_obs(snap_og; distance=distance)
 	x_sun = [8.122, 0, 0]
 	shift_vec = x_sun .+ lguys.rand_unit() * distance
 
@@ -423,9 +436,9 @@ let
 	ra0, dec0 = lguys.calc_centre2D(ra, dec, "mean", ms)
 	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 	R = @. 60sqrt(xi^2 + eta^2)
-	bins = 	 DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=30, dx_min=0.1)
+	bins = 	 DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=20, dx_min=0.03)
 
-	prof = lguys.calc_properties(R, weights=ms, bins=bins)
+	prof = lguys.calc_properties(R, weights=ms, bins=bins, normalization=:central, r_centre=10)
 
 
 	fig = Figure()
@@ -437,12 +450,11 @@ let
 	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err)
 
 	
-	profile2 = lguys.Exp2D(R_s = R_s_arcmin)
-
-	log_Σ(r) = log10(lguys.calc_Σ(profile2, r))
+	log_Σ(r) = log10(lguys.calc_Σ(profile, lguys.arcmin_to_kpc(r, distance)))
 
 	log_R = LinRange(-2, 2.5, 1000)
 	y = log_Σ.(10 .^ log_R)
+	y .-= y[1]
 	
 	lines!(log_R, y)
 	fig
@@ -508,17 +520,21 @@ end
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
 # ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
+# ╟─d76e6200-9401-4c2e-bd7c-53e79dd49415
 # ╠═8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
-# ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
 # ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
+# ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
 # ╠═159aa60d-563b-4c85-b75d-502ac944b99c
 # ╠═f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 # ╠═1066a445-600d-4508-96a2-aa9b90460097
+# ╠═0a4521ac-7e35-4976-8781-bdbd4f7242c7
 # ╠═29930595-5255-4454-8550-22ac6a96f609
 # ╟─4d1991ea-9496-48c7-a400-8fefbecefcd2
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
+# ╠═587d3017-15e2-4f81-9729-e9eb02de3b4d
+# ╠═30fdd463-5cb6-43f9-9348-543ee0dd385c
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
 # ╟─9e2f1606-46aa-4e06-a31f-b03a383cccda
@@ -543,7 +559,6 @@ end
 # ╠═6dd92ee1-374d-47fa-ad61-b54764b23240
 # ╟─99f274b4-91f3-41d0-b7d3-234badeb43d1
 # ╠═4396bced-cae8-4107-ac83-48cc3c4146f2
-# ╠═062cea41-3b51-474e-b877-7a4d96813fbc
 # ╠═87b5b241-db72-45ee-b3a7-a394f99510d9
 # ╠═7b7832d1-6739-453e-aaee-fa16a6000d26
 # ╠═904576b4-2669-45d1-8078-310347f5fec0

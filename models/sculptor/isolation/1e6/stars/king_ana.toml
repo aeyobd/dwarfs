@@ -1,0 +1,13 @@
+snapshot = "../halos/fiducial.hdf5"
+
+bin_method = "equal_width"
+bin_width = 0.01
+
+num_energy_bins = 1000
+
+analytic="../halos/fiducial.toml"
+
+[profile.KingProfile]
+M = 1
+R_s = 0.5
+R_t = 2.5
