@@ -51,6 +51,13 @@ md"""
 begin 
 	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
 	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
+
+	halo = lguys.TruncNFW(
+		M_s= 0.12144256932359862,
+		r_s=1.118861833686606,
+		trunc=64,
+		c=26.87054512188574,
+	)
 end
 
 # ╔═╡ d3313f08-7e4e-43b8-b55d-ea099d031bfe
@@ -117,16 +124,16 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
-	rc, Vc = lguys.calc_v_circ(snap)
-	lines!(log10.(rc), Vc * lguys.V2KMS, label="initial")
-
 	log_r = LinRange(-2, 2.5, 1000)
 
-	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r))
+	lines!(prof.log_r, prof.v_circ .* V2KMS, label="snapshot")
 
-	lines!(prof.log_r, prof.v_circ .* V2KMS)
-	lines!(log10.(zeno_prof.Radius), zeno_prof.V_circ .* V2KMS)
-	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS)
+	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
+
+	lines!(log10.(zeno_prof.Radius), zeno_prof.V_circ .* V2KMS, label="zeno profile")
+	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS, label="vmax, rmax")
+
+	axislegend()
 	fig
 end
 
@@ -200,7 +207,7 @@ let
 end
 
 # ╔═╡ aca95a0a-98e0-4b7a-bca2-e3c30f9df6e9
-
+lguys.get_M_tot(halo)
 
 # ╔═╡ 84b3759e-a598-4afc-a2b4-ce841e80ff96
 let

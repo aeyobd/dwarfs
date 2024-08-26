@@ -47,10 +47,11 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V60_r5.4/stars/"
+dir = "/astro/dboyea/sculptor/isolation/1e6/stars/"
+#dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "king_rs0.05")
+paramname = joinpath(dir, "king")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -120,17 +121,17 @@ let
 	ps = df_probs.probability
 
 	
-	h1 = lguys.histogram(ϵs, 200, normalization=:pdf)
-	h1.values .= y_trans(h1.values)
+	bins, h1, _ = lguys.histogram(ϵs, 200, normalization=:pdf)
+	h1 = y_trans(h1)
 
-	h_s = lguys.histogram(ϵs, 200, weights=ps, normalization=:pdf)
-	h_s.values .= y_trans(h_s.values)
+	_, h_s, _ = lguys.histogram(ϵs, 200, weights=ps, normalization=:pdf)
+	h_s .= y_trans(h_s)
 
 	
 	lines!(df_E.E, df_E.probs, color=Arya.COLORS[3], label="f_s / f_dm")
 	
-	lines!(h1, label="dark matter")
-	lines!(h_s, label="stars (nbody)")
+	lines!(midpoints(bins), h1, label="dark matter")
+	lines!(midpoints(bins), h_s, label="stars (nbody)")
 	vlines!([maximum(ϵs)], color="grey", linestyle=:dot, label=L"\epsilon_\textrm{max}")
 
 	axislegend(ax, position=:lb)
@@ -438,7 +439,7 @@ let
 	R = @. 60sqrt(xi^2 + eta^2)
 	bins = 	 DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=20, dx_min=0.03)
 
-	prof = lguys.calc_properties(R, weights=ms, bins=bins, normalization=:central, r_centre=10)
+	prof = lguys.calc_properties(R, weights=ms, bins=bins, normalization=:central, r_centre=3)
 
 
 	fig = Figure()

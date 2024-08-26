@@ -30,7 +30,7 @@ Explores the properties and evolution of the stars in an isolation run.
 modeldir = "/astro/dboyea/sculptor/isolation/1e6/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "stars/king" #"halos/V70_r0.4/stars/exp2d_rs0.07"
+starsname = "halos/V32_r2.4/stars/king_rs0.15"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"

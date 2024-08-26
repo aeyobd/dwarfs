@@ -41,10 +41,10 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r5//"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4//"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "king_stars.fits"
+starsname = "king_rs0.15_1.fits"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -663,7 +663,7 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L"\log r \ / \textrm{kpc}",
 		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((-1, 3), (-5, 1))
+		limits=((-1, 2.2), (-5, 1))
 	)
 
 	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,

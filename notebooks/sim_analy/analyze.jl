@@ -36,7 +36,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6/V60_r5.4"
+model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -101,7 +101,7 @@ let
 	#ax.yticks = [0.1:0.1:1;]
 
 	for r in [0.3, 1, 10, Inf]
-		M_dm_h = LilGuys.get_M_h(out, r)
+		M_dm_h = LilGuys.calc_M_in(out, r)
 		scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="$r")
 	end
 	
@@ -163,8 +163,9 @@ end
 
 # ╔═╡ c068c177-e879-4b8e-b1af-18690af9b334
 let 
-	i = length(out) - 80
+	i = length(out) - 10
 	snap = out[i]
+	prof = profiles[argmin(abs.(profiles.snapshot_index .- i))]
 
 	
 	fig = Figure(size=(700, 500))
@@ -172,14 +173,18 @@ let
 		ylabel=L"V_\textrm{circ}",
 	title="time = $(out.times[i]  * T2GYR) Gyr")
 
-	r, v = LilGuys.calc_v_circ(snap)
+	r, v = LilGuys.calc_v_circ(snap, filter_bound=true)
 	scatter!(log10.(r), v * V2KMS)
 
 	fit = LilGuys.fit_v_r_circ_max(snap)
 	r_fit = LinRange(fit.r_min, fit.r_max, 100)
-	v_fit = LilGuys.v_circ_max_model(r_fit, [fit.r_circ_max, fit.v_circ_max])
+	v_fit = LilGuys._v_circ_max_model(r_fit, [fit.r_circ_max, fit.v_circ_max])
 
-	lines!(log10.(r_fit), v_fit * V2KMS, linewidth=3)
+	lines!(log10.(r_fit), v_fit * V2KMS, linewidth=3, color=COLORS[2])
+
+	r_fit = 10 .^ LinRange(prof.log_r[1], prof.log_r[end], 1000)
+	v_fit = LilGuys._v_circ_max_model(r_fit, [fit.r_circ_max, fit.v_circ_max])
+	lines!(log10.(r_fit), v_fit * V2KMS, color=COLORS[2])
 	
 	scatter!(log10.(fit.r_circ_max), fit.v_circ_max * V2KMS, color=Arya.COLORS[3])
 
@@ -187,7 +192,7 @@ let
 	ax2 = Axis(fig[2, 1], xlabel="r/kpc", ylabel="residual")
 
 	filt = fit.r_min .<= r .<= fit.r_max
-	dv = v[filt] .- LilGuys.v_circ_max_model(r[filt], [fit.r_circ_max, fit.v_circ_max])
+	dv = v[filt] .- LilGuys._v_circ_max_model(r[filt], [fit.r_circ_max, fit.v_circ_max])
 	scatter!(log10.(r[filt]), dv * V2KMS)
 	vlines!(log10(fit.r_circ_max))
 	
@@ -230,9 +235,11 @@ let
 	lines!(prof_i.log_r, log10.(prof_i.rho), label="initial")
 	lines!(prof_f.log_r, log10.(prof_f.rho), label="final")
 
-	LP.plot_ρ_dm!(snap_f, label="final (all particles)", filt_bound=false, color=COLORS[2], linestyle=:dash)
+	prof_fap = LilGuys.calc_profile(snap_f, filt_bound=false)
+	
+	lines!(prof_fap.log_r, log10.(prof_fap.rho), label="final (all particles)", color=COLORS[2], linestyle=:dash)
 
-	LP.plot_ρ!(halo, linestyle=:dot, label="NFW")
+	LP.plot_ρ!(halo, linestyle=:dot, label="NFW", color=:black)
 
 	axislegend(ax)
 	#lines!([0, 0] .+ log10.(r_break), [-11.5, -10],  color=:black)
@@ -351,7 +358,7 @@ end
 # ╠═e6fc3297-c1b7-40a4-b2bb-98490a42604a
 # ╠═d57501a1-4764-4b23-962f-2d37547d7bcc
 # ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
-# ╟─c068c177-e879-4b8e-b1af-18690af9b334
+# ╠═c068c177-e879-4b8e-b1af-18690af9b334
 # ╠═245721a6-01aa-43e7-922d-ed5da02207c1
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
 # ╠═6cc4868a-8ef6-4d29-9d7d-f04504d6b157

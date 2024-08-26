@@ -17,7 +17,7 @@ MaxMemSize                  2400    # TUNE to system (MB)
 
 #---Time
 TimeBegin                   0
-TimeMax	                    1176    # 10 Gyr
+TimeMax	                    2121    # 10 Gyr
 
 #---Output frequency
 OutputListOn                0

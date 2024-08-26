@@ -358,7 +358,7 @@ dec0 = obs_c_gr.dec[idx_f]
 
 # ╔═╡ 31a11704-1dad-4007-b704-9312b81a5bad
 begin
-	dr = 5
+	dr = 0
 	dθ = 180
 	ra1 = ra0 + sind(θ0 + dθ) * dr / cosd(dec0)
 	dec1 = dec0 + cosd(θ0 + dθ) * dr
