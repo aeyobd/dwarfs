@@ -73,7 +73,7 @@ figure_dir = joinpath(name, "figures/")
 mkpath(figure_dir)
 
 # ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-profs = LilGuys.Profiles3D(joinpath(name, "out/profiles.hdf5"))
+profs = LilGuys.Profiles3D(joinpath(name, "out/profiles_z.hdf5"))
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""

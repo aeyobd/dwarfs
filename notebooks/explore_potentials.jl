@@ -23,7 +23,7 @@ LilGuys.Ludlow.solve_rmax(V0)
 R0 = 5.938
 
 # ╔═╡ 45cc3ae0-0c2f-415e-ade8-9415ae4795d8
-V = 60/ V2KMS
+V = 32/ V2KMS
 
 # ╔═╡ 53af1c45-d189-4b87-a28c-f1d18b3f3746
 n_sigma_R = -3

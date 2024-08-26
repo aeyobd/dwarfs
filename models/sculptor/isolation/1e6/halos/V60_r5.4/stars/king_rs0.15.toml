@@ -1,0 +1,10 @@
+snapshot = "../isolation.hdf5"
+num_energy_bins = 1000
+
+bin_method = "equal_width"
+bin_width = 0.03
+
+[profile.KingProfile]
+M = 1
+R_s = 0.15
+R_t = 0.75

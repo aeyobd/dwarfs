@@ -183,13 +183,13 @@ end
 
 # ╔═╡ 845dd99c-1534-47cb-a84d-42968bfbcb8d
 function plot_cmd_members!(centre, radius)
-	df = select_region(all_stars[filt_basic, :], centre, radius=radius)
+	df = select_region(all_stars, centre, radius=radius)
 	plot_cmd!(df, color=:grey, markersize=5, alpha=0.5)
 	
-	df = select_region(all_stars[filt_basic .& filt_pm, :], centre, radius=radius)
+	df = select_region(all_stars[filt_basic, :], centre, radius=radius)
 	plot_cmd!(df)
 
-	df = select_region(all_stars[filt_basic .& filt_pm .& filt_cmd, :], centre, radius=radius)
+	df = select_region(all_stars[filt_basic .& filt_cmd, :], centre, radius=radius)
 	
 	plot_cmd!(df, color=COLORS[2])
 
@@ -202,10 +202,10 @@ function plot_pm_members!(centre, radius)
 	df = select_region(all_stars[filt_basic, :], centre, radius=radius)
 	scatter!(df.pmra, df.pmdec, color=:grey, markersize=5, alpha=0.5, label="parallax & quality cut")
 	
-	df = select_region(all_stars[filt_basic .& filt_pm, :], centre, radius=radius)
-	scatter!(df.pmra, df.pmdec, markersize=8, label="and pm cut")
+	#df = select_region(all_stars[filt_basic, :], centre, radius=radius)
+	#scatter!(df.pmra, df.pmdec, markersize=8, label="and pm cut")
 
-	df = select_region(all_stars[filt_basic .& filt_pm .& filt_cmd, :], centre, radius=radius)
+	df = select_region(all_stars[filt_basic .& filt_cmd, :], centre, radius=radius)
 	scatter!(df.pmra, df.pmdec, markersize=10, label="and cmd cut")
 
 	pmra_cen = lguys.mean(df.pmra, lguys.weights(df.pmra_error .^ -2))
@@ -218,12 +218,12 @@ function plot_pm_members!(centre, radius)
 end
 
 # ╔═╡ 28bd7605-91d1-4c8c-a5f4-91af51a2d484
-function pm_axis(gp; kwargs...)
+function pm_axis(gp; dpm=5, kwargs...)
 	return Axis(gp, 
 		xlabel=L"$\mu_{\alpha*}$ / mas\,yr$^{-1}$",
 		ylabel=L"$\mu_\delta$ / mas\,yr$^{-1}$",
 		aspect=DataAspect(),
-		limits= 5 .* (-1, 1, -1, 1),
+		limits= dpm .* (-1, 1, -1, 1),
 		xgridvisible=false,
 		ygridvisible=false,
 	)
@@ -247,9 +247,9 @@ end
 # ╔═╡ 4cb80651-8b11-47ed-bf0f-c858b420978c
 let
 	fig = Figure()
-	ax = pm_axis(fig[1, 1])
+	ax = pm_axis(fig[1, 1], dpm=30)
 	
-	plot_pm_members!(0.5*orbit_vector, r_circ_cut)[1]
+	plot_pm_members!(0*orbit_vector, 4r_circ_cut)[1]
 
 	Legend(fig[1, 2], ax)
 	fig

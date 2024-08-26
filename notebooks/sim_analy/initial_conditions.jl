@@ -37,10 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r5"
-
-# ╔═╡ 56e5c255-c0f1-44ec-80ca-e6049eb42b7f
-
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
@@ -293,7 +290,7 @@ In our case,
 0.959 * 0.14
 
 # ╔═╡ 98a01aea-7d8b-4978-b8cf-2865d6d04e28
-
+0.42977 * 0.14
 
 # ╔═╡ Cell order:
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
@@ -303,7 +300,6 @@ In our case,
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
-# ╠═56e5c255-c0f1-44ec-80ca-e6049eb42b7f
 # ╠═d7a04cc7-369e-4687-b423-deda779f1c57
 # ╟─eb17e47b-b650-4362-ba29-77344e37bc48
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4

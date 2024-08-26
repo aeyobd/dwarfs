@@ -31,9 +31,9 @@ MaxFilesWithConcurrentIO    1
 # ----------------------------------Gravity-----------------------------------
 
 #---Timestep accuracy
-ErrTolIntAccuracy           0.001    # CHANGE to
+ErrTolIntAccuracy           0.005    # CHANGE to
 CourantFac                  0.1     # ignored; for SPH
-MaxSizeTimestep             0.05     # CHANGE to a fraction of dynamical time
+MaxSizeTimestep             0.5     # CHANGE to a fraction of dynamical time
 MinSizeTimestep             0.0 
 
 #---Tree algorithm

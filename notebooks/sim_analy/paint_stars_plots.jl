@@ -47,10 +47,10 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/stars"
+dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V60_r5.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "king")
+paramname = joinpath(dir, "king_rs0.05")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -147,7 +147,7 @@ maximum(df_probs.phi)
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], limits=(-1.2, 3, -15, 2),
+	ax = Axis(fig[1,1], limits=(-2, 3, -15, 3),
 		xlabel="log r", ylabel="log density")
 	scatter!(log10.(df_density.r), log10.(df_density.nu_dm), label="DM")
 	scatter!(log10.(df_density.r), log10.(df_density.nu_s), label="stars (analytic)")

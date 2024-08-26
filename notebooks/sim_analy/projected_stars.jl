@@ -44,7 +44,7 @@ models_dir = "/arc7/home/dboyea/sculptor"
 model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r5//"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.13_stars.fits"
+starsname = "king_stars.fits"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
