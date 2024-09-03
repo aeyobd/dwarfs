@@ -13,14 +13,33 @@ begin
 	using LilGuys
 end
 
+# ╔═╡ d8e0be92-6137-4eb8-9a59-7f7ad6005bfb
+using CairoMakie: save
+
 # ╔═╡ f0bdd44b-0bcb-41ab-966f-afd514142629
 include("read_iso.jl")
 
 # ╔═╡ 0e59c6c9-f053-439f-a6b5-5081e7a7a1a2
 include("filter_utils.jl")
 
+# ╔═╡ 89e57cae-afd1-42ae-bd17-e104c911ca84
+macro savefig(name, fig=nothing)
+	if fig === nothing
+		fig = esc(:fig)
+	end
+	
+	return quote
+		filename = joinpath(fig_dir, $name) * ".pdf"
+		save(filename, $fig)
+		@info "saved figure to $filename"
+	end
+end
+
 # ╔═╡ 003e78ba-37b7-4650-ab1e-ba7db2a15e70
 import LinearAlgebra: normalize, ×
+
+# ╔═╡ 4d45892d-d570-41e0-bfee-2b4c36b2ebf0
+red = COLORS[6]
 
 # ╔═╡ a5329eeb-9ec4-49ed-9c36-6307a67e3e83
 iso_dir = "/astro/dboyea/dwarfs/data/MIST_v1.2_vvcrit0.0_UBVRIplus/"
@@ -34,13 +53,16 @@ isochrone = ISOCMD(joinpath(iso_dir, "MIST_v1.2_feh_m1.75_afe_p0.0_vvcrit0.0_UBV
 # ╔═╡ 5438d9d9-0256-4779-8c64-56b560c2f730
 filt_params = DensityParams(read_file("sculptor/simple.toml"))
 
+# ╔═╡ 5cfdb2eb-7c85-4950-bb49-b77ed4371a5f
+pm_max = 10
+
 # ╔═╡ 1629ba90-c0ba-477f-9bc4-897bf61426fe
 function cmd_axis(gs)
 	return Axis(gs,
 		xlabel = "Bp-Rp",
 		ylabel = "G",
 		yreversed=true,
-		limits = (-0.5, 2, 16, 21),
+		limits = (-0.2, 2, 15, 21),
 		xgridvisible=false,
 		ygridvisible=false,
 	)
@@ -59,15 +81,18 @@ end
 # ╔═╡ d4e6fe00-e886-4807-8c92-0ce50fb124be
 obs_props = TOML.parsefile("/astro/dboyea/dwarfs/sculptor_obs_properties.toml")
 
+# ╔═╡ b7a27dd1-cba0-4afe-8b07-d9fbbf2cd6df
+LilGuys.pm_to_kms(pm_max, obs_props["distance"])
+
 # ╔═╡ c4a62177-c50a-4800-8fbc-d443216c571e
-orbit_props = TOML.parsefile("/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r5/orbital_properties.toml")
+orbit_props = TOML.parsefile("/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r5.4/orbital_properties.toml")
 
 # ╔═╡ f33adaef-228d-483e-938d-0d2ccd828ee8
 idx_f = orbit_props["idx_f"]
 
 # ╔═╡ 8e5e7421-042c-4876-a992-9f847f1e7ba8
 begin 
-	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r5/skyorbit.fits")
+	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r5.4/skyorbit.fits")
 
 	orbit[!, :xi], orbit[!, :eta] = lguys.to_tangent(orbit.ra, orbit.dec, orbit.ra[idx_f], orbit.dec[idx_f])
 
@@ -83,6 +108,15 @@ dm = 5*log10(83.2 * 1e3) - 5
 # ╔═╡ a3e53d78-40ac-43f2-b5a9-b3b7d5990a1d
 dm_err = 0.05
 
+# ╔═╡ 9a798ce3-a23d-44f3-b2df-3461a4a623ad
+orbit_props["theta0"]
+
+# ╔═╡ af43bd16-5c37-45ff-ae17-c842d00df9c9
+atand( -0.275, 0.332)
+
+# ╔═╡ 453b870c-1c0e-4ed9-ace2-4cc783c53e69
+θ0 = -39.63
+
 # ╔═╡ 9438a961-f66f-4be3-885c-74fb0f27661d
 lguys
 
@@ -93,12 +127,15 @@ begin
 
 	all_stars[:, :xi], all_stars[:, :eta] = lguys.to_tangent(all_stars.ra, all_stars.dec, filt_params.ra, filt_params.dec)
 
-	all_stars[:, :xi_p], all_stars[:, :eta_p] = lguys.to_orbit_coords(all_stars.ra, all_stars.dec, filt_params.ra, filt_params.dec, orbit_props["theta0"])
+	all_stars[:, :xi_p], all_stars[:, :eta_p] = lguys.to_orbit_coords(all_stars.ra, all_stars.dec, filt_params.ra, filt_params.dec, θ0)
 	all_stars
 end
 
 # ╔═╡ 33ca51be-05cc-4d27-92ba-d7979aa44f7e
 sum(isnan.(all_stars.bp_rp))
+
+# ╔═╡ f7e84351-7263-4f13-89a6-a6f695894451
+fig_dir = "./figures/"
 
 # ╔═╡ 5708825c-36c6-4937-b673-21ae1cd0449c
 cmd_x = [filt_params.cmd_cut[1:2:end]; filt_params.cmd_cut[1]]
@@ -106,11 +143,22 @@ cmd_x = [filt_params.cmd_cut[1:2:end]; filt_params.cmd_cut[1]]
 # ╔═╡ 340d6d44-2204-42f5-847f-0f9645e4df2c
 cmd_y = [filt_params.cmd_cut[2:2:end]; filt_params.cmd_cut[2]]
 
+# ╔═╡ 5e0a6e4b-963e-46f6-bd2d-c254a556e7f4
+print(collect(zip(cmd_x, cmd_y)))
+
 # ╔═╡ 917516ad-0807-4fb1-9afb-d28044249c72
 begin
 	filt_basic = ruwe_filter(all_stars, filt_params)
 	filt_basic .&= parallax_filter(all_stars, filt_params)
+	filt_basic .&= abs.(all_stars.pmra)  .< pm_max
+	filt_basic .&= abs.(all_stars.pmdec) .< pm_max
 end
+
+# ╔═╡ c8830c99-f0a2-4f3a-9080-e4ae539565a8
+filt_pm = bivariate_z.(all_stars.pmra, all_stars.pmdec, filt_params.pmra, filt_params.pmdec, all_stars.pmra_error, all_stars.pmdec_error, all_stars.pmra_pmdec_corr) .< 6
+
+# ╔═╡ 06f103a5-05ae-419d-af6f-21149d162af7
+filt_cmd = cmd_filter(all_stars, filt_params)
 
 # ╔═╡ 3b0992aa-1d1a-42b9-9db4-ef32ea8d7a4c
 let
@@ -120,20 +168,17 @@ let
 
 	filt = filt_basic
 
-	scatter!(all_stars.bp_rp[filt], all_stars.G[filt], markersize=1, alpha=0.3, color=:black)
+	scatter!(all_stars.bp_rp[filt], all_stars.G[filt], markersize=1, alpha=0.3, color=:black, label="parallax + quality cuts")
 
-	#scatter!(all_stars.bp_rp[filt_cmd], all_stars.G[filt_cmd])
+	scatter!(all_stars.bp_rp[filt_cmd .& filt .& filt_pm], all_stars.G[filt_cmd .& filt .& filt_pm], markersize=2, label="+ CMD + PM cuts")
 	#lines!(iso.bp_rp, iso.G .+ dm)
-
 	poly!(cmd_x, cmd_y, color=:transparent, strokecolor=COLORS[1], strokewidth=2)
+
+	axislegend(position=:lt, markersize=10)
+
+	save(joinpath(fig_dir, "cmd_polygon.pdf"), fig)
 	fig
 end
-
-# ╔═╡ c8830c99-f0a2-4f3a-9080-e4ae539565a8
-filt_pm = bivariate_z.(all_stars.pmra, all_stars.pmdec, filt_params.pmra, filt_params.pmdec, all_stars.pmra_error, all_stars.pmdec_error, all_stars.pmra_pmdec_corr) .< 6
-
-# ╔═╡ 06f103a5-05ae-419d-af6f-21149d162af7
-filt_cmd = cmd_filter(all_stars, filt_params)
 
 # ╔═╡ 7b8487e3-b85c-433e-b8e8-47ef399caab9
 let
@@ -182,43 +227,70 @@ function select_region(allstars, centre; radius=0.5)
 end
 
 # ╔═╡ 845dd99c-1534-47cb-a84d-42968bfbcb8d
-function plot_cmd_members!(centre, radius)
+function plot_cmd_members!(centre, radius; pm_filter=false)
 	df = select_region(all_stars, centre, radius=radius)
-	plot_cmd!(df, color=:grey, markersize=5, alpha=0.5)
 	
-	df = select_region(all_stars[filt_basic, :], centre, radius=radius)
-	plot_cmd!(df)
-
-	df = select_region(all_stars[filt_basic .& filt_cmd, :], centre, radius=radius)
+	plot_cmd!(df, color=:grey, markersize=3,
+		label = "no filter"
+	)
 	
-	plot_cmd!(df, color=COLORS[2])
+	df = select_region(all_stars[filt_basic, :], centre, radius=radius, 
+	)
+	plot_cmd!(df, 
+		label = "quality", markersize=5
+	)
 
+	filt = filt_basic .& filt_cmd
+
+	df = select_region(all_stars[filt, :],
+		centre, radius=radius)
+	
+	plot_cmd!(df, color=COLORS[2],
+		label = "+CMD",
+		markersize=7
+	)
+	
+	if pm_filter
+		filt .&= filt_pm
+		df = select_region(all_stars[filt, :],
+			centre, radius=radius)
+		plot_cmd!(df, color=COLORS[3],
+			label = "+PM",
+			markersize=10
+		)
+	end
 	N = size(df, 1)
 	text!(0.05, 0.9, text="$N stars in CMD", color=:black, space=:relative)
 end
 
 # ╔═╡ d6ca26cb-e4f7-4d17-ba46-0e082fb02d14
-function plot_pm_members!(centre, radius)
+function plot_pm_members!(centre, radius; pm_filter=false)
+	df = select_region(all_stars[:, :], centre, radius=radius)
+	scatter!(df.pmra, df.pmdec, color=:grey, markersize=5, alpha=0.5, label="no cuts")
+
 	df = select_region(all_stars[filt_basic, :], centre, radius=radius)
-	scatter!(df.pmra, df.pmdec, color=:grey, markersize=5, alpha=0.5, label="parallax & quality cut")
-	
-	#df = select_region(all_stars[filt_basic, :], centre, radius=radius)
-	#scatter!(df.pmra, df.pmdec, markersize=8, label="and pm cut")
+
+	scatter!(df.pmra, df.pmdec, markersize=5, label="parallax & quality cut")
 
 	df = select_region(all_stars[filt_basic .& filt_cmd, :], centre, radius=radius)
-	scatter!(df.pmra, df.pmdec, markersize=10, label="and cmd cut")
+	scatter!(df.pmra, df.pmdec, markersize=10, label="+CMD cut", alpha=0.5)
 
+	if pm_filter
+		df = select_region(all_stars[filt_basic .& filt_cmd .& filt_pm, :], centre, radius=radius)
+		scatter!(df.pmra, df.pmdec, markersize=10, label="+PM cut")
+	end
+	
 	pmra_cen = lguys.mean(df.pmra, lguys.weights(df.pmra_error .^ -2))
 	pmra_cen_err = sqrt(1 / sum(df.pmra_error .^ -2))
 	pmdec_cen = lguys.mean(df.pmdec, lguys.weights(df.pmdec_error .^ -2))
 	pmdec_cen_err = sqrt(1 / sum(df.pmdec_error .^ -2))
 
-	errscatter!([pmra_cen], [pmdec_cen], xerr=[pmra_cen_err], yerr=[pmdec_cen_err], color=:black)
+	errscatter!([pmra_cen], [pmdec_cen], xerr=[pmra_cen_err], yerr=[pmdec_cen_err], color=red, label="mean")
 
 end
 
 # ╔═╡ 28bd7605-91d1-4c8c-a5f4-91af51a2d484
-function pm_axis(gp; dpm=5, kwargs...)
+function pm_axis(gp; dpm=11, kwargs...)
 	return Axis(gp, 
 		xlabel=L"$\mu_{\alpha*}$ / mas\,yr$^{-1}$",
 		ylabel=L"$\mu_\delta$ / mas\,yr$^{-1}$",
@@ -239,19 +311,81 @@ orbit_vector = normalize([
 let
 	fig = Figure()
 	ax = cmd_axis(fig[1, 1])
+	ax.title = "Centre (r < $r_circ_cut deg)"
 	
 	plot_cmd_members!([0, 0], r_circ_cut)[1]
+
+	Legend(fig[1, 2], ax)
+
+	save(joinpath(fig_dir, "cmd_centre.pdf"), fig)
+	fig
+end
+
+# ╔═╡ 877e42cc-5217-4a29-acdc-3093b63771b4
+let
+	fig = Figure()
+	ax = cmd_axis(fig[1, 1])
+	ax.title = "Centre (r < $r_circ_cut deg)"
+	
+	plot_cmd_members!([0, 0], r_circ_cut, pm_filter=true)[1]
+
+	Legend(fig[1, 2], ax)
+
+	save(joinpath(fig_dir, "cmd_centre.pdf"), fig)
 	fig
 end
 
 # ╔═╡ 4cb80651-8b11-47ed-bf0f-c858b420978c
 let
 	fig = Figure()
-	ax = pm_axis(fig[1, 1], dpm=30)
+	ax = pm_axis(fig[1, 1], dpm=12)
 	
-	plot_pm_members!(0*orbit_vector, 4r_circ_cut)[1]
+	plot_pm_members!(0*orbit_vector, 4r_circ_cut, pm_filter=true)[1]
 
 	Legend(fig[1, 2], ax)
+
+	ax.title = "Centre (r < $r_circ_cut deg)"
+
+	save(joinpath(fig_dir, "pm_centre.pdf"), fig)
+	fig
+end
+
+# ╔═╡ a69f9f0a-81c4-4ffe-97c3-e3eb5f382b63
+let
+	fig = Figure()
+	ax = pm_axis(fig[1, 1])
+	ax.limits = (nothing, nothing)
+
+	df = all_stars[filt_basic .& filt_pm, :]
+
+	N = 100
+	idxs = rand(1:size(df, 1), N)
+
+	df = df[idxs, :]
+	errscatter!(df.pmra, df.pmdec, xerr=df.pmra_error, yerr=df.pmdec_error, alpha=0.1)
+
+	scatter!(obs_props["pmra"], obs_props["pmdec"], color=red)
+
+	fig
+end
+
+# ╔═╡ 925df36a-88fa-4dff-b850-82ee315f5cc8
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], 
+	xlabel="pmra over error", ylabel="pmdec over error",
+		xgridvisible=false,
+		ygridvisible=false,
+		aspect=DataAspect()
+	)
+	ax.limits = (nothing, nothing)
+
+	df = all_stars[filt_basic .& filt_pm, :]
+
+	scatter!(df.pmra ./ df.pmra_error, df.pmdec ./ df.pmdec_error, alpha=0.1, color=:black, markersize=3)
+
+	scatter!(0, 0, color=red)
+
 	fig
 end
 
@@ -275,6 +409,36 @@ let
 	end
 
 	linkxaxes!(fig.content...)
+
+	@savefig "cmd_along_orbit"
+	fig
+end
+
+# ╔═╡ e1c5532a-6ba8-4bef-8f41-f3e58f66d6fc
+pwd()
+
+# ╔═╡ 691f7222-e510-43e9-858e-ebc9dcd79cef
+let
+	rs = rs_test
+
+	N = length(rs)
+
+	fig = Figure(size=(600, 1200))
+	
+	for i in 1:N
+		r = rs[i]
+		ax = cmd_axis(fig[i, 1])
+		plot_cmd_members!(orbit_vector * r, r_circ_cut, pm_filter=false)
+		
+		text!(0.05, 0.8, text="$r degrees along orbit", space=:relative)
+		if i < N
+			hidexdecorations!(ax, grid=false)
+		end
+	end
+
+	linkxaxes!(fig.content...)
+
+	@savefig "cmd_along_orbit"
 	fig
 end
 
@@ -324,6 +488,9 @@ let
 	end
 
 	linkxaxes!(fig.content...)
+
+	@savefig "pm_along_orbit"
+
 	fig
 end
 
@@ -511,12 +678,41 @@ let
 end
 
 # ╔═╡ 204c31a5-4270-4194-bf1a-be079ba04ed4
-function xieta_axis()
-	return FigAxis(
+function xieta_axis(gs)
+	return Axis(gs,
 		xlabel=L"$\xi$ / degrees",
 		ylabel=L"$\eta$ / degrees",
 		aspect=DataAspect(),
+		xgridvisible=false, 
+		ygridvisible=false,
 	)
+end
+
+# ╔═╡ d067cc63-3614-4de3-a2c4-02e44710e47e
+let
+	fig = Figure()
+	ax = xieta_axis(fig[1, 1])
+	ax.limits = (-4, 4, -4, 4)
+	
+	df = all_stars[filt_cmd .& filt_basic, :]
+	scatter!(df.xi, df.eta, color=:black, alpha=1, markersize=1)
+
+	df = all_stars[filt_cmd .& filt_pm .& filt_basic, :]
+	scatter!(df.xi, df.eta, color=red, alpha=1, markersize=3)
+	@savefig "scl_matched_filter"
+	fig
+end
+
+# ╔═╡ 05dc069a-2937-43ee-8739-9a4063d2d239
+let
+	fig = Figure()
+	ax = xieta_axis(fig[1, 1])
+	ax.limits = 0.5 .* (-1, 1, -1, 1)
+
+	df = all_stars[filt_cmd .& filt_pm .& filt_basic, :]
+	scatter!(df.xi, df.eta, color=:black, alpha=0.3, markersize=3)
+	@savefig "scl_matched_filter_centre"
+	fig
 end
 
 # ╔═╡ 9ea84bd5-c381-49e2-99a1-1168f6568994
@@ -526,7 +722,8 @@ end
 
 # ╔═╡ 44e4b452-4fc1-4452-a8f0-9d71cdb5346e
 let
-	fig, ax = xieta_axis()
+	fig = Figure()
+	ax = xieta_axis(fig[1, 1])
 
 	rs = rs_test
 
@@ -575,13 +772,18 @@ end
 
 # ╔═╡ Cell order:
 # ╠═a27c968e-5fde-11ef-27c0-f5f22481829a
+# ╠═d8e0be92-6137-4eb8-9a59-7f7ad6005bfb
+# ╠═89e57cae-afd1-42ae-bd17-e104c911ca84
 # ╠═003e78ba-37b7-4650-ab1e-ba7db2a15e70
+# ╠═4d45892d-d570-41e0-bfee-2b4c36b2ebf0
 # ╠═f0bdd44b-0bcb-41ab-966f-afd514142629
 # ╠═0e59c6c9-f053-439f-a6b5-5081e7a7a1a2
 # ╠═a5329eeb-9ec4-49ed-9c36-6307a67e3e83
 # ╠═fd364bd0-3740-4cb7-941f-10fe47143778
 # ╠═506510de-af00-4668-871e-ea00ac6810ef
 # ╠═5438d9d9-0256-4779-8c64-56b560c2f730
+# ╠═5cfdb2eb-7c85-4950-bb49-b77ed4371a5f
+# ╠═b7a27dd1-cba0-4afe-8b07-d9fbbf2cd6df
 # ╠═1629ba90-c0ba-477f-9bc4-897bf61426fe
 # ╠═784654ff-1596-49eb-8c38-a28200a8bd0c
 # ╠═d4e6fe00-e886-4807-8c92-0ce50fb124be
@@ -591,16 +793,23 @@ end
 # ╠═d5ef30f4-7a58-41bd-9c42-62689c257bcd
 # ╠═5b791110-87d8-4139-abeb-91f6e2688304
 # ╠═a3e53d78-40ac-43f2-b5a9-b3b7d5990a1d
+# ╠═9a798ce3-a23d-44f3-b2df-3461a4a623ad
+# ╠═af43bd16-5c37-45ff-ae17-c842d00df9c9
+# ╠═453b870c-1c0e-4ed9-ace2-4cc783c53e69
 # ╠═9438a961-f66f-4be3-885c-74fb0f27661d
 # ╠═8ddacf0c-91f1-4543-ac2e-e37871c977f8
 # ╠═33ca51be-05cc-4d27-92ba-d7979aa44f7e
+# ╠═f7e84351-7263-4f13-89a6-a6f695894451
 # ╠═3b0992aa-1d1a-42b9-9db4-ef32ea8d7a4c
 # ╠═5708825c-36c6-4937-b673-21ae1cd0449c
+# ╠═5e0a6e4b-963e-46f6-bd2d-c254a556e7f4
 # ╠═340d6d44-2204-42f5-847f-0f9645e4df2c
 # ╠═917516ad-0807-4fb1-9afb-d28044249c72
 # ╠═c8830c99-f0a2-4f3a-9080-e4ae539565a8
 # ╠═06f103a5-05ae-419d-af6f-21149d162af7
 # ╠═7b8487e3-b85c-433e-b8e8-47ef399caab9
+# ╠═d067cc63-3614-4de3-a2c4-02e44710e47e
+# ╠═05dc069a-2937-43ee-8739-9a4063d2d239
 # ╠═32731e29-c988-437a-9e5f-ade7e6e9ffe9
 # ╠═845dd99c-1534-47cb-a84d-42968bfbcb8d
 # ╠═d6ca26cb-e4f7-4d17-ba46-0e082fb02d14
@@ -612,8 +821,13 @@ end
 # ╠═28bd7605-91d1-4c8c-a5f4-91af51a2d484
 # ╠═b35026bd-8ca4-4552-8d68-2b8811f7b3d5
 # ╠═6736916a-3484-4580-a909-6ba7e32e174a
+# ╠═877e42cc-5217-4a29-acdc-3093b63771b4
 # ╠═4cb80651-8b11-47ed-bf0f-c858b420978c
+# ╠═a69f9f0a-81c4-4ffe-97c3-e3eb5f382b63
+# ╠═925df36a-88fa-4dff-b850-82ee315f5cc8
 # ╠═72af6da6-22d1-4bbd-b009-bd801133b271
+# ╠═e1c5532a-6ba8-4bef-8f41-f3e58f66d6fc
+# ╠═691f7222-e510-43e9-858e-ebc9dcd79cef
 # ╠═89c96e28-14ba-4492-8f05-5474da8eef15
 # ╠═01717a66-0e21-49e1-ba8e-4e44a0826bb2
 # ╠═7b1a2c03-9df2-4ec2-8eeb-64c9c9c2cdd4
