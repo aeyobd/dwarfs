@@ -72,6 +72,9 @@ begin
 
 end
 
+# ╔═╡ 4c1a5aac-4bad-4eba-aa61-ccd317113633
+fig_dir = "./figures/"
+
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
 begin 
 	memb_filt = rv_meas.PSAT .> 0.2
@@ -217,7 +220,7 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = Arya.histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
+	h = histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
 	plot_samples!(samples, LinRange(70, 150, 100), thin=15)
 	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
@@ -265,7 +268,7 @@ end
 
 # ╔═╡ 7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 md"""
-## Binned properties
+## Binned properties along orbit
 """
 
 # ╔═╡ c2735c49-2892-46ac-bcf8-7cdcef409f44
@@ -391,6 +394,14 @@ end
 
 # ╔═╡ 319bd778-7e17-4bd7-856f-d6785b287219
 quantile(samples.σ, [0.16, 0.84]) .- σ_m
+
+# ╔═╡ 31aa8fc5-1415-4c44-9b92-a7d097181639
+md"""
+# Binned properties with radius
+"""
+
+# ╔═╡ 24ae8277-9644-40e5-b2ab-f4fc9584823c
+
 
 # ╔═╡ 82a0e58a-30a4-4e42-b9c1-cb184eb551aa
 md"""
@@ -630,6 +641,7 @@ end
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
+# ╠═4c1a5aac-4bad-4eba-aa61-ccd317113633
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═74b10a3e-1342-454f-8eed-77b371f81edf
 # ╠═d8800a31-1ed3-422f-ac51-90f18cf61c29
@@ -677,6 +689,8 @@ end
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 # ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
 # ╠═319bd778-7e17-4bd7-856f-d6785b287219
+# ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
+# ╠═24ae8277-9644-40e5-b2ab-f4fc9584823c
 # ╟─82a0e58a-30a4-4e42-b9c1-cb184eb551aa
 # ╠═3a69f395-3c2d-4357-89af-5963d5fa79b8
 # ╠═9b4a0a1f-4b0c-4c90-b871-2bd244f0a908

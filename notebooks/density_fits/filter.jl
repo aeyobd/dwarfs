@@ -139,9 +139,6 @@ md"""
 # Membership plots
 """
 
-# ╔═╡ 42fe651b-34b0-43f0-a76d-ab3829544073
-bw_fd = Arya.bandwidth_freedman_diaconis(members.xi), Arya.bandwidth_freedman_diaconis(members.eta)
-
 # ╔═╡ 7c7c360b-cc11-43a5-b6ee-f6347aa9ae32
 bw = (0.05, 0.05)
 
@@ -150,7 +147,7 @@ kd = kde([members.xi members.eta]; bandwidth=bw)
 
 # ╔═╡ 603fc81f-66af-4cc3-954b-2cf1e310a2b1
 begin 
-	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/skyorbit.fits")
+	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r5.4/skyorbit.fits")
 	
 	orbit[!, :xi], orbit[!, :eta] = lguys.to_tangent(orbit.ra, orbit.dec, params.ra, params.dec)
 end
@@ -353,7 +350,6 @@ end
 # ╠═07235d51-10e1-4408-a4d1-cd2079fadb75
 # ╠═695d532c-86d1-4b24-b7af-600a8ca29687
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
-# ╠═42fe651b-34b0-43f0-a76d-ab3829544073
 # ╠═7c7c360b-cc11-43a5-b6ee-f6347aa9ae32
 # ╠═c4b92086-db8c-421d-8ce2-f55863b1df18
 # ╠═603fc81f-66af-4cc3-954b-2cf1e310a2b1

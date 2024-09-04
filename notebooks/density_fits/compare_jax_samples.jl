@@ -13,8 +13,11 @@ begin
 	using LilGuys
 end
 
+# ╔═╡ 9d548f5a-223c-4827-b2d3-8361d0ced243
+using DataFrames: rename!
+
 # ╔═╡ 73f523e3-39eb-49ea-92d1-39e9d5e91d16
-include("../../data/MIST_v1.2_vvcrit0.4_UBVRIplus/read_iso.jl")
+include("../load_mist.jl")
 
 # ╔═╡ b653409b-fa89-4399-98d2-09c794aa88dc
 md"""
@@ -685,6 +688,13 @@ begin
 	df_out[!, :PSAT_S_CIRC] .= scl_circ.PSAT_S
 	df_out[!, :PSAT_CIRC] .= scl_circ.PSAT
 
+	rename!(df_out, :PSAT => :PSAT_ELL, 
+		:L_S_SAT => :L_S_SAT_ELL,
+		:PSAT_S => :PSAT_S_ELL,
+	)
+
+	df_out[!, :PSAT] = max.(df_out.PSAT_CIRC, df_out.PSAT_1C, df_out.PSAT_ELL)
+
 end
 
 # ╔═╡ dd1bbf56-4d9a-445c-9722-5541b63d227d
@@ -694,7 +704,7 @@ scatter(df_out.PSAT_CIRC, df_out.PSAT_1C)
 let
 	fig, ax = FigAxis()
 	
-	scatter!(df_out.PSAT_CIRC, df_out.PSAT)
+	scatter!(df_out.PSAT_CIRC, df_out.PSAT_ELL)
 
 	fig
 end
@@ -709,7 +719,7 @@ end
 convert(Float64, 1)
 
 # ╔═╡ 9b57518d-98b0-4cb6-a290-9b9ea22cefac
-LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out)
+LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out, verbose=true)
 
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
@@ -720,6 +730,7 @@ LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out)
 # ╠═4d967c49-4074-4e07-b175-841dde78f609
 # ╠═ed4b328a-59a1-11ef-2a75-092fdb7659b8
 # ╠═2dacbd3e-b027-44cd-bb39-d3bfcf99366f
+# ╠═9d548f5a-223c-4827-b2d3-8361d0ced243
 # ╟─27d01941-3d40-4447-847f-e21191a20dd1
 # ╟─0d9da520-3d03-4d9a-8bb0-6d698e819abc
 # ╠═d452a47a-22a2-4523-a7cf-f7b668cc7dda

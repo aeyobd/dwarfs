@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -8,7 +8,7 @@ using InteractiveUtils
 begin 
 	import Pkg; Pkg.activate()
 
-	using GLMakie
+	using CairoMakie
 	
 	import LilGuys as lguys
 	using Arya
@@ -122,7 +122,7 @@ end
 # ╔═╡ f6715279-c048-4260-b30a-8e0a4f7c5af5
 function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
     log_r_bins = LinRange(log_r_min, log_r_max, 1000)
-    log_r = lguys.midpoint(log_r_bins)
+    log_r = lguys.midpoints(log_r_bins)
     r = 10 .^  log_r
     r_bins = 10 .^ log_r_bins
     
@@ -164,7 +164,7 @@ function fit_profile(obs; r_max=r_max, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3
         N=N, log_r_min=obs["log_r_bins"][1], log_r_max=obs["log_r_bins"][end])
 
     log_Σ_pred = log_Σ_exp.(10 .^ obs["log_r"], popt...)
-    log_Σ_res = value.(obs["log_Sigma"]).- log_Σ_pred
+    log_Σ_res = Measurements.value.(obs["log_Sigma"]).- log_Σ_pred
     return popt_p, props, log_Σ_res
 end
 
@@ -207,7 +207,7 @@ let
 	)
 
 	
-	errscatter!(value.(profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
+	errscatter!(Measurements.value.(profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
 	
 	lines!(pred.log_r, pred.Γ, label="2D Exp", color=COLORS[2])
 
@@ -218,7 +218,7 @@ let
 	)
 
 	
-	errscatter!(value.(10 .^ profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
+	errscatter!(Measurements.value.(10 .^ profile["log_r"]), profile["Gamma"], yerr=profile["Gamma_err"])
 	
 	lines!(10 .^ pred.log_r, pred.Γ, label="2D Exp", color=COLORS[2])
 
@@ -237,7 +237,7 @@ let
 	)
 
 	
-	errscatter!(value.(profile["log_r"]), profile["Gamma_max"], yerr=profile["Gamma_max_err"])
+	errscatter!(Measurements.value.(profile["log_r"]), profile["Gamma_max"], yerr=profile["Gamma_max_err"])
 	
 	lines!(pred.log_r, pred.Γ_max, label="2D Exp", color=COLORS[2])
 
@@ -287,6 +287,9 @@ end
 # ╔═╡ 97c30296-cb40-4de3-8908-9acfb9471b8d
 lguys.arcmin_to_kpc(5.22, distance)
 
+# ╔═╡ c17cb6f5-f756-403f-8fbc-b71ce4e9425d
+fig_dir = "./figures"
+
 # ╔═╡ 824fc065-8ad8-408c-a4f7-0c464ed7fa13
 let 
 	popt, pred, res = fit_profile(profile, profile=lguys.KingProfile, p0=[1, 35, 200])
@@ -295,9 +298,15 @@ let
 	global popts[label] = popt
 	global preds[label] = pred
 	
-	plot_Σ_fit_res(profile, pred, res)
+	fig = plot_Σ_fit_res(profile, pred, res)
 
+	save(fig_dir * "/king_profile_fit.pdf", fig, verbose=true)
+
+	fig
 end
+
+# ╔═╡ db835da8-8f0d-4dba-8f4a-22bc6d5fec35
+fig_dir
 
 # ╔═╡ 1be3fa21-5945-4904-a23a-12c15cc4a485
 let 
@@ -388,7 +397,9 @@ end
 # ╠═0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
 # ╠═93cd5808-0e20-475a-8001-4e775d4ab4e7
 # ╠═97c30296-cb40-4de3-8908-9acfb9471b8d
+# ╠═c17cb6f5-f756-403f-8fbc-b71ce4e9425d
 # ╠═824fc065-8ad8-408c-a4f7-0c464ed7fa13
+# ╠═db835da8-8f0d-4dba-8f4a-22bc6d5fec35
 # ╠═1be3fa21-5945-4904-a23a-12c15cc4a485
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
 # ╠═c769d7b1-1b48-4a4a-aa02-ebc9a0658530

@@ -1,11 +1,11 @@
 PSAT_min = 0.2
 filename = "../../../data/j24_sculptor_all.fits"
 PA = 94
-dist = 86
+dist = 83.2
+dist_err = 2
 ra = 15.03917
 pmdec = -0.16
 ellipticity = 0.37
 pmra = 0.099
-dist_err = 3
 dec = -33.70917
 rh = 12.33
