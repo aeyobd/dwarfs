@@ -15,9 +15,11 @@ if [ $# -ne 1 ]; then
 fi
 
 
-N=257
-
+N=1024
+b=64
+rrange="1/4096:1024"
 filename=$1
+m_a=0.1931471805599453 # log(2) - 1/2 such that the scale mass is unity.
 
 halo_path=profiles/$filename.gsp
 txt_path=tmp/$filename.txt
@@ -27,7 +29,7 @@ echo "cleaning up"
 rm -f $halo_path
 
 echo "making halo (saved to $halo_path)"
-$ZENOPATH/bin/halogsp $halo_path npoint=$N rrange=1/4096:64
+$ZENOPATH/bin/halogsp $halo_path npoint=$N rrange=$rrange b=$b m_a=$m_a
 
 echo "converting to text > $txt_path"
 $ZENOPATH/bin/tsf $halo_path maxline=$N > $txt_path

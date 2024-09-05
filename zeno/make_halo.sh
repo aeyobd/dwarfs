@@ -14,11 +14,11 @@ filename=$3
 
 echo using $N particles
 
-model_path=models/$filename.gsp
+model_path=halos/$filename.gsp
 txt_path=tmp/$filename.txt
 #hdf5_path=${filename}_uncentred.hdf5
 
-out_path=models/$filename.hdf5
+out_path=halos/$filename.hdf5
 
 
 echo cleaning up
@@ -28,7 +28,7 @@ rm -f  $model_path $txt_path $hdf5_path $out_path
 echo generating nbody model
 echo reading $halo_path as profile table
 echo writing to $model_path
-$ZENOPATH/bin/gspmodel $halo_path $model_path nbody=$N
+$ZENOPATH/bin/gsprealize $halo_path $model_path nbody=$N
 
 echo writing $model_path to text file $txt_path
 $ZENOPATH/bin/tsf $model_path maxline=$N > $txt_path
