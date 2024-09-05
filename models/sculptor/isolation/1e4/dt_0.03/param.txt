@@ -1,84 +1,82 @@
+# -----------------------------------IO---------------------------------------
 
-%----  Relevant files 
-InitCondFile         ../initial
-OutputDir            ./out
-SnapshotFileBase     snapshot
-OutputListFilename   outputs.txt
+#---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
 
+#---File formats 
+ICFormat                    3       # use HDF5
+SnapFormat                  3 
 
-%---- File formats
-ICFormat             3 # use HDF5
-SnapFormat           3 
+#---Mem & CPU limits
+TimeLimitCPU                3600    # TUNE to run characteristics
+CpuTimeBetRestartFile       1800    # TUNE 
+MaxMemSize                  2400    # TUNE to system (MB)
 
+#---Time
+TimeBegin                   0
+TimeMax	                    50      # CHANGE
 
-%---- CPU-time limits
-TimeLimitCPU              86400   % 24h/s
-CpuTimeBetRestartFile     7200    % 2h/s
-
-%----- Memory alloction
-MaxMemSize                1000    % MB
-
-%---- Caracteristics of run
-TimeBegin                 0
-TimeMax	                  1176 % 5.54 Gyr
-
-%---- Cosmological parameters
-Omega0	                  0
-OmegaLambda               0
-OmegaBaryon               0
-HubbleParam               1.0
-Hubble                    100.0
-BoxSize                   30
-ComovingIntegrationOn	  0
+#---Output frequency
+OutputListOn                0
+TimeBetSnapshot             5      # TUNE
+TimeOfFirstSnapshot         0
+TimeBetStatistics           5      # TUNE 
+NumFilesPerSnapshot         1
+MaxFilesWithConcurrentIO    1 
 
 
-%---- System of units
-UnitLength_in_cm         1.0 
-UnitMass_in_g            1.0 
-UnitVelocity_in_cm_per_s 1.0 
-GravityConstantInternal  1.0
+# ----------------------------------Gravity-----------------------------------
 
+#---Timestep accuracy
+ErrTolIntAccuracy           0.01    # CHANGE to
+CourantFac                  0.1     # ignored; for SPH
+MaxSizeTimestep             0.03     # CHANGE to a fraction of dynamical time
+MinSizeTimestep             0.03 
 
+#---Tree algorithm
+TypeOfOpeningCriterion      0       # 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5     # 
+ErrTolThetaMax              1.0     # (used only for relative)
+ErrTolForceAcc              0.005   # (used only for relative)
 
-%---- Output frequency and output paramaters
-OutputListOn              0
-TimeBetSnapshot           10
-TimeOfFirstSnapshot       0.0
-TimeBetStatistics         1
-NumFilesPerSnapshot       1
-MaxFilesWithConcurrentIO  1 
+#---Domain decomposition: should only affect performance
+TopNodeFactor                       3.0
+ActivePartFracForNewDomainDecomp    0.02
 
-%---- Accuracy of time integration
-ErrTolIntAccuracy        0.01 
-CourantFac               0.1
-MaxSizeTimestep          0.05
-MinSizeTimestep          0.0 
-
-%---- Tree algorithm, force accuracy, domain update frequency
-TypeOfOpeningCriterion                0
-ErrTolTheta                           0.5
-ErrTolThetaMax                        1.0
-ErrTolForceAcc                        0.005
-TopNodeFactor                         3.0
-
-ActivePartFracForNewDomainDecomp      0.02
-# ActivePartFracForPMinsteadOfEwald     0.05
-
-%---- Initial density estimate
-DesNumNgb                        64
-MaxNumNgbDeviation               1 
-
-
-
-%---- Gravitational softening length
-SofteningMaxPhysClass0       0.08	# 10 pc
-SofteningComovingClass0      0.08	# 10 pc
+#---Gravitational Softening
+SofteningComovingClass0      1.4    # CHANGE!!
+SofteningMaxPhysClass0       0      # ignored; for cosmological
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
 
-%----- SPH
+#--------------------------------Misc-------------------------------------
+
+# probably do not need to change the options below 
+
+#---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
+
+#---Cosmological Parameters 
+ComovingIntegrationOn	    0 # no cosmology
+Omega0	                    0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+Hubble                      100
+BoxSize                     0
+
+#---SPH
 ArtBulkViscConst             0.8
 MinEgySpec                   0
 InitGasTemp                  100
 
+#---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1 

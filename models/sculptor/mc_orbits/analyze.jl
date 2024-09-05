@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -22,10 +22,13 @@ end
 using Statistics
 
 # ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
-if !@isdefined obs # read in sample (but only once)
-	include("sample.jl")
-	obs
-end
+obs_prop_filename = "../../../sculptor_obs_properties.toml"
+
+# ╔═╡ 1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
+obs = lguys.coord_from_file(obs_prop_filename)
+
+# ╔═╡ 0146ee17-de5f-4877-aaa6-83a898e01416
+err = lguys.coord_err_from_file(obs_prop_filename)
 
 # ╔═╡ cd9dea36-93f8-4461-85b1-87030d9367bb
 pwd()
@@ -149,6 +152,62 @@ let
 	    @info p 
 	end
 
+end
+
+# ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
+fig_dir = "./figures"
+
+# ╔═╡ c48b4e73-480e-4a50-b5fc-db5f6c5b040e
+let
+	fig = Figure(size=(600, 600))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.2,
+		:markersize => 3,
+	)
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "pericentre / kpc",
+	)
+
+	ax_pmra = Axis(fig[1, 1],
+		xlabel=L"$\mu_{\alpha *}$ / mas\,yr$^{-1}$";
+		ax_kwargs...
+	)
+	x = [getproperty(o, :pmra) for o in observations]
+	scatter!(x, peris; plot_kwargs...)
+
+	
+	ax_pmdec = Axis(fig[1, 2],
+		xlabel = L"$\mu_\delta$ / mas\,yr$^{-1}$";
+		ax_kwargs...
+	)
+	hideydecorations!(ax_pmdec)
+	x = [getproperty(o, :pmdec) for o in observations]
+	scatter!(x, peris; plot_kwargs...)
+
+	ax_dist = Axis(fig[2, 1], 
+		xlabel = "distance / kpc";
+		ax_kwargs...
+	)
+	x = [getproperty(o, :distance) for o in observations]
+	scatter!(x, peris; plot_kwargs...)
+
+	ax_rv = Axis(fig[2, 2], 
+		xlabel = L"$v_\textrm{los}$ / km\,s$^{-1}$";
+		ax_kwargs...
+	)
+	hideydecorations!(ax_rv)
+	x = [getproperty(o, :radial_velocity) for o in observations]
+	scatter!(x, peris; plot_kwargs...)
+
+
+	linkyaxes!(ax_rv, ax_pmra, ax_pmdec, ax_dist)
+
+
+	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	fig
 end
 
 # ╔═╡ 43d43f63-4c13-4b23-950e-ada59aa86bc9
@@ -425,6 +484,8 @@ lguys.T2GYR
 # ╔═╡ Cell order:
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
+# ╠═1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
+# ╠═0146ee17-de5f-4877-aaa6-83a898e01416
 # ╠═cd9dea36-93f8-4461-85b1-87030d9367bb
 # ╠═9c7e5bb4-8db0-4527-a8ec-331e2aed958b
 # ╠═fb6debf2-0161-477f-b29b-5a0f1f70f340
@@ -446,6 +507,8 @@ lguys.T2GYR
 # ╠═44660b2f-6220-473b-bb2f-07e23b176491
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
+# ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
+# ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4

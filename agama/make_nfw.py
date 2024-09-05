@@ -1,26 +1,29 @@
+#!/usr/bin/env python
+
 import agama
-from astropy.io import fits
 import argparse
 from math import pi
+
+from h5py import File
 
 
 def main():
     args = parse_args()
-    pos, vel, mass = sample_nfw(args.N)
+    pos, vel, mass = sample_nfw(N=args.N, verbose=args.verbose, cutoff=args.truncation_radius)
     write_to_fits(pos, vel, mass, args.output)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Create NFW potential')
     parser.add_argument('-n', '--N', type=float, default=1e4, help='Number of particles')
-    parser.add_argument('-o', '--output', type=str, default='nfw.fits', help='Output file name')
+    parser.add_argument('-o', '--output', type=str, default='nfw.hdf5', help='Output file name')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
-    parser.add_argument('-t', '--truncation_radius', type=float, default=16, help='Truncation radius over scale radius')
+    parser.add_argument('-t', '--truncation_radius', type=float, default=64, help='Truncation radius over scale radius')
 
     return parser.parse_args()
 
 
 
-def sample_nfw(N=1e4):
+def sample_nfw(N=1e4, verbose=False, cutoff=None):
     # Create a NFW potential
     if not isinstance(N, (int, float)):
         raise ValueError('N must be a number')
@@ -35,7 +38,6 @@ def sample_nfw(N=1e4):
     N = int(N)
     scaleRadius = 1
     mass = 1
-    cutoff = 16
 
     rho0 = mass / (4*pi * scaleRadius**3 ) / 3
 
@@ -55,20 +57,11 @@ def sample_nfw(N=1e4):
 
 
 
-def write_to_fits(pos, vel, mass, output='nfw.fits'):
-    hdu = fits.HDUList()
-    hdu.append(fits.PrimaryHDU())
-    hdu[0].header['N'] = len(pos)
-    hdu.append(fits.BinTableHDU.from_columns([
-        fits.Column(name='x', format='D', array=pos[:,0]),
-        fits.Column(name='y', format='D', array=pos[:,1]),
-        fits.Column(name='z', format='D', array=pos[:,2]),
-        fits.Column(name='vx', format='D', array=vel[:,0]),
-        fits.Column(name='vy', format='D', array=vel[:,1]),
-        fits.Column(name='vz', format='D', array=vel[:,2]),
-        fits.Column(name='mass', format='D', array=mass),
-    ]))
-    hdu.writeto(output, overwrite=True)
+def write_to_hdf5(pos, vel, mass, output='nfw.fits'):
+    with File(output, 'w') as f:
+        f.create_dataset('pos', data=pos)
+        f.create_dataset('vel', data=vel)
+        f.create_dataset('mass', data=mass)
     print(f'Wrote {len(pos)} particles to {output}')
 
 
