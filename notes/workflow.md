@@ -17,28 +17,44 @@ This document introduces my workflow for running N-body simulations of dwarfs in
    1. See end for helper classes and scripts to make this easier
    2. Rapha has made scripts to assign stellar probabilities to each particle (https://rerrani.github.io/code.html)
 
-# Misc
+## Detailed procedure
+
+As a more detailed procedure, from the start
+
+0. Install Gadget4 (with my agama patch), julia, my julia libraries (Arya, DensityEstimators, LilGuys). See description below
+1. Find observational parameters to match for galaxy
+   1. Need 6D kinematics
+   1. Compile literature sources and adopt reasonably recent and consistent measurements. If scatter is large, add this to combined measurements
+2. Chose a MW potential
+   1. Here, EP2021
+
+3. Find observationally consistent orbits
+   1. Sample observations given uncertainties and integrate back in time to find initial conditions (time, position, and velocity of first apocentre/infall)
+   2. One method: use the MCGadget binary (no selfgravity)
+   3. Another method: Use agama or galpy to integrate orbit
+
+4. Isolation Run
+5. Orbit run
+   1. Setup initial conditions
+   2. Run Gadget
+   3. Post: process (in output directory)
+      1. `combine_outputs.py`
+      2. `calc_centres.jl`
+      3. `combine_outputs.py centres.hdf5` (to add centres to outputs)
+      4. `calc_profiles.jl` to calculate 3D DM profiles
+      
+   4. Compare orbit to measurements and determine final snapshot time closest to today (`sim_analy/analyze_orbit.jl`)
+   5. Science analysis: make plots of density profiles, mass evolution, scatter plots, phase space, etc.
+   
+6. Painting on stars
+   1. Once the isolation run (or orbit run) are complete, we can add stars assuming that they are collisionless tracers of dark matter
+
+
+# Fundamentals
 
 Jaclyn's data 
 
 https://www.canfar.net/storage/vault/list/jax/DSPHS_Gaia_eDR3/December_2022/1-Component_HB_Probabilities
-
-
-
-## Numerical Setup
-
-See @power+2003 for a discussion of this...
-$$
-h_{grav} = 4 \frac{R_{200}}{\sqrt{N}}
-$$
-
-Asya gave the similar relation
-$$
-h = 0.005R_{\rm max} (N/1e6)^{-1/2}
-$$
-which is $5/4$ of the value from @power+2003
-
-
 
 ## Units
 
@@ -89,8 +105,57 @@ https://www.dur.ac.uk/icc/cosma/support/slurm/
 
 Zeno is a collection of scripts with documentation on [ifa](https://home.ifa.hawaii.edu/users/barnes/software.html). In particular, we want the following programs
 
-- `halogsp` generates a 1d density profile given the halo parameters. First argument is the outfile. Then the other parameters specify halo shape
-- `gspmodel` creates the actual model
+Once zeno and my library is installed, the procedure to generate a halo is 
+
+- calculate the profile by running `./make_profile.sh nfw`. This will write the zeno-file nfw.gsp to `profiles` and also outputs a .csv file with the same name for normal people to read in
+- Create an nbody model by using `./make_halo.sh 1e4 profiles/nfw.gsp nfw_1e4` which in this example will generate a profile with 1e4 particles written to `halos/nfw_1e4`. 
+- Use the NBody model for sciences!
+
+### HaloGSP
+
+Reverse engineered documentation.
+
+HaloGSP generates the density profile ($\rho$, $M$, for each $r$). The parameters are:
+
+- `m_a=1`, the mass within the scale radius `a`. Note that this is not $M_s$
+- `a=1` is the scale radius
+- `b=4` is the radius the taper begins
+- `taper=exp` the taper formula (one of `exp`, `gauss`, or `sw`)
+- `npoint=257` the number of points to calculate the density ate
+- `rrange=1/4096:16` is the range the radii are calculated. The radii are evenly spaced in log r
+
+All taper modes are defined as piecewise densities which are continuous at $\rho_b = \rho_{\rm NFW}(b)$; i.e.
+$$
+\rho(r) = \begin{cases}
+\rho_{\rm NFW}(r) & r\le b \\
+\rho_{\rm taper}(r) & r > b
+\end{cases}
+$$
+
+
+Internally, zeno uses $\rho_{\rm NFW}(r) = m_a / (4\pi\,A(1)\,r\,(a + r)^2)$ which is as expected. 
+
+The exponential taper is
+$$
+\rho_{e}(r) = \rho_b\,(b/r)^2\,\exp(-2\gamma\,(r/b-1))
+$$
+where $\gamma = b/(b+a) - 1/2$.
+
+The gaussian taper is
+$$
+\rho_g(r) = \rho_b (b/r)^2 \exp(-\gamma ((r/b)^2 - 1))
+$$
+and finally, the `sw` taper (not sure the abbreviation here, but intended to be fast) is
+$$
+\rho_{\rm sw}(r)/\rho_b = (r/b)^{\gamma_s}\,\exp(-(r-b)/a)
+$$
+where $\gamma \ne \gamma_s  = b/a - (a+3b)/(a+b)$.
+
+
+
+### GSPModel & GSPRealize
+
+Zeno includes 2 (3?) programs to sample particles from the profile. `gspmodel` uses rejection sampling in velocities which does not actually create an equilibrium model. `gsprealize` instead uses the distribution functions to correctly sample velocities. There is also a `gsprealize_2.0` which I am entirely unsure of the differences.
 
 ### Installation
 
@@ -121,50 +186,16 @@ and run `make -f Zeno >& zenomake.log`.
 
 Zeno produces a structured binary file, not useful for gadget.
 
-There are two possible methods here: using Rapha's modified zeno code (with a utility) or my silly little python script.
+There are two possible methods here: using Rapha's modified zeno code (with a utility) or I have a julia script
 
 - `tsf` writes out the details of a halo file as text, which can then be read in with python (a bit roundabout but works)
 - `snapgadget` to convert to gadget format. 
-
-
 
 in `/cosma/home/durham/dc-boru1/zeno/bin` using ICFormat=1.
 
 https://github.com/kyleaoman/zeno
 
 then run with gadget for short amount of time to convert to convert output
-
-### Rescaling Halo
-
-use `rescale.py`, put in mass/
-
-uses some other functions/etc.
-
-
-
-### Scaling
-
-Zeno creates a profile with a scale radius $R_s=1$ and mass inside this radius $M_s=1$. The NFW profile is given by
-$$
-\rho(r)/\rho_{\rm crit} = \frac{\delta_c}{(r/r_s)(1+r/r_s)^2}
-$$
-
-
-## Orbits
-
-## To Find Initial Orbit
-
-use leapfrog to integrate backwards
-
-give RA, DEC, distance, v_disp, proper motions, RV from GaiaDR2 and DR3, 
-
-standard units mas/yr etc.?
-
-Uses MC to run orbits observationally consistant, calculate peri/apocenters, and generate histogram. Gives median, 16th and 84th percentile pericenters. 
-
-outputs in a text file
-
-`setInOrbit.py`
 
 # Gadget4
 
@@ -216,15 +247,28 @@ sbatch submit_isolation
 
 Here is where all the other code options are stored. An overview of the important ones
 
+## Numerical Setup
+
+See @power+2003 for a discussion of this.
+
+The gravitational softening is based on:
+$$
+h_{grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}}
+$$
+
+I in fact find that dividing the softening by a factor of sqrt(10) gives slightly more precise results with a negligible increase in compute time.
 
 
-- `InitCondFile` put name of hdf5 file (without extension) of initial particle positions/velocities
+
+Asya gave the similar relation
+$$
+h = 0.005R_{\rm max} (N/1e6)^{-1/2}
+$$
+which is $5/4$ of the value from @power+2003
 
 
 
 ## Isolation Run
-
-/cosma/home/durham/dc-boru1/Gadget2_Noah/Gadget2-ABLL
 
 First, rescale profile with
 
@@ -234,99 +278,7 @@ python rescale.py snapshot_000.hdf5 iso_scaled.hdf5 2.11 2e8
 
 for e.g. fornax with 2e8 Msun within 2.11 kpc scale radius
 
-
-
-After running, need to centre the profile via centreSnapshot. 
-
-change parameters 3, 4, 92, 99, 110, 111
-
-ioptions
-
-- UNEQUALSOFTENINGS
-  - unequal softening lengths
-- PEANOHILBERT
-  - performance
-- WALLCLOCK
-- DOUBLEPRECISION
-- SYNCHRONIZATION
-  - hierarchy timesteps
-- HAVE_HDF5
-- H5_USE_16_PAI
-- OUTPUTPOTENTIAL
-- OUTPUTACCELLARATION
-
-## For orbit run
-
-we specify time in anchors.txt file, change third file in 
-
-/cosma/home/durham/dc-boru1/Gadget-RAPHAMW/source/Gadget2
-
-
-
-Use `setInOrbit.py` to put galaxy in galactocentric coordinates
-
-
-
-Change lines 3, 4, 67, 129
-
-
-
-## Units
-
-| Quantity   | Units               |
-| ---------- | ------------------- |
-| G          | 1                   |
-| Mass       | $10^{10}$ M$_\odot$ |
-| radius     | 1 kpc               |
-| velocities | 207.4 km/s          |
-| time       | 4,715,000 yr        |
-
-
-
-# Postprocessing
-
-Gadget 4 will provide snapshots for each timestep, but now we have to compute useful observational and theoretical summaries of the galaxy's evolution.
-
-## Painting stars
-
-As stars are sufficiently spread out in a dwarf galaxy, we can assume that they are simply attached to a dark matter particle, with probabilities governed by the ratio of the distribution functions. 
-
-
-
-
-
-
-# Analyzing observations
-
-Observationally, we know the 6D kinimatic and have estimated total stellar mass 
-
-## Orbits
-
-
-
-
-
-
-
-# Development
-
-Here, I discuss my reorganizations of the projects
-
-## snapshot
-
-This class is simply a method to open and close hdf5 gadget files more easily. all new work should use this class as it makes things more consistent and easier
-
-## coords
-
-use these methods to perform coordinate transformations
-
-
-
-
-
-
-
-# Tests
+# Gadget tests
 
 ## Conservation laws
 
@@ -368,5 +320,20 @@ I verify these relations for the hernquist and NFW spherical potentials.
 
 ## Disk potential
 
-Disk potentials are more complex but we can still check the overal relationships .
+Disk potentials are more complex but we can still check the overall relationships & the behaviour of epicycles in the potential.
 
+# Postprocessing
+
+Gadget 4 will provide snapshots for each timestep, but now we have to compute useful observational and theoretical summaries of the galaxy's evolution.
+
+## Painting stars
+
+As stars are sufficiently spread out in a dwarf galaxy, we can assume that they are simply attached to a dark matter particle, with probabilities governed by the ratio of the distribution functions. 
+
+To find the distribution function, we use Eddington inversion (eq. 4-140b in BT87)
+$$
+f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right)
+$$
+
+
+In practice the right term is zero as $\Psi \to 0$ as $r\to\infty$, and if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$. 
