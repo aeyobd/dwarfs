@@ -32,8 +32,7 @@ out
 out_old
 out_n1
 build
-build_mw
-build_mc
+build*
 
 Gadget4
 

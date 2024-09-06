@@ -43,13 +43,10 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e7"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6_zeno2"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
-halo_params = TOML.parsefile(joinpath(name, "halo.toml"))
-
-# ╔═╡ 79b07d75-fb05-4833-ac2c-ea0e9c24e791
-halo = lguys.NFW(; lguys.dict_to_tuple(halo_params["profile"])...)
+halo = lguys.load_profile(joinpath(name, "halo.toml"))
 
 # ╔═╡ 6435d239-4a83-4990-a25e-cd03bb0e2022
 softening = 0.044 # kpc
@@ -58,7 +55,7 @@ softening = 0.044 # kpc
 out = lguys.Output(joinpath(name, "out/combined.hdf5"))
 
 # ╔═╡ dd31d3ee-7fdf-46f5-b213-45faae93ae5e
-idxs = [1, 10, length(out)]
+idxs = [1, 3, length(out)]
 
 # ╔═╡ 38ab4838-960e-4321-b70c-6f14584e9e27
 snaps = [out[i] for i in idxs]
@@ -73,7 +70,7 @@ figure_dir = joinpath(name, "figures/")
 mkpath(figure_dir)
 
 # ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-profs = LilGuys.Profiles3D(joinpath(name, "out/profiles_z.hdf5"))
+profs = LilGuys.Profiles3D(joinpath(name, "out/profiles.hdf5"))
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -136,13 +133,13 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
-	limits=(-2.5, 2.5, -10, 1))
+	limits=(-2.5, 4, -20, 1))
 
-	for i in [1, 2, 11]
+	for i in idxs
 		lines!(profs[i].log_r, log10.(profs[i].rho), label="snapshot $(profs.snapshot_index[i])")
 	end
 
-	log_r = LinRange(-2, 3, 1000)
+	log_r = LinRange(-2, 4, 1000)
 	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
 	lines!(log_r, y, label="NFW", color="black", linestyle=:dot)
 
@@ -194,8 +191,9 @@ let
 	fig, ax = FigAxis( ylabel="count", xlabel="e spec", )
 
 	for i in eachindex(snaps)
-		e = lguys.calc_E_spec(snaps[i])
-		stephist!(log10.(e[e .> 0]), label="$i")
+		e = -lguys.calc_E_spec(snaps[i])
+		e = e[e .> 0]
+		stephist!(log10.(e), label="$i")
 	end
 	
 	fig
@@ -472,14 +470,14 @@ function plot_rv_dens(snap_i)
 end
 
 # ╔═╡ 3f625247-0d7d-4f6d-bf84-a40f19f1849a
-plot_rv_dens(snaps[1])
+plot_rv_dens(snaps[end])
 
 # ╔═╡ 9b88e37a-93eb-4c03-b654-0cd9284fc811
 function plot_phase_rvr!(snap; bins=100)
 	x = lguys.calc_r(snap)
 	v = lguys.calc_v_rad(snap)
 
-	h = Arya.histogram2d(x, v *V2KMS, bins)
+	h = Arya.histogram2d(log10.(x), v *V2KMS, bins)
 
 	heatmap!(h, colorscale=log10, colorrange=(1, maximum(h.values)))
 end
@@ -527,7 +525,6 @@ end
 # ╠═6dc6b811-5993-42d1-a6ac-07920aa4f564
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
-# ╠═79b07d75-fb05-4833-ac2c-ea0e9c24e791
 # ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 # ╠═dd31d3ee-7fdf-46f5-b213-45faae93ae5e
 # ╠═38ab4838-960e-4321-b70c-6f14584e9e27
@@ -571,7 +568,6 @@ end
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
 # ╠═3b2bb553-0130-4c8a-80ad-6e1f7071a293
 # ╟─5153654a-567f-4663-9b4a-6f08f9e49d1a
-# ╠═c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
 # ╠═3cc0df1f-dca3-4355-a969-3874aa414d1a
@@ -585,4 +581,5 @@ end
 # ╠═3f625247-0d7d-4f6d-bf84-a40f19f1849a
 # ╠═9b88e37a-93eb-4c03-b654-0cd9284fc811
 # ╠═564c6bcb-04be-4a1c-8f01-f7d76be74eb8
+# ╠═c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 # ╠═1a320f74-5cb7-44c5-8a59-c6fced771f52

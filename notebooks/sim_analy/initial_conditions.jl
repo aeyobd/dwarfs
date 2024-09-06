@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4"
+model_dir = "/arc7/home/dboyea/sculptor/isolation/1e6_agama/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
@@ -52,12 +52,13 @@ begin
 	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
 	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
 
-	halo = lguys.TruncNFW(
-		M_s= 0.12144256932359862,
-		r_s=1.118861833686606,
-		trunc=64,
-		c=26.87054512188574,
-	)
+	
+	# halo = lguys.TruncNFW(
+	# 	M_s= 0.12144256932359862,
+	# 	r_s=1.118861833686606,
+	# 	trunc=64,
+	# 	c=26.87054512188574,
+	# )
 end
 
 # ╔═╡ d3313f08-7e4e-43b8-b55d-ea099d031bfe
@@ -77,9 +78,6 @@ end
 
 # ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
 halo.r_s
-
-# ╔═╡ 2c5f63ca-88ab-468f-9a6f-839adf5c0955
-
 
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 lguys.calc_M(halo, 1)
@@ -130,7 +128,7 @@ let
 
 	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
 
-	lines!(log10.(zeno_prof.Radius), zeno_prof.V_circ .* V2KMS, label="zeno profile")
+	# lines!(log10.(zeno_prof.Radius), zeno_prof.V_circ .* V2KMS, label="zeno profile")
 	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS, label="vmax, rmax")
 
 	axislegend()
@@ -228,9 +226,9 @@ let
 	lines!(log10.(r), log10.(M))
 
 
-	lines!(log10.(zeno_prof.Radius), 
-		log10.(zeno_prof.Mass), 
-		label="zeno", linestyle=:dash)
+	# lines!(log10.(zeno_prof.Radius), 
+	# 	log10.(zeno_prof.Mass), 
+	# 	label="zeno", linestyle=:dash)
 
 	
 	log_r = LinRange(-2, 3, 1000)
@@ -260,7 +258,7 @@ lguys.calc_M(halo, 2)
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
 	fig, ax = FigAxis( ylabel="log counts / bin", xlabel="log r / kpc",
-		limits=(nothing, (-0.5, 5))
+		limits=(nothing, (-0.1, 5))
 	)
 	
 	scatter!(prof.log_r, log10.(prof.counts))
@@ -299,6 +297,40 @@ In our case,
 # ╔═╡ 98a01aea-7d8b-4978-b8cf-2865d6d04e28
 0.42977 * 0.14
 
+# ╔═╡ db034d78-f647-4382-b5e1-5e4623350d96
+md"""
+## Dynamical time
+"""
+
+# ╔═╡ 7032a304-1448-4182-b22b-6083a2efea5d
+r_circs = 10 .^ LinRange(-3, 0, 1000)
+
+# ╔═╡ ac22ac31-f4bf-497b-9971-c98a9900acfb
+v_circs = lguys.calc_v_circ.(halo, r_circs)
+
+# ╔═╡ d112b4d5-6a79-43ae-9ec1-23285e7c4a6e
+t_dyn = 2π * r_circs ./ v_circs
+
+# ╔═╡ c0fd9958-2ba9-45d4-87d0-0a401939811b
+t_dyn_rho = @. 1 / sqrt(lguys.G * lguys.calc_ρ(halo, r_circs))
+
+# ╔═╡ df08309c-8939-4abb-ac45-684c175c24f0
+let
+	fig, ax = FigAxis(xlabel="log r", ylabel = "t circ (code units)")
+
+	lines!(log10.(r_circs), t_dyn)
+	lines!(log10.(r_circs), t_dyn_rho)
+	vlines!(log10(grav_softening))
+
+	fig
+end
+
+# ╔═╡ 5798f8f8-32ce-4e9e-8489-4a165f6d240c
+ @. 1 / sqrt(lguys.G * lguys.calc_ρ(halo, grav_softening))
+
+# ╔═╡ 3e94b33f-35a9-4ccc-a90e-340b6beb310d
+t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
+
 # ╔═╡ Cell order:
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
@@ -311,7 +343,6 @@ In our case,
 # ╟─eb17e47b-b650-4362-ba29-77344e37bc48
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 # ╠═7f9db45f-38ea-4427-9af1-d5431429f612
-# ╠═2c5f63ca-88ab-468f-9a6f-839adf5c0955
 # ╠═d3313f08-7e4e-43b8-b55d-ea099d031bfe
 # ╠═0ccb9018-d88c-4cec-a8da-625be1289bfe
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
@@ -339,3 +370,11 @@ In our case,
 # ╠═d841539a-f755-460f-9994-16229aadca6a
 # ╠═ddea90f9-90f5-4624-a292-e7007da4247b
 # ╠═98a01aea-7d8b-4978-b8cf-2865d6d04e28
+# ╟─db034d78-f647-4382-b5e1-5e4623350d96
+# ╠═7032a304-1448-4182-b22b-6083a2efea5d
+# ╠═ac22ac31-f4bf-497b-9971-c98a9900acfb
+# ╠═d112b4d5-6a79-43ae-9ec1-23285e7c4a6e
+# ╠═df08309c-8939-4abb-ac45-684c175c24f0
+# ╠═c0fd9958-2ba9-45d4-87d0-0a401939811b
+# ╠═5798f8f8-32ce-4e9e-8489-4a165f6d240c
+# ╠═3e94b33f-35a9-4ccc-a90e-340b6beb310d

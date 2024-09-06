@@ -40,7 +40,7 @@ md"""
 model_dir = "/arc7/home/dboyea/dwarfs/zeno/halos"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "nfw_1e7"
+name = "nfw_1e4"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""

@@ -310,6 +310,9 @@ bins = bins_equal_number(memb_stars.r_ell, n=10)
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
 df_r_ell = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.RV, memb_stars.RV_err, bins)
 
+# ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
+df_r_ell_z = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.vz, memb_stars.vz_err, bins, μ_min=40)
+
 # ╔═╡ 38da4da1-74f5-4661-89f2-4b25562a1faf
 function scatter_range!(df_r_ell)
 	errscatter!(df_r_ell.x, df_r_ell.μ, yerr=df_r_ell.μ_err, color=:black)
@@ -332,8 +335,27 @@ let
 	fig
 end
 
+# ╔═╡ e05ec20a-3165-4360-866e-3e8cae8665e5
+let
+	fig, ax = FigAxis(
+		xlabel = "R / arcmin",
+		ylabel = L"RV / km s$^{-1}$"
+	)
+
+	scatter!(memb_stars.r_ell, memb_stars.vz, color=COLORS[3], alpha=0.1)
+
+	scatter_range!(df_r_ell_z)
+
+	fig
+end
+
+# ╔═╡ 31aa8fc5-1415-4c44-9b92-a7d097181639
+md"""
+# Binned properties with radius
+"""
+
 # ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
-df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.radial_velocity_gsr, memb_stars.RV_err, bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
+df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
 
 # ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
 let
@@ -392,13 +414,21 @@ let
 	fig
 end
 
+# ╔═╡ f82d2ff7-7a7f-4520-811e-126f3f4f5349
+let
+	fig, ax = FigAxis(
+		xlabel = "R / arcmin",
+		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
+	)
+
+	errscatter!(midpoints(bins), df_r_ell_z.σ, yerr=df_r_ell_z.σ_err, xerr=bin_errs, color=:black)
+	hlines!(σ_m)
+
+	fig
+end
+
 # ╔═╡ 319bd778-7e17-4bd7-856f-d6785b287219
 quantile(samples.σ, [0.16, 0.84]) .- σ_m
-
-# ╔═╡ 31aa8fc5-1415-4c44-9b92-a7d097181639
-md"""
-# Binned properties with radius
-"""
 
 # ╔═╡ 24ae8277-9644-40e5-b2ab-f4fc9584823c
 
@@ -583,6 +613,41 @@ let
 	fig
 end
 
+# ╔═╡ 53da82d5-2e69-4f88-8043-6694d57cdd91
+import StatsBase: weights
+
+# ╔═╡ 106482c9-a9f9-4b6e-95a9-614ab7991e23
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi / \textrm{degree}",
+		ylabel = L"\eta / \textrm{degree}",
+		aspect=DataAspect()
+	)
+
+
+	w = 1 ./ memb_stars.vz_err .^ 2
+	rv_mean = mean(memb_stars.vz, weights(w))
+
+	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights= w .* memb_stars.vz)
+	k2 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights=w)
+
+	k1.values ./= k2.values
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=(rv_mean - 20, rv_mean + 20)
+		)
+
+	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
+		color = memb_stars.vz[outside_bins],
+		colormap=:bluesreds,
+		colorrange=(rv_mean - 20, rv_mean + 20)
+	)
+	Colorbar(fig[1, 2], p, label=L"$v_{z}$ / km/s",
+)
+	fig
+end
+
 # ╔═╡ b5533db0-a734-4d37-9d75-24471634f855
 
 
@@ -594,17 +659,17 @@ let
 		aspect=DataAspect()
 	)
 
-	w = 1 ./ memb_stars.RV_err
+	w = 1 ./ memb_stars.vz_err
 
 	bins = (33, 25)
-	k1 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights= w .* memb_stars.radial_velocity_gsr)
+	k1 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights= w .* memb_stars.vz)
 	k2 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights=w)
 
 	k1.values ./= k2.values
 
 	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
 		colormap=:bluesreds,
-		# colorrange=(91, 131)
+		colorrange=(50, 100)
 		)
 	Colorbar(fig[1, 2], p, label="absolute radial velocity / km/s",
 )
@@ -678,10 +743,14 @@ end
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
 # ╠═c50f68d7-74c3-4c36-90c5-a5262982ed9f
+# ╠═f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 # ╠═30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
 # ╠═38da4da1-74f5-4661-89f2-4b25562a1faf
 # ╠═86776e68-d47f-43ed-b37f-432c864050bb
+# ╠═e05ec20a-3165-4360-866e-3e8cae8665e5
 # ╠═614f3f09-1880-491d-b41e-4e229330d66f
+# ╠═f82d2ff7-7a7f-4520-811e-126f3f4f5349
+# ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
 # ╠═2f5db664-fc99-41ac-a726-f21dd5d88ad4
 # ╠═fd0a74a1-6513-4612-8181-745d5b7c3f4c
 # ╠═3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
@@ -689,7 +758,6 @@ end
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 # ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
 # ╠═319bd778-7e17-4bd7-856f-d6785b287219
-# ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
 # ╠═24ae8277-9644-40e5-b2ab-f4fc9584823c
 # ╟─82a0e58a-30a4-4e42-b9c1-cb184eb551aa
 # ╠═3a69f395-3c2d-4357-89af-5963d5fa79b8
@@ -705,7 +773,9 @@ end
 # ╠═8f555e41-58d4-4e16-8f4a-1c0f58589b08
 # ╠═8bee2f6a-c65d-4f89-8a4e-5f5789a7b03d
 # ╠═6b59d6e9-833b-4582-b5fb-f0a1f69a16c1
-# ╟─89bf44ef-1ff5-443e-b8be-a3d1571b72e3
+# ╠═89bf44ef-1ff5-443e-b8be-a3d1571b72e3
+# ╠═53da82d5-2e69-4f88-8043-6694d57cdd91
+# ╠═106482c9-a9f9-4b6e-95a9-614ab7991e23
 # ╠═b5533db0-a734-4d37-9d75-24471634f855
 # ╠═4eea0a17-257e-4d0e-88df-9ff4858771b1
 # ╠═7178e5b9-cc42-4933-970a-4707ba69dbe9

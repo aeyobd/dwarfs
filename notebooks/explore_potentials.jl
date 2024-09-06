@@ -14,19 +14,19 @@ begin
 end
 
 # ╔═╡ 57474fd0-6ee8-4a76-b018-9df5ad087367
-V0 = 31.5 / V2KMS
+V0 = 31 / V2KMS
 
 # ╔═╡ d5703c11-08c7-4cd5-9c5e-54c93416da44
 LilGuys.Ludlow.solve_rmax(V0)
 
 # ╔═╡ 76e8a69e-6d6a-4a67-b320-e77980428d70
-R0 = 5.938
+R0 = 5.9
 
 # ╔═╡ 45cc3ae0-0c2f-415e-ade8-9415ae4795d8
-V = 32/ V2KMS
+V = 31/ V2KMS
 
 # ╔═╡ 53af1c45-d189-4b87-a28c-f1d18b3f3746
-n_sigma_R = -3
+n_sigma_R = -2
 
 # ╔═╡ 4e846290-ffeb-4b5d-b6f4-ac8831c1a8be
 R = LilGuys.Ludlow.solve_rmax(V) * 10 ^ (0.135 * n_sigma_R)

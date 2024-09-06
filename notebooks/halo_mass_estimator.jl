@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -66,6 +66,9 @@ Asya's crater II paper provides one example of this procedure.
 
 Or for Fornax, Mstr = 2.39e7, leaving Vmax = 39.6km / s, r_max = 8
 """
+
+# ╔═╡ 60eba328-c047-4b59-8b8c-8b24a4884541
+import CairoMakie: save
 
 # ╔═╡ 21619de9-8960-46fe-8a0c-808776b33c6d
 import StatsBase: quantile, median
@@ -495,11 +498,11 @@ end
 # ╔═╡ 5cdc46ec-6d1b-403f-a3a2-a15b2c82ee16
 pairplot(samples[:, [:MV, :L, :Ms]])
 
-# ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
-pairplot(samples[:, [:Ms2, :V_max, :r_max]], labels=Dict(
-	:Ms2 => L"$M_s$", 
-	:log_M200 => L"\log M_{200} / 10^{10}\,\textrm{M}_\odot ", 
-	:c => L"c", ))
+# ╔═╡ 0af29495-0d78-4e32-bbf9-69587e8ae222
+pairplot(samples[:, [:Ms, :log_M200, :c]])
+
+# ╔═╡ 0ad2bc38-9145-4e3a-8a07-2db6dad4404d
+0.04 * LilGuys.V2KMS
 
 # ╔═╡ 4e1290b5-171e-4715-a87b-28a2cfcb4325
 samples.Ms * 1e10
@@ -536,11 +539,26 @@ md"""
 # Self-consistency calculator
 """
 
+# ╔═╡ 76003206-050b-4913-9ab3-d4c0c2dd05f8
+fig_dir = "./figures/"
+
+# ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
+let
+	fig = pairplot(samples[:, [:Ms2, :V_max, :r_max]], labels=Dict(
+	:Ms2 => L"$M_\star$", 
+	:V_max => L"$v_\textrm{circ, max}$ / km\,s$^{-1}$", 
+	:r_max => L"$r_\textrm{circ, max}$ / kpc", ))
+
+	save(joinpath(fig_dir, "v_max_r_max_mcmc.pdf"), fig)
+
+	fig
+end
+
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	V_max_in = 50 / V2KMS
+	V_max_in = 0.15
 	# fiducial is 31.3
-	r_max_in = 10.783
+	r_max_in = 5.98
 
 	V_max_in
 end
@@ -557,22 +575,27 @@ log10(1 + 3.726 / r_max_exp)
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
 let
 	fig, ax = FigAxis(
-		xlabel="V max",
-		ylabel="r max / kpc",
-		limits=((00, 70), (0, 20))
+		xlabel=L"$v_\textrm{circ, max}$ / km\,s$^{-1}$",
+		ylabel=L"$r_\textrm{circ, max}$ / kpc",
+		limits=((00, 70), (0, 20)),
 	)
 
 	x = samples.Vc * V2KMS
 	y = samples.r_max
 	k = kde([x y])
 
-	h = hexbin!(x, y, bins=50, colorscale=log10)
+	h = hexbin!(x, y, bins=50)
 
-	c = contour!(k, colormap=:bluesgreens)
+	#c = contour!(k, linewidth=6)
 
 	scatter!(V_max_in * V2KMS, r_max_in)
 
 	lines!(Vc_mean * V2KMS, Rc_mean)
+
+
+	Colorbar(fig[1, 2], h, label="counts")
+
+	save(joinpath(fig_dir, "r_max_v_max_in.pdf"), fig)
 	
 	fig
 end
@@ -676,6 +699,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╟─33f433ec-e94e-41fd-a808-6254bf4d34ce
 # ╟─45ac95e4-a9a1-4f8f-9523-8f670f076ae5
 # ╠═2c90aad4-87e7-11ee-2fbd-05f67c7e0343
+# ╠═60eba328-c047-4b59-8b8c-8b24a4884541
 # ╠═f4269d1a-940d-41da-9183-5130978f7d7b
 # ╠═ef991557-7bf7-4add-b29f-f16187297e46
 # ╠═21619de9-8960-46fe-8a0c-808776b33c6d
@@ -730,6 +754,8 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═197cbbf0-beb9-45e4-99dc-5d9baa58c696
 # ╠═bbd5e178-eddc-4e75-b4c5-252048b75fb4
 # ╠═5cdc46ec-6d1b-403f-a3a2-a15b2c82ee16
+# ╠═0af29495-0d78-4e32-bbf9-69587e8ae222
+# ╠═0ad2bc38-9145-4e3a-8a07-2db6dad4404d
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
 # ╠═4e1290b5-171e-4715-a87b-28a2cfcb4325
 # ╠═9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
@@ -741,6 +767,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
+# ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 # ╠═f335d286-04d3-4248-b9bd-4bb6d8e82e33
 # ╠═b5a53e42-ef26-47b0-82f9-d404a4d3a544
