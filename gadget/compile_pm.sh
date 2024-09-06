@@ -1,6 +1,0 @@
-
-rm GadgetPM
-SCRIPT_DIR=$(pwd)
-cd $GADGET_SOURCE || exit
-
-make CONFIG=$SCRIPT_DIR/ConfigPM.sh BUILD_DIR=$SCRIPT_DIR/build EXEC=$SCRIPT_DIR/GadgetPM
