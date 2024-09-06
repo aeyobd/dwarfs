@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6_zeno2"
+name = "/arc7/home/dboyea/sculptor/isolation/1e5/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -55,7 +55,7 @@ softening = 0.044 # kpc
 out = lguys.Output(joinpath(name, "out/combined.hdf5"))
 
 # ╔═╡ dd31d3ee-7fdf-46f5-b213-45faae93ae5e
-idxs = [1, 3, length(out)]
+idxs = [1, 3, 6, length(out)]
 
 # ╔═╡ 38ab4838-960e-4321-b70c-6f14584e9e27
 snaps = [out[i] for i in idxs]
@@ -179,21 +179,23 @@ sum(lguys.calc_r(snaps[end]) .< 0.1)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
-	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", )
+	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", yscale=log10)
 	
-	hist!(log10.(lguys.calc_r(snaps[1])), label="")
+	hist!(log10.(lguys.calc_r(snaps[1])), label="", bins=100)
 
 	fig
 end
 
 # ╔═╡ 5f1c61f9-50d4-43cb-aa78-fa85314f26b7
 let
-	fig, ax = FigAxis( ylabel="count", xlabel="e spec", )
+	fig, ax = FigAxis( ylabel="count", xlabel="e spec", yscale=log10, 
+		limits=(-4, -1, 1, 1e4)
+	)
 
 	for i in eachindex(snaps)
 		e = -lguys.calc_E_spec(snaps[i])
 		e = e[e .> 0]
-		stephist!(log10.(e), label="$i")
+		stephist!(log10.(e), bins=100, label="$i")
 	end
 	
 	fig

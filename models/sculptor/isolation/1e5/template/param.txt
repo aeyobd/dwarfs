@@ -37,8 +37,8 @@ MaxSizeTimestep             0.5     # CHANGE to a fraction of dynamical time
 MinSizeTimestep             0.0 
 
 #---Tree algorithm
-TypeOfOpeningCriterion      0       # 0: Barnes-Hut, 1: Relative
-ErrTolTheta                 0.5     # 
+TypeOfOpeningCriterion      1       # 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5     # mostly used for Barnes-Hut
 ErrTolThetaMax              1.0     # (used only for relative)
 ErrTolForceAcc              0.005   # (used only for relative)
 
@@ -47,7 +47,7 @@ TopNodeFactor                       3.0
 ActivePartFracForNewDomainDecomp    0.02
 
 #---Gravitational Softening
-SofteningComovingClass0      0.44   # CHANGE!!
+SofteningComovingClass0      0.14   # CHANGE!!
 SofteningMaxPhysClass0       0      # ignored; for cosmological
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
