@@ -1,40 +1,3 @@
-# Milky Way Potentials
-
-Following @borukhovetskaya+2022, we define a multi-component MW potential as follows (in code units: 1 kpc, 10^10 Msun)
-
-
-
-| Component  | Values                    |      |
-| ---------- | ------------------------- | ---- |
-| thin disk  | M=5.9, a=3.9, b=0.31      |      |
-| thick disk | M=2, a=4.4, b=0.92        |      |
-| bulge      | M = 2.1, a = 1.3          |      |
-| halo       | Mvir=115, r=20.2, c=9.545 |      |
-
-
-
-
-
-instead the @vasily+2021 potential is
-
-| Component         | Values                                      |      |
-| ----------------- | ------------------------------------------- | ---- |
-| spherical bulge   | $\Gamma=1.8$, $r_b=0.2$, $u_b=1.8$, $M=1.2$ |      |
-| disk (isothermal) | M=5, r_d=3, h_d=0.4                         |      |
-| halo              |                                             |      |
-
-## 
-
-
-
-## Notes about derivations
-
-For my sake, here are the equations to derive each of the following relations. 
-
-Given a density profile, the contained mass is $M(r) = \int_0^r \rho dV$. The acceleration is $a = -\nabla \Phi$. 
-
-
-
 ## NFW (Halo)
 
 ### Source definition
@@ -47,43 +10,47 @@ where
 $$
 \delta_c = \frac{200}{3}\frac{c^3}{[\ln(1+c)-c/(1+c)]}
 $$
-$c$ is some concentration parameter, $\rho_c$ is the critical density of the universe, and $r_s$ is the characteristic scale length of the halo.
+$c$ is concentration parameter, $\rho_c$ is the critical density of the universe, and $r_s$ is the characteristic scale length of the halo.
 
-### Aside:Defined quantities
+### Some useful definitions
 
-The NFW is parameterized in terms of 
-
-with $c=r_{200}/r_s$
-
-The NFW halo is written in terms of $M_{200}$, $R_{200}$. These are the radius and mass of a sphere with 200 times the average critical density, $\rho_{crit} = 3H^2/8\pi G=127.35M_\odot/{\rm kpc}^3 $, so
+The critical density of the universe is 
 $$
-\rho_{200} = 200\rho_{crit} = \frac{M_{200}}{4/3\ \pi R_{200}^3}
-$$
-
-$$
-R_{200} = \sqrt[3]{\frac{1}{200}\frac{3M_{200}}{4\pi \rho_{\rm crit}}}
+\rho_{c} = 3H^2/8\pi G \approx127.35M_\odot/{\rm kpc}^3.
 $$
 
 
+The NFW halo is sometimes described by $M_{200}$. $r_{200}$ is the radius at which the mean density of the halo interior to $r_{200}$ is 200 times the critical density of the universe, and $M_{200}$ is the mass contained inside $r_{200}$. As equations:
 $$
-M_{200} = \frac{4\pi}{3} R_{200}^3\ \rho_{200}
+\rho_{200} = 200\rho_{c} = \frac{M_{200}}{(4\pi/3) r_{200}^3}
+$$
+
+$$
+r_{200} = \sqrt[3]{\frac{1}{200}\frac{3M_{200}}{4\pi \rho_{\rm c
+}}}
 $$
 
 
-nother quantity which turns up often here is
 $$
-A(x) \equiv \log (1+x) - \frac{x}{1+x}
+M_{200} = \frac{4\pi}{3} r_{200}^3\ \rho_{200}
+$$
+
+$M_{200}$ is also sometimes called the virial mass of the halo. $r_{200}$ is directly related to $r_s$ by
+$$
+r_{200} = c\,r_s
 $$
 
 
-We will also just define now
+Another useful definition is
 $$
-x \equiv r/r_s
+A(x) \equiv \log (1+x) - \frac{x}{1+x}.
 $$
-as all quantities are simply scaled by the scale radius.
 
-For example, Asya uses $M_{200} = 1.04e10$ and $c=12.5$ for Fornax, giving $M_s = 0.119\times10^{10}\,{\rm M}_\odot$ and $R_{s}=3.68\,$kpc.
 
+We will also define a dimensionless radius
+$$
+x \equiv r/r_s.
+$$
 ### Density
 
 A simple substitution to the definition gives
@@ -100,7 +67,7 @@ and $A(c)$ is as above. The characteristic density can also be written in terms 
 $$
 \rho_s = \frac{c^3}{A(c)} \frac{M_{200}}{(4\pi/3)\ r_{200}^3}  = \frac{3M_s}{4\pi\, {r_s}^3}
 $$
-Note that this is the same as an alpha-beta-gamma profile where $\alpha=\gamma=1$ and $\beta =3$.
+Note that the NFW density profile is the same as an alpha-beta-gamma profile where $\alpha=\gamma=1$ and $\beta =3$.
 
 ### Contained mass
 
@@ -110,7 +77,7 @@ M(x) = M_s\ A(x)
 $$
 where
 $$
-M_s \equiv 4\pi/3 \rho_s r_s^3 = \frac{M_{200}}{A(c)}
+M_s \equiv (4\pi/3) \rho_s r_s^3 = \frac{M_{200}}{A(c)}
 $$
  so $M(x) = M_s  A(x)$. Note that this differs from the mass contained within $r_s$ by $A(1) \approx 0.193147$.  
 
@@ -133,17 +100,21 @@ Also is consistent with using contained mass ($F=G M(r)/r^2$)
 
 ### Circular velocity
 
-if $x = r/r_s$, then 
+The circular velocity in terms of $v_{200} = \sqrt{G M_{200} / R_{200}}$ is
 $$
-\left(V_c/V_{200}\right)^2 = \frac{A(x)/x}{A(c)/c}
-$$
-
-from the radius and maximum circular velocity, 
-$$
-R_{\rm circ}^{\rm max} = \alpha\ r_s
+\left(v_{\rm circ}/v_{200}\right)^2 = \frac{A(x)/x}{A(c)/c},
 $$
 
-where $\alpha\approx2.16258$
+or in terms of $M_s$ and $r_s$, 
+$$
+v_{\rm circ}^2 = \frac{G M(r)}{r} = \frac{G M_s A(r/r_s)}{r}.
+$$
+Another parameterization of the NFW profile is in terms of the maximum circular velocity $v_{\rm circ}^{\rm max}$ and the radius at which it is reached $r_{\rm circ}^{\rm max}$. Given the scale radius, 
+$$
+r_{\rm circ}^{\rm max} = \alpha\ r_s
+$$
+
+where $\alpha\approx2.16258$, and $v_{\rm circ}^{\rm max}$ can be found from either of the equations above.
 
 
 
@@ -268,6 +239,59 @@ $$
 where $s$ is sphericalized (or hyperelliptical) radius 
 
 with exponential drop off $u_h = 200$, $\eta=2$. Becomes as published with $u_h \to \infty$
+
+
+
+# Milky Way Potentials
+
+Following @borukhovetskaya+2022, we define a multi-component MW potential as follows (in code units: 1 kpc, 10^10 Msun)
+
+
+
+| Component  | Values                    |      |
+| ---------- | ------------------------- | ---- |
+| thin disk  | M=5.9, a=3.9, b=0.31      |      |
+| thick disk | M=2, a=4.4, b=0.92        |      |
+| bulge      | M = 2.1, a = 1.3          |      |
+| halo       | Mvir=115, r=20.2, c=9.545 |      |
+
+
+
+
+
+instead the @vasily+2021 potential is
+
+| Component         | Values                                      |      |
+| ----------------- | ------------------------------------------- | ---- |
+| spherical bulge   | $\Gamma=1.8$, $r_b=0.2$, $u_b=1.8$, $M=1.2$ |      |
+| disk (isothermal) | M=5, r_d=3, h_d=0.4                         |      |
+| halo              |                                             |      |
+
+## 
+
+
+
+## Notes about derivations
+
+For my sake, here are the equations to derive each of the following relations. 
+
+Given a density profile, the contained mass is $M(r) = \int_0^r \rho dV$, which if assuming a spherical profile
+$$
+M(r) = 4\pi \int_0^r \rho\,r^2\,dr
+$$
+The potential is given by
+$$
+\Phi({\bf x}) = \iiint \frac{G\,\rho}{|{\bf x}- {\bf x}'|} d^3{\bf x'}
+$$
+For a spherica distribution (e.g. Galaxies book), the formula reduces to
+$$
+\Phi(r) = -4\pi G\left[\frac{1}{r}\int_0^r \rho(r')r'^2\,dr' + \int_r^\infty \rho(r') r' dr'\right]
+$$
+Note that the first term is simply $G M(r) / r$ so if we solve for $M(r)$ we only need one additional integral to evaluate $\Phi$. 
+
+
+
+The acceleration is $a = -\nabla \Phi$. 
 
 
 
