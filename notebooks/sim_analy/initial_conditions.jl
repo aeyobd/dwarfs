@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/isolation/1e6_agama/"
+model_dir = "/arc7/home/dboyea/sculptor/isolation/1e7/fiducial"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
@@ -52,28 +52,14 @@ begin
 	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
 	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
 
-	
+
+	halo = lguys.TruncNFW(M_s=halo.M_s, r_s=halo.r_s, trunc=100)
 	# halo = lguys.TruncNFW(
 	# 	M_s= 0.12144256932359862,
 	# 	r_s=1.118861833686606,
 	# 	trunc=64,
 	# 	c=26.87054512188574,
 	# )
-end
-
-# ╔═╡ d3313f08-7e4e-43b8-b55d-ea099d031bfe
-begin 
-	using DataFrames, CSV
-
-	zeno_prof = CSV.read("/astro/dboyea/dwarfs/zeno/profiles/nfw.csv", DataFrame)
-
-	zeno_prof.Radius *= halo.r_s
-	zeno_prof.Mass *= halo.M_s * LilGuys.A_NFW(1)
-	zeno_prof.Density *=  halo.M_s / halo.r_s^3 * LilGuys.A_NFW(1)
-
-	zeno_prof[!, :V_circ] = sqrt.(zeno_prof.Mass ./ zeno_prof.Radius)
-
-	zeno_prof
 end
 
 # ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
@@ -122,15 +108,15 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
-	log_r = LinRange(-2, 2.5, 1000)
+	log_r = LinRange(-2, 4, 1000)
 
 	lines!(prof.log_r, prof.v_circ .* V2KMS, label="snapshot")
 
 	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
 
-	# lines!(log10.(zeno_prof.Radius), zeno_prof.V_circ .* V2KMS, label="zeno profile")
-	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS, label="vmax, rmax")
-
+	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS, label="max; halo")
+	
+	scatter!(log10.(prof.r_circ_max), prof.v_circ_max * lguys.V2KMS, label="max; observed")
 	axislegend()
 	fig
 end
@@ -181,6 +167,9 @@ function plot_ρ_dm!(snap; kwargs...)
 	lines!(log10.(lguys.midpoint(r)), log10.(ρ); kwargs...)
 end
 
+# ╔═╡ 09139e38-fdb7-4754-9cc0-79e13a131b08
+12*3600
+
 # ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 let 
 	fig = Figure()
@@ -193,9 +182,6 @@ let
 	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
 	lines!(log_r, y, label="NFW", color="black", linestyle=:dot)
 
-	lines!(log10.(zeno_prof.Radius), 
-		log10.(zeno_prof.Density ), 
-		label="zeno", linestyle=:dash)
 	
 	lines!(prof.log_r, log10.(prof.rho))
 
@@ -226,10 +212,6 @@ let
 	lines!(log10.(r), log10.(M))
 
 
-	# lines!(log10.(zeno_prof.Radius), 
-	# 	log10.(zeno_prof.Mass), 
-	# 	label="zeno", linestyle=:dash)
-
 	
 	log_r = LinRange(-2, 3, 1000)
 	y = log10.(lguys.calc_M.(halo, 10 .^ log_r) )
@@ -258,7 +240,7 @@ lguys.calc_M(halo, 2)
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
 	fig, ax = FigAxis( ylabel="log counts / bin", xlabel="log r / kpc",
-		limits=(nothing, (-0.1, 5))
+		limits=(nothing, (-0.1, log10(length(snap)/10)))
 	)
 	
 	scatter!(prof.log_r, log10.(prof.counts))
@@ -316,11 +298,13 @@ t_dyn_rho = @. 1 / sqrt(lguys.G * lguys.calc_ρ(halo, r_circs))
 
 # ╔═╡ df08309c-8939-4abb-ac45-684c175c24f0
 let
-	fig, ax = FigAxis(xlabel="log r", ylabel = "t circ (code units)")
+	fig, ax = FigAxis(xlabel="log r", ylabel = L"$t_\textrm{dyn}$ (code units)")
 
-	lines!(log10.(r_circs), t_dyn)
-	lines!(log10.(r_circs), t_dyn_rho)
-	vlines!(log10(grav_softening))
+	lines!(log10.(r_circs), log10.(t_dyn), label="circ")
+	lines!(log10.(r_circs), log10.(t_dyn_rho), label="grav")
+	vlines!(log10(grav_softening), linestyle=:dot, color=:black, label="softening")
+
+	axislegend()
 
 	fig
 end
@@ -343,7 +327,6 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╟─eb17e47b-b650-4362-ba29-77344e37bc48
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 # ╠═7f9db45f-38ea-4427-9af1-d5431429f612
-# ╠═d3313f08-7e4e-43b8-b55d-ea099d031bfe
 # ╠═0ccb9018-d88c-4cec-a8da-625be1289bfe
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
 # ╠═54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
@@ -358,6 +341,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
+# ╠═09139e38-fdb7-4754-9cc0-79e13a131b08
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
 # ╠═aca95a0a-98e0-4b7a-bca2-e3c30f9df6e9
 # ╠═84b3759e-a598-4afc-a2b4-ce841e80ff96

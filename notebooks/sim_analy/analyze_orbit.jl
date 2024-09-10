@@ -35,13 +35,13 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4/"
+dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = joinpath(dir, "../orbit.csv")
+orbit_file = joinpath(dir, "orbit.csv")
 
 # ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 outfile = joinpath(dir, "orbital_properties.toml")
@@ -89,9 +89,6 @@ LilGuys.Plots.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
 
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
 LilGuys.Plots.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
-
-# ╔═╡ d9669fcb-b3da-4720-b509-8d5a9d8a1a35
-available_marker_symbols()
 
 # ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
 T2GYR = LilGuys.T2GYR
@@ -460,7 +457,6 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
-# ╠═d9669fcb-b3da-4720-b509-8d5a9d8a1a35
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
 # ╟─f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5

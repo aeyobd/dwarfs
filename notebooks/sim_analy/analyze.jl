@@ -36,7 +36,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4"
+model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -136,7 +136,7 @@ let
 		ygridvisible=false
 	)
 
-	r_model = 10 .^ LinRange(-2, 2, 1000)
+	r_model = 10 .^ LinRange(-2, 3, 1000)
 	v_model = calc_v_circ.(halo, r_model)
 	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="NFW")
 	

@@ -27,10 +27,10 @@ Explores the properties and evolution of the stars in an isolation run.
 """
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = "/astro/dboyea/sculptor/isolation/1e6/"
+modeldir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "halos/V32_r2.4/stars/king_rs0.15"
+starsname = "stars/exp2d_rs0.05"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"
@@ -39,13 +39,13 @@ starsfile = "$(starsname)_stars.hdf5"
 halo_factor = 0.24108 / 0.153194 
 
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
-paramname = "$(starsname).toml"
+paramname = "$(starsname)"
 
 # ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
 import TOML
 
 # ╔═╡ c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
-profile = lguys.load_profile(joinpath(modeldir, paramname))
+profile = lguys.load_profile(joinpath(modeldir, paramname) * ".toml")
 
 # ╔═╡ 7dfc4066-eee5-4118-9d12-48861aa66e03
 NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
@@ -53,14 +53,14 @@ NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
 # ╔═╡ 0671aa68-3d02-4b6c-a238-adffede13bd8
 ρ_s(r) = lguys.calc_ρ(profile, r)
 
-# ╔═╡ e32e2d66-2dad-4f09-84f1-a3081e3891a7
-begin 
-	out = lguys.Output("$modeldir/out/combined.hdf5")
+# ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
+prob_df = lguys.load_hdf5_table(joinpath(modeldir, starsfile))
 
-	cens = CSV.read("$modeldir/out/centres.csv", DataFrames.DataFrame)
-	x_cen = transpose(Matrix(cens[:, ["x", "y", "z"]]))
-	v_cen = transpose(Matrix(cens[:, ["vx", "vy", "vz"]]))
-end
+# ╔═╡ a888cc8f-e27c-4989-a535-6a2862c60c91
+probabilities = prob_df.probability
+
+# ╔═╡ e32e2d66-2dad-4f09-84f1-a3081e3891a7
+out = lguys.Output("$modeldir/out/", weights=probabilities)
 
 # ╔═╡ 3150cdfd-7573-4db9-86b7-ef614150a7b9
 times = out.times * lguys.T2GYR
@@ -68,23 +68,14 @@ times = out.times * lguys.T2GYR
 # ╔═╡ 2cc047db-ae05-42c5-898f-702ae3b83bd6
 idx_i = 10 + 1; idx_f = length(out)
 
+# ╔═╡ ddc895b1-698e-4f89-bf4f-d5ede7ef2c04
+out[1].x_cen
+
 # ╔═╡ 052d229a-0362-42eb-b03c-fdab0f0bc6b4
 begin
 	snap_i = out[idx_i]
-	snap_i.x_cen = x_cen[:, idx_i]
-	snap_i.v_cen = v_cen[:, idx_i]
-
 	snap_f = out[idx_f]
-	snap_f.x_cen = x_cen[:, idx_f]
-	snap_f.v_cen = v_cen[:, idx_f]
-
 end
-
-# ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
-prob_df = lguys.load_hdf5_table(joinpath(modeldir, starsfile))
-
-# ╔═╡ a888cc8f-e27c-4989-a535-6a2862c60c91
-probabilities = prob_df.probability
 
 # ╔═╡ addf19a4-088b-4aff-89a9-df73e8049f2c
 let
@@ -93,14 +84,14 @@ let
 	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
 
 	bins = LinRange(-1, 1, 100)
-	probs = probabilities[snap_i.index]
+	probs = snap_i.weights
 	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], weights=probs, bins = bins)
 
 	ax2 = Axis(fig[1,2], aspect=1,
 	xlabel = "x / kpc", ylabel="y/kpc",
 	title="final")
 
-	probs = probabilities[snap_f.index]
+	probs = snap_f.weights
 
 	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=probs, bins = bins)
 	hideydecorations!(ax2)
@@ -289,6 +280,7 @@ end
 # ╠═e32e2d66-2dad-4f09-84f1-a3081e3891a7
 # ╠═3150cdfd-7573-4db9-86b7-ef614150a7b9
 # ╠═2cc047db-ae05-42c5-898f-702ae3b83bd6
+# ╠═ddc895b1-698e-4f89-bf4f-d5ede7ef2c04
 # ╠═052d229a-0362-42eb-b03c-fdab0f0bc6b4
 # ╠═b4e107d1-5b14-4e64-80ce-a02ece3b41b7
 # ╠═a888cc8f-e27c-4989-a535-6a2862c60c91

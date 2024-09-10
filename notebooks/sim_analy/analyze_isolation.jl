@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e5/fiducial"
+name = "/arc7/home/dboyea/sculptor/isolation/1e7/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -141,7 +141,7 @@ let
 
 	log_r = LinRange(-2, 4, 1000)
 	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
-	lines!(log_r, y, label="NFW", color="black", linestyle=:dot)
+	lines!(log_r, y, label="trunc-NFW", color="black", linestyle=:dot)
 
 	vlines!(log10(softening), color="grey")
 	axislegend(ax)
@@ -189,7 +189,7 @@ end
 # ╔═╡ 5f1c61f9-50d4-43cb-aa78-fa85314f26b7
 let
 	fig, ax = FigAxis( ylabel="count", xlabel="e spec", yscale=log10, 
-		limits=(-4, -1, 1, 1e4)
+		limits=(-4, -1, 1, 1e6)
 	)
 
 	for i in eachindex(snaps)
