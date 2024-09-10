@@ -36,10 +36,10 @@ M_exp(x) = calc_M(halo, x)
 Γ_exp(x) = -x 
 
 # ╔═╡ b4d30aef-95a6-4579-9965-54922272b3f4
-N = 100_000
+N = 10_000
 
 # ╔═╡ d38e8e46-a9b4-4251-a106-3582e9faeb88
-radii = LilGuys.sample_ρ(f_ρ, N, log_r=LinRange(-5, 3, 100000))
+radii = LilGuys.sample_ρ(f_ρ, N, log_r=LinRange(-5, 5, 10000))
 
 # ╔═╡ 8f5ebb2d-1c17-4e03-93f5-947fda8b35a8
 hist(radii)
@@ -112,7 +112,7 @@ end
 
 # ╔═╡ 4b02472a-701b-4d3f-8fdf-0ae3a8b49832
 let
-	fig, ax = FigAxis(xlabel="log r", ylabel="M(r)")
+	fig, ax = FigAxis(xlabel="log r", ylabel="v circ")
 
 	log_x = prof.log_r_bins[2:end]
 	x = 10 .^ log_x
@@ -140,42 +140,6 @@ let
 	fig
 end
 
-# ╔═╡ 06edc1a7-8ab2-4893-8367-698e8bb77bd0
-let
-	fig, ax = FigAxis(xlabel="log r", ylabel="M(r)")
-
-	log_x = prof.log_r_bins[2:end]
-
-	x = 10 .^ log_x
-	radii = calc_r(snap)
-	counts_in = [sum(radii .< r) for r in x]
-	M_in = counts_in * snap.masses[1]
-	println(M_in)
-	M_in_err = M_in ./ sqrt.(counts_in)
-	
-	errscatter!(log_x, M_in, yerr=M_in_err)
-
-	xpred = LinRange(-1, 3.5, 100)
-	ypred = M_exp.(10 .^ xpred)
-
-	lines!(xpred, ypred, color=COLORS[2])
-	hidexdecorations!(ax, grid=false)
-
-	res = (M_in .- M_exp.(x)) ./ M_in
-
-	ax2 = Axis(fig[2, 1], 
-		ylabel="residual", xlabel="log r",
-		limits=(nothing, nothing, -0.03, 0.03)
-	)
-
-	errscatter!(log_x, res, yerr=M_in_err ./ M_in)
-	hlines!(0, color=:black)
-
-	rowsize!(fig.layout, 2, Relative(0.3))
-	linkxaxes!(ax, ax2)
-	fig
-end
-
 # ╔═╡ 94eaa3a2-fa51-4032-b0a5-6cd8a06a149f
 cumsum(prof.mass_in_shell)
 
@@ -190,10 +154,13 @@ function calc_χ2(x, x_exp, xerr)
 end
 
 # ╔═╡ 40a68cd5-6d7d-4421-8d04-718804c14adf
-calc_χ2(prof.rho, f_ρ.(10 .^ prof.log_r), prof.rho_err)
+calc_χ2(prof.rho[2:end-1], f_ρ.(10 .^ prof.log_r[2:end-1]), prof.rho_err[2:end-1])
 
 # ╔═╡ cfacda96-2c99-4c1b-b86b-65c9d4383ca1
 calc_χ2(prof.M_in, M_exp.(10 .^ prof.log_r_bins[2:end]), prof.M_in_err)
+
+# ╔═╡ 0a14c5d1-aeff-4c0a-81a9-4b258b35b26c
+calc_χ2(prof.v_circ, calc_v_circ.(halo, 10 .^ prof.log_r_bins[2:end]), prof.v_circ_err)
 
 # ╔═╡ Cell order:
 # ╟─cf73ae3a-65a3-447f-a407-1c62cde4601c
@@ -212,9 +179,9 @@ calc_χ2(prof.M_in, M_exp.(10 .^ prof.log_r_bins[2:end]), prof.M_in_err)
 # ╠═cee96228-eb9d-4819-8d6b-34d79266bfb7
 # ╠═603bbf97-dc7f-4a2b-a554-e4bfad4b5ef2
 # ╠═4b02472a-701b-4d3f-8fdf-0ae3a8b49832
-# ╠═06edc1a7-8ab2-4893-8367-698e8bb77bd0
 # ╠═94eaa3a2-fa51-4032-b0a5-6cd8a06a149f
 # ╠═61e9cfab-42e6-4784-9719-5ed7725626f9
 # ╠═bad9ee8e-7338-40d8-a40a-4cfb6d3ad023
 # ╠═40a68cd5-6d7d-4421-8d04-718804c14adf
 # ╠═cfacda96-2c99-4c1b-b86b-65c9d4383ca1
+# ╠═0a14c5d1-aeff-4c0a-81a9-4b258b35b26c

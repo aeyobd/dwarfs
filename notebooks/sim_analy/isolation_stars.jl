@@ -26,11 +26,14 @@ md"""
 Explores the properties and evolution of the stars in an isolation run.
 """
 
+# ╔═╡ bb3b3395-a64d-4907-a4bd-1b3f621010b1
+import DensityEstimators: histogram
+
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
 modeldir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "stars/exp2d_rs0.05"
+starsname = "stars/exp2d_rs0.13"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"
@@ -103,8 +106,9 @@ end
 function plot_ρ_s!(snap; bins=200, kwargs...)
 	rs = lguys.calc_r(snap)
 	ps = probabilities[snap.index]
-	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=ps)
-	x = log10.(lguys.midpoints(r))
+	h = histogram(log10.(rs), bins, weights=ps)
+	ρ = lguys.calc_ρ_from_hist(10 .^ h.bins, h.values)
+	x = (lguys.midpoints(h.bins))
 	lines!(x, log10.(ρ); kwargs...)
 end
 
@@ -125,7 +129,8 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
-		limits=((-0.8, 0.8), (-15, 2)))
+		limits=((-0.8, 0.8), (-15, 2))
+		)
 
 	#vlines!(log10(r_s_s), label="r_s")
 
@@ -142,7 +147,7 @@ let
 end
 
 # ╔═╡ 341440a0-9567-4ebf-8acb-cf327edfa4fb
-function find_radii_fracs(out, x_cen, probabilities; skip=10) 
+function find_radii_fracs(out, probabilities; skip=10) 
 	rs = Vector[]
 	Ms = Vector[]
 	rs_s = Vector[]
@@ -150,7 +155,7 @@ function find_radii_fracs(out, x_cen, probabilities; skip=10)
 	percens = [0.003, 0.01, .03, .1, .5, .9]
 	
 	for i in 1:length(out)
-		r = lguys.calc_r(out[i].positions .- x_cen[:, i])
+		r = lguys.calc_r(out[i])
 		s_idx = sortperm(r)
 		push!(rs, r[s_idx])
 		
@@ -173,7 +178,7 @@ function find_radii_fracs(out, x_cen, probabilities; skip=10)
 end
 
 # ╔═╡ ab0b1a03-325c-489a-ac2f-309560541085
-percens, rs, rs_s = find_radii_fracs(out, x_cen, probabilities)
+percens, rs, rs_s = find_radii_fracs(out, probabilities)
 
 # ╔═╡ d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 let 
@@ -202,7 +207,7 @@ end
 v_los = snap_f.velocities[1, :] .* lguys.V2KMS
 
 # ╔═╡ 0f0275b6-473c-4b3e-8e3f-2be7903eec32
-r = @. sqrt((snap_f.positions[2, :] .- x_cen[2, end])^2 + (snap_f.positions[3, :] .- x_cen[3, end])^2)
+r = @. sqrt((snap_f.positions[2, :] .- snap_f.x_cen[2, end])^2 + (snap_f.positions[3, :] .- snap_f.x_cen[3, end])^2)
 
 # ╔═╡ 1e7ac1c1-5d83-4d43-8949-0953a4ef098f
 m_los = probabilities[snap_f.index]
@@ -267,6 +272,7 @@ end
 # ╔═╡ Cell order:
 # ╠═2845abc7-53cd-4996-a04b-e062ca3e63b7
 # ╠═6238c3fa-1974-11ef-1539-2f50fb31fe9a
+# ╠═bb3b3395-a64d-4907-a4bd-1b3f621010b1
 # ╠═141d3b97-e344-4760-aa12-a48b1afb125c
 # ╠═5b1dd353-a437-47cd-94be-7da9684581da
 # ╠═28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0

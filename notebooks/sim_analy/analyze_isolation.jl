@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e7/fiducial"
+name = "/arc7/home/dboyea/sculptor/isolation/1e6/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))

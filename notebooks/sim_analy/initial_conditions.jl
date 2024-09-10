@@ -37,36 +37,15 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/isolation/1e7/fiducial"
+model_dir = "/arc7/home/dboyea/dwarfs/agama/halos"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "initial"
+name = "nfw_1e6"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
 # File loading
 """
-
-# ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
-begin 
-	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
-	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
-
-
-	halo = lguys.TruncNFW(M_s=halo.M_s, r_s=halo.r_s, trunc=100)
-	# halo = lguys.TruncNFW(
-	# 	M_s= 0.12144256932359862,
-	# 	r_s=1.118861833686606,
-	# 	trunc=64,
-	# 	c=26.87054512188574,
-	# )
-end
-
-# ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
-halo.r_s
-
-# ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
-lguys.calc_M(halo, 1)
 
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
 begin 
@@ -97,6 +76,27 @@ snap.v_cen
 # ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
 prof = lguys.calc_profile(snap, filt_bound=false)
 
+# ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
+begin 
+	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
+	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
+
+
+	halo = lguys.TruncNFW(v_circ_max=prof.v_circ_max*1.008, r_circ_max=prof.r_circ_max * 1.007, trunc=100)
+	# halo = lguys.TruncNFW(
+	# 	M_s= 0.12144256932359862,
+	# 	r_s=1.118861833686606,
+	# 	trunc=64,
+	# 	c=26.87054512188574,
+	# )
+end
+
+# ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
+halo.r_s
+
+# ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
+lguys.calc_M(halo, 1)
+
 # ╔═╡ 9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 prof.v_circ_max * V2KMS
 
@@ -108,16 +108,35 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
+	
 	log_r = LinRange(-2, 4, 1000)
 
 	lines!(prof.log_r, prof.v_circ .* V2KMS, label="snapshot")
 
 	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
 
+	scatter!(log10.(prof.r_circ_max), prof.v_circ_max * lguys.V2KMS, label="max; observed")
+	
 	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS, label="max; halo")
 	
-	scatter!(log10.(prof.r_circ_max), prof.v_circ_max * lguys.V2KMS, label="max; observed")
 	axislegend()
+
+	
+	ax2 = Axis(fig[2,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"d v / v")
+	ax2.limits=(nothing, nothing, -0.1, 0.1)
+
+	y = prof.v_circ
+	x = prof.log_r
+	ye = calc_v_circ.(halo, 10 .^ x)
+
+	res = (y .- ye) ./ ye
+
+	err = prof.v_circ_err ./ ye
+
+	errscatter!(x, res, yerr=err)
+
+	rowsize!(fig.layout, 2, Relative(0.3))
+	
 	fig
 end
 
