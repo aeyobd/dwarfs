@@ -54,7 +54,7 @@ dir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/stars/"
 #dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_rs0.05")
+paramname = joinpath(dir, "exp2d_0.13_ana")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -67,18 +67,15 @@ params = TOML.parsefile(paramname * ".toml")
 # ╔═╡ 0ede2af5-a572-41c8-b3f0-cb0a24318c5f
 profile = lguys.load_profile(params)
 
-# ╔═╡ 159aa60d-563b-4c85-b75d-502ac944b99c
-df_E = lguys.load_fits(paramname * "_energy.fits")
-
-# ╔═╡ f1a7fa1f-bdcd-408c-ab27-b52916b1892f
-df_density = lguys.load_fits(paramname * "_density.fits")
+# ╔═╡ 715f771b-686a-4643-a914-35ba6ca9042d
+energy_df = lguys.load_hdf5_table(joinpath(dir, "energies.hdf5"))
 
 # ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
 df_probs = lguys.load_hdf5_table(paramname * "_stars.hdf5")
 
 # ╔═╡ 578c6196-db59-4d5c-96a7-9a8487bbeaae
 begin 
-	snap = lguys.Snapshot(joinpath(dir, params["snapshot"]))
+	snap = lguys.Snapshot(joinpath(dir, "../out/snapshot_118.hdf5"))
 	snap.weights = df_probs.probability[snap.index]
 	snap
 end
@@ -142,29 +139,11 @@ let
 	fig
 end
 
-# ╔═╡ 1f30febf-5047-46eb-87fb-01576bfda202
-sum(df_E.f_dm_e .< 0)
-
-# ╔═╡ 3dd2f71e-3862-4f93-8a27-93d9c554ca5c
-sum(df_E.f_s_e .< 0)
-
 # ╔═╡ 587d3017-15e2-4f81-9729-e9eb02de3b4d
 minimum(df_probs.phi)
 
 # ╔═╡ 30fdd463-5cb6-43f9-9348-543ee0dd385c
 maximum(df_probs.phi)
-
-# ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], limits=(-2, 3, -15, 3),
-		xlabel="log r", ylabel="log density")
-	scatter!(log10.(df_density.r), log10.(df_density.nu_dm), label="DM")
-	scatter!(log10.(df_density.r), log10.(df_density.nu_s), label="stars (analytic)")
-
-	axislegend()
-	fig
-end
 
 # ╔═╡ 75d23b44-71e7-4e28-ad3e-c537f3d4422f
 let
@@ -176,9 +155,6 @@ let
 	axislegend(ax, position=:lt)
 	fig
 end
-
-# ╔═╡ e905652c-2235-4bc9-b1a2-a577a7d48f69
-df_E.E
 
 # ╔═╡ 6da679d4-6af6-4f42-b6e9-44ce20faa676
 let
@@ -192,12 +168,6 @@ let
 	axislegend(ax, position=:lt)
 	fig
 end
-
-# ╔═╡ c6d7a7f8-8528-40b2-b641-814022494978
-df_E.E[2]
-
-# ╔═╡ da0a64dc-addc-4b5e-8680-aceb8d5ade89
-maximum(df_E.f_dm_e)
 
 # ╔═╡ 9e2f1606-46aa-4e06-a31f-b03a383cccda
 md"""
@@ -244,17 +214,8 @@ end
 # ╔═╡ bec1ed0b-7a3d-4523-84ad-3fad4a7296cd
 
 
-# ╔═╡ 65c7cb79-1246-493d-b6d6-4d836746e396
-df_density.r
-
-# ╔═╡ 406c942e-d5a5-4ab7-806c-27ce79cefffb
-r_e = [df_density.r[1] - df_density.dr[1]; df_density.r .+ df_density.dr]
-
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
 ν_s_nbody = lguys.calc_ρ_from_hist(r_e, histogram(df_probs.radii, r_e, weights=df_probs.probability).values)
-
-# ╔═╡ c5fa22bf-6090-4014-85e6-6681b2bb10a7
-df_density.r .- df_density.dr .- r_e[1:end-1]
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 let
@@ -559,9 +520,8 @@ end
 # ╟─d76e6200-9401-4c2e-bd7c-53e79dd49415
 # ╠═8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
 # ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
+# ╠═715f771b-686a-4643-a914-35ba6ca9042d
 # ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
-# ╠═159aa60d-563b-4c85-b75d-502ac944b99c
-# ╠═f1a7fa1f-bdcd-408c-ab27-b52916b1892f
 # ╠═1066a445-600d-4508-96a2-aa9b90460097
 # ╠═0a4521ac-7e35-4976-8781-bdbd4f7242c7
 # ╠═29930595-5255-4454-8550-22ac6a96f609
@@ -569,16 +529,10 @@ end
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
-# ╠═1f30febf-5047-46eb-87fb-01576bfda202
-# ╠═3dd2f71e-3862-4f93-8a27-93d9c554ca5c
 # ╠═587d3017-15e2-4f81-9729-e9eb02de3b4d
 # ╠═30fdd463-5cb6-43f9-9348-543ee0dd385c
-# ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
-# ╠═e905652c-2235-4bc9-b1a2-a577a7d48f69
 # ╠═6da679d4-6af6-4f42-b6e9-44ce20faa676
-# ╠═c6d7a7f8-8528-40b2-b641-814022494978
-# ╠═da0a64dc-addc-4b5e-8680-aceb8d5ade89
 # ╟─9e2f1606-46aa-4e06-a31f-b03a383cccda
 # ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
 # ╟─999df0b7-1ff0-4771-8113-2bfe7a74b646
@@ -586,9 +540,6 @@ end
 # ╠═76200404-16aa-4caf-b247-3bc330b82868
 # ╠═bec1ed0b-7a3d-4523-84ad-3fad4a7296cd
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
-# ╠═65c7cb79-1246-493d-b6d6-4d836746e396
-# ╠═406c942e-d5a5-4ab7-806c-27ce79cefffb
-# ╠═c5fa22bf-6090-4014-85e6-6681b2bb10a7
 # ╠═a9335e17-a410-455a-9a9e-d63706a026bd
 # ╠═33a26663-0c08-411b-902b-a509b2afa5ad
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1

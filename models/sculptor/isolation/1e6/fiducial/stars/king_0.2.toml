@@ -1,0 +1,12 @@
+snapshot = "../out/snapshot_010.hdf5"
+num_energy_bins = 1000
+
+bin_method = "both"
+dr_min = 0.02
+N_per_bin_min = 100
+
+
+[profile.KingProfile]
+M = 1
+R_s = 0.2
+R_t = 1

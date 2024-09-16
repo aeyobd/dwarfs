@@ -13,6 +13,11 @@ begin
 	using LilGuys
 end
 
+# ╔═╡ 8ec7fdd1-6805-48aa-b700-9e6f4da765a5
+md"""
+some plots and rough calculations for the distribution function
+"""
+
 # ╔═╡ 9e3600af-5954-4ec1-ad0d-b86e83e63d79
 LP = LilGuys.Plots
 
@@ -25,6 +30,12 @@ haloname = "/astro/dboyea/sculptor/isolation/1e6/fiducial/stars"
 # ╔═╡ ee946594-16da-4edf-a884-967f8ae9ff53
 snapname = joinpath(haloname, "../halos/fiducial.hdf5")
 
+# ╔═╡ de1519ce-22ae-4f3e-bd50-66b6b891d2c3
+df_df = LilGuys.load_hdf5_table(haloname * "/analytic_df.hdf5")
+
+# ╔═╡ 14100a85-74d9-46cf-9f8c-4cba33b9a6b0
+df_E = LilGuys.load_hdf5_table(haloname * "/energies.hdf5")
+
 # ╔═╡ f31b6dab-bec1-4716-bea1-79507cf6fa03
 snap = Snapshot(snapname)
 
@@ -36,7 +47,7 @@ radii = LilGuys.calc_r(snap)
 
 # ╔═╡ 9a5d4c4d-7128-4ad3-ad4d-f41ad51669c9
 begin 
-	r_bins = 10 .^ LinRange(minimum(log10.(radii)), maximum(log10.(radii)), 100)
+	r_bins = 10 .^ LinRange(minimum(log10.(radii)), maximum(log10.(radii)), 80)
 	r_bins = r_bins[r_bins .< 1]
 end
 
@@ -50,7 +61,7 @@ r_m = midpoints(r_bins)
 logr_m = log10.(r_m)
 
 # ╔═╡ b7c9a69f-6135-41ec-8c57-527a4be335ab
-h = DE.histogram(radii, r_bins)
+h = DE.histogram(radii, r_bins, weights=snap.masses)
 
 # ╔═╡ b86eaab9-610c-4fd3-82d1-d9f1460d211a
 plot(logr_m, log10.(h.values))
@@ -76,6 +87,7 @@ let
 
 
 	lines!(logr_m, ϕ)
+	lines!(log10.(df_df.radii), df_df.psi)
 
 	fig
 end
@@ -89,10 +101,12 @@ let
 	
 	ax = Axis(fig[1,1],
 		ylabel = LP.log_rho_label,
+		limits=((-2, 2), (-15, 10))
 	)
 
 	errscatter!(logr_m, log10.(ρ), yerr=1 / log(10) ./ sqrt.(h.values))
-
+	lines!(log10.(df_df.radii), log10.(df_df.rho))
+	
 	x = r_m 
 	y = ρ
 	ax2 = Axis(fig[2, 1],
@@ -117,11 +131,32 @@ let
 	fig
 end
 
+# ╔═╡ 354acb89-2e84-46f7-8ac0-d1283abd2061
+DF_ana = LilGuys.DistributionFunction(calc_ρ.(halo, r_m), -LilGuys.calc_Φ.(halo, r_m), r_m)
+
 # ╔═╡ b6f9bb10-105b-48b1-9f5d-447112a86ed5
-ϵ = LinRange(ϕ[1], ϕ[end], 1000)
+ϵ = LinRange(minimum(ϕ), maximum(ϕ), 1000)
 
 # ╔═╡ 30fe63ee-8478-45e9-9789-b73902c4074d
 f_ϵ = DF.(ϵ)
+
+# ╔═╡ 25257acd-7aac-4ed1-b5af-865fa295d97b
+let
+	fig, ax = FigAxis(
+		xlabel="energy", ylabel="asinh distribution function",
+		limits=((0.08, 0.102), nothing)
+	)
+
+	
+	scatter!(ϵ, asinh.(f_ϵ))
+
+	e = -LilGuys.calc_Φ.(halo, r_m)
+	scatter!(e, asinh.(DF_ana.(e)))
+
+	lines!(df_df.psi, asinh.(df_df.f), color=COLORS[3])
+
+	fig
+end
 
 # ╔═╡ ae225d08-7333-4a01-86d5-a228785ff51f
 let
@@ -236,11 +271,14 @@ let
 end
 
 # ╔═╡ Cell order:
+# ╠═8ec7fdd1-6805-48aa-b700-9e6f4da765a5
 # ╠═963a0312-6eec-11ef-3070-53f3c18efb6f
 # ╠═9e3600af-5954-4ec1-ad0d-b86e83e63d79
 # ╠═0febc738-cfe8-47e8-8acb-7e09a6f4191c
 # ╠═879566d4-c24c-415a-9781-4ec0a4413680
 # ╠═ee946594-16da-4edf-a884-967f8ae9ff53
+# ╠═de1519ce-22ae-4f3e-bd50-66b6b891d2c3
+# ╠═14100a85-74d9-46cf-9f8c-4cba33b9a6b0
 # ╠═f31b6dab-bec1-4716-bea1-79507cf6fa03
 # ╠═ffaf29c3-8861-452e-8a42-d548dbcb4a54
 # ╠═fbef83a8-8224-4a66-9dd1-c04ca37b3001
@@ -257,7 +295,9 @@ end
 # ╠═12d93b96-135c-4ee5-a226-fdfc64b9e916
 # ╠═e91afedb-9fcf-4303-ab27-a6ab53c2ce17
 # ╠═b180ed7f-ef91-4d62-91de-e38b50153b83
+# ╠═354acb89-2e84-46f7-8ac0-d1283abd2061
 # ╠═b6f9bb10-105b-48b1-9f5d-447112a86ed5
+# ╠═25257acd-7aac-4ed1-b5af-865fa295d97b
 # ╠═30fe63ee-8478-45e9-9789-b73902c4074d
 # ╠═ae225d08-7333-4a01-86d5-a228785ff51f
 # ╠═cf3320c2-1192-4e76-9dcd-8782563f412e
