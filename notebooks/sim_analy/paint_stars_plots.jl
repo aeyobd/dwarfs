@@ -50,11 +50,11 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/stars/"
+dir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/ana_stars/"
 #dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_0.13_ana")
+paramname = joinpath(dir, "exp2d_rs0.13")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -68,7 +68,7 @@ params = TOML.parsefile(paramname * ".toml")
 profile = lguys.load_profile(params)
 
 # ╔═╡ 715f771b-686a-4643-a914-35ba6ca9042d
-energy_df = lguys.load_hdf5_table(joinpath(dir, "energies.hdf5"))
+df_E = lguys.load_hdf5_table(paramname * "_df.hdf5")
 
 # ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
 df_probs = lguys.load_hdf5_table(paramname * "_stars.hdf5")
@@ -100,8 +100,8 @@ md"""
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radii", ylabel="PDF")
-	stephist!(log10.(df_probs.radii), bins=log10.(df_density.r), normalization=:pdf, label="dark matter")
-	stephist!(log10.(df_probs.radii), bins=log10.(df_density.r), weights=df_probs.probability, normalization=:pdf, label="stars (nbody)")
+	stephist!(log10.(df_probs.radii), bins=log10.(df_E.radii), normalization=:pdf, label="dark matter")
+	stephist!(log10.(df_probs.radii), bins=log10.(df_E.radii), weights=df_probs.probability, normalization=:pdf, label="stars (nbody)")
 	axislegend()
 	fig
 end
@@ -128,7 +128,7 @@ let
 	h_s .= y_trans(h_s)
 
 	
-	#lines!(df_E.E, df_E.probs, color=Arya.COLORS[3], label="f_s / f_dm")
+	lines!(df_E.psi, asinh.(df_E.probability), color=Arya.COLORS[3], label="f_s / f_dm")
 	
 	lines!(midpoints(bins), h1, label="dark matter")
 	lines!(midpoints(bins), h_s, label="stars (nbody)")
@@ -139,58 +139,49 @@ let
 	fig
 end
 
-# ╔═╡ 587d3017-15e2-4f81-9729-e9eb02de3b4d
-minimum(df_probs.phi)
-
-# ╔═╡ 30fdd463-5cb6-43f9-9348-543ee0dd385c
-maximum(df_probs.phi)
-
-# ╔═╡ 75d23b44-71e7-4e28-ad3e-c537f3d4422f
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="log f", limits=(nothing, (-15, 7)) )
-	lines!(log10.(df_E.E), nm.log10.(df_E.f_s_e), label="stars")
-	lines!(log10.(df_E.E), nm.log10.(df_E.f_dm_e), label="DM")
-
-	axislegend(ax, position=:lt)
-	fig
-end
-
 # ╔═╡ 6da679d4-6af6-4f42-b6e9-44ce20faa676
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="f", 
-		limits=(minimum(log10.(df_E.E[2:end-1])), maximum(log10.(df_E.E[2:end-1])), minimum(df_E.f_dm_e), maximum(df_E.f_dm_e))
 	)
+
+	h = 0.01
 	
-	lines!(log10.(df_E.E), (df_E.f_dm_e), label="DM")
+	lines!(log10.(df_E.psi), asinh.(df_E.f ./ h), label="DM")
+	lines!(log10.(df_E.psi), asinh.(df_E.f_s ./ h), label="stars")
 
 	axislegend(ax, position=:lt)
 	fig
 end
+
+# ╔═╡ a462157f-e991-4ee0-9a62-c0bb3c687e87
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="p(e)", 
+	)
+
+	h = 1
+	
+	lines!(log10.(df_E.psi), asinh.(df_E.probability ./ h), label="DM")
+	lines!(log10.(df_E.psi), asinh.(df_E.f_s ./ df_E.f ./ h), label="DM")
+
+	axislegend(ax, position=:lt)
+	fig
+end
+
+# ╔═╡ f2d82ee9-94f6-422b-a1be-a4a19cf49ca2
+
+
+# ╔═╡ 49f66f52-5c29-49d1-9e50-2be48f494ceb
+maximum(df_E.psi)
+
+# ╔═╡ 061cccde-82c1-4519-aec9-4fc92a67b348
+maximum(df_probs.eps)
 
 # ╔═╡ 9e2f1606-46aa-4e06-a31f-b03a383cccda
 md"""
 The calculated energy distribution function for both stars and dark matter (sampled at the specified number of points). Ideally, we would like this curve to be smooth and well-sampled.
 """
-
-# ╔═╡ b625d8a5-7265-4849-9bd6-ca8064d392eb
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel=L"\log\ r / \textrm{kpc}", ylabel=L"\Psi(r)")
-
-	skip=100
-
-	radii = df_probs.radii[1:skip:end]
-	phi = df_probs.phi[1:skip:end]
-	scatter!(log10.(radii), phi, label="interpolated", markersize=5)
-
-	radii = lguys.calc_r(snap)[1:skip:end]
-	phi = snap.Φs[1:skip:end]
-	scatter!(log10.(radii), phi, label="snapshot", markersize=3)
-	axislegend(position=:rb)
-	fig
-end
 
 # ╔═╡ 999df0b7-1ff0-4771-8113-2bfe7a74b646
 md"""
@@ -322,7 +313,7 @@ lguys.arcmin_to_kpc(14, 83.2)
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
 	r = lguys.calc_r(snap)
-	ms = snap.weights
+	ms = snap.weights ./ sum(snap.weights)
 
 	
 	r_h2 = calc_r_h(r, ms)
@@ -529,12 +520,12 @@ end
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
-# ╠═587d3017-15e2-4f81-9729-e9eb02de3b4d
-# ╠═30fdd463-5cb6-43f9-9348-543ee0dd385c
-# ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
 # ╠═6da679d4-6af6-4f42-b6e9-44ce20faa676
+# ╠═a462157f-e991-4ee0-9a62-c0bb3c687e87
+# ╠═f2d82ee9-94f6-422b-a1be-a4a19cf49ca2
+# ╠═49f66f52-5c29-49d1-9e50-2be48f494ceb
+# ╠═061cccde-82c1-4519-aec9-4fc92a67b348
 # ╟─9e2f1606-46aa-4e06-a31f-b03a383cccda
-# ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
 # ╟─999df0b7-1ff0-4771-8113-2bfe7a74b646
 # ╟─ffca9cd9-a2d7-4f52-8467-8f4757ddf445
 # ╠═76200404-16aa-4caf-b247-3bc330b82868

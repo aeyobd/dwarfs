@@ -31,7 +31,10 @@ haloname = "/astro/dboyea/sculptor/isolation/1e6/fiducial/stars"
 snapname = joinpath(haloname, "../halos/fiducial.hdf5")
 
 # ╔═╡ de1519ce-22ae-4f3e-bd50-66b6b891d2c3
-df_df = LilGuys.load_hdf5_table(haloname * "/analytic_df.hdf5")
+df_emp = LilGuys.load_hdf5_table(haloname * "/distribution_function.hdf5")
+
+# ╔═╡ 617c927a-8204-4a84-8ff9-531fab8b9150
+df_df = LilGuys.load_hdf5_table(haloname * "/../ana_stars/distribution_function.hdf5")
 
 # ╔═╡ 14100a85-74d9-46cf-9f8c-4cba33b9a6b0
 df_E = LilGuys.load_hdf5_table(haloname * "/energies.hdf5")
@@ -63,12 +66,6 @@ logr_m = log10.(r_m)
 # ╔═╡ b7c9a69f-6135-41ec-8c57-527a4be335ab
 h = DE.histogram(radii, r_bins, weights=snap.masses)
 
-# ╔═╡ b86eaab9-610c-4fd3-82d1-d9f1460d211a
-plot(logr_m, log10.(h.values))
-
-# ╔═╡ 992c9e66-c53e-441c-ade8-dcade5e61f52
-h.values
-
 # ╔═╡ a7d46b4a-7a79-4320-9968-9e89365b59a2
 ρ = LilGuys.calc_ρ_from_hist(r_bins, h.values)
 
@@ -86,8 +83,17 @@ let
 	)
 
 
-	lines!(logr_m, ϕ)
-	lines!(log10.(df_df.radii), df_df.psi)
+	# lines!(logr_m, ϕ)
+	scatter!(log10.(df_emp.radii), df_emp.psi, label="emperical", color=COLORS[3], markersize=3)
+
+	skip = 100
+	phi = -snap.Φs[1:skip:end]
+	radii = calc_r(snap)[1:skip:end]
+
+	scatter!(log10.(radii), phi, label="snapshot", markersize=3, color=COLORS[2])
+	lines!(log10.(df_df.radii), df_df.psi, label="analytic")
+
+	axislegend(position=:rb)
 
 	fig
 end
@@ -104,8 +110,9 @@ let
 		limits=((-2, 2), (-15, 10))
 	)
 
-	errscatter!(logr_m, log10.(ρ), yerr=1 / log(10) ./ sqrt.(h.values))
+	#errscatter!(logr_m, log10.(ρ), yerr=1 / log(10) ./ sqrt.(h.values))
 	lines!(log10.(df_df.radii), log10.(df_df.rho))
+	scatter!(log10.(df_emp.radii), log10.(df_emp.rho))
 	
 	x = r_m 
 	y = ρ
@@ -152,6 +159,7 @@ let
 
 	e = -LilGuys.calc_Φ.(halo, r_m)
 	scatter!(e, asinh.(DF_ana.(e)))
+	lines!(df_emp.psi, asinh.(df_emp.f))
 
 	lines!(df_df.psi, asinh.(df_df.f), color=COLORS[3])
 
@@ -278,6 +286,7 @@ end
 # ╠═879566d4-c24c-415a-9781-4ec0a4413680
 # ╠═ee946594-16da-4edf-a884-967f8ae9ff53
 # ╠═de1519ce-22ae-4f3e-bd50-66b6b891d2c3
+# ╠═617c927a-8204-4a84-8ff9-531fab8b9150
 # ╠═14100a85-74d9-46cf-9f8c-4cba33b9a6b0
 # ╠═f31b6dab-bec1-4716-bea1-79507cf6fa03
 # ╠═ffaf29c3-8861-452e-8a42-d548dbcb4a54
@@ -287,8 +296,6 @@ end
 # ╠═23c77c0c-c2b0-4245-b48d-638358eac6e9
 # ╠═cc75d352-83b8-4fe2-9b9a-173912e97086
 # ╠═b7c9a69f-6135-41ec-8c57-527a4be335ab
-# ╠═b86eaab9-610c-4fd3-82d1-d9f1460d211a
-# ╠═992c9e66-c53e-441c-ade8-dcade5e61f52
 # ╠═a7d46b4a-7a79-4320-9968-9e89365b59a2
 # ╠═912db6da-822e-4b63-82bc-4f3329e3f89c
 # ╠═ea8ecc31-1e44-4cff-84f8-61dbdcea687e

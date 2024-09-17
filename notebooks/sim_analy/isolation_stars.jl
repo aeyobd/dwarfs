@@ -33,7 +33,7 @@ import DensityEstimators: histogram
 modeldir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "stars/exp2d_0.13_ana"
+starsname = "ana_stars/exp2d_rs0.13"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"
@@ -237,7 +237,9 @@ let
 
 	x_mod = LinRange(-30, 30, 1000)
 	y_mod = lguys.gaussian.(x_mod, μ_v, σ_v)
-	lines!(x_mod, y_mod)
+	lines!(x_mod, y_mod, label="N($μ_v, $σ_v)")
+
+	axislegend()
 	fig
 end
 
