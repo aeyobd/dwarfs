@@ -41,10 +41,10 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6/V32_r2.4//"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4//"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "king_rs0.15_1.fits"
+starsname = "king_rs0.15.fits"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)

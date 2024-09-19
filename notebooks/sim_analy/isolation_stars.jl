@@ -33,13 +33,24 @@ import DensityEstimators: histogram
 modeldir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "ana_stars/exp2d_rs0.13"
+starsname = "ana_stars/exp2d_rs0.05"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"
 
+# ╔═╡ 7e5edb0d-afd7-4437-86c0-f2532e25971e
+md"""
+# file loading
+"""
+
+# ╔═╡ 83fbe8a1-5d95-458a-87f2-b1d5c66846d2
+
+
+# ╔═╡ b38a74d3-2a82-412d-981e-8466e403746e
+fig_name = joinpath(modeldir, dirname(starsfile), "figures", basename(starsname))
+
 # ╔═╡ f13d237d-ce33-43aa-a1c7-796ac502c9fe
-halo_factor = 0.24108 / 0.153194 
+halo_factor = 1
 
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
 paramname = "$(starsname)"
@@ -69,7 +80,7 @@ out = lguys.Output("$modeldir/out/", weights=probabilities)
 times = out.times * lguys.T2GYR
 
 # ╔═╡ 2cc047db-ae05-42c5-898f-702ae3b83bd6
-idx_i = 10 + 1; idx_f = length(out)
+idx_i = 20 + 1; idx_f = length(out)
 
 # ╔═╡ ddc895b1-698e-4f89-bf4f-d5ede7ef2c04
 out[1].x_cen
@@ -79,6 +90,11 @@ begin
 	snap_i = out[idx_i]
 	snap_f = out[idx_f]
 end
+
+# ╔═╡ 4a32cad7-c18a-4494-aca9-e292d64ef6b7
+md"""
+# 2D plots
+"""
 
 # ╔═╡ addf19a4-088b-4aff-89a9-df73e8049f2c
 let
@@ -99,6 +115,8 @@ let
 	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=probs, bins = bins)
 	hideydecorations!(ax2)
 	linkaxes!(ax, ax2)
+
+	save(fig_name * "_xy_ini_fin.pdf", fig)
 	fig
 end
 
@@ -129,7 +147,7 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
-		limits=((-0.8, 0.8), (-15, 2))
+		limits=((-1.5, 0.8), (-15, 3))
 		)
 
 	#vlines!(log10(r_s_s), label="r_s")
@@ -141,40 +159,11 @@ let
 	ρ_s_pred = ρ_s.(10 .^ log_r_pred)
 
 	lines!(log_r_pred, log10.(ρ_s_pred), label="expected", color="black", linestyle=:dot)
-	
+
+	save(fig_name * "_rho_ini_fin.pdf", fig)
+
 	axislegend(ax)
 	fig
-end
-
-# ╔═╡ 341440a0-9567-4ebf-8acb-cf327edfa4fb
-function find_radii_fracs(out, probabilities; skip=10) 
-	rs = Vector[]
-	Ms = Vector[]
-	rs_s = Vector[]
-
-	percens = [0.003, 0.01, .03, .1, .5, .9]
-	
-	for i in 1:length(out)
-		r = lguys.calc_r(out[i])
-		s_idx = sortperm(r)
-		push!(rs, r[s_idx])
-		
-		ps = probabilities[out[i].index[s_idx]]
-		ms = cumsum(ps)
-		ms ./= ms[end]
-		idxs = searchsortedfirst.([ms], percens)
-		if i % 50 == 0
-			println(idxs)
-		end
-		push!(Ms, ms)
-		push!(rs_s, r[s_idx][idxs])
-	end
-
-	rs = hcat(rs...)
-	rs_s = hcat(rs_s...)
-
-	return percens, rs, rs_s
-
 end
 
 # ╔═╡ ab0b1a03-325c-489a-ac2f-309560541085
@@ -190,6 +179,9 @@ let
 			label="$(percens[i])")
 	end
 	Legend(fig[1,2], ax, "fraction")
+
+	save(fig_name * "_mstar_fractions.pdf", fig)
+
 	fig
 end
 
@@ -265,6 +257,9 @@ let
 	)
 	scatter!(ts, sigmas * lguys.V2KMS)
 
+	save(fig_name * "_sigma_v_t.pdf", fig)
+
+
 	fig
 end
 
@@ -279,6 +274,9 @@ end
 # ╠═5b1dd353-a437-47cd-94be-7da9684581da
 # ╠═28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
 # ╠═21adbbe7-c8cc-4094-9e75-b68d97fa211a
+# ╟─7e5edb0d-afd7-4437-86c0-f2532e25971e
+# ╠═83fbe8a1-5d95-458a-87f2-b1d5c66846d2
+# ╠═b38a74d3-2a82-412d-981e-8466e403746e
 # ╠═f13d237d-ce33-43aa-a1c7-796ac502c9fe
 # ╠═312576e2-16da-4285-9c19-a7a8005acf25
 # ╠═feb6cc17-a25d-4ba8-a152-78412f422b80
@@ -292,6 +290,7 @@ end
 # ╠═052d229a-0362-42eb-b03c-fdab0f0bc6b4
 # ╠═b4e107d1-5b14-4e64-80ce-a02ece3b41b7
 # ╠═a888cc8f-e27c-4989-a535-6a2862c60c91
+# ╟─4a32cad7-c18a-4494-aca9-e292d64ef6b7
 # ╠═addf19a4-088b-4aff-89a9-df73e8049f2c
 # ╠═de8ebcd0-d6e1-4b16-aaec-5bcd47cad1bd
 # ╠═98d2168c-f450-41e2-9b9d-2880a662f841
@@ -299,7 +298,6 @@ end
 # ╠═7ad553e8-50ac-41c3-b461-3c9ba2cdef17
 # ╠═b76c91ff-0928-40ad-9263-c455f804b6f5
 # ╠═e76583dc-eea9-43c8-8051-a58a5c68a942
-# ╠═341440a0-9567-4ebf-8acb-cf327edfa4fb
 # ╠═ab0b1a03-325c-489a-ac2f-309560541085
 # ╠═d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 # ╠═193273c9-5b13-4af6-a345-4326cdebcf04

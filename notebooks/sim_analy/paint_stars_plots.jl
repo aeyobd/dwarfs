@@ -54,7 +54,7 @@ dir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/ana_stars/"
 #dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_rs0.13")
+paramname = joinpath(dir, "exp2d_rs0.05")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -86,6 +86,9 @@ lguys.get_M_tot(profile)
 # ╔═╡ 29930595-5255-4454-8550-22ac6a96f609
 r_h = lguys.calc_r_h(profile)
 
+# ╔═╡ f5582e2e-6cbf-4b32-9da0-86b4f33c55b6
+bins = LinRange(log10(minimum(df_probs.radii)), log10(maximum(df_probs.radii)), 100)
+
 # ╔═╡ 4d1991ea-9496-48c7-a400-8fefbecefcd2
 md"""
 # Plots
@@ -100,8 +103,8 @@ md"""
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radii", ylabel="PDF")
-	stephist!(log10.(df_probs.radii), bins=log10.(df_E.radii), normalization=:pdf, label="dark matter")
-	stephist!(log10.(df_probs.radii), bins=log10.(df_E.radii), weights=df_probs.probability, normalization=:pdf, label="stars (nbody)")
+	stephist!(log10.(df_probs.radii), bins=bins, normalization=:pdf, label="dark matter")
+	stephist!(log10.(df_probs.radii), bins=bins, weights=df_probs.probability, normalization=:pdf, label="stars (nbody)")
 	axislegend()
 	fig
 end
@@ -142,13 +145,13 @@ end
 # ╔═╡ 6da679d4-6af6-4f42-b6e9-44ce20faa676
 let
 	fig = Figure()
-	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="f", 
+	ax = Axis(fig[1,1],xlabel="ϵ", ylabel="f", 
 	)
 
-	h = 0.01
+	h = 0.001
 	
-	lines!(log10.(df_E.psi), asinh.(df_E.f ./ h), label="DM")
-	lines!(log10.(df_E.psi), asinh.(df_E.f_s ./ h), label="stars")
+	lines!((df_E.psi), asinh.(df_E.f ./ h), label="DM")
+	lines!((df_E.psi), asinh.(df_E.f_s ./ h), label="stars")
 
 	axislegend(ax, position=:lt)
 	fig
@@ -157,13 +160,13 @@ end
 # ╔═╡ a462157f-e991-4ee0-9a62-c0bb3c687e87
 let
 	fig = Figure()
-	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="p(e)", 
+	ax = Axis(fig[1,1],xlabel="ϵ", ylabel="p(e)", 
 	)
 
 	h = 1
 	
-	lines!(log10.(df_E.psi), asinh.(df_E.probability ./ h), label="DM")
-	lines!(log10.(df_E.psi), asinh.(df_E.f_s ./ df_E.f ./ h), label="DM")
+	lines!((df_E.psi), asinh.(df_E.probability ./ h), label="DM")
+	lines!((df_E.psi), asinh.(df_E.f_s ./ df_E.f ./ h), label="DM")
 
 	axislegend(ax, position=:lt)
 	fig
@@ -203,10 +206,10 @@ function calc_r_h(rs, masses)
 end
 
 # ╔═╡ bec1ed0b-7a3d-4523-84ad-3fad4a7296cd
-
+bins
 
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
-ν_s_nbody = lguys.calc_ρ_from_hist(r_e, histogram(df_probs.radii, r_e, weights=df_probs.probability).values)
+ν_s_nbody = lguys.calc_ρ_from_hist(10 .^ bins, histogram(df_probs.radii, 10 .^ bins, weights=df_probs.probability).values)
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 let
@@ -214,21 +217,11 @@ let
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
 		limits=((0, 1), (-15, 3))
 		)
-	lines!(log10.(df_density.r), nm.log10.(df_density.nu_s), label="stars")
-	scatter!(log10.(df_density.r) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
 
-	ax2 = Axis(fig[2,1], 
-		xlabel=L"\log\,r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
-		limits=((log10(0.5r_h), log10(100r_h)), (-1, 1)))
+	r_m = midpoints(bins)
+	lines!(log10.(df_E.radii), nm.log10.(df_E.rho), label="stars")
+	scatter!((r_m) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
 	
-	scatter!(log10.(df_density.r), nm.log10.(ν_s_nbody) .- nm.log10.(df_density.nu_s), label="",
-		color=COLORS[2]
-	)
-	hlines!([0], label="")
-
-	linkxaxes!(ax, ax2, )
-	rowsize!(fig.layout, 2, Auto(0.3))
-	hidexdecorations!(ax, grid=false)
 	fig
 end
 
@@ -313,7 +306,7 @@ lguys.arcmin_to_kpc(14, 83.2)
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
 	r = lguys.calc_r(snap)
-	ms = snap.weights ./ sum(snap.weights)
+	ms = snap.weights 
 
 	
 	r_h2 = calc_r_h(r, ms)
@@ -516,6 +509,7 @@ end
 # ╠═1066a445-600d-4508-96a2-aa9b90460097
 # ╠═0a4521ac-7e35-4976-8781-bdbd4f7242c7
 # ╠═29930595-5255-4454-8550-22ac6a96f609
+# ╠═f5582e2e-6cbf-4b32-9da0-86b4f33c55b6
 # ╟─4d1991ea-9496-48c7-a400-8fefbecefcd2
 # ╟─5b30475b-b4c4-4c87-817d-0d885546d004
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9

@@ -38,10 +38,10 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/1e6/orbit1/V70_r0.4"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "halos/V70_r0.4/stars/exp2d_rs0.07"
+starsname = "fiducial/stars/exp2d_rs0.13"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 r_scale = 1

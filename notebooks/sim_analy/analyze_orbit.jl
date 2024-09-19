@@ -405,6 +405,7 @@ let
 		"apocentre" => r_apo,
 		"period" => t_peri - t_anteperi,
 		"idx_f" => idx_f,
+		"distance_f" => obs_c.distance[idx_f],
 		"idx_peri" => idx_peri,
 		"t_last_peri" => t_f - t_peri,
 		# these three are for the final stream coordinate frame
