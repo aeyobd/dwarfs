@@ -26,6 +26,9 @@ md"""
 Explores the properties and evolution of the stars in an isolation run.
 """
 
+# ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
+import TOML
+
 # ╔═╡ bb3b3395-a64d-4907-a4bd-1b3f621010b1
 import DensityEstimators: histogram
 
@@ -33,18 +36,10 @@ import DensityEstimators: histogram
 modeldir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "ana_stars/exp2d_rs0.05"
+starsname = "stars/exp2d_rs0.10"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "$(starsname)_stars.hdf5"
-
-# ╔═╡ 7e5edb0d-afd7-4437-86c0-f2532e25971e
-md"""
-# file loading
-"""
-
-# ╔═╡ 83fbe8a1-5d95-458a-87f2-b1d5c66846d2
-
 
 # ╔═╡ b38a74d3-2a82-412d-981e-8466e403746e
 fig_name = joinpath(modeldir, dirname(starsfile), "figures", basename(starsname))
@@ -52,11 +47,28 @@ fig_name = joinpath(modeldir, dirname(starsfile), "figures", basename(starsname)
 # ╔═╡ f13d237d-ce33-43aa-a1c7-796ac502c9fe
 halo_factor = 1
 
+# ╔═╡ 7e5edb0d-afd7-4437-86c0-f2532e25971e
+md"""
+# file loading
+"""
+
+# ╔═╡ 83fbe8a1-5d95-458a-87f2-b1d5c66846d2
+begin 
+	stellar_profiles, profile_labels = lguys.read_structs_from_hdf5(joinpath(modeldir, starsname * "_stars_profiles.hdf5"), lguys.StellarProfile3D)
+	
+	snap_idxs = parse.(Int, profile_labels)
+	stellar_profiles = stellar_profiles[sortperm(snap_idxs)]
+	snap_idxs = sort(snap_idxs)
+
+	snap_idxs, stellar_profiles
+end
+	
+
+# ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
+prob_df = lguys.read_hdf5_table(joinpath(modeldir, starsfile))
+
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
 paramname = "$(starsname)"
-
-# ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
-import TOML
 
 # ╔═╡ c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
 profile = lguys.load_profile(joinpath(modeldir, paramname) * ".toml")
@@ -67,8 +79,11 @@ NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
 # ╔═╡ 0671aa68-3d02-4b6c-a238-adffede13bd8
 ρ_s(r) = lguys.calc_ρ(profile, r)
 
-# ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
-prob_df = lguys.load_hdf5_table(joinpath(modeldir, starsfile))
+# ╔═╡ 01742641-9e37-45bc-a0c4-a4a662fde1f9
+star_prof_i = stellar_profiles[2]
+
+# ╔═╡ 0297ef30-d37b-48a1-9051-dc7e2a5df801
+star_prof_f = stellar_profiles[end]
 
 # ╔═╡ a888cc8f-e27c-4989-a535-6a2862c60c91
 probabilities = prob_df.probability
@@ -93,7 +108,7 @@ end
 
 # ╔═╡ 4a32cad7-c18a-4494-aca9-e292d64ef6b7
 md"""
-# 2D plots
+# Plots
 """
 
 # ╔═╡ addf19a4-088b-4aff-89a9-df73e8049f2c
@@ -142,7 +157,7 @@ snap_i.positions
 # ╔═╡ b76c91ff-0928-40ad-9263-c455f804b6f5
 out.times[end] * lguys.T2GYR
 
-# ╔═╡ e76583dc-eea9-43c8-8051-a58a5c68a942
+# ╔═╡ 6065db1e-1387-4735-ad9d-0f401d9f0f73
 let 
 	fig = Figure()
 
@@ -150,10 +165,8 @@ let
 		limits=((-1.5, 0.8), (-15, 3))
 		)
 
-	#vlines!(log10(r_s_s), label="r_s")
-
-	plot_ρ_s!(snap_i, label="initial")
-	plot_ρ_s!(snap_f, label="final")
+	lines!(star_prof_i.log_r, log10.(star_prof_i.rho))
+	lines!(star_prof_f.log_r, log10.(star_prof_f.rho))
 
 	log_r_pred = LinRange(-2, 2, 1000)
 	ρ_s_pred = ρ_s.(10 .^ log_r_pred)
@@ -166,22 +179,23 @@ let
 	fig
 end
 
-# ╔═╡ ab0b1a03-325c-489a-ac2f-309560541085
-percens, rs, rs_s = find_radii_fracs(out, probabilities)
+# ╔═╡ cea9464d-d620-4fc9-9224-d24e075bf42a
+star_prof_i
 
 # ╔═╡ d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r / kpc containing stellar mass")
-	for i in eachindex(percens)
-		lines!(times, log10.(rs_s[i, :]), 
-			color=i, colorrange=(1, length(percens)),
-			label="$(percens[i])")
+
+	q = star_prof_i.quantiles
+	for i in eachindex(q)
+		Mq = [log10.(p.r_quantile[i]) for p in stellar_profiles]
+		t = times[snap_idxs]
+	
+		lines!(t, Mq, color=q[i], colorrange=extrema(q), label="$(q[i])")
 	end
-	Legend(fig[1,2], ax, "fraction")
 
-	save(fig_name * "_mstar_fractions.pdf", fig)
-
+	Legend(fig[1, 2], ax, "quantile")
 	fig
 end
 
@@ -235,26 +249,19 @@ let
 	fig
 end
 
-# ╔═╡ ae8e1425-343d-45b0-a24b-920294954596
-function calc_σv_x(snap)
-	vs = lguys.get_v_x(snap)
-	w = probabilities[snap.index]
-	return std(vs, weights(w))
-end
-
 # ╔═╡ 2f6da0ff-eef1-407d-a5e4-c3035d049688
 let
 	skip = 1
 
-	idx = 1:skip:length(out)
-	ts = times[idx]
+	ts = times[snap_idxs]
 
-	sigmas = [calc_σv_x(out[i]) for i in idx]
+	sigmas = [p.sigma_vx for p in stellar_profiles]
 
 	fig, ax = FigAxis(
 		xlabel = "time / Gyr",
 		ylabel = L"\sigma_v / \textrm{km s^{-1}}",
 	)
+	
 	scatter!(ts, sigmas * lguys.V2KMS)
 
 	save(fig_name * "_sigma_v_t.pdf", fig)
@@ -263,42 +270,41 @@ let
 	fig
 end
 
-# ╔═╡ fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7
-σ_v * halo_factor
-
 # ╔═╡ Cell order:
 # ╠═2845abc7-53cd-4996-a04b-e062ca3e63b7
 # ╠═6238c3fa-1974-11ef-1539-2f50fb31fe9a
+# ╠═feb6cc17-a25d-4ba8-a152-78412f422b80
 # ╠═bb3b3395-a64d-4907-a4bd-1b3f621010b1
 # ╠═141d3b97-e344-4760-aa12-a48b1afb125c
 # ╠═5b1dd353-a437-47cd-94be-7da9684581da
 # ╠═28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
 # ╠═21adbbe7-c8cc-4094-9e75-b68d97fa211a
-# ╟─7e5edb0d-afd7-4437-86c0-f2532e25971e
-# ╠═83fbe8a1-5d95-458a-87f2-b1d5c66846d2
 # ╠═b38a74d3-2a82-412d-981e-8466e403746e
 # ╠═f13d237d-ce33-43aa-a1c7-796ac502c9fe
+# ╟─7e5edb0d-afd7-4437-86c0-f2532e25971e
+# ╠═83fbe8a1-5d95-458a-87f2-b1d5c66846d2
+# ╠═b4e107d1-5b14-4e64-80ce-a02ece3b41b7
+# ╠═e32e2d66-2dad-4f09-84f1-a3081e3891a7
 # ╠═312576e2-16da-4285-9c19-a7a8005acf25
-# ╠═feb6cc17-a25d-4ba8-a152-78412f422b80
 # ╠═c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
 # ╠═7dfc4066-eee5-4118-9d12-48861aa66e03
 # ╠═0671aa68-3d02-4b6c-a238-adffede13bd8
-# ╠═e32e2d66-2dad-4f09-84f1-a3081e3891a7
+# ╠═01742641-9e37-45bc-a0c4-a4a662fde1f9
+# ╠═0297ef30-d37b-48a1-9051-dc7e2a5df801
 # ╠═3150cdfd-7573-4db9-86b7-ef614150a7b9
 # ╠═2cc047db-ae05-42c5-898f-702ae3b83bd6
 # ╠═ddc895b1-698e-4f89-bf4f-d5ede7ef2c04
 # ╠═052d229a-0362-42eb-b03c-fdab0f0bc6b4
-# ╠═b4e107d1-5b14-4e64-80ce-a02ece3b41b7
 # ╠═a888cc8f-e27c-4989-a535-6a2862c60c91
-# ╟─4a32cad7-c18a-4494-aca9-e292d64ef6b7
+# ╠═4a32cad7-c18a-4494-aca9-e292d64ef6b7
 # ╠═addf19a4-088b-4aff-89a9-df73e8049f2c
 # ╠═de8ebcd0-d6e1-4b16-aaec-5bcd47cad1bd
 # ╠═98d2168c-f450-41e2-9b9d-2880a662f841
 # ╠═8b69303d-c992-447a-aaf6-af5839173b1a
 # ╠═7ad553e8-50ac-41c3-b461-3c9ba2cdef17
 # ╠═b76c91ff-0928-40ad-9263-c455f804b6f5
-# ╠═e76583dc-eea9-43c8-8051-a58a5c68a942
-# ╠═ab0b1a03-325c-489a-ac2f-309560541085
+# ╠═6065db1e-1387-4735-ad9d-0f401d9f0f73
+# ╠═cea9464d-d620-4fc9-9224-d24e075bf42a
 # ╠═d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 # ╠═193273c9-5b13-4af6-a345-4326cdebcf04
 # ╠═93abb048-2a1a-468c-86f5-abba3a0e92e5
@@ -307,6 +313,4 @@ end
 # ╠═5b2f984b-a9cd-4c7f-a901-e2e6df26f5e4
 # ╠═dd21570b-9ba5-44b3-a8c1-76251b492eef
 # ╠═95386397-7303-48a6-9720-c70384b8ec7a
-# ╠═ae8e1425-343d-45b0-a24b-920294954596
 # ╠═2f6da0ff-eef1-407d-a5e4-c3035d049688
-# ╠═fe0f0a09-b641-4da3-ae3e-1ce185fa2cd7

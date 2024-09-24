@@ -54,7 +54,7 @@ dir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/ana_stars/"
 #dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_rs0.05")
+paramname = joinpath(dir, "king_rs0.10")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -68,10 +68,10 @@ params = TOML.parsefile(paramname * ".toml")
 profile = lguys.load_profile(params)
 
 # ╔═╡ 715f771b-686a-4643-a914-35ba6ca9042d
-df_E = lguys.load_hdf5_table(paramname * "_df.hdf5")
+df_E = lguys.read_hdf5_table(paramname * "_df.hdf5")
 
 # ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
-df_probs = lguys.load_hdf5_table(paramname * "_stars.hdf5")
+df_probs = lguys.read_hdf5_table(paramname * "_stars.hdf5")
 
 # ╔═╡ 578c6196-db59-4d5c-96a7-9a8487bbeaae
 begin 
