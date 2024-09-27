@@ -4,7 +4,7 @@
 using LilGuys
 
 function main()
-    out = Output("../out")
+    out = Output(".")
 
     pos = out.x_cen
     vel = out.v_cen
@@ -12,7 +12,7 @@ function main()
     snap = Snapshot(pos, vel, zeros(size(pos, 2)))
     df = LilGuys.to_gaia(snap, p_min=0, SkyFrame=LilGuys.GSR)
 
-    LilGuys.write_fits("sky_orbit.fits", df)
+    LilGuys.write_fits("skyorbit.fits", df)
 
 end
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -xe
+
 #requires two arguments
 if [ $# -ne 1 ]; then
     echo "Usage: ./project.sh <stars_file>"
@@ -11,7 +13,7 @@ idx_f=$(awk -F' = ' '/idx_f/ {gsub(/"/, "", $2); print $2}' ../orbital_propertie
 echo "using idx_f = $idx_f"
 
 
-stars_path="../../../../isolation/1e6/fiducial/ana_stars/"
+stars_path="../../../../isolation/1e6/fiducial/stars_ana/"
 stars_file="$stars_path/$1_stars.hdf5"
 
 if [ ! -f $stars_file ]; then
@@ -24,10 +26,14 @@ snap_path="../out/"
 echo "writing stars"
 project_snapshot.jl $snap_path $stars_file $1.fits -i $idx_f
 
+echo "initial stars"
+project_snapshot.jl $snap_path $stars_file $1_i.fits -i 1
 
-# project initial stars too
-idx_f=1
-distance=81.4656 # take from orbital_properties.toml
+# create time evolution
+#
+echo "making stellar profiles for each time"
 
-echo "writing initial stars"
-project_snapshot.jl $snap_path $stars_file $1_$idx_f.fits -i $idx_f -d $distance
+stellar_profiles.jl .. $stars_file -o $1_stellar_profiles.hdf5
+stellar_profiles_3d.jl .. $stars_file -o $1_stellar_profiles_3d.hdf5
+
+

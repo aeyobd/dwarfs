@@ -15,11 +15,17 @@ begin
 	using Arya
 end
 
+# ╔═╡ b918a965-9e54-42a4-9126-4dd614024ff5
+using StatsBase: median, weights, mad
+
 # ╔═╡ 9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 md"""
 # Tidal Tails
 A detailed analysis of the stars in sculptor
 """
+
+# ╔═╡ 0e9e2085-bf96-4f9d-a758-8af36edf02da
+import DensityEstimators as DE
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
 models_dir = "/arc7/home/dboyea/sculptor"
@@ -28,19 +34,10 @@ models_dir = "/arc7/home/dboyea/sculptor"
 r_b_arcmin = 120
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/orbits/1e6/orbit1/V70_r0.4//"
+model_dir = "$models_dir/orbits/orbit1/1e6_V32_r5.4"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.07_stars.fits"
-
-# ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
-stars = lguys.load_fits(starsfile)
-
-# ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
-obs_cen = stars[1, :]
-
-# ╔═╡ 075ae901-bbbd-4d10-9d91-c393fc86a8e7
-sky_orbit = lguys.load_fits(joinpath(model_dir, "skyorbit.fits"))
+starsfile = "$model_dir/stars/exp2d_rs0.10.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 obs_today_filename = "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
@@ -50,6 +47,25 @@ import TOML
 
 # ╔═╡ e37559b2-229c-4a37-b516-c6cb7c022b71
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
+
+# ╔═╡ 89a34cdf-c724-4c7e-ae42-11da6077feb2
+function add_xi_eta_p!(df)
+	xi_p, eta_p = lguys.to_orbit_coords(df.ra, df.dec, orbit_props["ra0"], orbit_props["dec0"], orbit_props["theta0"])
+
+	df[!, :xi_p] = xi_p
+	df[!, :eta_p] = eta_p
+
+	return df
+end
+
+# ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
+stars = lguys.read_fits(starsfile) |> add_xi_eta_p!
+
+# ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
+obs_cen = stars[1, :]
+
+# ╔═╡ 075ae901-bbbd-4d10-9d91-c393fc86a8e7
+sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_p!
 
 # ╔═╡ 0ba05fdb-f859-4381-b2d0-145aa04f7bbf
 obs_today_file = TOML.parsefile(obs_today_filename)
@@ -83,7 +99,8 @@ function ra_dec_axis(ddeg=5; kwargs...)
 		limits=limits,
 		aspect = 1,
 		xgridvisible=false,
-		ygridvisible=false
+		ygridvisible=false,
+		xreversed=true,
 		
 	)
 
@@ -94,7 +111,7 @@ end
 idx_f = orbit_props["idx_f"]
 
 # ╔═╡ 816b9db9-26c6-4ac8-9a46-82209d2cdc85
-idx_orbit = idx_f - 20: idx_f + 20
+idx_orbit = idx_f - 5: idx_f + 5
 
 # ╔═╡ e9e35643-168e-4e87-a880-6831b46145c7
 let 
@@ -122,53 +139,22 @@ let
 	fig
 end
 
+# ╔═╡ 2c9e8ad0-bbff-4086-974e-89269868e324
+sky_orbit[idx_f, :].pmra, sky_orbit[idx_f, :].pmdec
+
+# ╔═╡ a89adc86-67a0-453f-b382-96f721f74d39
+diff(sky_orbit.ra)[idx_f], diff(sky_orbit.dec)[idx_f]
+
+# ╔═╡ 9419722f-9c65-45a7-b9c5-c666b22bf70e
+sind(orbit_props["theta0"] ), cosd(orbit_props["theta0"])
+
 # ╔═╡ 12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
 md"""
 # Transform to stream coordinates
 """
 
-# ╔═╡ 6b516488-80d7-4904-9331-6161e5829638
-"""
-Given the slope of an orbit in ddec/dra, calculates a rotated
-sky frame centred on RA, DEC and with the x-axis aligned with the orbit.
-"""
-function to_orbit_coords(ra, dec, ra0, dec0, PA)
-
-	# want to rotate to dec, ra of centre, then rotate 
-
-	α = deg2rad(ra0)
-	δ = deg2rad(dec0)
-	ϖ = deg2rad(90 - PA)
-	Rmat = lguys.Rx_mat(ϖ) * lguys.Ry_mat(δ) * lguys.Rz_mat(-α) 
-
-	coords = lguys.unit_vector(ra, dec)
-	coords =  Rmat * coords
-	ra, dec, _ = lguys.cartesian_to_sky(coords[1, :], coords[2, :], coords[3, :])
-
-	ra .-= 360 * (ra .> 180)
-	
-	ra, dec
-end
-
 # ╔═╡ 8dd15727-d9b0-47b2-a031-d7765ebd3fba
 orbit_props
-
-# ╔═╡ a8a4442e-b180-4ffe-8f91-522e45cac47e
-xi_p, eta_p = to_orbit_coords(stars.ra, stars.dec, orbit_props["ra0"], 
-orbit_props["dec0"], orbit_props["theta0"])
-
-# ╔═╡ 22afcc2d-95d1-4999-9b42-0a7c75d054c4
-xi_p_orbit, eta_p_orbit = to_orbit_coords(sky_orbit.ra, sky_orbit.dec, orbit_props["ra0"], 
-orbit_props["dec0"], orbit_props["theta0"])
-
-# ╔═╡ b9998808-90e3-4bdf-a060-5c4c22df745f
-begin
-	sky_orbit[:, :xi_p] = xi_p_orbit
-	sky_orbit[:, :eta_p] = eta_p_orbit
-
-	stars[:, :xi_p] = xi_p
-	stars[:, :eta_p] = eta_p
-end
 
 # ╔═╡ 7688c0ac-be70-470c-9db5-f2ed937e2fb5
 function xi_eta_axis(dx=10, dy=5; kwargs...)
@@ -229,25 +215,16 @@ r_max = 600 # arcminutes
 not = !
 
 # ╔═╡ 82b9c535-4991-486b-9fb7-d98159bfda8f
-filt_cen = stars.r_ell .< 120
+filt_cen = stars.r_ell .< r_centre
 
 # ╔═╡ 2cb76b38-b768-4184-b73c-e8fb350351d8
 filt_leading = not.(filt_cen) .& (stars.xi_p .> 0)
 
-# ╔═╡ 74df5002-cabe-4d00-996d-6e82bcfc36b0
-
-
 # ╔═╡ c0166054-7c1f-474f-a4bc-3b122034e923
 filt_trailing = not.(filt_cen) .& (stars.xi_p .< 0)
 
-# ╔═╡ 76257252-4af8-4d4e-a11e-f9ac90ad873b
-
-
 # ╔═╡ aa157085-0705-44ed-9d65-5626658d71e7
 filt_dist = stars.r_ell .< r_max
-
-# ╔═╡ d4d5c328-b135-4ddb-8d12-f8f13ba1da3d
-scatter(stars.xi_p[filt_dist], stars.eta_p[filt_dist])
 
 # ╔═╡ dd6faf9c-8206-46f8-bd6f-4c2e7a4b3887
 filt_excl = not.(filt_dist)
@@ -291,12 +268,10 @@ let
 	fig
 end
 
-# ╔═╡ 26ca4789-de4b-48c0-9501-ed7bafd45144
-
-
 # ╔═╡ 443ac755-70fc-4193-945d-0e98622c5919
 let 
-	fig, ax = ra_dec_axis(2r_centre / 60)
+	fig, ax = ra_dec_axis(r_centre / 60)
+	ax.title = "central stars cut"
 
 	x = stars.ra
 	y = stars.dec
@@ -417,9 +392,6 @@ let
 	fig
 end
 
-# ╔═╡ 1e9117f0-dc0b-446c-a7f3-9e71274089ac
-
-
 # ╔═╡ be0158cf-c322-4147-8f01-8b6a715bc0dc
 let
 		fig = Figure()
@@ -465,9 +437,6 @@ let
 
 	fig
 end
-
-# ╔═╡ fc3a1a85-c317-4b45-b9c4-50d15e0eb9da
-obs_cen.pmra
 
 # ╔═╡ 79dd7e3d-8564-4389-960b-05512b0143c0
 let
@@ -526,7 +495,7 @@ let
 	d = stars.distance
 	x = stars.xi_p
 
-	limits = (-r_max / 60, r_max/60, 70, 100)
+	limits = (-r_max / 60, r_max/60, obs_cen.distance - 20, obs_cen.distance + 20)
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
@@ -548,7 +517,9 @@ let
 	v_rad = stars.pmra
 	x = stars.xi_p
 
-	limits = (-r_max / 60, r_max/60, -0.35, -0.15)
+	dy = 0.1
+
+	limits = (-r_max / 60, r_max/60, obs_cen.pmra - dy, obs_cen.pmra + dy)
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
@@ -564,13 +535,144 @@ let
 	fig
 end
 
+# ╔═╡ f1cb5d80-57a8-43e8-8819-4e1bc134edea
+function weighted_mad(samples::Vector{T}, weights::Vector{T}) where T
+    # Ensure that the number of samples matches the number of weights
+    if length(samples) != length(weights)
+        throw(ArgumentError("Length of samples and weights must be equal."))
+    end
+
+    # Compute the weighted median
+    weighted_med = lguys.quantile(samples, weights, 0.5)
+
+    # Compute the absolute deviations from the weighted median
+    abs_deviations = abs.(samples .- weighted_med)
+
+    # Compute the weighted median of the absolute deviations
+    mad = lguys.quantile(abs_deviations, weights, 0.5)
+
+    return mad
+end
+
+# ╔═╡ 4b0515a9-e55d-4bed-b6d3-0a2f12d0a238
+function binned_median(x, y, bins; w)
+	idxs = DE.bin_indices(x, bins)
+
+	N =  length(bins) - 1
+	y_m = Vector{Float64}(undef, N)
+	y_l = Vector{Float64}(undef, N)
+	y_h = Vector{Float64}(undef, N)
+	
+	for i in eachindex(y_m)
+		filt = idxs .== i
+		y_m[i] = median(y[filt], weights(w[filt]))
+
+		s = weighted_mad(y[filt], (w[filt]))
+		y_l[i], y_h[i] = lguys.quantile(y[filt], (w[filt]), [0.16, 0.84])
+
+		y_l[i] = y_m[i] - s
+		y_h[i] = y_m[i] + s
+		
+	end
+
+	return y_m, y_l, y_h
+end
+
+# ╔═╡ 90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
+let	
+	w = stars.weights
+	y = stars.pmra
+	x = stars.xi_p
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+	)
+
+	bins = LinRange(-r_max/60, r_max/60, 10)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ a293ddc2-461c-42d6-9d02-7077c66163e5
+let	
+	w = stars.weights
+	y = stars.pmra
+	x = stars.eta_p
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\eta' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+	)
+
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 10)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ 20e6efaa-95ab-4163-a584-f1fea47f02c7
+function hist_eff(x, bins; w)
+	idxs = DE.bin_indices(x, bins)
+
+	N =  length(bins) - 1
+	y = Vector{Float64}(undef, N)
+	
+	for i in eachindex(y)
+		filt = idxs .== i
+
+		z = w[filt]
+		y[i] = sum(z) .^ 2 / sum(z .^ 2)
+	end
+
+	return y
+end
+
+# ╔═╡ 925be0a1-0afa-4b5a-b9c9-003833e80a28
+let	
+	w = stars.weights
+	x = stars.xi_p
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel="effective num of observations",
+		yscale=log10
+	)
+
+	bins = LinRange(-r_max/60, r_max/60, 10)
+
+	
+	scatter!(midpoints(bins), hist_eff(x, bins, w=w))
+
+	fig
+end
+
 # ╔═╡ b79ea320-c652-4850-a617-58bfb0c09be8
 let	
 	mass = stars.weights
-	v_rad = stars.pmdec
+	y = stars.pmdec
 	x = stars.xi_p
+	y_m = median(y, weights(mass))
 
-	limits = (-r_max / 60, r_max/60, 0.2, 0.4)
+	
+	limits = (-r_max / 60, r_max/60, y_m - 0.1, y_m + 0.1)
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
@@ -578,11 +680,59 @@ let
 		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
 	)
 	
-	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=100, limits=limits,
+	h = Arya.hist2d!(ax, x, y, weights=mass, bins=100, limits=limits,
 		colorrange=(1e-15, nothing), colorscale=log10, normalization=:density
 	)
 
 	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
+# ╔═╡ de36ca44-5c34-4673-a75f-e705e5cd83a8
+let	
+	w = stars.weights
+	y = stars.pmdec
+	x = stars.xi_p
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+	)
+
+	bins = LinRange(-r_max/60, r_max/60, 10)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ d3d1e03d-d99a-4f79-818d-5bdc5b4a005a
+let	
+	w = stars.weights
+	y = stars.pmdec
+	x = stars.eta_p
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\eta' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+	)
+
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 10)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
 	fig
 end
 
@@ -616,7 +766,7 @@ let
 	)
 	
 	scatter!(stars.eta_p, stars.distance, alpha=0.1)
-	scatter!(eta_p[filt_dist], stars.distance[filt_dist], alpha=0.1)
+	scatter!(stars.eta_p[filt_dist], stars.distance[filt_dist], alpha=0.1)
 
 	fig
 end
@@ -670,8 +820,9 @@ The orbit in the rotated coordinate system. We expect the orbit to be ~ a horizo
 let
 	fig, ax = xi_eta_axis()
 
-	scatter!(xi_p, eta_p)
-	p = scatter!(xi_p_orbit[idx_orbit], eta_p_orbit[idx_orbit], color=idx_orbit)
+	scatter!(stars.xi_p, stars.eta_p)
+	p = lines!(sky_orbit.xi_p[idx_orbit], sky_orbit.eta_p[idx_orbit], 
+		color=idx_orbit, linewidth=4)
 
 	Colorbar(fig[1, 2], p, label="time / Gyr")
 	fig
@@ -680,12 +831,15 @@ end
 # ╔═╡ Cell order:
 # ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 # ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
+# ╠═0e9e2085-bf96-4f9d-a758-8af36edf02da
+# ╠═b918a965-9e54-42a4-9126-4dd614024ff5
 # ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
 # ╠═82e8f2e4-d3ea-43c5-8813-aaebbca71cda
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
 # ╠═6c76cfae-928b-47b3-babe-b0b9a5d68e65
+# ╠═89a34cdf-c724-4c7e-ae42-11da6077feb2
 # ╠═075ae901-bbbd-4d10-9d91-c393fc86a8e7
 # ╠═a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 # ╠═c4008b83-b61b-4baa-9fd5-9cced2dc6be8
@@ -698,24 +852,20 @@ end
 # ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
 # ╠═e9e35643-168e-4e87-a880-6831b46145c7
 # ╠═816b9db9-26c6-4ac8-9a46-82209d2cdc85
+# ╠═2c9e8ad0-bbff-4086-974e-89269868e324
+# ╠═a89adc86-67a0-453f-b382-96f721f74d39
+# ╠═9419722f-9c65-45a7-b9c5-c666b22bf70e
 # ╟─12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
-# ╠═6b516488-80d7-4904-9331-6161e5829638
 # ╠═8dd15727-d9b0-47b2-a031-d7765ebd3fba
-# ╠═a8a4442e-b180-4ffe-8f91-522e45cac47e
-# ╠═22afcc2d-95d1-4999-9b42-0a7c75d054c4
-# ╠═b9998808-90e3-4bdf-a060-5c4c22df745f
 # ╠═7688c0ac-be70-470c-9db5-f2ed937e2fb5
 # ╠═d1564bf3-a3c4-410b-b61b-69ac56b618e5
 # ╠═49705acd-d623-4860-a5e7-759f112553ab
 # ╠═9241f6a2-d829-4370-a497-35f6fb3358dd
 # ╠═b09e9622-b522-4308-ad95-c939ed0a5315
 # ╠═95b7627e-c17a-4be6-ac66-c3212a8feb23
-# ╠═d4d5c328-b135-4ddb-8d12-f8f13ba1da3d
 # ╠═82b9c535-4991-486b-9fb7-d98159bfda8f
 # ╠═2cb76b38-b768-4184-b73c-e8fb350351d8
-# ╠═74df5002-cabe-4d00-996d-6e82bcfc36b0
 # ╠═c0166054-7c1f-474f-a4bc-3b122034e923
-# ╠═76257252-4af8-4d4e-a11e-f9ac90ad873b
 # ╠═aa157085-0705-44ed-9d65-5626658d71e7
 # ╠═dd6faf9c-8206-46f8-bd6f-4c2e7a4b3887
 # ╠═d240246d-f79a-4f95-a5b9-b355e7bc092f
@@ -723,23 +873,28 @@ end
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
 # ╟─c57edba1-09f9-4fe9-bc73-5746884ee7c2
 # ╟─119040e2-ef45-4fc2-809d-aec333e276d0
-# ╠═26ca4789-de4b-48c0-9501-ed7bafd45144
-# ╠═443ac755-70fc-4193-945d-0e98622c5919
+# ╟─443ac755-70fc-4193-945d-0e98622c5919
 # ╟─1d35a894-1eca-4ee0-9d1a-6ac4704b912c
 # ╠═6b0a0ea3-f6f7-4cee-be11-bce6872ab870
 # ╠═54205139-3c7b-4beb-b9cb-c87b272df58a
 # ╠═19bdc540-63a8-46ad-8d6f-a425d64cdd81
 # ╠═e098260a-718a-4f43-b12c-cab0a1302b90
-# ╠═1e9117f0-dc0b-446c-a7f3-9e71274089ac
 # ╠═be0158cf-c322-4147-8f01-8b6a715bc0dc
 # ╠═5eb22695-57c4-4ebf-b412-588f5e366bf5
-# ╠═fc3a1a85-c317-4b45-b9c4-50d15e0eb9da
 # ╠═79dd7e3d-8564-4389-960b-05512b0143c0
 # ╠═d4d50209-e9a8-40dc-9f45-4e8000f70b39
 # ╠═92b761ba-dc5d-4b99-9462-2c9b6faf680d
 # ╠═f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
-# ╠═302b3ac4-94cc-44d9-a5e6-314460e76a9f
+# ╟─302b3ac4-94cc-44d9-a5e6-314460e76a9f
+# ╠═90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
+# ╠═a293ddc2-461c-42d6-9d02-7077c66163e5
+# ╠═925be0a1-0afa-4b5a-b9c9-003833e80a28
+# ╠═f1cb5d80-57a8-43e8-8819-4e1bc134edea
+# ╠═4b0515a9-e55d-4bed-b6d3-0a2f12d0a238
+# ╠═20e6efaa-95ab-4163-a584-f1fea47f02c7
 # ╠═b79ea320-c652-4850-a617-58bfb0c09be8
+# ╠═de36ca44-5c34-4673-a75f-e705e5cd83a8
+# ╠═d3d1e03d-d99a-4f79-818d-5bdc5b4a005a
 # ╟─ae9d8d21-1269-4053-89a3-3a8287a4ca70
 # ╟─4c8b9b51-5e72-42a7-a919-ca2c2d1c5294
 # ╟─7178c98a-15d1-4f10-9850-2079a6fdaa27

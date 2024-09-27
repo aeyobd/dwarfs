@@ -25,10 +25,10 @@ LP = LilGuys.Plots
 import DensityEstimators as DE
 
 # ╔═╡ 879566d4-c24c-415a-9781-4ec0a4413680
-haloname = "/astro/dboyea/sculptor/isolation/1e6/fiducial/stars"
+haloname = "/astro/dboyea/sculptor/isolation/1e6/s0.14/stars"
 
 # ╔═╡ ee946594-16da-4edf-a884-967f8ae9ff53
-snapname = joinpath(haloname, "../out/20")
+snapname = joinpath(haloname, "../out/1")
 
 # ╔═╡ 1455ca37-525e-46bf-9fd5-b99a058db1f3
 md"""
@@ -42,13 +42,13 @@ halo = LilGuys.load_profile(joinpath(haloname, "../halo.toml"))
 snap = Snapshot(snapname)
 
 # ╔═╡ de1519ce-22ae-4f3e-bd50-66b6b891d2c3
-df_emp = LilGuys.load_hdf5_table(haloname * "/distribution_function.hdf5")
+df_emp = LilGuys.read_hdf5_table(haloname * "/distribution_function.hdf5")
 
 # ╔═╡ 617c927a-8204-4a84-8ff9-531fab8b9150
-df_df = LilGuys.load_hdf5_table(haloname * "/../ana_stars/distribution_function.hdf5")
+df_df = LilGuys.read_hdf5_table(haloname * "/../stars/distribution_function.hdf5")
 
 # ╔═╡ 14100a85-74d9-46cf-9f8c-4cba33b9a6b0
-df_E = LilGuys.load_hdf5_table(haloname * "/energies.hdf5")
+df_E = LilGuys.read_hdf5_table(haloname * "/energies.hdf5")
 
 # ╔═╡ 2a025f1a-ac58-4ec6-8066-069030b0a7f3
 md"""

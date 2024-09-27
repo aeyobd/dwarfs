@@ -1,17 +1,17 @@
 outputFile	survey	#don't fiddle
 outputDir	/arc7/home/dboyea/dwarfs/notebooks	#where to output the survey
 photoCateg	padova	#name of folder where to select magnitude system
-photoSys	LSST	#magnitude system (see ananke-for-wings/GalaxiaData/Isochrones/padova/ for options)
-magcolorNames	r,g-r	#magnitude and color to use for selecting the CMD box
+photoSys	GAIA__DR2	#magnitude system (see ananke-for-wings/GalaxiaData/Isochrones/padova/ for options)
+magcolorNames	G,Gbp-Grp	#magnitude and color to use for selecting the CMD box
 appMagLimits[0]	-1000	#upper and lower limits in apparent mag
-appMagLimits[1]	26.9
+appMagLimits[1]	30
 absMagLimits[0]	-1000	#upper and lower limits in absolute mag
 absMagLimits[1]	1000
 colorLimits[0]	-1000	#upper and lower limits in color defined on line 4
 colorLimits[1]	1000
 geometryOption	0	#don't fiddle
 surveyArea	207.455	#not used
-fSample	1.0	#don't fiddle
+fSample	1	#don't fiddle
 popID	10	#don't fiddle
 warpFlareOn	0	#not used
 longitude	76.273	#not used
@@ -19,13 +19,13 @@ latitude	13.4725	#not used
 starType	0	#don't fiddle
 photoError	0	#not used
 seed	17052	#change if you want a different random sample
-r_max	100	#max distance from galactic center to include
+r_max	1000	#max distance from galactic center to include
 r_min	0	#min distance from galactic center to include
 nres	64	#nres
 nstart	0	#integer at which to start numbering synthetic stars
-rSun[0]	8.0	#location of survey viewpoint relative to galactic center
-rSun[1]	0.0
-rSun[2]	0.0
+rSun[0]	-8.121973366106948	#location of survey viewpoint relative to galactic center
+rSun[1]	-1.4729444519452402e-11
+rSun[2]	0.020800000030482345
 vSun[0]	12.9	#velocity of survey viewpoint relative to galactic center (not used)
 vSun[1]	245.6
 vSun[2]	7.78

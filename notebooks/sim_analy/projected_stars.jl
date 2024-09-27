@@ -44,7 +44,7 @@ models_dir = "/arc7/home/dboyea/sculptor"
 model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4//"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "king_rs0.15.fits"
+starsname = "exp2d_ananke.fits"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -66,7 +66,7 @@ md"""
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
-stars = lguys.load_fits(joinpath(model_dir, "stars", starsname))
+stars = lguys.read_fits(joinpath(model_dir, "stars", starsname))
 
 # ╔═╡ 2612e3a2-6e6e-494e-b140-720dd2db6ec2
 obs_today_file = TOML.parsefile(obs_today_filename)
@@ -93,10 +93,17 @@ obs_today_err = lguys.ICRS(;
 )
 
 # ╔═╡ 240077b7-dc20-4cfa-9ada-d3aedcf36a75
-sky_orbit = lguys.load_fits(joinpath(model_dir, "stars", "sky_orbit.fits"))
+sky_orbit = lguys.read_fits(joinpath(model_dir, "sky_orbit.fits"))
 
 # ╔═╡ 9b5e75e7-171d-40e9-9148-718bb498c56d
 idx_f = orbit_props["idx_f"]
+
+# ╔═╡ 8c8a3bad-3f8c-4bf3-8892-ee6b930b3f97
+if "r_ell" ∉ names(stars) 
+	ra0, dec0 = lguys.spherical_mean(stars.ra, stars.dec)
+	stars[:, :xi], stars[:, :eta] = lguys.to_tangent(stars.ra, stars.dec, ra0, dec0)
+	stars[!, :r_ell] = @. sqrt(stars.xi^2 + stars.eta^2)
+end
 
 # ╔═╡ 638b644f-a1e2-4d7f-a3b7-2d543d556729
 md"""
@@ -110,14 +117,14 @@ sort(stars.r_ell / 60)
 let
 	fig, ax = FigAxis(aspect=1,
 		limits=(-2, 2, -2, 2),
-		xlabel=L"\xi",
-		ylabel=L"\eta",
+		xlabel=L"$\xi$ / degree",
+		ylabel=L"$\eta$ / degree",
 		xgridvisible=false,
 		ygridvisible=false
 	)
 	
 	scatter!(stars.xi, stars.eta, 
-		alpha=0.1, color=:black, markersize=3)
+		alpha=1, color=:black, markersize=1)
 	fig
 end
 
@@ -235,6 +242,23 @@ let
 	Colorbar(fig[1, 2], h,
 		label="stellar density"
 	)
+	fig
+end
+
+# ╔═╡ 7b4284a3-65bb-4338-ac9c-5ffd51ca8e80
+let
+	dr = 3
+	fig, ax = xi_eta_axis(dr, dr)
+
+	bins = LinRange(-dr, dr, 100)
+
+	h = Arya.histogram2d(stars.xi, stars.eta, bins, weights=stars.weights)
+
+	p = heatmap!(h.xbins, h.ybins, h.values, 
+		colorscale=log10, colorrange=(1e-5*maximum(h.values), maximum(h.values)))
+
+	Colorbar(fig[1, 2], p)
+
 	fig
 end
 
@@ -646,13 +670,13 @@ nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 maximum(stars.r_ell[nan_filt])
 
 # ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
-prof = lguys.calc_properties(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=30)
+prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=30)
 
 # ╔═╡ 63ec3cae-09e2-469f-a7fa-15c2af40c517
 DensityEstimators.histogram(stars.r_ell[nan_filt])
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
-prof_expected = lguys.ObsProfile("/astro/dboyea/dwarfs/notebooks/density_fits/sculptor/fiducial_sample_profile.toml")
+prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/notebooks/density_fits/sculptor/fiducial_sample_profile.toml")
 
 # ╔═╡ b5fd1bcd-b554-48d3-8472-024cb0bd0792
 lguys.GalactocentricFrame().d
@@ -736,6 +760,7 @@ end
 # ╠═2612e3a2-6e6e-494e-b140-720dd2db6ec2
 # ╠═240077b7-dc20-4cfa-9ada-d3aedcf36a75
 # ╠═9b5e75e7-171d-40e9-9148-718bb498c56d
+# ╠═8c8a3bad-3f8c-4bf3-8892-ee6b930b3f97
 # ╟─638b644f-a1e2-4d7f-a3b7-2d543d556729
 # ╠═9fed63d6-c139-4d28-b00c-37dc1b8dc004
 # ╠═3655adc4-44a7-4746-9ea9-036f2cac43f3
@@ -746,6 +771,7 @@ end
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
 # ╠═33a75908-3d98-4006-a8ef-833d9a161b01
 # ╠═9a5e143b-2295-4db9-a945-642fd6adeef0
+# ╠═7b4284a3-65bb-4338-ac9c-5ffd51ca8e80
 # ╠═edf68b42-4fe9-4e14-b7ed-739e89a1541a
 # ╠═b4778d19-cb91-4f0f-97fa-4ef69448f849
 # ╠═e3fdb5b0-acf1-4ee1-bd3f-56fbfd60f646

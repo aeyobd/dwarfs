@@ -348,7 +348,13 @@ ra0 = obs_c_gr.ra[idx_f]
 dec0 = obs_c_gr.dec[idx_f]
 
 # ╔═╡ 661ca87c-c8da-49b1-b8a3-72c81050590b
-θ0 = 90 - atand(obs_c_gr.pmdec[idx_f], obs_c_gr.pmra[idx_f])
+θ0 = atand(obs_c_gr.pmra[idx_f], obs_c_gr.pmdec[idx_f])
+
+# ╔═╡ 77aa1d73-0c90-4f6c-9383-99e9e9f0379a
+sind(θ0), cosd(θ0)
+
+# ╔═╡ 2318b289-d6c4-44bf-b2ff-36f448faf97b
+obs_c_gr.pmra[idx_f], obs_c_gr.pmdec[idx_f]
 
 # ╔═╡ afdb058a-ebbd-4f07-b0d8-a85bb1070737
 90 - atand(0, 1)
@@ -494,6 +500,8 @@ LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrit
 # ╠═66435478-0619-47aa-a659-c06089951f72
 # ╠═78271e36-12b7-4edc-bfb0-20ecc597ab20
 # ╠═661ca87c-c8da-49b1-b8a3-72c81050590b
+# ╠═77aa1d73-0c90-4f6c-9383-99e9e9f0379a
+# ╠═2318b289-d6c4-44bf-b2ff-36f448faf97b
 # ╠═afdb058a-ebbd-4f07-b0d8-a85bb1070737
 # ╠═31a11704-1dad-4007-b704-9312b81a5bad
 # ╠═bc1a33f4-cf2e-44a6-a20b-1344f47e75c6

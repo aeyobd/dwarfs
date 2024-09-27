@@ -41,7 +41,7 @@ models_dir = "/arc7/home/dboyea/sculptor"
 model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "fiducial/stars/exp2d_rs0.13"
+starsname = "fiducial/stars/king_rs0.10"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 r_scale = 1
@@ -91,7 +91,7 @@ params = TOML.parsefile(paramsfile)
 obs_today_file = TOML.parsefile(obs_today_filename)
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
-df_probs = lguys.load_hdf5_table(starsfile)
+df_probs = lguys.read_hdf5_table(starsfile)
 
 # ╔═╡ e76a6fa2-c020-48bf-b065-bc7ca51ecd98
 p_idx = df_probs.index; probabilities = df_probs.probability

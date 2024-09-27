@@ -3,7 +3,7 @@
 directory="./"
 extension=".fits"
 new_ext="_profile.toml"
-scriptname="calc_2d_density.jl"
+scriptname="stellar_profile.jl"
 
 for file in "$directory"/*"$extension"; do
     filename=$(basename "$file")
@@ -13,7 +13,7 @@ for file in "$directory"/*"$extension"; do
     if [[ ! -f "$new_file" || "$file" -nt "$new_file" ]]; then
         echo "Processing $filename"
         
-        "$scriptname" -s "$file" "$new_file"
+        "$scriptname" -s "$file" "$new_file" --bin-method equal-number
     else
         echo "Skipping $filename"
     fi

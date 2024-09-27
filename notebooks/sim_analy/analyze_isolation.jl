@@ -70,7 +70,7 @@ figure_dir = joinpath(name, "figures/")
 mkpath(figure_dir)
 
 # ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-profs = LilGuys.Profiles3D(joinpath(name, "out/profiles.hdf5"))
+profs = LilGuys.read_structs_from_hdf5(joinpath(name, "out/profiles.hdf5"), LilGuys.MassProfile3D)
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -332,7 +332,7 @@ function find_radii_fracs(out, x_cen; skip=10)
 	Ms = Vector[]
 	rs_s = Vector[]
 
-	percens = [0.1, 1, 3, 10, 50, 90, 97]
+	percens = [0.0001, 0.001, 0.01, 0.1, 1, 3, 10, 50, 90, 97]
 	
 	for i in 1:skip:length(out)
 		r = lguys.calc_r(out[i])
@@ -348,7 +348,7 @@ function find_radii_fracs(out, x_cen; skip=10)
 end
 
 # ╔═╡ 34244a2e-9501-451c-bd77-bebfebde2a78
-percens, rs, rs_s = find_radii_fracs(out, out.x_cen, skip=skip)
+percens, rs, rs_s = find_radii_fracs(out, out.x_cen, skip=1)
 
 # ╔═╡ ed206b2b-7ee6-4b77-a5bf-bd3dcc3f976f
 # TODO: Add these calculations to the profiles3D
@@ -364,7 +364,7 @@ let
 	for i in eachindex(percens)
 		label = "$(percens[i]) "
 		y = log10.(rs[i, :])
-		lines!(times[1:skip:end], y, 				
+		scatterlines!(times[1:1:end], y, 				
 			label=label, color=i, colorrange=(1, length(percens))
 		)
 	end
