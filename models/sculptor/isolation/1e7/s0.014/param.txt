@@ -11,13 +11,13 @@ ICFormat                    3       # use HDF5
 SnapFormat                  3 
 
 #---Mem & CPU limits
-TimeLimitCPU                10700   # TUNE to run characteristics
+TimeLimitCPU                60000   # TUNE to run characteristics
 CpuTimeBetRestartFile        7200    # TUNE 
 MaxMemSize                  2400    # TUNE to system (MB)
 
 #---Time
 TimeBegin                   0
-TimeMax	                    50      # CHANGE
+TimeMax	                    1176      # CHANGE
 
 #---Output frequency
 OutputListOn                0

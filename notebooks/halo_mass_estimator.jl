@@ -510,6 +510,9 @@ samples.Ms * 1e10
 # ╔═╡ 9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
 lc_err = 0.01
 
+# ╔═╡ ccaad684-577d-4160-9a5d-d03f588b8981
+0.04/0.15
+
 # ╔═╡ 7d1ba57d-4332-4d6e-872b-42925c14ecfb
 c_mean = [h.c for h in halo_mean]
 
@@ -560,8 +563,20 @@ begin
 	# fiducial is 31.3
 	r_max_in = 5.98
 
-	V_max_in
+	V_max_in * V2KMS
 end
+
+# ╔═╡ afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
+31 / V2KMS
+
+# ╔═╡ a0be8f75-a69b-447c-b616-442cf423fffd
+LilGuys.Ludlow.solve_rmax.(31 / V2KMS, 0.2)
+
+# ╔═╡ 6c50c1c9-13e0-4837-af21-f4d5343af609
+LilGuys.Ludlow.solve_rmax.(47 / V2KMS, 0.2)
+
+# ╔═╡ 632a9a6f-6cd3-4e8d-a3b5-10c36dd92ff1
+5.935 - 1.55
 
 # ╔═╡ 5e71b022-bd95-4c3c-8930-51100fb9ab1c
 r_max_exp = solve_rmax(V_max_in, 0)
@@ -620,7 +635,7 @@ let
 	y = samples.Ms
 	k = kde([x y])
 
-	c = contour!(k, colormap=:bluesgreens)
+	c = contour!(k)
 	
 	
 	lines!(v_1 * V2KMS, M_s_from_vel.(v_1))
@@ -759,6 +774,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
 # ╠═4e1290b5-171e-4715-a87b-28a2cfcb4325
 # ╠═9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
+# ╠═ccaad684-577d-4160-9a5d-d03f588b8981
 # ╠═7d1ba57d-4332-4d6e-872b-42925c14ecfb
 # ╠═d2616939-fba8-42ff-921a-8b0bcaf7acb9
 # ╠═4c0c93ad-5471-45d4-b44a-2d15a782491b
@@ -769,7 +785,11 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
 # ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
+# ╠═afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
 # ╠═f335d286-04d3-4248-b9bd-4bb6d8e82e33
+# ╠═a0be8f75-a69b-447c-b616-442cf423fffd
+# ╠═6c50c1c9-13e0-4837-af21-f4d5343af609
+# ╠═632a9a6f-6cd3-4e8d-a3b5-10c36dd92ff1
 # ╠═b5a53e42-ef26-47b0-82f9-d404a4d3a544
 # ╠═5e71b022-bd95-4c3c-8930-51100fb9ab1c
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455

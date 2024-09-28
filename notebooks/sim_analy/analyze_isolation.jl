@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e6/fiducial"
+name = "/arc7/home/dboyea/sculptor/isolation/1e7/s0.014"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -87,7 +87,7 @@ let
 
 
 	for i in eachindex(snaps)
-		lines!(profs[i].log_r, profs[i].v_circ * V2KMS, label="snapshot $(idxs[i])" )
+		lines!(profs[i].second.log_r, profs[i].second.v_circ * V2KMS, label="snapshot $(profs[i].first)" )
 	end
 
 
@@ -125,9 +125,6 @@ function plot_ρ_dm!(snap; N=100, kwargs...)
 	lines!(log10.(lguys.midpoints(r)), log10.(ρ); kwargs...)
 end
 
-# ╔═╡ 2edbc22e-1432-441a-9fba-ef256321fe25
-
-
 # ╔═╡ 264aedc1-b624-475e-af28-1d31b533839d
 let 
 	fig = Figure()
@@ -135,8 +132,8 @@ let
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
 	limits=(-2.5, 4, -20, 1))
 
-	for i in idxs
-		lines!(profs[i].log_r, log10.(profs[i].rho), label="snapshot $(profs.snapshot_index[i])")
+	for i in eachindex(profs)
+		lines!(profs[i].second.log_r, log10.(profs[i].second.rho), label="snapshot $(profs[i].first)")
 	end
 
 	log_r = LinRange(-2, 4, 1000)
@@ -209,36 +206,6 @@ md"""
 # Time variation
 """
 
-# ╔═╡ 8e87001c-4bc0-4580-a0b4-43fe24d92c99
-skip = 30
-
-# ╔═╡ ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
-# ╠═╡ disabled = true
-#=╠═╡
-let 
-	skip = 30
-	idx = 1:skip:length(out)
-
-	Ls = hcat([lguys.calc_L_tot(snap) for snap in out[idx]]...)
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="total angular momentum component"
-	)
-
-	t = out.times[idx] * T2GYR
-	
-	for i in 1:3
-		scatter!(t, Ls[i, :], label=["x", "y", "z"][i])
-		lines!(t, Ls[i, :], label=["x", "y", "z"][i])
-	end
-
-	axislegend(ax)
-	fig
-end
-  ╠═╡ =#
-
 # ╔═╡ d6bc6ccb-15aa-415a-aa48-8a3cff89749e
 md"""
 TODO: Why are these methods slightly different?
@@ -255,15 +222,10 @@ let
 		ylabel="total angular momentum component"
 	)
 
-	idx = profs.snapshot_index
-	t = out.times[idx] * T2GYR
-	Ls = [profs[i].L for i in eachindex(profs.snapshot_index)]
+	t = parse.(Int64, [profs[i].first for i in eachindex(profs)])
+	Ls = [profs[i].second.L for i in eachindex(profs)]
 	Ls = hcat(Ls...)
 
-	ii = 1:3:length(idx)
-	t = t[ii]
-	Ls = Ls[:, ii]
-	
 	for i in 1:3
 		scatter!(t, Ls[i, :], label=["x", "y", "z"][i])
 		lines!(t, Ls[i, :])
@@ -273,15 +235,11 @@ let
 	fig
 end
 
-# ╔═╡ 9de516f4-968f-44e9-b35a-74882a802dc0
-profs.snapshot_index[1]
-
 # ╔═╡ bfa7593c-4915-4e03-83e6-8f790de4c1a5
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="relative change in energy")
-	idx = 1:skip:length(out)
-	Es = [profs[i].E for i in eachindex(profs.snapshot_index)]
+	Es = [profs[i].second.E for i in eachindex(profs)]
 	scatter!((Es ./ Es[1]))
 
 	save(figure_dir * "energy.pdf", fig)
@@ -293,11 +251,9 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="-W / 2T (virial ratio)")
-
-	idx = 1:1skip:length(out)
 	
-	E_kin = [profs[i].K for i in eachindex(profs.profiles)]
-	E_pot = -[profs[i].W for i in eachindex(profs.profiles)]
+	E_kin = [profs[i].second.K for i in eachindex(profs)]
+	E_pot = -[profs[i].second.W for i in eachindex(profs)]
 
 	scatter!(-E_pot ./ 2E_kin)
 	hlines!(1, color=:black)
@@ -306,9 +262,6 @@ let
 
 	fig
 end
-
-# ╔═╡ 449493f7-6d80-407d-ab85-d734203245af
-profs[1].K
 
 # ╔═╡ 91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
 let
@@ -323,51 +276,24 @@ end
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
 lguys.Plots.plot_xyz(out.v_cen * V2KMS, units=" / km s⁻¹")
 
-# ╔═╡ b5c71290-d2de-424d-b026-f1ae15d7d86e
-percentile(lguys.calc_r(out[1]), [5, 10, 50, 90, 95])
-
-# ╔═╡ dc221349-eb61-4ace-8de3-a6c50249aca0
-function find_radii_fracs(out, x_cen; skip=10) 
-	rs = Vector[]
-	Ms = Vector[]
-	rs_s = Vector[]
-
-	percens = [0.0001, 0.001, 0.01, 0.1, 1, 3, 10, 50, 90, 97]
-	
-	for i in 1:skip:length(out)
-		r = lguys.calc_r(out[i])
-		
-		push!(rs, percentile(r, percens))
-	end
-
-	rs = hcat(rs...)
-	rs_s = hcat(rs_s...)
-
-	return percens, rs, rs_s
-
-end
-
-# ╔═╡ 34244a2e-9501-451c-bd77-bebfebde2a78
-percens, rs, rs_s = find_radii_fracs(out, out.x_cen, skip=1)
-
-# ╔═╡ ed206b2b-7ee6-4b77-a5bf-bd3dcc3f976f
-# TODO: Add these calculations to the profiles3D
-
-# ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
-times = out.times * T2GYR
-
-# ╔═╡ f21cfe22-95f3-485d-902b-b022a41548c2
+# ╔═╡ 84f0bac9-5655-4acd-88db-8ba3114f712f
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel="log r containing fraction of DM")
-	
-	for i in eachindex(percens)
-		label = "$(percens[i]) "
-		y = log10.(rs[i, :])
-		scatterlines!(times[1:1:end], y, 				
-			label=label, color=i, colorrange=(1, length(percens))
+
+	qs = profs[1].second.quantiles
+	t = parse.(Int, first.(profs))
+
+	for i in eachindex(qs)
+		label = "$(qs[i]) "
+		y = log10.([prof.second.r_quantile[i] for prof in profs])
+		
+		scatter!(t ./ 20, y, 				
+			label=label, color=i, colorrange=(1, length(qs))
 		)
 	end
+
+
 
 	Legend(fig[1,2], ax, "f = ")
 
@@ -376,8 +302,8 @@ let
 	fig
 end
 
-# ╔═╡ 3b2bb553-0130-4c8a-80ad-6e1f7071a293
-#lguys.Plots.plot_xyz(lguys.extract_vector(out, :positions, 100_000))
+# ╔═╡ 967136d3-8d58-4fdc-9537-aa3a85a92528
+times = out.times * T2GYR
 
 # ╔═╡ 5153654a-567f-4663-9b4a-6f08f9e49d1a
 md"""
@@ -543,7 +469,6 @@ end
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═06cafe6c-98ed-42ce-8b6c-b3e12afab896
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
-# ╠═2edbc22e-1432-441a-9fba-ef256321fe25
 # ╠═264aedc1-b624-475e-af28-1d31b533839d
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
@@ -551,24 +476,15 @@ end
 # ╠═5f1c61f9-50d4-43cb-aa78-fa85314f26b7
 # ╠═1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
 # ╟─fb0dec74-aaab-43a4-9b37-d13634c5dcad
-# ╠═8e87001c-4bc0-4580-a0b4-43fe24d92c99
-# ╠═ebdd5430-c7c1-4fc7-82f5-8acd8ca99070
 # ╠═d6bc6ccb-15aa-415a-aa48-8a3cff89749e
 # ╠═36b741d4-5a47-4d2e-8c93-0b29c53e2a0e
 # ╠═17435494-a855-4295-9ce7-e60d937c2aa8
-# ╠═9de516f4-968f-44e9-b35a-74882a802dc0
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═e3a45a8e-cc52-4e9d-9db3-97109b59fc77
-# ╠═449493f7-6d80-407d-ab85-d734203245af
 # ╠═91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
-# ╠═b5c71290-d2de-424d-b026-f1ae15d7d86e
-# ╠═dc221349-eb61-4ace-8de3-a6c50249aca0
-# ╠═34244a2e-9501-451c-bd77-bebfebde2a78
-# ╠═ed206b2b-7ee6-4b77-a5bf-bd3dcc3f976f
-# ╠═f21cfe22-95f3-485d-902b-b022a41548c2
+# ╠═84f0bac9-5655-4acd-88db-8ba3114f712f
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
-# ╠═3b2bb553-0130-4c8a-80ad-6e1f7071a293
 # ╟─5153654a-567f-4663-9b4a-6f08f9e49d1a
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb

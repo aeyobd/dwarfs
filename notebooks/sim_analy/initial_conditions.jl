@@ -37,52 +37,21 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/dwarfs/agama/halos"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "nfw_1e6"
+name = "initial"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
 # File loading
 """
 
-# ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
-begin 
-	println("loading model from $model_dir")
-	snap = lguys.Snapshot(joinpath(model_dir, "$name.hdf5"))
-
-	snap.x_cen = lguys.centroid(snap.positions)
-	snap.v_cen = lguys.centroid(snap.velocities)
-
-	println(snap.x_cen)
-	println(snap.v_cen)
-
-	snap.positions .-= snap.x_cen
-	snap.velocities .-= snap.v_cen
-
-	snap.x_cen = zeros(3)
-	snap.v_cen = zeros(3)
-	
-	lguys.calc_r(snap)
-end
-
-# ╔═╡ 0ccb9018-d88c-4cec-a8da-625be1289bfe
-snap.x_cen
-
-# ╔═╡ 5ebe92b8-602e-42be-8751-58898b7323b0
-snap.v_cen
-
-# ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
-prof = lguys.calc_profile(snap, filt_bound=false)
-
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 begin 
 	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
 	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
 
-
-	halo = lguys.TruncNFW(v_circ_max=prof.v_circ_max*1.008, r_circ_max=prof.r_circ_max * 1.007, trunc=100)
 	# halo = lguys.TruncNFW(
 	# 	M_s= 0.12144256932359862,
 	# 	r_s=1.118861833686606,
@@ -96,6 +65,33 @@ halo.r_s
 
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 lguys.calc_M(halo, 1)
+
+# ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
+begin 
+	println("loading model from $model_dir")
+	snap = lguys.Snapshot(joinpath(model_dir, "$name.hdf5"))
+	snap.Φs = - ones(length(snap))
+
+	sss = lguys.Centres.SS_State(snap)
+	lguys.calc_centre!(sss, snap)
+
+	snap.x_cen = sss.centre.position
+	snap.v_cen = sss.centre.velocity
+
+	println(snap.x_cen)
+	println(snap.v_cen)
+
+	lguys.calc_r(snap)
+end
+
+# ╔═╡ 0ccb9018-d88c-4cec-a8da-625be1289bfe
+snap.x_cen
+
+# ╔═╡ 5ebe92b8-602e-42be-8751-58898b7323b0
+snap.v_cen
+
+# ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
+prof = lguys.MassProfile3D(snap)
 
 # ╔═╡ 9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 prof.v_circ_max * V2KMS
@@ -111,7 +107,7 @@ let
 	
 	log_r = LinRange(-2, 4, 1000)
 
-	lines!(prof.log_r, prof.v_circ .* V2KMS, label="snapshot")
+	lines!(prof.log_r_bins[2:end], prof.v_circ .* V2KMS, label="snapshot")
 
 	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
 
@@ -126,7 +122,7 @@ let
 	ax2.limits=(nothing, nothing, -0.1, 0.1)
 
 	y = prof.v_circ
-	x = prof.log_r
+	x = prof.log_r_bins[2:end]
 	ye = calc_v_circ.(halo, 10 .^ x)
 
 	res = (y .- ye) ./ ye
@@ -149,7 +145,7 @@ phase space distribution of star particles initial and final snapshot
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="velocity (km/s)" )
-	Arya.hist2d!(ax, log10.(lguys.calc_r(snap.positions)), lguys.calc_r(snap.velocities) * lguys.V2KMS, bins=100)
+	Arya.hist2d!(ax, log10.(lguys.calc_r(snap)), lguys.calc_v(snap) * lguys.V2KMS, bins=100)
 
 
 	fig
@@ -164,10 +160,10 @@ the dark matter distribution of  the snapshot (initial and final)
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+	xlabel = "dx / kpc", ylabel="dy/kpc", title="initial")
 
 	bins = LinRange(-10, 10, 30)
-	Arya.hist2d!(ax, snap.positions[1, :], snap.positions[2, :], bins = bins, colorscale=log10)
+	Arya.hist2d!(ax, snap.positions[1, :] .- snap.x_cen[1], snap.positions[2, :] .- snap.x_cen[2], bins = bins, colorscale=log10)
 
 	fig
 end
@@ -355,7 +351,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═2e293959-9c05-4d9b-b889-a68584ca88f0
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
-# ╟─72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
+# ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0
 # ╟─a35b5f3d-ed9e-48f9-b96f-0a3c00ff2410
 # ╠═b9746093-0f2f-4478-82ba-00911c8fcceb
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9

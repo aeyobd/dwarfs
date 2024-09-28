@@ -578,17 +578,68 @@ function binned_median(x, y, bins; w)
 	return y_m, y_l, y_h
 end
 
-# ╔═╡ 90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
+# ╔═╡ e3ecf2c5-67e9-4571-8743-04c67755a23b
 let	
-	w = stars.weights
-	y = stars.pmra
-	x = stars.xi_p
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.radial_velocity[filt]
+	x = stars.xi_p[filt]
 
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+		ylabel=L"\tilde{v}_\textrm{los} / \textrm{km\,s^{-1}}"
+	)
+
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ 0b88d438-0666-4875-b2f6-66480b652617
+let	
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.distance[filt]
+	x = stars.xi_p[filt]
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel="distance / kpc"
+	)
+
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ 90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
+let	
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.pmra[filt]
+	x = stars.xi_p[filt]
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
 	)
 
 	bins = LinRange(-r_max/60, r_max/60, 10)
@@ -690,9 +741,10 @@ end
 
 # ╔═╡ de36ca44-5c34-4673-a75f-e705e5cd83a8
 let	
-	w = stars.weights
-	y = stars.pmdec
-	x = stars.xi_p
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.pmdec[filt]
+	x = stars.xi_p[filt]
 
 	fig = Figure()
 	ax = Axis(fig[1,1],
@@ -701,7 +753,7 @@ let
 		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
 	)
 
-	bins = LinRange(-r_max/60, r_max/60, 10)
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
 
 	x_m  = midpoints(bins)
 	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
@@ -828,6 +880,40 @@ let
 	fig
 end
 
+# ╔═╡ e013dcb6-ea17-4fd5-af4d-318188600107
+let	
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.eta_p[filt]
+	x = stars.xi_p[filt]
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\eta'",
+		aspect=DataAspect(),
+		limits=(-5, 5, nothing, nothing)
+	)
+
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 10)
+
+	bin_idxs = DE.bin_indices(x, bins)
+
+	N = length(bins) - 1
+
+	for i in 1:N
+		filt = bin_idxs .== i
+		scatter!(x[filt], y[filt], 
+			color=i, colorrange=(1, N), markersize=3)
+	end
+
+	lines!(sky_orbit.xi_p[idx_orbit], sky_orbit.eta_p[idx_orbit], color=COLORS[3])
+
+	vlines!(bins)
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 # ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
@@ -884,7 +970,9 @@ end
 # ╠═79dd7e3d-8564-4389-960b-05512b0143c0
 # ╠═d4d50209-e9a8-40dc-9f45-4e8000f70b39
 # ╠═92b761ba-dc5d-4b99-9462-2c9b6faf680d
+# ╠═e3ecf2c5-67e9-4571-8743-04c67755a23b
 # ╠═f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
+# ╠═0b88d438-0666-4875-b2f6-66480b652617
 # ╟─302b3ac4-94cc-44d9-a5e6-314460e76a9f
 # ╠═90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
 # ╠═a293ddc2-461c-42d6-9d02-7077c66163e5
@@ -904,3 +992,4 @@ end
 # ╟─1b31eabc-3b6f-4d82-9cbb-62f1c53408de
 # ╟─7ec71b3a-4c34-4803-923f-2effeff7cfcf
 # ╟─84e4a23c-c926-4c86-ab11-07a08ef7d1b3
+# ╠═e013dcb6-ea17-4fd5-af4d-318188600107

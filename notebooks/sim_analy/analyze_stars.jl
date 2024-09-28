@@ -38,10 +38,10 @@ md"""
 models_dir = "/arc7/home/dboyea/sculptor"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4"
+model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "fiducial/stars/king_rs0.10"
+starsname = "fiducial/stars/exp2d_rs0.10"
 
 # ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
 r_scale = 1
@@ -570,29 +570,6 @@ md"""
 # Evolutionary Properties
 """
 
-# ╔═╡ 6408828d-d570-4585-8fa8-24661857fb35
-function get_M_h(output::lguys.Output, radius; idxs=(1:10:length(output)))
-	N = length(idxs)
-	M = Vector{Float64}(undef, N)
-	
-	for i in eachindex(idxs)
-		snap = output[idxs[i]]
-		ϵ = lguys.calc_ϵ(snap)
-		filt = ϵ .> 0
-		
-		rs = lguys.calc_r(snap[filt])
-		filt[filt] .= rs .< radius
-
-		ps = snap.weights[filt]
-		M[i] = sum(ps)
-	end
-
-	return M
-end
-
-# ╔═╡ b36b594c-23b4-4683-8a12-3fa1b4c8b0d9
-r_h = 0.1
-
 # ╔═╡ cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
 # ╠═╡ disabled = true
 #=╠═╡
@@ -709,7 +686,5 @@ end
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 # ╠═d53669fc-84a1-4138-8445-5f31c3ec44a5
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
-# ╠═6408828d-d570-4585-8fa8-24661857fb35
-# ╠═b36b594c-23b4-4683-8a12-3fa1b4c8b0d9
 # ╠═cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
 # ╠═d42795d0-bd69-4c2c-be5b-e27e85199ee3

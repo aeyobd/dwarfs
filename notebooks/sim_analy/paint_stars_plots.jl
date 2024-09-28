@@ -14,9 +14,7 @@ end
 
 # ╔═╡ 641946b3-e6f2-4d6d-8777-7698f353eb3d
 begin 
-	import QuadGK: quadgk
 	using CairoMakie
-	using DataFrames, CSV
 	using NaNMath; nm = NaNMath
 	using Arya
 	using HDF5
@@ -50,11 +48,11 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 # input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/ana_stars/"
+dir = "/astro/dboyea/sculptor/isolation/1e6/V31_r3.2/stars/"
 #dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "king_rs0.10")
+paramname = joinpath(dir, "exp2d_rs0.10")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -75,7 +73,7 @@ df_probs = lguys.read_hdf5_table(paramname * "_stars.hdf5")
 
 # ╔═╡ 578c6196-db59-4d5c-96a7-9a8487bbeaae
 begin 
-	snap = lguys.Snapshot(joinpath(dir, "../out/snapshot_118.hdf5"))
+	snap = lguys.Snapshot(joinpath(dir, "../mid.hdf5"))
 	snap.weights = df_probs.probability[snap.index]
 	snap
 end
@@ -359,7 +357,7 @@ let
 
 	bins = DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.03)
 
-	prof = lguys.calc_properties(R, weights=snap.weights, bins=bins)
+	prof = lguys.StellarProfile(R, weights=snap.weights, bins=bins)
 
 	
 	fig = Figure()
@@ -418,7 +416,7 @@ let
 	R = @. 60sqrt(xi^2 + eta^2)
 	bins = 	 DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=20, dx_min=0.03)
 
-	prof = lguys.calc_properties(R, weights=ms, bins=bins, normalization=:central, r_centre=3)
+	prof = lguys.StellarProfile(R, weights=ms, bins=bins, normalization=:central, r_centre=3)
 
 
 	fig = Figure()

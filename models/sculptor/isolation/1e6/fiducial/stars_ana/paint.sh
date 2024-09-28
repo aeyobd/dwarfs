@@ -20,4 +20,4 @@ echo $filename
 set -x
 
 paint_stars.jl distribution_function.hdf5 energies.hdf5 $filename
-stellar_profiles_3d.jl .. ${filename%".toml"}_stars.hdf5
+stellar_profiles_3d.jl .. ${filename%".toml"}_stars.hdf5 --bin-method equal-number

@@ -36,7 +36,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4"
+model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2/"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -76,14 +76,23 @@ snap_i = out[idx_i]
 # ╔═╡ 8d127679-401c-439d-913d-e2020df1c600
 snap_f = out[idx_f]
 
+# ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
+begin 
+	profiles = LilGuys.read_structs_from_hdf5(joinpath(model_dir, "out/profiles.hdf5"), LilGuys.MassProfile3D)
+
+	snap_idx = parse.(Int, first.(profiles))
+
+	profiles = last.(profiles)
+
+	profiles = profiles[sortperm(snap_idx)]
+	snap_idx = sort(snap_idx)
+end
+
 # ╔═╡ 8dae2e01-652b-4afc-b040-dd2ba1c6eedb
-prof_i = LilGuys.calc_profile(snap_i)
+prof_i = profiles[1]
 
 # ╔═╡ b64c1caf-9ee0-4633-bd52-0258557b8847
-prof_f = LilGuys.calc_profile(snap_f)
-
-# ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
-profiles = LilGuys.Profiles3D(joinpath(model_dir, "out/profiles.hdf5"))
+prof_f = profiles[end]
 
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
@@ -117,10 +126,10 @@ md"""
 """
 
 # ╔═╡ e6fc3297-c1b7-40a4-b2bb-98490a42604a
-v_max = [f.v_circ_max for f in profiles.profiles]
+v_max = [f.v_circ_max for f in profiles]
 
 # ╔═╡ d57501a1-4764-4b23-962f-2d37547d7bcc
-r_max = [f.r_circ_max for f in profiles.profiles]
+r_max = [f.r_circ_max for f in profiles]
 
 # ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
 let 
@@ -131,7 +140,7 @@ let
 		yscale=log10,
 		yticks=[1, 10, 20, 30, 40, 50, 60],
 		yminorticks=[1:9; 10:2:60],
-		limits=(nothing, (1, 75)),
+		limits=((-2, 3), (5, 50)),
 		xgridvisible=false,
 		ygridvisible=false
 	)
@@ -156,7 +165,7 @@ let
 	lines!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
 
 		
-	axislegend(ax, position=:rb)
+	axislegend(ax, position=:rt)
 	save(joinpath(figures_dir, "v_circ_profiles.pdf"), fig)
 	fig
 end
@@ -165,7 +174,7 @@ end
 let 
 	i = length(out) - 10
 	snap = out[i]
-	prof = profiles[argmin(abs.(profiles.snapshot_index .- i))]
+	prof = profiles[argmin(abs.(snap_idx .- i))]
 
 	
 	fig = Figure(size=(700, 500))
@@ -223,9 +232,6 @@ md"""
 # Density evolution
 """
 
-# ╔═╡ 6cc4868a-8ef6-4d29-9d7d-f04504d6b157
-snap_i.masses
-
 # ╔═╡ dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 let 
 	fig = Figure()
@@ -235,7 +241,7 @@ let
 	lines!(prof_i.log_r, log10.(prof_i.rho), label="initial")
 	lines!(prof_f.log_r, log10.(prof_f.rho), label="final")
 
-	prof_fap = LilGuys.calc_profile(snap_f, filt_bound=false)
+	prof_fap = LilGuys.MassProfile3D(snap_f, filt_bound=false)
 	
 	lines!(prof_fap.log_r, log10.(prof_fap.rho), label="final (all particles)", color=COLORS[2], linestyle=:dash)
 
@@ -361,7 +367,6 @@ end
 # ╠═c068c177-e879-4b8e-b1af-18690af9b334
 # ╠═245721a6-01aa-43e7-922d-ed5da02207c1
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
-# ╠═6cc4868a-8ef6-4d29-9d7d-f04504d6b157
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 # ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═4801ff80-5761-490a-801a-b263b90d63fd

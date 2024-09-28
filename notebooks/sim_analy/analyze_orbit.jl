@@ -35,7 +35,7 @@ md"""
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V32_r5.4/"
+dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2/"
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
