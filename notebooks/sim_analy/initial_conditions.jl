@@ -37,10 +37,11 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2"
+#model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2"
+model_dir = "/astro/dboyea/dwarfs/agama/halos/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "initial"
+name = "nfw_1e5"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -48,17 +49,7 @@ md"""
 """
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
-begin 
-	#params = TOML.parsefile(joinpath(model_dir, "$name.toml"))	
-	halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
-
-	# halo = lguys.TruncNFW(
-	# 	M_s= 0.12144256932359862,
-	# 	r_s=1.118861833686606,
-	# 	trunc=64,
-	# 	c=26.87054512188574,
-	# )
-end
+halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
 
 # ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
 halo.r_s
@@ -270,7 +261,7 @@ R200 = lguys.calc_R200(halo)
 N200 = sum(lguys.calc_r(snap) .< R200)
 
 # ╔═╡ d841539a-f755-460f-9994-16229aadca6a
-grav_softening = 4R200 / sqrt(N200)
+grav_softening = 4R200 / sqrt(N200) / sqrt(10)
 
 # ╔═╡ 5d5d72d6-8272-40c9-bce8-d7d90c670052
 md"""
@@ -287,12 +278,6 @@ In our case,
 - N200 = $N200
 - so h= $grav_softening kpc
 """
-
-# ╔═╡ ddea90f9-90f5-4624-a292-e7007da4247b
-0.959 * 0.14
-
-# ╔═╡ 98a01aea-7d8b-4978-b8cf-2865d6d04e28
-0.42977 * 0.14
 
 # ╔═╡ db034d78-f647-4382-b5e1-5e4623350d96
 md"""
@@ -367,8 +352,6 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═fddeb921-468b-4f00-b4cb-a6fc4faec555
 # ╠═da55fc43-69f7-4375-b8fc-c61dd606fb24
 # ╠═d841539a-f755-460f-9994-16229aadca6a
-# ╠═ddea90f9-90f5-4624-a292-e7007da4247b
-# ╠═98a01aea-7d8b-4978-b8cf-2865d6d04e28
 # ╟─db034d78-f647-4382-b5e1-5e4623350d96
 # ╠═7032a304-1448-4182-b22b-6083a2efea5d
 # ╠═ac22ac31-f4bf-497b-9971-c98a9900acfb

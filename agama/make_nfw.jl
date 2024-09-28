@@ -8,27 +8,31 @@ agama = pyimport("agama")
 
 
 function get_args()
-    s = ArgParseSettings()
+    s = ArgParseSettings(
+        description="Generate a snapshot of N particles from an NFW profile"
+        )
 
     @add_arg_table s begin
         "output" 
-            help="output file"
-            default = "nfw.hdf5"
-        "-v", "--verbose"
-            help="verbose output"
-            action="store_true"
+            help="output file. If not provided, will be halos/N_nfw.hdf5 where N is the number of particles"
+            default = nothing
         "-N", "--number"
             help="number of particles"
-            arg_type=Float64
-            default=1e4
+            default="1e4"
         "-t", "--cutoff"
-            help="cutoff radius"
+            help="exponential cutoff radius in units of scale radius"
             arg_type=Float64
             default=100
     end
 
     args = parse_args(s)
-    args["number"] = convert(Int, args["number"])
+
+
+    if args["output"] === nothing
+        args["output"] = "halos/nfw_$(args["number"]).hdf5"
+    end
+
+    args["number"] = convert(Int, parse(Float64, args["number"]))
 
     if args["number"] < 1
         throw(ArgumentError("N must be positive"))
@@ -60,7 +64,6 @@ function main()
     posvel, mass = gm.sample(N)
     posvel = pyconvert(Matrix{Float64}, posvel)
     posvel = posvel'
-    println(size(posvel))
 
     pos = posvel[1:3, :]
     vel = posvel[4:6, :]
