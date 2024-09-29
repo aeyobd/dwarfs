@@ -1,4 +1,3 @@
-[TruncNFW]
-v_circ_max = 0.1496
-r_circ_max = 5.4
-trunc=100
+[NFW]
+M_s = 0.29
+r_s = 2.76
