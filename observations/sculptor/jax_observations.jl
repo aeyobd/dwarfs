@@ -24,7 +24,10 @@ using Arya
 
 # ╔═╡ 47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 md"""
-Some qualitative plots to understand the sample.
+# Jensen et al. 2024 sammple
+
+Some plots to understand the (unmodified) J+24 data sample.
+
 """
 
 # ╔═╡ da9ca7a7-18b8-49cb-a041-ab1c667920ff
@@ -39,7 +42,7 @@ begin
 end
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
-all_stars = lguys.load_fits("../../data/j24_sculptor_all.fits")
+all_stars = lguys.read_fits("processed/j24_sculptor_all.fits")
 
 # ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
 cen = lguys.calc_centre2D(all_stars.xi, all_stars.eta, "mean")
@@ -66,31 +69,40 @@ let
 	ax = Axis(fig[1, 1], xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}", aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
 
 
-	scatter!(60members_nospace.xi, 60members_nospace.eta, alpha=1, markersize=3)
-	scatter!(60members.xi, 60members.eta, alpha=1, markersize=3)
+	scatter!(60members_nospace.xi, 60members_nospace.eta, 
+		alpha=1, markersize=3, label="members w/o spatial")
+	scatter!(60members.xi, 60members.eta, alpha=1, markersize=3,
+		label = "members")
 
-
+	Legend(fig[1, 2], ax)
 
 	fig
-
 end
 
 # ╔═╡ 02d19c07-411f-40d6-9ac3-010ebfd4bdfe
 let 
 	dθ = 10
-	f = Figure()
-	ax = Axis(f[1, 1], xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}", aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
+	fig = Figure()
+	ax = Axis(fig[1, 1], 
+		xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}",
+		aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
 	
-	scatter!(60*all_stars.xi, 60*all_stars.eta, color=all_stars.phot_g_mean_mag, colormap=:greys, markersize=3)
+	h = scatter!(60*all_stars.xi, 60*all_stars.eta, color=all_stars.phot_g_mean_mag, 
+		colormap=:greys, markersize=3)
 
-	f
+	Colorbar(fig[1,2], h, label="G mag")
+	fig
 end
 
 # ╔═╡ c54224d3-c528-41bb-bce6-c910fc680b55
-hexbin(all_stars[:, "ra"], all_stars[:, "dec"], bins=300)
+hexbin(all_stars[:, "ra"], all_stars[:, "dec"], bins=300,
+	axis=(; xlabel="ra / degrees", ylabel="dec / degrees", title="allstars")
+)
 
 # ╔═╡ 4f538de6-8827-454f-a97f-8f6c2cd7ea3f
-hexbin(members.ra, members.dec, bins=300)
+hexbin(members.ra, members.dec, bins=300,
+	axis=(; xlabel="ra / degrees", ylabel="dec / degrees", title="members only")
+)
 
 # ╔═╡ 1942cac0-2da8-4bec-80d0-a9302ddc9ea1
 begin 
@@ -110,7 +122,14 @@ end
 let 
 	dθ = 1
 
-	fig, ax, p = heatmap(kde_d.x, kde_d.y, Σ_kde, colormap=:greys, colorscale=x -> asinh(x/1e-1))
+	fig = Figure()
+	ax = Axis(fig[1, 1], 
+		xlabel = "xi / degrees",
+		ylabel = "eta / degrees",
+		aspect = DataAspect()
+	)
+	
+	p = heatmap!(kde_d.x, kde_d.y, Σ_kde, colormap=:greys, colorscale=x -> asinh(x/1e-1))
 	ax.aspect = 1
 	contour!(kde_d.x, kde_d.y, asinh.(Σ_kde ./ 1), levels=10 )
 
@@ -120,7 +139,9 @@ let
 	filt = members.r_ell .> 1.5
 	scatter!(ax, xi[filt], eta[filt], markersize=3, color=Arya.COLORS[3])
 
-	Colorbar(fig[1, 2], p, ticks=[10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0])
+	Colorbar(fig[1, 2], p, ticks=[10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0],
+		label = "asinh density / 0.1"
+	)
 	fig
 end
 
@@ -161,9 +182,10 @@ let
 	title = "sculptor members")
 
 	
-	scatter!(members.bp_rp, members.phot_g_mean_mag, color=log10.(members.r_ell), 
+	h = scatter!(members.bp_rp, members.phot_g_mean_mag, color=log10.(members.r_ell), 
 	)
 
+	Colorbar(f[1, 2], h, label="log10 ell radius / rh")
 	f
 end
 
@@ -240,6 +262,7 @@ let
 	ax = Axis(f[1,1], 
 		xlabel = L"\xi / \textrm{degree}",
 		ylabel = L"\eta / \textrm{degree}",
+		title = "the very centre",
 		limits = (-dθ, dθ, -dθ, dθ)
 	)
 	scatter!(ax, all_stars.xi, all_stars.eta)
@@ -415,7 +438,7 @@ let
 	dc = 1
 	df = members_nospace
 	w = 1 ./ df.pmra_error .^ 2
-	pmra_mean = lguys.mean(df.pmra, lguys.weights(w))
+	pmra_mean = lguys.mean(df.pmra, w)
 		
 	k1 = histogram2d(df.xi, df.eta, bins, weights=df.pmra .* w)
 	k2 = histogram2d(df.xi, df.eta, bins, weights=w)
@@ -446,7 +469,7 @@ let
 	dc = 1
 	df = members_nospace
 	w = 1 ./ df.pmdec_error .^ 2
-	pmdec_mean = lguys.mean(df.pmdec, lguys.weights(w))
+	pmdec_mean = lguys.mean(df.pmdec, w)
 	@info pmdec_mean
 		
 	k1 = histogram2d(df.xi, df.eta, bins, weights=df.pmdec .* w)
@@ -476,7 +499,7 @@ let
 	dc = 1
 	df = members_nospace
 	w = 1 ./ df.pmra_error .^ 2
-	pmdec_mean = lguys.mean(df.pmra, lguys.weights(w))
+	pmdec_mean = lguys.mean(df.pmra, w)
 	@info pmdec_mean
 		
 	k1 = histogram2d(df.xi, df.eta, bins, weights=w)
@@ -491,7 +514,7 @@ let
 end
 
 # ╔═╡ Cell order:
-# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═da9ca7a7-18b8-49cb-a041-ab1c667920ff
 # ╠═489f6d21-9e9a-4b1e-b05c-c63a44ba1951

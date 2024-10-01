@@ -22,7 +22,10 @@ end
 
 # ╔═╡ 3a360b8d-e830-47ab-bfbc-ce147b15d09d
 md"""
-This notebook uses Agama to compute some example orbits in a milky way potential. This is useful for rapidly development and exploration of orbits.
+# Orbits jl
+
+This notebook uses Agama to compute some example orbits in a milky way potential. The notebook is somewhat interactive which is nice for exploring orbit families and such
+
 """
 
 # ╔═╡ a2467e1c-8976-4812-9c23-6940c5ebb9c7

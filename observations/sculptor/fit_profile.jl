@@ -42,9 +42,8 @@ We expect data as a
 
 # ╔═╡ d0992dc9-08f1-487a-a96a-90996f29cefd
 begin 
-	name = "../test_sky_recon" #
-	name = "sculptor/fiducial"
-	profile_name = name *  "_sample_profile.toml" 
+	name = "processed"
+	profile_name = "processed/fiducial_sample_profile.toml" 
 end
 
 # ╔═╡ 4f1a0765-4462-41a3-84e1-ec01caaae4e1
@@ -300,7 +299,7 @@ let
 	
 	fig = plot_Σ_fit_res(profile, pred, res)
 
-	save(fig_dir * "/king_profile_fit.pdf", fig, verbose=true)
+	#save(fig_dir * "/king_profile_fit.pdf", fig, verbose=true)
 
 	fig
 end

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -12,7 +12,7 @@ begin
 	using DataFrames
 	using Measurements
 	
-	using GLMakie
+	using CairoMakie
 	import TOML
 		
 	import LilGuys as lguys
@@ -21,11 +21,12 @@ begin
 end
 
 # ╔═╡ 91d87251-c9c6-467f-9cae-4f30bfea8acc
-include("filter_utils.jl")
+include("../../utils/gaia_filters.jl")
 
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
-See filter notebook as well. This notebook is used to understand the background density
+See filter notebook as well. This notebook is used to understand the background density using the columns in the J+24 sample.
+Also compares the simple method to the J+24 method of filtering.
 """
 
 # ╔═╡ 47b0d3e6-a79b-4f49-b847-e708e5d6aabf
@@ -42,15 +43,15 @@ md"""
 """
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-param_file = "sculptor/fiducial.toml"
+param_file = "processed/fiducial.toml"
 
 # ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
-params = DensityParams(read_file(param_file))
+params = GaiaFilterParams(read_paramfile(param_file))
 
 # ╔═╡ a86b5875-c30a-446a-8897-763b07f76c68
 begin 
-	simple_file = "sculptor/simple.toml"
-	params_simple = DensityParams(read_file(simple_file))
+	simple_file = "processed/simple.toml"
+	params_simple = GaiaFilterParams(read_paramfile(simple_file))
 end
 
 # ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
@@ -88,7 +89,7 @@ function filter_r_ell(all_stars_unfiltered, params)
 end
 
 # ╔═╡ 9371bcb3-0e26-4162-8a40-dc1bf1dacdda
-all_stars_unfiltered = load_stars(params.filename, params)
+all_stars_unfiltered = load_stars("processed/" * params.filename, params)
 
 # ╔═╡ 0307085b-816f-469f-8811-60af02cfcb67
 # ╠═╡ disabled = true
@@ -105,7 +106,7 @@ params.filename
 # ╔═╡ 6c092147-c295-4ee5-9ee3-6e04c2aaaf98
 begin 
 
-	gaia_all = filter_r_ell(load_stars("data/sculptor_gaia_4deg.fits", params), params)
+	gaia_all = filter_r_ell(load_stars("data/gaia_4deg_cen.fits", params), params)
 	
 end
 
@@ -163,36 +164,42 @@ md"""
 # Membership plots
 """
 
-# ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
-function plot_tangent(all_stars, members=nothing) 
-	fig = Figure()
-
-	ax = plot_all_tangent!(fig[1,1], all_stars, markersize=2,
-        color=(:black, 0.2))
-
-	if !isnothing(members )
-		plot_all_tangent!(ax, members, markersize=2, color=red)
-	end
-	
-	ax.xgridvisible = false
-	ax.ygridvisible = false
-	
-	return fig
-end
-
 # ╔═╡ d7d81ed8-0427-4ee5-8213-320ce5a6711f
-function plot_tangent!(grid, all_stars, members=nothing)
-	ax = plot_all_tangent!(grid, all_stars, markersize=2,
+function plot_tangent!(grid, all_stars, members=nothing; markersize=2, kwargs...)
+	ax = Axis(grid, 
+		xlabel = "xi / degrees",
+		ylabel = "eta / degrees",
+	)
+		
+	scatter!(ax, all_stars.xi, all_stars.eta, markersize=2,
         color=(:black, 0.2))
 
 	if !isnothing(members )
-		plot_all_tangent!(ax, members, markersize=2, color=red)
+		scatter!(ax, members.xi, members.eta; 
+		markersize=markersize, color=red, kwargs...)
 	end
 	
 	ax.xgridvisible = false
 	ax.ygridvisible = false
 	
 	return ax
+end
+
+# ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
+function plot_tangent(all_stars, members=nothing; markersize=2, kwargs...) 
+	fig = Figure()
+
+	ax = plot_tangent!(fig[1,1], all_stars, markersize=2,
+        color=(:black, 0.2))
+
+	if !isnothing(members )
+		scatter!(ax, members.xi, members.eta; markersize=markersize, color=red, kwargs...)
+	end
+	
+	ax.xgridvisible = false
+	ax.ygridvisible = false
+	
+	return fig
 end
 
 # ╔═╡ 75701b7d-e1f1-47f2-800e-c07eec01a4ff
@@ -413,13 +420,10 @@ md"""
 # Background density
 """
 
-# ╔═╡ 31096853-9eaa-40e2-90aa-b248df77f73f
-lguys.calc_properties
-
 # ╔═╡ 65a10161-cbeb-49fe-b8d1-075ffe346e43
 function get_density(df)
 	r = df.r_ell
-	props = lguys.calc_properties(r, bins=40, normalization=:none)
+	props = lguys.StellarProfile(r, bins=40, normalization=:none)
 
 	println("stars left ", length(r))
 	println("counts in last bin ", props.counts[end-2: end])
@@ -432,7 +436,7 @@ end
 get_density(all_stars[filt, :])
 
 # ╔═╡ 1fc6160b-17d1-4d98-ad63-d4894c5816c1
-Arya.histogram(randn(100), normalization=:none)
+lguys.histogram(randn(100), normalization=:none)
 
 # ╔═╡ 198ba5a6-9d04-49de-9726-4e1d9be9780f
 value = lguys.value
@@ -636,31 +640,8 @@ let
 	fig
 end
 
-# ╔═╡ bf7aac44-e090-4453-bdb5-7ecca95564f8
-Arya.histogram(randn(100), weights=ones(100), normalization=:none)
-
-# ╔═╡ e033e344-737e-46e8-ab85-5fe33d191f41
-"""
-A simple density calculation 
-"""
-function calc_offset_density(dra, ddec, r_cut; n_sigma_dist=3, dpm=1, cmd_cut=cmd_cut_umi)
-
-	
-	params = DensityParams(params_json, 
-		ra=params_json["ra"] + dra, dec=params_json["dec"] + ddec, PSAT_min=nothing, max_ang_dist=r_cut, ecc=0,
-		dpm=dpm,
-		cmd_cut=cmd_cut, n_sigma_dist=n_sigma_dist
-	)
-
-	_, memb = load_and_filter(params)
-	r = memb.r_ell * 60
-	
-	obs = calc_properties(r)
-	return obs
-end
-
 # ╔═╡ Cell order:
-# ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
+# ╠═48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═91d87251-c9c6-467f-9cae-4f30bfea8acc
@@ -725,7 +706,6 @@ end
 # ╠═13fb3ebc-50c0-43aa-88e9-1a7543e4e202
 # ╠═80f2e2cf-c3b6-4931-b62f-4a2b9659fad5
 # ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
-# ╠═31096853-9eaa-40e2-90aa-b248df77f73f
 # ╠═65a10161-cbeb-49fe-b8d1-075ffe346e43
 # ╠═08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
 # ╠═1fc6160b-17d1-4d98-ad63-d4894c5816c1
@@ -753,5 +733,3 @@ end
 # ╠═ba6ac07c-94f1-4024-8838-9c4d9b1c6cb1
 # ╠═6d69d5d8-2e5b-4bcb-aadf-fb0dac2a49bb
 # ╠═040dab05-b690-4e7b-839d-e65196b1856a
-# ╠═bf7aac44-e090-4453-bdb5-7ecca95564f8
-# ╠═e033e344-737e-46e8-ab85-5fe33d191f41

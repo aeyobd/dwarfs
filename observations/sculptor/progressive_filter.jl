@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -21,7 +21,7 @@ begin
 end
 
 # ╔═╡ 91d87251-c9c6-467f-9cae-4f30bfea8acc
-include("filter_utils.jl")
+include("../../utils/gaia_filters.jl")
 
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
@@ -33,6 +33,9 @@ md"""
  # setup
 """
 
+# ╔═╡ 25066fa5-a811-47e9-8579-5b1e167e2a86
+import DensityEstimators: histogram
+
 # ╔═╡ ff92927e-b078-45fd-9c13-1ce5a009d0bb
 red = COLORS[6];
 
@@ -42,7 +45,7 @@ md"""
 """
 
 # ╔═╡ c15da236-6c47-4144-b17a-a28578ba619a
-galaxy_dir = "sculptor"
+galaxy_dir = "processed"
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 name = "centre"
@@ -51,8 +54,8 @@ name = "centre"
 begin 
 	param_file = joinpath(galaxy_dir, "$name.toml")
 
-	params_json = read_file(param_file)
-	params = DensityParams(params_json)
+	params_json = read_paramfile(param_file)
+	params = GaiaFilterParams(params_json)
 end
 
 # ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
@@ -62,14 +65,7 @@ md"""
 
 # ╔═╡ 2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
 begin
-	all_stars_unfiltered = DataFrame(FITS(joinpath(galaxy_dir, params.filename))[2])
-	xi, eta = lguys.to_tangent(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ra, params.dec)
-	
-	r_ell = 60lguys.calc_r_ell(xi, eta, params.ellipticity, params.PA)
-
-	all_stars_unfiltered[!, :r_ell] = r_ell
-	all_stars_unfiltered[!, :xi] = xi
-	all_stars_unfiltered[!, :eta] = eta
+	all_stars_unfiltered = load_stars(joinpath(galaxy_dir, params.filename), params)
 
 
 end
@@ -93,36 +89,45 @@ md"""
 # Membership plots
 """
 
-# ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
-function plot_tangent(all_stars, members=nothing; markersize=2, kwargs...) 
-	fig = Figure()
-
-	ax = plot_all_tangent!(fig[1,1], all_stars, markersize=2,
-        color=(:black, 0.2))
-
-	if !isnothing(members )
-		plot_all_tangent!(ax, members; markersize=markersize, color=red, kwargs...)
-	end
-	
-	ax.xgridvisible = false
-	ax.ygridvisible = false
-	
-	return fig
-end
+# ╔═╡ 9fd9954c-f670-4b69-b66b-5d392825fd97
+import LilGuys.Plots as LP
 
 # ╔═╡ d7d81ed8-0427-4ee5-8213-320ce5a6711f
 function plot_tangent!(grid, all_stars, members=nothing; markersize=2, kwargs...)
-	ax = plot_all_tangent!(grid, all_stars, markersize=2,
+	ax = Axis(grid, 
+		xlabel = "xi / degrees",
+		ylabel = "eta / degrees",
+	)
+		
+	scatter!(ax, all_stars.xi, all_stars.eta, markersize=2,
         color=(:black, 0.2))
 
 	if !isnothing(members )
-		plot_all_tangent!(ax, members; markersize=markersize, color=red, kwargs...)
+		scatter!(ax, members.xi, members.eta; 
+		markersize=markersize, color=red, kwargs...)
 	end
 	
 	ax.xgridvisible = false
 	ax.ygridvisible = false
 	
 	return ax
+end
+
+# ╔═╡ d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
+function plot_tangent(all_stars, members=nothing; markersize=2, kwargs...) 
+	fig = Figure()
+
+	ax = plot_tangent!(fig[1,1], all_stars, markersize=2,
+        color=(:black, 0.2))
+
+	if !isnothing(members )
+		scatter!(ax, members.xi, members.eta; markersize=markersize, color=red, kwargs...)
+	end
+	
+	ax.xgridvisible = false
+	ax.ygridvisible = false
+	
+	return fig
 end
 
 # ╔═╡ 75701b7d-e1f1-47f2-800e-c07eec01a4ff
@@ -221,22 +226,22 @@ md"""
 """
 
 # ╔═╡ f74f597a-908b-4569-8de8-219abba31afd
-filt_parallax = apply_filter(all_stars, parallax_filter, params.dist, params.dist_err, params.n_sigma_dist)
+filt_parallax = parallax_filter(all_stars, params)
 
 # ╔═╡ eab8e0d4-0a40-48b6-9689-0c102d883a96
-filt_pm = apply_filter(all_stars, pm_filter, params.pmra, params.pmdec, params.dpm, params.n_sigma_pm)
-
-# ╔═╡ c15d2045-f6c2-42d1-947e-fb4b31daeb99
-filt_ruwe = apply_filter(all_stars, max_filter, :ruwe, params.ruwe_max)
-
-# ╔═╡ 6ee77988-5d0b-49db-87cb-a041c1ed4a28
-plot_sample(all_stars, all_stars[filt_pm .& filt_parallax .& filt_ruwe, :]; markersize=5, alpha=0.3)
+filt_pm = pm_filter(all_stars, params)
 
 # ╔═╡ 20fe601c-874c-4a37-b3fa-b229232a0f4f
 params.ruwe_max
 
 # ╔═╡ b0e0a366-8bac-4cf6-8b40-33d517b41e47
-filt_cmd = apply_filter(all_stars, cmd_filter, params.cmd_cut)
+filt_cmd = cmd_filter(all_stars, params)
+
+# ╔═╡ 90c347ff-74fe-4032-93ec-931b181d3829
+filt_ruwe = ruwe_filter(all_stars, params)
+
+# ╔═╡ 6ee77988-5d0b-49db-87cb-a041c1ed4a28
+plot_sample(all_stars, all_stars[filt_pm .& filt_parallax .& filt_ruwe, :]; markersize=5, alpha=0.3)
 
 # ╔═╡ 29dba8f1-b4a6-41da-8323-437447c9d888
 filt = filt_cmd .& filt_pm .& filt_parallax .& filt_ruwe
@@ -270,10 +275,10 @@ let
 	nan_filt = (!).(isnan.(all_stars.ruwe))
 	println(sum( @. filt_ruwe & ! nan_filt))
 	
-	h = Arya.histogram(all_stars.ruwe[nan_filt], normalization=:none)
-	h1 = Arya.histogram(all_stars.ruwe[filt_ruwe .& nan_filt], normalization=:none)
-	lines!(h)
-	lines!(h1)
+	h = histogram(all_stars.ruwe[nan_filt], normalization=:none)
+	h1 = histogram(all_stars.ruwe[filt_ruwe .& nan_filt], normalization=:none)
+	lines!(midpoints(h.bins), h.values)
+	lines!(midpoints(h1.bins), h1.values)
 	vlines!(params.ruwe_max, color=:black)
 	fig
 end
@@ -306,10 +311,12 @@ let
 
 	scatter!(ax, all_stars[filt, :pmra], all_stars[filt, :pmra_error]; 
 		color=red, markersize=2)
-
-	x = [-5, 0, 5]
-	y = abs.(1/params.n_sigma_pm .* x)
-	lines!(x, y)
+	
+	if params.n_sigma_pm !== nothing
+		x = [-5, 0, 5]
+		y = abs.(1/params.n_sigma_pm .* x)
+		lines!(x, y)
+	end
 	
 	fig
 end
@@ -333,9 +340,11 @@ let
 	scatter!(ax, all_stars[filt, :pmdec], all_stars[filt, :pmdec_error]; 
 		color=red, markersize=2)
 
-	x = [-5, 0, 5]
-	y = abs.(1/params.n_sigma_pm .* x)
-	lines!(x, y)
+	if params.n_sigma_pm !== nothing
+		x = [-5, 0, 5]
+		y = abs.(1/params.n_sigma_pm .* x)
+		lines!(x, y)
+	end
 	
 	fig
 end
@@ -362,13 +371,10 @@ md"""
 # Background density
 """
 
-# ╔═╡ 31096853-9eaa-40e2-90aa-b248df77f73f
-lguys.calc_properties
-
 # ╔═╡ 65a10161-cbeb-49fe-b8d1-075ffe346e43
 function get_density(df)
 	r = df.r_ell
-	props = lguys.calc_properties(r, bins=40, normalization=:none)
+	props = lguys.StellarProfile(r, bins=40, normalization=:none)
 
 	println("stars left ", length(r))
 	println("counts in last bin ", props.counts[end-2: end])
@@ -518,6 +524,7 @@ end
 # ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╟─47b0d3e6-a79b-4f49-b847-e708e5d6aabf
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
+# ╠═25066fa5-a811-47e9-8579-5b1e167e2a86
 # ╠═91d87251-c9c6-467f-9cae-4f30bfea8acc
 # ╠═ff92927e-b078-45fd-9c13-1ce5a009d0bb
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c
@@ -532,6 +539,7 @@ end
 # ╠═6c092147-c295-4ee5-9ee3-6e04c2aaaf98
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c
+# ╠═9fd9954c-f670-4b69-b66b-5d392825fd97
 # ╠═d7d81ed8-0427-4ee5-8213-320ce5a6711f
 # ╠═bffe11bd-4233-4a7c-9411-0dfb1ac79077
 # ╠═75701b7d-e1f1-47f2-800e-c07eec01a4ff
@@ -548,9 +556,9 @@ end
 # ╟─f3eac4e6-0b4b-4d54-83ac-213b78fcb522
 # ╠═f74f597a-908b-4569-8de8-219abba31afd
 # ╠═eab8e0d4-0a40-48b6-9689-0c102d883a96
-# ╠═c15d2045-f6c2-42d1-947e-fb4b31daeb99
 # ╠═20fe601c-874c-4a37-b3fa-b229232a0f4f
 # ╠═b0e0a366-8bac-4cf6-8b40-33d517b41e47
+# ╠═90c347ff-74fe-4032-93ec-931b181d3829
 # ╠═29dba8f1-b4a6-41da-8323-437447c9d888
 # ╟─cf7b3e70-2a92-4fe3-928f-6f842899893c
 # ╠═8775835f-3e50-4a88-a3fe-6439a1bcbd22
@@ -561,7 +569,6 @@ end
 # ╠═70aad4cf-0a09-46c2-999e-a9bec307a4f4
 # ╠═dbc48359-f4a2-41a3-a26d-57dadf0bb3e4
 # ╟─49ae0572-5d6b-4935-bc95-0a845bb3df2f
-# ╠═31096853-9eaa-40e2-90aa-b248df77f73f
 # ╠═65a10161-cbeb-49fe-b8d1-075ffe346e43
 # ╠═08b5251d-bbe4-48f6-9cb3-01e0a8364c1d
 # ╠═d0c00f3e-f3d3-4cd1-8541-9ae239420174

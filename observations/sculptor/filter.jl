@@ -23,7 +23,7 @@ end
 using KernelDensity
 
 # ╔═╡ 4cae5cc6-f270-42bf-97a1-067b7f57a7da
-include("filter_utils.jl")
+include("../../utils/gaia_filters.jl")
 
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
@@ -62,20 +62,13 @@ zoom 20 arcmin
 """
 
 # ╔═╡ bdef32be-2748-48c4-85ed-1d0d68c38b28
-galaxy_dir = "sculptor"
+galaxy_dir = "processed"
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "$galaxy_dir/fiducial"
-
-# ╔═╡ 1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
-begin 
-	param_file = "$name.toml"
-
-	params_raw = read_file(param_file)
-end
+name = "fiducial"
 
 # ╔═╡ f8779f92-3ae0-474e-907e-1067170b1531
-params = DensityParams(params_raw)
+params = GaiaFilterParams("$galaxy_dir/$name.toml")
 
 # ╔═╡ 6f4ee4fd-0fe9-4314-a2ec-8b0caa08e8af
 md"""
@@ -145,13 +138,6 @@ bw = (0.05, 0.05)
 # ╔═╡ c4b92086-db8c-421d-8ce2-f55863b1df18
 kd = kde([members.xi members.eta]; bandwidth=bw)
 
-# ╔═╡ 603fc81f-66af-4cc3-954b-2cf1e310a2b1
-begin 
-	orbit = lguys.load_fits("/astro/dboyea/sculptor/orbits/orbit1/1e6/V32_r5.4/skyorbit.fits")
-	
-	orbit[!, :xi], orbit[!, :eta] = lguys.to_tangent(orbit.ra, orbit.dec, params.ra, params.dec)
-end
-
 # ╔═╡ 3a555897-1d4d-4391-bf9a-a92c317ca34f
 let
 	fig = Figure()
@@ -166,7 +152,6 @@ let
 
 	h = heatmap!(kd.x, kd.y, asinh.(kd.density ./ scale))
 
-	#lines!(orbit.xi, orbit.eta)
 	Colorbar(fig[1, 2], h, label="asinh density / $scale")
 	fig
 end
@@ -308,7 +293,7 @@ md"""
 """
 
 # ╔═╡ 5a172f47-589f-4b2c-8180-108b293cebf7
-out_name = "$(name)_sample.fits"
+out_name = "processed/$(name)_sample.fits"
 
 # ╔═╡ 28ff0827-dd3e-43ff-b210-9a45687dd1f8
 let
@@ -338,7 +323,6 @@ end
 # ╟─daac0dde-fe80-44e3-9e6c-d00384769710
 # ╠═bdef32be-2748-48c4-85ed-1d0d68c38b28
 # ╠═8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-# ╠═1514203c-8c64-49f2-bd2b-9b38e7e3e6ba
 # ╠═f8779f92-3ae0-474e-907e-1067170b1531
 # ╟─6f4ee4fd-0fe9-4314-a2ec-8b0caa08e8af
 # ╠═44a44f97-9115-4610-9706-33acf065d0e7
@@ -352,7 +336,6 @@ end
 # ╟─efc003db-c980-40ba-822f-23220f7e852e
 # ╠═7c7c360b-cc11-43a5-b6ee-f6347aa9ae32
 # ╠═c4b92086-db8c-421d-8ce2-f55863b1df18
-# ╠═603fc81f-66af-4cc3-954b-2cf1e310a2b1
 # ╠═3a555897-1d4d-4391-bf9a-a92c317ca34f
 # ╠═52bb6b36-736a-45a8-b1e1-7f174b366ec8
 # ╠═d7e51fb3-bfb2-4f19-963c-6a8eb497a88c

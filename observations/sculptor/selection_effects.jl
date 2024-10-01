@@ -19,7 +19,7 @@ begin
 end
 
 # ╔═╡ 4cae5cc6-f270-42bf-97a1-067b7f57a7da
-include("filter_utils.jl")
+include("../../utils/gaia_filters.jl")
 
 # ╔═╡ 48caecb2-180c-4ce4-a57b-6fed82328b01
 md"""
@@ -34,7 +34,7 @@ md"""
 """
 
 # ╔═╡ 3aa7e2b8-d51c-46d0-b961-f8e5d015aa57
-cd("sculptor")
+cd("processed")
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
 name = "fiducial"
@@ -43,7 +43,7 @@ name = "fiducial"
 param_file = "$name.toml"
 
 # ╔═╡ f8779f92-3ae0-474e-907e-1067170b1531
-params = DensityParams(read_file(param_file))
+params = GaiaFilterParams(read_paramfile(param_file))
 
 # ╔═╡ 4093a7d6-2f74-4c37-a4a8-270934ede924
 md"""
@@ -145,7 +145,7 @@ let
 	)
 
 	# jax is in terms of a
-	a = params.rh .* sqrt(1 - params.ellipticity)
+	a = 12.33 * sqrt(1 - params.ellipticity)
 	scatter!(df.r_ell, a * df.r_ell_original ./ df.r_ell)
 
 	fig
@@ -160,7 +160,7 @@ let
 	r_ell_2 = 60lguys.calc_r_ell(df.xi, df.eta, params.ellipticity, -params.PA)
 
 	# jax is in terms of a
-	a = params.rh .* sqrt(1 - params.ellipticity)
+	a = 12.33 .* sqrt(1 - params.ellipticity)
 	scatter!(df.r_ell, a * df.r_ell_original ./ r_ell_2)
 
 	fig
@@ -246,7 +246,7 @@ let
 	ax = Axis(fig[1, 1],
 		ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
 		xlabel=log_r_label,
-		limits=((-1, 2), nothing)
+		limits=((-1, 2), (-7, -2))
 	)
 
 	g_cuts = [21.5, 20.5, 20, 19.5, 19, 10]
@@ -259,7 +259,7 @@ let
 		
 		memb = members[filt, :]
 
-		obs = lguys.calc_properties(memb.r_ell)
+		obs = lguys.StellarProfile(memb.r_ell)
 
 		# plot
 		lines!(ax, obs.log_r, obs.log_Sigma, 
@@ -285,31 +285,31 @@ let
 	ax = Axis(fig[1, 1],
 		ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
 		xlabel=log_r_label,
-		limits=((-1, 2.3), nothing)
+		limits=((-1, 2.3), (-7, -2))
 	)
 
 	memb = all_stars[all_stars.PSAT_1C .> 0.2, :]
 
-	obs = lguys.calc_properties(memb.r_ell)
+	obs = lguys.StellarProfile(memb.r_ell)
 	lines!(ax, obs.log_r, obs.log_Sigma, 
 		label="1 component")
 
 	
 	memb = all_stars[all_stars.PSAT_CIRC .> 0.2, :]
 	r = @. sqrt(memb.xi^2 + memb.eta^2) * 60
-	obs = lguys.calc_properties(r)
+	obs = lguys.StellarProfile(r)
 	lines!(ax, obs.log_r, obs.log_Sigma, 
 		label="2 component, circ")
 
 
-	memb = all_stars[all_stars.PSAT .> 0.2, :]
-	obs = lguys.calc_properties(memb.r_ell)
+	memb = all_stars[all_stars.PSAT_ELL .> 0.2, :]
+	obs = lguys.StellarProfile(memb.r_ell)
 	lines!(ax, obs.log_r, obs.log_Sigma, 
 		label="2 component, ell")
 
 
 	memb = all_stars[all_stars.PSAT_NOSPACE .> 0.2, :]
-	obs = lguys.calc_properties(memb.r_ell)
+	obs = lguys.StellarProfile(memb.r_ell)
 	lines!(ax, obs.log_r, obs.log_Sigma, 
 		label="no spatial prior")
 	
@@ -345,7 +345,7 @@ let
 		r = all_stars[filt, :r_ell]
 
 		
-		obs = lguys.calc_properties(r, normalization=:none)
+		obs = lguys.StellarProfile(r, normalization=:none)
 		
 		lines!(ax, obs.log_r, log10.(obs.Sigma), color=i, colorrange=(1, Nc+1),
 			label = string(p_cut)

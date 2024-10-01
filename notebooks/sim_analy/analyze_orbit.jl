@@ -34,20 +34,34 @@ md"""
 # inputs
 """
 
-# ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2/"
-
-# ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
-
-# ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = joinpath(dir, "orbit.csv")
-
-# ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
-outfile = joinpath(dir, "orbital_properties.toml")
-
 # ╔═╡ b75f0fb1-be59-416c-a61f-4109bada9ae9
 r_h = 0.11 # order of mag, for chi sq fit
+
+# ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
+modelname = "sculptor/1e6_V31_r3.2/orbit1"
+
+# ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
+md"""
+the below should hopefully be always the same
+"""
+
+# ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
+parentdir = "/arc7/home/dboyea/dwarfs/"
+
+# ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
+properties_file =  "$parentdir/observations/sculptor/observed_properties.toml"
+
+# ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
+orbit_file = joinpath(parentdir, "simulations", modelname, "orbit.csv")
+
+# ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
+outfile = joinpath(parentdir, "analysis", modelname, "orbital_properties.toml")
+
+# ╔═╡ bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
+centresfile = joinpath(parentdir, "analysis", modelname, "centres.hdf5")
+
+# ╔═╡ 9c427388-c657-4bb7-bc0a-b4de3597c645
+skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
 
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
 md"""
@@ -64,7 +78,7 @@ obs_today["ra_err"] = r_h
 obs_today["dec_err"] = r_h 
 
 # ╔═╡ b250bf10-c228-4b14-938a-35561ae871d7
-h5open(dir * "out/centres.hdf5", "r") do  f
+h5open(centresfile, "r") do  f
 	global x_cen, v_cen, t
 	x_cen = read(f["positions"])
 	v_cen = read(f["velocities"])
@@ -441,18 +455,22 @@ md"""
 """
 
 # ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
-LilGuys.write_fits(joinpath(dir, "skyorbit.fits"), obs_c, verbose=true, overwrite=true)
+LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╠═8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
+# ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
+# ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
+# ╟─dd56b7ec-be11-447f-acc1-12750d82879b
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2
 # ╠═d142b7bd-3002-4331-a725-577873c42f28
 # ╠═0dd476fd-be53-4e9b-a686-a4462485c64c
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
-# ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
+# ╠═bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
+# ╠═9c427388-c657-4bb7-bc0a-b4de3597c645
 # ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═a609f221-0721-4b4b-a393-49b386393c66

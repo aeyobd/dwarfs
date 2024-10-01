@@ -1,9 +1,11 @@
 inherits = "fiducial.toml"
 
-filename="gaia_4deg_cen.fits"
+filename="../data/gaia_4deg_cen.fits"
+
 n_sigma_dist = 3
-dpm = 0.1
-n_sigma_pm = 4
+
+dpm = 1
+
 PSAT_min = nan
 ruwe_max = 1.3
 

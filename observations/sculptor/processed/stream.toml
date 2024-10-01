@@ -3,9 +3,7 @@ inherits = "simple.toml"
 max_ang_dist = nan
 ellipticity = 0
 
-dpm = 0.1
 PSAT_min = nan
 ruwe_max = 1.3
-n_sigma_pm = 4
 
 filt_r_max = false

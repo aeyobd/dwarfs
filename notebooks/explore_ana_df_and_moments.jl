@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -8,25 +8,18 @@ using InteractiveUtils
 begin
 	import Pkg
 	Pkg.activate()
-	
-	import LilGuys as lguys
-end
-
-# ╔═╡ 641946b3-e6f2-4d6d-8777-7698f353eb3d
-begin 
-	import QuadGK: quadgk
 	using CairoMakie
-	using NaNMath; nm = NaNMath
 	using Arya
+	
+	using LilGuys
 end
-
-# ╔═╡ cc14b21c-4690-4ae9-a14b-586174cb3feb
-using LilGuys
 
 # ╔═╡ 17ffde4b-5796-4915-9741-d594cf0c5ca7
 md"""
 # Distribution functions
-Just a scratch notebook to build my intuition
+
+This notebook is a scratch notebook which calculates the distribution function analytically from a potential and calculates some moments of the distribution function.
+
 """
 
 # ╔═╡ 93045024-a91d-4b31-9a5a-7c999afdb9ec
@@ -35,19 +28,19 @@ md"""
 """
 
 # ╔═╡ 73bb13e4-4a36-42b3-a04d-f235a8b11362
-R_s_s = 0.19
+R_s_s = 0.10
 
 # ╔═╡ 64578172-da38-49ed-8777-51b538aa9b18
-prof_halo = NFW(V_circ_max=50/V2KMS, r_circ_max=10.783)
+prof_halo = LilGuys.TruncNFW(v_circ_max=31/V2KMS, r_circ_max=3.2, trunc=100)
 
 # ╔═╡ 5a42e848-caee-4aea-a541-7812c4fbeb13
-profile = lguys.Exp2D(R_s = R_s_s)
+profile = LilGuys.Exp2D(R_s = R_s_s)
 
 # ╔═╡ aa69bde5-ab93-4105-9d48-ad0ace88e3f0
-r_h = lguys.get_r_h(profile)
+r_h = LilGuys.calc_r_h(profile)
 
 # ╔═╡ 1b9f3101-4891-4a8c-8c73-41a222b6c26f
-ρ_s(r) = lguys.calc_ρ(profile, r)
+ρ_s(r) = calc_ρ(profile, r)
 
 # ╔═╡ e935a80a-7f4f-4143-ae6c-bee62b82c30e
 md"""
@@ -81,10 +74,10 @@ function make_radius_bins(radii::AbstractVector, params::Dict)
 end
 
 # ╔═╡ deb46b0b-3504-4231-9f85-99f27caf924b
-r_e = 10 .^ LinRange(-4, 4, 1000)
+r_e = 10 .^ LinRange(-5, 4, 10000)
 
 # ╔═╡ 36b4adbd-d706-4e72-a922-53080c67946c
-r = lguys.midpoint(r_e)
+r = midpoints(r_e)
 
 # ╔═╡ f3e95cfc-0087-4afa-8e88-a4e1628c50a0
 """
@@ -101,19 +94,19 @@ end
 print_missing(r_e, M_s)
 
 # ╔═╡ dfa675d6-aa32-45c3-a16c-626e16f36083
-ψ = -lguys.calc_Φ.(prof_halo, r)
+ψ = - LilGuys.calc_Φ.(prof_halo, r)
 
 # ╔═╡ ab4d4458-fd1d-417a-8a74-5e06f41af166
-ν_dm = lguys.calc_ρ.(prof_halo, r)
+ν_dm = calc_ρ.(prof_halo, r)
 
 # ╔═╡ 20f858d6-a9f5-4880-a431-60b395cc7e50
 ν_s = max.(ρ_s.(r) ./ M_s_tot, 0)
 
+# ╔═╡ cf2f2756-5775-4302-b0eb-50ed530cec1a
+f_dm = LilGuys.DistributionFunction(ν_dm, ψ, r)
+
 # ╔═╡ 1fab14ec-6bfc-4243-bc48-915d1a129925
-begin 
-	f_dm = lguys.calc_fϵ(ν_dm, ψ, r)
-	f_s = lguys.calc_fϵ(ν_s, ψ, r)
-end
+f_s = LilGuys.DistributionFunction(ν_s, ψ, r)
 
 # ╔═╡ 126c6825-723f-4d13-b5a3-64cba72fc867
 md"""
@@ -126,14 +119,18 @@ The potential $\psi = -\Phi$ as a function of log radii (for the spherically cal
 """
 
 # ╔═╡ 1c0899c6-2692-45ab-b9e6-668dc576d679
-function make_energy_bins(ψ, N)
+function make_energy_bins(ψ, N; k=5)
 	E_max = ψ[1]
 	E_min = ψ[end]
-	E = LinRange(E_min, E_max, N + 1)
+
+	x = LinRange(-k, k, N+1)
+	E = E_min .+ (1 .+ tanh.(x)) ./ 2 * (E_max - E_min)
+
+	E
 end
 
 # ╔═╡ 3025546e-3ce1-4a78-824d-24f644238e32
-E = make_energy_bins(ψ, 1000)
+E = ψ
 
 # ╔═╡ 500c67b2-8c4a-4d03-b4e4-39beff43a46c
 f_dm_e = f_dm.(E)
@@ -141,16 +138,45 @@ f_dm_e = f_dm.(E)
 # ╔═╡ 9e492a55-7b20-4eca-aead-c7afeee63f11
 f_s_e = f_s.(E)
 
+# ╔═╡ e9a12600-bf3c-43a6-8ab6-a06b463229e8
+function calc_g(ϵ, radii=r)
+	integrand(r) = ((-LilGuys.calc_Φ(prof_halo, r) - ϵ) > 0) && sqrt( 2 * (-LilGuys.calc_Φ(prof_halo, r) - ϵ)) * r^2
+	
+	return 16π^2 * sum(integrand.(radii) .* LilGuys.gradient(radii))
+end
+
+# ╔═╡ 5992781a-8041-405c-ae3d-c60b1f8ef951
+r_m = LilGuys.lerp(ψ, r)
+
+# ╔═╡ 96554ebf-bf80-4fac-b9bc-3a7d6c524d6d
+function calc_g_int(ϵ)
+	integrand(r) = ((-LilGuys.calc_Φ(prof_halo, r) - ϵ) > 0) && sqrt( 2 * (-LilGuys.calc_Φ(prof_halo, r) - ϵ)) * r^2
+	
+	return 16π^2 * LilGuys.integrate(integrand, 0, r_m(ϵ))
+end
+
+# ╔═╡ 94c9c9cb-762d-44a9-b0c5-3634dffa2694
+calc_g(E[50], r)
+
+# ╔═╡ 2e0cf0f5-0ada-43be-9045-207bf10e0a97
+calc_g_int(E[50])
+
 # ╔═╡ 8b66d00d-529b-4e8c-9386-b17117996579
 md"""
 The calculated distribution function as a function of log specific binding energy $\epsilon =  -\Phi - T$
 """
 
+# ╔═╡ 9f55e818-0ab8-4c25-987b-386ebb7f8e31
+f_dm_i = LilGuys.lerp(E, f_dm_e)
+
+# ╔═╡ 81e027df-311f-4036-a8ec-5e03ddbfc20d
+f_s_i = LilGuys.lerp(E, f_s_e)
+
 # ╔═╡ 7409a024-cea4-47a5-84d2-846c96d88b7a
 begin 
 	probs = f_s_e ./ f_dm_e
-	probs ./= sum(probs .* lguys.gradient(E)) # pdf, dN/dE
-	prob = lguys.lerp(E, probs)
+	probs ./= sum(probs .* LilGuys.gradient(E)) # pdf, dN/dE
+	prob = LilGuys.lerp(E, probs)
 end
 
 # ╔═╡ 8bb8736d-a41b-4dac-a6cd-06d0d4704654
@@ -182,9 +208,37 @@ end
 # ╔═╡ 75d23b44-71e7-4e28-ad3e-c537f3d4422f
 let
 	fig = Figure()
-	ax = Axis(fig[1,1],xlabel="log ϵ", ylabel="log f", limits=(nothing, (-15, 10)) )
-	lines!(log10.(E), log10.(f_s_e), label="stars")
-	lines!(log10.(E), log10.(f_dm_e), label="DM")
+	ax = Axis(fig[1,1],xlabel="ϵ [code units]", ylabel="log f(ϵ)", limits=(nothing, (-15, 10)) )
+	lines!((E), log10.(f_s_e), label="stars")
+	lines!((E), log10.(f_dm_e), label="DM")
+
+	axislegend(ax, position=:lt)
+	fig
+end
+
+# ╔═╡ 29a07d14-5de3-44ee-894e-4a5e6969f2dd
+g = calc_g.(E)
+
+# ╔═╡ 8b810ccf-5ff3-405a-be99-82e753dad894
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],xlabel="ϵ [code units]", ylabel="log dN/dϵ", limits=(nothing, (-15, 3)) )
+	lines!((E), log10.(f_s_e .* g), label="stars")
+	lines!((E), log10.(f_dm_e .* g), label="DM")
+
+	axislegend(ax, position=:lt)
+	fig
+end
+
+# ╔═╡ 652ab3a4-8ac4-44df-be5b-555447c63522
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel="ϵ [code units]", 
+		ylabel="log probability(ϵ)", 
+		limits=(nothing, (-15, 4)) 
+	)
+	lines!(E, log10.(f_s_e ./ f_dm_e), label="stars")
 
 	axislegend(ax, position=:lt)
 	fig
@@ -200,9 +254,9 @@ E
 
 # ╔═╡ 0d217f82-8316-40b8-a344-c4a409e9c70d
 function phase_density(r, vel, f)
-	V = lguys.calc_Φ(prof_halo, r)
-	T = @. 0.5vel^2
-	E = -(T .+ V)
+	V = LilGuys.calc_Φ(prof_halo, r)
+	T = @. 1/2 * vel^2
+	E = -T .- V
 
 	if E < 0
 		return 0
@@ -213,25 +267,32 @@ end
 
 # ╔═╡ df6e75a8-a6ca-409c-b2b1-25a2be74af45
 begin 
-	xs = 10 .^ LinRange(-6, 3, 100)
-	vs = LinRange(0.00, 0.7, 200)
-	dx = lguys.gradient(xs)
-	dv = lguys.gradient(vs)
+	xs = 10 .^ LinRange(log10.(r_e[1]), log10(r_e[end]), 500)
+	vs = LinRange(0.00, (2ψ[1])^0.5, 500)
+	dx = LilGuys.gradient(xs)
+	dv = LilGuys.gradient(vs)
 	
-	Z = hcat([[phase_density(x, v, f_s) for x in xs] for v in vs]...)
-	Z_dm = hcat([[phase_density(x, v, f_dm) for x in xs] for v in vs]...)
+	Z = hcat([[phase_density(x, v, f_s_i) for x in xs] for v in vs]...)
+	Z_dm = hcat([[phase_density(x, v, f_dm_i) for x in xs] for v in vs]...)
 
 end
 
 # ╔═╡ aceb7c70-de8d-424c-bcda-20d7874d21f2
 let
-	fig, ax = FigAxis()
+	fig, ax = FigAxis(
+		xlabel=L"$\log\ |r\,|$ / kpc",
+		ylabel = L"$|v\,|$ / km s$^{-1}$",
+		limits=(nothing, nothing)
+	)	
 	
-	heatmap!(log10.(xs), V2KMS * vs, Z,
-	colorscale=log10, colorrange=(1e-12, maximum(Z))
+	h = heatmap!(log10.(xs), V2KMS * vs, Z,
+		colorscale=log10, colorrange=(1e-12, maximum(Z))
 	)
-	y = sqrt.( - 2lguys.calc_Φ.(prof_halo, xs)) .* V2KMS
+	
+	y = sqrt.( - 2LilGuys.calc_Φ.(prof_halo, xs)) .* V2KMS
 	lines!(log10.(xs), y)
+
+	Colorbar(fig[1, 2], h, label="stellar distribution function")
 
 	fig
 end
@@ -244,16 +305,16 @@ let
 	fig, ax = FigAxis(
 		xlabel=L"$\log\ |r\,|$ / kpc",
 		ylabel = L"$|v\,|$ / km s$^{-1}$",
-		limits=((-2, 3), nothing)
+		limits=(nothing, nothing)
 	)
 	
 	h = heatmap!(log10.(xs), V2KMS * vs, Z_dm,
 	colorscale=log10, colorrange=( 1e-15 * maximum(Z), maximum(Z))
 	)
-	y = sqrt.( - 2lguys.calc_Φ.(prof_halo, xs)) .* V2KMS
+	y = sqrt.( - 2LilGuys.calc_Φ.(prof_halo, xs)) .* V2KMS
 	lines!(log10.(xs), y)
 
-	Colorbar(fig[1, 2], h)
+	Colorbar(fig[1, 2], h, label="DM distribution function")
 
 	fig
 end
@@ -269,7 +330,7 @@ sum(
 )
 
 # ╔═╡ 35db741c-5f30-476e-9a65-5d86313ad290
-lguys.calc_M(prof_halo, xs[end])
+LilGuys.calc_M(prof_halo, xs[end])
 
 # ╔═╡ 5be4f410-e39c-429b-bef1-2188ccb9e556
 md"""
@@ -317,29 +378,38 @@ nu_dm = dropdims(sum(
 # ╔═╡ cc8a9d43-9613-4b1f-bf00-b3118efb0e94
 let
 	fig, ax = FigAxis(
-		limits=(nothing, (-15, 5))
+		limits=(nothing, (-15, 5)),
+		xlabel="log r / kpc",
+		ylabel = L"$\rho_\star$ / M$_\odot$r$^{-3}$",
 	)
 	
-	scatter!(log10.(xs), log10.(nu_calc))
+	scatter!(log10.(xs), log10.(nu_calc), 
+		label="integrated")
 
-	y_model = lguys.calc_ρ.(profile, xs)
+	y_model = LilGuys.calc_ρ.(profile, xs)
 
-	lines!(log10.(xs), log10.(y_model))
+	lines!(log10.(xs), log10.(y_model), label="analytic")
 
+	axislegend()
 	fig
 end
 
 # ╔═╡ 6da67070-1cf6-4ffa-b62d-bc87677056cc
 let
 	fig, ax = FigAxis(
-		limits=(nothing, (-15, 5))
+		limits=(nothing, (-5, 14)),
+		xlabel="log r / kpc",
+		ylabel = L"$\rho_\textrm{DM}$ / M$_\odot$r$^{-3}$",
 	)
 	
-	scatter!(log10.(xs), log10.(nu_dm))
+	y_model = LilGuys.calc_ρ.(prof_halo, xs) * M2MSUN
+	lines!(log10.(xs), log10.(y_model), label="analytic")
 
-	y_model = lguys.calc_ρ.(prof_halo, xs)
+	scatter!(log10.(xs), log10.(nu_dm * M2MSUN), 
+		markersize=3, color=COLORS[2], label="integrated")
 
-	lines!(log10.(xs), log10.(y_model))
+	axislegend()
+
 
 	fig
 end
@@ -381,18 +451,17 @@ v_dens_dm = dropdims(sum(
 let
 	fig, ax = FigAxis(
 		xlabel="|v| / km / s",
-		ylabel = "density / dv^3"
+		ylabel = "density / dv^3",
+		limits=(nothing, (-5, 3))
 	)
 
-	lines!(vs * V2KMS, v_dens / V2KMS)
+	lines!(vs * V2KMS, log10.(v_dens / V2KMS))
 	fig
 end
 
 # ╔═╡ Cell order:
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
-# ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
-# ╠═cc14b21c-4690-4ae9-a14b-586174cb3feb
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
 # ╠═73bb13e4-4a36-42b3-a04d-f235a8b11362
 # ╠═64578172-da38-49ed-8777-51b538aa9b18
@@ -409,6 +478,7 @@ end
 # ╠═dfa675d6-aa32-45c3-a16c-626e16f36083
 # ╠═ab4d4458-fd1d-417a-8a74-5e06f41af166
 # ╠═20f858d6-a9f5-4880-a431-60b395cc7e50
+# ╠═cf2f2756-5775-4302-b0eb-50ed530cec1a
 # ╠═1fab14ec-6bfc-4243-bc48-915d1a129925
 # ╟─126c6825-723f-4d13-b5a3-64cba72fc867
 # ╟─7481f47a-2b8a-45a3-9b4e-31ea14e9d331
@@ -416,18 +486,28 @@ end
 # ╠═3025546e-3ce1-4a78-824d-24f644238e32
 # ╠═500c67b2-8c4a-4d03-b4e4-39beff43a46c
 # ╠═9e492a55-7b20-4eca-aead-c7afeee63f11
+# ╠═96554ebf-bf80-4fac-b9bc-3a7d6c524d6d
+# ╠═e9a12600-bf3c-43a6-8ab6-a06b463229e8
+# ╠═5992781a-8041-405c-ae3d-c60b1f8ef951
+# ╠═94c9c9cb-762d-44a9-b0c5-3634dffa2694
+# ╠═2e0cf0f5-0ada-43be-9045-207bf10e0a97
 # ╟─8b66d00d-529b-4e8c-9386-b17117996579
+# ╠═9f55e818-0ab8-4c25-987b-386ebb7f8e31
+# ╠═81e027df-311f-4036-a8ec-5e03ddbfc20d
 # ╠═7409a024-cea4-47a5-84d2-846c96d88b7a
 # ╠═8bb8736d-a41b-4dac-a6cd-06d0d4704654
-# ╟─b625d8a5-7265-4849-9bd6-ca8064d392eb
+# ╠═b625d8a5-7265-4849-9bd6-ca8064d392eb
 # ╠═75d23b44-71e7-4e28-ad3e-c537f3d4422f
+# ╠═29a07d14-5de3-44ee-894e-4a5e6969f2dd
+# ╠═8b810ccf-5ff3-405a-be99-82e753dad894
+# ╠═652ab3a4-8ac4-44df-be5b-555447c63522
 # ╟─a5ccf909-79b7-4ac2-b3d0-0b7796e14354
 # ╠═c10d65b8-daa6-4a1f-b07b-06c507dc6a83
 # ╠═0d217f82-8316-40b8-a344-c4a409e9c70d
 # ╠═df6e75a8-a6ca-409c-b2b1-25a2be74af45
-# ╠═aceb7c70-de8d-424c-bcda-20d7874d21f2
+# ╟─aceb7c70-de8d-424c-bcda-20d7874d21f2
 # ╠═f31d102e-946e-404f-9d2f-30b48aad4b04
-# ╠═7a85cdc2-0001-4d87-817a-9c71a2df9971
+# ╟─7a85cdc2-0001-4d87-817a-9c71a2df9971
 # ╠═81f2a43e-65b5-4578-858f-76c33088e65a
 # ╠═2dbc5266-68ff-4d4b-83dd-f144d5554f6b
 # ╠═35db741c-5f30-476e-9a65-5d86313ad290
@@ -436,8 +516,8 @@ end
 # ╟─68d0d571-99f1-4c39-bf17-7c481686cfaf
 # ╠═6c55bde8-df17-4c9c-85f7-119fd1a1c290
 # ╠═b32d21fe-5aa5-4fab-b716-b7f9c8dc3b1e
-# ╠═cc8a9d43-9613-4b1f-bf00-b3118efb0e94
-# ╠═6da67070-1cf6-4ffa-b62d-bc87677056cc
+# ╟─cc8a9d43-9613-4b1f-bf00-b3118efb0e94
+# ╟─6da67070-1cf6-4ffa-b62d-bc87677056cc
 # ╠═94a09909-2af8-481f-a46c-d5a0dc8cbe50
 # ╠═72348a89-ad25-4e75-bb7e-11623d23240b
 # ╠═4b88d424-bf0d-45eb-a6ae-594b1ffd61b6

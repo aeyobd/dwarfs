@@ -23,6 +23,15 @@ using FITSIO
 # ╔═╡ d4123ffd-cb32-486e-a93d-f48d7112a831
 include("filter_utils.jl")
 
+# ╔═╡ 811c5da0-7e70-4393-b59d-c0fdb89523ca
+md"""
+# Radial Velocity CrossMatch
+
+This notebook loads in radial velocity data from several sources (including Tolstoy+23, APOGEE, DART, and Fedrico++'s GMOS observations) and consolidates this data into a single combined radial velocity catalogue cross-matched with J+24's membership calculations.
+
+With this catalogue, detailed radial velocity analysis can then be calculated.
+"""
+
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, kurtosis, sem
 
@@ -38,7 +47,7 @@ md"""
 """
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-data_dir = "../../data/"
+data_dir = "data/"
 
 # ╔═╡ da5a3b57-72bc-46e1-b1a0-6c02eb101626
 function sigma_clip(x, nσ=5)
@@ -73,14 +82,14 @@ function xmatch(df1::DataFrame, df2::DataFrame, max_sep=2)
 end
 
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
-obs_properties = TOML.parsefile("../../sculptor_obs_properties.toml")
+obs_properties = TOML.parsefile("observed_properties.toml")
 
 # ╔═╡ 248c2d5f-85cc-44be-bc63-43d4af470182
 begin 
-	params = read_file("sculptor/fiducial.toml")
-	params["filename"] = "$data_dir/j24_sculptor_all.fits"
-	params["PA"] = 92
-	params["ellipticity"] = 0.36
+	params = read_file("processed/fiducial.toml")
+	params["filename"] = "processed/j24_sculptor_all.fits"
+	params["PA"] = obs_properties["PA"]
+	params["ellipticity"] = obs_properties["ellipticity"]
 	params["PSAT_min"] = nothing
 	params = DensityParams(params)
 end
@@ -92,6 +101,11 @@ FITS
 begin #TODO: implement J24 crossmatching
 	j24 = load_stars(params.filename, params) # does not filter
 end
+
+# ╔═╡ dd1eee07-bb37-4de3-8781-47edd794c1f3
+md"""
+## Federico's samples
+"""
 
 # ╔═╡ 6f2359d8-332b-11ef-0db9-f1f06474c561
 md"""
@@ -261,12 +275,12 @@ sort(a2.source_id) == sort(apogee_notdart.source_id)
 
 # ╔═╡ b6de4afb-9362-4618-a114-df460031e4f9
 md"""
-# GMOS alla Federico
+## GMOS alla Federico
 """
 
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
 let
-	global gmos = CSV.read("$data_dir/targets_stellar_met.csv", DataFrame)
+	global gmos = CSV.read("$data_dir/sestito+23_gmos.csv", DataFrame)
 	rename!(gmos,
 		"RA"=>"ra",
 		"Dec"=>"dec"
@@ -290,7 +304,7 @@ md"""
 # ╔═╡ 15f2a8e2-90df-48a9-a7bf-e86955f566ce
 
 begin 
-	tolstoy23_all = lguys.load_fits("$data_dir/tolstoy_2023.fits")
+	tolstoy23_all = lguys.read_fits("$data_dir/tolstoy+23.fits")
 
 	rename!(tolstoy23_all, 
 		:Vlos => :RV,
@@ -327,7 +341,7 @@ Note that we combine two dataframes, one with individual measurements and a seco
 # ╔═╡ 77830e77-50a4-48b7-b070-8fbd7508c173
 let 
 	global walker09_single
-	walker09_single = lguys.load_fits("$data_dir/walker_2009.fits") 
+	walker09_single = lguys.read_fits("$data_dir/walker+09_observations.fits") 
 	
 	walker09_single[!, "Galaxy"] = [s[1:3] for s in walker09_single.Target];
 
@@ -335,7 +349,7 @@ end
 
 # ╔═╡ dee71790-ffeb-477d-adbe-112731dfe134
 let 
-	global walker09_averaged = lguys.load_fits("$data_dir/walker+09.fits")
+	global walker09_averaged = lguys.read_fits("$data_dir/walker+09_summary.fits")
 
 	rename!(walker09_averaged, 
 		"RAJ2000"=>"ra",
@@ -687,10 +701,19 @@ distance = obs_properties["distance"] ± obs_properties["distance_err"]
 ra0, dec0 = obs_properties["ra"], obs_properties["dec"]
 
 # ╔═╡ c0accd82-17a7-437c-9ba8-4db437071a5b
-icrs = [lguys.ICRS{Measurement{Float64}}(ra=row.ra, dec=row.dec, distance=82.3 ± 2, pmra=row.pmra ± row.pmra_error, pmdec=row.pmdec ± row.pmdec_error, radial_velocity = row.RV ± row.RV_err) for row in eachrow(rv_meas)]
+icrs = [
+	lguys.ICRS(
+		ra=row.ra ± 0, dec=row.dec ± 0, 
+		distance=82.3 ± 2, pmra=row.pmra ± row.pmra_error,
+		pmdec=row.pmdec ± row.pmdec_error, 
+		radial_velocity = row.RV ± row.RV_err
+	) for row in eachrow(rv_meas)]
+
+# ╔═╡ d0842a73-dd1b-452f-97f9-50a23668fe14
+methods(lguys.ICRS)
 
 # ╔═╡ 11461563-dbcd-48fc-a97a-1a0391538462
-gsr = lguys.transform.(lguys.GSR, icrs)
+gsr = lguys.transform.(lguys.GSR{Measurement{Float64}}, icrs)
 
 # ╔═╡ 718ec8bc-cae6-4905-a336-b04964699b61
 vra = [o.pmra for o in gsr] .* distance
@@ -1203,17 +1226,10 @@ sum(sum(eachcol(ismissing.(memb_stars))))
 out_df.:q__Fe_H__t23
 
 # ╔═╡ 1a0eac4e-4100-4da6-820b-19c34e283118
-lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
-
-# ╔═╡ a7c864f2-1f55-46cb-9864-a53cb13bd4c5
-
-
-# ╔═╡ a5a5a6a9-1b02-4f30-b6e3-426d1c996eef
-# if ispath(joinpath(data_dir, "sculptor_all_rv.fits"))
-# 	rm(joinpath(data_dir, "sculptor_all_rv.fits"))
-# end
+lguys.write_fits(joinpath("processed", "sculptor_all_rv.fits"), out_df)
 
 # ╔═╡ Cell order:
+# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═202e0f8b-b417-4597-a737-7c60c0575fd3
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -1229,6 +1245,7 @@ lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
 # ╠═248c2d5f-85cc-44be-bc63-43d4af470182
 # ╠═dfd2fbee-9993-4553-b693-6fb71a7b11a2
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
+# ╟─dd1eee07-bb37-4de3-8781-47edd794c1f3
 # ╟─6f2359d8-332b-11ef-0db9-f1f06474c561
 # ╟─7db47590-b82b-4822-8a01-eaff96c9389f
 # ╟─97277013-a8fc-4f70-b016-ef7f9025ce97
@@ -1252,7 +1269,7 @@ lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
 # ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
 # ╠═2e7ce524-573e-45c9-b0f4-ce9fea68e026
 # ╠═f8775eb1-2cb9-4d81-8c02-39c43ceb9b45
-# ╟─b6de4afb-9362-4618-a114-df460031e4f9
+# ╠═b6de4afb-9362-4618-a114-df460031e4f9
 # ╠═b7345279-4f80-47ad-a726-537571849eae
 # ╟─c31f9e07-c520-443b-94dc-787519021d01
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
@@ -1322,6 +1339,7 @@ lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
 # ╠═23d4b7c4-61f9-4748-b3c4-80eaad551914
 # ╠═7dab615b-e0a1-431e-88c0-e1e9d9c29568
 # ╠═c0accd82-17a7-437c-9ba8-4db437071a5b
+# ╠═d0842a73-dd1b-452f-97f9-50a23668fe14
 # ╠═11461563-dbcd-48fc-a97a-1a0391538462
 # ╠═718ec8bc-cae6-4905-a336-b04964699b61
 # ╠═379bff0e-e65c-4abd-bce1-d6b776656bc8
@@ -1391,5 +1409,3 @@ lguys.write_fits(joinpath(data_dir, "sculptor_all_rv.fits"), out_df)
 # ╠═f1912692-d890-4f97-ba98-7b226f29e9c8
 # ╠═4fdccf0a-adfa-4f05-bb48-df8a1efba940
 # ╠═1a0eac4e-4100-4da6-820b-19c34e283118
-# ╠═a7c864f2-1f55-46cb-9864-a53cb13bd4c5
-# ╠═a5a5a6a9-1b02-4f30-b6e3-426d1c996eef

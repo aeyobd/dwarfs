@@ -17,7 +17,7 @@ end
 using DataFrames: rename!
 
 # ╔═╡ 73f523e3-39eb-49ea-92d1-39e9d5e91d16
-include("../load_mist.jl")
+include("../../utils/read_iso.jl")
 
 # ╔═╡ b653409b-fa89-4399-98d2-09c794aa88dc
 md"""
@@ -132,19 +132,24 @@ md"""
 """
 
 # ╔═╡ d452a47a-22a2-4523-a7cf-f7b668cc7dda
-data_dir = "../../data"
+data_dir = "data"
 
 # ╔═╡ 330a4e01-59e0-4eb6-9900-d23db1159dd5
-scl_ell = LilGuys.load_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-ell.fits"))
+scl_ell = LilGuys.read_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-ell.fits"))
 
 # ╔═╡ b37ad796-1695-4665-b592-b68a99356907
-scl_circ = LilGuys.load_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-circ.fits"))
+scl_circ = LilGuys.read_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-circ.fits"))
 
 # ╔═╡ 39be2272-202a-4bb9-95cb-a9e584589d97
-scl_1comp = LilGuys.load_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"))
+scl_1comp = LilGuys.read_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"))
 
 # ╔═╡ 08cf3854-66e9-4358-8925-e069f59f65e6
-scl_gaia = LilGuys.load_fits("sculptor/gaia_4deg_cen.fits")
+scl_gaia = LilGuys.read_fits("data/gaia_4deg_cen.fits")
+
+# ╔═╡ 035a4b04-729a-413d-b1e4-d7fc0ecbfad9
+md"""
+The next two `setdiff` cells ensure that the IDs are the same for each sample from J+24
+"""
 
 # ╔═╡ 8a8aadb5-b84f-4ed0-8942-2c407ccc2517
 setdiff(scl_1comp.source_id, scl_ell.source_id)
@@ -237,7 +242,7 @@ I do not think that it is worth rederiving the CMD likelihood, so here is a figu
 """
 
 # ╔═╡ 4243c523-edfd-40a1-9e91-a2563c0ea3a0
-isocmd = ISOCMD("../../data/MIST_v1.2_vvcrit0.4_UBVRIplus/MIST_v1.2_feh_m2.00_afe_p0.0_vvcrit0.4_UBVRIplus.iso.cmd")
+isocmd = ISOCMD("../../MIST/MIST_v1.2_vvcrit0.4_UBVRIplus/MIST_v1.2_feh_m2.00_afe_p0.0_vvcrit0.4_UBVRIplus.iso.cmd")
 
 # ╔═╡ 93d499d2-4744-4613-878c-de4e425f7bfd
 isocmd[9]
@@ -489,11 +494,21 @@ end
 L_pm = bivariate_normal.(df.pmra, df.pmdec, pmra, pmdec, df.pmra_error .⊕ dpm, df.pmdec_error .⊕ dpm, df.pmra_pmdec_corr)
 
 # ╔═╡ 81aaaaef-8fff-41b9-981b-cd4b08dc62cd
-scatter(df.L_PM_SAT, L_pm;
+begin
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "Likelihood pm (me)",
+		ylabel = "Likelihood PM (jax)",
+		limits=(-0.1, 4, -0.1, 4),
+	)
+	
+	scatter!(df.L_PM_SAT, L_pm;
 	alpha=0.1,
 	markersize=5, 
-	axis=(; limits=(-0.1, 4, -0.1, 4))
-)
+	)
+	
+	fig
+end
 
 # ╔═╡ 4accc157-bf98-42b9-b8bf-8395bff5f49f
 sum(.! isnan.(df.L_PM_SAT))
@@ -513,13 +528,10 @@ let
 		markersize=3, colorscale=log10, colorrange=(1e-2, 1e1)
 	)
 
-	Colorbar(fig[1, 2], p, label="pm likelihood", )
+	Colorbar(fig[1, 2], p, label="pm likelihood (jax)", )
 
 	fig
 end
-
-# ╔═╡ 34dc5d88-16ce-49e7-912f-0e6f36c81bd3
-pmra, pmdec
 
 # ╔═╡ c6dda910-7ade-4668-9592-899264248339
 let
@@ -533,7 +545,7 @@ let
 		markersize=3, colorscale=log10, colorrange=(1e-2, 1e1)
 	)
 
-	Colorbar(fig[1, 2], p, label="PM likelihood", )
+	Colorbar(fig[1, 2], p, label="PM likelihood (me)", )
 
 	fig
 end
@@ -698,11 +710,25 @@ begin
 end
 
 # ╔═╡ dd1bbf56-4d9a-445c-9722-5541b63d227d
-scatter(df_out.PSAT_CIRC, df_out.PSAT_1C)
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "Psat 2c circ",
+		ylabel = "Psat 1c ell",
+	)
+	
+	scatter!(df_out.PSAT_CIRC, df_out.PSAT_1C)
+	fig
+end
 
 # ╔═╡ d39d9fba-288f-48fc-8db5-eb10854cb4a7
 let
-	fig, ax = FigAxis()
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "Psat 2c circ",
+		ylabel = "Psat 2c ell",
+	)
+	
 	
 	scatter!(df_out.PSAT_CIRC, df_out.PSAT_ELL)
 
@@ -719,7 +745,7 @@ end
 convert(Float64, 1)
 
 # ╔═╡ 9b57518d-98b0-4cb6-a290-9b9ea22cefac
-LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out, verbose=true)
+LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true)
 
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
@@ -727,7 +753,7 @@ LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out, verbose=true)
 # ╟─7db0c811-a50f-434b-9d89-05a82a6d265c
 # ╟─6e7743d1-1399-483b-9d3a-a8a4c6afd721
 # ╟─951dc3e9-496b-450e-9b0a-1862af2e8626
-# ╠═4d967c49-4074-4e07-b175-841dde78f609
+# ╟─4d967c49-4074-4e07-b175-841dde78f609
 # ╠═ed4b328a-59a1-11ef-2a75-092fdb7659b8
 # ╠═2dacbd3e-b027-44cd-bb39-d3bfcf99366f
 # ╠═9d548f5a-223c-4827-b2d3-8361d0ced243
@@ -738,6 +764,7 @@ LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out, verbose=true)
 # ╠═b37ad796-1695-4665-b592-b68a99356907
 # ╠═39be2272-202a-4bb9-95cb-a9e584589d97
 # ╠═08cf3854-66e9-4358-8925-e069f59f65e6
+# ╠═035a4b04-729a-413d-b1e4-d7fc0ecbfad9
 # ╠═8a8aadb5-b84f-4ed0-8942-2c407ccc2517
 # ╠═9ec35690-9048-4f7f-954f-33a474d33bf3
 # ╟─f66e116c-ad7a-4804-a3e9-099b7743fafa
@@ -805,7 +832,6 @@ LilGuys.write_fits("$data_dir/j24_sculptor_all.fits", df_out, verbose=true)
 # ╠═81aaaaef-8fff-41b9-981b-cd4b08dc62cd
 # ╠═4accc157-bf98-42b9-b8bf-8395bff5f49f
 # ╠═54e97bc1-593b-4b74-8f77-433f5cad7b8b
-# ╠═34dc5d88-16ce-49e7-912f-0e6f36c81bd3
 # ╠═c6dda910-7ade-4668-9592-899264248339
 # ╟─ee79b752-fcdd-4742-af23-e40eb86edbe9
 # ╠═60deb437-7803-4ce3-b2eb-c2f3c78f4bc2

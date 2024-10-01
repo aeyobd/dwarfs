@@ -39,7 +39,7 @@ md"""
 """
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-data_dir = "../../data/"
+data_dir = "processed"
 
 # ╔═╡ 9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 θ_orbit = -40.095
@@ -48,17 +48,18 @@ data_dir = "../../data/"
 import TOML
 
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
-obs_properties = TOML.parsefile("/astro/dboyea/dwarfs/sculptor_obs_properties.toml")
+obs_properties = TOML.parsefile("/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml")
 
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
 begin
-	rv_meas = lguys.load_fits(joinpath(data_dir, "sculptor_all_rv.fits"))
+	rv_meas = lguys.read_fits(joinpath(data_dir, "sculptor_all_rv.fits"))
 
 	rv_meas[!, :xi_p], rv_meas[!, :eta_p] = lguys.to_orbit_coords(rv_meas.ra, rv_meas.dec, obs_properties["ra"], obs_properties["dec"], θ_orbit)
 
 
-	obs = [lguys.ICRS(r.ra, r.dec, obs_properties["distance"], 
-						r.pmra, r.pmdec, r.RV)
+	obs = [lguys.ICRS(ra=r.ra, dec=r.dec, 
+		distance=obs_properties["distance"], 
+						pmra=r.pmra, pmdec=r.pmdec, radial_velocity=r.RV)
 	for r in eachrow(rv_meas)]
 		
 	obs_gsr = lguys.to_frame(lguys.transform.(lguys.GSR, obs))
