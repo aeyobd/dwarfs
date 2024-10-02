@@ -221,6 +221,22 @@ profile = lguys.load_profile(params)
 # ╔═╡ 91daae57-94dc-4a8e-b981-75f1406e0768
 ρ_s(r) = lguys.calc_ρ(profile, r)
 
+# ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
+function v_rad_hist(snap, bins=40)
+
+	mass = snap.weights
+	v_rad = calc_v_rad(snap)
+	logr = log10.(lguys.calc_r(snap))
+	h1 = DensityEstimators.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
+	h2 = DensityEstimators.histogram(logr, bins, weights=mass, normalization=:none)
+
+	x_bins = h1.bins
+	v_bins = h1.values
+	counts = h2.values
+
+	return x_bins, v_bins ./ counts
+end
+
 # ╔═╡ a0391689-66a2-473f-9704-e12a3d033d13
 import LinearAlgebra: dot
 
@@ -244,22 +260,6 @@ function calc_v_rad(snap)
 	v_rad = dropdims(v_rad, dims=1)
 	
 	return v_rad 
-end
-
-# ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
-function v_rad_hist(snap, bins=40)
-
-	mass = snap.weights
-	v_rad = calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	h1 = DensityEstimators.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
-	h2 = DensityEstimators.histogram(logr, bins, weights=mass, normalization=:none)
-
-	x_bins = h1.bins
-	v_bins = h1.values
-	counts = h2.values
-
-	return x_bins, v_bins ./ counts
 end
 
 # ╔═╡ 227a4b71-afbd-4121-930b-696d06ccc9ba

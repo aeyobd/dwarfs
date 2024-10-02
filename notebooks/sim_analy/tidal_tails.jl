@@ -16,7 +16,7 @@ begin
 end
 
 # ╔═╡ b918a965-9e54-42a4-9126-4dd614024ff5
-using StatsBase: median, weights, mad
+using StatsBase: median, weights, mad, std
 
 # ╔═╡ 9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 md"""
@@ -31,7 +31,10 @@ import DensityEstimators as DE
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
 # ╔═╡ 82e8f2e4-d3ea-43c5-8813-aaebbca71cda
+# ╠═╡ disabled = true
+#=╠═╡
 r_b_arcmin = 120
+  ╠═╡ =#
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 model_dir = "$models_dir/1e6_V31_r3.2/orbit1/"
@@ -64,8 +67,17 @@ stars = lguys.read_fits(starsfile) |> add_xi_eta_p!
 # ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
 obs_cen = stars[1, :]
 
+# ╔═╡ adca7da4-c7e5-4f24-9f50-0413c91fad1d
+σ_v = std(stars.radial_velocity, weights(stars.weights))
+
 # ╔═╡ 075ae901-bbbd-4d10-9d91-c393fc86a8e7
 sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_p!
+
+# ╔═╡ ccc714c4-b2dd-4c83-939b-f0ca3d04c255
+r_b_kpc = orbit_props["t_last_peri"] * σ_v
+
+# ╔═╡ c351926c-1e3d-44d7-8f39-6fb5893b9b0d
+r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, orbit_props["distance_f"])
 
 # ╔═╡ 0ba05fdb-f859-4381-b2d0-145aa04f7bbf
 obs_today_file = TOML.parsefile(obs_today_filename)
@@ -166,11 +178,40 @@ function xi_eta_axis(dx=10, dy=5; kwargs...)
 		limits=limits,
 		aspect = DataAspect(),
 		xgridvisible=false,
-		ygridvisible=false
+		ygridvisible=false,
+		xreversed=true,
 		
 	)
 
 	return fig, ax
+end
+
+# ╔═╡ 3868afc5-a406-4ced-ada0-96336e5fbe96
+let 
+	fig, ax = xi_eta_axis()
+
+	bins = 100
+	limits = ax.limits.val
+	x = stars.xi
+	y = stars.eta
+
+
+	hi = Arya.histogram2d(x, y, bins, weights=stars.weights, limits=limits)
+	areas = diff(hi.xbins) .* (diff(hi.ybins)')
+	hi.values ./= areas
+	
+		
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10, maximum(hi.values)))
+
+	lines!(sky_orbit.xi[idx_orbit], sky_orbit.eta[idx_orbit])
+	arc!(Point2f(0, 0), r_b_arcmin / 60, -π, π, color=COLORS[2])
+	text!(0, -r_b_arcmin/60, text=L"r_b", color=COLORS[2])
+	
+	Colorbar(fig[1, 2], h,
+		label="stellar density"
+	)
+
+	fig
 end
 
 # ╔═╡ d1564bf3-a3c4-410b-b61b-69ac56b618e5
@@ -234,6 +275,9 @@ sum(filt_trailing .& filt_dist), sum(stars.weights[filt_trailing .& filt_dist])
 
 # ╔═╡ 9c1839d6-1076-4598-8da6-49c02ec10580
 sum(stars.weights[filt_cen])
+
+# ╔═╡ e58263aa-48d5-4a30-8c2d-f6ed19ada10f
+1 - sum(stars.weights[filt_cen])
 
 # ╔═╡ c57edba1-09f9-4fe9-bc73-5746884ee7c2
 md"""
@@ -650,6 +694,8 @@ let
 	x_m  = midpoints(bins)
 	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
 
+	arrows!([r_b_arcmin / 60], [60], [0], [-10])
+	text!(r_b_arcmin/60, 60, text=L"r_b")
 	scatter!(x_m, y_m)
 	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
 
@@ -682,7 +728,7 @@ end
 
 # ╔═╡ 0b88d438-0666-4875-b2f6-66480b652617
 let	
-	filt = abs.(stars.eta_p) .< 2
+	filt = abs.(stars.eta_p) .< 1
 	w = stars.weights[filt]
 	y = stars.distance[filt]
 	x = stars.xi_p[filt]
@@ -707,7 +753,7 @@ end
 
 # ╔═╡ 90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
 let	
-	filt = abs.(stars.eta_p) .< 2
+	filt = abs.(stars.eta_p) .< 1
 	w = stars.weights[filt]
 	y = stars.pmra_gsr[filt]
 	x = stars.xi_p[filt]
@@ -730,7 +776,7 @@ end
 
 # ╔═╡ 380cef17-05a1-4111-8479-d88c5757a62e
 let	
-	filt = abs.(stars.eta_p) .< 2
+	filt = abs.(stars.eta_p) .< 1
 	w = stars.weights[filt]
 	y = stars.pmra[filt]
 	x = stars.xi_p[filt]
@@ -1065,6 +1111,9 @@ end
 # ╠═6c76cfae-928b-47b3-babe-b0b9a5d68e65
 # ╠═89a34cdf-c724-4c7e-ae42-11da6077feb2
 # ╠═075ae901-bbbd-4d10-9d91-c393fc86a8e7
+# ╠═adca7da4-c7e5-4f24-9f50-0413c91fad1d
+# ╠═ccc714c4-b2dd-4c83-939b-f0ca3d04c255
+# ╠═c351926c-1e3d-44d7-8f39-6fb5893b9b0d
 # ╠═a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 # ╠═c4008b83-b61b-4baa-9fd5-9cced2dc6be8
 # ╠═e37559b2-229c-4a37-b516-c6cb7c022b71
@@ -1074,6 +1123,7 @@ end
 # ╠═4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 # ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
 # ╠═e9e35643-168e-4e87-a880-6831b46145c7
+# ╠═3868afc5-a406-4ced-ada0-96336e5fbe96
 # ╠═816b9db9-26c6-4ac8-9a46-82209d2cdc85
 # ╠═2c9e8ad0-bbff-4086-974e-89269868e324
 # ╠═a89adc86-67a0-453f-b382-96f721f74d39
@@ -1094,6 +1144,7 @@ end
 # ╠═d240246d-f79a-4f95-a5b9-b355e7bc092f
 # ╠═cb8c2e79-a5c2-4a59-af40-393b83f64bc7
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
+# ╠═e58263aa-48d5-4a30-8c2d-f6ed19ada10f
 # ╟─c57edba1-09f9-4fe9-bc73-5746884ee7c2
 # ╟─119040e2-ef45-4fc2-809d-aec333e276d0
 # ╟─443ac755-70fc-4193-945d-0e98622c5919

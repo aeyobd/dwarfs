@@ -50,7 +50,7 @@ md"""
 dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/stars/"
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "king_rs0.10"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")
