@@ -16,6 +16,8 @@ ellipticity_err = 0.01
 PA = 92
 PA_err = 1
 
+theta_pm_gsr = -39.64 # atand(pmra_gsr, pmdec_gsr)
+
 Mv = -10.82
 Mv_err = 0.14
 M_L_s = 1.4 

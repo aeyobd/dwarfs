@@ -28,19 +28,19 @@ A detailed analysis of the stars in sculptor
 import DensityEstimators as DE
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = "/arc7/home/dboyea/sculptor"
+models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
 # ╔═╡ 82e8f2e4-d3ea-43c5-8813-aaebbca71cda
 r_b_arcmin = 120
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/orbits/orbit1/1e6_V32_r5.4"
+model_dir = "$models_dir/1e6_V31_r3.2/orbit1/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.10.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.10/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = "/astro/dboyea/dwarfs/sculptor_obs_properties.toml"
+obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ c4008b83-b61b-4baa-9fd5-9cced2dc6be8
 import TOML
@@ -71,7 +71,7 @@ sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_
 obs_today_file = TOML.parsefile(obs_today_filename)
 
 # ╔═╡ 4ef955fb-a813-46ad-8f71-7c8a3d371eee
-obs_today_icrs = lguys.ICRS(;
+obs_today = lguys.ICRS(;
 	ra=obs_today_file["ra"], dec=obs_today_file["dec"],
 	distance=obs_today_file["distance"],
 	pmra=obs_today_file["pmra"],
@@ -79,11 +79,8 @@ obs_today_icrs = lguys.ICRS(;
 	radial_velocity=obs_today_file["radial_velocity"],
 )
 
-# ╔═╡ c3a3129e-18c6-4348-81c0-b03c5836b785
-frame = lguys.GSR
-
 # ╔═╡ 910267ee-aa39-4f04-961b-70f0862d27e2
-obs_today = lguys.transform(frame, obs_today_icrs)
+obs_today_gsr = lguys.transform(lguys.GSR, obs_today)
 
 # ╔═╡ 4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 function ra_dec_axis(ddeg=5; kwargs...)
@@ -292,8 +289,8 @@ let
 	limits = (obs_cen.pmra - dr, obs_cen.pmra + dr, obs_cen.pmdec - dr, obs_cen.pmdec + dr)
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="stars within $r_max arcmin",
 		limits=limits,
 	aspect=DataAspect())
@@ -320,8 +317,8 @@ let
 	limits = (obs_cen.pmra - dr, obs_cen.pmra + dr, obs_cen.pmdec - dr, obs_cen.pmdec + dr)
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="",
 		limits=limits,
 	aspect=DataAspect())
@@ -339,13 +336,40 @@ let
 	fig
 end
 
+# ╔═╡ 91955a7b-009e-4afa-aca1-312f4a779bb9
+let
+	dr = 1
+		
+	fig = Figure()
+	limits = (obs_cen.pmra_gsr - dr, obs_cen.pmra_gsr + dr, obs_cen.pmdec_gsr - dr, obs_cen.pmdec_gsr + dr)
+	
+	ax = Axis(fig[1,1],
+		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		title="",
+		limits=limits,
+	aspect=DataAspect())
+
+
+	x = stars.pmra_gsr
+	y = stars.pmdec_gsr
+	w = weights=stars.weights
+	h = Arya.hist2d!(ax, x, y, bins=100, weights=w, limits=limits,
+		colorscale=log10, colorrange=(1e-20, nothing))
+	
+
+	Colorbar(fig[1, 2], h, label="stellar density")
+	
+	fig
+end
+
 # ╔═╡ 19bdc540-63a8-46ad-8d6f-a425d64cdd81
 let 
 	fig = Figure()
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="",
 	aspect=DataAspect())
 
@@ -358,7 +382,34 @@ let
 	filt = filt_trailing .& filt_dist
 	scatter!(x[filt], y[filt], label="trailing arm", alpha=1, markersize=5)
 
+	filt = filt_leading .& filt_dist
+	scatter!(x[filt], y[filt], label="leading arm", alpha=1, markersize=5)
+
+	Legend(fig[1,2], ax)
+
+	fig
+end
+
+# ╔═╡ 51e4628a-a799-48a3-9ad0-b5c2bd7a8d87
+let 
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		title="",
+	aspect=DataAspect())
+
+	bins = 100
+	limits = ax.limits.val
+	x = stars.pmra_gsr
+	y = stars.pmdec_gsr
+	scatter!(x[filt_cen], y[filt_cen], label="centre", alpha=0.03, markersize=3)
+
 	filt = filt_trailing .& filt_dist
+	scatter!(x[filt], y[filt], label="trailing arm", alpha=1, markersize=5)
+
+	filt = filt_leading .& filt_dist
 	scatter!(x[filt], y[filt], label="leading arm", alpha=1, markersize=5)
 
 	Legend(fig[1,2], ax)
@@ -371,8 +422,8 @@ let
 	fig = Figure()
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="",)
 
 	bins = 100
@@ -394,14 +445,14 @@ end
 
 # ╔═╡ be0158cf-c322-4147-8f01-8b6a715bc0dc
 let
-		fig = Figure()
+	fig = Figure()
 
 	dr = 0.1
 	limits = (obs_today.pmra - dr, obs_today.pmra + dr, obs_today.pmdec - dr, obs_today.pmdec + dr)
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="Centre",
 		aspect=DataAspect()
 	)
@@ -421,10 +472,10 @@ let
 
 	dr = 0.1
 	limits = (obs_cen.pmra - dr, obs_cen.pmra + dr, obs_cen.pmdec - dr, obs_cen.pmdec + dr)
-	
+
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="leading arm",
 		aspect=DataAspect()
 	)
@@ -446,8 +497,8 @@ let
 	limits = (obs_cen.pmra - dr, obs_cen.pmra + dr, obs_cen.pmdec - dr, obs_cen.pmdec + dr)
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
-		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="trailing arm",
 		aspect=DataAspect()
 	)
@@ -473,12 +524,12 @@ let
 	x = stars.xi_p
 	r_max = 120
 
-	limits = (-r_max / 60, r_max/60, 20, 110)
+	limits = (-r_max / 60, r_max/60, obs_today.radial_velocity - 40, obs_today.radial_velocity + 40)
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{v}_\textrm{los} / \textrm{km\,s^{-1}}"
+		ylabel=L"{v}_\textrm{los} / \textrm{km\,s^{-1}}"
 	)
 	
 	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=100, limits=limits,
@@ -488,6 +539,9 @@ let
 	Colorbar(fig[1, 2], h, label="stellar mass density")
 	fig
 end
+
+# ╔═╡ 1d4a7103-3d37-4597-a180-88a4c3733497
+bins = -0.4r_max/60:0.5:0.4r_max/60
 
 # ╔═╡ f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
 let	
@@ -589,10 +643,33 @@ let
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"{v}_\textrm{los} / \textrm{km\,s^{-1}}"
+	)
+
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ 1f58f320-7bd6-40d6-b66b-0ec0db29de4a
+let	
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.radial_velocity_gsr[filt]
+	x = stars.xi_p[filt]
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
 		ylabel=L"\tilde{v}_\textrm{los} / \textrm{km\,s^{-1}}"
 	)
 
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
 
 	x_m  = midpoints(bins)
 	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
@@ -632,6 +709,29 @@ end
 let	
 	filt = abs.(stars.eta_p) .< 2
 	w = stars.weights[filt]
+	y = stars.pmra_gsr[filt]
+	x = stars.xi_p[filt]
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}"
+	)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ 380cef17-05a1-4111-8479-d88c5757a62e
+let	
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
 	y = stars.pmra[filt]
 	x = stars.xi_p[filt]
 
@@ -639,10 +739,8 @@ let
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
+		ylabel=L"{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}"
 	)
-
-	bins = LinRange(-r_max/60, r_max/60, 10)
 
 	x_m  = midpoints(bins)
 	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
@@ -656,17 +754,15 @@ end
 # ╔═╡ a293ddc2-461c-42d6-9d02-7077c66163e5
 let	
 	w = stars.weights
-	y = stars.pmra
+	y = stars.pmra_gsr
 	x = stars.eta_p
 
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\eta' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+		ylabel=L"\tilde{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}"
 	)
-
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 10)
 
 	x_m  = midpoints(bins)
 	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
@@ -706,9 +802,6 @@ let
 		ylabel="effective num of observations",
 		yscale=log10
 	)
-
-	bins = LinRange(-r_max/60, r_max/60, 10)
-
 	
 	scatter!(midpoints(bins), hist_eff(x, bins, w=w))
 
@@ -718,7 +811,7 @@ end
 # ╔═╡ b79ea320-c652-4850-a617-58bfb0c09be8
 let	
 	mass = stars.weights
-	y = stars.pmdec
+	y = stars.pmdec_gsr
 	x = stars.xi_p
 	y_m = median(y, weights(mass))
 
@@ -739,7 +832,56 @@ let
 	fig
 end
 
+# ╔═╡ 3ebaa8ee-4ddf-49e8-b9ac-f0df9b45876b
+let	
+	mass = stars.weights
+	y = stars.pmdec
+	x = stars.xi_p
+	y_m = median(y, weights(mass))
+
+	
+	limits = (-r_max / 60, r_max/60, y_m - 0.1, y_m + 0.1)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+	)
+	
+	h = Arya.hist2d!(ax, x, y, weights=mass, bins=100, limits=limits,
+		colorrange=(1e-15, nothing), colorscale=log10, normalization=:density
+	)
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+	fig
+end
+
 # ╔═╡ de36ca44-5c34-4673-a75f-e705e5cd83a8
+let	
+	filt = abs.(stars.eta_p) .< 2
+	w = stars.weights[filt]
+	y = stars.pmdec_gsr[filt]
+	x = stars.xi_p[filt]
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=L"\xi' / \textrm{degrees}",
+		ylabel=L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
+	)
+
+	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+
+	fig
+end
+
+# ╔═╡ 14b0f654-81e2-4f29-95d3-30918293d852
 let	
 	filt = abs.(stars.eta_p) .< 2
 	w = stars.weights[filt]
@@ -750,7 +892,7 @@ let
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+		ylabel=L"{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
 	)
 
 	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
@@ -767,17 +909,15 @@ end
 # ╔═╡ d3d1e03d-d99a-4f79-818d-5bdc5b4a005a
 let	
 	w = stars.weights
-	y = stars.pmdec
+	y = stars.pmdec_gsr
 	x = stars.eta_p
 
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		#limits=limits,
 		xlabel=L"\eta' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
+		ylabel=L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
 	)
-
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 10)
 
 	x_m  = midpoints(bins)
 	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
@@ -896,8 +1036,6 @@ let
 		limits=(-5, 5, nothing, nothing)
 	)
 
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 10)
-
 	bin_idxs = DE.bin_indices(x, bins)
 
 	N = length(bins) - 1
@@ -932,7 +1070,6 @@ end
 # ╠═e37559b2-229c-4a37-b516-c6cb7c022b71
 # ╠═0ba05fdb-f859-4381-b2d0-145aa04f7bbf
 # ╠═4ef955fb-a813-46ad-8f71-7c8a3d371eee
-# ╠═c3a3129e-18c6-4348-81c0-b03c5836b785
 # ╠═910267ee-aa39-4f04-961b-70f0862d27e2
 # ╠═4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 # ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
@@ -963,25 +1100,32 @@ end
 # ╟─1d35a894-1eca-4ee0-9d1a-6ac4704b912c
 # ╠═6b0a0ea3-f6f7-4cee-be11-bce6872ab870
 # ╠═54205139-3c7b-4beb-b9cb-c87b272df58a
+# ╠═91955a7b-009e-4afa-aca1-312f4a779bb9
 # ╠═19bdc540-63a8-46ad-8d6f-a425d64cdd81
+# ╠═51e4628a-a799-48a3-9ad0-b5c2bd7a8d87
 # ╠═e098260a-718a-4f43-b12c-cab0a1302b90
 # ╠═be0158cf-c322-4147-8f01-8b6a715bc0dc
 # ╠═5eb22695-57c4-4ebf-b412-588f5e366bf5
 # ╠═79dd7e3d-8564-4389-960b-05512b0143c0
 # ╠═d4d50209-e9a8-40dc-9f45-4e8000f70b39
 # ╠═92b761ba-dc5d-4b99-9462-2c9b6faf680d
+# ╠═1d4a7103-3d37-4597-a180-88a4c3733497
 # ╠═e3ecf2c5-67e9-4571-8743-04c67755a23b
+# ╠═1f58f320-7bd6-40d6-b66b-0ec0db29de4a
 # ╠═f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
 # ╠═0b88d438-0666-4875-b2f6-66480b652617
 # ╟─302b3ac4-94cc-44d9-a5e6-314460e76a9f
 # ╠═90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
+# ╠═380cef17-05a1-4111-8479-d88c5757a62e
 # ╠═a293ddc2-461c-42d6-9d02-7077c66163e5
 # ╠═925be0a1-0afa-4b5a-b9c9-003833e80a28
 # ╠═f1cb5d80-57a8-43e8-8819-4e1bc134edea
 # ╠═4b0515a9-e55d-4bed-b6d3-0a2f12d0a238
 # ╠═20e6efaa-95ab-4163-a584-f1fea47f02c7
 # ╠═b79ea320-c652-4850-a617-58bfb0c09be8
+# ╠═3ebaa8ee-4ddf-49e8-b9ac-f0df9b45876b
 # ╠═de36ca44-5c34-4673-a75f-e705e5cd83a8
+# ╠═14b0f654-81e2-4f29-95d3-30918293d852
 # ╠═d3d1e03d-d99a-4f79-818d-5bdc5b4a005a
 # ╟─ae9d8d21-1269-4053-89a3-3a8287a4ca70
 # ╟─4c8b9b51-5e72-42a7-a919-ca2c2d1c5294

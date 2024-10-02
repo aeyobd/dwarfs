@@ -47,33 +47,31 @@ md"""
 """
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
-# input directory
-dir = "/astro/dboyea/sculptor/isolation/1e6/V31_r3.2/stars/"
-#dir = "/astro/dboyea/sculptor/isolation/1e6/halos/V32_r2.4/stars/"
+dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/stars/"
+
+# ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
+starsname = "king_rs0.10"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
-paramname = joinpath(dir, "exp2d_rs0.10")
+paramname = joinpath(dir, starsname, "profile.toml")
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
 # File loading
 """
 
-# ╔═╡ 8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
-params = TOML.parsefile(paramname * ".toml")
-
 # ╔═╡ 0ede2af5-a572-41c8-b3f0-cb0a24318c5f
-profile = lguys.load_profile(params)
+profile = lguys.load_profile(paramname)
 
 # ╔═╡ 715f771b-686a-4643-a914-35ba6ca9042d
-df_E = lguys.read_hdf5_table(paramname * "_df.hdf5")
+df_E = lguys.read_hdf5_table(joinpath(dir, starsname, "probabilities_df.hdf5"))
 
 # ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
-df_probs = lguys.read_hdf5_table(paramname * "_stars.hdf5")
+df_probs = lguys.read_hdf5_table(joinpath(dir, starsname, "probabilities_stars.hdf5"))
 
 # ╔═╡ 578c6196-db59-4d5c-96a7-9a8487bbeaae
 begin 
-	snap = lguys.Snapshot(joinpath(dir, "../mid.hdf5"))
+	snap = lguys.Snapshot(joinpath(dir, "initial_stars.hdf5"))
 	snap.weights = df_probs.probability[snap.index]
 	snap
 end
@@ -498,9 +496,9 @@ end
 # ╠═631a70f3-5284-4c3f-81ef-714455b876ee
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
 # ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
+# ╠═939cc89e-7273-4bb5-a13f-241139d922ea
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
 # ╟─d76e6200-9401-4c2e-bd7c-53e79dd49415
-# ╠═8a8d3180-ab8c-4456-a2cf-6ffb7dc73760
 # ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
 # ╠═715f771b-686a-4643-a914-35ba6ca9042d
 # ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
