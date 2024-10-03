@@ -74,16 +74,16 @@ import TOML
 obs_props = TOML.parsefile("/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml")
 
 # ╔═╡ 9814b558-0fd6-43ef-b145-4d94136bada7
-ddist = 0 * obs_props["distance_err"]
+ddist = -1.8 * obs_props["distance_err"]
 
 # ╔═╡ af1bb0be-59e4-40b2-af88-f7428a125c24
-dpm_ra = 0 * obs_props["pmra_err"]
+dpm_ra = 0.87 * obs_props["pmra_err"]
 
 # ╔═╡ eb2e8a83-f2c2-4ac2-b4e4-3c78e8ed21e8
-dpm_dec = 0 * obs_props["pmdec_err"]
+dpm_dec = -0.47 * obs_props["pmdec_err"]
 
 # ╔═╡ 741ee80a-fac4-4494-a546-26534ba0719e
-drv = 0 * obs_props["radial_velocity_err"]
+drv = 0.2 * obs_props["radial_velocity_err"]
 
 # ╔═╡ aeaae20c-4ee7-4f66-8b1f-52d3afdda205
 obs = lguys.ICRS(
