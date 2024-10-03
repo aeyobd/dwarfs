@@ -69,7 +69,7 @@ def create_sbatch_script(args, resubmit):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     return f"""#!/bin/bash
 #SBATCH --job-name          {args.name}
-#SBATCH --output            %J.out
+#SBATCH --output            %j.out
 #SBATCH --time              {args.time}
 #SBATCH --nodes             {args.nodes}
 #SBATCH --ntasks-per-node   80

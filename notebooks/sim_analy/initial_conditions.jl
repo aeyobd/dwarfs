@@ -37,11 +37,10 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-#model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2"
-model_dir = "/astro/dboyea/dwarfs/agama/halos/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V40_r5.9/orbit_mean"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "nfw_1e5"
+name = "initial"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -49,7 +48,7 @@ md"""
 """
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
-halo = lguys.load_profile(joinpath(model_dir, "halo.toml"))
+halo = lguys.load_profile(joinpath(model_dir, "../halo.toml"))
 
 # ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
 halo.r_s
@@ -79,7 +78,7 @@ end
 snap.x_cen
 
 # ╔═╡ 5ebe92b8-602e-42be-8751-58898b7323b0
-snap.v_cen
+snap.v_cen * V2KMS
 
 # ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
 prof = lguys.MassProfile3D(snap)
