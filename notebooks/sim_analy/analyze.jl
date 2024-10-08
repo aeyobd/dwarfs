@@ -36,13 +36,13 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2/"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V40_r5.9/orbit_mean"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
-halo = LilGuys.load_profile(joinpath(model_dir, "halo.toml"))
+halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
 
 # ╔═╡ d971556d-8b66-4b2d-9dc0-31799f94b10a
 skip = 10
@@ -78,7 +78,7 @@ snap_f = out[idx_f]
 
 # ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
 begin 
-	profiles = LilGuys.read_structs_from_hdf5(joinpath(model_dir, "out/profiles.hdf5"), LilGuys.MassProfile3D)
+	profiles = LilGuys.read_structs_from_hdf5(joinpath(model_dir, "profiles.hdf5"), LilGuys.MassProfile3D)
 
 	snap_idx = parse.(Int, first.(profiles))
 
@@ -217,7 +217,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"v_\text{circ} / \text{km\,s^{-1}}",
 	limits=(nothing, (0, nothing)))
-	x = out.times[1:skip:end] * T2GYR
+	x = out.times[snap_idx]
 	scatter!(x, v_max * V2KMS, label=L"maximum $v_\text{circ}$")
 	#scatter!(x, v_h, label=L"r=r_h")
 	axislegend(ax)
@@ -245,7 +245,7 @@ let
 	
 	lines!(prof_fap.log_r, log10.(prof_fap.rho), label="final (all particles)", color=COLORS[2], linestyle=:dash)
 
-	LP.plot_ρ!(halo, linestyle=:dot, label="NFW", color=:black)
+	#LP.plot_ρ!(halo, linestyle=:dot, label="NFW", color=:black)
 
 	axislegend(ax)
 	#lines!([0, 0] .+ log10.(r_break), [-11.5, -10],  color=:black)
@@ -260,7 +260,9 @@ end
 
 # ╔═╡ 4cd952f3-555d-401b-aa31-8b79a23ca42e
 let 
-	fig, ax = LP.xy_axis()
+	fig = Figure()
+	
+	ax =Axis(fig[1, 1], aspect=1)
 
 	bins = LinRange(-10, 10, 100)
 	colorrange=(1e-6, nothing)
@@ -274,7 +276,7 @@ end
 
 # ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
 let
-	fig, ax = LP.xy_axis()
+	fig, ax = FigAxis(aspect=1)
 	ax.title = "initial"
 
 	bins = LinRange(-10, 10, 100)
@@ -325,12 +327,20 @@ end
 # ╔═╡ 7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 let 
 	fig = Figure()
-	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e2, 1e6)),
-		xlabel=L"\epsilon", ylabel="count")
-	stephist!(LilGuys.calc_ϵ(snap_i), )
-	es = LilGuys.calc_ϵ(snap_f)
-	es = es[es .> 0]
-	stephist!(es)
+	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-1, 1e2)),
+		xlabel=L"\epsilon", ylabel=L"dN/d\epsilon")
+
+	x = LilGuys.calc_ϵ(snap_i)
+	bins, values, errs = LilGuys.histogram(x[x .> 0], 
+		normalization=:pdf)
+	
+	scatter!(midpoints(bins), values, label="initial")
+
+	x = LilGuys.calc_ϵ(snap_f)
+	bins, values, errs = LilGuys.histogram(x[x .> 0], 
+		normalization=:pdf)
+	
+	scatter!(midpoints(bins), values, label="final")
 
 	save(joinpath(figures_dir, "energy distribution.pdf"), fig)
 	fig

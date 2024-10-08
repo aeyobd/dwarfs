@@ -555,8 +555,8 @@ let
 
 	#c = contour!(k, linewidth=6)
 	filt = z .>= σ_thresh
-	h = scatter!(x[filt], y[filt], color=z[filt], colorrange=extrema(z))
-	scatter!(x[.!filt], y[.!filt], color=z[.!filt], colorrange=extrema(z), markersize=2)
+	h = scatter!(x[filt], y[filt], color=z[filt], colorrange=extrema(z[filt]))
+	# scatter!(x[.!filt], y[.!filt], color=z[.!filt], colorrange=extrema(z[filt]), markersize=2)
 
 	lines!(Vc_mean * V2KMS, Rc_mean)
 

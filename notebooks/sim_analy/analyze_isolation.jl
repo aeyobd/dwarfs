@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/sculptor/isolation/1e7/s0.014"
+name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e7/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -52,7 +52,7 @@ halo = lguys.load_profile(joinpath(name, "halo.toml"))
 softening = 0.044 # kpc
 
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
-out = lguys.Output(joinpath(name, "out/combined.hdf5"))
+out = lguys.Output(joinpath(name, "combined.hdf5"))
 
 # ╔═╡ dd31d3ee-7fdf-46f5-b213-45faae93ae5e
 idxs = [1, 3, 6, length(out)]
@@ -70,7 +70,7 @@ figure_dir = joinpath(name, "figures/")
 mkpath(figure_dir)
 
 # ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-profs = LilGuys.read_structs_from_hdf5(joinpath(name, "out/profiles.hdf5"), LilGuys.MassProfile3D)
+profs = LilGuys.read_structs_from_hdf5(joinpath(name, "profiles.hdf5"), LilGuys.MassProfile3D)
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -86,8 +86,8 @@ let
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"V_\textrm{circ}")
 
 
-	for i in eachindex(snaps)
-		lines!(profs[i].second.log_r, profs[i].second.v_circ * V2KMS, label="snapshot $(profs[i].first)" )
+	for i in eachindex(profs)
+		lines!(profs[i].second.log_r_bins[2:end], profs[i].second.v_circ * V2KMS, color=i, colorrange=(1, length(profs)))
 	end
 
 
@@ -133,7 +133,7 @@ let
 	limits=(-2.5, 4, -20, 1))
 
 	for i in eachindex(profs)
-		lines!(profs[i].second.log_r, log10.(profs[i].second.rho), label="snapshot $(profs[i].first)")
+		lines!(profs[i].second.log_r, log10.(profs[i].second.rho))
 	end
 
 	log_r = LinRange(-2, 4, 1000)

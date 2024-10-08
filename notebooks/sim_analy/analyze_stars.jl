@@ -24,7 +24,7 @@ Given the stellar probabilty file, makes plots based on the 3D properties of the
 """
 
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
-import DensityEstimators
+import DensityEstimators as DE
 
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
@@ -34,44 +34,29 @@ md"""
 # Inputs
 """
 
-# ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
-models_dir = "/arc7/home/dboyea/sculptor"
-
-# ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = "/arc7/home/dboyea/sculptor/orbits/orbit1/1e6_V31_r3.2"
-
-# ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "fiducial/stars/exp2d_rs0.10"
-
-# ╔═╡ d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
-r_scale = 1
+# ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
+starsname = "exp2d_rs0.10"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-starsfile = "/arc7/home/dboyea/sculptor/isolation/1e6/$(starsname)_stars.hdf5"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r5.9/orbit1"
+
+# ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
+stars_dir_in = joinpath(model_dir, "../stars/$starsname")
+
+# ╔═╡ 7c64a7c7-232b-47b6-973a-62e1ac21df3a
+stars_dir_out = joinpath(model_dir, "stars/$starsname")
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
-paramsfile = "/astro/dboyea/sculptor/isolation/1e6/$starsname.toml"
+paramsfile = joinpath(stars_dir_in, "profile.toml")
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
 
-# ╔═╡ 172588cc-ae22-440e-8488-f508aaf7ce96
-rel_p_cut = 1e-20
-
-# ╔═╡ ef3481f8-2505-4c04-a04a-29bdf34e9abb
-outfile = "stars/$(starsname)_today.fits"
-
 # ╔═╡ 973955ad-3214-42cf-831f-a782f1d2434a
 idx_i = 1 
 
-# ╔═╡ 5e12d306-a430-4b15-b3a7-d4806a5856cd
-name = splitext(basename(starsfile))[1]
-
-# ╔═╡ a80d9e83-6b11-4c55-94ec-294d4247af42
-outfile_i = "stars/$(starsname)_i_today.fits"
-
 # ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
-obs_today_filename = "../../models/sculptor/mc_orbits/orbit1.toml"
+obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
@@ -91,7 +76,7 @@ params = TOML.parsefile(paramsfile)
 obs_today_file = TOML.parsefile(obs_today_filename)
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
-df_probs = lguys.read_hdf5_table(starsfile)
+df_probs = lguys.read_hdf5_table(stars_dir_in * "/probabilities_stars.hdf5")
 
 # ╔═╡ e76a6fa2-c020-48bf-b065-bc7ca51ecd98
 p_idx = df_probs.index; probabilities = df_probs.probability
@@ -100,7 +85,7 @@ p_idx = df_probs.index; probabilities = df_probs.probability
 length(probabilities)
 
 # ╔═╡ 6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
-out =  lguys.Output(model_dir * "/out", weights=probabilities)
+out =  lguys.Output(model_dir, weights=probabilities)
 
 # ╔═╡ 396a53a3-de0f-4d97-9693-40f3757d66f9
 snap_i = out[idx_i]
@@ -111,13 +96,16 @@ length(snap_i.masses)
 # ╔═╡ 6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
 snap_f = out[idx_f]
 
+# ╔═╡ 33f12011-9b26-405f-9154-413cdbee0921
+stellar_profs = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
+
+# ╔═╡ 145144a0-d93d-4bea-8603-655bb6c818aa
+save = Makie.save
+
 # ╔═╡ 5ee4f95d-0587-44ab-b543-9b7039d545e6
 md"""
 # Plots
 """
-
-# ╔═╡ 1fd7b586-75ad-42a8-b752-ea82b290cb47
-out.weights
 
 # ╔═╡ 77479cd4-513c-4603-9aa0-1acd964c403a
 let
@@ -129,8 +117,10 @@ let
 	z = lguys.get_z(snap_f)
 	ps = snap_f.weights
 	bins = LinRange(-r_max, r_max, 300)
-	
-	kwargs = (colorscale=log10, colorrange=(1e-10, nothing), weights=ps, bins=bins)
+
+	h = Arya.histogram2d(y, z, bins, weights=ps)
+	cmax = maximum(h.values)
+	kwargs = (colorscale=log10, colorrange=(1e-10*cmax, cmax), weights=ps, bins=bins)
 
 	
 	ax_yz = Axis(fig[2,2], aspect=1,
@@ -159,6 +149,15 @@ let
 	linkxaxes!(ax_xz, ax_xz)
 
 	Colorbar(fig[1, 2], hm, tellwidth=false, label="stellar density")
+
+    rowsize!(fig.layout, 1, ax_yz.scene.viewport[].widths[1])
+	rowgap!(fig.layout, 1, -50.0)
+	colgap!(fig.layout, 1, 50.)
+
+	resize_to_layout!(fig)
+	save(joinpath(fig_dir, "density_xy_zoomout.pdf"), fig)
+
+	
 	fig
 end
 
@@ -169,22 +168,31 @@ let
 	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
 
 	bin_range = LinRange(-2, 2, 100)
-	colorrange =(1e-5, nothing)
-
 	bins = (out.x_cen[1, idx_i]  .+ bin_range,  out.x_cen[2, idx_i]  .+ bin_range)
+
+	h = Arya.histogram2d( snap_i.positions[1, :], snap_i.positions[2, :], bins, weights=snap_i.weights)
+	
+	colorrange =(1e-5, 1) .* maximum(h.values)
+
 		
 
 	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], weights=snap_i.weights, bins = bins, colorscale=log10, colorrange=colorrange)
 
 	ax2 = Axis(fig[1,2], aspect=1,
-	xlabel = "x / kpc", ylabel="y/kpc",
+	xlabel = "x / kpc", 
 	title="final")
 
 
 	bins = (out.x_cen[1, idx_f]  .+ bin_range,  out.x_cen[2, idx_f]  .+ bin_range)
 
-	Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=snap_f.weights, bins = bins, colorscale=log10, colorrange=colorrange)
-	
+	h = Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=snap_f.weights, bins = bins, colorscale=log10, colorrange=colorrange)
+
+	Colorbar(fig[1, 3], h, label="stellar density")
+
+    rowsize!(fig.layout, 1, ax.scene.viewport[].widths[1])
+
+	save(joinpath(fig_dir, "density_xy_if.pdf"), fig)
+
 	fig
 end
 
@@ -221,71 +229,25 @@ profile = lguys.load_profile(params)
 # ╔═╡ 91daae57-94dc-4a8e-b981-75f1406e0768
 ρ_s(r) = lguys.calc_ρ(profile, r)
 
+# ╔═╡ 44e065d8-e85b-4972-adc7-340a2af22a54
+prof_i = lguys.StellarProfile3D(snap_i)
+
+# ╔═╡ 11d8c251-28ae-412c-8a96-646e19adef56
+prof_f = lguys.StellarProfile3D(snap_f)
+
 # ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
-function v_rad_hist(snap, bins=40)
+function v_rad_hist(snap, bins=100)
 
 	mass = snap.weights
-	v_rad = calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	h1 = DensityEstimators.histogram(logr, bins, weights=v_rad .* mass, normalization=:none)
-	h2 = DensityEstimators.histogram(logr, bins, weights=mass, normalization=:none)
 
-	x_bins = h1.bins
-	v_bins = h1.values
-	counts = h2.values
+	v_rad = lguys.calc_v_rad(snap)
+	logr = log10.(lguys.calc_r(snap))
+	x_bins, v_bins, _ = lguys.histogram(logr, bins, weights=v_rad .* mass)
+	_, counts, _ = lguys.histogram(logr, x_bins, weights=mass)
+
 
 	return x_bins, v_bins ./ counts
 end
-
-# ╔═╡ a0391689-66a2-473f-9704-e12a3d033d13
-import LinearAlgebra: dot
-
-# ╔═╡ 44ab0a25-ab4c-4e90-8619-2a068a285755
-""" 
-	calc_v_rad(snap)
-
-returns the radial velocities relative to the snapshot centre in code units
-"""
-function calc_v_rad(snap)
-	x_vec = snap.positions .- snap.x_cen
-	v_vec = snap.velocities .- snap.v_cen
-
-	# normalize
-	x_hat = x_vec ./ lguys.calc_r(x_vec)'
-
-	# dot product
-	v_rad = sum(x_hat .* v_vec, dims=1)
-
-	# matrix -> vector
-	v_rad = dropdims(v_rad, dims=1)
-	
-	return v_rad 
-end
-
-# ╔═╡ 227a4b71-afbd-4121-930b-696d06ccc9ba
-md"""
-double checking the velocity radial 3D calculation. Blue arrows should all point inward and red outward. Tiny slice in the x-y vx-vy plane...
-"""
-
-# ╔═╡ 253e43df-58fc-4dee-b1c4-35e273499ab7
-let
-	vs = calc_v_rad(snap_f)
-
-	filt = snap_f.weights .> 0.01 * maximum(snap_f.weights)
-	x = lguys.get_x(snap_f)[filt]
-	y = lguys.get_y(snap_f)[filt]
-	w = snap_f.weights[filt]
-	scatter(x, y, color=vs[filt])
-end
-
-# ╔═╡ 17b8f17b-0801-45ca-a86b-bba1d78f9ecd
-lguys.calc_r(snap_f)
-
-# ╔═╡ 51ba2a8e-6f6f-43bd-ac5f-5d238bd41165
-lguys.calc_r(snap_f, snap_f.x_cen)
-
-# ╔═╡ 56be7b5a-3e46-4162-94cb-3f5783efd183
-snap_f.x_cen
 
 # ╔═╡ 9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8
 md"""
@@ -408,53 +370,28 @@ lguys.arcmin_to_kpc(240, 86)
 # ╔═╡ fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 gaussian(x, μ, σ) = 1/sqrt(2π)* 1/σ * exp(-(x-μ)^2/(2σ^2))
 
-# ╔═╡ 04629bcf-5c19-41eb-8903-72947c209cbf
-let
-	snap = snap_f
-	
-	mass = snap_f.weights
-	v_rad = calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	filt = logr .< 1
-
-	h = DensityEstimators.histogram(v_rad[filt] * V2KMS, 20, 
-		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
-
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel=L"v_\textrm{rad} = \vec{v} \cdot \hat{r} \  / \ \textrm{km\,s^{-1}}",
-		ylabel="stellar density"
-	)
-	
-	scatter!(lguys.midpoints(h.bins), h.values)
-
-	σ = calc_σv(snap)
-	x_model = LinRange(-20, 20, 100)
-	y_model = gaussian.(x_model, 0, σ*√3/2)
-	lines!(x_model, y_model)
-	fig
-	
-end
-
 # ╔═╡ c2ccf9de-e3cd-4950-9a4d-6f425d261ccb
 function calc_v_tan(snap)
 	v = lguys.calc_v(snap)
-	v_rad = calc_v_rad(snap)
+	v_rad = lguys.calc_v_rad(snap)
 	v_tan = @. sqrt(v^2 - v_rad^2)
 	return vec(v_tan)
 end
 
 # ╔═╡ 76438e61-d227-41cf-b9ea-e658bc389772
 let
-	snap = snap_i
+	snap = snap_f
+	logr_max = 2
+
+	σv = calc_σv(snap, r_max=10 .^ logr_max)
+	
 	
 	mass = snap.weights
-	v_rad = (snap.velocities[1, :] .- snap.v_cen[1]) * V2KMS
+	v_x = (snap.velocities[1, :] .- snap.v_cen[1]) * V2KMS
 	logr = log10.(lguys.calc_r(snap))
-	filt = logr .< 1
+	filt = logr .< logr_max
 
-	h = DensityEstimators.histogram(v_rad[filt], 15,
+	h = DE.histogram(v_x[filt], 15,
 		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
 
 
@@ -501,21 +438,26 @@ r_b_kpc = calc_rb(σv, orbit_props["t_last_peri"])
 let 
 	fig = Figure()
 
+	ymax = log10(maximum(prof_i.rho))
+	
 	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
-		limits=((-1.9, 1), (-12, 2)))
+		limits=((-1.9, 1), (ymax - 15, ymax)))
 
-	plot_ρ_s!(snap_i, bins=500, label="initial")
-	plot_ρ_s!(snap_f, bins=500, label="final")
-
+	lines!(prof_i.log_r, log10.(prof_i.rho), label="initial")
+	lines!(prof_f.log_r, log10.(prof_f.rho), label="final")
+	
 	x = LinRange(-2, 1, 1000)
 	r = 10 .^ x
 	y = log10.(ρ_s.(r))
+
+	lines!(x, y, label="analytic", linestyle=:dot)
 	
-	lines!(x, y)
+	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black, label="break radius")
 	
-	vlines!(log10.(r_b_kpc))
+	axislegend(ax, position=:lb)
 	
-	axislegend(ax)
+	save(joinpath(fig_dir, "rho_3d_if.pdf"), fig)
+
 	fig
 end
 
@@ -524,7 +466,7 @@ let
 	snap = snap_f
 	
 	mass = snap.weights
-	v_rad = calc_v_rad(snap) 
+	v_rad = lguys.calc_v_rad(snap) 
 	logr = log10.(lguys.calc_r(snap))
 
 	limits = (-2, 3, -100, 100)
@@ -547,15 +489,18 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		xlabel="log r",
-		ylabel="mean 3D radial velocity (km / s)",
+		xlabel=L"log $r$ / kpc",
+		ylabel=L"mean 3D radial velocity in bin (km\,s$^{-1}$)",
 		limits=((nothing, 2), (-40, 50))
 	)
 	
-	x, y= v_rad_hist(snap_f, 50)
+	x, y= v_rad_hist(snap_f)
 	scatter!(lguys.midpoints(x), y * V2KMS)
 
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
+	text!(log10.(r_b_kpc), -20, text=L"r_b")
+
+	save(joinpath(fig_dir, "break_radius.pdf"), fig)
 	fig
 end
 
@@ -563,7 +508,7 @@ end
 orbit_props["t_last_peri"]
 
 # ╔═╡ d53669fc-84a1-4138-8445-5f31c3ec44a5
-@info lguys.kpc_to_arcmin(r_b_kpc, stars)
+r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, orbit_props["distance_f"])
 
 # ╔═╡ 9b75409d-55f5-47c3-ab63-8168d31d3d54
 md"""
@@ -605,7 +550,7 @@ let
 		#yticks=[1, 0.1],
 	)
 
-	idx = 1:30:length(out)
+	idx = 1:10:length(out)
 	vs = [calc_σv(out[i]) for i in idx]
 
 	scatter!(out.times[idx] * T2GYR, vs)
@@ -613,26 +558,32 @@ let
 	fig
 end
 
+# ╔═╡ a955cee5-609e-46bd-8212-51e18c0d1e86
+properties = Dict(
+	"break_radius_kpc" => r_b_kpc,
+	"break_radius_arcmin" => r_b_arcmin,
+)
+
+# ╔═╡ a3311d9e-430b-49af-ac7c-460aa49e19bc
+open(joinpath(stars_dir_out, "properties.toml"), "w") do f
+	TOML.print(f, properties)
+end
+
 # ╔═╡ Cell order:
-# ╠═377284f2-dcee-44d3-9a04-728605cea92a
+# ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
 # ╟─b3a16249-b8d9-4a6b-9294-cd654a17dc17
-# ╠═cb6a58a6-9ba9-44b5-95a6-062965c13259
-# ╠═0a73bf88-3f46-4864-97f5-41705ea6913d
-# ╠═29988108-b02c-418c-a720-5766f47c39ff
-# ╠═d7f5a3ed-ae4a-4ea3-b776-00dba6506a88
+# ╠═2106bfe1-a53d-4ef8-9111-e191a8056351
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
+# ╠═08aa0f76-3d74-45b5-b9e9-6abbf6350910
+# ╠═7c64a7c7-232b-47b6-973a-62e1ac21df3a
 # ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 # ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
-# ╠═172588cc-ae22-440e-8488-f508aaf7ce96
-# ╠═ef3481f8-2505-4c04-a04a-29bdf34e9abb
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
 # ╠═8f9ee2a7-de43-43e0-8257-93ecc630044f
-# ╠═5e12d306-a430-4b15-b3a7-d4806a5856cd
-# ╠═a80d9e83-6b11-4c55-94ec-294d4247af42
 # ╠═9c42eb0a-029d-46f7-afb0-de03f82c5889
 # ╟─396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
@@ -645,27 +596,22 @@ end
 # ╠═6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
 # ╠═396a53a3-de0f-4d97-9693-40f3757d66f9
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
+# ╠═33f12011-9b26-405f-9154-413cdbee0921
+# ╠═145144a0-d93d-4bea-8603-655bb6c818aa
 # ╟─5ee4f95d-0587-44ab-b543-9b7039d545e6
-# ╠═1fd7b586-75ad-42a8-b752-ea82b290cb47
 # ╟─77479cd4-513c-4603-9aa0-1acd964c403a
-# ╠═7bc2c15c-33f7-43f3-a47f-ca39ffc22071
+# ╟─7bc2c15c-33f7-43f3-a47f-ca39ffc22071
 # ╠═8df71dd5-ba0b-4918-9dc0-791c6c3bad5f
 # ╟─c6ce37f4-09f6-43c2-9ee3-286d9e6baf7f
 # ╠═a1138e64-5fa5-4a0e-aeef-487ee78a7adc
 # ╠═04e315d5-8684-4206-bc8f-a9483d721b2a
 # ╠═91daae57-94dc-4a8e-b981-75f1406e0768
-# ╠═1866c280-89c3-4a71-9dbf-50b583360145
+# ╠═44e065d8-e85b-4972-adc7-340a2af22a54
+# ╠═11d8c251-28ae-412c-8a96-646e19adef56
+# ╟─1866c280-89c3-4a71-9dbf-50b583360145
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
-# ╠═57d5decd-8259-4ec2-87ac-44d28625cd7b
-# ╠═a0391689-66a2-473f-9704-e12a3d033d13
-# ╠═44ab0a25-ab4c-4e90-8619-2a068a285755
-# ╟─227a4b71-afbd-4121-930b-696d06ccc9ba
-# ╠═253e43df-58fc-4dee-b1c4-35e273499ab7
-# ╠═17b8f17b-0801-45ca-a86b-bba1d78f9ecd
-# ╠═51ba2a8e-6f6f-43bd-ac5f-5d238bd41165
-# ╠═56be7b5a-3e46-4162-94cb-3f5783efd183
-# ╠═04629bcf-5c19-41eb-8903-72947c209cbf
+# ╟─57d5decd-8259-4ec2-87ac-44d28625cd7b
 # ╟─9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8
 # ╠═d7fece88-3327-4435-ab61-b45ff62b3b2e
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780
@@ -681,10 +627,12 @@ end
 # ╠═fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 # ╠═c2ccf9de-e3cd-4950-9a4d-6f425d261ccb
 # ╠═76438e61-d227-41cf-b9ea-e658bc389772
-# ╟─b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
+# ╠═b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
 # ╠═13a87549-1318-494c-9147-3f71095bf2ef
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 # ╠═d53669fc-84a1-4138-8445-5f31c3ec44a5
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
 # ╠═cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
 # ╠═d42795d0-bd69-4c2c-be5b-e27e85199ee3
+# ╠═a955cee5-609e-46bd-8212-51e18c0d1e86
+# ╠═a3311d9e-430b-49af-ac7c-460aa49e19bc

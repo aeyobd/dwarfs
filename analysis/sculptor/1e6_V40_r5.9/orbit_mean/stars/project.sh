@@ -17,6 +17,7 @@ out_path="../combined.hdf5"
 iso_stars_path="../../stars/"
 stars_file=$iso_stars_path/$1/probabilities_stars.hdf5
 
+
 project_snapshot.jl $out_path $stars_file $1/final.fits -i $idx_f
 stellar_profile.jl $1/final.fits --mass-column probability -s --bin-method both
 

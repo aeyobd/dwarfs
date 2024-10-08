@@ -11,34 +11,36 @@ ICFormat                    3       # use HDF5
 SnapFormat                  3 
 
 #---Mem & CPU limits
-TimeLimitCPU                3600    # TUNE to run characteristics
-CpuTimeBetRestartFile       1800    # TUNE 
+TimeLimitCPU                86400   # TUNE to run characteristics
+CpuTimeBetRestartFile       7200    # TUNE 
 MaxMemSize                  2400    # TUNE to system (MB)
 
 #---Time
 TimeBegin                   0
-TimeMax	                    1176      # CHANGE
+TimeMax	                    2120      # 10 Gyr
 
 #---Output frequency
 OutputListOn                0
-TimeBetSnapshot             10      # TUNE
+TimeBetSnapshot             10      # change as needed
 TimeOfFirstSnapshot         0
-TimeBetStatistics           10      # TUNE 
+TimeBetStatistics           10      # change as needed 
 NumFilesPerSnapshot         1
 MaxFilesWithConcurrentIO    1 
 
 
 # ----------------------------------Gravity-----------------------------------
 
+# Match the below to isolation run
+
 #---Timestep accuracy
-ErrTolIntAccuracy           0.01    # CHANGE to
+ErrTolIntAccuracy           0.01    # MATCH
 CourantFac                  0.1     # ignored; for SPH
-MaxSizeTimestep             0.5     # CHANGE to a fraction of dynamical time
+MaxSizeTimestep             0.5     # MATCH
 MinSizeTimestep             0.0 
 
-#---Tree algorithm
-TypeOfOpeningCriterion      0       # 0: Barnes-Hut, 1: Relative
-ErrTolTheta                 0.5     # 
+#---Tree algorithm                    MATCH
+TypeOfOpeningCriterion      1       # 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5     # mostly used for Barnes-Hut
 ErrTolThetaMax              1.0     # (used only for relative)
 ErrTolForceAcc              0.005   # (used only for relative)
 
@@ -47,7 +49,7 @@ TopNodeFactor                       3.0
 ActivePartFracForNewDomainDecomp    0.02
 
 #---Gravitational Softening
-SofteningComovingClass0      0.44    # CHANGE!!
+SofteningComovingClass0      0.0074   # MATCH!!
 SofteningMaxPhysClass0       0      # ignored; for cosmological
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0

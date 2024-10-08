@@ -23,7 +23,8 @@ md"""
 Analyzes the orbit of a n-body halo in a gravitational potential.
 Requires the centres to be calculated prior.
 
-We would like to check if the orbit is 
+This notebook only uses the centres of the orbit, but then calculates useful quantities such as the pericentre, the orbital period, the time of each peri and apocentre and outputs this into the model analysis directory.
+
 """
 
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
@@ -38,7 +39,7 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/orbit1"
+modelname = "sculptor/1e6_V40_r5.9/orbit_mean"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -221,37 +222,37 @@ v_cen
 # ╔═╡ d95c457b-c9be-4570-bc90-b4bbb7de56e2
 plot(t, vr)
 
-# ╔═╡ 5ee77968-567a-49c4-8e19-4d88bb930558
-function find_last_peri(vr, idx_f; minima=true)
-	v_sign = sign(vr[idx_f])
-	decreasing = vr[idx_f] < 0
+# ╔═╡ 88a9bb2d-9f86-4a96-a3b8-7a057480c7c3
+"""
 
-	for i in idx_f-1:-1:1
-		decreasing_new = vr[i] < 0
-		
-		if !decreasing && decreasing_new
-			decreasing = decreasing_new
-			if minima
-				return i
-			end
-		elseif decreasing && !decreasing_new
-			decreasing = decreasing_new
-			if !minima
-				return i
-			end
+Given the velocities, finds when the velocity changes sign, 
+i.e. a local extrema in r
+"""
+function find_all_peris(r)
+	is_local_max(i) = (r[i] >= r[i-1]) && (r[i] >= r[i+1])
+	is_local_min(i) = (r[i] <= r[i-1]) && (r[i] <= r[i+1])
+	
+	peris = []
+	apos = []
+	
+	for i in 2:length(r)-1
+		if is_local_max(i)
+			push!(apos, i)
+		elseif is_local_min(i)
+			push!(peris, i)
 		end
 	end
-	return -1
+	return peris, apos
 end
 
+# ╔═╡ 8d1508af-1715-4ef6-aab9-e95a02265913
+idx_peris, idx_apos = find_all_peris(r)
+
 # ╔═╡ efcbae60-cf7c-4e74-aae4-39d19b74b6fa
-idx_peri = find_last_peri(vr, idx_f)
+idx_peri = maximum(idx_peris[idx_peris .< idx_f])
 
-# ╔═╡ 809095ae-0aee-47ec-9d54-9d314e2cc11d
-idx_apo = find_last_peri(vr, idx_f, minima=false)
-
-# ╔═╡ c3d6b68e-1b2a-4f84-a620-fb8dbe02867a
-idx_anteperi = find_last_peri(vr, idx_apo, minima=true)
+# ╔═╡ d81c1455-728a-4023-ad65-e3cce37a69f9
+r[idx_peris[end]], minimum(r)
 
 # ╔═╡ a5ce5442-73ca-4aaf-915a-72fe9936e791
 d_idx = 20
@@ -277,16 +278,16 @@ let
 		marker=:+, markersize=10, label="expected"
 	)
 	
-	scatter!(t[idx_peri] * T2GYR, r[idx_peri], 
-		label="last pericentre"
+	scatter!(t[idx_peris] * T2GYR, r[idx_peris], 
+		label="pericentrs"
 	)
 
-	scatter!(t[idx_apo] * T2GYR, r[idx_apo], 
-		label="last apocentre"
+	scatter!(t[idx_apos] * T2GYR, r[idx_apos], 
+		label="apocentres"
 	)
 	
-	scatter!(t[idx_anteperi] * T2GYR, r[idx_anteperi], 
-		label="last last pericentre"
+	scatter!(t[idx_peri] * T2GYR, r[idx_peri], 
+		label=" last pericentre"
 	)
 	
 	Legend(fig[1, 2], ax)
@@ -302,20 +303,6 @@ begin
 	else 
 		t_peri = NaN
 		r_peri = NaN
-	end
-
-	if idx_apo > 0
-		t_apo = T2GYR * t[idx_apo]
-		r_apo = r[idx_apo]
-	else
-		t_apo = NaN
-		r_apo = NaN
-	end
-
-	if idx_anteperi > 0
-		t_anteperi = T2GYR * t[idx_anteperi]
-	else
-		t_anteperi = NaN
 	end
 
 end
@@ -417,13 +404,19 @@ let
 	fig
 end
 
+# ╔═╡ 5676b72f-a981-4efb-8328-c25d3c5d6fb0
+periods = [diff(times[idx_peris]); diff(times[idx_apos])]
+
+# ╔═╡ 592a18e9-ee9a-4638-9454-f0bda3a0a3f2
+period = LilGuys.mean(periods)
+
 # ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 let
 	
 	orbital_properties = Dict(
 		"pericentre" => r_peri,
-		"apocentre" => r_apo,
-		"period" => t_peri - t_anteperi,
+		"apocentre" => r[idx_apos[idx_apos .< idx_f]],
+		"period" => period,
 		"idx_f" => idx_f,
 		"distance_f" => obs_c.distance[idx_f],
 		"idx_peri" => idx_peri,
@@ -432,6 +425,10 @@ let
 		"ra0" => ra0,
 		"dec0" => dec0,
 		"theta0" => θ0,
+		"idx_peris" => idx_peris, 
+		"idx_apos" => idx_apos,
+		"t_peris" => t[idx_peris], 
+		"t_apos" => t[idx_apos]
 	)
 
 
@@ -458,7 +455,7 @@ md"""
 LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 
 # ╔═╡ Cell order:
-# ╠═8b41af50-9ae0-475b-bacc-3799e2949b30
+# ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
@@ -503,10 +500,10 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═7a30bd90-946e-418c-8339-be64c37cda76
 # ╠═0c69519c-9650-46b9-89f9-cc37227f5b1a
 # ╠═d95c457b-c9be-4570-bc90-b4bbb7de56e2
-# ╠═5ee77968-567a-49c4-8e19-4d88bb930558
+# ╠═88a9bb2d-9f86-4a96-a3b8-7a057480c7c3
+# ╠═8d1508af-1715-4ef6-aab9-e95a02265913
 # ╠═efcbae60-cf7c-4e74-aae4-39d19b74b6fa
-# ╠═809095ae-0aee-47ec-9d54-9d314e2cc11d
-# ╠═c3d6b68e-1b2a-4f84-a620-fb8dbe02867a
+# ╠═d81c1455-728a-4023-ad65-e3cce37a69f9
 # ╠═a5ce5442-73ca-4aaf-915a-72fe9936e791
 # ╠═7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
 # ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
@@ -525,6 +522,8 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═bc1a33f4-cf2e-44a6-a20b-1344f47e75c6
 # ╠═2d1017a9-03a0-4aa2-829f-72174eaaa363
 # ╠═63d2d908-2f12-483b-bbad-833b2aecc4e3
+# ╠═5676b72f-a981-4efb-8328-c25d3c5d6fb0
+# ╠═592a18e9-ee9a-4638-9454-f0bda3a0a3f2
 # ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 # ╟─179c3c32-1368-4a58-b4b8-26d9d3f19f8c
 # ╠═5704daca-a8c4-4292-a6c0-ea294f4373fd
