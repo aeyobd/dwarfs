@@ -41,7 +41,7 @@ which means the orbit has a position angle of approximately -39.63 degrees on th
 
 ![](figures/king_profile_fit.pdf)
 
-## Search for tidal signatures
+## Tidal signatures in Gaia?
 
 From the simulations (below), we expect a shift in the proper motions of order 0.05mas/yr, a shift in the radial velocities proportional to distance (xxx km/s/deg) as we move along the orbit. As a model-independent initial assumption, we can assume that the orbit traces along the system proper motion in GSR, so $\mu_\alpha, \mu_\delta = (c, c)$. If there are indeed tidal signatures in the Gaia observations, then we expect an overdensity of stars broadly consistent with Scl's CMD and proper motions and parallax. Therefore, we create a sample of Gaia stars with the cuts
 
@@ -96,7 +96,7 @@ We assume that the anisotropy is zero ($\beta=0$). If the anisotropy is nonzero,
 | $v_{\rm circ, max}$ | $31\pm8$                                      |
 | $r_{\rm circ, max}$ | $5.9 \pm 2.9$                                 |
 
-Note that v and r circ max are highly correlated.
+So to choose a halo, first we pick a v circ max. Then, the value for r circ max is given from the above relationship with a scatter of 0.1 dex. This is calculated by solve_rmax with deltac=0.1 * number of sigma we would like to deviate from the trend.
 
 Methods
 
@@ -112,7 +112,9 @@ We also work in a Galactic Standard of Rest (GSR) frame, which is identitical to
 
 ## Orbital analysis
 
-Given the uncertainties in 
+Given the uncertainties in the measurement errors, we can sample present-day measurments from these values, and then integrate the orbits to determine the pericentres. 
+
+
 
 ![](figures/peri_mc_orbits_corr.pdf)
 
@@ -120,10 +122,12 @@ Given the uncertainties in
 
 ### Haloes
 
-| halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $M_{200} / M_0$ | $c$  | $\sigma_{vx, \rm ini}$ | $h  / {\rm kpc}$ |
-| ------- | -------------------- | ------------- | --------------- | ---- | ---------------------- | ---------------- |
-| average | 31                   | 5.9           | 0.5             | 13.1 | 9.25                   | 0.14             |
-| compact | 31                   | 3.2           |                 |      |                        |                  |
+| halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma_{vx, \rm best}$ | $h  / {\rm kpc}$ |
+| ------- | -------------------- | ------------- | ----------------------- | ---------------- |
+| average | 31.1                 | 5.96          | 9.25                    | 0.044            |
+| compact | 31                   | 3.2           |                         | 0.024            |
+| heavy?  | 47                   | 5.4           |                         |                  |
+| both?   | 39                   | 4.5           |                         |                  |
 
 Last column: present-day velocity dispersion for best visual fit.
 
@@ -141,24 +145,26 @@ which for our average halo equates to 0.14 kpc.
 
 Next, we integrate the orbit of Sculptor back 10 Gyr and place the halo in a static Milky Way potential described by @EP2021. 
 
+The initial kinematic conditions for the galaxy are determined by integrating the orbit back in time 10 Gyr and determining the time of the next apocentre. We ignore dynamic friction for this calculation.
 
 
-| Orbit      | 1          | 2         | 3    |
-| ---------- | ---------- | --------- | ---- |
-| ra         | 15.039170  | 15        |      |
-| dec        | -33.809180 |           |      |
-| pm ra      | 0.0990     | 0.086701  |      |
-| pm_dec     | -0.16      | -0.207850 |      |
-| dist       | 86         | 92.151974 |      |
-| rv         | 111.4      | 112.203   |      |
-| pericentre | 54         | 50.0      |      |
-| apocentre  | 105.2      | 108.5     |      |
-| X0         |            |           |      |
-| Y0         |            |           |      |
-| Z0         |            |           |      |
-| Vx0        |            |           |      |
-| Vy0        |            |           |      |
-| Vz0        |            |           |      |
+
+| Orbit      | 1        | 2       | 3     |
+| ---------- | -------- | ------- | ----- |
+| ra         | 15.0183  | ''      | ''    |
+| dec        | -33.7186 | ''      | ''    |
+| pm ra      | 0.0990   | 0.1007  |       |
+| pm_dec     | -0.160   | -0.161  |       |
+| dist       | 83.2     | 79.6    |       |
+| rv         | 111.4    | 111.44  |       |
+| pericentre | 53.0     | 51.5    | 54.5  |
+| apocentre  | 102.0    | 97.8    | 106.0 |
+| $x_0$      | 16.1574  | 15.4134 |       |
+| $y_0$      | 92.5936  | 86.16   |       |
+| $z_0$      | 39.5549  | 43.59   |       |
+| $v_{x,0}$  | -2.31    | -3.12   |       |
+| $v_{y,0}$  | -54.26   | -63.40  |       |
+| $v_{z,0}$  | 129.015  | 126.7   |       |
 
 
 
