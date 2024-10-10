@@ -30,14 +30,8 @@ import DensityEstimators as DE
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
-# ╔═╡ 82e8f2e4-d3ea-43c5-8813-aaebbca71cda
-# ╠═╡ disabled = true
-#=╠═╡
-r_b_arcmin = 120
-  ╠═╡ =#
-
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_V31_r3.2/orbit1/"
+model_dir = "$models_dir/1e6_V31_r3.2/orbit_smallperi/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
 starsfile = "$model_dir/stars/exp2d_rs0.10/final.fits"
@@ -74,7 +68,7 @@ obs_cen = stars[1, :]
 sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_p!
 
 # ╔═╡ ccc714c4-b2dd-4c83-939b-f0ca3d04c255
-r_b_kpc = orbit_props["t_last_peri"] * σ_v
+r_b_kpc = lguys.calc_break_radius(orbit_props["t_last_peri"]/lguys.T2GYR, σ_v/lguys.V2KMS)
 
 # ╔═╡ c351926c-1e3d-44d7-8f39-6fb5893b9b0d
 r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, orbit_props["distance_f"])
@@ -93,6 +87,20 @@ obs_today = lguys.ICRS(;
 
 # ╔═╡ 910267ee-aa39-4f04-961b-70f0862d27e2
 obs_today_gsr = lguys.transform(lguys.GSR, obs_today)
+
+# ╔═╡ 0d2dafb6-9b64-42c0-ba71-c662ff699aa2
+obs_today_df = Dict(
+	:ra => obs_today_file["ra"], 
+	:dec => obs_today_file["dec"],
+	:distance => obs_today_file["distance"],
+	:pmra => obs_today_file["pmra"],
+	:pmdec => obs_today_file["pmdec"],
+	:radial_velocity => obs_today_file["radial_velocity"],
+	:pmra_gsr => obs_today_gsr.pmra,
+	:pmdec_gsr => obs_today_gsr.pmdec,
+	:radial_velocity_gsr => obs_today_gsr.radial_velocity,
+
+)
 
 # ╔═╡ 4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 function ra_dec_axis(ddeg=5; kwargs...)
@@ -165,8 +173,8 @@ md"""
 # ╔═╡ 8dd15727-d9b0-47b2-a031-d7765ebd3fba
 orbit_props
 
-# ╔═╡ 7688c0ac-be70-470c-9db5-f2ed937e2fb5
-function xi_eta_axis(dx=10, dy=5; kwargs...)
+# ╔═╡ 237c25a1-5537-400c-826d-5827c52c38a3
+function xi_eta_p_axis(dx=10, dy=5; kwargs...)
 	fig = Figure(;kwargs...)
 	
 
@@ -175,6 +183,27 @@ function xi_eta_axis(dx=10, dy=5; kwargs...)
 	ax = Axis(fig[1,1],
 		xlabel=L"$\xi'$ / degrees",
 		ylabel=L"$\eta'$ / degrees",
+		limits=limits,
+		aspect = DataAspect(),
+		xgridvisible=false,
+		ygridvisible=false,
+		xreversed=true,
+		
+	)
+
+	return fig, ax
+end
+
+# ╔═╡ 7688c0ac-be70-470c-9db5-f2ed937e2fb5
+function xi_eta_axis(dx=5, dy=dx; kwargs...)
+	fig = Figure(;kwargs...)
+	
+
+	limits = ((-dx, dx), (-dy, dy))
+
+	ax = Axis(fig[1,1],
+		xlabel=L"$\xi$ / degrees",
+		ylabel=L"$\eta$ / degrees",
 		limits=limits,
 		aspect = DataAspect(),
 		xgridvisible=false,
@@ -204,8 +233,8 @@ let
 	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10, maximum(hi.values)))
 
 	lines!(sky_orbit.xi[idx_orbit], sky_orbit.eta[idx_orbit])
-	arc!(Point2f(0, 0), r_b_arcmin / 60, -π, π, color=COLORS[2])
-	text!(0, -r_b_arcmin/60, text=L"r_b", color=COLORS[2])
+	arc!(Point2f(0, 0), r_b_arcmin / 60, -π, π, color=COLORS[3])
+	text!(0, -r_b_arcmin/60, text=L"r_b", color=COLORS[3])
 	
 	Colorbar(fig[1, 2], h,
 		label="stellar density"
@@ -272,6 +301,12 @@ sum(filt_leading .& filt_dist), sum(stars.weights[filt_leading .& filt_dist])
 
 # ╔═╡ cb8c2e79-a5c2-4a59-af40-393b83f64bc7
 sum(filt_trailing .& filt_dist), sum(stars.weights[filt_trailing .& filt_dist])
+
+# ╔═╡ 5ea9a308-13b4-4d64-84b2-2143be6e9a23
+sum(stars.weights[stars.r_ell .< r_b_arcmin])
+
+# ╔═╡ 268bf2e9-d6a0-4fca-b77b-005fc79e9497
+r_b_arcmin / 60
 
 # ╔═╡ 9c1839d6-1076-4598-8da6-49c02ec10580
 sum(stars.weights[filt_cen])
@@ -363,7 +398,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
 		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
-		title="",
+		title="all stars",
 		limits=limits,
 	aspect=DataAspect())
 
@@ -390,7 +425,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
 		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
-		title="",
+		title="all stars",
 		limits=limits,
 	aspect=DataAspect())
 
@@ -414,7 +449,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
 		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
-		title="",
+		title="stars within $r_max arcmin",
 	aspect=DataAspect())
 
 	bins = 100
@@ -441,7 +476,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel=L"\tilde{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
 		ylabel=L"\tilde{\mu}_\delta / \textrm{mas\,yr^{-1}}",
-		title="",
+		title="stars within $r_max arcmin",
 	aspect=DataAspect())
 
 	bins = 100
@@ -466,7 +501,7 @@ let
 	fig = Figure()
 	
 	ax = Axis(fig[1,1],
-		xlabel=L"{\mu}_{{\alpha}\!*} / \textrm{mas\,yr^{-1}}",
+		xlabel=L"{\mu}_{\alpha*} / \textrm{mas\,yr^{-1}}",
 		ylabel=L"{\mu}_\delta / \textrm{mas\,yr^{-1}}",
 		title="",)
 
@@ -561,76 +596,29 @@ md"""
 # Functions of orbital coordinates
 """
 
-# ╔═╡ 92b761ba-dc5d-4b99-9462-2c9b6faf680d
-let	
-	mass = stars.weights
-	v_rad = stars.radial_velocity
-	x = stars.xi_p
-	r_max = 120
-
-	limits = (-r_max / 60, r_max/60, obs_today.radial_velocity - 40, obs_today.radial_velocity + 40)
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"{v}_\textrm{los} / \textrm{km\,s^{-1}}"
-	)
-	
-	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=100, limits=limits,
-		colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
-	)
-
-	Colorbar(fig[1, 2], h, label="stellar mass density")
-	fig
-end
+# ╔═╡ bf83963a-5291-4de2-9cd0-5fc318c6fd53
+md"""
+### Utility functions
+"""
 
 # ╔═╡ 1d4a7103-3d37-4597-a180-88a4c3733497
 bins = -0.4r_max/60:0.5:0.4r_max/60
 
-# ╔═╡ f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
-let	
-	mass = stars.weights
-	d = stars.distance
-	x = stars.xi_p
+# ╔═╡ 45b7b28f-9125-48bb-8895-a19d60b825d0
+eta_max = 1
 
-	limits = (-r_max / 60, r_max/60, obs_cen.distance - 20, obs_cen.distance + 20)
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel="distance / kpc"
-	)
+# ╔═╡ e12ac0ef-7903-4cbc-84f9-6052a701771c
+function plot_rb!(ax, r_b; y0=nothing, dy=nothing)
+	ylim = ax.limits[][3:4]
+	println(ylim)
+	if y0 === nothing
+		
+		y0 =  ylim[1] + 0.1 * (ylim[2] - ylim[1])
+		dy =  0.07 * (ylim[2] - ylim[1])
+	end
 	
-	h = Arya.hist2d!(ax, x, d, weights=mass, bins=100, limits=limits,
-		colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
-	)
-
-	Colorbar(fig[1, 2], h, label="stellar mass density")
-	fig
-end
-
-# ╔═╡ 302b3ac4-94cc-44d9-a5e6-314460e76a9f
-let	
-	mass = stars.weights
-	v_rad = stars.pmra
-	x = stars.xi_p
-
-	dy = 0.1
-
-	limits = (-r_max / 60, r_max/60, obs_cen.pmra - dy, obs_cen.pmra + dy)
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\alpha}/ \textrm{mas\,yr^{-1}}"
-	)
-	
-	h = Arya.hist2d!(ax, x, v_rad, weights=mass, bins=100, limits=limits,
-		colorrange=(1e-15, nothing), colorscale=log10, normalization=:density
-	)
-
-	Colorbar(fig[1, 2], h, label="stellar mass density")
-	fig
+	arrows!([r_b], [y0], [0], [-dy])
+	text!(r_b, y0, text=L"r_b")
 end
 
 # ╔═╡ f1cb5d80-57a8-43e8-8819-4e1bc134edea
@@ -676,147 +664,27 @@ function binned_median(x, y, bins; w)
 	return y_m, y_l, y_h
 end
 
-# ╔═╡ e3ecf2c5-67e9-4571-8743-04c67755a23b
-let	
-	filt = abs.(stars.eta_p) .< 2
-	w = stars.weights[filt]
-	y = stars.radial_velocity[filt]
-	x = stars.xi_p[filt]
+# ╔═╡ 57528a9e-fbcf-4926-a3a1-574935df69b4
+function binned_mean(x, y, bins; w)
+	idxs = DE.bin_indices(x, bins)
 
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"{v}_\textrm{los} / \textrm{km\,s^{-1}}"
-	)
+	N =  length(bins) - 1
+	y_m = Vector{Float64}(undef, N)
+	y_l = Vector{Float64}(undef, N)
+	y_h = Vector{Float64}(undef, N)
+	
+	for i in eachindex(y_m)
+		filt = idxs .== i
+		y_m[i] = lguys.mean(y[filt], (w[filt]))
 
+		s =  lguys.std(y[filt], (w[filt]))
 
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
+		y_l[i] = y_m[i] - s
+		y_h[i] = y_m[i] + s
+		
+	end
 
-	arrows!([r_b_arcmin / 60], [60], [0], [-10])
-	text!(r_b_arcmin/60, 60, text=L"r_b")
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ 1f58f320-7bd6-40d6-b66b-0ec0db29de4a
-let	
-	filt = abs.(stars.eta_p) .< 2
-	w = stars.weights[filt]
-	y = stars.radial_velocity_gsr[filt]
-	x = stars.xi_p[filt]
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{v}_\textrm{los} / \textrm{km\,s^{-1}}"
-	)
-
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ 0b88d438-0666-4875-b2f6-66480b652617
-let	
-	filt = abs.(stars.eta_p) .< 1
-	w = stars.weights[filt]
-	y = stars.distance[filt]
-	x = stars.xi_p[filt]
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel="distance / kpc"
-	)
-
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ 90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
-let	
-	filt = abs.(stars.eta_p) .< 1
-	w = stars.weights[filt]
-	y = stars.pmra_gsr[filt]
-	x = stars.xi_p[filt]
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}"
-	)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ 380cef17-05a1-4111-8479-d88c5757a62e
-let	
-	filt = abs.(stars.eta_p) .< 1
-	w = stars.weights[filt]
-	y = stars.pmra[filt]
-	x = stars.xi_p[filt]
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}"
-	)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ a293ddc2-461c-42d6-9d02-7077c66163e5
-let	
-	w = stars.weights
-	y = stars.pmra_gsr
-	x = stars.eta_p
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\eta' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}"
-	)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
+	return y_m, y_l, y_h
 end
 
 # ╔═╡ 20e6efaa-95ab-4163-a584-f1fea47f02c7
@@ -836,6 +704,124 @@ function hist_eff(x, bins; w)
 	return y
 end
 
+# ╔═╡ 51555d9f-65fc-4c5c-86ca-a1a0153772ed
+
+
+# ╔═╡ 35f1ac55-eff5-4847-ad40-b6e040ec168d
+md"""
+### Radial Velocity
+"""
+
+# ╔═╡ 2c636a11-0908-4e5e-b31b-af71833eb6f5
+obs_labels = Dict(
+	:radial_velocity => L"{v}_\textrm{los} / \textrm{km\,s^{-1}}",
+	:radial_velocity_gsr => L"\tilde{v}_\textrm{los} / \textrm{km\,s^{-1}}",
+	:distance => "distance / kpc",
+	:pmra => L"{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}",
+	:pmra_gsr => L"\tilde{\mu}_{\alpha*}/ \textrm{mas\,yr^{-1}}",
+	:pmdec => L"{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}",
+	:pmdec_gsr => L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}",
+	:xi_p => L"\xi' / \textrm{degrees}",
+	:eta_p => L"\eta' / \textrm{degrees}",
+)
+
+# ╔═╡ f171df4d-2a52-4132-9a80-66eec6663179
+obs_dy = Dict(
+	:radial_velocity => 40,
+	:radial_velocity_gsr => 40,
+	:distance => 5,
+	:pmra => 0.1,
+	:pmra_gsr =>  0.1,
+	:pmdec =>  0.1,
+	:pmdec_gsr =>  0.1,
+)
+
+# ╔═╡ 499f3cd7-b7fc-4fe2-acc0-5e2d2697c3d6
+function plot_hist2d_coord(sym; xsym = :xi_p)
+	mass = stars.weights
+	x = stars[:, xsym]
+	
+	r_max = 5
+	
+	y0 = obs_today_df[sym]
+	dy0 = obs_dy[sym]
+	y = stars[:, sym]
+
+	limits = (-r_max, r_max,  y0 - dy0, y0 + dy0)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=obs_labels[xsym],
+		ylabel=obs_labels[sym]
+	)
+	
+	h = Arya.hist2d!(ax, x, y, weights=mass, bins=100, limits=limits,
+		colorrange=(1e-20, nothing), colorscale=log10, normalization=:density
+	)
+
+	Colorbar(fig[1, 2], h, label="stellar mass density")
+
+	return fig
+end
+
+# ╔═╡ cc2be8c5-bdfc-4c55-815c-1ccc1d261678
+for sym in [:pmra, :pmra_gsr, :pmdec, :radial_velocity, :distance, ]
+	@info plot_hist2d_coord(sym)
+end
+
+# ╔═╡ a52f14bf-eb6d-4523-b6ee-38af9b822a49
+for sym in [:pmra, :pmra_gsr, :pmdec, :radial_velocity, :distance, ]
+	@info plot_hist2d_coord(sym, xsym=:eta_p)
+end
+
+# ╔═╡ 6ac742ef-ff1f-4a1c-a812-e2962bd6a50d
+function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=2)
+	if xsym == :xi_p
+		filt = abs.(stars.eta_p) .< eta_max
+	elseif xsym == :eta_p
+		filt = abs.(stars.xi_p) .< eta_max
+	end
+
+	w = stars.weights[filt]
+	y = stars[filt, ysym]
+	x = stars[filt, xsym]
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_mean(x, y, bins, w=w)
+
+	
+	fig = Figure()
+
+	yl0 = minimum(y_l)
+	yh0 = maximum(y_h)
+	dy0 = yh0 - yl0
+	limits=(minimum(bins), maximum(bins), yl0 - 0.05dy0, yh0 + 0.05dy0)
+
+	ax = Axis(fig[1,1],
+		xlabel=obs_labels[xsym],
+		ylabel=obs_labels[ysym],
+		limits=limits
+	)
+
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+	
+	plot_rb!(ax, r_b_arcmin / 60)
+
+	fig
+end
+
+# ╔═╡ e3ecf2c5-67e9-4571-8743-04c67755a23b
+for ysym in [:pmra, :pmra_gsr, :pmdec, :distance, :radial_velocity]
+	@info plot_obs_bin_means(ysym)
+end
+
+# ╔═╡ cae30107-1aee-48c0-8104-720cf5535b02
+for ysym in [:pmra, :pmra_gsr, :pmdec, :distance, :radial_velocity]
+	@info plot_obs_bin_means(ysym, xsym=:eta_p)
+end
+
 # ╔═╡ 925be0a1-0afa-4b5a-b9c9-003833e80a28
 let	
 	w = stars.weights
@@ -850,126 +836,6 @@ let
 	)
 	
 	scatter!(midpoints(bins), hist_eff(x, bins, w=w))
-
-	fig
-end
-
-# ╔═╡ b79ea320-c652-4850-a617-58bfb0c09be8
-let	
-	mass = stars.weights
-	y = stars.pmdec_gsr
-	x = stars.xi_p
-	y_m = median(y, weights(mass))
-
-	
-	limits = (-r_max / 60, r_max/60, y_m - 0.1, y_m + 0.1)
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
-	)
-	
-	h = Arya.hist2d!(ax, x, y, weights=mass, bins=100, limits=limits,
-		colorrange=(1e-15, nothing), colorscale=log10, normalization=:density
-	)
-
-	Colorbar(fig[1, 2], h, label="stellar mass density")
-	fig
-end
-
-# ╔═╡ 3ebaa8ee-4ddf-49e8-b9ac-f0df9b45876b
-let	
-	mass = stars.weights
-	y = stars.pmdec
-	x = stars.xi_p
-	y_m = median(y, weights(mass))
-
-	
-	limits = (-r_max / 60, r_max/60, y_m - 0.1, y_m + 0.1)
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"{\mu}_{\delta*}/ \textrm{mas\,yr^{-1}}"
-	)
-	
-	h = Arya.hist2d!(ax, x, y, weights=mass, bins=100, limits=limits,
-		colorrange=(1e-15, nothing), colorscale=log10, normalization=:density
-	)
-
-	Colorbar(fig[1, 2], h, label="stellar mass density")
-	fig
-end
-
-# ╔═╡ de36ca44-5c34-4673-a75f-e705e5cd83a8
-let	
-	filt = abs.(stars.eta_p) .< 2
-	w = stars.weights[filt]
-	y = stars.pmdec_gsr[filt]
-	x = stars.xi_p[filt]
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
-	)
-
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ 14b0f654-81e2-4f29-95d3-30918293d852
-let	
-	filt = abs.(stars.eta_p) .< 2
-	w = stars.weights[filt]
-	y = stars.pmdec[filt]
-	x = stars.xi_p[filt]
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\xi' / \textrm{degrees}",
-		ylabel=L"{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
-	)
-
-	bins = LinRange(-0.5r_max/60, 0.5r_max/60, 20)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
-
-	fig
-end
-
-# ╔═╡ d3d1e03d-d99a-4f79-818d-5bdc5b4a005a
-let	
-	w = stars.weights
-	y = stars.pmdec_gsr
-	x = stars.eta_p
-
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		#limits=limits,
-		xlabel=L"\eta' / \textrm{degrees}",
-		ylabel=L"\tilde{\mu}_{\delta}/ \textrm{mas\,yr^{-1}}"
-	)
-
-	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
-
-	scatter!(x_m, y_m)
-	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
 
 	fig
 end
@@ -1104,7 +970,6 @@ end
 # ╠═0e9e2085-bf96-4f9d-a758-8af36edf02da
 # ╠═b918a965-9e54-42a4-9126-4dd614024ff5
 # ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-# ╠═82e8f2e4-d3ea-43c5-8813-aaebbca71cda
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
@@ -1120,6 +985,7 @@ end
 # ╠═0ba05fdb-f859-4381-b2d0-145aa04f7bbf
 # ╠═4ef955fb-a813-46ad-8f71-7c8a3d371eee
 # ╠═910267ee-aa39-4f04-961b-70f0862d27e2
+# ╠═0d2dafb6-9b64-42c0-ba71-c662ff699aa2
 # ╠═4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 # ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
 # ╠═e9e35643-168e-4e87-a880-6831b46145c7
@@ -1130,6 +996,7 @@ end
 # ╠═9419722f-9c65-45a7-b9c5-c666b22bf70e
 # ╟─12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
 # ╠═8dd15727-d9b0-47b2-a031-d7765ebd3fba
+# ╠═237c25a1-5537-400c-826d-5827c52c38a3
 # ╠═7688c0ac-be70-470c-9db5-f2ed937e2fb5
 # ╠═d1564bf3-a3c4-410b-b61b-69ac56b618e5
 # ╠═49705acd-d623-4860-a5e7-759f112553ab
@@ -1143,41 +1010,43 @@ end
 # ╠═dd6faf9c-8206-46f8-bd6f-4c2e7a4b3887
 # ╠═d240246d-f79a-4f95-a5b9-b355e7bc092f
 # ╠═cb8c2e79-a5c2-4a59-af40-393b83f64bc7
+# ╠═5ea9a308-13b4-4d64-84b2-2143be6e9a23
+# ╠═268bf2e9-d6a0-4fca-b77b-005fc79e9497
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
 # ╠═e58263aa-48d5-4a30-8c2d-f6ed19ada10f
 # ╟─c57edba1-09f9-4fe9-bc73-5746884ee7c2
 # ╟─119040e2-ef45-4fc2-809d-aec333e276d0
 # ╟─443ac755-70fc-4193-945d-0e98622c5919
 # ╟─1d35a894-1eca-4ee0-9d1a-6ac4704b912c
-# ╠═6b0a0ea3-f6f7-4cee-be11-bce6872ab870
-# ╠═54205139-3c7b-4beb-b9cb-c87b272df58a
-# ╠═91955a7b-009e-4afa-aca1-312f4a779bb9
-# ╠═19bdc540-63a8-46ad-8d6f-a425d64cdd81
-# ╠═51e4628a-a799-48a3-9ad0-b5c2bd7a8d87
-# ╠═e098260a-718a-4f43-b12c-cab0a1302b90
-# ╠═be0158cf-c322-4147-8f01-8b6a715bc0dc
-# ╠═5eb22695-57c4-4ebf-b412-588f5e366bf5
-# ╠═79dd7e3d-8564-4389-960b-05512b0143c0
-# ╠═d4d50209-e9a8-40dc-9f45-4e8000f70b39
-# ╠═92b761ba-dc5d-4b99-9462-2c9b6faf680d
+# ╟─6b0a0ea3-f6f7-4cee-be11-bce6872ab870
+# ╟─54205139-3c7b-4beb-b9cb-c87b272df58a
+# ╟─91955a7b-009e-4afa-aca1-312f4a779bb9
+# ╟─19bdc540-63a8-46ad-8d6f-a425d64cdd81
+# ╟─51e4628a-a799-48a3-9ad0-b5c2bd7a8d87
+# ╟─e098260a-718a-4f43-b12c-cab0a1302b90
+# ╟─be0158cf-c322-4147-8f01-8b6a715bc0dc
+# ╟─5eb22695-57c4-4ebf-b412-588f5e366bf5
+# ╟─79dd7e3d-8564-4389-960b-05512b0143c0
+# ╟─d4d50209-e9a8-40dc-9f45-4e8000f70b39
+# ╟─bf83963a-5291-4de2-9cd0-5fc318c6fd53
 # ╠═1d4a7103-3d37-4597-a180-88a4c3733497
-# ╠═e3ecf2c5-67e9-4571-8743-04c67755a23b
-# ╠═1f58f320-7bd6-40d6-b66b-0ec0db29de4a
-# ╠═f1af9a92-a80d-4b7c-ba66-4f8cd43e0157
-# ╠═0b88d438-0666-4875-b2f6-66480b652617
-# ╟─302b3ac4-94cc-44d9-a5e6-314460e76a9f
-# ╠═90f9d044-d03d-4e0f-a89e-c67b97ce9fb0
-# ╠═380cef17-05a1-4111-8479-d88c5757a62e
-# ╠═a293ddc2-461c-42d6-9d02-7077c66163e5
-# ╠═925be0a1-0afa-4b5a-b9c9-003833e80a28
+# ╠═45b7b28f-9125-48bb-8895-a19d60b825d0
+# ╠═e12ac0ef-7903-4cbc-84f9-6052a701771c
 # ╠═f1cb5d80-57a8-43e8-8819-4e1bc134edea
 # ╠═4b0515a9-e55d-4bed-b6d3-0a2f12d0a238
+# ╠═57528a9e-fbcf-4926-a3a1-574935df69b4
 # ╠═20e6efaa-95ab-4163-a584-f1fea47f02c7
-# ╠═b79ea320-c652-4850-a617-58bfb0c09be8
-# ╠═3ebaa8ee-4ddf-49e8-b9ac-f0df9b45876b
-# ╠═de36ca44-5c34-4673-a75f-e705e5cd83a8
-# ╠═14b0f654-81e2-4f29-95d3-30918293d852
-# ╠═d3d1e03d-d99a-4f79-818d-5bdc5b4a005a
+# ╠═51555d9f-65fc-4c5c-86ca-a1a0153772ed
+# ╟─35f1ac55-eff5-4847-ad40-b6e040ec168d
+# ╠═2c636a11-0908-4e5e-b31b-af71833eb6f5
+# ╠═f171df4d-2a52-4132-9a80-66eec6663179
+# ╠═499f3cd7-b7fc-4fe2-acc0-5e2d2697c3d6
+# ╠═cc2be8c5-bdfc-4c55-815c-1ccc1d261678
+# ╠═a52f14bf-eb6d-4523-b6ee-38af9b822a49
+# ╠═6ac742ef-ff1f-4a1c-a812-e2962bd6a50d
+# ╠═e3ecf2c5-67e9-4571-8743-04c67755a23b
+# ╠═cae30107-1aee-48c0-8104-720cf5535b02
+# ╟─925be0a1-0afa-4b5a-b9c9-003833e80a28
 # ╟─ae9d8d21-1269-4053-89a3-3a8287a4ca70
 # ╟─4c8b9b51-5e72-42a7-a919-ca2c2d1c5294
 # ╟─7178c98a-15d1-4f10-9850-2079a6fdaa27
