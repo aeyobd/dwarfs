@@ -1,6 +1,7 @@
-gadget/Gadget
-gadget/GadgetMW
-gadget/GadgetMC
+gadget/Gadget*
+
+gadget2_rapha/GadgetUVIC
+*.o
 
 .ipynb_checkpoints
 __pycache__

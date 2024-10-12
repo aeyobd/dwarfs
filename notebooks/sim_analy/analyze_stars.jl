@@ -38,7 +38,7 @@ md"""
 starsname = "exp2d_rs0.10"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r5.9/orbit1"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/orbit1"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -364,9 +364,6 @@ end
 # ╔═╡ 08b66f99-f81a-4495-a933-9291e986373a
 calc_σvx(snap_i, r_max=6) 
 
-# ╔═╡ cfccf1a1-22ac-4fb8-8b91-c7af98ad3c4d
-lguys.arcmin_to_kpc(240, 86)
-
 # ╔═╡ fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 gaussian(x, μ, σ) = 1/sqrt(2π)* 1/σ * exp(-(x-μ)^2/(2σ^2))
 
@@ -382,6 +379,7 @@ end
 let
 	snap = snap_f
 	logr_max = 2
+	vmax = 30
 
 	σv = calc_σv(snap, r_max=10 .^ logr_max)
 	
@@ -391,8 +389,8 @@ let
 	logr = log10.(lguys.calc_r(snap))
 	filt = logr .< logr_max
 
-	h = DE.histogram(v_x[filt], 15,
-		weights=mass[filt], normalization=:pdf, limits=(-20, 20))
+	h = DE.histogram(v_x[filt], 25,
+		weights=mass[filt], normalization=:pdf, limits=(-vmax, vmax))
 
 
 	fig = Figure()
@@ -403,7 +401,7 @@ let
 	
 	scatter!(lguys.midpoints(h.bins), h.values)
 
-	x_model = LinRange(-20, 20, 100)
+	x_model = LinRange(-vmax, vmax, 100)
 	y_model = gaussian.(x_model, 0, σv)
 	lines!(x_model, y_model, 
 		color=COLORS[2], label="gaussian (σ = $(round(σv, digits=2)) km / s)"
@@ -510,6 +508,9 @@ orbit_props["t_last_peri"]
 # ╔═╡ d53669fc-84a1-4138-8445-5f31c3ec44a5
 r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, orbit_props["distance_f"])
 
+# ╔═╡ 27184a9d-07c9-4b4d-ad17-74ed279ed4e3
+r_b_arcmin / 60
+
 # ╔═╡ 9b75409d-55f5-47c3-ab63-8168d31d3d54
 md"""
 # Evolutionary Properties
@@ -611,6 +612,7 @@ end
 # ╟─1866c280-89c3-4a71-9dbf-50b583360145
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
+# ╠═27184a9d-07c9-4b4d-ad17-74ed279ed4e3
 # ╟─57d5decd-8259-4ec2-87ac-44d28625cd7b
 # ╟─9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8
 # ╠═d7fece88-3327-4435-ab61-b45ff62b3b2e
@@ -623,7 +625,6 @@ end
 # ╠═422839f0-6da4-46b9-8689-2dd13b03188b
 # ╠═d664ab12-a2c1-4531-a4ff-250ffa3ce9eb
 # ╠═08b66f99-f81a-4495-a933-9291e986373a
-# ╠═cfccf1a1-22ac-4fb8-8b91-c7af98ad3c4d
 # ╠═fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 # ╠═c2ccf9de-e3cd-4950-9a4d-6f425d261ccb
 # ╠═76438e61-d227-41cf-b9ea-e658bc389772

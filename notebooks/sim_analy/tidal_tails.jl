@@ -305,6 +305,9 @@ sum(filt_trailing .& filt_dist), sum(stars.weights[filt_trailing .& filt_dist])
 # ╔═╡ 5ea9a308-13b4-4d64-84b2-2143be6e9a23
 sum(stars.weights[stars.r_ell .< r_b_arcmin])
 
+# ╔═╡ 51d391f8-130a-4c85-a165-f1cebaea3812
+sum(stars.weights[filt_dist])
+
 # ╔═╡ 268bf2e9-d6a0-4fca-b77b-005fc79e9497
 r_b_arcmin / 60
 
@@ -1011,6 +1014,7 @@ end
 # ╠═d240246d-f79a-4f95-a5b9-b355e7bc092f
 # ╠═cb8c2e79-a5c2-4a59-af40-393b83f64bc7
 # ╠═5ea9a308-13b4-4d64-84b2-2143be6e9a23
+# ╠═51d391f8-130a-4c85-a165-f1cebaea3812
 # ╠═268bf2e9-d6a0-4fca-b77b-005fc79e9497
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
 # ╠═e58263aa-48d5-4a30-8c2d-f6ed19ada10f
