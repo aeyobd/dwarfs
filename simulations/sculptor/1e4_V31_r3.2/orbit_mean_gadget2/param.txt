@@ -1,0 +1,132 @@
+% -----------------------------------IO---------------------------------------
+
+%---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
+
+%---File formats 
+ICFormat                    3       % use HDF5
+SnapFormat                  3 
+
+%---Mem & CPU limits
+TimeLimitCPU                43200   % TUNE
+CpuTimeBetRestartFile       7200    % TUNE 
+
+
+%---Time
+TimeBegin                   0
+TimeMax                     2120      % 10 Gyr
+
+%---Output frequency
+OutputListOn                0
+TimeBetSnapshot             10      % change as needed
+TimeOfFirstSnapshot         0
+TimeBetStatistics           10      % change as needed 
+NumFilesPerSnapshot         1
+%MaxFilesWithConcurrentIO    1 
+
+
+% ----------------------------------Gravity-----------------------------------
+
+% Match the below to isolation run
+
+%---Timestep accuracy
+ErrTolIntAccuracy           0.01    % MATCH
+CourantFac                  0.1     % ignored; for SPH
+MaxSizeTimestep             0.5     % MATCH
+MinSizeTimestep             0.0 
+
+%---Tree algorithm                    MATCH
+TypeOfOpeningCriterion      0       % 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5     % mostly used for Barnes-Hut
+%ErrTolThetaMax              1.0     % (used only for relative)
+ErrTolForceAcc              0.005   % (used only for relative)
+
+
+%---Gravitational Softening
+SofteningGas       0
+SofteningHalo      0.236        % MATCH!!
+SofteningDisk      0
+SofteningBulge     0           
+SofteningStars     0
+SofteningBndry     0
+
+SofteningGasMaxPhys       0
+SofteningHaloMaxPhys      0 %not used in non-comoving simulation
+SofteningDiskMaxPhys      0
+SofteningBulgeMaxPhys     0           
+SofteningStarsMaxPhys     0
+SofteningBndryMaxPhys     0
+
+
+%--------------------------------Misc-------------------------------------
+
+% probably do not need to change the options below 
+
+%---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
+
+%---Cosmological Parameters 
+ComovingIntegrationOn       0 % no cosmology
+Omega0                      0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+%Hubble                      100
+BoxSize                     0
+
+%---SPH
+ArtBulkViscConst            0.8
+InitGasTemp                 100
+
+%---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1 
+
+
+%--------------------------------Gadget 2----------------------------       
+RestartFile                restart
+ResubmitOn                 0
+ResubmitCommand            my-scriptfile
+PeriodicBoundariesOn       0
+
+AnchorFile                  anchors.txt
+CpuFile                     cpus.txt
+EnergyFile				  energy.txt
+InfoFile                    info.txt
+TimingsFile                 timings.txt
+NumFilesWrittenInParallel  1
+TypeOfTimestepCriterion     0
+
+
+% potential
+MdthinExt 5.95
+MdthickExt 2.01
+athinExt 3.944
+athickExt 3.886
+bthinExt 0.3105
+bthickExt 0.918
+
+MbExt 2.12589
+abulgeExt 1.344
+
+MhvirExt 115.0
+dExt 20.0
+concExt 9.54
+
+
+
+% misc
+MinGasHsmlFractional 0.25
+BufferSize                  100
+PartAllocFactor             3.5
+TreeAllocFactor		    3.8
+TreeDomainUpdateFrequency   0.1
+MaxRMSDisplacementFac       0.2
+MinGasTemp	            0
+

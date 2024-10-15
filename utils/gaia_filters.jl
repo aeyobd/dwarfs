@@ -86,6 +86,7 @@ If θ is specified, than the orbital coordinate frame is also calculated as xi_p
 """
 function read_gaia_stars(filename, params; θ=nothing)
     df = lguys.read_fits(filename)
+
     for col in ["r_ell", "xi", "eta"]
         if col ∈ names(df)
             df[!, Symbol(col * "_original")] = df[!, col]
@@ -93,23 +94,21 @@ function read_gaia_stars(filename, params; θ=nothing)
     end
 
     add_xi_eta!(df, params.ra, params.dec)
+    r_ell = 60lguys.calc_r_ell(df.xi, df.eta, params.ellipticity, params.PA)
+    df[!, :r_ell] = r_ell
+    df[!, :G] = df.phot_g_mean_mag
 
     if params.dist !== nothing
         add_pm_gsr!(df, params.dist)
     end
-
-	r_ell = 60lguys.calc_r_ell(df.xi, df.eta, params.ellipticity, params.PA)
-	df[!, :r_ell] = r_ell
-
 
     if θ !== nothing
     	df[:, :xi_p], df[:, :eta_p] = lguys.to_orbit_coords(df.ra, df.dec, 
                                                             params.ra, params.dec, θ)
     end
 
-    df[!, :G] = df.phot_g_mean_mag
 
-	return df
+    return df
 end
 
 

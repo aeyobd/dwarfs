@@ -1,6 +1,6 @@
 gadget/Gadget*
 
-gadget2_rapha/GadgetUVIC
+gadget2_rapha/Gadget2-UVIC
 *.o
 
 .ipynb_checkpoints

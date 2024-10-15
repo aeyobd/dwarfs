@@ -47,7 +47,7 @@ the below should hopefully be always the same
 """
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
-parentdir = "/arc7/home/dboyea/dwarfs/"
+parentdir = ENV["DWARFS_ROOT"]
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "$parentdir/observations/sculptor/observed_properties.toml"

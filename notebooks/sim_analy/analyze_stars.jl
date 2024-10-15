@@ -23,6 +23,9 @@ md"""
 Given the stellar probabilty file, makes plots based on the 3D properties of the stars in the sample.
 """
 
+# ╔═╡ 145144a0-d93d-4bea-8603-655bb6c818aa
+save = Makie.save
+
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
 import DensityEstimators as DE
 
@@ -38,7 +41,7 @@ md"""
 starsname = "exp2d_rs0.10"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/orbit1"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r3.2/orbit_mean"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -95,12 +98,6 @@ length(snap_i.masses)
 
 # ╔═╡ 6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
 snap_f = out[idx_f]
-
-# ╔═╡ 33f12011-9b26-405f-9154-413cdbee0921
-stellar_profs = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
-
-# ╔═╡ 145144a0-d93d-4bea-8603-655bb6c818aa
-save = Makie.save
 
 # ╔═╡ 5ee4f95d-0587-44ab-b543-9b7039d545e6
 md"""
@@ -201,11 +198,17 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-8, 1)),
 		xlabel=L"\epsilon", ylabel="count")
-	stephist!(lguys.calc_ϵ(snap_i), weights=snap_i.weights)
+
+	bins = 200
+	stephist!(lguys.calc_ϵ(snap_i), bins=bins, weights=snap_i.weights,
+		label = "initial"
+	)
 	es = lguys.calc_ϵ(snap_f)
 	filt = es .> 0
 	es = es[filt]
-	stephist!(es, weights = snap_f.weights[filt])
+	stephist!(es, bins=bins, weights = snap_f.weights[filt],
+		label = "final"
+	)
 
 	fig
 
@@ -573,6 +576,7 @@ end
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
+# ╠═145144a0-d93d-4bea-8603-655bb6c818aa
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
@@ -597,8 +601,6 @@ end
 # ╠═6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
 # ╠═396a53a3-de0f-4d97-9693-40f3757d66f9
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
-# ╠═33f12011-9b26-405f-9154-413cdbee0921
-# ╠═145144a0-d93d-4bea-8603-655bb6c818aa
 # ╟─5ee4f95d-0587-44ab-b543-9b7039d545e6
 # ╟─77479cd4-513c-4603-9aa0-1acd964c403a
 # ╟─7bc2c15c-33f7-43f3-a47f-ca39ffc22071

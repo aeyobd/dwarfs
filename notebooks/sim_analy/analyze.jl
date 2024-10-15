@@ -16,9 +16,6 @@ begin
 	using Arya
 end
 
-# ╔═╡ d7aaba0e-1ba9-4349-b2f0-c047bb49bcd7
-using KernelDensity
-
 # ╔═╡ bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 md"""
 Analyzes the dark matter particles and profiles for the simulation.
@@ -109,7 +106,7 @@ let
 
 	#ax.yticks = [0.1:0.1:1;]
 
-	for r in [0.3, 1, 10, Inf]
+	for r in [Inf]
 		M_dm_h = LilGuys.calc_M_in(out, r)
 		scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="$r")
 	end
@@ -149,9 +146,9 @@ let
 	v_model = calc_v_circ.(halo, r_model)
 	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="NFW")
 	
-	lines!(prof_i.log_r, prof_i.v_circ * V2KMS, label="initial")
+	lines!(log10.(prof_i.r_circ), prof_i.v_circ * V2KMS, label="initial")
 
-	lines!(prof_f.log_r, prof_f.v_circ * V2KMS, label="final")
+	lines!(log10.(prof_f.r_circ), prof_f.v_circ * V2KMS, label="final")
 
 
 	α = 0.4
@@ -218,7 +215,7 @@ let
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"v_\text{circ} / \text{km\,s^{-1}}",
 	limits=(nothing, (0, nothing)))
 	x = out.times[snap_idx]
-	scatter!(x, v_max * V2KMS, label=L"maximum $v_\text{circ}$")
+	lines!(x*T2GYR, v_max * V2KMS, label=L"maximum $v_\text{circ}$")
 	#scatter!(x, v_h, label=L"r=r_h")
 	axislegend(ax)
 
@@ -232,18 +229,20 @@ md"""
 # Density evolution
 """
 
+# ╔═╡ 3aa62ecf-495a-434b-8008-02783bd5b56e
+prof_f_allpart = LilGuys.MassProfile3D(snap_f, filt_bound=false)
+
 # ╔═╡ dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\log\rho_\textrm{DM}",
-	limits=(nothing, (-13, 0)))
+	limits=((-2, 2.5), (-10, 0)))
 
 	lines!(prof_i.log_r, log10.(prof_i.rho), label="initial")
 	lines!(prof_f.log_r, log10.(prof_f.rho), label="final")
 
-	prof_fap = LilGuys.MassProfile3D(snap_f, filt_bound=false)
 	
-	lines!(prof_fap.log_r, log10.(prof_fap.rho), label="final (all particles)", color=COLORS[2], linestyle=:dash)
+	lines!(prof_f_allpart.log_r, log10.(prof_f_allpart.rho), label="final (all particles)", color=COLORS[2], linestyle=:dash)
 
 	#LP.plot_ρ!(halo, linestyle=:dot, label="NFW", color=:black)
 
@@ -281,21 +280,27 @@ let
 
 	bins = LinRange(-10, 10, 100)
 	colorrange=(1e-3, 1e3)
+	bins = LinRange(-10, 10, 100)
+	colorrange=(1e-12, nothing)
 
-	LP.projected_density!(out[1], centre=true)
+	LP.projected_density!(snap_i, centre=false, 
+		colorrange=colorrange, colorscale=log10,
+		direction1=2, direction2=3,
+		bins=bins
+	)
 	
-	bins = (out.x_cen[1, idx_i]  .+ bins,  out.x_cen[2, idx_i]  .+bins)
-	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], bins = bins, colorscale=log10, colorrange=colorrange)
-
 	ax2 = Axis(fig[1,2], aspect=1,
 	xlabel = "x / kpc",
 	title="final")
 
-	bins = LinRange(-10, 10, 100)
-	bins = (out.x_cen[1, idx_f]  .+ bins,  out.x_cen[2, idx_f]  .+bins)
-	hm = Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], bins = bins, colorscale=log10, colorrange=colorrange)
+		LP.projected_density!(snap_f, centre=true, r_max=130, 
+		colorrange=colorrange, colorscale=log10,
+		direction1=2, direction2=3,
+		bins=bins
+
+	)
 	
-	Colorbar(fig[:, end+1], hm, label="DM density")
+	#Colorbar(fig[:, end+1], hm, label="DM density")
 	
     rowsize!(fig.layout, 1, ax.scene.viewport[].widths[2])
 
@@ -377,9 +382,9 @@ end
 # ╠═c068c177-e879-4b8e-b1af-18690af9b334
 # ╠═245721a6-01aa-43e7-922d-ed5da02207c1
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
+# ╠═3aa62ecf-495a-434b-8008-02783bd5b56e
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 # ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
-# ╠═d7aaba0e-1ba9-4349-b2f0-c047bb49bcd7
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf

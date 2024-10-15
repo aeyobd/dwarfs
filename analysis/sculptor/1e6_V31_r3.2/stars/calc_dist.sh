@@ -1,10 +1,9 @@
+source ../paths.sh
 
-snap_path="$DWARFS_ROOT/analysis/isolation/1e6/fiducial/combined.hdf5/20"
-
-halo_in="$DWARFS_ROOT/simulations/isolation/1e6/fiducial/halo.toml"
 halo_out="../halo.toml"
 
 set -ex
+snap_path="$iso_out/$iso_idx_f"
 
 
 rescale_nfw.jl $snap_path -o initial_stars.hdf5 -n $halo_in -p $halo_out
