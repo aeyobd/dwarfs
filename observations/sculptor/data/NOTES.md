@@ -21,6 +21,17 @@ The next five entries are useful to exactly reproduce the plots in Sestito et al
 
 - `battaglia+22_sculptor.fits` the data from Battaglia+22 for Sculptor, very similar to J+24 below.
 - `gaia_4deg_cen.fits` is simply every stars within 4 degrees of sculptor on the sky downloaded from Gaia's ASQL tool.
+- `gaia_6deg_ruwe.fits` is simply every stars within 6 degrees of the centre of Scl additionally imposing a ruwe cut so the size is not huge. The ASQL query is:
+```sql
+SELECT * FROM gaiadr3.gaia_source
+where 1 = CONTAINS(
+    POINT(15.0183, -33.7186),
+    CIRCLE( ra, dec, 6)
+    )
+AND ruwe < 1.3
+AND pmra IS NOT NULL
+AND pmdec IS NOT NULL
+```
 
 ### Jensen + 2024
 

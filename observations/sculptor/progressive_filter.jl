@@ -64,11 +64,7 @@ md"""
 """
 
 # ╔═╡ 2b9cb3d6-e6ec-4c85-9c27-0f5e2090a0ff
-begin
-	all_stars_unfiltered = load_stars(joinpath(galaxy_dir, params.filename), params)
-
-
-end
+all_stars_unfiltered = read_gaia_stars(joinpath(galaxy_dir, params.filename), params)
 
 # ╔═╡ 9371bcb3-0e26-4162-8a40-dc1bf1dacdda
 r_ell_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec,
@@ -210,9 +206,6 @@ function plot_sample(all_stars, members=nothing; kwargs...)
 	@info plot_cmd(all_stars, members; kwargs...)
 	@info plot_pms(all_stars, members; kwargs...)
 end
-
-# ╔═╡ ab387f41-8d0f-4a1f-8dbf-b90396914c75
-maximum(all_stars.parallax_over_error)
 
 # ╔═╡ c5ca7506-5952-4973-879e-e9848bb72d03
 plot_sample(all_stars)
@@ -548,7 +541,6 @@ end
 # ╠═049ff11e-c04c-41d9-abf1-ec040b799649
 # ╠═2ec0ac71-8bb4-4459-a5a7-049ab711075e
 # ╠═b57a31e4-5394-4c32-9020-5ade8a1018c1
-# ╠═ab387f41-8d0f-4a1f-8dbf-b90396914c75
 # ╠═c5ca7506-5952-4973-879e-e9848bb72d03
 # ╠═6ee77988-5d0b-49db-87cb-a041c1ed4a28
 # ╠═99726828-62ad-465a-a961-4340b143cf6a
