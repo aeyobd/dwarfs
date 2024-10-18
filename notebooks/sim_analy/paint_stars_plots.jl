@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -47,10 +47,10 @@ md"""
 """
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
-dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/stars/"
+dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "exp2d_rs0.13"
+starsname = "exp2d_rs0.10"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")
@@ -66,15 +66,23 @@ profile = lguys.load_profile(paramname)
 # ╔═╡ 715f771b-686a-4643-a914-35ba6ca9042d
 df_E = lguys.read_hdf5_table(joinpath(dir, starsname, "probabilities_df.hdf5"))
 
+# ╔═╡ 1f10e98c-42ff-4598-9822-3f0af5c065bb
+df_E[8000, :]
+
 # ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
 df_probs = lguys.read_hdf5_table(joinpath(dir, starsname, "probabilities_stars.hdf5"))
 
 # ╔═╡ 578c6196-db59-4d5c-96a7-9a8487bbeaae
 begin 
-	snap = lguys.Snapshot(joinpath(dir, "initial_stars.hdf5"))
+	snap = lguys.Snapshot(joinpath(dir, "iso_paint.hdf5"))
 	snap.weights = df_probs.probability[snap.index]
-	snap
+	# cen = lguys.Centres.shrinking_spheres(snap.positions)[1]
+	# snap.x_cen = cen
+	snap.positions
 end
+
+# ╔═╡ ed0996a4-8667-49f7-b89f-64ae44f8a3ea
+snap.x_cen
 
 # ╔═╡ 0a4521ac-7e35-4976-8781-bdbd4f7242c7
 lguys.get_M_tot(profile)
@@ -144,7 +152,7 @@ let
 	ax = Axis(fig[1,1],xlabel="ϵ", ylabel="f", 
 	)
 
-	h = 0.001
+	h = 1e-5
 	
 	lines!((df_E.psi), asinh.(df_E.f ./ h), label="DM")
 	lines!((df_E.psi), asinh.(df_E.f_s ./ h), label="stars")
@@ -159,7 +167,7 @@ let
 	ax = Axis(fig[1,1],xlabel="ϵ", ylabel="p(e)", 
 	)
 
-	h = 1
+	h = 0.01
 	
 	lines!((df_E.psi), asinh.(df_E.probability ./ h), label="DM")
 	lines!((df_E.psi), asinh.(df_E.f_s ./ df_E.f ./ h), label="DM")
@@ -384,35 +392,27 @@ md"""
 # ╔═╡ 4396bced-cae8-4107-ac83-48cc3c4146f2
 distance = 83.2
 
-# ╔═╡ 7b7832d1-6739-453e-aaee-fa16a6000d26
-function mock_obs(snap_og; distance=distance)
-	x_sun = [8.122, 0, 0]
-	shift_vec = x_sun .+ lguys.rand_unit() * distance
-
-	snap_shift = deepcopy(snap_og)
-	snap_shift.positions .+= shift_vec
-
-	snap_shift.weights = snap.weights
-	obs = lguys.to_gaia(snap_shift, add_centre=false)
-	return obs
-end
+# ╔═╡ e63b488f-d1d7-488f-a1b8-6c32d2f66829
+snap.x_cen, snap.positions
 
 # ╔═╡ 87b5b241-db72-45ee-b3a7-a394f99510d9
-obs_mock = mock_obs(snap)
+obs_mock = lguys.to_gaia(snap, set_to_distance=distance, add_centre=false)
 
 # ╔═╡ 904576b4-2669-45d1-8078-310347f5fec0
-sum(.!isnan.(obs_mock.xi))
+sum(.!isnan.(obs_mock.r_ell))
+
+# ╔═╡ 8561415c-7c5d-4c1a-8478-3b237c2cb360
+obs_mock
+
+# ╔═╡ f46e1c29-67cf-4508-9136-6162b44cde2c
+DensityEstimators.bins_min_width_equal_number(log10.(obs_mock.r_ell), N_per_bin_min=20, dx_min=0.03)
 
 # ╔═╡ ff51f97d-2404-49c6-9339-4b201d6a94a9
 let
-	ra = obs_mock.ra
-	dec = obs_mock.dec
 	ms = obs_mock.weights
-
-	ra0, dec0 = lguys.calc_centre2D(ra, dec, "mean", ms)
-	xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
-	R = @. 60sqrt(xi^2 + eta^2)
-	bins = 	 DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=20, dx_min=0.03)
+	R = obs_mock.r_ell
+	
+	bins = 	10 .^ DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=20, dx_min=0.03)
 
 	prof = lguys.StellarProfile(R, weights=ms, bins=bins, normalization=:central, r_centre=3)
 
@@ -420,7 +420,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], ylabel=L"\log\ \Sigma", 
 		xlabel="R (projected at $distance kpc )/ arcmin",
-		limits=((-1, 2.5), (-15, 3))
+		limits=((-1, 3), (-15, 3))
 		)
 
 	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err)
@@ -428,7 +428,7 @@ let
 	
 	log_Σ(r) = log10(lguys.calc_Σ(profile, lguys.arcmin_to_kpc(r, distance)))
 
-	log_R = LinRange(-2, 2.5, 1000)
+	log_R = LinRange(-2, 3, 1000)
 	y = log_Σ.(10 .^ log_R)
 	y .-= y[1]
 	
@@ -464,28 +464,6 @@ let
 	fig
 end
 
-# ╔═╡ e4c33671-744b-42bb-87be-2df7add03b96
-let
-	x = lguys.calc_r(snap.velocities) .^2 * lguys.V2KMS^2
-	m = snap.weights
-	
-	μ = mean(x, weights(m))
-	println(sqrt(μ)/ sqrt(3))
-end
-
-# ╔═╡ b89fbbb0-b161-4fa7-82ba-c06e3d32f8b8
-function save_obs(obs_df, outfile)
-	rm(outfile, force=true)
-	df = Dict(String(name) => obs_df[:, name] for name in names(obs_df))
-
-	FITS(outfile, "w") do f
-		write(f, df)
-		println("written to $outfile")
-
-		df
-	end
-end
-
 # ╔═╡ Cell order:
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
@@ -501,7 +479,9 @@ end
 # ╟─d76e6200-9401-4c2e-bd7c-53e79dd49415
 # ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
 # ╠═715f771b-686a-4643-a914-35ba6ca9042d
+# ╠═1f10e98c-42ff-4598-9822-3f0af5c065bb
 # ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
+# ╠═ed0996a4-8667-49f7-b89f-64ae44f8a3ea
 # ╠═1066a445-600d-4508-96a2-aa9b90460097
 # ╠═0a4521ac-7e35-4976-8781-bdbd4f7242c7
 # ╠═29930595-5255-4454-8550-22ac6a96f609
@@ -534,11 +514,11 @@ end
 # ╠═6dd92ee1-374d-47fa-ad61-b54764b23240
 # ╟─99f274b4-91f3-41d0-b7d3-234badeb43d1
 # ╠═4396bced-cae8-4107-ac83-48cc3c4146f2
+# ╠═e63b488f-d1d7-488f-a1b8-6c32d2f66829
 # ╠═87b5b241-db72-45ee-b3a7-a394f99510d9
-# ╠═7b7832d1-6739-453e-aaee-fa16a6000d26
 # ╠═904576b4-2669-45d1-8078-310347f5fec0
+# ╠═8561415c-7c5d-4c1a-8478-3b237c2cb360
+# ╠═f46e1c29-67cf-4508-9136-6162b44cde2c
 # ╠═ff51f97d-2404-49c6-9339-4b201d6a94a9
 # ╠═03037c94-7f26-479c-9772-fa2682e3ba37
 # ╠═74845a4f-588b-44d3-a5e1-7155fd6a7b01
-# ╠═e4c33671-744b-42bb-87be-2df7add03b96
-# ╠═b89fbbb0-b161-4fa7-82ba-c06e3d32f8b8

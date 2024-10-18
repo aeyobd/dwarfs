@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -37,10 +37,10 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e7_V31_r3.2/orbit_mean"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/stars"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "initial"
+name = "iso_final"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -97,7 +97,7 @@ let
 	
 	log_r = LinRange(-2, 4, 1000)
 
-	lines!(prof.log_r_bins[2:end], prof.v_circ .* V2KMS, label="snapshot")
+	lines!(log10.(prof.r_circ), prof.v_circ .* V2KMS, label="snapshot")
 
 	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
 
@@ -112,7 +112,7 @@ let
 	ax2.limits=(nothing, nothing, -0.1, 0.1)
 
 	y = prof.v_circ
-	x = prof.log_r_bins[2:end]
+	x = log10.(prof.r_circ)
 	ye = calc_v_circ.(halo, 10 .^ x)
 
 	res = (y .- ye) ./ ye

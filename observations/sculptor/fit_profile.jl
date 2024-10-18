@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -50,7 +50,7 @@ end
 r_max = 20
 
 # ╔═╡ abeada6d-b74e-4769-90d6-3efe92dbbf1b
-distance = 86 ± 3
+distance = 83.2 ± 2
 
 # ╔═╡ 88f02d81-927c-405a-ada4-064157c7dbf0
 begin
@@ -71,44 +71,7 @@ md"""
 """
 
 # ╔═╡ 333c27b4-1da5-4745-942a-961202399f6d
-log_r_label = L"\log r / \mathrm{arcmin}"
-
-# ╔═╡ 46d3af07-cf51-40eb-b129-8f3b8e0fdeed
-function plot_Σ_fit_res(obs, pred, res)
-    fig = Figure()
-    ax = Axis(fig[1, 1], 
-        ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}")
-	
-    errscatter!(ax, obs["log_r"], obs["log_Sigma"], yerr=obs["log_Sigma_err"])
-
-
-	filt = pred.log_r .< log10(r_max)
-    lines!(ax, pred.log_r[filt], log10.(pred.Σ)[filt], color=COLORS[2])
-	filt = map(!, filt)
-	
-    lines!(ax, pred.log_r[filt], log10.(pred.Σ)[filt], color=COLORS[2], linestyle=:dash)
-    
-    ax2 = Axis(fig[2, 1],
-        ylabel=L"\delta\log\Sigma", 
-    	xlabel=log_r_label,
-		limits = (nothing, (-1, 1))
-	)
-
-#     p2 = plot(ylabel=L"\Delta \log\Sigma", xlabel=log_r_label, ylim=(-2, 2))
-
-	y = res
-    errscatter!(ax2, obs["log_r"], y, yerr=obs["log_Sigma_err"], label="")
-
-
-    hlines!(0, color=:black)
-    
-    rowsize!(fig.layout, 2, Relative(1/4))
-
-    linkxaxes!(ax, ax2)
-    hidexdecorations!(ax, grid=false)
-#     return plot(p1, p2, layout=grid(2, 1, heights=(0.8, 0.2)), link=:x, bottom_margin=[-5Plots.mm 0Plots.mm])
-    return fig
-end
+log_r_label = L"\log\, r\ /\ \mathrm{arcmin}"
 
 # ╔═╡ 6b909975-cdba-4961-bc0f-842c68f33ef9
 function calc_Γ(log_rs, Σs, step=1)
@@ -138,7 +101,7 @@ function predict_properties(Σ_model; N=10_000, log_r_min=-2, log_r_max=2)
 end
 
 # ╔═╡ 347aee22-17bf-11ef-196f-0146bd88f688
-function fit_profile(obs; r_max=r_max, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3])
+function fit_profile(obs; r_max=r_max, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3], kwargs...)
     r_val = 10 .^ obs["log_r"]
     log_Σ = obs["log_Sigma"] .± obs["log_Sigma_err"]
     filt = r_val .< r_max
@@ -154,7 +117,7 @@ function fit_profile(obs; r_max=r_max, N=10_000, profile=lguys.Exp2D, p0=[2, 0.3
 
 	log_Σ_exp(r, popt...) = nm.log10.(lguys.calc_Σ.(profile(popt...), r))
 	popt, covt = SciPy.optimize.curve_fit(log_Σ_exp, r_val, log_Σ_val, 
-        sigma=log_Σ_e, p0=p0)
+        sigma=log_Σ_e, p0=p0; kwargs...)
     
     popt_p = popt .± sqrt.(diag(covt))
 
@@ -188,13 +151,6 @@ let
 	errscatter!(profile["log_r"], profile["counts"], yerr=sqrt.(profile["counts"]))
 
 	fig
-end
-
-# ╔═╡ 98b776e5-824b-4db5-8455-b2433fba22b1
-let 
-	f = plot_Σ_fit_res(profile, pred, res)
-	ax = f.content[1]
-	f
 end
 
 # ╔═╡ 3c133454-d1c2-4aff-a27f-c3368bf06480
@@ -256,6 +212,101 @@ begin
 	preds = Dict{String, Any}()
 end
 
+# ╔═╡ 97c30296-cb40-4de3-8908-9acfb9471b8d
+lguys.arcmin_to_kpc(5.22, distance)
+
+# ╔═╡ c17cb6f5-f756-403f-8fbc-b71ce4e9425d
+fig_dir = "./figures"
+
+# ╔═╡ db835da8-8f0d-4dba-8f4a-22bc6d5fec35
+fig_dir
+
+# ╔═╡ 7d1f7577-93a7-48c5-a58d-a6c678904157
+lguys.calc_Σ(lguys.Plummer(2, 1), 1)
+
+# ╔═╡ 2f7bf886-5b1e-44d1-a16b-1d6214405a5f
+md"""
+# Saving fit parameters to json
+"""
+
+# ╔═╡ ba12cfef-a74d-4f4a-8acc-ca28b9ca5db0
+arcmin_to_rad = 60 / 206265
+
+# ╔═╡ 5cd1ac71-c8f8-48bf-8f2f-46f0d3f526b6
+popts
+
+# ╔═╡ 0b694b57-5e1b-4df4-8807-6ae2b151231e
+for (label, popt) in popts
+	print(label, "\t" )
+	r_s_am = popt[2]
+	r_s = r_s_am * arcmin_to_rad * distance
+	print("$r_s_am arcmin   \t\t")
+	print(r_s, " kpc")
+	println()
+end
+
+# ╔═╡ b0e73a76-e555-46c7-bd24-a0a22f2d6465
+distance
+
+# ╔═╡ 3b152248-0f9f-4fd0-aecc-5912a39f0ec2
+popts["king"]
+
+# ╔═╡ 696b6919-da98-4e84-8cfa-3b30711bfa76
+popts["king"][2:end] .* arcmin_to_rad * distance * 1e3
+
+# ╔═╡ 3e303b31-c4ec-46d2-86e9-43033affe807
+log_sigma_label = L"\log\, \Sigma\ /\ \textrm{stars\ arcmin^{-2}}"
+
+# ╔═╡ 46d3af07-cf51-40eb-b129-8f3b8e0fdeed
+function plot_Σ_fit_res(obs, pred, res; r_max=r_max, res_max=1, nf=2)
+    fig = Figure()
+    ax = Axis(fig[1, 1], 
+        ylabel=log_sigma_label, 
+	)
+	
+    errscatter!(ax, obs["log_r"], obs["log_Sigma"], yerr=obs["log_Sigma_err"])
+
+
+	filt = pred.log_r .< log10(r_max)
+    lines!(ax, pred.log_r[filt], log10.(pred.Σ)[filt], color=COLORS[2])
+	filt = map(!, filt)
+	
+    lines!(ax, pred.log_r[filt], log10.(pred.Σ)[filt], color=COLORS[2], linestyle=:dash)
+    
+    ax2 = Axis(fig[2, 1],
+        ylabel=L"\delta\log\Sigma", 
+    	xlabel=log_r_label,
+		limits = (nothing, (-res_max, res_max))
+	)
+
+#     p2 = plot(ylabel=L"\Delta \log\Sigma", xlabel=log_r_label, ylim=(-2, 2))
+
+	y = res
+    errscatter!(ax2, obs["log_r"], y, yerr=obs["log_Sigma_err"], label="")
+
+	chi2s = @. res^2 / obs["log_Sigma_err"]^2
+
+	filt = isfinite.(chi2s)
+	chi2 = sum(chi2s[filt]) / (sum(filt) - nf)
+	println("chi 2 = ", chi2 )
+
+    hlines!(0, color=:black)
+    
+    rowsize!(fig.layout, 2, Relative(1/4))
+
+    linkxaxes!(ax, ax2)
+    hidexdecorations!(ax, grid=false)
+#     return plot(p1, p2, layout=grid(2, 1, heights=(0.8, 0.2)), link=:x, bottom_margin=[-5Plots.mm 0Plots.mm])
+    return fig
+end
+
+# ╔═╡ 98b776e5-824b-4db5-8455-b2433fba22b1
+let 
+	f = plot_Σ_fit_res(profile, pred, res)
+	ax = f.content[1]
+	f
+end
+
 # ╔═╡ 0b79e7ec-b595-4dd0-9cfc-ab2eb0db9a12
 let 
 	popt, pred, res = fit_profile(profile, p0=[10_000, 7], profile=lguys.Exp3D)
@@ -283,12 +334,6 @@ let
 
 end
 
-# ╔═╡ 97c30296-cb40-4de3-8908-9acfb9471b8d
-lguys.arcmin_to_kpc(5.22, distance)
-
-# ╔═╡ c17cb6f5-f756-403f-8fbc-b71ce4e9425d
-fig_dir = "./figures"
-
 # ╔═╡ 824fc065-8ad8-408c-a4f7-0c464ed7fa13
 let 
 	popt, pred, res = fit_profile(profile, profile=lguys.KingProfile, p0=[1, 35, 200])
@@ -304,9 +349,6 @@ let
 	fig
 end
 
-# ╔═╡ db835da8-8f0d-4dba-8f4a-22bc6d5fec35
-fig_dir
-
 # ╔═╡ 1be3fa21-5945-4904-a23a-12c15cc4a485
 let 
 	popt, pred, res = fit_profile(profile, profile=lguys.LogCusp2D, p0=[10000, 15])
@@ -319,54 +361,41 @@ let
 
 end
 
-# ╔═╡ 2f7bf886-5b1e-44d1-a16b-1d6214405a5f
-md"""
-# Saving fit parameters to json
-"""
+# ╔═╡ eba0715e-1a5f-4385-90f8-defdded0be06
+let 
+	popt, pred, res = fit_profile(profile, r_max=1000, profile=lguys.Plummer, p0=[7000, 9], maxfev=1000,)
 
-# ╔═╡ c769d7b1-1b48-4a4a-aa02-ebc9a0658530
-popts
+	label = "plummer"
 
-# ╔═╡ ba12cfef-a74d-4f4a-8acc-ca28b9ca5db0
-	arcmin_to_rad = 60 / 206265
+	global popts[label] = popt
+	global preds[label] = pred
+	
+	fig = plot_Σ_fit_res(profile, pred, res, r_max=Inf, res_max=0.2)
 
+	#save(fig_dir * "/king_profile_fit.pdf", fig, verbose=true)
 
-# ╔═╡ 5cd1ac71-c8f8-48bf-8f2f-46f0d3f526b6
-popts
-
-# ╔═╡ 0b694b57-5e1b-4df4-8807-6ae2b151231e
-for (label, popt) in popts
-	print(label, "\t" )
-	r_s_am = popt[2]
-	r_s = r_s_am * arcmin_to_rad * distance
-	print("$r_s_am arcmin   \t\t")
-	print(r_s, " kpc")
-	println()
+	fig
 end
-
-# ╔═╡ b0e73a76-e555-46c7-bd24-a0a22f2d6465
-distance
-
-# ╔═╡ 3b152248-0f9f-4fd0-aecc-5912a39f0ec2
-popts["king"]
-
-# ╔═╡ 696b6919-da98-4e84-8cfa-3b30711bfa76
-popts["king"][2:end] .* arcmin_to_rad * distance * 1e3
 
 # ╔═╡ 6d8705f8-8580-4424-be21-809ea1a0b526
 let
 	fig = Figure()
     ax = Axis(fig[1, 1], 
-        ylabel=L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}")
+        ylabel=log_sigma_label,
+		xlabel=log_r_label,
+		limits=(-1, 2, -3, 2)
+	)
 	
-    errscatter!(ax, profile["log_r"], profile["log_Sigma"], yerr=profile["log_Sigma_err"])
+    errscatter!(ax, profile["log_r"], profile["log_Sigma"], yerr=profile["log_Sigma_err"],)
 
 
 	for (label, pred) in preds
-    	lines!(ax, pred.log_r, log10.(pred.Σ), label=label)
+		if label ∈ ["plummer", "exp2d", "king"]
+    		lines!(ax, pred.log_r, log10.(pred.Σ), label=label)
+		end
 	end
 
-	axislegend()
+	axislegend(position=:lb)
 	fig
 end
 
@@ -400,8 +429,9 @@ end
 # ╠═824fc065-8ad8-408c-a4f7-0c464ed7fa13
 # ╠═db835da8-8f0d-4dba-8f4a-22bc6d5fec35
 # ╠═1be3fa21-5945-4904-a23a-12c15cc4a485
+# ╠═7d1f7577-93a7-48c5-a58d-a6c678904157
+# ╠═eba0715e-1a5f-4385-90f8-defdded0be06
 # ╟─2f7bf886-5b1e-44d1-a16b-1d6214405a5f
-# ╠═c769d7b1-1b48-4a4a-aa02-ebc9a0658530
 # ╠═ba12cfef-a74d-4f4a-8acc-ca28b9ca5db0
 # ╠═5cd1ac71-c8f8-48bf-8f2f-46f0d3f526b6
 # ╠═0b694b57-5e1b-4df4-8807-6ae2b151231e
@@ -409,3 +439,4 @@ end
 # ╠═3b152248-0f9f-4fd0-aecc-5912a39f0ec2
 # ╠═696b6919-da98-4e84-8cfa-3b30711bfa76
 # ╠═6d8705f8-8580-4424-be21-809ea1a0b526
+# ╠═3e303b31-c4ec-46d2-86e9-43033affe807

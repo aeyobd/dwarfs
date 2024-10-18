@@ -22,4 +22,4 @@
 
 
 # Parallel options, not needed except for niagara
-    NUMBER_OF_MPI_LISTENERS_PER_NODE=2
+    #NUMBER_OF_MPI_LISTENERS_PER_NODE=2

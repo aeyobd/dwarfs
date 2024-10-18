@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -31,10 +31,10 @@ import DensityEstimators as DE
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_V31_r3.2/orbit_smallperi/"
+model_dir = "$models_dir/1e7_V31_r3.2/orbit_mean/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.10/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.13/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
@@ -303,7 +303,7 @@ sum(filt_leading .& filt_dist), sum(stars.weights[filt_leading .& filt_dist])
 sum(filt_trailing .& filt_dist), sum(stars.weights[filt_trailing .& filt_dist])
 
 # ╔═╡ 5ea9a308-13b4-4d64-84b2-2143be6e9a23
-sum(stars.weights[stars.r_ell .< r_b_arcmin])
+sum(stars.weights[stars.r_ell .> r_b_arcmin])
 
 # ╔═╡ 51d391f8-130a-4c85-a165-f1cebaea3812
 sum(stars.weights[filt_dist])
@@ -759,7 +759,7 @@ function plot_hist2d_coord(sym; xsym = :xi_p)
 	)
 	
 	h = Arya.hist2d!(ax, x, y, weights=mass, bins=100, limits=limits,
-		colorrange=(1e-20, nothing), colorscale=log10, normalization=:density
+		colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
 	)
 
 	Colorbar(fig[1, 2], h, label="stellar mass density")
@@ -778,7 +778,7 @@ for sym in [:pmra, :pmra_gsr, :pmdec, :radial_velocity, :distance, ]
 end
 
 # ╔═╡ 6ac742ef-ff1f-4a1c-a812-e2962bd6a50d
-function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=2)
+function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=1)
 	if xsym == :xi_p
 		filt = abs.(stars.eta_p) .< eta_max
 	elseif xsym == :eta_p
@@ -816,7 +816,7 @@ function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=2)
 end
 
 # ╔═╡ e3ecf2c5-67e9-4571-8743-04c67755a23b
-for ysym in [:pmra, :pmra_gsr, :pmdec, :distance, :radial_velocity]
+for ysym in [:pmra, :pmra_gsr, :pmdec, :pmdec_gsr,  :distance, :radial_velocity, :radial_velocity_gsr]
 	@info plot_obs_bin_means(ysym)
 end
 

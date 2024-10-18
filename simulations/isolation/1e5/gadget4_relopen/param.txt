@@ -1,0 +1,82 @@
+% -----------------------------------IO---------------------------------------
+
+%---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
+
+%---File formats 
+ICFormat                    3
+SnapFormat                  3
+
+%---Mem & CPU limits
+TimeLimitCPU                3600
+CpuTimeBetRestartFile       1800
+MaxMemSize                  2500
+
+%---Time
+TimeBegin                   0
+TimeMax                     117
+
+%---Output frequency
+OutputListOn                0
+TimeBetSnapshot             10
+TimeOfFirstSnapshot         0
+TimeBetStatistics           10
+NumFilesPerSnapshot         1
+MaxFilesWithConcurrentIO    1 
+
+
+% ----------------------------------Gravity-----------------------------------
+
+%---Timestep accuracy
+ErrTolIntAccuracy           0.01
+CourantFac                  0.1
+MaxSizeTimestep             0.5
+MinSizeTimestep             0.0
+
+%---Tree algorithm
+TypeOfOpeningCriterion      1       % 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5
+ErrTolThetaMax              10.0
+ErrTolForceAcc              0.005   % (used only for relative)
+
+%---Domain decomposition: should only affect performance
+TopNodeFactor                       1.0
+ActivePartFracForNewDomainDecomp    0.02
+
+%---Gravitational Softening
+SofteningComovingClass0      0.14
+SofteningMaxPhysClass0       0
+SofteningClassOfPartType0    0
+SofteningClassOfPartType1    0
+
+
+%--------------------------------Misc-------------------------------------
+
+% probably do not need to change the options below 
+
+%---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
+
+%---Cosmological Parameters 
+ComovingIntegrationOn       0 % no cosmology
+Omega0                      0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+Hubble                      100
+BoxSize                     0
+
+%---SPH
+ArtBulkViscConst            0.8
+MinEgySpec                  0
+InitGasTemp                 100
+
+%---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1 

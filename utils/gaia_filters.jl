@@ -441,3 +441,41 @@ x \oplus y \equiv \sqrt{x^2 + y^2}
 function ⊕(x::Real, y::Real)
 	return sqrt(x^2 + y^2)
 end
+
+
+"""
+    calc_r_max(ra, dec, args...; centre="mean", weights=nothing)
+
+
+"""
+function calc_r_max(ra, dec, args...; 
+        centre="mean",
+        weights=nothing
+    )
+
+    ra0, dec0 = lguys.calc_centre2D(ra, dec, centre, weights)
+
+    x, y = lguys.to_tangent(ra, dec, ra0, dec0)
+    x_p, y_p = lguys.shear_points_to_ellipse(x, y, args...)
+
+    if length(args) == 3
+        a, b, _ = args
+        aspect = b/a
+        if aspect < 1
+            aspect = 1/aspect
+        end
+    else
+        aspect = lguys.ellipticity_to_aspect(args[1])
+    end
+    
+    if isdefined(LilGuys, :convex_hull)
+        hull = convex_hull(x_p, y_p)
+        r_max = min_distance_to_polygon(hull...)
+    else
+        @warn "r_ell: Convex hull not defined. Using max radius. Load Polyhedra to enable convex hull."
+        r_max = maximum(@. sqrt(x^2 + y^2)) ./ sqrt(aspect)
+    end
+
+    return r_max
+end
+

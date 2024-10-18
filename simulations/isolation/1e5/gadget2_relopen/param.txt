@@ -1,0 +1,113 @@
+% -----------------------------------IO---------------------------------------
+
+%---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
+
+%---File formats 
+ICFormat                    3
+SnapFormat                  3
+
+%---Mem & CPU limits
+TimeLimitCPU                3600
+CpuTimeBetRestartFile       1800
+BufferSize                  15
+PartAllocFactor             1.1
+TreeAllocFactor             0.7
+
+
+%---Time
+TimeBegin                   0
+TimeMax                     117
+
+%---Output frequency
+OutputListOn                0
+TimeBetSnapshot             10
+TimeOfFirstSnapshot         0
+TimeBetStatistics           10
+NumFilesPerSnapshot         1
+
+
+% ----------------------------------Gravity-----------------------------------
+
+% Match the below to isolation run
+
+%---Timestep accuracy
+ErrTolIntAccuracy           0.01
+CourantFac                  0.1
+MaxSizeTimestep             0.5
+MinSizeTimestep             0.0
+
+%---Tree algorithm
+TreeDomainUpdateFrequency   0.02
+TypeOfOpeningCriterion      1       % 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5
+ErrTolForceAcc              0.005   % (used only for relative)
+
+
+%---Gravitational Softening
+SofteningGas       0
+SofteningHalo      0.14
+SofteningDisk      0
+SofteningBulge     0           
+SofteningStars     0
+SofteningBndry     0
+
+SofteningGasMaxPhys       0
+SofteningHaloMaxPhys      0 %not used in non-comoving simulation
+SofteningDiskMaxPhys      0
+SofteningBulgeMaxPhys     0           
+SofteningStarsMaxPhys     0
+SofteningBndryMaxPhys     0
+
+
+%--------------------------------Misc-------------------------------------
+
+% probably do not need to change the options below 
+
+%---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
+
+%---Cosmological Parameters 
+ComovingIntegrationOn       0 % no cosmology
+Omega0                      0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+BoxSize                     0
+
+%---SPH
+ArtBulkViscConst            0.8
+InitGasTemp                 100
+MinGasTemp                  0
+MinGasHsmlFractional        0.25
+
+%---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1 
+
+
+%--------------------------------Gadget 2----------------------------       
+RestartFile                restart
+ResubmitOn                 0
+ResubmitCommand            my-scriptfile
+PeriodicBoundariesOn       0
+
+CpuFile                     cpus.txt
+EnergyFile            energy.txt
+InfoFile                    info.txt
+TimingsFile                 timings.txt
+NumFilesWrittenInParallel   1
+TypeOfTimestepCriterion     0 % only choice
+
+
+
+% misc
+
+MaxRMSDisplacementFac       0.2 % only for treepm
+

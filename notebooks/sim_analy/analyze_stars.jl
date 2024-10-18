@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -38,7 +38,7 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.10"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
 model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r3.2/orbit_mean"
@@ -543,6 +543,8 @@ end
   ╠═╡ =#
 
 # ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	fig = Figure()
 
@@ -561,6 +563,7 @@ let
 	
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ a955cee5-609e-46bd-8212-51e18c0d1e86
 properties = Dict(

@@ -1,3 +1,5 @@
-halo_in="$DWARFS_ROOT/simulations/isolation/1e6/fiducial/halo.toml"
-iso_idx_f=21 # index starts at 1
-iso_out="$DWARFS_ROOT/analysis/isolation/1e6/fiducial/combined.hdf5"
+export iso_path="$DWARFS_ROOT/analysis/isolation/1e6/fiducial/"
+export iso_halo="$DWARFS_ROOT/simulations/isolation/1e6/fiducial/halo.toml"
+
+export iso_idx_paint=21
+export iso_idx_f=119
