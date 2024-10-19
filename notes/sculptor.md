@@ -12,7 +12,7 @@ In the table below, we compile recent observations of Scl to provide the most mo
 
 A brief comparison with other estimates of all properties reveals that most studies agree within 2$\sigma$ for the observed properties. 
 
-
+Note however, that the proper motions described in MV20a using Gaia DR3 also have a 0.017 mas/yr systematic error (angular scale of 1 deg using Lindegren 2021 eq. 25).
 
 | parameter                | value                            | Source    |
 | ------------------------ | -------------------------------- | --------- |
@@ -47,8 +47,8 @@ From the simulations (below), we expect a shift in the proper motions of order 0
 
 - no NANs in PM, parallax, magnitudes
 - RUWE < 1.4 (Gaia quality cut)
-- parallax 3$\sigma$ consistency with sculptors distance (effectively same cut as consistent with zero)
-- CMD within the polygon in BP - RP versus G described by  [(-0.21, 20.58), (-0.1, 20.1), (0.28, 19.77), (0.7, 19.64), (1.02, 18.5), (1.14, 17.59), (1.41, 16.73), (1.68, 15.94), (1.94, 15.94), (1.91, 16.8), (1.68, 17.01), (1.45, 17.87), (1.32, 19.16), (1.26, 20.1), (1.35, 21.0), (0.46, 21.0), (0.82, 20.27), (0.39, 20.33), (0.16, 20.76)]
+- parallax 3$\sigma$ consistency with zero (no offset applied)
+- CMD within the polygon in BP - RP versus G described by ...
 - total proper motion less than 10 mas/yr (corresponding to a velocity of about 4000 km/s)
 
 
@@ -126,8 +126,7 @@ Given the uncertainties in the measurement errors, we can sample present-day mea
 | ------- | -------------------- | ------------- | ----------------------- | ---------------- |
 | average | 31.1                 | 5.96          | 9.25                    | 0.044            |
 | compact | 31                   | 3.2           |                         | 0.024            |
-| heavy?  | 47                   | 5.4           |                         |                  |
-| both?   | 39                   | 4.5           |                         |                  |
+| heavy   | 40                   | 5.9           |                         |                  |
 
 Last column: present-day velocity dispersion for best visual fit.
 
@@ -149,22 +148,22 @@ The initial kinematic conditions for the galaxy are determined by integrating th
 
 
 
-| Orbit      | 1        | 2       | 3     |
-| ---------- | -------- | ------- | ----- |
-| ra         | 15.0183  | ''      | ''    |
-| dec        | -33.7186 | ''      | ''    |
-| pm ra      | 0.0990   | 0.1007  |       |
-| pm_dec     | -0.160   | -0.161  |       |
-| dist       | 83.2     | 79.6    |       |
-| rv         | 111.4    | 111.44  |       |
-| pericentre | 53.0     | 51.5    | 54.5  |
-| apocentre  | 102.0    | 97.8    | 106.0 |
-| $x_0$      | 16.1574  | 15.4134 |       |
-| $y_0$      | 92.5936  | 86.16   |       |
-| $z_0$      | 39.5549  | 43.59   |       |
-| $v_{x,0}$  | -2.31    | -3.12   |       |
-| $v_{y,0}$  | -54.26   | -63.40  |       |
-| $v_{z,0}$  | 129.015  | 126.7   |       |
+| Orbit      | 1        | 2        | 3        |
+| ---------- | -------- | -------- | -------- |
+| ra         | 15.0183  | ''       | ''       |
+| dec        | -33.7186 | ''       | ''       |
+| pm ra      | 0.0990   | 0.134    | 0.064    |
+| pm_dec     | -0.160   | -0.196   | -0.126   |
+| dist       | 83.2     | 82.7     | 85.4     |
+| rv         | 111.4    | ''       | ''       |
+| pericentre | 53       | 43       | 63       |
+| apocentre  | 102      | 96       | 114      |
+| $x_0$      | 16.1574  | -2.4303  | 4.9579   |
+| $y_0$      | 92.5936  | -43.4768 | 57.7071  |
+| $z_0$      | 39.5549  | 86.0834  | -97.6210 |
+| $v_{x,0}$  | -2.31    | -20.16   | 22.38    |
+| $v_{y,0}$  | -54.26   | -113.91  | 120.00   |
+| $v_{z,0}$  | 129.015  | -59.60   | 72.61    |
 
 
 
