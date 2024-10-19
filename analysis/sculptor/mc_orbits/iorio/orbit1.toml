@@ -1,0 +1,17 @@
+gc_d = 8.0
+gc_v_sun_x = 11.1
+distance_err = 6.0
+pmra = 0.08500001121369995
+gc_dec = -28.936175
+distance = 85.99999665578048
+gc_v_sun_z = 7.25
+ra = 15.038499994542633
+pmra_err = 0.028
+pmdec_err = 0.028
+gc_v_sun_y = 230.2
+dec = -33.705600327592435
+radial_velocity = 111.60000083316955
+radial_velocity_err = 0.2
+pmdec = -0.1330000122039145
+gc_ra = 266.4051
+gc_z_sun = 0.0

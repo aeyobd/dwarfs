@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -26,14 +26,13 @@ md"""
 This notebook analyzes the result of the MC samples of orbits in the same potential to determine the plausable range of pericentres and apocentres
 """
 
-# ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
-obs_prop_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
+# ╔═╡ 5b8fb227-2564-4dfb-86c0-d3a5094b6893
+sim_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/mc_orbits/systematic_errors/"
 
-# ╔═╡ 1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
-obs = lguys.coord_from_file(obs_prop_filename)
-
-# ╔═╡ 0146ee17-de5f-4877-aaa6-83a898e01416
-err = lguys.coord_err_from_file(obs_prop_filename)
+# ╔═╡ 9583b7d0-0d86-4346-998b-000ea68e94b6
+if !isdefined(Main, :obs)
+	include(joinpath(sim_dir, "sample.jl"))
+end
 
 # ╔═╡ 3b83205d-91c1-481e-9305-0d59bc692135
 coord_labels = Dict(
@@ -71,7 +70,7 @@ begin
 end
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
-p_value = 0.02
+p_value = 0.001349898031630093 # 3sigma
 
 # ╔═╡ fb6debf2-0161-477f-b29b-5a0f1f70f340
 [snap.positions[:, 1]; snap.velocities[:, 1] * lguys.V2KMS]
@@ -83,7 +82,8 @@ peris = df_peris_apos.pericenter
 peri_qs = lguys.quantile(peris, [p_value, 1-p_value])
 
 # ╔═╡ 17a63cc8-84f4-4248-a7b0-c8378454b1f7
-idx = [1, 
+idx = [
+	argmin(abs.(peris .- median(peris))),
 	argmin(abs.(peri_qs[1] .- peris)),
 	argmin(abs.(peri_qs[2] .- peris)),
 ]
@@ -257,6 +257,79 @@ md"""
 # Validation
 """
 
+# ╔═╡ 6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
+let
+	fig = Figure(size=(600, 600))
+
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "density",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+	    x = getproperty.(observations, sym)
+		
+		    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
+	
+		
+		x_mod = LinRange(minimum(x), maximum(x), 1000)
+
+		mu_exp = getproperty(obs, sym)
+		err_exp = getproperty(err, sym)
+		y_mod = normal_dist.(x_mod, mu_exp, err_exp)
+		lines!(x_mod, y_mod, label="expected gaussian")
+			
+		axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
+	end
+
+	
+
+	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	fig
+end
+
+# ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
+let
+
+	for sym in columns
+		
+		fig = Figure()
+		ax = Axis(fig[1,1], 
+			xlabel=String(sym),
+			ylabel="density",
+			#limits=((μ - 5σ, μ + 5σ), nothing),
+		)
+		
+	    x = getproperty.(observations, sym)
+		
+	    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
+
+
+		μ = getproperty(obs, sym)
+		σ = getproperty(err, sym)
+		x_mod = LinRange(μ - 3σ, μ + 3σ, 10_000)
+		y_mod = normal_dist.(x_mod, μ, σ) 
+		lines!(x_mod, y_mod, label="expected")
+			
+		axislegend()
+
+		@info fig
+	end
+
+end
+
 # ╔═╡ de2f3380-90df-48f5-ba60-8417e91f4818
 function median_residual(observations)
 	for sym in [:distance, :pmra, :pmdec, :radial_velocity, :ra, :dec]
@@ -266,34 +339,37 @@ function median_residual(observations)
 	end
 end
 
+# ╔═╡ c8aec4f8-975f-4bbc-b874-bf0172d35868
+function median_percen(observations)
+	for sym in [:distance, :pmra, :pmdec, :radial_velocity]
+		md = median(getproperty.(observations, sym))
+		err = std(getproperty.(observations, sym)) / sqrt(length(observations))
+		@printf "     %-15s  = %8.3f ± %8.3f \n"  sym md err
+	end
+end
+
 # ╔═╡ 4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 let 
-	peri1 = lguys.quantile(peris, 0.015)
-	peri2 = lguys.quantile(peris, 0.025)
-
-	idx_s = @. peri1 < peris < peri2
+	idx_s =  peris .< quantile(peris, 2*p_value)
 
 	median_residual(observations[idx_s])
+	median_percen(observations[idx_s])
 end
 
 # ╔═╡ 34104429-05e0-40a6-83e5-078dbe346504
 let
-	peri2 = lguys.quantile(peris, 1 - 0.015)
-	peri1 = lguys.quantile(peris, 1 - 0.025)
-
-	idx_s = @. peri1 < peris < peri2
+	idx_s =  peris .> quantile(peris, 1-2*p_value)
 
 	median_residual(observations[idx_s])
+	median_percen(observations[idx_s])
+
 end
 
-# ╔═╡ e7fc6024-374b-422d-837b-26448e06e1db
-observations[1].radial_velocity
-
-# ╔═╡ 853b4153-7e5d-498b-bccd-26729d5371d9
-obs.radial_velocity
-
 # ╔═╡ e5825c4a-b446-44a3-8fd5-d94664965aca
-median_residual(observations[[1]])
+median_residual(observations)
+
+# ╔═╡ ef57611c-2986-4b03-aa5a-ab45003edd72
+median_percen(observations)
 
 # ╔═╡ 16f4ac20-d8cf-4218-8c01-c15e04e567fb
 md"""
@@ -303,14 +379,12 @@ md"""
 # ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
 begin
 	
-	positions = lguys.extract_vector(out, :positions, idx)
-	velocities = lguys.extract_vector(out, :velocities, idx)
-	accelerations = lguys.extract_vector(out, :accelerations, idx)
-	positions = [positions[:, i, :] for i in 1:length(idx)]
-	velocities = [velocities[:, i, :] for i in 1:length(idx)]
-	accelerations = [accelerations[:, i, :] for i in 1:length(idx)]
-	Φs_ext = lguys.extract(out, :Φs_ext, idx)
-	Φs = lguys.extract(out, :Φs, idx)
+	positions = [lguys.extract_vector(out, :positions, i) for i in idx]
+	velocities = [lguys.extract_vector(out, :velocities, i) for i in idx]
+	accelerations = [lguys.extract_vector(out, :accelerations, i) for i in idx]
+
+	Φs_ext = [lguys.extract(out, :Φs_ext, i) for i in idx]
+	Φs = [lguys.extract(out, :Φs, i) for i in idx]
 
 
 end
@@ -413,7 +487,7 @@ let
 	ax = Axis(fig[1,1])
 	
 	for i in 1:length(idx)
-		scatter!(out.times, Φs_ext[i, :] .- phi_exp.(rs[i]))
+		scatter!(out.times, Φs_ext[i] .- phi_exp.(rs[i]))
 	end
 	fig
 end
@@ -457,91 +531,6 @@ reverse(out.times)
 
 # ╔═╡ b8c9823f-ca6b-48bf-9140-40440562dac0
 import TOML
-
-# ╔═╡ a87a575b-bdb3-493a-a2ff-298d6bf23ec8
-obs_prop_all = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/obs_props_all.toml")
-
-# ╔═╡ 6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
-let
-	fig = Figure(size=(600, 600))
-
-	ax_kwargs = Dict(
-		:xgridvisible => false,
-		:ygridvisible => false,
-		:ylabel => "density",
-	)
-
-	ax_idx = Dict(
-		:pmra => [1, 1],
-		:pmdec => [1, 2],
-		:distance => [2, 1],
-		:radial_velocity => [2, 2],
-	)
-
-	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
-		ax = Axis(fig[ax_idx[sym]...],
-			xlabel=coord_labels[sym];
-			ax_kwargs...
-		)
-	    x = getproperty.(observations, sym)
-		
-		    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
-	
-	
-		studies = obs_prop_all["$(sym)_studies"]
-		μs = obs_prop_all["$(sym)"]
-		σs = obs_prop_all["$(sym)_err"]
-		
-		x_mod = LinRange(minimum(x), maximum(x), 1000)
-
-		for i in eachindex(studies)
-			y_mod = normal_dist.(x_mod, μs[i], σs[i]) ./ length(studies)
-			lines!(x_mod, y_mod, label=studies[i])
-		end
-			
-		axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
-	end
-
-	
-
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
-	fig
-end
-
-# ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
-let
-
-	for sym in columns
-		
-		fig = Figure()
-		ax = Axis(fig[1,1], 
-			xlabel=String(sym),
-			ylabel="density",
-			#limits=((μ - 5σ, μ + 5σ), nothing),
-		)
-		
-	    x = getproperty.(observations, sym)
-		
-	    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
-
-
-		studies = obs_prop_all["$(sym)_studies"]
-		μs = obs_prop_all["$(sym)"]
-		σs = obs_prop_all["$(sym)_err"]
-	    
-	    x_mod = LinRange(minimum(x), maximum(x), 1000)
-
-		for i in eachindex(studies)
-	    	y_mod = normal_dist.(x_mod, μs[i], σs[i]) ./ length(studies)
-	    	lines!(x_mod, y_mod, label=studies[i])
-		end
-			
-		axislegend()
-
-		@info fig
-	end
-
-end
 
 # ╔═╡ 1152cd63-baab-426a-b464-b10857eed4ec
 for i in 1:length(idx)
@@ -641,10 +630,8 @@ end
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
-# ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
-# ╠═a87a575b-bdb3-493a-a2ff-298d6bf23ec8
-# ╠═1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
-# ╠═0146ee17-de5f-4877-aaa6-83a898e01416
+# ╠═5b8fb227-2564-4dfb-86c0-d3a5094b6893
+# ╠═9583b7d0-0d86-4346-998b-000ea68e94b6
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
 # ╠═26d616da-95ec-4fb9-b9a8-2f095d74c722
@@ -676,13 +663,13 @@ end
 # ╠═6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╠═de2f3380-90df-48f5-ba60-8417e91f4818
+# ╠═c8aec4f8-975f-4bbc-b874-bf0172d35868
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 # ╠═34104429-05e0-40a6-83e5-078dbe346504
-# ╠═e7fc6024-374b-422d-837b-26448e06e1db
-# ╠═853b4153-7e5d-498b-bccd-26729d5371d9
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
+# ╠═ef57611c-2986-4b03-aa5a-ab45003edd72
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
-# ╟─e5d40e2f-ac47-4827-853d-2f94bc39a624
+# ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
