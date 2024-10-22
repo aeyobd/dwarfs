@@ -342,7 +342,6 @@ let
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
 		ylabel="radius / kpc",
-		title = "My orbits"
 	)
 
 	for i in eachindex(orbit_labels)
@@ -631,7 +630,7 @@ end
 # ╟─43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╟─ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
-# ╟─e5d40e2f-ac47-4827-853d-2f94bc39a624
+# ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c

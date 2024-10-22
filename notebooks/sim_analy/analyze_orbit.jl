@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -39,7 +39,7 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e7_V31_r3.2/orbit_mean"
+modelname = "sculptor/1e6_V31_r3.2/orbit_smallperi"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -524,7 +524,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═63d2d908-2f12-483b-bbad-833b2aecc4e3
 # ╠═5676b72f-a981-4efb-8328-c25d3c5d6fb0
 # ╠═592a18e9-ee9a-4638-9454-f0bda3a0a3f2
-# ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 # ╟─179c3c32-1368-4a58-b4b8-26d9d3f19f8c
 # ╠═5704daca-a8c4-4292-a6c0-ea294f4373fd
+# ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 # ╠═fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67

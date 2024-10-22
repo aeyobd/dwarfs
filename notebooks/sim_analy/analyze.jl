@@ -33,7 +33,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_mean"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/orbit_smallperi"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -106,7 +106,7 @@ let
 
 	#ax.yticks = [0.1:0.1:1;]
 
-	for r in [Inf]
+	for r in [Inf, 10, 1]
 		M_dm_h = LilGuys.calc_M_in(out, r)
 		scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="$r")
 	end
@@ -257,33 +257,16 @@ let
 	# only include bound points in profile...
 end
 
-# ╔═╡ 4cd952f3-555d-401b-aa31-8b79a23ca42e
-let 
-	fig = Figure()
-	
-	ax =Axis(fig[1, 1], aspect=1)
-
-	bins = LinRange(-10, 10, 100)
-	colorrange=(1e-6, nothing)
-
-	LP.projected_density!(snap_f, centre=false, r_max=130, 
-		colorrange=colorrange, colorscale=log10,
-		direction1=2, direction2=3
-	)
-	fig
-end
-
 # ╔═╡ 4801ff80-5761-490a-801a-b263b90d63fd
 let
 	fig, ax = FigAxis(aspect=1)
 	ax.title = "initial"
 
-	bins = LinRange(-10, 10, 100)
-	colorrange=(1e-3, 1e3)
-	bins = LinRange(-10, 10, 100)
-	colorrange=(1e-12, nothing)
+	bins = 100
+	colorrange=(1e-7, 1e-3)
+	r_max = 5
 
-	LP.projected_density!(snap_i, centre=false, 
+	LP.projected_density!(snap_i, centre=true, r_max=r_max,
 		colorrange=colorrange, colorscale=log10,
 		direction1=2, direction2=3,
 		bins=bins
@@ -293,20 +276,41 @@ let
 	xlabel = "x / kpc",
 	title="final")
 
-		LP.projected_density!(snap_f, centre=true, r_max=130, 
+	hm = LP.projected_density!(snap_f, centre=true, r_max=r_max,  
 		colorrange=colorrange, colorscale=log10,
 		direction1=2, direction2=3,
 		bins=bins
 
 	)
 	
-	#Colorbar(fig[:, end+1], hm, label="DM density")
+	Colorbar(fig[:, end+1], hm, label="DM density")
 	
     rowsize!(fig.layout, 1, ax.scene.viewport[].widths[2])
 
 	resize_to_layout!(fig)
 
 	save(joinpath(figures_dir, "xy_cen_projection.pdf"), fig)
+
+	fig
+end
+
+# ╔═╡ 4cd952f3-555d-401b-aa31-8b79a23ca42e
+let 
+	fig = Figure()
+	
+	ax =Axis(fig[1, 1], aspect=1, 
+		xlabel = "x / kpc", ylabel="z / kpc", title="dark matter",
+	)
+
+	bins = LinRange(-10, 10, 100)
+	colorrange=(1e-6, nothing)
+
+	h = LP.projected_density!(snap_f, centre=false, r_max=130, 
+		colorrange=colorrange, colorscale=log10,
+		xdirection=1, ydirection=3
+	)
+
+	Colorbar(fig[1, 2], h, label="DM density")
 
 	fig
 end
@@ -384,7 +388,7 @@ end
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
 # ╠═3aa62ecf-495a-434b-8008-02783bd5b56e
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
-# ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
-# ╠═4801ff80-5761-490a-801a-b263b90d63fd
-# ╠═fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
+# ╟─4801ff80-5761-490a-801a-b263b90d63fd
+# ╟─4cd952f3-555d-401b-aa31-8b79a23ca42e
+# ╟─fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
