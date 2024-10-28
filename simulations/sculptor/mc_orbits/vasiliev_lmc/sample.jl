@@ -1,5 +1,6 @@
 import LilGuys as lguys
-
+# warning, in vasiliev coordinates
+# V0=1kms, R0=1kpc T0 = 977.8 Myr
 
 obs_props_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
@@ -15,15 +16,15 @@ err = lguys.ICRS(
     radial_velocity = err.radial_velocity,
 )
 
-function sample(N = 100_000)
+function sample(N = 10_000)
     mc_obs = lguys.rand_coords(obs, err, N)
 
     mc_phase = lguys.transform.(lguys.Galactocentric, mc_obs)
     pos = hcat([lguys.position_of(p) for p in mc_phase]...)
     vel = hcat([lguys.velocity_of(p) for p in mc_phase]...)
 
-    pos ./= lguys.R2KPC
-    vel ./= lguys.V2KMS
+    pos ./= 1# 1 Vasiliev
+    vel ./= 1 # vasiliev
     vel .*= -1 # reverse velocities to go backwards in time
 
     m = 0

@@ -39,24 +39,8 @@ end
 Given an inital phase position and agama potential, computes the orbit.
 Returns a ve
 """
-function calc_orbit(phase::LilGuys.Galactocentric, pot; N=10_000, time=10, units = :code)
-
-    if units == :code
-        ic = [phase.x, phase.y, phase.z, 
-            ((phase.v_x, phase.v_y, phase.v_z) ./ V2KMS)...]
-        time = time ./ T2GYR
-    elseif units == :vasiliev
-        ic = [phase.x, phase.y, phase.z, 
-            ((phase.v_x, phase.v_y, phase.v_z) ./ V_V2KMS)...]
-        time  = time ./ V_T2GYR
-    elseif units == :physical
-        ic = [phase.x,
-              phase.y,
-              phase.z,
-              phase.v_x,
-              phase.v_y,
-              phase.v_z]
-    end
+function calc_orbit(coords, pot; N=10_000, time=10, units = :code)
+    ic = make_agama_init(coords, units=units)
 
     if time isa Real
         o = agama.orbit(ic=ic, time=time, potential=pot, trajsize=N)
@@ -71,7 +55,34 @@ function calc_orbit(phase::LilGuys.Galactocentric, pot; N=10_000, time=10, units
         o = agama.orbit(ic=ic, time=tottime, timestart=time0, potential=pot, dtype="object")
         pyposvel = o(time)
     end
-    posvel = pyconvert(Matrix{Float64}, pyposvel)'
+    return from_agama_orbit(time, pyposvel, units=units)
+end
+
+
+function calc_orbits(coords::AbstractVector, pot; N=10_000, time=10, units=:code)
+    ic = make_agama_init(coords, units=units)
+
+    Np = length(coords)
+
+    if time isa Real
+        o = agama.orbit(ic=ic, time=time, potential=pot, trajsize=N)
+        time = pyconvert(Vector{Float64}, o[0][0])
+        pyposvels = [o[i][1] for i in 0:Np-1]
+    elseif time isa AbstractVector
+        time0 = time[1]
+        tottime = time[end] - time[1]
+        println("start time: ", time0)
+        println("integration time: ", tottime)
+        o = agama.orbit(ic=ic, time=tottime, timestart=time0, potential=pot, dtype="object")
+        pyposvels = [oo(time) for oo in o]
+    end
+    return ["$i" => from_agama_orbit(time, pyposvels[i], units=units) for i in eachindex(pyposvels)]
+end
+
+
+
+function from_agama_orbit(time, posvel; units=:code)
+    posvel = pyconvert(Matrix{Float64}, posvel)'
 
     position = posvel[1:3, :]
     velocity = posvel[4:6, :]
@@ -83,8 +94,53 @@ function calc_orbit(phase::LilGuys.Galactocentric, pot; N=10_000, time=10, units
         velocity = velocity ./ V2KMS
         time = time ./ T2GYR
     end
-
     return Orbit(time=time, position=position, velocity=velocity)
+end
+
+function make_agama_init(coord::LilGuys.Galactocentric; units=:code)
+    x = coord.x
+    y = coord.y
+    z = coord.z
+    v_x = coord.v_x
+    v_y = coord.v_y
+    v_z = coord.v_z
+    if units == :code
+        v_x /= V2KMS
+        v_y /= V2KMS
+        v_z /= V2KMS
+    elseif units == :vasiliev
+        v_x /= V_V2KMS
+        v_y /= V_V2KMS
+        v_z /= V_V2KMS
+    elseif units == :physical
+        # pass
+    end
+
+    return [x, y, z, v_x, v_y, v_z]
+end
+
+
+function make_agama_init(coords::AbstractVector{<:LilGuys.Galactocentric}; units=:code)
+    x = [coord.x for coord in coords]
+    y = [coord.y for coord in coords]
+    z = [coord.z for coord in coords]
+    v_x = [coord.v_x for coord in coords]
+    v_y = [coord.v_y for coord in coords]
+    v_z = [coord.v_z for coord in coords]
+
+    if units == :code
+        v_x ./= V2KMS
+        v_y ./= V2KMS
+        v_z ./= V2KMS
+
+    elseif units == :vasiliev
+        v_x ./= V_V2KMS
+        v_y ./= V_V2KMS
+        v_z ./= V_V2KMS
+    elseif units == :physical
+        # pass
+    end
+    return [x y z v_x v_y v_z]
 end
 
 function calc_v_circ_pot(pot, r; vasiliev_units = false)
@@ -186,15 +242,18 @@ end
 
 
 
-function plot_r_t(orbits; kwargs...)
+function plot_r_t(orbits; legend=true, kwargs...)
     fig = Figure()
-    ax = axis_r_t(fig[1, 1]; kwargs...)
+    ax = axis_r_t(fig[1, 1])
 
     for (label, orbit) in orbits
-        plot_r_t!(ax, orbit, label=label)
+        plot_r_t!(ax, orbit, label=label; kwargs...)
     end
 
-    axislegend()
+    if legend
+        axislegend()
+    end
+
     return fig
 end
 
@@ -220,17 +279,19 @@ function ax_v_circ(gp; kwargs...)
         )
 end
 
-function plot_v_circ(pot; vasiliev_units = false, kwargs...)
-    fig = Figure()
-    ax = ax_v_circ(fig[1, 1]; kwargs...)
-
-    log_r = LinRange(-2, 2, 100)
+function plot_v_circ!(pot; vasiliev_units = false, log_r=LinRange(-1, 2.5, 100), log=true, kwargs...)
     r = 10 .^ log_r
     v_circ = calc_v_circ_pot(pot, r, vasiliev_units=vasiliev_units)
 
-    p = lines!(ax, log_r, v_circ * V2KMS)
-    return Makie.FigureAxisPlot(fig, ax, p)
+    if log
+        x = log_r
+    else
+        x = r
+    end
+    p = lines!(x, v_circ * V2KMS; kwargs...)
+    return p
 end
+
 
 
 # TODO 

@@ -31,15 +31,12 @@ import TOML
 # ╔═╡ b967b388-bb0a-4664-bef0-0236e37798f0
 import StatsBase: sample, Weights
 
-# ╔═╡ 576b1ea1-05bd-48ce-b977-276b9271fc1f
-font = "/astro/dboyea/fonts/Arev.ttf"
-
 # ╔═╡ b2f25a23-71bc-4217-8bef-c49d0cbc6676
 begin 
 	Arya.__init__()
 
 	fg = "#000000ff"
-	bg = "#ffffffff"
+	bg = "#ffffff00"
 	
 	update_theme!(Theme(
 		fontsize=24,
@@ -66,16 +63,10 @@ begin
 			backgroundcolor=:transparent,
 			framecolor=fg,
 		),
-		fonts = (;
-			regular = font
-		)
 	)
 	)
 		
 end
-
-# ╔═╡ d794992b-328b-4327-96fa-67564dc8db98
-Makie.load_font(font)
 
 # ╔═╡ c64b9fe9-b3ff-498f-85dd-55e227443b63
 name = "plummer_rs0.20"
@@ -86,23 +77,14 @@ model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r3.2/orbit_mean"
 # ╔═╡ 9b6b3d13-d390-457c-b7fa-45f8fba3e4d0
 readdir(model_dir)
 
-# ╔═╡ be631a25-dc1a-4e28-9dfd-ed89c1de605d
-
-
 # ╔═╡ 6d207751-695f-4247-94da-ced5a146092f
 prof_expected = lguys.StellarProfile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/processed/fiducial_sample_profile.toml"))
 
 # ╔═╡ 88f31bfc-a67d-4654-af8b-46dc91500558
-r_b = 58.69
+
 
 # ╔═╡ de26b439-d9dd-449e-9289-9d3daed87cc7
 fig_dir = "/astro/dboyea/figures"; mkpath(fig_dir)
-
-# ╔═╡ 171b307c-cc13-4928-9526-a632031554e0
-# ╠═╡ disabled = true
-#=╠═╡
-model_dir = "/astro/dboyea/sculptor/orbits/orbit_"
-  ╠═╡ =#
 
 # ╔═╡ c47ce6da-46b1-46e0-bd7a-acc5f6bdb92b
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
@@ -209,7 +191,7 @@ let
 
 	)
 	ax = Axis(fig[1,1], 
-		xlabel="log radius",
+		xlabel="log radius / arcmin",
 		ylabel = "log stellar density",
 		limits=((-0.2, 2.8), (-7, 0.5)),
 	)
@@ -393,13 +375,13 @@ let
 	)
 	
 	
-	ax = Axis(fig[1,1], aspect=DataAspect(),
+	ax = Axis(fig[1,2], aspect=DataAspect(),
 		limits= 0.5 .* (-1, 1, -1, 1),
 		xlabel = "xi / degrees",
-		ylabel = "eta / degrees",
 		title="simulation"
 		)
 
+	hideydecorations!(ax, ticks=false, minorticks=false)
 
 	df = obs_df_all[idx_samples, :]
 	dx = 0.01
@@ -412,14 +394,14 @@ let
 
 
 
-	ax = Axis(fig[1,2], aspect=DataAspect(),
+	ax = Axis(fig[1,1], aspect=DataAspect(),
 		limits= 0.5 .* (-1, 1, -1, 1),
 		xlabel = "xi / degrees",
+			ylabel = "eta / degrees",
 		title="observations"
 		)
 
 
-	hideydecorations!(ax, ticks=false)
 	df = df_j24
 
 	scatter!(df.xi, df.eta, 
@@ -427,6 +409,7 @@ let
 	)
 
 	lguys.Plots.hide_grid!(ax)
+	colgap!(fig.layout, 1, 50)
 	save(joinpath(fig_dir, "stars_samples.svg"), fig)
 	fig
 end
@@ -444,17 +427,13 @@ fig_dir
 # ╠═91564a7b-71f9-4619-9d51-69caf49af642
 # ╠═b967b388-bb0a-4664-bef0-0236e37798f0
 # ╠═b2f25a23-71bc-4217-8bef-c49d0cbc6676
-# ╠═576b1ea1-05bd-48ce-b977-276b9271fc1f
-# ╠═d794992b-328b-4327-96fa-67564dc8db98
 # ╠═c64b9fe9-b3ff-498f-85dd-55e227443b63
 # ╠═96eafa68-e517-44ea-bf10-0649e82c8c9a
 # ╠═9b6b3d13-d390-457c-b7fa-45f8fba3e4d0
 # ╠═a25f3edf-8d5b-401d-b727-8d8cd2d14910
-# ╠═be631a25-dc1a-4e28-9dfd-ed89c1de605d
 # ╠═6d207751-695f-4247-94da-ced5a146092f
 # ╠═88f31bfc-a67d-4654-af8b-46dc91500558
 # ╠═de26b439-d9dd-449e-9289-9d3daed87cc7
-# ╠═171b307c-cc13-4928-9526-a632031554e0
 # ╠═3df5d132-1a1a-40d6-b2d8-dcce2fcc4c34
 # ╠═c47ce6da-46b1-46e0-bd7a-acc5f6bdb92b
 # ╠═5c2534ca-ed11-47b4-9635-a132fd2a35e6
