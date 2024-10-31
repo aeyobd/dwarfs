@@ -1,6 +1,5 @@
 import LilGuys as lguys
-# warning, in vasiliev coordinates
-# V0=1kms, R0=1kpc T0 = 977.8 Myr
+
 
 obs_props_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
@@ -23,8 +22,8 @@ function sample(N = 10_000)
     pos = hcat([lguys.position_of(p) for p in mc_phase]...)
     vel = hcat([lguys.velocity_of(p) for p in mc_phase]...)
 
-    pos ./= 1# 1 Vasiliev
-    vel ./= 1 # vasiliev
+    pos ./= lguys.R2KPC
+    vel ./= lguys.V2KMS
     vel .*= -1 # reverse velocities to go backwards in time
 
     m = 0

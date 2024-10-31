@@ -38,6 +38,9 @@ UnitMass_in_g            1.0
 UnitVelocity_in_cm_per_s 1.0 
 GravityConstantInternal  1.0
 
+AgamaLengthScale         1.0
+AgamaVelocityScale       -0.004822
+AgamaMassScale           2.325e-5
 
 
 %---- Output frequency and output paramaters

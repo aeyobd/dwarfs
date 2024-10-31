@@ -11,7 +11,7 @@ suffix=".sh"
 name=${paramname#"$prefix"}
 name=${name%"$suffix"}
 
-rm "Gadget$name"
+# rm "Gadget$name"
 SCRIPT_DIR=$(pwd)
 cd $GADGET_SOURCE || exit
 
