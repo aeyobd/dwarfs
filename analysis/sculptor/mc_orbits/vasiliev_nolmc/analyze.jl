@@ -241,7 +241,7 @@ let
 	
 	for sym in columns
 	    x = [getproperty(o, sym) for o in observations]
-	    y = apos
+	    y = peris
 
 		
 	    p = scatter(x, y, alpha=0.1, 
@@ -326,7 +326,7 @@ let
 	)
 
 	for i in eachindex(idx)
-		lines!(-out.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
+		lines!(out.times * T2GYR, log10.(rs[i]), label=orbit_labels[i])
 	
 		#hlines!([peris[idx[i]], apos[idx[i]]], linestyle=:dot)
 	end
