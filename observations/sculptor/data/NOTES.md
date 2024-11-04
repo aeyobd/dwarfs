@@ -42,3 +42,11 @@ AND pmdec IS NOT NULL
 These files are based on GaiaDR3, but applying J+24 membership selection to the stars. Ask J+24 for data access.
 
 
+### Sgr stream
+As a mini investigation, I looked into an excess of stars in proper motion space in the Gaia data near Scl. 
+It turns out that this is likely just part of the Sgr stream. To double check this, I took a gaia cut centred on the stream closest to my Sculptor fields. This is stored in the file `sgr_stream_near_scl-result.fits` and the ASQL query is:
+
+```
+SELECT * FROM gaiadr3.gaia_source where 1 = CONTAINS( POINT(5.28, -15.62), CIRCLE( ra, dec, 4) ) AND ruwe < 1.3 AND pmra IS NOT NULL AND pmdec IS NOT NULL
+```
+
