@@ -1,3 +1,4 @@
+using SpecialFunctions: erf
 using PythonCall
 agama = pyimport("agama")
 u = pyimport("astropy.units")
@@ -160,143 +161,135 @@ end
 
 
 
-function axis_r_t(gp; kwargs...)
-    Axis(gp;
-         xlabel = "time / Gyr",
-         ylabel = "r / kpc",
-         kwargs...
-        )
-end
 
+@doc raw"""
+    a_dyn_friction(pos, vel; r_s, σv, ρ, M)
 
-function axis_R_z(gp; kwargs...)
-    Axis(gp;
-         xlabel = "R / kpc",
-         ylabel = "z / kpc",
-         aspect = DataAspect(),
-         kwargs...
-        )
-end
+Computes the dynamical friction based on 
 
+``
+\frac{d{\bf v}}{dt} = -\frac{4\pi\,G^2\,M\,\rho\,\ln\Lambda}{v^2} \left({\rm erf}(X) - \frac{2X}{\sqrt\pi} \exp(-X^2)\right) \frac{{\bf v}}{v}
+``
+"""
+function a_dyn_friction(pos, vel; r_s, σv, ρ, M, Λ=nothing  )
+    G = 1
+    v = calc_r(vel)
+    r = calc_r(pos)
+    
+    if Λ === nothing
+        if r_s < 8
+            ϵ = 0.45r_s
+        else
+            ϵ = 2.2r_s - 14
+        end
 
-function axis_y_z(gp; kwargs...)
-    Axis(gp;
-         xlabel = "y / kpc",
-         ylabel = "z / kpc",
-         aspect = DataAspect(),
-         kwargs...
-        )
-end
-
-function plot_R_z!(ax, orbit::Orbit; kwargs...)
-    R = @. sqrt(orbit.position[1, :]^2 + orbit.position[2, :]^2)
-    z = orbit.position[3, :]
-
-    lines!(ax, R, z; kwargs...)
-end
-
-
-function plot_y_z!(ax, orbit::Orbit; kwargs...)
-    y = orbit.position[2, :]
-    z = orbit.position[3, :]
-    x = orbit.position[1, :]
-
-    x ./= maximum(abs.(x))
-    x .+= 1
-    x .*= 5
-
-    lines!(ax, y, z; kwargs...)
-end
-
-
-function plot_r_t!(ax, orbit::Orbit; kwargs...)
-    r = calc_r(orbit.position)
-    t = orbit.time * T2GYR
-
-    lines!(ax, t, r; kwargs...)
-end
-
-
-
-function plot_y_z(orbit::Orbit; kwargs...)
-    fig = Figure()
-    ax = axis_y_z(fig[1, 1]; kwargs...)
-    p = plot_y_z!(ax, orbit, color=orbit.time)
-    return Makie.FigureAxisPlot(fig, ax, p)
-end
-
-
-function plot_R_z(orbit::Orbit; kwargs...)
-    fig = Figure()
-    ax = axis_R_z(fig[1, 1]; kwargs...)
-    p = plot_R_z!(ax, orbit, color=orbit.time)
-    return Makie.FigureAxisPlot(fig, ax, p)
-end
-
-function plot_r_t(orbit::Orbit; kwargs...)
-    fig = Figure()
-    ax = axis_r_t(fig[1, 1]; kwargs...)
-    p = plot_r_t!(ax, orbit)
-    return Makie.FigureAxisPlot(fig, ax, p)
-end
-
-
-
-function plot_r_t(orbits; legend=true, kwargs...)
-    fig = Figure()
-    ax = axis_r_t(fig[1, 1])
-
-    for (label, orbit) in orbits
-        plot_r_t!(ax, orbit, label=label; kwargs...)
+        Λ = r / ϵ
     end
 
-    if legend
-        axislegend()
+    X = v / (√2 * σv(r))
+    fX = erf(X) - 2X/√π * exp(-X^2)
+
+    return -4π*G^2 * M * ρ(pos) * log(Λ) * fX * vel ./ v^3
+end
+
+
+"""
+    calc_σv_interp(pot; log_r = LinRange(-3, 5, 100000))
+
+Computes the velocity dispersion as a function of radius by integrating the Jeans equation.
+
+"""
+function calc_σv_interp(pot; log_r = LinRange(-3, 5, 100000))
+    x0 = [1/√2, 0., 1/√2] # direction
+
+    if !issorted(log_r)
+        @warn "log_r is not sorted. Sorting."
+        log_r = sort(log_r)
     end
 
-    return fig
+    log_r = reverse(log_r)
+    radii = 10 .^ log_r
+
+    positions = x0' .* radii
+    acc = pyconvert(Matrix{Float64}, pot.force(positions))
+    rho = pyconvert(Array{Float64}, pot.density(positions))
+
+    a = calc_r(acc')
+    
+    dr = abs.(LilGuys.gradient(radii))
+
+    σ2 = 1 ./ rho .* cumsum(rho .* a .* dr)
+
+    return LilGuys.lerp(radii, sqrt.(σ2))
 end
 
 
-function plot_y_z(orbits; kwargs...)
-    fig = Figure()
-    ax = axis_y_z(fig[1, 1]; kwargs...)
 
-    for (label, orbit) in orbits
-        plot_y_z!(ax, orbit, label=label)
+"""
+    leap_frog(gc, acceleration; params...)
+
+Computes the orbit of a Galactocentric object using the leap frog method.
+
+Parameters:
+- `gc::Galactocentric`: the initial conditions
+- `acceleration::Function`: the acceleration function
+- `dt_max::Real=0.1`: the maximum timestep
+- `dt_min::Real=0.001`: the minimum timestep, will exit if timestep is below this
+- `time::Real=-10/T2GYR`: the time to integrate to
+- `timestep::Symbol=:adaptive`: the timestep to use, either `:adaptive` or `:fixed`
+- `η::Real=0.01`: the adaptive timestep parameter
+
+"""
+function leap_frog(gc, acceleration; dt_max=0.1, dt_min=0.001, time=-10/T2GYR, timestep=:adaptive, η=0.01)
+
+    Nt = round(Int, abs(time / dt_min))
+    positions = Vector{Vector{Float64}}()
+    velocities = Vector{Vector{Float64}}()
+    times = Float64[]
+
+    push!(positions, [gc.x, gc.y, gc.z])
+    push!(velocities, [gc.v_x, gc.v_y, gc.v_z] / V2KMS)
+    push!(times, 0.)
+    is_done = false
+    backwards = time < 0
+
+    t = 0.
+    for i in 1:Nt
+        pos = positions[i]
+        vel = velocities[i]
+        acc = acceleration(pos, vel)
+
+        dt = min(sqrt(η / calc_r(acc)), dt_max)
+        
+        if backwards
+            dt *= -1
+        end
+        if abs(dt) < dt_min
+            @warn "timestep below minimum timestep"
+            break
+        end
+
+        if (backwards && t + dt <= time ) || (!backwards && t + dt >= time)
+            dt = time - t
+            is_done = true
+        end
+
+        vel_h = vel + 1/2 * dt * acc
+        pos_new = pos + dt*vel_h
+        acc = acceleration(pos_new, vel_h)
+        vel_new = vel_h + 1/2 * dt * acc
+
+        push!(positions, pos_new)
+        push!(velocities, vel_new)
+        t = times[i] + dt
+        push!(times, t)
+
+        if is_done
+            break
+        end
     end
 
-    axislegend()
-    return fig
+    positions_matrix = hcat(positions...)
+    velocities_matrix = hcat(velocities...)
+    return Orbit(time=times, position=positions_matrix, velocity=velocities_matrix)
 end
-
-
-function ax_v_circ(gp; kwargs...)
-    Axis(gp;
-         xlabel = "log r / kpc",
-         ylabel = "v_circ / km/s",
-         kwargs...
-        )
-end
-
-function plot_v_circ!(pot; vasiliev_units = false, log_r=LinRange(-1, 2.5, 100), log=true, kwargs...)
-    r = 10 .^ log_r
-    v_circ = calc_v_circ_pot(pot, r, vasiliev_units=vasiliev_units)
-
-    if log
-        x = log_r
-    else
-        x = r
-    end
-    p = lines!(x, v_circ * V2KMS; kwargs...)
-    return p
-end
-
-
-
-# TODO 
-# add function to plot Kz (1.1 kpc)
-# function to plot Vcirc of potential
-# maybe plot isopotential contours
-#
-#

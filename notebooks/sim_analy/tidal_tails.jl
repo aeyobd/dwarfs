@@ -31,10 +31,10 @@ import DensityEstimators as DE
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e7_V31_r3.2/orbit_mean/"
+model_dir = "$models_dir/1e6_V31_r3.2/orbit_smallperi/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.13/final.fits"
+starsfile = "$model_dir/stars/plummer_rs0.20/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"

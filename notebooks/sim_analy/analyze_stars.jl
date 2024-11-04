@@ -38,10 +38,10 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.13"
+starsname = "plummer_rs0.20"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r3.2/orbit_mean"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/orbit_smallperi"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -189,6 +189,39 @@ let
     rowsize!(fig.layout, 1, ax.scene.viewport[].widths[1])
 
 	save(joinpath(fig_dir, "density_xy_if.pdf"), fig)
+
+	fig
+end
+
+# ╔═╡ 865b194d-9efa-41c2-8184-63bcfcd90f6f
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], aspect=1,
+	xlabel = "x / kpc", ylabel="y/kpc", title="initial")
+
+	bin_range = LinRange(-10, 10, 100)
+	bins = (out.x_cen[1, idx_i]  .+ bin_range,  out.x_cen[2, idx_i]  .+ bin_range)
+
+	h = Arya.histogram2d( snap_i.positions[1, :], snap_i.positions[2, :], bins, weights=snap_i.weights)
+	
+	colorrange =(1e-7, 1) .* maximum(h.values)
+
+		
+
+	Arya.hist2d!(ax, snap_i.positions[1, :], snap_i.positions[2, :], weights=snap_i.weights, bins = bins, colorscale=log10, colorrange=colorrange)
+
+	ax2 = Axis(fig[1,2], aspect=1,
+	xlabel = "x / kpc", 
+	title="final")
+
+
+	bins = (out.x_cen[1, idx_f]  .+ bin_range,  out.x_cen[2, idx_f]  .+ bin_range)
+
+	h = Arya.hist2d!(ax2, snap_f.positions[1, :], snap_f.positions[2, :], weights=snap_f.weights, bins = bins, colorscale=log10, colorrange=colorrange)
+
+	Colorbar(fig[1, 3], h, label="stellar density")
+
+    rowsize!(fig.layout, 1, ax.scene.viewport[].widths[1])
 
 	fig
 end
@@ -606,7 +639,8 @@ end
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
 # ╟─5ee4f95d-0587-44ab-b543-9b7039d545e6
 # ╟─77479cd4-513c-4603-9aa0-1acd964c403a
-# ╟─7bc2c15c-33f7-43f3-a47f-ca39ffc22071
+# ╠═7bc2c15c-33f7-43f3-a47f-ca39ffc22071
+# ╠═865b194d-9efa-41c2-8184-63bcfcd90f6f
 # ╠═8df71dd5-ba0b-4918-9dc0-791c6c3bad5f
 # ╟─c6ce37f4-09f6-43c2-9ee3-286d9e6baf7f
 # ╠═a1138e64-5fa5-4a0e-aeef-487ee78a7adc

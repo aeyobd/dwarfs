@@ -15,7 +15,7 @@ err = lguys.ICRS(
     radial_velocity = err.radial_velocity,
 )
 
-function sample(N = 10_000)
+function sample(N = 100_000)
     mc_obs = lguys.rand_coords(obs, err, N)
 
     mc_phase = lguys.transform.(lguys.Galactocentric, mc_obs)

@@ -29,6 +29,9 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 # ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 obs_prop_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
+# ╔═╡ 750cb4b9-5725-42ef-9259-845ee5e665b0
+
+
 # ╔═╡ 1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
 obs = lguys.coord_from_file(obs_prop_filename)
 
@@ -322,7 +325,8 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
-		ylabel="radius / kpc"
+		ylabel="radius / kpc",
+		limits=(nothing, nothing, 0, nothing)
 	)
 
 	for i in eachindex(idx)
@@ -397,7 +401,7 @@ let
 	ax = Axis(fig[1,1])
 	
 	for i in 1:length(idx)
-		scatter!(out.times, accs[i] .- a_exp.(rs[i]))
+		scatter!(out.times, (accs[i] .- a_exp.(rs[i])) ./ (a_exp.(rs[i])) )
 	end
 	fig
 end 
@@ -637,6 +641,7 @@ end
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
+# ╠═750cb4b9-5725-42ef-9259-845ee5e665b0
 # ╠═a87a575b-bdb3-493a-a2ff-298d6bf23ec8
 # ╠═1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
 # ╠═0146ee17-de5f-4877-aaa6-83a898e01416
