@@ -1,8 +1,20 @@
-diff --git a/Makefile b/Makefile
-index a765b45..4f81e3e 100644
---- a/Makefile
-+++ b/Makefile
-@@ -446,6 +446,9 @@ CFLAGS = $(OPTIMIZE) $(OPT) $(HDF5_INCL) $(GSL_INCL) $(FFTW_INCL) $(HWLOC_INCL)
+diff --git Makefile Makefile
+index a765b45..cf662f6 100644
+--- Makefile
++++ Makefile
+@@ -202,6 +202,11 @@ include buildsystem/Makefile.comp.gcc
+ include buildsystem/Makefile.path.bwforcluster
+ endif
+ 
++ifeq ($(SYSTYPE),"sangiovese")
++include buildsystem/Makefile.comp.gcc
++include buildsystem/Makefile.path.sangiovese
++endif
++
+ 
+ ifndef LINKER
+ LINKER = $(CPP)
+@@ -446,6 +451,9 @@ CFLAGS = $(OPTIMIZE) $(OPT) $(HDF5_INCL) $(GSL_INCL) $(FFTW_INCL) $(HWLOC_INCL)
  
  LIBS = $(MATH_LIBS) $(HDF5_LIBS) $(GSL_LIBS) $(FFTW_LIBS) $(HWLOC_LIBS) $(VTUNE_LIBS) $(TEST_LIBS) $(MAPS_LIBS) $(SHMEM_LIBS)
  
@@ -12,23 +24,24 @@ index a765b45..4f81e3e 100644
  
  SUBDIRS := $(addprefix $(BUILD_DIR)/,$(SUBDIRS))
  OBJS := $(addprefix $(BUILD_DIR)/,$(OBJS)) $(BUILD_DIR)/compile_time_info.o $(BUILD_DIR)/compile_time_info_hdf5.o $(BUILD_DIR)/version.o
-diff --git a/Template-Config.sh b/Template-Config.sh
-index d37e28a..ef573d8 100644
---- a/Template-Config.sh
-+++ b/Template-Config.sh
-@@ -33,6 +33,7 @@ SELFGRAVITY                                   # switch to enable self-gravity of
+diff --git Template-Config.sh Template-Config.sh
+index d37e28a..fbadf79 100644
+--- Template-Config.sh
++++ Template-Config.sh
+@@ -33,6 +33,8 @@ SELFGRAVITY                                   # switch to enable self-gravity of
  #ALLOW_DIRECT_SUMMATION                       # allows calculation of direct summation gravity force if only a tiny number of particles as active 
  #EXTERNALGRAVITY                              # switches on inclusion of external gravitational potential
  #EXTERNALGRAVITY_STATICHQ                     # example for a simple external potential due to a Hernquist halo
 +#EXTERNALGRAVITY_AGAMA                        # external potential provided by the Agama package and described by parameters in agama_potential.ini
++#AGAMA_UNITS				      # Unit scalings for Agama
  
  #--------------------------------------- TreePM Options
  
-diff --git a/documentation/04_config-options.md b/documentation/04_config-options.md
-index 9930c4b..40654db 100644
---- a/documentation/04_config-options.md
-+++ b/documentation/04_config-options.md
-@@ -369,6 +369,13 @@ halo, with parameters specified in the parameterfile.
+diff --git documentation/04_config-options.md documentation/04_config-options.md
+index 9930c4b..0e35080 100644
+--- documentation/04_config-options.md
++++ documentation/04_config-options.md
+@@ -369,6 +369,19 @@ halo, with parameters specified in the parameterfile.
  
  -------
  
@@ -39,13 +52,105 @@ index 9930c4b..40654db 100644
 +
 +-------
 +
++**AGAMA_UNITS**
++
++Enables arbitrary scaling of units for the Agama potential. 
++Enables the parameterfile options `AgamaLengthScale`, `AgamaTimeScale`, and `AgamaMassScale`.
++Useful if the Agama potential is in different units than the simulation or we would like to integrate backwards in time (for non-cosmological simulation).
++
  
  TreePM Options                                             {#treepm}
  ==============
-diff --git a/src/gravity/grav_external.cc b/src/gravity/grav_external.cc
-index b51c0dd..3c8ee22 100644
---- a/src/gravity/grav_external.cc
-+++ b/src/gravity/grav_external.cc
+diff --git documentation/05_parameterfile.md documentation/05_parameterfile.md
+index f68bfdc..78240ea 100644
+--- documentation/05_parameterfile.md
++++ documentation/05_parameterfile.md
+@@ -1249,3 +1249,27 @@ This parameter is only active when `EXTERNALGRAVITY_STATICHQ` is
+ enabled, and then gives the total mass (in internal units) of the
+ halos that is added as a static potential to the force computation.
+ 
++-------
++
++**AgamaLengthScale**      1.0
++
++This parameter is only active when `EXTERNALGRAVITY_AGAMA` is enabled.
++This parameter sets the number of Agama length units in one internal length unit.
++The position of the particle is scaled by this length scale before calling agama.
++
++-------
++
++**AgamaVelocityScale**	1.0
++
++This parameter is only active when `EXTERNALGRAVITY_AGAMA` is enabled.
++This parameter sets the number of Agama velocity units in one internal velocity unit.
++The resulting potential of the particle is divided by this scale squared 
++(or this scale squared over the length scale for acceleration). 
++
++-------
++
++**AgamaMassScale**	1.0
++
++This parameter is only active when `EXTERNALGRAVITY_AGAMA` is enabled.
++This is an additional scale factor for the mass, so the acceleration and 
++potential from Agama are multiplied by this factor.
+diff --git src/data/allvars.cc src/data/allvars.cc
+index 37123ba..86fcb6c 100644
+--- src/data/allvars.cc
++++ src/data/allvars.cc
+@@ -205,6 +205,13 @@ void global_data_all_processes::register_parameters(void)
+   add_param("A_StaticHQHalo", &A_StaticHQHalo, PARAM_DOUBLE, PARAM_FIXED);
+   add_param("Mass_StaticHQHalo", &Mass_StaticHQHalo, PARAM_DOUBLE, PARAM_FIXED);
+ #endif
++
++#ifdef AGAMA_UNITS
++  add_param("AgamaLengthScale", &AgamaLengthScale, PARAM_DOUBLE, PARAM_FIXED);
++  add_param("AgamaVelocityScale", &AgamaVelocityScale, PARAM_DOUBLE, PARAM_FIXED);
++  add_param("AgamaMassScale", &AgamaMassScale, PARAM_DOUBLE, PARAM_FIXED);
++#endif
++
+ }
+ 
+ /*! \brief This function reads a table with a list of desired output times.
+diff --git src/data/allvars.h src/data/allvars.h
+index c2edb12..34f09c2 100644
+--- src/data/allvars.h
++++ src/data/allvars.h
+@@ -356,6 +356,12 @@ struct global_data_all_processes : public parameters
+   double Mass_StaticHQHalo;
+ #endif
+ 
++#ifdef AGAMA_UNITS
++  double AgamaLengthScale;
++  double AgamaVelocityScale;
++  double AgamaMassScale;
++#endif
++
+   void set_cosmo_factors_for_current_time(void);
+   void register_parameters(void);
+   void read_outputlist(char *fname);
+diff --git src/data/constants.h src/data/constants.h
+index 18663bf..a9b1114 100644
+--- src/data/constants.h
++++ src/data/constants.h
+@@ -290,6 +290,14 @@
+ #error "EXTERNALGRAVITY_STATICHQ only works when EXTERNALGRAVITY is activated"
+ #endif
+ 
++#if defined(EXTERNALGRAVITY_AGAMA) && !defined(EXTERNALGRAVITY)
++#error "EXTERNALGRAVITY_AGAMA only works when EXTERNALGRAVITY is activated"
++#endif
++
++#if defined(AGAMA_UNITS) && !defined(EXTERNALGRAVITY_AGAMA)
++#error "AGAMA_UNITS only works when EXTERNALGRAVITY_AGAMA is activated"
++#endif
++
+ #if defined(LIGHTCONE_MULTIPLE_ORIGINS) && defined(LIGHTCONE_PARTICLES_GROUPS)
+ #error "Presently, the option LIGHTCONE_MULTIPLE_ORIGINS cannot be used yet together with LIGHTCONE_PARTICLES_GROUPS"
+ #endif
+diff --git src/gravity/grav_external.cc src/gravity/grav_external.cc
+index b51c0dd..9531729 100644
+--- src/gravity/grav_external.cc
++++ src/gravity/grav_external.cc
 @@ -33,6 +33,13 @@
  #include "../system/system.h"
  #include "../time_integration/timestep.h"
@@ -60,7 +165,7 @@ index b51c0dd..3c8ee22 100644
  void sim::gravity_external(void)
  {
  #ifdef PERIODIC
-@@ -70,6 +77,21 @@ void sim::gravity_external(void)
+@@ -70,6 +77,45 @@ void sim::gravity_external(void)
  #endif
        }
  #endif
@@ -70,22 +175,46 @@ index b51c0dd..3c8ee22 100644
 +        vector<double> pos;
 +        Sp.intpos_to_pos(Sp.P[target].IntPos, pos.da);
 +        double deriv[3];
++	double time = All.Time;
++
++#if defined(AGAMA_UNITS)
++	double time_scale = All.AgamaLengthScale / All.AgamaVelocityScale;
++	pos[0] /= All.AgamaLengthScale;
++	pos[1] /= All.AgamaLengthScale;
++	pos[2] /= All.AgamaLengthScale;
++	time /= time_scale;
++#endif
++
 +#if defined(EVALPOTENTIAL) || defined(OUTPUT_POTENTIAL)
 +        Sp.P[target].ExtPotential +=
 +#endif
-+        agama_evalPotential(agama_potential, &pos.da[0], All.Time, deriv, NULL);
++        agama_evalPotential(agama_potential, &pos.da[0], time, deriv, NULL);
++
 +        Sp.P[target].GravAccel.da[0] -= deriv[0];
 +        Sp.P[target].GravAccel.da[1] -= deriv[1];
 +        Sp.P[target].GravAccel.da[2] -= deriv[2];
++#if defined(AGAMA_UNITS)
++	double a_scale = All.AgamaMassScale * All.AgamaVelocityScale / time_scale;
++	Sp.P[target].GravAccel.da[0] *= a_scale;
++	Sp.P[target].GravAccel.da[1] *= a_scale;
++	Sp.P[target].GravAccel.da[2] *= a_scale;
++
++#if defined(EVALPOTENTIAL) || defined(OUTPUT_POTENTIAL)
++	double potential_scale = a_scale * All.AgamaLengthScale;
++
++	Sp.P[target].ExtPotential *= potential_scale;
++#endif
++#endif
++
 +      }
 +#endif
      }
  }
  
-diff --git a/src/io/snap_io.cc b/src/io/snap_io.cc
+diff --git src/io/snap_io.cc src/io/snap_io.cc
 index 94197e8..4c4a390 100644
---- a/src/io/snap_io.cc
-+++ b/src/io/snap_io.cc
+--- src/io/snap_io.cc
++++ src/io/snap_io.cc
 @@ -161,6 +161,13 @@ void snap_io::init_basic(simparticles *Sp_ptr)
    init_field("POT ", "Potential", MEM_MY_FLOAT, FILE_MY_IO_FLOAT, READ_IF_PRESENT, 1, A_P, &Sp->P[0].Potential, 0,
               ALL_TYPES, /* potential */
@@ -100,10 +229,10 @@ index 94197e8..4c4a390 100644
  #endif
  
  #ifdef OUTPUT_CHANGEOFENTROPY
-diff --git a/src/main/begrun.cc b/src/main/begrun.cc
+diff --git src/main/begrun.cc src/main/begrun.cc
 index 30e0421..d47d0b1 100644
---- a/src/main/begrun.cc
-+++ b/src/main/begrun.cc
+--- src/main/begrun.cc
++++ src/main/begrun.cc
 @@ -50,6 +50,14 @@
  #include "../time_integration/driftfac.h"
  #include "../time_integration/timestep.h"

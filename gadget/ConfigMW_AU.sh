@@ -5,6 +5,7 @@
     SELFGRAVITY
     EXTERNALGRAVITY
     EXTERNALGRAVITY_AGAMA
+    AGAMA_UNITS
     
 # Gravity options
 
