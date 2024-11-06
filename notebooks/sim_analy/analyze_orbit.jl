@@ -39,7 +39,7 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/orbit_smallperi"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev+21_mean"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -90,7 +90,7 @@ end
 begin 
 	orbit_expected = CSV.read(orbit_file, DataFrame)
 	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
-	v_cen_exp = -transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
+	v_cen_exp = transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
 
 end
 
@@ -114,7 +114,7 @@ let
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
 	r = calc_r(x_cen)
 	lines!(t * T2GYR, r, label="model")
-	lines!(T2GYR*(orbit_expected.t .- orbit_expected.t[begin]), calc_r(x_cen_exp),
+	lines!(T2GYR*(orbit_expected.t), calc_r(x_cen_exp),
 		label="expected"
 	)
 
@@ -161,7 +161,7 @@ end
 times = t * T2GYR
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
-t_min = 5
+t_min = -5
 
 # ╔═╡ 9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
 t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
@@ -324,7 +324,7 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-10:idx_f+10
+		idx = idx_f-10:idx_f+2
 	
 		scatter!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		
@@ -410,6 +410,17 @@ periods = [diff(times[idx_peris]); diff(times[idx_apos])]
 # ╔═╡ 592a18e9-ee9a-4638-9454-f0bda3a0a3f2
 period = LilGuys.mean(periods)
 
+# ╔═╡ 179c3c32-1368-4a58-b4b8-26d9d3f19f8c
+md"""
+## Identification of interesting locations to search....
+- for this project, want to find stars between 2 and 10 degrees away along stream path.
+"""
+
+# ╔═╡ 5704daca-a8c4-4292-a6c0-ea294f4373fd
+md"""
+## Saving
+"""
+
 # ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 let
 	
@@ -440,17 +451,6 @@ let
 	orbital_properties
 end
 
-# ╔═╡ 179c3c32-1368-4a58-b4b8-26d9d3f19f8c
-md"""
-## Identification of interesting locations to search....
-- for this project, want to find stars between 2 and 10 degrees away along stream path.
-"""
-
-# ╔═╡ 5704daca-a8c4-4292-a6c0-ea294f4373fd
-md"""
-## Saving
-"""
-
 # ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
 LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 
@@ -480,7 +480,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
-# ╟─f88b909f-c3dc-41e0-bdb1-25e229964d27
+# ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
 # ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
 # ╠═64e558da-2928-4815-ad5a-7528516311f9

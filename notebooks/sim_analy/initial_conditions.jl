@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V31_r3.2/orbit_smallperi/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V31_r3.2/vasiliev+21_mean/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
@@ -78,9 +78,6 @@ end
 snap.x_cen
 
 # ╔═╡ 5ebe92b8-602e-42be-8751-58898b7323b0
-snap.v_cen * V2KMS
-
-# ╔═╡ 0cf1dd95-4aa8-4795-983c-e17240804b8b
 snap.v_cen * V2KMS
 
 # ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
@@ -333,7 +330,6 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
 # ╠═54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
-# ╠═0cf1dd95-4aa8-4795-983c-e17240804b8b
 # ╠═14e3b593-17b9-4acd-a9cb-d5923662a02c
 # ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 # ╠═2e293959-9c05-4d9b-b889-a68584ca88f0

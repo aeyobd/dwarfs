@@ -29,9 +29,6 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 # ╔═╡ a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
 obs_prop_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
-# ╔═╡ 750cb4b9-5725-42ef-9259-845ee5e665b0
-
-
 # ╔═╡ 1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
 obs = lguys.coord_from_file(obs_prop_filename)
 
@@ -74,13 +71,16 @@ begin
 end
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
-p_value = 0.02
+p_value = 0.0014
 
 # ╔═╡ fb6debf2-0161-477f-b29b-5a0f1f70f340
 [snap.positions[:, 1]; snap.velocities[:, 1] * lguys.V2KMS]
 
 # ╔═╡ 4481a5e1-d635-4fea-a5c5-c85f0d6df62f
 peris = df_peris_apos.pericenter
+
+# ╔═╡ e3084451-1492-49c5-b5dc-8a085e513640
+length(peris)
 
 # ╔═╡ 413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 peri_qs = lguys.quantile(peris, [p_value, 1-p_value])
@@ -102,6 +102,31 @@ orbit_labels = ["mean", "smallperi", "largeperi"]
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 fig_dir = "./figures"
+
+# ╔═╡ 6651d141-f6ca-4e8f-a785-5b14275b367c
+T2GYR = lguys.T2GYR
+
+# ╔═╡ 73af5376-3b38-4d5f-b6e2-1cafba27dabd
+begin
+	# loads in trajectory of lmc in Vasiliev 2021
+	lmc_file = ENV["DWARFS_ROOT"] * "/agama/potentials/vasiliev+21/trajlmc.txt"
+	lmc_traj = CSV.read(lmc_file, DataFrame, delim=" ", header = [:time, :x, :y, :z, :v_x, :v_y, :v_z])
+	
+	lmc_x = lguys.lerp(lmc_traj.time, lmc_traj.x)
+	lmc_y = lguys.lerp(lmc_traj.time, lmc_traj.y)
+	lmc_z = lguys.lerp(lmc_traj.time, lmc_traj.z)
+	lmc_v_x = lguys.lerp(lmc_traj.time, lmc_traj.v_x)
+	lmc_v_y = lguys.lerp(lmc_traj.time, lmc_traj.v_y)
+	lmc_v_z = lguys.lerp(lmc_traj.time, lmc_traj.v_z)
+
+	V_T2GYR = 1 / lguys.kpc_per_Gyr_per_kms
+	
+	times_v = -out.times * T2GYR / V_T2GYR
+	
+	lmc_pos = reshape([lmc_x.(times_v) lmc_y.(times_v) lmc_z.(times_v)]', (3, :))
+	lmc_vel = reshape([lmc_v_x.(times_v) lmc_v_y.(times_v) lmc_v_z.(times_v)]', (3, :))
+
+end
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -260,22 +285,100 @@ md"""
 # Validation
 """
 
+# ╔═╡ 6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
+let
+	fig = Figure(size=(600, 600))
+
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "density",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+	    x = getproperty.(observations, sym)
+		
+		    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
+	
+		
+		x_mod = LinRange(minimum(x), maximum(x), 1000)
+
+		mu_exp = getproperty(obs, sym)
+		err_exp = getproperty(err, sym)
+		y_mod = normal_dist.(x_mod, mu_exp, err_exp)
+		lines!(x_mod, y_mod, label="expected gaussian")
+			
+		axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
+	end
+
+	
+
+	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	fig
+end
+
+# ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
+let
+
+	for sym in columns
+		
+		fig = Figure()
+		ax = Axis(fig[1,1], 
+			xlabel=String(sym),
+			ylabel="density",
+			#limits=((μ - 5σ, μ + 5σ), nothing),
+		)
+		
+	    x = getproperty.(observations, sym)
+		
+	    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
+
+
+		μ = getproperty(obs, sym)
+		σ = getproperty(err, sym)
+		x_mod = LinRange(μ - 3σ, μ + 3σ, 10_000)
+		y_mod = normal_dist.(x_mod, μ, σ) 
+		lines!(x_mod, y_mod, label="expected")
+			
+		axislegend()
+
+		@info fig
+	end
+
+end
+
 # ╔═╡ de2f3380-90df-48f5-ba60-8417e91f4818
 function median_residual(observations)
 	for sym in [:distance, :pmra, :pmdec, :radial_velocity, :ra, :dec]
 		md = median(getproperty.(observations, sym))
 		res = (md - getproperty(obs, sym) ) / getproperty(err, sym)
 		@printf "Δ ln %-15s  = %6.2f \t \n"  sym res
+		@printf "     %-15s  = %6.2f \t \n"  sym md
 	end
 end
 
+# ╔═╡ 0bb7cc30-69f2-496f-965f-0c331a928de0
+median(peris)
+
 # ╔═╡ 4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 let 
-	peri1 = lguys.quantile(peris, 0.015)
-	peri2 = lguys.quantile(peris, 0.025)
+	peri1 = lguys.quantile(peris, 0.5p_value)
+	peri2 = lguys.quantile(peris, 1.5p_value)
 
 	idx_s = @. peri1 < peris < peri2
 
+	println(median(peris[idx_s]))
 	median_residual(observations[idx_s])
 end
 
@@ -305,12 +408,16 @@ md"""
 
 # ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
 begin
-	
+
 	positions = [lguys.extract_vector(out, :positions, i) for i in idx]
 	velocities = [lguys.extract_vector(out, :velocities, i) for i in idx]
 	accelerations = [lguys.extract_vector(out, :accelerations, i) for i in idx]
+end
 
-
+# ╔═╡ d3de3a33-8f9a-44a5-9851-1992c88f04ae
+begin
+	Φs_ext = [lguys.extract(out, :Φs_ext, i) for i in idx]
+	Φs = [lguys.extract(out, :Φs, i) for i in idx]
 end
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
@@ -339,11 +446,32 @@ let
 	fig
 end
 
+# ╔═╡ 2c073544-d24c-4583-99e9-30a57d82b154
+rs_lmc = lguys.calc_r.(positions, [lmc_pos])
+
+# ╔═╡ f3a53066-2edc-4c22-9132-ef0ec4c66db0
+times_v
+
 # ╔═╡ ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
 positions
 
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
 lguys.Plots.plot_xyz(positions..., labels=orbit_labels)
+
+# ╔═╡ aec104ef-a4ca-4d69-aa72-1657c83c037d
+lguys.Plots.plot_xyz([p .- lmc_pos for p in positions]..., labels=orbit_labels)
+
+# ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
+lguys.Plots.plot_xyz(velocities..., units=" / km / s")
+
+# ╔═╡ 756f6d16-bc47-47d8-a090-32b4d7b3f3a0
+times = out.times * lguys.T2GYR
+
+# ╔═╡ 52e8c357-1269-4165-a6d7-d7e3c129f123
+idx_perilmc = [argmin(r) for r in rs_lmc]
+
+# ╔═╡ c82d023f-8123-4b20-ace1-cfb48dd94a5e
+idx_peri = [argmin(r) for r in rs]
 
 # ╔═╡ 57a8d1c8-3940-4430-8b46-375fb2bf1695
 let
@@ -352,11 +480,73 @@ let
 	z = positions[1][3, :]
 	R = @. sqrt(x^2 + y^2)
 
-	plot(R, z)
+	fig = Figure()
+	ax = Axis(fig[1, 1])
+	 p = plot!(R, z, color=times)
+
+	scatter!(R[idx_peri[1]], z[idx_peri[1]])
+	scatter!(R[idx_perilmc[1]], z[idx_perilmc[1]])
+	
+	Colorbar(fig[1, 2], p)
+
+	fig
 end
 
-# ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
-lguys.Plots.plot_xyz(velocities..., units=" / km / s")
+# ╔═╡ a2ea5f2e-16b0-4b20-8831-83a61f813750
+let
+	x = positions[1][1, :] .- lmc_pos[1, :]
+	y = positions[1][2, :] .- lmc_pos[2, :]
+	z = positions[1][3, :] .- lmc_pos[3, :]
+	R = @. sqrt(x^2 + y^2)
+
+	fig = Figure()
+	ax = Axis(fig[1, 1])
+	p = lines!(R, z, color=times)
+
+	scatter!(R[idx_peri[1]], z[idx_peri[1]])
+	scatter!(R[idx_perilmc[1]], z[idx_perilmc[1]])
+	Colorbar(fig[1, 2], p)
+
+	fig
+end
+
+# ╔═╡ 385eb53c-011b-431e-993b-ca12fece56e2
+let
+	fig = Figure()
+	ax_acc = Axis(fig[1, 1], 
+		yticksmirrored = false,
+		xlabel="time / Gyr", 
+		ylabel="Scl acceleration"
+	)
+	ax_dist = Axis(fig[1, 1], yaxisposition=:right,
+		yticksmirrored = false,
+		ylabel="distance",
+		
+	)
+	
+	hidexdecorations!(ax_dist)
+	linkxaxes!(ax_acc, ax_dist)
+
+	i = 1
+	lines!(ax_acc, out.times * lguys.T2GYR, accs[1],
+		color="black"
+	)
+
+	lines!(ax_dist, out.times * lguys.T2GYR, rs[1],
+	)
+	vlines!(ax_dist, times[idx_peri[i]], alpha=0.3)
+
+	lines!(ax_dist, out.times * lguys.T2GYR, rs_lmc[1],
+	)
+
+	vlines!(ax_dist, times[idx_perilmc[i]], alpha=0.3)
+
+	
+	lguys.Plots.hide_grid!(ax_acc)
+	lguys.Plots.hide_grid!(ax_dist)
+	
+	fig
+end
 
 # ╔═╡ ad078920-225d-436e-835b-d87a9db53c49
 let
@@ -454,93 +644,33 @@ end
 # ╔═╡ 2dfe9a85-6553-4632-81e0-33c148fd1102
 reverse(out.times)
 
+# ╔═╡ 5f45e7c7-e447-48bf-ade4-38f516df2dad
+for i in 1:length(idx)
+	fname = "orbit$i.csv"
+	vel = -reverse(velocities[i], dims=2)
+	pos = reverse(positions[i], dims=2)
+	t = -reverse(out.times)
+
+	t0 = 1
+	orbit_df = DataFrame(
+		t = t[t0:end],
+		x = pos[1, t0:end],
+		y = pos[2, t0:end],
+		z = pos[3, t0:end],
+		v_x = vel[1, t0:end],
+		v_y = vel[2, t0:end],
+		v_z = vel[3, t0:end],
+	)
+
+	println("saving to $fname")
+	CSV.write(fname, orbit_df)
+end
+
 # ╔═╡ b8c9823f-ca6b-48bf-9140-40440562dac0
 import TOML
 
-# ╔═╡ a87a575b-bdb3-493a-a2ff-298d6bf23ec8
-obs_prop_all = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/obs_props_all.toml")
-
-# ╔═╡ 6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
-let
-	fig = Figure(size=(600, 600))
-
-	ax_kwargs = Dict(
-		:xgridvisible => false,
-		:ygridvisible => false,
-		:ylabel => "density",
-	)
-
-	ax_idx = Dict(
-		:pmra => [1, 1],
-		:pmdec => [1, 2],
-		:distance => [2, 1],
-		:radial_velocity => [2, 2],
-	)
-
-	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
-		ax = Axis(fig[ax_idx[sym]...],
-			xlabel=coord_labels[sym];
-			ax_kwargs...
-		)
-	    x = getproperty.(observations, sym)
-		
-		    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
-	
-	
-		studies = obs_prop_all["$(sym)_studies"]
-		μs = obs_prop_all["$(sym)"]
-		σs = obs_prop_all["$(sym)_err"]
-		
-		x_mod = LinRange(minimum(x), maximum(x), 1000)
-
-		for i in eachindex(studies)
-			y_mod = normal_dist.(x_mod, μs[i], σs[i]) ./ length(studies)
-			lines!(x_mod, y_mod, label=studies[i])
-		end
-			
-		axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
-	end
-
-	
-
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
-	fig
-end
-
-# ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
-let
-
-	for sym in columns
-		
-		fig = Figure()
-		ax = Axis(fig[1,1], 
-			xlabel=String(sym),
-			ylabel="density",
-			#limits=((μ - 5σ, μ + 5σ), nothing),
-		)
-		
-	    x = getproperty.(observations, sym)
-		
-	    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
-
-
-		studies = obs_prop_all["$(sym)_studies"]
-		μs = obs_prop_all["$(sym)"]
-		σs = obs_prop_all["$(sym)_err"]
-	    
-	    x_mod = LinRange(minimum(x), maximum(x), 1000)
-
-		for i in eachindex(studies)
-	    	y_mod = normal_dist.(x_mod, μs[i], σs[i]) ./ length(studies)
-	    	lines!(x_mod, y_mod, label=studies[i])
-		end
-			
-		axislegend()
-
-		@info fig
-	end
-
-end
+# ╔═╡ 94405d26-1eca-4dcc-b331-b47e9903b07d
+times
 
 # ╔═╡ 1152cd63-baab-426a-b464-b10857eed4ec
 for i in 1:length(idx)
@@ -580,29 +710,6 @@ function get_initial_t(j)
 end
 	
 
-# ╔═╡ 5f45e7c7-e447-48bf-ade4-38f516df2dad
-for i in 1:length(idx)
-	fname = "orbit$i.csv"
-	vel = -reverse(velocities[i], dims=2)
-	pos = reverse(positions[i], dims=2)
-	t0 = size(pos, 2) - get_initial_t(i)
-	println(t0)
-	t = out.times[end] .- reverse(out.times)
-
-	orbit_df = DataFrame(
-		t = t[t0:end],
-		x = pos[1, t0:end],
-		y = pos[2, t0:end],
-		z = pos[3, t0:end],
-		v_x = vel[1, t0:end],
-		v_y = vel[2, t0:end],
-		v_z = vel[3, t0:end],
-	)
-
-	println("saving to $fname")
-	CSV.write(fname, orbit_df)
-end
-
 # ╔═╡ 5316884b-3971-4ca7-9106-f638241d3388
 get_initial_t(1)
 
@@ -610,7 +717,7 @@ get_initial_t(1)
 begin 
 	# orbit info
 	for i in 1:length(idx)
-		t = get_initial_t(i)
+		t =1
 		@printf "orbit: \t\t %i\n" i
 		@printf "index: \t\t %i\n" idx[i]
 		
@@ -620,7 +727,7 @@ begin
 		@printf "time of first apocentre: %f \n" out.times[end] - out.times[t]
 		@printf "radius of first apocentre: %f\n" rs[i][t]
 		@printf "intial position: [%f, %f, %f]\n" positions[i][:, t]...
-		@printf "intial velocity: [%f, %f, %f]\n" -1* velocities[i][:, t]...
+		@printf "intial velocity: [%f, %f, %f]\n" -lguys.V2KMS* velocities[i][:, t]...
 		@printf "final position: [%f, %f, %f]\n" positions[i][:, 1]...
 		@printf "final velocity: [%f, %f, %f]\n" -lguys.V2KMS * velocities[i][:, 1]...
 
@@ -641,8 +748,6 @@ end
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═a7ce5b0c-84a6-4d63-94f1-68e7a0d9e758
-# ╠═750cb4b9-5725-42ef-9259-845ee5e665b0
-# ╠═a87a575b-bdb3-493a-a2ff-298d6bf23ec8
 # ╠═1e50dbfe-09e5-4f42-83c3-a8291b8e1b1a
 # ╠═0146ee17-de5f-4877-aaa6-83a898e01416
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
@@ -651,6 +756,7 @@ end
 # ╠═9a22d47b-8474-4596-b418-de33eb07c627
 # ╠═b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 # ╠═17a63cc8-84f4-4248-a7b0-c8378454b1f7
+# ╠═e3084451-1492-49c5-b5dc-8a085e513640
 # ╠═413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
 # ╠═fb6debf2-0161-477f-b29b-5a0f1f70f340
@@ -658,6 +764,8 @@ end
 # ╠═384be6a6-f9d9-47e0-9792-aef6689dcbdb
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
+# ╠═6651d141-f6ca-4e8f-a785-5b14275b367c
+# ╠═73af5376-3b38-4d5f-b6e2-1cafba27dabd
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
 # ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
@@ -676,6 +784,7 @@ end
 # ╠═6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╠═de2f3380-90df-48f5-ba60-8417e91f4818
+# ╠═0bb7cc30-69f2-496f-965f-0c331a928de0
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 # ╠═34104429-05e0-40a6-83e5-078dbe346504
 # ╠═e7fc6024-374b-422d-837b-26448e06e1db
@@ -684,11 +793,20 @@ end
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
+# ╠═d3de3a33-8f9a-44a5-9851-1992c88f04ae
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
+# ╠═2c073544-d24c-4583-99e9-30a57d82b154
+# ╠═f3a53066-2edc-4c22-9132-ef0ec4c66db0
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
+# ╠═aec104ef-a4ca-4d69-aa72-1657c83c037d
 # ╠═57a8d1c8-3940-4430-8b46-375fb2bf1695
+# ╠═a2ea5f2e-16b0-4b20-8831-83a61f813750
 # ╠═34efe422-e672-4d17-a558-ce32fb704a8e
+# ╠═756f6d16-bc47-47d8-a090-32b4d7b3f3a0
+# ╠═385eb53c-011b-431e-993b-ca12fece56e2
+# ╠═52e8c357-1269-4165-a6d7-d7e3c129f123
+# ╠═c82d023f-8123-4b20-ace1-cfb48dd94a5e
 # ╠═ad078920-225d-436e-835b-d87a9db53c49
 # ╠═8f8ea990-6ae8-45c2-a4f5-b7fc7a425b1d
 # ╠═5d5f719c-e5b7-4e05-94b0-71523da46b66
@@ -702,6 +820,7 @@ end
 # ╠═2dfe9a85-6553-4632-81e0-33c148fd1102
 # ╠═5f45e7c7-e447-48bf-ade4-38f516df2dad
 # ╠═b8c9823f-ca6b-48bf-9140-40440562dac0
+# ╠═94405d26-1eca-4dcc-b331-b47e9903b07d
 # ╠═1152cd63-baab-426a-b464-b10857eed4ec
 # ╠═519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 # ╠═5316884b-3971-4ca7-9106-f638241d3388

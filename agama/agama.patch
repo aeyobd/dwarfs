@@ -148,7 +148,7 @@ index 18663bf..a9b1114 100644
  #error "Presently, the option LIGHTCONE_MULTIPLE_ORIGINS cannot be used yet together with LIGHTCONE_PARTICLES_GROUPS"
  #endif
 diff --git src/gravity/grav_external.cc src/gravity/grav_external.cc
-index b51c0dd..9531729 100644
+index b51c0dd..4eaf5fb 100644
 --- src/gravity/grav_external.cc
 +++ src/gravity/grav_external.cc
 @@ -33,6 +33,13 @@
@@ -165,7 +165,7 @@ index b51c0dd..9531729 100644
  void sim::gravity_external(void)
  {
  #ifdef PERIODIC
-@@ -70,6 +77,45 @@ void sim::gravity_external(void)
+@@ -70,6 +77,42 @@ void sim::gravity_external(void)
  #endif
        }
  #endif
@@ -185,26 +185,23 @@ index b51c0dd..9531729 100644
 +	time /= time_scale;
 +#endif
 +
++
++#if defined(AGAMA_UNITS)
++	double AGAMA_A_SCALE = All.AgamaMassScale * All.AgamaVelocityScale / time_scale;
++	double AGAMA_POT_SCALE = AGAMA_A_SCALE * All.AgamaLengthScale;
++#else
++#define AGAMA_A_SCALE 1
++#define AGAMA_POT_SCALE 1
++#endif
++
 +#if defined(EVALPOTENTIAL) || defined(OUTPUT_POTENTIAL)
-+        Sp.P[target].ExtPotential +=
++        Sp.P[target].ExtPotential += AGAMA_POT_SCALE * 
 +#endif
 +        agama_evalPotential(agama_potential, &pos.da[0], time, deriv, NULL);
 +
-+        Sp.P[target].GravAccel.da[0] -= deriv[0];
-+        Sp.P[target].GravAccel.da[1] -= deriv[1];
-+        Sp.P[target].GravAccel.da[2] -= deriv[2];
-+#if defined(AGAMA_UNITS)
-+	double a_scale = All.AgamaMassScale * All.AgamaVelocityScale / time_scale;
-+	Sp.P[target].GravAccel.da[0] *= a_scale;
-+	Sp.P[target].GravAccel.da[1] *= a_scale;
-+	Sp.P[target].GravAccel.da[2] *= a_scale;
-+
-+#if defined(EVALPOTENTIAL) || defined(OUTPUT_POTENTIAL)
-+	double potential_scale = a_scale * All.AgamaLengthScale;
-+
-+	Sp.P[target].ExtPotential *= potential_scale;
-+#endif
-+#endif
++        Sp.P[target].GravAccel.da[0] -= AGAMA_A_SCALE * deriv[0];
++        Sp.P[target].GravAccel.da[1] -= AGAMA_A_SCALE * deriv[1];
++        Sp.P[target].GravAccel.da[2] -= AGAMA_A_SCALE * deriv[2];
 +
 +      }
 +#endif

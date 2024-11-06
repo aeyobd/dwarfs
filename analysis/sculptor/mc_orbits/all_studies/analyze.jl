@@ -71,7 +71,7 @@ begin
 end
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
-p_value = 0.02
+p_value = 0.001
 
 # ╔═╡ fb6debf2-0161-477f-b29b-5a0f1f70f340
 [snap.positions[:, 1]; snap.velocities[:, 1] * lguys.V2KMS]
