@@ -6,6 +6,7 @@ u = pyimport("astropy.units")
 using LilGuys
 using CairoMakie
 
+import Base: -, reverse
 potential_dir = ENV["DWARFS_ROOT"] * "/agama/potentials/"
 
 
@@ -24,10 +25,36 @@ Base.@kwdef struct Orbit
     time::Vector{F}
     position::Matrix{F}
     velocity::Matrix{F}
-    pericenter::F = NaN
-    apocenter::F = NaN
+    acceleration::Union{Matrix{F}, Nothing} = nothing
+    pericenter::F = minimum(calc_r(position))
+    apocenter::F = maximum(calc_r(position))
 end
 
+
+function (-)(a::Orbit, b::Orbit)
+    @assert isapprox(a.time, b.time, rtol=1e-6)
+
+    return Orbit(time=a.time, position=a.position - b.position, velocity=a.velocity - b.velocity)
+end
+
+
+function reverse(a::Orbit)
+    return Orbit(time=reverse(a.time), position=reverse(a.position, dims=2), velocity=reverse(a.velocity, dims=2))
+end
+
+function resample(a::Orbit, time::AbstractVector)
+    if a.time[2] < a.time[1]
+        a = reverse(a)
+    end
+    x = LilGuys.lerp(a.time, a.position[1, :]).(time)
+    y = LilGuys.lerp(a.time, a.position[2, :]).(time)
+    z = LilGuys.lerp(a.time, a.position[3, :]).(time)
+    v_x = LilGuys.lerp(a.time, a.velocity[1, :]).(time)
+    v_y = LilGuys.lerp(a.time, a.velocity[2, :]).(time)
+    v_z = LilGuys.lerp(a.time, a.velocity[3, :]).(time)
+
+    return Orbit(time=time, position=[x y z]', velocity=[v_x v_y v_z]')
+end
 
 function load_agama_potential(filename)
     return agama.Potential(joinpath(potential_dir, filename))
@@ -40,7 +67,7 @@ end
 Given an inital phase position and agama potential, computes the orbit.
 Returns a ve
 """
-function calc_orbit(coords, pot; N=10_000, time=10, units = :code)
+function calc_orbit(coords, pot; N=10_001, time=10, units = :code)
     ic = make_agama_init(coords, units=units)
 
     if time isa Real
@@ -240,15 +267,24 @@ Parameters:
 - `η::Real=0.01`: the adaptive timestep parameter
 
 """
-function leap_frog(gc, acceleration; dt_max=0.1, dt_min=0.001, time=-10/T2GYR, timestep=:adaptive, η=0.01)
+function leap_frog(gc, acceleration; 
+        dt_max=0.1, dt_min=0.001, time=-10/T2GYR, 
+        timestep=:adaptive, η=0.01
+    )
+
+    if timestep isa Real
+        dt_min = timestep
+    end
 
     Nt = round(Int, abs(time / dt_min))
     positions = Vector{Vector{Float64}}()
     velocities = Vector{Vector{Float64}}()
+    accelerations = Vector{Vector{Float64}}()
     times = Float64[]
 
     push!(positions, [gc.x, gc.y, gc.z])
     push!(velocities, [gc.v_x, gc.v_y, gc.v_z] / V2KMS)
+    push!(accelerations, acceleration(positions[1], velocities[1]))
     push!(times, 0.)
     is_done = false
     backwards = time < 0
@@ -258,8 +294,12 @@ function leap_frog(gc, acceleration; dt_max=0.1, dt_min=0.001, time=-10/T2GYR, t
         pos = positions[i]
         vel = velocities[i]
         acc = acceleration(pos, vel)
-
-        dt = min(sqrt(η / calc_r(acc)), dt_max)
+        
+        if timestep == :adaptive
+            dt = min(sqrt(η / calc_r(acc)), dt_max)
+        elseif timestep isa Real
+            dt = timestep
+        end
         
         if backwards
             dt *= -1
@@ -281,6 +321,7 @@ function leap_frog(gc, acceleration; dt_max=0.1, dt_min=0.001, time=-10/T2GYR, t
 
         push!(positions, pos_new)
         push!(velocities, vel_new)
+        push!(accelerations, acc)
         t = times[i] + dt
         push!(times, t)
 
@@ -291,5 +332,6 @@ function leap_frog(gc, acceleration; dt_max=0.1, dt_min=0.001, time=-10/T2GYR, t
 
     positions_matrix = hcat(positions...)
     velocities_matrix = hcat(velocities...)
-    return Orbit(time=times, position=positions_matrix, velocity=velocities_matrix)
+    accelerations_matrix = hcat(accelerations...)
+    return Orbit(time=times, position=positions_matrix, velocity=velocities_matrix, acceleration=accelerations_matrix)
 end

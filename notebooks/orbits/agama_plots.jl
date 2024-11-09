@@ -101,7 +101,7 @@ function plot_r_t(orbits; legend=true, kwargs...)
 end
 
 
-function plot_y_z(orbits; kwargs...)
+function plot_y_z(orbits; legend=true, kwargs...)
     fig = Figure()
     ax = axis_y_z(fig[1, 1]; kwargs...)
 
@@ -109,7 +109,9 @@ function plot_y_z(orbits; kwargs...)
         plot_y_z!(ax, orbit, label=label)
     end
 
-    axislegend()
+    if legend
+        Legend(fig[1,2], ax)
+    end
     return fig
 end
 
