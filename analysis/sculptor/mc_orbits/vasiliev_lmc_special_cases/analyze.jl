@@ -18,6 +18,9 @@ begin
 end
 
 
+# ╔═╡ acce474f-5b88-42dc-aa1b-840f3d3967b7
+using LilGuys
+
 # ╔═╡ 1be546d7-8b11-4dc5-9295-393d39f65123
 using OrderedCollections
 
@@ -33,6 +36,9 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 md"""
 # Setup
 """
+
+# ╔═╡ 0f1eadfc-bff3-42b8-beee-2765589671ac
+save = Makie.save
 
 # ╔═╡ b8c9823f-ca6b-48bf-9140-40440562dac0
 import TOML
@@ -95,7 +101,7 @@ end
 special_orbits_dir = "."
 
 # ╔═╡ e5f728b8-8412-4f57-ad38-a0a35bb08a48
-orbit_labels = ["mean", "smallperi", "largeperi"][1:2]
+orbit_labels = ["mean", "smallperi", "largeperi"]
 
 # ╔═╡ dcdca4a7-08a6-4d1b-a972-c386493207d0
 begin 
@@ -108,16 +114,16 @@ begin
 end
 
 # ╔═╡ bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
-df_peris_apos_special.pericenter
+df_peris_apos_special
 
 # ╔═╡ 4481a5e1-d635-4fea-a5c5-c85f0d6df62f
-peris = df_peris_apos.pericenter
+peris = df_peris_apos.pericentre
 
 # ╔═╡ 413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 peri_qs = lguys.quantile(peris, [p_value, 1-p_value, 0.5])
 
 # ╔═╡ 384be6a6-f9d9-47e0-9792-aef6689dcbdb
-apos = df_peris_apos.apocenter
+apos = df_peris_apos.apocentre
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -134,7 +140,7 @@ let
 
 	bins, counts, err = lguys.histogram(peris)
 	scatter!(lguys.midpoints(bins), counts)
-	vlines!(df_peris_apos_special.pericenter)
+	vlines!(df_peris_apos_special.pericentre)
 
 	fig
 end
@@ -149,7 +155,37 @@ let
 
 	bins, counts, err = lguys.histogram(apos)
 	scatter!(lguys.midpoints(bins), counts)
-	vlines!(df_peris_apos_special.apocenter)
+	vlines!(df_peris_apos_special.apocentre)
+
+	fig
+end
+
+# ╔═╡ 73f827a2-a529-49ce-b9be-0b256d4ac768
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "dt lmc / Gyr",
+		ylabel = "count"
+	)
+
+	bins, counts, err = lguys.histogram(df_peris_apos.t_last_peri_lmc * T2GYR)
+	scatter!(lguys.midpoints(bins), counts)
+	vlines!(df_peris_apos_special.t_last_peri_lmc * T2GYR)
+
+	fig
+end
+
+# ╔═╡ a57d212d-e5b4-4fc4-aace-de3b1ab67c57
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "perilmc",
+		ylabel = "count"
+	)
+
+	bins, counts, err = lguys.histogram(df_peris_apos.peri_lmc)
+	scatter!(lguys.midpoints(bins), counts)
+	vlines!(df_peris_apos_special.peri_lmc )
 
 	fig
 end
@@ -234,7 +270,7 @@ let
 		
 		for i in eachindex(orbit_labels)
 				x = getproperty(observations_special[i], sym)
-				y = df_peris_apos_special[i, :pericenter]
+				y = df_peris_apos_special[i, :pericentre]
 				scatter!(x, y; orbit_points_kwargs[i]...)
 		end
 	end
@@ -279,7 +315,7 @@ let
 		
 		for i in eachindex(orbit_labels)
 				x = getproperty(observations_special[i], sym)
-				y = df_peris_apos_special[i, :apocenter]
+				y = df_peris_apos_special[i, :apocentre]
 				scatter!(x, y; orbit_points_kwargs[i]...)
 		end
 	end
@@ -289,6 +325,141 @@ let
 
 
 	save(joinpath(fig_dir, "apo_mc_orbits_corr.pdf"), fig)
+	fig
+end
+
+# ╔═╡ 16ce3cab-d92f-41ef-8d6a-a449fe6a8e58
+let
+	fig = Figure(size=(600, 600))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.1,
+		:markersize => 1,
+	)
+
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "perilmc / kpc",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+		x = [getproperty(o, sym) for o in observations]
+		scatter!(x, df_peris_apos.peri_lmc; plot_kwargs...)
+		
+		for i in eachindex(orbit_labels)
+				x = getproperty(observations_special[i], sym)
+				y = df_peris_apos_special[i, :peri_lmc]
+				scatter!(x, y; orbit_points_kwargs[i]...)
+		end
+	end
+
+
+	linkyaxes!(fig.content...)
+
+
+	save(joinpath(fig_dir, "peri_lmc_mc_corr.pdf"), fig)
+	fig
+end
+
+# ╔═╡ 4dbbf202-bc06-4f23-bddc-8aeb1ae1bd7a
+let
+	fig = Figure(size=(600, 600))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.1,
+		:markersize => 1,
+	)
+
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "t last peri lmc / Gyr",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+		x = [getproperty(o, sym) for o in observations]
+		scatter!(x, df_peris_apos.t_last_peri * T2GYR; plot_kwargs...)
+		
+		for i in eachindex(orbit_labels)
+				x = getproperty(observations_special[i], sym)
+				y = df_peris_apos_special[i, :t_last_peri] * T2GYR
+				scatter!(x, y; orbit_points_kwargs[i]...)
+		end
+	end
+
+
+	linkyaxes!(fig.content...)
+
+
+	save(joinpath(fig_dir, "t_peri_mc_corr.pdf"), fig)
+	fig
+end
+
+# ╔═╡ d1801170-9efa-4234-8666-fa7b38a35c9b
+let
+	fig = Figure(size=(600, 600))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.1,
+		:markersize => 1,
+	)
+
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "t last peri lmc / Gyr",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+		x = [getproperty(o, sym) for o in observations]
+		scatter!(x, df_peris_apos.t_last_peri_lmc * T2GYR; plot_kwargs...)
+		
+		for i in eachindex(orbit_labels)
+				x = getproperty(observations_special[i], sym)
+				y = df_peris_apos_special[i, :t_last_peri_lmc] * T2GYR
+				scatter!(x, y; orbit_points_kwargs[i]...)
+		end
+	end
+
+
+	linkyaxes!(fig.content...)
+
+
+	save(joinpath(fig_dir, "t_perilmc_mc_corr.pdf"), fig)
 	fig
 end
 
@@ -324,14 +495,36 @@ md"""
 # The selected orbits
 """
 
+# ╔═╡ 4b29ef51-5047-4c8a-9692-a388a6e51c2b
+traj_lmc = CSV.read("lmc_traj.csv", DataFrame)
+
+# ╔═╡ 40cd8af5-70cd-45eb-9841-a9fce83e9f9d
+traj_lmc.time == out.times
+
+# ╔═╡ 921b889a-376a-43dc-bf86-302e0e2521d0
+pos_lmc = [traj_lmc.x traj_lmc.y traj_lmc.z]'
+
+# ╔═╡ 6cfc3e05-17e0-4054-863f-9aedf215af4f
+
+
+# ╔═╡ 43b8d382-6226-46bb-9cbe-6463eb0415d0
+vel_lmc = [traj_lmc.v_x traj_lmc.v_y traj_lmc.v_z]'
+
 # ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
 begin
 	
 	positions = [lguys.extract_vector(out_special, :positions, i) for i in eachindex(orbit_labels)]
 	velocities = [lguys.extract_vector(out_special, :velocities, i) for i in eachindex(orbit_labels)]
+	accelerations = [lguys.extract_vector(out_special, :accelerations, i) for i in eachindex(orbit_labels)]
 	Φs_ext = [lguys.extract(out_special, :Φs_ext, i) for i in eachindex(orbit_labels)]
 
 end
+
+# ╔═╡ 3831432c-488f-4cfd-90d9-d137930c6bb2
+positions_scl_lmc = [pos .- pos_lmc for pos in positions]
+
+# ╔═╡ a7053872-c788-4d9f-a6a5-e53f83e95aff
+velocities_scl_lmc = [vel .- vel_lmc for vel in velocities]
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 begin
@@ -350,13 +543,39 @@ let
 	for i in eachindex(orbit_labels)
 		lines!(out_special.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
 	
-		hlines!([df_peris_apos_special.pericenter[i], df_peris_apos_special.apocenter[i]], linestyle=:dot)
+		hlines!([df_peris_apos_special.pericentre[i], df_peris_apos_special.apocentre[i]], linestyle=:dot)
 	end
 
 	Legend(fig[1, 2], ax)
 	lguys.Plots.hide_grid!(ax)
 
 	save(joinpath(fig_dir, "r_time_orbits.pdf"), fig)
+	fig
+end
+
+# ╔═╡ 27754eca-1c6f-4cc4-8153-a4bacf4d473b
+accs = lguys.calc_r.(accelerations)
+
+# ╔═╡ cf4e92a9-80a3-4ef8-9404-0ee6707a3401
+rs_scl_lmc = lguys.calc_r.(positions_scl_lmc)
+
+# ╔═╡ 7afbee36-7c8b-4d73-b5c0-079d2346f020
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="radius / kpc",
+	)
+
+	for i in eachindex(orbit_labels)
+		lines!(out_special.times * lguys.T2GYR, rs_scl_lmc[i], label=orbit_labels[i])
+	
+		hlines!([df_peris_apos_special.peri_lmc[i], df_peris_apos_special.apo_lmc[i]], linestyle=:dot)
+	end
+
+	Legend(fig[1, 2], ax)
+	lguys.Plots.hide_grid!(ax)
+
 	fig
 end
 
@@ -374,6 +593,22 @@ let
 
 	fig
 end
+
+# ╔═╡ e2e31f30-bbf3-41b5-ba87-5b3a6db152bb
+let
+
+	fig = lguys.Plots.plot_xyz(positions_scl_lmc..., labels=orbit_labels)
+
+	resize_to_layout!(fig)
+
+	fig
+end
+
+# ╔═╡ c6746c48-4547-483e-807d-07865f0576c6
+ lguys.Plots.plot_xyz(velocities_scl_lmc..., labels=orbit_labels)
+
+# ╔═╡ 83aa4296-047a-455d-a5ad-d9f9d111165b
+ lguys.Plots.plot_xyz(velocities..., labels=orbit_labels)
 
 # ╔═╡ 57a8d1c8-3940-4430-8b46-375fb2bf1695
 let
@@ -398,9 +633,6 @@ let
 	fig
 end
 
-# ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
-lguys.Plots.plot_xyz(velocities..., units=" / km / s")
-
 # ╔═╡ ad078920-225d-436e-835b-d87a9db53c49
 let
 	fig = Figure()
@@ -408,6 +640,30 @@ let
 
 	for i in eachindex(orbit_labels)
 		scatter!(rs[i], vs[i], color=out.times)
+	end
+
+	fig
+end
+
+# ╔═╡ 12eb9758-74dc-44ba-be9f-7bb9eff7ab43
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+	for i in eachindex(orbit_labels)
+		scatter!(rs[i], accs[i], color=out.times)
+	end
+
+	fig
+end
+
+# ╔═╡ 2665bd17-fa3d-4e00-bbdf-b5b7cb0f67c7
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+	for i in eachindex(orbit_labels)
+		scatter!(rs_scl_lmc[i], accs[i], color=out.times)
 	end
 
 	fig
@@ -520,8 +776,8 @@ for i in 1:length(orbit_labels)
 		"pmra_err" => err.pmra,
 		"pmdec_err" => err.pmdec,
 		"radial_velocity_err" => err.radial_velocity,
-		"pericentre" => df_peris_apos_special.pericenter[i],
-		"apocentre" => df_peris_apos_special.apocenter[i],
+		"pericentre" => df_peris_apos_special.pericentre[i],
+		"apocentre" => df_peris_apos_special.apocentre[i],
 		"t_apo_i" => lguys.T2GYR*(out_special.times[end] - out.times[t]),
 		"r_i" => rs[i][t],
 		"x_i" => positions[i][1, t],
@@ -546,8 +802,13 @@ begin
 		t = length(rs[i])
 		@printf "orbit: \t\t %i\n" i
 		
-		@printf "pericentre:\t %0.1f\n" df_peris_apos_special.pericenter[i]
-		@printf "apocentre: \t %0.1f\n" df_peris_apos_special.apocenter[i]
+		@printf "pericentre:\t %0.1f\n" df_peris_apos_special.pericentre[i]
+		@printf "apocentre: \t %0.1f\n" df_peris_apos_special.apocentre[i]
+		@printf "t last peri:\t %0.2f\n" df_peris_apos_special.t_last_peri[i] * T2GYR
+		
+		@printf "perilmc:\t %0.1f\n" df_peris_apos_special.peri_lmc[i]
+		@printf "apolmc: \t %0.1f\n" df_peris_apos_special.apo_lmc[i]
+		@printf "t last perilmc:\t %0.2f\n" df_peris_apos_special.t_last_peri_lmc[i] * T2GYR
 
 	
 		@printf "intial position: [%0.4f, %0.4f, %0.4f]\n" positions[i][:, t]...
@@ -574,6 +835,8 @@ out.times * lguys.T2GYR
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╠═3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═0f1eadfc-bff3-42b8-beee-2765589671ac
+# ╠═acce474f-5b88-42dc-aa1b-840f3d3967b7
 # ╠═b8c9823f-ca6b-48bf-9140-40440562dac0
 # ╠═1be546d7-8b11-4dc5-9295-393d39f65123
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
@@ -596,6 +859,8 @@ out.times * lguys.T2GYR
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
 # ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
+# ╠═73f827a2-a529-49ce-b9be-0b256d4ac768
+# ╠═a57d212d-e5b4-4fc4-aace-de3b1ab67c57
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
 # ╠═8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
@@ -606,16 +871,33 @@ out.times * lguys.T2GYR
 # ╠═67ca9626-8416-4254-87f8-d1c5c88bf2de
 # ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 # ╟─43d43f63-4c13-4b23-950e-ada59aa86bc9
+# ╠═16ce3cab-d92f-41ef-8d6a-a449fe6a8e58
+# ╠═4dbbf202-bc06-4f23-bddc-8aeb1ae1bd7a
+# ╠═d1801170-9efa-4234-8666-fa7b38a35c9b
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
+# ╠═4b29ef51-5047-4c8a-9692-a388a6e51c2b
+# ╠═40cd8af5-70cd-45eb-9841-a9fce83e9f9d
+# ╠═921b889a-376a-43dc-bf86-302e0e2521d0
+# ╠═6cfc3e05-17e0-4054-863f-9aedf215af4f
+# ╠═43b8d382-6226-46bb-9cbe-6463eb0415d0
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
+# ╠═7afbee36-7c8b-4d73-b5c0-079d2346f020
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
+# ╠═3831432c-488f-4cfd-90d9-d137930c6bb2
+# ╠═a7053872-c788-4d9f-a6a5-e53f83e95aff
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
+# ╠═27754eca-1c6f-4cc4-8153-a4bacf4d473b
+# ╠═cf4e92a9-80a3-4ef8-9404-0ee6707a3401
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
+# ╠═e2e31f30-bbf3-41b5-ba87-5b3a6db152bb
+# ╠═c6746c48-4547-483e-807d-07865f0576c6
+# ╠═83aa4296-047a-455d-a5ad-d9f9d111165b
 # ╠═57a8d1c8-3940-4430-8b46-375fb2bf1695
-# ╠═34efe422-e672-4d17-a558-ce32fb704a8e
 # ╠═ad078920-225d-436e-835b-d87a9db53c49
+# ╠═12eb9758-74dc-44ba-be9f-7bb9eff7ab43
+# ╠═2665bd17-fa3d-4e00-bbdf-b5b7cb0f67c7
 # ╠═09bbae0d-ca3e-426d-b77c-69dd68ca42cc
 # ╠═35f0ea14-a945-4745-910c-365b730676c5
 # ╟─2e7c1798-4066-4c46-b5ed-732263728ac0

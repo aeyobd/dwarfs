@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -41,10 +41,10 @@ md"""
 models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = models_dir * "sculptor/1e6_V31_r3.2/orbit1/"
+model_dir = models_dir * "sculptor/1e6_V31_r3.2/vasiliev+21_mean/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.10"
+starsname = "plummer_rs0.20"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -211,7 +211,7 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-12, maximum(hi.values)))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-6, maximum(hi.values)))
 	errscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], size=10)
 
 	# idx = idx_f - 20: idx_f + 20
@@ -662,7 +662,7 @@ md"""
 nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 
 # ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
-prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=30)
+prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=150)
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
 prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/sculptor/processed/fiducial_sample_profile.toml")
@@ -687,7 +687,7 @@ let
 
 	
 
-	lines!(prof.log_r, prof.log_Sigma .+ 1.5, 
+	scatter!(prof.log_r, prof.log_Sigma .+ 1.5, 
 			label="model")
 
 

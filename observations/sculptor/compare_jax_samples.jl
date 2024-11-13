@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -14,7 +14,7 @@ begin
 end
 
 # ╔═╡ 9d548f5a-223c-4827-b2d3-8361d0ced243
-using DataFrames: rename!
+using DataFrames: rename!, leftjoin
 
 # ╔═╡ 73f523e3-39eb-49ea-92d1-39e9d5e91d16
 include("../../utils/read_iso.jl")
@@ -135,13 +135,13 @@ md"""
 data_dir = "data"
 
 # ╔═╡ 330a4e01-59e0-4eb6-9900-d23db1159dd5
-scl_ell = LilGuys.read_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-ell.fits"))
+scl_ell = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2_comp_ell.fits"))
 
 # ╔═╡ b37ad796-1695-4665-b592-b68a99356907
-scl_circ = LilGuys.read_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.2-comp-circ.fits"))
+scl_circ = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2_comp_circ.fits"))
 
 # ╔═╡ 39be2272-202a-4bb9-95cb-a9e584589d97
-scl_1comp = LilGuys.read_fits(joinpath(data_dir, "Sculptor.GAIASOURCE.RUWE.VELS.PROB.fits"))
+scl_1comp = LilGuys.read_fits(joinpath(data_dir, "jensen+24_1_comp_circ.fits"))
 
 # ╔═╡ 08cf3854-66e9-4358-8925-e069f59f65e6
 scl_gaia = LilGuys.read_fits("data/gaia_4deg_cen.fits")
@@ -688,10 +688,41 @@ md"""
 # Combining properties
 """
 
+# ╔═╡ 3fe41e1f-269e-4de3-883a-4b4798e82c90
+extra_cols = push!(setdiff(names(scl_gaia), names(df)), "source_id")
+
+# ╔═╡ c43e3165-0bb7-4588-90ab-57a3150740ab
+for col in extra_cols
+	println(col, "\t", typeof(scl_gaia[1, col]))
+end
+
+# ╔═╡ ccf1535d-8b77-4df0-8dc8-4c685be7e1ff
+df_2 = leftjoin(df, scl_gaia[:, extra_cols], on=:source_id, order=:left)
+
+# ╔═╡ 6e3b43a1-4d90-46d7-9cad-7f258930c019
+df_2.source_id 
+
+# ╔═╡ c378e6e7-a599-4dda-893d-1bc739cc7b3d
+df.source_id
+
+# ╔═╡ 83462485-795b-4efe-b3d8-3e882f9077b6
+scl_gaia.source_id
+
+# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
+@assert all(scl_1comp.source_id .== df.source_id)
+
+# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
+@assert all(scl_circ.source_id .== df.source_id)
+
+# ╔═╡ a9ebb6fa-569c-4418-b92e-101fec1e0730
+import DataFrames: disallowmissing!
+
 # ╔═╡ 0a48ae68-348b-4494-9c81-d11c9bbe87a0
 begin 
-	df_out = copy(df)
+	df_out = leftjoin(df,  scl_gaia[:, extra_cols], on=:source_id, order=:left)
 
+	disallowmissing!(df_out)
+	
 	df_out[!, :L_S_SAT_1C] .= scl_1comp.L_S_SAT
 	df_out[!, :PSAT_S_1C] .= scl_1comp.PSAT_S
 	df_out[!, :PSAT_1C] .= scl_1comp.PSAT
@@ -708,6 +739,12 @@ begin
 	df_out[!, :PSAT] = max.(df_out.PSAT_CIRC, df_out.PSAT_1C, df_out.PSAT_ELL)
 
 end
+
+# ╔═╡ 67a1bf24-9ed1-4a0f-907d-4300a81028f9
+df_out
+
+# ╔═╡ d1cea355-9dea-4531-b69a-40423d84013a
+setdiff(names(scl_gaia), names(df_out))
 
 # ╔═╡ dd1bbf56-4d9a-445c-9722-5541b63d227d
 let
@@ -735,17 +772,11 @@ let
 	fig
 end
 
-# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
-@assert all(scl_1comp.source_id .== df.source_id)
-
-# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
-@assert all(scl_circ.source_id .== df.source_id)
-
-# ╔═╡ 1d0ef71c-e584-4612-8685-09e6bb79423b
-convert(Float64, 1)
+# ╔═╡ 6f3096a4-812c-47c1-94be-2d3715282bd4
+disallowmissing!(df_out)
 
 # ╔═╡ 9b57518d-98b0-4cb6-a290-9b9ea22cefac
-LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true)
+LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
@@ -847,10 +878,19 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true)
 # ╠═a79814b3-3b9d-4e26-9001-9e84cbe67bec
 # ╠═ad6cf0cc-42c5-414d-bf07-27311d7716c2
 # ╟─8486d28e-5ae8-40f2-9a93-ce81606f1496
+# ╠═3fe41e1f-269e-4de3-883a-4b4798e82c90
+# ╠═c43e3165-0bb7-4588-90ab-57a3150740ab
+# ╠═ccf1535d-8b77-4df0-8dc8-4c685be7e1ff
+# ╠═6e3b43a1-4d90-46d7-9cad-7f258930c019
+# ╠═c378e6e7-a599-4dda-893d-1bc739cc7b3d
+# ╠═83462485-795b-4efe-b3d8-3e882f9077b6
 # ╠═0a48ae68-348b-4494-9c81-d11c9bbe87a0
+# ╠═67a1bf24-9ed1-4a0f-907d-4300a81028f9
+# ╠═d1cea355-9dea-4531-b69a-40423d84013a
 # ╠═dd1bbf56-4d9a-445c-9722-5541b63d227d
 # ╠═d39d9fba-288f-48fc-8db5-eb10854cb4a7
 # ╠═b546c73a-823b-4f19-a9a3-d01946c4982f
 # ╠═ff29e7c1-5aa4-4295-b114-e38fc3a208c7
-# ╠═1d0ef71c-e584-4612-8685-09e6bb79423b
+# ╠═a9ebb6fa-569c-4418-b92e-101fec1e0730
+# ╠═6f3096a4-812c-47c1-94be-2d3715282bd4
 # ╠═9b57518d-98b0-4cb6-a290-9b9ea22cefac

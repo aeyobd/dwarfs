@@ -104,17 +104,30 @@ begin
 	@assert all(snap_special.index  .== df_peris_apos_special.index) "snapshot and peri apo index must match"
 end
 
+# ╔═╡ e2398981-9de2-4442-a5b2-6d0ec88a7bc3
+lguys.T2GYR * lguys.quantile(df_peris_apos.t_last_peri, [p_value, 1-p_value, 0.5])
+
+# ╔═╡ 56631a4d-323e-42ac-ad71-3e35face895d
+obs_props_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
+
+
+# ╔═╡ c60b4d12-642f-4247-a022-f2c0bb16a092
+delta_t = df_peris_apos.t_last_peri
+
+# ╔═╡ 98b33c5a-b6cf-4472-a87b-3b8a278e0e36
+mean(r_breaks_arcmin), std(r_breaks_arcmin.)
+
 # ╔═╡ bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
-df_peris_apos_special.pericenter
+df_peris_apos_special.pericentre
 
 # ╔═╡ 4481a5e1-d635-4fea-a5c5-c85f0d6df62f
-peris = df_peris_apos.pericenter
+peris = df_peris_apos.pericentre
 
 # ╔═╡ 413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 peri_qs = lguys.quantile(peris, [p_value, 1-p_value, 0.5])
 
 # ╔═╡ 384be6a6-f9d9-47e0-9792-aef6689dcbdb
-apos = df_peris_apos.apocenter
+apos = df_peris_apos.apocentre
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -131,7 +144,7 @@ let
 
 	bins, counts, err = lguys.histogram(peris)
 	scatter!(lguys.midpoints(bins), counts)
-	vlines!(df_peris_apos_special.pericenter)
+	vlines!(df_peris_apos_special.pericentre)
 
 	fig
 end
@@ -146,7 +159,22 @@ let
 
 	bins, counts, err = lguys.histogram(apos)
 	scatter!(lguys.midpoints(bins), counts)
-	vlines!(df_peris_apos_special.apocenter)
+	vlines!(df_peris_apos_special.apocentre)
+
+	fig
+end
+
+# ╔═╡ 377628e5-67a7-45fa-9e98-992acf7171ea
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "time of last peri / Gyr",
+		ylabel = "count"
+	)
+
+	bins, counts, err = lguys.histogram(df_peris_apos.t_last_peri * lguys.T2GYR)
+	scatter!(lguys.midpoints(bins), counts)
+	vlines!(df_peris_apos_special.t_last_peri * lguys.T2GYR)
 
 	fig
 end
@@ -231,7 +259,7 @@ let
 		
 		for i in eachindex(orbit_labels)
 				x = getproperty(observations_special[i], sym)
-				y = df_peris_apos_special[i, :pericenter]
+				y = df_peris_apos_special[i, :pericentre]
 				scatter!(x, y; orbit_points_kwargs[i]...)
 		end
 	end
@@ -276,7 +304,7 @@ let
 		
 		for i in eachindex(orbit_labels)
 				x = getproperty(observations_special[i], sym)
-				y = df_peris_apos_special[i, :apocenter]
+				y = df_peris_apos_special[i, :apocentre]
 				scatter!(x, y; orbit_points_kwargs[i]...)
 		end
 	end
@@ -286,6 +314,50 @@ let
 
 
 	save(joinpath(fig_dir, "apo_mc_orbits_corr.pdf"), fig)
+	fig
+end
+
+# ╔═╡ f14fb67d-37c1-46f8-9d63-3f0d4fd93b3c
+let
+	fig = Figure(size=(600, 600))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.1,
+		:markersize => 1,
+	)
+
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => L"$\Delta\,t_\textrm{peri}$ / Gyr",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+		x = [getproperty(o, sym) for o in observations]
+		scatter!(x, df_peris_apos.t_last_peri * lguys.T2GYR .+ 0.001 .* randn(length(snap)); plot_kwargs...)
+				for i in eachindex(orbit_labels)
+				x = getproperty(observations_special[i], sym)
+				y = lguys.T2GYR * df_peris_apos_special[i, :t_last_peri]
+				scatter!(x, y; orbit_points_kwargs[i]...)
+		end
+	end
+
+
+	linkyaxes!(fig.content...)
+
+
+	save(joinpath(fig_dir, "t_last_peri.pdf"), fig)
 	fig
 end
 
@@ -347,7 +419,11 @@ let
 	for i in eachindex(orbit_labels)
 		lines!(out_special.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
 	
-		hlines!([df_peris_apos_special.pericenter[i], df_peris_apos_special.apocenter[i]], linestyle=:dot)
+		hlines!([df_peris_apos_special.pericentre[i], df_peris_apos_special.apocentre[i]], linestyle=:dot)
+
+		scatter!(df_peris_apos_special.t_last_peri[i] * lguys.T2GYR, df_peris_apos_special.pericentre[i])
+		
+		scatter!(df_peris_apos_special.t_last_apo[i] * lguys.T2GYR, df_peris_apos_special.apocentre[i])
 	end
 
 	Legend(fig[1, 2], ax)
@@ -476,6 +552,30 @@ reverse(out.times)
 # ╔═╡ b8c9823f-ca6b-48bf-9140-40440562dac0
 import TOML
 
+# ╔═╡ 3639400c-e5eb-4ce6-9ec5-7a4eafa9f458
+obs_props = TOML.parsefile(obs_props_filename)
+
+# ╔═╡ 106ebb4c-300f-4b7e-b9a2-85c0da493c8c
+σv = obs_props["sigma_v"] .+ randn(length(peris)) * obs_props["sigma_v_err"]
+
+# ╔═╡ 54e8d50a-2e01-465c-b423-afced2272a51
+r_breaks = lguys.calc_break_radius.(σv/lguys.V2KMS, delta_t)
+
+# ╔═╡ a4fe3b8b-ca53-40fc-b729-e70e95bd9fd9
+r_breaks_arcmin = lguys.kpc_to_arcmin.(r_breaks, [o.distance for o in observations])
+
+# ╔═╡ 2d98e884-db50-4a53-84ae-7c6b1527805b
+quantile(r_breaks_arcmin, [p_value, 0.5, 1-p_value])
+
+# ╔═╡ cd0ea8cc-882b-479c-9f2a-3a433c43e0a0
+hist(r_breaks)
+
+# ╔═╡ 515fdab4-012a-4a16-a4e6-392fb203c7b9
+mean(r_breaks), std(r_breaks)
+
+# ╔═╡ f0f8d0fe-b519-420d-8db9-8968c15bcce1
+quantile(r_breaks, [p_value, 0.5, 1-p_value])
+
 # ╔═╡ 519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 function get_initial_t(rs)
 	N = length(rs)
@@ -534,8 +634,8 @@ for i in 1:length(orbit_labels)
 		"pmra_err" => err.pmra,
 		"pmdec_err" => err.pmdec,
 		"radial_velocity_err" => err.radial_velocity,
-		"pericentre" => df_peris_apos_special.pericenter[i],
-		"apocentre" => df_peris_apos_special.apocenter[i],
+		"pericentre" => df_peris_apos_special.pericentre[i],
+		"apocentre" => df_peris_apos_special.apocentre[i],
 		"t_apo_i" => lguys.T2GYR*(out_special.times[end] - out.times[t]),
 		"r_i" => rs[i][t],
 		"x_i" => positions[i][1, t],
@@ -572,8 +672,8 @@ begin
 		t = get_initial_t(rs[i])
 		@printf "orbit: \t\t %i\n" i
 		
-		@printf "pericentre:\t %0.1f\n" df_peris_apos_special.pericenter[i]
-		@printf "apocentre: \t %0.1f\n" df_peris_apos_special.apocenter[i]
+		@printf "pericentre:\t %0.1f\n" df_peris_apos_special.pericentre[i]
+		@printf "apocentre: \t %0.1f\n" df_peris_apos_special.apocentre[i]
 
 		@printf "time of first apocentre: %f \n" out_special.times[end] - out.times[t]
 		@printf "radius of first apocentre: %f\n" rs[i][t]
@@ -612,12 +712,25 @@ end
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
 # ╠═dcdca4a7-08a6-4d1b-a972-c386493207d0
 # ╠═413d4e5d-c9cd-4aca-be1e-d132b2bd616d
+# ╠═e2398981-9de2-4442-a5b2-6d0ec88a7bc3
+# ╠═56631a4d-323e-42ac-ad71-3e35face895d
+# ╠═3639400c-e5eb-4ce6-9ec5-7a4eafa9f458
+# ╠═106ebb4c-300f-4b7e-b9a2-85c0da493c8c
+# ╠═c60b4d12-642f-4247-a022-f2c0bb16a092
+# ╠═54e8d50a-2e01-465c-b423-afced2272a51
+# ╠═a4fe3b8b-ca53-40fc-b729-e70e95bd9fd9
+# ╠═cd0ea8cc-882b-479c-9f2a-3a433c43e0a0
+# ╠═515fdab4-012a-4a16-a4e6-392fb203c7b9
+# ╠═f0f8d0fe-b519-420d-8db9-8968c15bcce1
+# ╠═98b33c5a-b6cf-4472-a87b-3b8a278e0e36
+# ╠═2d98e884-db50-4a53-84ae-7c6b1527805b
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
 # ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f
 # ╠═384be6a6-f9d9-47e0-9792-aef6689dcbdb
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
 # ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
+# ╠═377628e5-67a7-45fa-9e98-992acf7171ea
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
 # ╠═8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
@@ -628,6 +741,7 @@ end
 # ╠═67ca9626-8416-4254-87f8-d1c5c88bf2de
 # ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 # ╟─43d43f63-4c13-4b23-950e-ada59aa86bc9
+# ╠═f14fb67d-37c1-46f8-9d63-3f0d4fd93b3c
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624

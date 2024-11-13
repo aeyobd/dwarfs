@@ -69,6 +69,15 @@ begin
 	@assert all(snap.index  .== df_peris_apos.index) "snapshot and peri apo index must match"
 end
 
+# ╔═╡ da6e5566-f2df-4feb-9188-53eca9a1a0d5
+df_peris_apos
+
+# ╔═╡ b6a04776-44b0-4602-8cd6-3961aaed423f
+dt_peri = out.times[end] .- df_peris_apos.t_last_peri
+
+# ╔═╡ 9283d77a-97b5-4436-ac82-f2e0a73b0ef9
+dt_peri * lguys.T2GYR
+
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 p_value = 0.001349898031630093 # 3sigma
 
@@ -76,7 +85,7 @@ p_value = 0.001349898031630093 # 3sigma
 [snap.positions[:, 1]; snap.velocities[:, 1] * lguys.V2KMS]
 
 # ╔═╡ 4481a5e1-d635-4fea-a5c5-c85f0d6df62f
-peris = df_peris_apos.pericenter
+peris = df_peris_apos.pericentre
 
 # ╔═╡ 413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 peri_qs = lguys.quantile(peris, [p_value, 1-p_value])
@@ -92,7 +101,7 @@ idx = [
 peris[idx]
 
 # ╔═╡ 384be6a6-f9d9-47e0-9792-aef6689dcbdb
-apos = df_peris_apos.apocenter
+apos = df_peris_apos.apocentre
 
 # ╔═╡ e5f728b8-8412-4f57-ad38-a0a35bb08a48
 orbit_labels = ["mean", "smallperi", "largeperi"]
@@ -128,6 +137,20 @@ let
 	)
 
 	bins, counts, err = lguys.histogram(apos)
+	scatter!(lguys.midpoints(bins), counts)
+
+	fig
+end
+
+# ╔═╡ 5a903509-e2cc-4bac-9c59-d1689ccc408e
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "time of last pericentre / Gyr",
+		ylabel = "count"
+	)
+
+	bins, counts, err = lguys.histogram(df_peris_apos.t_last_peri .* lguys.T2GYR)
 	scatter!(lguys.midpoints(bins), counts)
 
 	fig
@@ -250,6 +273,57 @@ let
 	    @info p 
 	end
 
+end
+
+# ╔═╡ 8b6f95f7-284f-4133-b6f1-a22dd9c405f0
+let
+	fig = Figure(size=(600, 600))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.1,
+		:markersize => 1,
+	)
+
+	
+	orbit_points_kwargs = [Dict(
+		:color => COLORS[i],
+		:alpha => 1,
+		:markersize => 10,
+		:label => orbit_labels[i]
+	) for i in eachindex(idx)
+		]
+	
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "time of last pericentre / Gyr",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+		x = [getproperty(o, sym) for o in observations]
+		scatter!(x, df_peris_apos.t_last_peri * lguys.T2GYR .+ 0.001 .* randn(length(snap)); plot_kwargs...)
+		for i in eachindex(idx)
+			scatter!(x[idx[i]], df_peris_apos.t_last_peri[idx[i]]* lguys.T2GYR; orbit_points_kwargs[i]...)
+		end
+	end
+
+
+	linkyaxes!(fig.content...)
+
+
+	save(joinpath(fig_dir, "t_last_peri.pdf"), fig)
+	fig
 end
 
 # ╔═╡ 69e77193-29cc-4304-98a1-44828eaedf9f
@@ -408,6 +482,9 @@ let
 		lines!(out.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
 	
 		hlines!([peris[idx[i]], apos[idx[i]]], linestyle=:dot)
+		scatter!(df_peris_apos.t_last_peri[idx[i]] .* lguys.T2GYR, peris[idx[i]])
+		scatter!(df_peris_apos.t_last_apo[idx[i]] .* lguys.T2GYR, apos[idx[i]])
+
 	end
 
 	Legend(fig[1, 2], ax)
@@ -636,6 +713,9 @@ end
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
 # ╠═26d616da-95ec-4fb9-b9a8-2f095d74c722
 # ╠═9a22d47b-8474-4596-b418-de33eb07c627
+# ╠═da6e5566-f2df-4feb-9188-53eca9a1a0d5
+# ╠═b6a04776-44b0-4602-8cd6-3961aaed423f
+# ╠═9283d77a-97b5-4436-ac82-f2e0a73b0ef9
 # ╠═b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 # ╠═17a63cc8-84f4-4248-a7b0-c8378454b1f7
 # ╠═413d4e5d-c9cd-4aca-be1e-d132b2bd616d
@@ -648,6 +728,7 @@ end
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
 # ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
+# ╠═5a903509-e2cc-4bac-9c59-d1689ccc408e
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═471a5501-bc7b-4114-be1a-9088b4e674cd
 # ╠═68b0383a-3d5a-4b94-967c-f0e31e8a0ce1
@@ -659,6 +740,7 @@ end
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 # ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
+# ╠═8b6f95f7-284f-4133-b6f1-a22dd9c405f0
 # ╟─69e77193-29cc-4304-98a1-44828eaedf9f
 # ╠═6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
 # ╠═ac81acd8-4a78-4230-bc70-3b78a861b618

@@ -253,7 +253,7 @@ end
 
 
 function r_ell_filter(all_stars, ra0, dec0, ellipticity, PA)
-    r_ell_max = 60*lguys.calc_r_max(all_stars.ra, all_stars.dec, ellipticity, PA, centre=(ra0, dec0))
+    r_ell_max = 60*calc_r_max(all_stars.ra, all_stars.dec, ellipticity, PA, centre=(ra0, dec0))
 
     println("max r_ell = ", r_ell_max)
     return all_stars.r_ell .< r_ell_max
@@ -446,7 +446,8 @@ end
 """
     calc_r_max(ra, dec, args...; centre="mean", weights=nothing)
 
-
+    Calculates the approximate maximum elliptical radius which is complete
+in a set of points in ra, dec space.
 """
 function calc_r_max(ra, dec, args...; 
         centre="mean",
@@ -461,20 +462,17 @@ function calc_r_max(ra, dec, args...;
     if length(args) == 3
         a, b, _ = args
         aspect = b/a
-        if aspect < 1
-            aspect = 1/aspect
-        end
     else
         aspect = lguys.ellipticity_to_aspect(args[1])
     end
-    
-    if isdefined(LilGuys, :convex_hull)
-        hull = convex_hull(x_p, y_p)
-        r_max = min_distance_to_polygon(hull...)
-    else
-        @warn "r_ell: Convex hull not defined. Using max radius. Load Polyhedra to enable convex hull."
-        r_max = maximum(@. sqrt(x^2 + y^2)) ./ sqrt(aspect)
+    if aspect < 1
+        aspect = 1/aspect
     end
+    
+    # hull = convex_hull(x_p, y_p)
+    # r_max = min_distance_to_polygon(hull...)
+        # @warn "r_ell: Convex hull not defined. Using max radius. Load Polyhedra to enable convex hull."
+    r_max = maximum(@. sqrt(x^2 + y^2)) ./ sqrt(aspect)
 
     return r_max
 end

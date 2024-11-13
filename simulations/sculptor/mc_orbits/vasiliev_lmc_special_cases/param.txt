@@ -45,7 +45,7 @@ AgamaMassScale           1.0
 
 
 %---- Output frequency and output paramaters
-OutputListOn              0
+OutputListOn              1
 TimeBetSnapshot           1
 TimeOfFirstSnapshot       0.
 TimeBetStatistics         1
@@ -55,7 +55,7 @@ MaxFilesWithConcurrentIO  1
 %---- Accuracy of time integration
 ErrTolIntAccuracy        0.025
 CourantFac               0.15
-MaxSizeTimestep          1.0
+MaxSizeTimestep          0.1
 MinSizeTimestep          0.0 
 
 %---- Tree algorithm, force accuracy, domain update frequency

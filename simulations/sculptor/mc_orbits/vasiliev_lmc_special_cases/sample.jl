@@ -17,9 +17,17 @@ function sample(N = 100_000)
         lguys.ICRS(
             ra=obs.ra,
             dec=obs.dec,
-            distance = 83.0,
-            pmra = 0.14,
-            pmdec = -0.2,
+            distance = 77.45,
+            pmra = 0.11,
+            pmdec = -0.16,
+            radial_velocity = 111.44,
+           ),
+        lguys.ICRS(
+            ra=obs.ra,
+            dec=obs.dec,
+            distance = 88.89,
+            pmra = 0.08,
+            pmdec = -0.16,
             radial_velocity = 111.4,
            ),
        ]

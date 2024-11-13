@@ -115,6 +115,13 @@ function plot_y_z(orbits; legend=true, kwargs...)
     return fig
 end
 
+function plot_xyz(orbits::Vector{<:Pair{<:Any, Orbit}}; kwargs...)
+    pos = getproperty.(last.(orbits), :position)
+    labels = first.(orbits)
+
+    return LilGuys.Plots.plot_xyz(pos...; labels=labels, kwargs...)
+end
+
 
 function ax_v_circ(gp; kwargs...)
     Axis(gp;

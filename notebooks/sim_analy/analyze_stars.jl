@@ -41,7 +41,7 @@ md"""
 starsname = "plummer_rs0.20"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/orbit_smallperi"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev+21_mean"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -117,7 +117,7 @@ let
 
 	h = Arya.histogram2d(y, z, bins, weights=ps)
 	cmax = maximum(h.values)
-	kwargs = (colorscale=log10, colorrange=(1e-10*cmax, cmax), weights=ps, bins=bins)
+	kwargs = (colorscale=log10, colorrange=(1e-6*cmax, cmax), weights=ps, bins=bins)
 
 	
 	ax_yz = Axis(fig[2,2], aspect=1,
@@ -414,7 +414,7 @@ end
 # ╔═╡ 76438e61-d227-41cf-b9ea-e658bc389772
 let
 	snap = snap_f
-	logr_max = 2
+	logr_max = 1
 	vmax = 30
 
 	σv = calc_σv(snap, r_max=10 .^ logr_max)
@@ -638,7 +638,7 @@ end
 # ╠═396a53a3-de0f-4d97-9693-40f3757d66f9
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
 # ╟─5ee4f95d-0587-44ab-b543-9b7039d545e6
-# ╟─77479cd4-513c-4603-9aa0-1acd964c403a
+# ╠═77479cd4-513c-4603-9aa0-1acd964c403a
 # ╠═7bc2c15c-33f7-43f3-a47f-ca39ffc22071
 # ╠═865b194d-9efa-41c2-8184-63bcfcd90f6f
 # ╠═8df71dd5-ba0b-4918-9dc0-791c6c3bad5f
