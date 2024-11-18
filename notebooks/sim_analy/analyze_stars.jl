@@ -38,10 +38,10 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "plummer_rs0.20"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev+21_mean"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev+21_smallperi"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")

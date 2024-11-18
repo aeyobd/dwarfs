@@ -39,7 +39,7 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev+21_mean"
+modelname = "sculptor/1e6_V31_r4.2/vasiliev+21_smallperi"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -151,7 +151,7 @@ function calc_χ2s(obs_c, obs_today)
 		σ = obs_today[name * "_err"]
 		χ2 .+= @. (x -μ)^2/(σ)^2
 	end
-	return χ2
+	return χ2 ./ 6
 end
 
 # ╔═╡ ecf7c820-81a4-4cb7-a794-b7835c77811e

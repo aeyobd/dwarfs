@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -10,7 +10,7 @@ begin
 
 	using LilGuys
 	
-	using CairoMakie, Roots, Arya
+	using CairoMakie, Arya
 end
 
 # ╔═╡ f4269d1a-940d-41da-9183-5130978f7d7b
@@ -77,7 +77,7 @@ import StatsBase: quantile, median
 import TOML
 
 # ╔═╡ 24b4184d-7f69-47fc-a758-50f21840283a
-obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties")
+obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
 
 # ╔═╡ 67e892f1-3969-484f-9671-e0ac018babf2
 md"""
@@ -478,17 +478,40 @@ let
 	fig
 end
 
+# ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
+halos_ex = Dict(
+	:mean => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 5.6),
+	:heavy => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.6),
+	:compact => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
+	:middle => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 4.2),
+)
+
+# ╔═╡ 8a06c0ad-2b48-48ba-a542-85926e164712
+labels_ex = [:mean, :heavy, :compact, :middle]
+
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
-	V_max_in = 0.15
+	V_max_in = 0.10
 	# fiducial is 31.3
-	r_max_in = 5.98
+	r_max_in = 4.2
 
 	V_max_in * V2KMS
 end
 
+# ╔═╡ b0b97ee9-e7e6-41ec-b3ef-933069e23af0
+
+
 # ╔═╡ afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
 31 / V2KMS
+
+# ╔═╡ 0df6a87c-74b0-4713-a5e8-d73efbcb0b26
+LilGuys.Ludlow.solve_rmax.(20 / V2KMS, 0.2)
+
+# ╔═╡ d0173c19-507f-4a68-8a2a-a4f5d084a7e1
+NFW_small = LilGuys.TruncNFW(r_circ_max=1.85, v_circ_max = 20 / V2KMS, trunc=10)
+
+# ╔═╡ eee22cf7-79c6-427e-9542-ef7a042e9787
+LilGuys.calc_M(NFW_small, 10000)
 
 # ╔═╡ a0be8f75-a69b-447c-b616-442cf423fffd
 LilGuys.Ludlow.solve_rmax.(31 / V2KMS, 0.2)
@@ -504,6 +527,26 @@ r_max_exp, (LilGuys.Ludlow.solve_rmax.(V_max_in, 0.1), LilGuys.Ludlow.solve_rmax
 
 # ╔═╡ b5a53e42-ef26-47b0-82f9-d404a4d3a544
 log10(1 + 3.726 / r_max_exp)
+
+# ╔═╡ 8196e6b2-8355-438c-abc1-ffce2e29b8f2
+let
+	fig, ax = FigAxis(
+		xlabel=L"$v_\textrm{circ, max}$ / km\,s$^{-1}$",
+		ylabel=L"$r_\textrm{circ, max}$ / kpc",
+	)
+
+	for label in labels_ex
+		x = LilGuys.calc_v_circ_max(halos_ex[label]) * V2KMS
+		y = LilGuys.calc_r_circ_max(halos_ex[label]) 
+		scatter!(log10(x), log10(y), label=string(label))
+	end
+	
+	lines!(log10.(Vc_mean * V2KMS), log10.(Rc_mean))
+
+	axislegend(position=:lt)
+	
+	fig
+end
 
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
 let
@@ -532,9 +575,6 @@ let
 	
 	fig
 end
-
-# ╔═╡ db89cc22-f770-4f10-b3c0-3bc3298fb6a3
-calc_σv_star_mean(LilGuys.TruncNFW(r_s=2.76, M_s=0.29, trunc=100)) * V2KMS
 
 # ╔═╡ 41283b0b-6563-4b2b-b978-4e65f32c8240
 calc_σv_star_mean(LilGuys.TruncNFW(r_circ_max=3.2, v_circ_max= 31/V2KMS, trunc=100)) * V2KMS
@@ -602,6 +642,9 @@ end
 
 # ╔═╡ 2b1d7ec9-b3f7-4230-9f5a-80ece86f709d
 halo_in = NFW(v_circ_max=V_max_in, r_circ_max=r_max_in)
+
+# ╔═╡ db89cc22-f770-4f10-b3c0-3bc3298fb6a3
+calc_σv_star_mean(halo_in) * V2KMS
 
 # ╔═╡ ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 LilGuys.calc_M200(halo_in)
@@ -727,15 +770,22 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
 # ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
+# ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
+# ╠═8a06c0ad-2b48-48ba-a542-85926e164712
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
+# ╠═b0b97ee9-e7e6-41ec-b3ef-933069e23af0
 # ╠═afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
 # ╠═f335d286-04d3-4248-b9bd-4bb6d8e82e33
+# ╠═0df6a87c-74b0-4713-a5e8-d73efbcb0b26
+# ╠═d0173c19-507f-4a68-8a2a-a4f5d084a7e1
+# ╠═eee22cf7-79c6-427e-9542-ef7a042e9787
 # ╠═a0be8f75-a69b-447c-b616-442cf423fffd
 # ╠═6c50c1c9-13e0-4837-af21-f4d5343af609
 # ╠═b5a53e42-ef26-47b0-82f9-d404a4d3a544
 # ╠═5e71b022-bd95-4c3c-8930-51100fb9ab1c
-# ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═db89cc22-f770-4f10-b3c0-3bc3298fb6a3
+# ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
+# ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═41283b0b-6563-4b2b-b978-4e65f32c8240
 # ╠═7b3777cc-e2f7-4032-86a9-774b03a8a141
 # ╠═6baff9d8-a96d-4d1b-898f-089003459c19

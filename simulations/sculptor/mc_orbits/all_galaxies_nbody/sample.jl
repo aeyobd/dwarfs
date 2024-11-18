@@ -2,7 +2,7 @@ import LilGuys as lguys
 using CSV, DataFrames
 
 
-obs_props_filename = ENV["DWARFS_ROOT"] * "/observations/all_galaxies.csv"
+obs_props_filename = ENV["DWARFS_ROOT"] * "/observations/pace_complete_nolmc.csv"
 
 obs_props = CSV.read(obs_props_filename, DataFrame)
 filt = .!isnan.(obs_props.radial_velocity)
@@ -22,8 +22,14 @@ function sample()
     vel ./= lguys.V2KMS
     vel .*= -1 # reverse velocities to go backwards in time
 
-    m = 1 # rough approximation for dwarf
-    snap = lguys.Snapshot(pos, vel, fill(m, size(pos, 2)))
+    Mstar = [10 .^ o.mass_stellar ./ lguys.M2MSUN for o in eachrow(obs_props)]
+    vcircmax = lguys.vel_from_M_s_fattahi.(Mstar)
+    rcircmax = lguys.Ludlow.solve_rmax.(vcircmax)
+    halos = [lguys.TruncNFW(v_circ_max=v, r_circ_max=r, trunc=10) for (v, r) in zip(vcircmax, rcircmax)]
+    Ms = [lguys.calc_M(halo, 10) for halo in halos]
+    println(Ms)
+
+    snap = lguys.Snapshot(pos, vel, Ms)
 
     return snap
 end
