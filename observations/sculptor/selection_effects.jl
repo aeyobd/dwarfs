@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -25,7 +25,9 @@ include("../../utils/gaia_filters.jl")
 md"""
 # Introduction 
 
-Are there confounding selection effects in the field (e.g. crowding and how sensitive to PSAT)
+Are there confounding selection effects in the field (e.g. magnitude limits, PSAT, etc.)
+
+
 """
 
 # ╔═╡ 8a551dbe-9112-48c2-be9a-8b688dc5a05c
@@ -103,10 +105,10 @@ md"""
 """
 
 # ╔═╡ 0de39cdf-5723-4464-9498-a9908877aa42
-all_stars_unfiltered = load_stars(params.filename, params)
+all_stars_unfiltered = read_gaia_stars(params.filename, params)
 
 # ╔═╡ 9d9d7778-68ba-405b-abb1-9c8a30125947
-r_ell_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ellipticity, params.PA)
+r_ell_max = 60calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ellipticity, params.PA)
 
 # ╔═╡ b824ab20-b42e-4f59-8c87-673796d10606
 all_stars = all_stars_unfiltered[all_stars_unfiltered.r_ell .< r_ell_max, :]
@@ -366,13 +368,13 @@ md"""
 x_p, y_p = 60 .* lguys.shear_points_to_ellipse(all_stars_unfiltered.xi, all_stars_unfiltered.eta, params.ellipticity, params.PA)
 
 # ╔═╡ 556d5c09-d531-4ce0-ab01-1810c6db4deb
-pol = lguys.convex_hull(x_p, y_p)
+pol = convex_hull(x_p, y_p)
 
 # ╔═╡ 8c882887-43df-472f-91db-4d9d8e201639
 r_max = lguys.min_distance_to_polygon(pol...)
 
 # ╔═╡ 0723118a-5685-4b81-9098-4e702c9f4d8b
-poly = lguys.convex_hull(x_p, y_p)
+poly = convex_hull(x_p, y_p)
 
 # ╔═╡ f9606772-d51d-4701-80dc-5637b3510627
 let
@@ -395,7 +397,7 @@ let
 end
 
 # ╔═╡ Cell order:
-# ╟─48caecb2-180c-4ce4-a57b-6fed82328b01
+# ╠═48caecb2-180c-4ce4-a57b-6fed82328b01
 # ╠═d5bec398-03e3-11ef-0930-f3bd4f3c64fd
 # ╠═4cae5cc6-f270-42bf-97a1-067b7f57a7da
 # ╟─8a551dbe-9112-48c2-be9a-8b688dc5a05c

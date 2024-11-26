@@ -1,0 +1,4 @@
+inherits = "./fiducial.toml"
+
+remove_qso = true
+remove_galaxy = true

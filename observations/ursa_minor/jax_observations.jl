@@ -42,7 +42,7 @@ begin
 end
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
-all_stars = lguys.read_fits("processed/j24_sculptor_all.fits")
+all_stars = lguys.read_fits("processed/j24_umi_all.fits")
 
 # ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
 cen = lguys.calc_centre2D(all_stars.xi, all_stars.eta, "mean")

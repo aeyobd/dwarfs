@@ -1,0 +1,11 @@
+inherits = "fiducial.toml"
+
+filename = "../data/delve.fits"
+
+cmd_cut = [0.01,19.9, -0.17,19.9, -0.40,20.4, -0.30,20.8, -0.17,20.3, 0.00,20.4]
+
+cmd_x1 = "mag_psf_g"
+cmd_x2 = "mag_psf_r"
+cmd_y = "mag_psf_g"
+
+PSAT_min = nan

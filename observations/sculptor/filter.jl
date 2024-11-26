@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -65,7 +65,7 @@ zoom 20 arcmin
 galaxy_dir = "processed"
 
 # ╔═╡ 8b2b3cec-baf7-4584-81bd-fa0a4fe2a4ac
-name = "fiducial"
+name = "delve_rgb"
 
 # ╔═╡ f8779f92-3ae0-474e-907e-1067170b1531
 params = GaiaFilterParams("$galaxy_dir/$name.toml")
@@ -76,7 +76,7 @@ md"""
 """
 
 # ╔═╡ 44a44f97-9115-4610-9706-33acf065d0e7
-all_stars_unfiltered = load_stars("$galaxy_dir/" *params.filename, params)
+all_stars_unfiltered = read_gaia_stars("$galaxy_dir/" *params.filename, params)
 
 # ╔═╡ ce3cead5-b49e-41ff-ae3f-bdcaab68e858
 r_ell_max = 60lguys.calc_r_max(all_stars_unfiltered.ra, all_stars_unfiltered.dec, params.ellipticity, params.PA)
@@ -219,7 +219,7 @@ let
 	
 	scatter!(ax, 
 	    60*members.xi, 60*members.eta, 
-	    color=members.phot_g_mean_mag, 
+	    color=members.G, 
 	    colormap=:greys,
 	    markersize=5
 	)
@@ -259,10 +259,10 @@ let
 	    limits=(-0.5, 3, 10, 22), yreversed=true,
 	    xlabel="bp - rp", 
 	    ylabel="G",)
-	scatter!(ax, all_stars.bp_rp, all_stars.phot_g_mean_mag, 
+	scatter!(ax, all_stars.bp_rp, all_stars.G, 
 	    color=(:black, 0.2), markersize=1)
 	
-	scatter!(ax, members.bp_rp, members.phot_g_mean_mag, 
+	scatter!(ax, members.bp_rp, members.G, 
 	    color=(red, 1), markersize=1)
 
 	lines!(ax, [x_poly; x_poly[1]], [y_poly; y_poly[1]])

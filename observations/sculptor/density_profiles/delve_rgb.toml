@@ -1,0 +1,14 @@
+filename = "../processed/delve_rgb_sample.fits"
+ra = 15.03917
+dec = -33.70917
+
+ellipticity = 0.37
+PA = 94
+
+cmd_x1 = "mag_psf_g"
+cmd_x2 = "mag_psf_r"
+cmd_y = "mag_psf_g"
+
+
+[profile_kwargs]
+normalization = "none"

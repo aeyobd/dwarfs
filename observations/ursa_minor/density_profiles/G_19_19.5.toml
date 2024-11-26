@@ -1,0 +1,4 @@
+inherits = "./fiducial.toml"
+
+g_min = 19
+g_max = 19.5

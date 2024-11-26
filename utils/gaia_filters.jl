@@ -3,7 +3,9 @@ using Arya
 using Makie
 using FITSIO
 import LilGuys as lguys
-using DataFrames: DataFrame, names
+import Polyhedra
+using DataFrames: DataFrame, names, rename!
+using LinearAlgebra: norm, dot
 
 # types used in this code.
 OptF = Union{Float64, Nothing}
@@ -41,6 +43,8 @@ Base.@kwdef struct GaiaFilterParams
     "The minimum value of PSAT to include in the density calculation"
     PSAT_min::OptF = nothing
 
+    PSAT_col::String = "PSAT"
+
     "The maximum value of Gaia's renormalised unit weight error"
     ruwe_max::OptF = nothing
     "The minimum value of G magnitude"
@@ -49,6 +53,15 @@ Base.@kwdef struct GaiaFilterParams
     g_max::OptF = nothing
     "A flattened list of tuples of the vertices of the CMD cut polygon in (bp_rp, g) space"
     cmd_cut::Union{Array,Nothing} = nothing
+
+    "x dimension of CMD"
+    cmd_x = "bp_rp"
+    "CMD magnitude column"
+    cmd_y = "phot_g_mean_mag"
+    "The first column to subtract from the second to get the CMD x"
+    cmd_x1 = nothing
+    "The second column to subtract from the first to get the CMD x"
+    cmd_x2 = nothing
 
     "The pmra mean of the galaxy"
     pmra::OptF = nothing
@@ -60,6 +73,9 @@ Base.@kwdef struct GaiaFilterParams
     If dpm is set but not this, then the pm filter is a simple distance cutoff
     """
     n_sigma_pm::OptF = nothing
+
+    remove_qso::Bool = false
+    remove_galaxy::Bool = false
 end
 
 
@@ -96,7 +112,6 @@ function read_gaia_stars(filename, params; θ=nothing)
     add_xi_eta!(df, params.ra, params.dec)
     r_ell = 60lguys.calc_r_ell(df.xi, df.eta, params.ellipticity, params.PA)
     df[!, :r_ell] = r_ell
-    df[!, :G] = df.phot_g_mean_mag
 
     if params.dist !== nothing
         add_pm_gsr!(df, params.dist)
@@ -105,6 +120,22 @@ function read_gaia_stars(filename, params; θ=nothing)
     if θ !== nothing
     	df[:, :xi_p], df[:, :eta_p] = lguys.to_orbit_coords(df.ra, df.dec, 
                                                             params.ra, params.dec, θ)
+    end
+
+    if params.PSAT_col !== "PSAT"
+        df[!, :PSAT] = df[!, params.PSAT_col]
+    end
+
+    if params.cmd_y !== "phot_g_mean_mag"
+        df[!, :G] = df[!, params.cmd_y]
+    else
+        df[!, :G] = df.phot_g_mean_mag
+    end
+
+    if params.cmd_x1 !== nothing
+        df[!, :bp_rp] = df[!, params.cmd_x1] - df[!, params.cmd_x2]
+    elseif params.cmd_x !== "bp_rp"
+        df[!, :bp_rp] = df[!, params.cmd_x]
     end
 
 
@@ -116,16 +147,21 @@ end
 """
     read_paramfile(filename)
 
-Reads a TOML param file and includes inhereitance
+Reads a TOML param file and includes inhereitance.
+If the filename includes a key `inherits`, then the file specified by that key is also read and merged, with any duplicate keys being overwritten by the primary `filename` file.
 """
 function read_paramfile(filename::String)
-	f = TOML.parsefile(filename)
+    f = TOML.parsefile(filename)
 
-	if "inherits" ∈ keys(f)
-		f1 = read_paramfile(dirname(filename) * "/" * f["inherits"])
-		delete!(f, "inherits")
+    if "inherits" ∈ keys(f)
+        if dirname(filename) == ""
+            f1 = read_paramfile(f["inherits"])
+        else
+            f1 = read_paramfile(dirname(filename) * "/" * f["inherits"])
+        end
+        delete!(f, "inherits")
         f = merge(f1, f)
-	end
+    end
 
     for (k, v) in f
         if v === NaN
@@ -133,7 +169,7 @@ function read_paramfile(filename::String)
         end
     end
 
-	return f
+    return f
 end
 
 
@@ -207,7 +243,9 @@ function select_members(all_stars, params::GaiaFilterParams)
         ang_dist_filter,
         parallax_filter,
         pm_filter,
-        r_ell_filter
+        r_ell_filter,
+        qso_filter,
+        galaxy_filter,
     ]
 
 
@@ -233,7 +271,7 @@ end
 
 
 function g_filter(all_stars, g_min, g_max)
-    return (all_stars.phot_g_mean_mag .> g_min) .& (all_stars.phot_g_mean_mag .< g_max)
+    return (all_stars.G .> g_min) .& (all_stars.G .< g_max)
 end
 
 function g_filter(all_stars, params::GaiaFilterParams)
@@ -241,9 +279,37 @@ function g_filter(all_stars, params::GaiaFilterParams)
 end
 
 
+function qso_filter(all_stars)
+    filt = .!all_stars.in_qso_candidates
+    return filt
+end
+
+
+function qso_filter(all_stars, params::GaiaFilterParams)
+    if params.remove_qso
+        return apply_filter(all_stars, qso_filter)
+    else
+        return trues(size(all_stars, 1))
+    end
+end
+
+function galaxy_filter(all_stars)
+    filt = .!all_stars.in_galaxy_candidates
+    return filt
+end
+
+function galaxy_filter(all_stars, params::GaiaFilterParams)
+    if params.remove_galaxy
+        return apply_filter(all_stars, galaxy_filter)
+    else
+        return trues(size(all_stars, 1))
+    end
+end
+
+
 function cmd_filter(all_stars, cmd_cut)
 	cmd_cut_m = reshape(cmd_cut, 2, :)
-	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.phot_g_mean_mag), [cmd_cut_m])
+	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.G), [cmd_cut_m])
 end
 
 
@@ -262,7 +328,7 @@ end
 
 function r_ell_filter(all_stars, params::GaiaFilterParams)
     if params.filt_r_max
-        return r_ell_filter(all_stars, params.ra, params.dec, params.ellipticity, params.PA)
+        return apply_filter(all_stars, r_ell_filter, params.ra, params.dec, params.ellipticity, params.PA)
     else
         return trues(size(all_stars, 1))
     end
@@ -469,11 +535,84 @@ function calc_r_max(ra, dec, args...;
         aspect = 1/aspect
     end
     
-    # hull = convex_hull(x_p, y_p)
-    # r_max = min_distance_to_polygon(hull...)
+    hull = convex_hull(x_p, y_p)
+    r_max = min_distance_to_polygon(hull...)
         # @warn "r_ell: Convex hull not defined. Using max radius. Load Polyhedra to enable convex hull."
-    r_max = maximum(@. sqrt(x^2 + y^2)) ./ sqrt(aspect)
+    r_max_simple = maximum(@. sqrt(x_p^2 + y_p^2)) ./ sqrt(aspect)
+    @info "r_ell: r_max = $r_max, r_max_simple = $r_max_simple"
 
     return r_max
 end
 
+function min_distance_to_polygon(x, y)
+    min_dist = Inf
+    N = length(x)
+    for i in 1:N
+        a = [x[i], y[i]]
+        j = mod1(i + 1, N)
+        b = [x[j], y[j]]
+
+        dist = distance_to_segment(a, b)
+
+        min_dist = min(min_dist, dist)
+    end
+
+    return min_dist
+end
+
+    
+"""
+    distance_to_segment(a, b, p)
+
+Distance from point `p` to the line segment defined by `a` and `b`.
+all points are 2D vectors.
+"""
+function distance_to_segment(a, b, p=zeros(2))
+    a = vec(a)
+    b = vec(b)
+
+    # work in origin at p
+    a -= p
+    b -= p
+
+    # is the segment a point?
+    l = norm(a - b)
+    if l == 0
+        return norm(a)  
+    end
+
+    # line unit vector
+    n = (a - b) / l
+    # projection along line
+    t = dot(a, n) 
+
+    if t < 0
+        closest_point = a
+    elseif t > l
+        closest_point = b
+    else
+        closest_point = a - t * n
+    end
+
+    dist = norm(closest_point)
+
+    return dist
+end
+
+
+
+"""
+    convex_hull(x, y)
+Given a vector of x and y coordinates, returns
+the convex hull bounding the points.
+"""
+function convex_hull(xi, eta)
+    @assert length(xi) == length(eta)
+    filt = .!isnan.(xi) .& .!isnan.(eta)
+    @assert sum(filt) > 2
+
+    ps = [[x, e] for (x, e) in zip(xi[filt], eta[filt])]
+    p = Polyhedra.convexhull(ps...)
+    b = Polyhedra.planar_hull(p).points.points
+    return first.(b), last.(b)
+end

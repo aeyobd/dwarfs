@@ -156,7 +156,7 @@ end
 # ╔═╡ 3c133454-d1c2-4aff-a27f-c3368bf06480
 let
 	fig = Figure(size=(700, 300))
-	ax = Axis(fig[1, 1], limits=((-0.8, 3), (-10, 3)),
+	ax = Axis(fig[1, 1], limits=((-0.8, 3), nothing),
 		xlabel=log_r_label,
 		ylabel=L"\Gamma"
 	)
@@ -170,7 +170,6 @@ let
 	ax_lin = Axis(fig[1, 2],
 		xlabel="r / arcmin",
 		yticklabelsvisible=false,
-		limits=(nothing, (-10, 3))
 	)
 
 	
@@ -305,7 +304,7 @@ end
 let 
 	f = plot_Σ_fit_res(profile, pred, res)
 	ax = f.content[1]
-	ylims!(ax, (-4, 2.5))
+	ax.limits = (-1, 2.1, -3.5, 2)
 	f
 end
 
