@@ -19,6 +19,9 @@ using PairPlots
 # ╔═╡ ef991557-7bf7-4add-b29f-f16187297e46
 using DataFrames
 
+# ╔═╡ ff9ea455-d618-4ebf-b9e9-5d92e23b4f37
+using Measurements
+
 # ╔═╡ e7ab194c-63a4-4274-aaba-43c3d369ce0d
 using KernelDensity
 
@@ -330,6 +333,32 @@ end
 
   ╠═╡ =#
 
+# ╔═╡ 8109003b-60cf-458a-a43d-9cd084d27344
+md"""
+# Mean (by hand)
+"""
+
+# ╔═╡ db6f7825-4f9a-48ef-8700-6f4434032751
+MV
+
+# ╔═╡ 0541d9c1-c6fb-4bb6-8541-7529a65e446d
+mag_to_L(MV ± MV_err, MV_sol)
+
+# ╔═╡ b9d918b4-3c03-474c-8659-2ccc601c487d
+Lm, Lm_err = mag_to_L(MV, MV_sol) .* (1, MV_err .* 0.2 / log(10))
+
+# ╔═╡ da3746bb-db05-4981-9f77-fc92238f61ed
+Ms_m = Lm * M_L_star / 1e10
+
+# ╔═╡ 07cb7647-be33-4a16-8382-d44302f9e6d3
+ lMs_to_lVc(log10(Ms_m)) + log10(V2KMS)
+
+# ╔═╡ 02c22085-8e4d-4ae8-a1d7-ac746dc5b42f
+vc_m_err = 0.1
+
+# ╔═╡ c0f9d7f0-7983-4a44-b85c-15534623d534
+lMs_to_lVc(log10(Ms_m*0.2))
+
 # ╔═╡ 122794fb-82ab-4f3c-a458-29462fbab1fd
 md"""
 ## Monte Carlo mass estimates
@@ -468,7 +497,7 @@ fig_dir = "./figures/"
 
 # ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
 let
-	fig = pairplot(samples[:, [:Ms, :v_circ_max, :r_circ_max]], labels=Dict(
+	fig = pairplot(samples[:, [:Ms, :log_v_circ_max, :r_circ_max]], labels=Dict(
 	:Ms2 => L"$M_\star$", 
 	:V_max => L"$v_\textrm{circ, max}$ / km\,s$^{-1}$", 
 	:r_max => L"$r_\textrm{circ, max}$ / kpc", ))
@@ -480,8 +509,8 @@ end
 
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = Dict(
-	:mean => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 5.6),
-	:heavy => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.6),
+	:mean => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 5.9),
+	:heavy => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.9),
 	:compact => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
 	:middle => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 4.2),
 )
@@ -528,23 +557,46 @@ r_max_exp, (LilGuys.Ludlow.solve_rmax.(V_max_in, 0.1), LilGuys.Ludlow.solve_rmax
 # ╔═╡ b5a53e42-ef26-47b0-82f9-d404a4d3a544
 log10(1 + 3.726 / r_max_exp)
 
+# ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
+
+
 # ╔═╡ 8196e6b2-8355-438c-abc1-ffce2e29b8f2
 let
 	fig, ax = FigAxis(
-		xlabel=L"$v_\textrm{circ, max}$ / km\,s$^{-1}$",
-		ylabel=L"$r_\textrm{circ, max}$ / kpc",
+		ylabel=L"$\log\,v_\textrm{circ, max}$ / km\,s$^{-1}$",
+		xlabel=L"$\log\,r_\textrm{circ, max}$ / kpc",
+		limits=(0.2, 1.5, 1.2, 1.9)
 	)
 
 	for label in labels_ex
-		x = LilGuys.calc_v_circ_max(halos_ex[label]) * V2KMS
-		y = LilGuys.calc_r_circ_max(halos_ex[label]) 
+		y = LilGuys.calc_v_circ_max(halos_ex[label]) * V2KMS
+		x = LilGuys.calc_r_circ_max(halos_ex[label]) 
 		scatter!(log10(x), log10(y), label=string(label))
 	end
-	
-	lines!(log10.(Vc_mean * V2KMS), log10.(Rc_mean))
 
-	axislegend(position=:lt)
+
 	
+	v = log10.(Vc_mean * V2KMS)
+	lines!(log10.(Rc_mean), v, color=:grey, label="Ludlow+16")
+	
+	xl = log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, 0.1))
+	xh =  log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, -0.1))
+	x = [xl; reverse(xh)]
+	y = [v; reverse(v)]
+	poly!(x, y, color=(:grey, 0.2))
+
+	hspan!(1.49 - 0.1, 1.49+0.1, color=(COLORS[2], 0.1))
+	hlines!(1.49, color=(COLORS[2], 0.5), label="Fattahi+18")
+
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max)
+	k = kde([x y])
+
+	contour!(k)
+
+	
+	axislegend(position=:lt, title="halo")
+
 	fig
 end
 
@@ -582,13 +634,12 @@ calc_σv_star_mean(LilGuys.TruncNFW(r_circ_max=3.2, v_circ_max= 31/V2KMS, trunc=
 # ╔═╡ 7b3777cc-e2f7-4032-86a9-774b03a8a141
 let
 	fig, ax = FigAxis(
-		xlabel=L"$v_\textrm{circ, max}$ / km\,s$^{-1}$",
-		ylabel=L"$r_\textrm{circ, max}$ / kpc",
-		limits=((10, 60), (0, 15)),
+		xlabel=L"$\log r_\textrm{circ, max}$ / km\,s$^{-1}$",
+		ylabel=L"$\log v_\textrm{circ, max}$ / kpc",
 	)
 
-	x = samples.v_circ_max 
-	y = samples.r_circ_max
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max )
 	z = samples.σv
 
 	σ_thresh = 9.5
@@ -598,7 +649,7 @@ let
 	h = scatter!(x[filt], y[filt], color=z[filt], colorrange=extrema(z[filt]))
 	# scatter!(x[.!filt], y[.!filt], color=z[.!filt], colorrange=extrema(z[filt]), markersize=2)
 
-	lines!(Vc_mean * V2KMS, Rc_mean)
+	lines!(log10.(Rc_mean), log10.(Vc_mean * V2KMS))
 
 
 	Colorbar(fig[1, 2], h, label=L"$\sigma_v$ / km\,s$^{-1}$")
@@ -748,6 +799,15 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═023f12d0-317a-46db-b5c5-81a7d2216c55
 # ╠═be32e183-a0c4-4261-a3a8-3486db0734b7
 # ╠═e6995206-ebf2-40aa-ae7e-cc101e07f8ac
+# ╠═8109003b-60cf-458a-a43d-9cd084d27344
+# ╠═db6f7825-4f9a-48ef-8700-6f4434032751
+# ╠═ff9ea455-d618-4ebf-b9e9-5d92e23b4f37
+# ╠═0541d9c1-c6fb-4bb6-8541-7529a65e446d
+# ╠═b9d918b4-3c03-474c-8659-2ccc601c487d
+# ╠═da3746bb-db05-4981-9f77-fc92238f61ed
+# ╠═07cb7647-be33-4a16-8382-d44302f9e6d3
+# ╠═02c22085-8e4d-4ae8-a1d7-ac746dc5b42f
+# ╠═c0f9d7f0-7983-4a44-b85c-15534623d534
 # ╟─122794fb-82ab-4f3c-a458-29462fbab1fd
 # ╠═5dc54372-14c4-424b-8419-55d639f00baa
 # ╠═28e09f56-7a1c-4fc9-95da-36ef0ed75a74
@@ -784,6 +844,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═b5a53e42-ef26-47b0-82f9-d404a4d3a544
 # ╠═5e71b022-bd95-4c3c-8930-51100fb9ab1c
 # ╠═db89cc22-f770-4f10-b3c0-3bc3298fb6a3
+# ╠═21acda7b-a116-4bc1-af7d-e715e2b32b86
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═41283b0b-6563-4b2b-b978-4e65f32c8240

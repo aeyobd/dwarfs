@@ -38,10 +38,10 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.13"
+starsname = "plummer_rs0.20"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev+21_smallperi"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r4.2/vasiliev+21_smallperi"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -278,11 +278,11 @@ function v_rad_hist(snap, bins=100)
 
 	v_rad = lguys.calc_v_rad(snap)
 	logr = log10.(lguys.calc_r(snap))
-	x_bins, v_bins, _ = lguys.histogram(logr, bins, weights=v_rad .* mass)
+	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad .* mass)
 	_, counts, _ = lguys.histogram(logr, x_bins, weights=mass)
 
 
-	return x_bins, v_bins ./ counts
+	return x_bins, v_bins ./ counts, err ./ counts
 end
 
 # ╔═╡ 9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8
@@ -525,11 +525,11 @@ let
 	ax = Axis(fig[1,1],
 		xlabel=L"log $r$ / kpc",
 		ylabel=L"mean 3D radial velocity in bin (km\,s$^{-1}$)",
-		limits=((nothing, 2), (-40, 50))
+		limits=((nothing, 1.5), (-20, 20))
 	)
 	
-	x, y= v_rad_hist(snap_f)
-	scatter!(lguys.midpoints(x), y * V2KMS)
+	x, y, ye = v_rad_hist(snap_f)
+	errscatter!(lguys.midpoints(x), y * V2KMS, yerr=ye*V2KMS)
 
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
 	text!(log10.(r_b_kpc), -20, text=L"r_b")
@@ -652,7 +652,7 @@ end
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
 # ╠═27184a9d-07c9-4b4d-ad17-74ed279ed4e3
-# ╟─57d5decd-8259-4ec2-87ac-44d28625cd7b
+# ╠═57d5decd-8259-4ec2-87ac-44d28625cd7b
 # ╟─9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8
 # ╠═d7fece88-3327-4435-ab61-b45ff62b3b2e
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780

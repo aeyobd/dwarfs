@@ -36,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r4.2/vasiliev+21_smallperi"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -125,14 +125,14 @@ md"""
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
 LilGuys.Plots.plot_xyz(x_cen, x_cen_exp, x_lmc, labels=["n body", "point particle", "LMC"])
 
+# ╔═╡ c96035d2-8860-4609-96d3-116f0928fa14
+LilGuys.struct_to_dict((; a=1))
+
 # ╔═╡ e500cd04-30be-4de2-890b-cc7f460cc176
 LilGuys.Plots.plot_xyz(x_scl_lmc, x_scl_lmc_exp, labels=["Scl - LMC", "point particle"])
 
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
 LilGuys.Plots.plot_xyz(v_cen, v_cen_exp, v_lmc, units=" / km/ s")
-
-# ╔═╡ b7c3051f-7aec-472f-906d-c29b8e078475
-LilGuys.Plots.plot_xyz(v_scl_lmc, label="scl - lmc", units = " / km / s")
 
 # ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
 T2GYR = LilGuys.T2GYR
@@ -159,6 +159,7 @@ let
 	)
 	r = calc_r(x_scl_lmc)
 	lines!(t * T2GYR, r, label="nbody")
+	@info minimum(r)
 
 	r = calc_r(x_scl_lmc_exp)
 	lines!(orbit_expected.t * T2GYR, r, label="point particle")
@@ -180,11 +181,36 @@ snap_cen.masses
 # ╔═╡ 319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 times = t * T2GYR
 
-# ╔═╡ 80c65ee6-4950-4ec4-933e-3208ff5a88ab
-LilGuys.Plots.plot_xyz(x_cen, x_lmc, color=times)
+# ╔═╡ 7bbbc936-7626-423b-bcaa-9870f320c432
+times
+
+# ╔═╡ 88ae0d01-2a5d-4434-8452-5f89ba9d55c3
+idx_gyr = [argmin(abs.(times .- i )) for i in -5:0]
+
+# ╔═╡ b4c12b61-6827-4c63-bbbc-e708fdb8ba4b
+LilGuys.Plots.plot_xyz(x_cen, x_lmc, labels=["Scl", "LMC"], idx_scatter=fill(idx_gyr, 2))
+
+# ╔═╡ a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "Scl - LMC distance / kpc",
+		limits=(nothing, nothing, 0, nothing)
+	)
+	r = calc_r(x_scl_lmc)
+	lines!(t * T2GYR, r, label="nbody")
+	scatter!(t[idx_gyr] * T2GYR, r[idx_gyr], label="nbody")
+
+	fig
+end
 
 # ╔═╡ 761750fd-4b18-4c5f-8b79-0f87307e08a1
-LilGuys.Plots.plot_xyz(x_scl_lmc, color=times)
+LilGuys.Plots.plot_xyz(x_scl_lmc, times=times / T2GYR, idx_scatter=[idx_gyr])
+
+# ╔═╡ b7c3051f-7aec-472f-906d-c29b8e078475
+LilGuys.Plots.plot_xyz(v_scl_lmc, label="scl - lmc", units = " / km / s", times=times / T2GYR, idx_scatter=[idx_gyr])
+
+# ╔═╡ a8e051d1-39dd-444b-85de-f235339efa26
+LilGuys.Plots.plot_xyz(v_cen, label="scl - lmc", units = " / km / s", times=times / T2GYR, idx_scatter=[idx_gyr])
 
 # ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 let 
@@ -273,16 +299,21 @@ r[idx_peris[end]], minimum(r)
 # ╠═1e1b3641-6454-4f9b-b96a-336406dab56a
 # ╠═06e931d8-5518-4594-818c-4dccba83b4c1
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
+# ╠═7bbbc936-7626-423b-bcaa-9870f320c432
+# ╠═88ae0d01-2a5d-4434-8452-5f89ba9d55c3
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
-# ╠═80c65ee6-4950-4ec4-933e-3208ff5a88ab
+# ╠═b4c12b61-6827-4c63-bbbc-e708fdb8ba4b
 # ╠═761750fd-4b18-4c5f-8b79-0f87307e08a1
+# ╠═c96035d2-8860-4609-96d3-116f0928fa14
 # ╠═e500cd04-30be-4de2-890b-cc7f460cc176
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═b7c3051f-7aec-472f-906d-c29b8e078475
+# ╠═a8e051d1-39dd-444b-85de-f235339efa26
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
 # ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╠═01b57b06-c658-49e1-b61d-cf1c7e223723
+# ╠═a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
 # ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
 # ╠═5ec062c3-3815-4cf7-b45a-f97332d1b800

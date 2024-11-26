@@ -33,7 +33,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/orbit_smallperi"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc_smallperilmc"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
