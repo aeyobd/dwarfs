@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -215,6 +215,9 @@ pairplot(samples[:, [:μ, :σ]])
 # ╔═╡ e93c66f7-394a-46bf-96c9-475494979548
 memb_stars
 
+# ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
+lguys.write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), memb_stars)
+
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
 	fig, ax = FigAxis(
@@ -284,6 +287,7 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 	σs = Vector{Float64}(undef, N)
 	μ_errs = Vector{Tuple{Float64, Float64}}(undef, N)
 	σ_errs = Vector{Tuple{Float64, Float64}}(undef, N)
+	xs = Vector{Float64}(undef, N)
 
 	
 	for i in 1:N
@@ -292,11 +296,13 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 		@info "calculating bin $i"
 
 		μs[i], σs[i], μ_errs[i], σ_errs[i] = fit_rv_sigma(y[filt], yerr[filt]; kwargs...)
+		xs[i] = median(x[filt])
 	end
 
 	return DataFrame(
-		x=midpoints(bins),
-		x_err = diff(bins)/2,
+		x=xs,
+		x_low = bins[1:end-1],
+		x_high = bins[2:end],
 		μ=μs, 
 		σ = σs, 
 		μ_err = μ_errs, 
@@ -318,8 +324,8 @@ df_r_ell_z = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.vz, memb_stars.vz
 function scatter_range!(df_r_ell)
 	errscatter!(df_r_ell.x, df_r_ell.μ, yerr=df_r_ell.μ_err, color=:black)
 	
-	errorbars!(df_r_ell.x, df_r_ell.μ .+ df_r_ell.σ, df_r_ell.x_err, direction = :x, color=:black)
-	errorbars!(df_r_ell.x, df_r_ell.μ .- df_r_ell.σ, df_r_ell.x_err, direction = :x, color=:black)
+	errorbars!(df_r_ell.x, df_r_ell.μ .+ df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x,  direction = :x, color=:black)
+	errorbars!(df_r_ell.x, df_r_ell.μ .- df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x, direction = :x, color=:black)
 end
 
 # ╔═╡ 86776e68-d47f-43ed-b37f-432c864050bb
@@ -358,6 +364,9 @@ md"""
 # ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
 df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
 
+# ╔═╡ 090acae4-1209-49e6-882c-20ac2c972dd5
+df_eta_p = calc_binned_mu_sigma(memb_stars.eta_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.eta_p, n=10), μ_min=50, μ_max=90)
+
 # ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
 let
 	fig, ax = FigAxis(
@@ -375,11 +384,23 @@ end
 # ╔═╡ 3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
 let
 	fig, ax = FigAxis(
-		xlabel = L"$\xi'$",
+		xlabel = L"$\xi'$ / arcmin",
 		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(df_xi_p.x, df_xi_p.μ, yerr=df_xi_p.μ_err, xerr=df_xi_p.x_err, color=:black)
+	errscatter!(60df_xi_p.x, df_xi_p.μ, yerr=df_xi_p.μ_err, color=:black)
+
+	fig
+end
+
+# ╔═╡ 14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
+let
+	fig, ax = FigAxis(
+		xlabel = L"$\eta'$ / arcmin",
+		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
+	)
+
+	errscatter!(60df_eta_p.x, df_eta_p.μ, yerr=df_eta_p.μ_err, color=:black)
 
 	fig
 end
@@ -391,7 +412,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(df_xi_p.x, df_xi_p.σ, yerr=df_xi_p.σ_err, xerr=df_xi_p.x_err, color=:black)
+	errscatter!(df_xi_p.x, df_xi_p.σ, yerr=df_xi_p.σ_err, color=:black)
 
 	fig
 end
@@ -409,7 +430,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(midpoints(bins), df_r_ell.σ, yerr=df_r_ell.σ_err, xerr=bin_errs, color=:black)
+	errscatter!(df_r_ell.x, df_r_ell.σ, yerr=df_r_ell.σ_err, color=:black)
 	hlines!(σ_m)
 
 	fig
@@ -650,14 +671,15 @@ let
 end
 
 # ╔═╡ b5533db0-a734-4d37-9d75-24471634f855
-
+memb_stars
 
 # ╔═╡ 4eea0a17-257e-4d0e-88df-9ff4858771b1
 let
 	fig, ax = FigAxis(
 		xlabel = L"\xi / \textrm{degree}",
 		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
+		aspect=DataAspect(),
+		xreversed=true,
 	)
 
 	w = 1 ./ memb_stars.vz_err
@@ -672,8 +694,9 @@ let
 		colormap=:bluesreds,
 		colorrange=(50, 100)
 		)
-	Colorbar(fig[1, 2], p, label="absolute radial velocity / km/s",
+	Colorbar(fig[1, 2], p, label="GSR radial velocity / km/s",
 )
+
 	fig
 end
 
@@ -730,6 +753,7 @@ end
 # ╠═b18e4622-41e0-4700-9e4b-3dbebeefea53
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 # ╠═e93c66f7-394a-46bf-96c9-475494979548
+# ╠═a162219f-df5a-41d8-bf54-927a355f6431
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f
 # ╠═61e15c47-c454-48db-95f9-02abe052676e
 # ╠═d5938fc3-9c8a-4e33-8401-500b4201df14
@@ -753,8 +777,10 @@ end
 # ╠═f82d2ff7-7a7f-4520-811e-126f3f4f5349
 # ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
 # ╠═2f5db664-fc99-41ac-a726-f21dd5d88ad4
+# ╠═090acae4-1209-49e6-882c-20ac2c972dd5
 # ╠═fd0a74a1-6513-4612-8181-745d5b7c3f4c
 # ╠═3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
+# ╠═14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
 # ╠═d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 # ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
