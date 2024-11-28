@@ -12,22 +12,22 @@ In the table below, we compile recent observations of Scl to provide the most mo
 
 A brief comparison with other estimates of all properties reveals that most studies agree within 2$\sigma$ for the observed properties. 
 
-Note however, that the proper motions described in MV20a using Gaia DR3 also have a 0.017 mas/yr systematic error (angular scale of 1 deg using Lindegren 2021 eq. 25).
+Note however, that the proper motions described in MV20a using Gaia DR3 also have a 0.017 mas/yr systematic error (angular scale of 1 deg using Lindegren+2021 eq. 25).
 
-| parameter                | value                            | Source    |
-| ------------------------ | -------------------------------- | --------- |
-| $\alpha$                 | $15.0183 \pm 0.0012$˚            | M+18      |
-| $\delta$                 | $-33.7186 \pm 0.00072$˚          | M+18      |
-| distance                 | $83.2 \pm 2$ kpc                 | Tran+22   |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002$ mas yr$^{-1}$  | MV20a     |
-| $\mu_\delta$             | $-0.160 \pm 0.002$ mas yr$^{-1}$ | MV20a     |
-| RV                       | $111.03 \pm 0.23$                | This work |
-| $\sigma_v$               | $9.61\pm0.16$                    | This work |
-| $r_h$                    | $12.33 \pm 0.05$ arcmin          | MV20*     |
-| ell                      | $0.36 \pm 0.01$                  | M+18      |
-| PA                       | $92\pm1$                         | M+18      |
-| $M_V$                    | $-10.82\pm0.14$                  | M+18      |
-| $\Upsilon_\star$         | $1.5 \pm 0.3$                    | assumed   |
+| parameter                | value                                                        | Source    |
+| ------------------------ | ------------------------------------------------------------ | --------- |
+| $\alpha$                 | $15.0183 \pm 0.0012$˚                                        | M+18      |
+| $\delta$                 | $-33.7186 \pm 0.00072$˚                                      | M+18      |
+| distance                 | $83.2 \pm 2$ kpc                                             | Tran+22   |
+| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | MV20a     |
+| $\mu_\delta$             | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a     |
+| RV                       | $111.03 \pm 0.23$                                            | This work |
+| $\sigma_v$               | $9.61\pm0.16$                                                | This work |
+| $r_h$                    | $12.33 \pm 0.05$ arcmin                                      | MV20*     |
+| ell                      | $0.36 \pm 0.01$                                              | M+18      |
+| PA                       | $92\pm1$                                                     | M+18      |
+| $M_V$                    | $-10.82\pm0.14$                                              | M+18      |
+| $\Upsilon_\star$         | $1.5 \pm 0.3$                                                | assumed   |
 
 In the GSR frame, the properties are
 
@@ -58,6 +58,23 @@ The matched filter of stars matching the above cuts. The red points match proper
 ![matched filter search](figures/scl_matched_filter.pdf)
 
 We also explore the CMD and PM distributions along the orbit and find little indication that there may be any over density of stars or change associated with tidal effects. Deeper surveys with proper motions like Vera Rubin observatory and Euclid will be essential to uncovering fainter features associated with dwarf galaxies.
+
+### DELVE
+
+
+
+Select stars from DELVE DR2
+
+```
+SELECT TOP 1000
+       *
+FROM delve_dr2.objects
+WHERE 11 < ra
+and ra < 19
+and -37.7 < dec
+and dec < -29.7
+
+```
 
 ## Radial velocity compilation
 
@@ -120,15 +137,32 @@ Given the uncertainties in the measurement errors, we can sample present-day mea
 
 # Methods
 
+### Milky Way Potential
+
+
+
+Following @borukhovetskaya+2022, we define a multi-component MW potential as follows (in code units: 1 kpc, 10^10 Msun)
+
+Next, we integrate the orbit of Sculptor back 10 Gyr and place the halo in a static Milky Way potential described by @EP2021. 
+
+
+
+| Component  | Values                    |      |
+| ---------- | ------------------------- | ---- |
+| thin disk  | M=5.9, a=3.9, b=0.31      |      |
+| thick disk | M=2, a=4.4, b=0.92        |      |
+| bulge      | M = 2.1, a = 1.3          |      |
+| halo       | Mvir=115, r=20.2, c=9.545 |      |
+
+
+
 ### Haloes
 
 | halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma_{vx, \rm best}$ | $h  / {\rm kpc}$ |
 | ------- | -------------------- | ------------- | ----------------------- | ---------------- |
-| average | 31.1                 | 5.96          | 9.25                    | 0.044            |
-| compact | 31                   | 3.2           |                         | 0.024            |
+| average | 31.1                 | 5.96          | 8?                      | 0.014            |
+| compact | 31                   | 3.2           | 9.2?                    | 0.017            |
 | heavy   | 40                   | 5.9           |                         |                  |
-
-Last column: present-day velocity dispersion for best visual fit.
 
 
 
@@ -142,40 +176,77 @@ which for our average halo equates to 0.14 kpc.
 
 
 
-Next, we integrate the orbit of Sculptor back 10 Gyr and place the halo in a static Milky Way potential described by @EP2021. 
-
 The initial kinematic conditions for the galaxy are determined by integrating the orbit back in time 10 Gyr and determining the time of the next apocentre. We ignore dynamic friction for this calculation.
 
 
 
-| Orbit      | 1        | 2        | 3        |
-| ---------- | -------- | -------- | -------- |
-| ra         | 15.0183  | ''       | ''       |
-| dec        | -33.7186 | ''       | ''       |
-| pm ra      | 0.0990   | 0.134    | 0.064    |
-| pm_dec     | -0.160   | -0.196   | -0.126   |
-| dist       | 83.2     | 82.7     | 85.4     |
-| rv         | 111.4    | ''       | ''       |
-| pericentre | 53       | 43       | 63       |
-| apocentre  | 102      | 96       | 114      |
-| $x_0$      | 16.1574  | -2.4303  | 4.9579   |
-| $y_0$      | 92.5936  | -43.4768 | 57.7071  |
-| $z_0$      | 39.5549  | 86.0834  | -97.6210 |
-| $v_{x,0}$  | -2.31    | -20.16   | 22.38    |
-| $v_{y,0}$  | -54.26   | -113.91  | 120.00   |
-| $v_{z,0}$  | 129.015  | -59.60   | 72.61    |
+| Orbit                       | mean     | smallperi | largeperi |
+| --------------------------- | -------- | --------- | --------- |
+| ra                          | 15.0183  | ''        | ''        |
+| dec                         | -33.7186 | ''        | ''        |
+| pm ra                       | 0.0990   | 0.134     | 0.064     |
+| pm_dec                      | -0.160   | -0.196    | -0.126    |
+| heliocentric distance / kpc | 83.2     | 82.7      | 85.4      |
+| rv                          | 111.4    | ''        | ''        |
+| pericentre / kpc            | 53       | 43        | 63        |
+| apocentre / kpc             | 102      | 96        | 114       |
+| $x_0$ / kpc                 | 16.1574  | -2.4303   | 4.9579    |
+| $y_0$                       | 92.5936  | -43.4768  | 57.7071   |
+| $z_0$                       | 39.5549  | 86.0834   | -97.6210  |
+| $v_{x,0}$ / km s            | -2.31    | -20.16    | 22.38     |
+| $v_{y,0}$                   | -54.26   | -113.91   | 120.00    |
+| $v_{z,0}$                   | 129.015  | -59.60    | 72.61     |
+
+
+
+### LMC Orbits
+
+Note that we set the model to begin at $T_0 = -4.88895$ Gyr and finish at $T_f=0.2444475$ Gyr (or in code units, 1036.892895 and 51.84464)
+
+| Orbit                       | mean     | smallperi | largeperi |
+| --------------------------- | -------- | --------- | --------- |
+| ra                          | 15.0183  |           |           |
+| dec                         | -33.7186 |           |           |
+| pm ra                       | 0.0990   |           |           |
+| pm_dec                      | -0.160   |           |           |
+| heliocentric distance / kpc | 83.2     |           |           |
+| rv                          | 111.4    |           |           |
+| pericentre / kpc            | 53       |           |           |
+| apocentre / kpc             | 102      |           |           |
+| t last peri                 |          |           |           |
+| perilmc                     |          |           |           |
+| apolmc                      |          |           |           |
+| t last apolmc               |          |           |           |
+| $x_0$ / kpc                 | 20.0299  | 9.52      |           |
+| $y_0$                       | 299.0933 | 236.706   |           |
+| $z_0$                       | 100.9998 | 35.35     |           |
+| $v_{x,0}$ / km s            | 8.63     | 6.48      |           |
+| $v_{y,0}$                   | -50.58   | 11.93     |           |
+| $v_{z,0}$                   | 52.99    | 73.08     |           |
 
 
 
 
 
-
-
-# Results & Discussion
-
+# Results 
 
 
 
+## Milky Way only
 
 
+
+In both models which we run, the break radius (from @peñarrubia++) is between 90 and 110 arcminutes. This is not a satesfactory explanation for the aparent excess of stars. While each model does lose much of the extended dark matter halo, the interior component is rather unaffected, and the model remains in the slightly stripped regieme. 
+
+
+
+![image-20241112091720413](/Users/daniel/Library/Application Support/typora-user-images/image-20241112091720413.png)
+
+Density Profiles for the extreme orbit:
+
+![image-20241112091539852](/Users/daniel/Library/Application Support/typora-user-images/image-20241112091539852.png)
+
+![image-20241112091547626](/Users/daniel/Library/Application Support/typora-user-images/image-20241112091547626.png)
+
+# Discussion
 

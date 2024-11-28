@@ -244,17 +244,6 @@ with exponential drop off $u_h = 200$, $\eta=2$. Becomes as published with $u_h 
 
 # Milky Way Potentials
 
-Following @borukhovetskaya+2022, we define a multi-component MW potential as follows (in code units: 1 kpc, 10^10 Msun)
-
-
-
-| Component  | Values                    |      |
-| ---------- | ------------------------- | ---- |
-| thin disk  | M=5.9, a=3.9, b=0.31      |      |
-| thick disk | M=2, a=4.4, b=0.92        |      |
-| bulge      | M = 2.1, a = 1.3          |      |
-| halo       | Mvir=115, r=20.2, c=9.545 |      |
-
 
 
 
