@@ -1,7 +1,10 @@
-# make frames
 set -xe 
 
-animate_dm.jl -n 1001 -p ~/dwarfs/agama/potentials/vasiliev+21/potential_evolving.ini  --limits 600 --timescale 0.004822 -k 1 -P 0.5 -e
+# project density
+# project_2d.jl . --limits 500 -k 1
+
+# make pictures (:)
+animate_dm.jl -i projected_densities.hdf5 ~/dwarfs/agama/potentials/vasiliev+21/animation/projected_halo.hdf5 ~/dwarfs/agama/potentials/vasiliev+21/animation/projected_lmc.hdf5 --scalebar 100 -s max max match2 -P -4
 
 # combine to movie!!!
 cd figures/dm_animation

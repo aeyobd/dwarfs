@@ -31,19 +31,34 @@ import DensityEstimators as DE
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_V31_r3.2/orbit_smallperi/"
+model_dir = "$models_dir/1e7_V31_r3.2/orbit_smallperi/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/plummer_rs0.20/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.08/final.fits"
+
+# ╔═╡ 217527cb-7f25-4fd9-a4a8-78cb2c744c2b
+figdir = joinpath(dirname(starsfile), "figures")
+
+# ╔═╡ d1e9ed33-d600-441a-876d-0c0fcd5cca72
+mkpath(figdir)
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
+
+# ╔═╡ 89ec03a2-2ec9-4b77-aba0-28af551a1366
+out = lguys.Output(model_dir)
+
+# ╔═╡ 24c24fd2-e615-4ad4-a19d-7b7a49ede6f5
+
 
 # ╔═╡ c4008b83-b61b-4baa-9fd5-9cced2dc6be8
 import TOML
 
 # ╔═╡ e37559b2-229c-4a37-b516-c6cb7c022b71
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
+
+# ╔═╡ 0963fc32-2e60-4229-96dd-9858348ec646
+orbit_props["dec0"]
 
 # ╔═╡ 89a34cdf-c724-4c7e-ae42-11da6077feb2
 function add_xi_eta_p!(df)
@@ -61,8 +76,14 @@ stars = lguys.read_fits(starsfile) |> add_xi_eta_p!
 # ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
 obs_cen = stars[1, :]
 
+# ╔═╡ f461f362-7aa6-4b23-a522-bd98cea8473f
+lguys.mean(stars.dec, stars.weights)
+
 # ╔═╡ adca7da4-c7e5-4f24-9f50-0413c91fad1d
 σ_v = std(stars.radial_velocity, weights(stars.weights))
+
+# ╔═╡ 14348e2e-053a-48ac-8e10-7c66ea13906e
+stars
 
 # ╔═╡ 075ae901-bbbd-4d10-9d91-c393fc86a8e7
 sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_p!
@@ -777,8 +798,45 @@ for sym in [:pmra, :pmra_gsr, :pmdec, :radial_velocity, :distance, ]
 	@info plot_hist2d_coord(sym, xsym=:eta_p)
 end
 
+# ╔═╡ c86fddf0-d293-4735-8397-5a1889f2d1be
+function plot_obs_bin_means!(gs, ysym; xsym = :xi_p, eta_max=1, bins=bins)
+	if xsym == :xi_p
+		filt = abs.(stars.eta_p) .< eta_max
+	elseif xsym == :eta_p
+		filt = abs.(stars.xi_p) .< eta_max
+	end
+
+	w = stars.weights[filt]
+	y = stars[filt, ysym]
+	x = stars[filt, xsym]
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_mean(x, y, bins, w=w)
+
+	
+	yl0 = minimum(y_l)
+	yh0 = maximum(y_h)
+	dy0 = yh0 - yl0
+	limits=(minimum(bins), maximum(bins), yl0 - 0.05dy0, yh0 + 0.05dy0)
+
+	ax = Axis(gs,
+		xlabel=obs_labels[xsym],
+		ylabel=obs_labels[ysym],
+		limits=limits
+	)
+
+
+	scatter!(x_m, y_m)
+	errorbars!(x_m, y_m, y_m-y_l, y_h - y_m)
+	
+	plot_rb!(ax, r_b_arcmin / 60)
+	plot_rb!(ax, -r_b_arcmin / 60)
+
+	ax
+end
+
 # ╔═╡ 6ac742ef-ff1f-4a1c-a812-e2962bd6a50d
-function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=1)
+function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=1, r_b_arcmin=r_b_arcmin, bins=bins, stars=stars)
 	if xsym == :xi_p
 		filt = abs.(stars.eta_p) .< eta_max
 	elseif xsym == :eta_p
@@ -815,9 +873,109 @@ function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=1)
 	fig
 end
 
+# ╔═╡ 32ce8cf5-94fa-4bb4-83eb-d3c6329d497a
+1 ÷ 2
+
+# ╔═╡ 5eaaa70a-3210-4ab2-9318-b56ad4962c22
+let
+	fig = Figure(size=(600,500))
+
+	for i in 1:4
+		ysym = [:pmra, :pmdec, :distance, :radial_velocity][i]
+
+		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
+		plot_obs_bin_means!(gs, ysym)	|> lguys.Plots.hide_grid!
+
+
+	end
+
+	fig
+end
+
+# ╔═╡ 6eb0507a-c7dd-4009-b699-ae6423623f63
+bins_cen = -1.5:0.1:1.5
+
+# ╔═╡ 041ba6c2-0a5c-4a59-b536-95db6e68716f
+let
+	fig = Figure(size=(600,500))
+
+	for i in 1:4
+		ysym = [:pmra_gsr, :pmdec_gsr, :distance, :radial_velocity_gsr][i]
+
+		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
+		plot_obs_bin_means!(gs, ysym, bins=bins_cen)	|> lguys.Plots.hide_grid!
+
+	end
+
+	fig
+end
+
+# ╔═╡ c6224653-9dcd-4e17-9999-ccb69da6c222
+let
+	fig = Figure(size=(600,500))
+
+	for i in 1:4
+		ysym = [:pmra_gsr, :pmdec_gsr, :distance, :radial_velocity_gsr][i]
+
+		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
+		plot_obs_bin_means!(gs, ysym, xsym=:eta_p, bins=bins_cen)	|> lguys.Plots.hide_grid!
+
+	end
+
+	fig
+end
+
+# ╔═╡ 13c53be9-4922-4872-8ebf-8ed147a72fff
+
+
+# ╔═╡ 4be2b3c0-98df-4d25-8200-a051a5dba4e9
+let
+	fig = Figure(size=(600,500))
+
+	for i in 1:4
+		ysym = [:pmra, :pmdec, :distance, :radial_velocity][i]
+
+		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
+		plot_obs_bin_means!(gs, ysym; xsym=:eta_p)	|> lguys.Plots.hide_grid!
+
+	end
+
+	fig
+end
+
 # ╔═╡ e3ecf2c5-67e9-4571-8743-04c67755a23b
 for ysym in [:pmra, :pmra_gsr, :pmdec, :pmdec_gsr,  :distance, :radial_velocity, :radial_velocity_gsr]
 	@info plot_obs_bin_means(ysym)
+end
+
+# ╔═╡ 4b4938c2-bf21-455e-88d5-7d3843a6e005
+let
+	xsym = :r_ell
+	ysym = :radial_velocity_gsr
+	bins = 60 * (0:0.1:1.5)
+
+	filt = stars.r_ell .< 1.5 * 60
+	w = stars.weights[filt]
+	y = stars[filt, ysym]
+	x = stars[filt, xsym]
+
+	x_m  = midpoints(bins)
+	y_m, y_l, y_h = binned_mean(x, y, bins, w=w)
+
+	sy = y_m - y_l
+	limits=(minimum(bins), maximum(bins), 0.9minimum(sy), 1.1maximum(sy))
+
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel="log r / arcmin",
+		ylabel="velocity dispersion",
+		limits=limits
+	)
+
+
+	scatter!(x_m, sy)
+	
+	fig
 end
 
 # ╔═╡ cae30107-1aee-48c0-8104-720cf5535b02
@@ -854,6 +1012,8 @@ Below is a scatter plot of all stars in polar coordinates wrt ``\xi'`` and dista
 """
 
 # ╔═╡ 7178c98a-15d1-4f10-9850-2079a6fdaa27
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	fig = Figure()
 	ax = PolarAxis(fig[1, 1])
@@ -863,8 +1023,11 @@ let
 
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ 90e0d677-a837-4a17-8c64-68ed350dd3c8
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	fig = Figure()
 	ax = Axis(fig[1, 1],
@@ -877,6 +1040,7 @@ let
 
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ 26d120cb-0bd4-432d-9ce1-fc9a23a5067d
 md"""
@@ -884,6 +1048,8 @@ The next two plots validate the rotated coordinate system.
 """
 
 # ╔═╡ 65ca1318-8f62-4133-ab14-f3d3e1190029
+# ╠═╡ disabled = true
+#=╠═╡
 let 
 	fig, ax = ra_dec_axis()
 
@@ -899,8 +1065,11 @@ let
 	)
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ 1b31eabc-3b6f-4d82-9cbb-62f1c53408de
+# ╠═╡ disabled = true
+#=╠═╡
 let 
 	fig, ax = ra_dec_axis()
 
@@ -917,6 +1086,7 @@ let
 	)
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ 7ec71b3a-4c34-4803-923f-2effeff7cfcf
 md"""
@@ -924,6 +1094,8 @@ The orbit in the rotated coordinate system. We expect the orbit to be ~ a horizo
 """
 
 # ╔═╡ 84e4a23c-c926-4c86-ab11-07a08ef7d1b3
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	fig, ax = xi_eta_axis()
 
@@ -934,8 +1106,11 @@ let
 	Colorbar(fig[1, 2], p, label="time / Gyr")
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ e013dcb6-ea17-4fd5-af4d-318188600107
+# ╠═╡ disabled = true
+#=╠═╡
 let	
 	filt = abs.(stars.eta_p) .< 2
 	w = stars.weights[filt]
@@ -966,6 +1141,7 @@ let
 	vlines!(bins)
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
@@ -975,14 +1151,21 @@ end
 # ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
+# ╠═217527cb-7f25-4fd9-a4a8-78cb2c744c2b
+# ╠═d1e9ed33-d600-441a-876d-0c0fcd5cca72
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
 # ╠═6c76cfae-928b-47b3-babe-b0b9a5d68e65
+# ╠═0963fc32-2e60-4229-96dd-9858348ec646
+# ╠═f461f362-7aa6-4b23-a522-bd98cea8473f
 # ╠═89a34cdf-c724-4c7e-ae42-11da6077feb2
 # ╠═075ae901-bbbd-4d10-9d91-c393fc86a8e7
 # ╠═adca7da4-c7e5-4f24-9f50-0413c91fad1d
 # ╠═ccc714c4-b2dd-4c83-939b-f0ca3d04c255
 # ╠═c351926c-1e3d-44d7-8f39-6fb5893b9b0d
 # ╠═a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
+# ╠═89ec03a2-2ec9-4b77-aba0-28af551a1366
+# ╠═24c24fd2-e615-4ad4-a19d-7b7a49ede6f5
+# ╠═14348e2e-053a-48ac-8e10-7c66ea13906e
 # ╠═c4008b83-b61b-4baa-9fd5-9cced2dc6be8
 # ╠═e37559b2-229c-4a37-b516-c6cb7c022b71
 # ╠═0ba05fdb-f859-4381-b2d0-145aa04f7bbf
@@ -1047,8 +1230,17 @@ end
 # ╠═499f3cd7-b7fc-4fe2-acc0-5e2d2697c3d6
 # ╠═cc2be8c5-bdfc-4c55-815c-1ccc1d261678
 # ╠═a52f14bf-eb6d-4523-b6ee-38af9b822a49
+# ╠═c86fddf0-d293-4735-8397-5a1889f2d1be
 # ╠═6ac742ef-ff1f-4a1c-a812-e2962bd6a50d
+# ╠═32ce8cf5-94fa-4bb4-83eb-d3c6329d497a
+# ╠═5eaaa70a-3210-4ab2-9318-b56ad4962c22
+# ╠═6eb0507a-c7dd-4009-b699-ae6423623f63
+# ╠═041ba6c2-0a5c-4a59-b536-95db6e68716f
+# ╠═c6224653-9dcd-4e17-9999-ccb69da6c222
+# ╠═13c53be9-4922-4872-8ebf-8ed147a72fff
+# ╠═4be2b3c0-98df-4d25-8200-a051a5dba4e9
 # ╠═e3ecf2c5-67e9-4571-8743-04c67755a23b
+# ╠═4b4938c2-bf21-455e-88d5-7d3843a6e005
 # ╠═cae30107-1aee-48c0-8104-720cf5535b02
 # ╟─925be0a1-0afa-4b5a-b9c9-003833e80a28
 # ╟─ae9d8d21-1269-4053-89a3-3a8287a4ca70

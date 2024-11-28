@@ -36,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc_smallperilmc"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
