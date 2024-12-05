@@ -190,7 +190,7 @@ end
 
 
 @doc raw"""
-    a_dyn_friction(pos, vel; r_s, σv, ρ, M)
+    a_dyn_friction(pos, vel; r_s, σv, ρ, M, Λ)
 
 Computes the dynamical friction based on 
 
@@ -198,7 +198,7 @@ Computes the dynamical friction based on
 \frac{d{\bf v}}{dt} = -\frac{4\pi\,G^2\,M\,\rho\,\ln\Lambda}{v^2} \left({\rm erf}(X) - \frac{2X}{\sqrt\pi} \exp(-X^2)\right) \frac{{\bf v}}{v}
 ``
 """
-function a_dyn_friction(pos, vel; r_s, σv, ρ, M, Λ=nothing  )
+function a_dyn_friction(pos, vel; r_s=nothing, σv, ρ, M, Λ=nothing  )
     G = 1
     v = calc_r(vel)
     r = calc_r(pos)
@@ -216,7 +216,7 @@ function a_dyn_friction(pos, vel; r_s, σv, ρ, M, Λ=nothing  )
     X = v / (√2 * σv(r))
     fX = erf(X) - 2X/√π * exp(-X^2)
 
-    return -4π*G^2 * M * ρ(pos) * log(Λ) * fX * vel ./ v^3
+    return -4π*G^2 * M * ρ(pos) * max(log(Λ), 0) * fX * vel ./ v^3
 end
 
 
@@ -263,18 +263,21 @@ Parameters:
 - `dt_max::Real=0.1`: the maximum timestep
 - `dt_min::Real=0.001`: the minimum timestep, will exit if timestep is below this
 - `time::Real=-10/T2GYR`: the time to integrate to
-- `timestep::Symbol=:adaptive`: the timestep to use, either `:adaptive` or `:fixed`
+- `timebegin::Real=0`: the time to start integrating from
+- `timestep::Symbol=:adaptive`: the timestep to use, either `:adaptive` or a real number
 - `η::Real=0.01`: the adaptive timestep parameter
 
 """
 function leap_frog(gc, acceleration; 
-        dt_max=0.1, dt_min=0.001, time=-10/T2GYR, 
+        dt_max=0.1, dt_min=0.001, timebegin=0, time=-10/T2GYR, 
         timestep=:adaptive, η=0.01
     )
 
     if timestep isa Real
         dt_min = timestep
     end
+
+    t = timebegin
 
     Nt = round(Int, abs(time / dt_min))
     positions = Vector{Vector{Float64}}()
@@ -284,16 +287,15 @@ function leap_frog(gc, acceleration;
 
     push!(positions, [gc.x, gc.y, gc.z])
     push!(velocities, [gc.v_x, gc.v_y, gc.v_z] / V2KMS)
-    push!(accelerations, acceleration(positions[1], velocities[1]))
+    push!(accelerations, acceleration(positions[1], velocities[1], t))
     push!(times, 0.)
     is_done = false
     backwards = time < 0
 
-    t = 0.
     for i in 1:Nt
         pos = positions[i]
         vel = velocities[i]
-        acc = acceleration(pos, vel)
+        acc = acceleration(pos, vel, t)
         
         if timestep == :adaptive
             dt = min(sqrt(η / calc_r(acc)), dt_max)
@@ -316,7 +318,7 @@ function leap_frog(gc, acceleration;
 
         vel_h = vel + 1/2 * dt * acc
         pos_new = pos + dt*vel_h
-        acc = acceleration(pos_new, vel_h)
+        acc = acceleration(pos_new, vel_h, t + dt/2)
         vel_new = vel_h + 1/2 * dt * acc
 
         push!(positions, pos_new)

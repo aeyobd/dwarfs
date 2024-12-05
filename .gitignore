@@ -63,3 +63,7 @@ coverage
 enbid_paramfile
 to_enbid
 to_enbid_d3n64.est
+*.npz
+
+*download=*
+*.zip

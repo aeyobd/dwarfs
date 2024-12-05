@@ -15,6 +15,7 @@ lmc_traj.time = -lmc_traj.time * V_T2GYR / T2GYR
 
 
 out = Output(".")
+println(length(out.times))
 
 times = out.times
 

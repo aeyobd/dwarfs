@@ -39,7 +39,7 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e7_V31_r3.2/orbit_smallperi"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -100,10 +100,10 @@ md"""
 """
 
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
-LilGuys.Plots.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
+LilGuys.MakieExtension.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
 
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
-LilGuys.Plots.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
+LilGuys.MakieExtension.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
 
 # ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
 T2GYR = LilGuys.T2GYR

@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 name = "initial"
