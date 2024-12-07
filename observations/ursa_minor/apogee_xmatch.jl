@@ -33,7 +33,7 @@ With this catalogue, detailed radial velocity analysis can then be calculated.
 j24 = lguys.read_fits("processed/j24_umi_all.fits")
 
 # ╔═╡ d9d4eb78-a0c0-4c15-bdaa-cd436d972c97
-apogee_f = FITS("../data/allStar-dr17-synspec_rev1.fits")[2]
+apogee_f = FITS("../data/allStarLite-dr17-synspec_rev1.fits")[2]
 
 # ╔═╡ a1dd09f8-b635-48e5-8d0c-afd58dff4641
 apogee = lguys.DataFrame(
@@ -41,6 +41,7 @@ apogee = lguys.DataFrame(
 	:RV => read(apogee_f, "VHELIO_AVG"),
 	:RV_err => read(apogee_f, "VERR"),
 	:RV_sigma => read(apogee_f, "VSCATTER"),
+	:RV_count => read(apogee_f, "NVISITS"),
 	:RV_flag => read(apogee_f, "RV_FLAG"),
 	:RA_apogee => read(apogee_f, "RA"),
 	:DEC_apogee => read(apogee_f, "DEC"),
