@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -19,13 +19,14 @@ end
 # ╔═╡ bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 md"""
 Analyzes the dark matter particles and profiles for the simulation.
+In particular, we plot the initial/final density profiles, 
+circular velocity evolution, 
+and make some nice projections of the DM in different orientations.
+All of the figures are saved to figures directory inside the model analysis directory. 
 """
 
 # ╔═╡ 589f2e18-d697-4fa1-a1bc-eb3c83ad73bf
 save = CairoMakie.save
-
-# ╔═╡ 7f29d14d-0e3f-4e64-b726-6b8fd5bb7548
-LP = LilGuys.Plots
 
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
 md"""
@@ -33,16 +34,13 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc_smallperilmc"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
 halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
-
-# ╔═╡ d971556d-8b66-4b2d-9dc0-31799f94b10a
-skip = 10
 
 # ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 out =  Output(model_dir)
@@ -65,7 +63,7 @@ md"""
 idx_f = orbit_props["idx_f"]
 
 # ╔═╡ 7e3df305-9678-447e-a48e-f102cf6ebced
-idx_i = 1
+idx_i = 2
 
 # ╔═╡ 9c3f79ee-89db-4fe1-aa62-4e706bdd73f8
 snap_i = out[idx_i]
@@ -159,7 +157,7 @@ let
 	lines!(log10.(x .* r_max[1]), y .* v_max[1] * V2KMS,  label="EN21",
 	color=:black, linestyle=:dash)
 
-	lines!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
+	scatter!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
 
 		
 	axislegend(ax, position=:rt)
@@ -266,7 +264,7 @@ let
 	colorrange=(1e-7, 1e-3)
 	r_max = 5
 
-	LP.projected_density!(snap_i, centre=true, r_max=r_max,
+	LilGuys.projecteddensity!(snap_i, centre=true, r_max=r_max,
 		colorrange=colorrange, colorscale=log10,
 		direction1=2, direction2=3,
 		bins=bins
@@ -276,7 +274,7 @@ let
 	xlabel = "x / kpc",
 	title="final")
 
-	hm = LP.projected_density!(snap_f, centre=true, r_max=r_max,  
+	hm = LilGuys.projecteddensity!(snap_f, centre=true, r_max=r_max,  
 		colorrange=colorrange, colorscale=log10,
 		direction1=2, direction2=3,
 		bins=bins
@@ -302,34 +300,15 @@ let
 		xlabel = "x / kpc", ylabel="z / kpc", title="dark matter",
 	)
 
-	bins = LinRange(-10, 10, 100)
 	colorrange=(1e-6, nothing)
 
-	h = LP.projected_density!(snap_f, centre=false, r_max=130, 
+	h = LilGuys.projecteddensity!(snap_f, centre=false, r_max=250, 
 		colorrange=colorrange, colorscale=log10,
-		xdirection=1, ydirection=3
+		xdirection=2, ydirection=3
 	)
 
 	Colorbar(fig[1, 2], h, label="DM density")
 
-	fig
-end
-
-# ╔═╡ fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
-let
-	fig = Figure()
-	r_max = 130
-	ax = Axis(fig[1,1], aspect=1,
-	xlabel = "y / kpc", ylabel="z / kpc", title="dark matter",
-	limits=(-r_max, r_max, -r_max, r_max))
-	bins = LinRange(-r_max, r_max, 200)
-	
-	h = Arya.hist2d!(ax, snap_f.positions[2, :], snap_f.positions[3, :], bins = bins, colorscale=log10, colorrange=(1e-1, nothing))
-
-	#scatter!(snap_f.x_cen[2], snap_f.x_cen[3])
-	Colorbar(fig[1, 2], h, label="DM density")
-
-	save(joinpath(figures_dir, "xy_projection.pdf"), fig)
 	fig
 end
 
@@ -356,15 +335,13 @@ let
 end
 
 # ╔═╡ Cell order:
-# ╟─bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
+# ╠═bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
 # ╠═589f2e18-d697-4fa1-a1bc-eb3c83ad73bf
-# ╠═7f29d14d-0e3f-4e64-b726-6b8fd5bb7548
 # ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
 # ╠═14279a79-bf66-4b34-bf9f-735ff2886ea5
 # ╠═c260ee35-7eed-43f4-b07a-df4371397195
 # ╠═d010a230-7331-4afd-86dc-380da0e0f720
-# ╠═d971556d-8b66-4b2d-9dc0-31799f94b10a
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 # ╠═1b87d662-da3c-4438-98eb-72dc93e32f6a
 # ╠═63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
@@ -389,6 +366,5 @@ end
 # ╠═3aa62ecf-495a-434b-8008-02783bd5b56e
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd
-# ╟─4cd952f3-555d-401b-aa31-8b79a23ca42e
-# ╟─fa9c08d6-98d1-46a4-a5d1-6cd79db77ace
+# ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -29,6 +29,9 @@ This notebook only uses the centres of the orbit, but then calculates useful qua
 
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
 import TOML
+
+# ╔═╡ 7bf1a839-b24e-4478-bdd3-200989779f68
+save = Makie.save
 
 # ╔═╡ 643cd0bf-77b3-4201-9ff7-09dd5aee277c
 md"""
@@ -63,6 +66,12 @@ centresfile = joinpath(parentdir, "analysis", modelname, "centres.hdf5")
 
 # ╔═╡ 9c427388-c657-4bb7-bc0a-b4de3597c645
 skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
+
+# ╔═╡ 4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
+begin 
+	figdir = "./figures"
+	mkpath(figdir)
+end
 
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
 md"""
@@ -100,10 +109,14 @@ md"""
 """
 
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
-LilGuys.MakieExtension.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
+let
+	fig = LilGuys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
+	save("$figdir/centre_xyz.pdf", fig)
+	fig
+end
 
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
-LilGuys.MakieExtension.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
+LilGuys.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
 
 # ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
 T2GYR = LilGuys.T2GYR
@@ -119,6 +132,8 @@ let
 	)
 
 	axislegend(ax)
+
+	save("$figdir/centre_r_t.pdf")
 	fig
 end
 
@@ -209,6 +224,9 @@ end
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = calc_r(x_cen)
+
+# ╔═╡ 6d0612d6-8609-4832-80ae-4e8e78c557cc
+minimum(r)
 
 # ╔═╡ 882d4fc5-07ae-4b06-8da5-67f0894595db
 import LinearAlgebra: dot
@@ -458,6 +476,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
+# ╠═7bf1a839-b24e-4478-bdd3-200989779f68
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
 # ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
@@ -468,6 +487,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 # ╠═bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
 # ╠═9c427388-c657-4bb7-bc0a-b4de3597c645
+# ╠═4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
 # ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═a609f221-0721-4b4b-a393-49b386393c66
@@ -481,6 +501,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
 # ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
+# ╠═6d0612d6-8609-4832-80ae-4e8e78c557cc
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
 # ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
 # ╠═64e558da-2928-4815-ad5a-7528516311f9

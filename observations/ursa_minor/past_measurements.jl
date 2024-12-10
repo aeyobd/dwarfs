@@ -49,21 +49,15 @@ md"""
 """
 
 # ╔═╡ d13c99eb-2cb2-4093-85bb-19a3dd18675d
-# myobs = Dict(
-# 	:study => "this",
-# 	:ra => 15.0209 ± 0.017, # gaia systematics
-# 	:dec => -33.7127 ± 0.017,
-# 	:pm_ra => 0.111299 ± 0.0078,
-# 	:pm_dec => -0.148202 ± 0.00586,
-# 	:σ_v => (9.61 ± 0.16),
-# 	:radial_velocity => (111.03 ± 0.23),
-# )
-
-# ╔═╡ d4c9d7ef-b8ab-48b9-9c15-afe7d11602ad
-md"""
-## Muñoz + 2005 
-does not seem to report velocity dispersion? but calculate dispersion profiles
-"""
+myobs = Dict(
+	:study => "us",
+	# :ra => 15.0209 ± 0.017, # gaia systematics
+	# :dec => -33.7127 ± 0.017,
+	# :pm_ra => 0.111299 ± 0.0078,
+	# :pm_dec => -0.148202 ± 0.00586,
+	:σ_v => (9 ± 0.6),
+	:radial_velocity => (-245 ± 1),
+)
 
 # ╔═╡ 0ea649d4-c260-450f-a51c-7598da5bfe2e
 md"""
@@ -156,8 +150,8 @@ mv2020a = Dict(
 # ╔═╡ 30f6a515-76dc-47fc-abc0-a90e28f64d9f
 battaglia2022 = Dict(
 	:study => "B+22",
-	:ra => 15.01830,
-	:dec => -33.71860,
+	# :ra => 15.01830,
+	# :dec => -33.71860,
 	:pm_ra => -0.124 ± σpm_sys_gdr3, # gaia systematic err
 	:pm_dec => 0.071 ± σpm_sys_gdr3
 )
@@ -191,6 +185,7 @@ garofalo2024 = Dict(
 
 # ╔═╡ 777ec196-e193-456d-8d44-cba200a366dd
 obs = [
+	myobs,
 	muñoz2018,
 	spencer2018,
 	pace2020,
@@ -2364,7 +2359,6 @@ version = "3.6.0+0"
 # ╟─26ae0d94-698c-4e9d-bac6-3e91d0d197ab
 # ╠═fef51bf1-0022-478c-ac62-0ffd127c1bd0
 # ╠═d13c99eb-2cb2-4093-85bb-19a3dd18675d
-# ╟─d4c9d7ef-b8ab-48b9-9c15-afe7d11602ad
 # ╟─0ea649d4-c260-450f-a51c-7598da5bfe2e
 # ╠═6eed53c4-7798-4ced-ae58-59679f4cb380
 # ╠═351731df-8d84-41ba-83e7-793898b9a148

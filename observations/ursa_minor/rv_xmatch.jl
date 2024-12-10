@@ -1010,6 +1010,12 @@ md"""
 ### Comparing sample properties
 """
 
+# ╔═╡ 8e7c650c-ebc5-4775-a725-0810b735cc36
+0.3 ⊕ 0.5
+
+# ╔═╡ f17c35af-27c2-40e8-9dc9-814c07f636f5
+atand(gsr.pmra, gsr.pmdec)
+
 # ╔═╡ 46434fa6-09df-4b02-9270-cbdcc9648e38
 let
 	ks = keys(props)
@@ -1206,6 +1212,8 @@ begin
 	df_averaged.RV = convert.(Float64, df_averaged.RV)
 	df_averaged.RV_err = convert.(Float64, df_averaged.RV_err)
 
+	select!(df_averaged, Not(["RV_$study" for study in all_studies]))
+	select!(df_averaged, Not(["RV_err_$study" for study in all_studies]))
 	df_averaged
 end
 
@@ -1408,6 +1416,8 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═ec4bc80f-22e6-49f9-a589-5c5bc9e50a8b
 # ╠═eaf47845-95dd-4f7d-bf76-3d9b1154711a
 # ╟─b5faa873-d5c9-447b-b90e-f693db26e6c2
+# ╠═8e7c650c-ebc5-4775-a725-0810b735cc36
+# ╠═f17c35af-27c2-40e8-9dc9-814c07f636f5
 # ╠═46434fa6-09df-4b02-9270-cbdcc9648e38
 # ╠═dc4c0453-fed0-4733-9f59-0b2df506b45c
 # ╠═ce3067d3-55e6-43a1-9b7b-4cf53c09ee88

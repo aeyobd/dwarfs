@@ -8,20 +8,19 @@ pmra = -0.124
 pmra_err = 0.017 #0.002 + gaia sys
 pmdec = 0.078
 pmdec_err = 0.017 #0.002 + gaia sys
-# TODO revise...
-radial_velocity = 246.9
-radial_velocity_err = 0.4
+radial_velocity = -245.2
+radial_velocity_err = 1
 
 # TODO: revise...
-sigma_v = 8.0
-sigma_v_err = 0.3
+sigma_v = 9
+sigma_v_err = 0.6
 
 ellipticity = 0.55
 ellipticity_err = 0.01
 PA = 50
 PA_err = 1
 
-# theta_pm_gsr = -39.64 # atand(pmra_gsr, pmdec_gsr)
+theta_pm_gsr = 55.97 # atand(pmra_gsr, pmdec_gsr)
 
 Mv = -9.03
 Mv_err = 0.03

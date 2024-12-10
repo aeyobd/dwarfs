@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -36,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev+21_heavylmc_smallperilmc"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -123,16 +123,16 @@ md"""
 """
 
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
-LilGuys.Plots.plot_xyz(x_cen, x_cen_exp, x_lmc, labels=["n body", "point particle", "LMC"])
+LilGuys.plot_xyz(x_cen, x_cen_exp, x_lmc, labels=["n body", "point particle", "LMC"])
 
 # ╔═╡ c96035d2-8860-4609-96d3-116f0928fa14
 LilGuys.struct_to_dict((; a=1))
 
 # ╔═╡ e500cd04-30be-4de2-890b-cc7f460cc176
-LilGuys.Plots.plot_xyz(x_scl_lmc, x_scl_lmc_exp, labels=["Scl - LMC", "point particle"])
+LilGuys.plot_xyz(x_scl_lmc, x_scl_lmc_exp, labels=["Scl - LMC", "point particle"])
 
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
-LilGuys.Plots.plot_xyz(v_cen, v_cen_exp, v_lmc, units=" / km/ s")
+LilGuys.plot_xyz(v_cen, v_cen_exp, v_lmc, units=" / km/ s")
 
 # ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
 T2GYR = LilGuys.T2GYR
@@ -167,17 +167,6 @@ let
 	fig
 end
 
-# ╔═╡ 7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
-md"""
-# Sky Properties
-"""
-
-# ╔═╡ f134b3ce-53f0-47e9-84e9-1e73064d5191
-snap_cen = Snapshot(x_cen, v_cen, zeros(size(x_cen, 2)))
-
-# ╔═╡ 5ec062c3-3815-4cf7-b45a-f97332d1b800
-snap_cen.masses
-
 # ╔═╡ 319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 times = t * T2GYR
 
@@ -188,7 +177,7 @@ times
 idx_gyr = [argmin(abs.(times .- i )) for i in -5:0]
 
 # ╔═╡ b4c12b61-6827-4c63-bbbc-e708fdb8ba4b
-LilGuys.Plots.plot_xyz(x_cen, x_lmc, labels=["Scl", "LMC"], idx_scatter=fill(idx_gyr, 2))
+LilGuys.plot_xyz(x_cen, x_lmc, labels=["Scl", "LMC"], idx_scatter=fill(idx_gyr, 2))
 
 # ╔═╡ a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
 let
@@ -204,13 +193,13 @@ let
 end
 
 # ╔═╡ 761750fd-4b18-4c5f-8b79-0f87307e08a1
-LilGuys.Plots.plot_xyz(x_scl_lmc, times=times / T2GYR, idx_scatter=[idx_gyr])
+LilGuys.plot_xyz(x_scl_lmc, times=times / T2GYR, idx_scatter=[idx_gyr])
 
 # ╔═╡ b7c3051f-7aec-472f-906d-c29b8e078475
-LilGuys.Plots.plot_xyz(v_scl_lmc, label="scl - lmc", units = " / km / s", times=times / T2GYR, idx_scatter=[idx_gyr])
+LilGuys.plot_xyz(v_scl_lmc, label="scl - lmc", units = " / km / s", times=times / T2GYR, idx_scatter=[idx_gyr])
 
 # ╔═╡ a8e051d1-39dd-444b-85de-f235339efa26
-LilGuys.Plots.plot_xyz(v_cen, label="scl - lmc", units = " / km / s", times=times / T2GYR, idx_scatter=[idx_gyr])
+LilGuys.plot_xyz(v_cen, label="scl - lmc", units = " / km / s", times=times / T2GYR, idx_scatter=[idx_gyr])
 
 # ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 let 
@@ -233,44 +222,6 @@ end
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = calc_r(x_cen)
-
-# ╔═╡ 882d4fc5-07ae-4b06-8da5-67f0894595db
-import LinearAlgebra: dot
-
-# ╔═╡ 7a30bd90-946e-418c-8339-be64c37cda76
-vr = [dot(x_cen[:, i], v_cen[:, i]) / r[i] for i in 1:size(x_cen, 2)]
-
-# ╔═╡ 0c69519c-9650-46b9-89f9-cc37227f5b1a
-v_cen
-
-# ╔═╡ 88a9bb2d-9f86-4a96-a3b8-7a057480c7c3
-"""
-
-Given the velocities, finds when the velocity changes sign, 
-i.e. a local extrema in r
-"""
-function find_all_peris(r)
-	is_local_max(i) = (r[i] >= r[i-1]) && (r[i] >= r[i+1])
-	is_local_min(i) = (r[i] <= r[i-1]) && (r[i] <= r[i+1])
-	
-	peris = []
-	apos = []
-	
-	for i in 2:length(r)-1
-		if is_local_max(i)
-			push!(apos, i)
-		elseif is_local_min(i)
-			push!(peris, i)
-		end
-	end
-	return peris, apos
-end
-
-# ╔═╡ 8d1508af-1715-4ef6-aab9-e95a02265913
-idx_peris, idx_apos = find_all_peris(r)
-
-# ╔═╡ d81c1455-728a-4023-ad65-e3cce37a69f9
-r[idx_peris[end]], minimum(r)
 
 # ╔═╡ Cell order:
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
@@ -314,14 +265,5 @@ r[idx_peris[end]], minimum(r)
 # ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╠═01b57b06-c658-49e1-b61d-cf1c7e223723
 # ╠═a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
-# ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
-# ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
-# ╠═5ec062c3-3815-4cf7-b45a-f97332d1b800
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
-# ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
-# ╠═7a30bd90-946e-418c-8339-be64c37cda76
-# ╠═0c69519c-9650-46b9-89f9-cc37227f5b1a
-# ╠═88a9bb2d-9f86-4a96-a3b8-7a057480c7c3
-# ╠═8d1508af-1715-4ef6-aab9-e95a02265913
-# ╠═d81c1455-728a-4023-ad65-e3cce37a69f9
