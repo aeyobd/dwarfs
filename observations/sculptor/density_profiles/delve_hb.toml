@@ -1,4 +1,0 @@
-inherits = "fiducial.toml"
-filename = "../data/delve.fits"
-PSAT_min = nan
-

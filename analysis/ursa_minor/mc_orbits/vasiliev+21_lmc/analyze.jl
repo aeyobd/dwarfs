@@ -531,7 +531,7 @@ end
 positions
 
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
-lguys.MakieExtension.plot_xyz(positions..., labels=orbit_labels)
+lguys.plot_xyz(positions..., labels=orbit_labels)
 
 # ╔═╡ 57a8d1c8-3940-4430-8b46-375fb2bf1695
 let
@@ -544,7 +544,7 @@ let
 end
 
 # ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
-lguys.MakieExtension.plot_xyz(velocities..., units=" / km / s")
+lguys.plot_xyz(velocities..., units=" / km / s")
 
 # ╔═╡ ad078920-225d-436e-835b-d87a9db53c49
 let

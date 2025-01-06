@@ -40,10 +40,12 @@ function main()
         kwargs = Dict()
     end
 
-    if "bins" ∈ keys(kwargs)
-        if kwargs["bins"] == "equal_number"
+    if "bins" ∈ keys(params)
+        if kwargs["bins"] == "equal-number"
             kwargs["bins"] = LilGuys.bins_equal_number
         end
+    else
+        kwargs["bins"] = (x, w) -> LilGuys.bins_both(x, w, num_per_bin=20, bin_width=0.05)
     end
 
     kwargs = LilGuys.dict_to_tuple(kwargs)

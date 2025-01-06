@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -654,7 +654,8 @@ let
 	fig, ax = FigAxis(
 		xlabel = L"\xi / \textrm{degree}",
 		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
+		aspect=DataAspect(),
+		xreversed=true,
 	)
 
 
@@ -703,6 +704,89 @@ let
 	fig
 end
 
+# ╔═╡ c87bce4a-59df-48e4-97aa-de9091e45d9b
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi' / \textrm{degree}",
+		ylabel = L"\eta' / \textrm{degree}",
+		aspect=DataAspect()
+	)
+	memb_stars = memb_best
+
+	w = 1 ./ memb_stars.RV_err
+
+	k1 = Arya.histogram2d(memb_stars.xi_p, memb_stars.eta_p, tangent_bins, weights= w .* memb_stars.RV_gsr)
+	k2 = Arya.histogram2d(memb_stars.xi_p, memb_stars.eta_p, tangent_bins, weights=w)
+
+	k1.values ./= k2.values
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=(rv_mean_gsr - 20, rv_mean_gsr + 20)
+		)
+
+	scatter!(memb_stars.xi_p[outside_bins_best], memb_stars.eta_p[outside_bins_best],
+		color = memb_stars.RV_gsr[outside_bins_best],
+		colormap=:bluesreds,
+		colorrange=(rv_mean_gsr - 20, rv_mean_gsr + 20)
+	)
+	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s",
+)
+	fig
+end
+
+# ╔═╡ 6dd20c60-5e56-4cb5-8134-8331782c14b3
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi / \textrm{degree}",
+		ylabel = L"\eta / \textrm{degree}",
+		aspect=DataAspect()
+	)
+	memb_stars = memb_best
+
+	w = 1 ./ memb_stars.RV_err
+
+	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights= w .* memb_stars.RV_gsr)
+	k2 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights=w)
+
+	k1.values ./= k2.values
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=(rv_mean_gsr - 20, rv_mean_gsr + 20)
+		)
+
+	scatter!(memb_stars.xi[outside_bins_best], memb_stars.eta[outside_bins_best],
+		color = memb_stars.RV_gsr[outside_bins_best],
+		colormap=:bluesreds,
+		colorrange=(rv_mean_gsr - 20, rv_mean_gsr + 20)
+	)
+	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s",
+)
+	fig
+end
+
+# ╔═╡ 0f31a9bf-3992-4759-b9ec-54722bec8d77
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi / \textrm{degree}",
+		ylabel = L"\eta / \textrm{degree}",
+		aspect=DataAspect()
+	)
+	memb_stars = memb_best
+
+
+	p = scatter!(memb_stars.xi, memb_stars.eta,
+		color = memb_stars.RV_gsr,
+		colormap=:bluesreds,
+		colorrange=(rv_mean_gsr - 20, rv_mean_gsr + 20),
+		markersize = 5
+	)
+	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s",
+)
+	fig
+end
+
 # ╔═╡ 53da82d5-2e69-4f88-8043-6694d57cdd91
 import StatsBase: weights
 
@@ -711,7 +795,8 @@ let
 	fig, ax = FigAxis(
 		xlabel = L"\xi / \textrm{degree}",
 		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
+		aspect=DataAspect(),
+		xreversed=true
 	)
 	memb_stars = memb_best
 
@@ -749,10 +834,11 @@ let
 		aspect=DataAspect(),
 		xreversed=true,
 	)
+	memb_stars = memb_best
 
 	w = 1 ./ memb_stars.VZ_err
 
-	bins = (33, 25)
+	bins = (70, 70)
 	k1 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights= w .* memb_stars.VZ)
 	k2 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights=w)
 
@@ -782,6 +868,32 @@ let
 	)
 
 	#Colorbar(fig[1, 2], p)
+	fig
+end
+
+
+# ╔═╡ 0712d737-73f2-406d-af59-29bef38dd296
+let
+	fig, ax = FigAxis(
+		xlabel="xi",
+		ylabel=L"\eta'",
+		aspect=DataAspect(),
+		xreversed=true,
+		
+	)
+
+	memb_stars = memb_best
+	
+	p = scatter!(memb_stars.xi_p, memb_stars.eta_p, 
+		color= memb_stars.RV_gsr,
+			colorrange=(rv_mean_gsr - 20, rv_mean_gsr + 20),
+			colormap=:bluesreds,
+		markersize=3
+
+	)
+
+	Colorbar(fig[1, 2], p)
+	lguys.hide_grid!(ax)
 	fig
 end
 
@@ -891,8 +1003,12 @@ end
 # ╠═1ae62158-7b52-4761-a67a-10c754ea18da
 # ╠═6b59d6e9-833b-4582-b5fb-f0a1f69a16c1
 # ╠═89bf44ef-1ff5-443e-b8be-a3d1571b72e3
+# ╠═c87bce4a-59df-48e4-97aa-de9091e45d9b
+# ╠═6dd20c60-5e56-4cb5-8134-8331782c14b3
+# ╠═0f31a9bf-3992-4759-b9ec-54722bec8d77
 # ╠═53da82d5-2e69-4f88-8043-6694d57cdd91
 # ╠═106482c9-a9f9-4b6e-95a9-614ab7991e23
 # ╠═b5533db0-a734-4d37-9d75-24471634f855
 # ╠═4eea0a17-257e-4d0e-88df-9ff4858771b1
 # ╠═7178e5b9-cc42-4933-970a-4707ba69dbe9
+# ╠═0712d737-73f2-406d-af59-29bef38dd296

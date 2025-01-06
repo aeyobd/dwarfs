@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -340,6 +340,11 @@ md"""
 # Validation for xmatch
 """
 
+# ╔═╡ ff236dd1-3097-44f6-8e12-00803a8bee42
+md"""
+Each of these plots should exactly line up within the xmatch tolerance.
+"""
+
 # ╔═╡ e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 function plot_xmatch_radec(suffix)
 
@@ -387,17 +392,7 @@ md"""
 """
 
 # ╔═╡ 93d185f2-1eaa-4d35-87dd-b84f385483de
-function filt_missing(col, verbose=false; low=-Inf, high=Inf)
-	filt =  not.(ismissing.(col)) .& not.(isnan.(col))
-	filt1 = high .> col .> low
-	if verbose
-		println("excluding ", sum(not.(filt1)[filt]), " outliers")
-	end
-	return filt .& filt1
-end
 
-# ╔═╡ 36d2d86f-6a75-46f4-b48f-36137e95e90d
-filt_missing(all_stars.RV_gaia)
 
 # ╔═╡ 66e5693f-90cc-4b49-8a0c-8d92ea9e8cdd
 function get_matching_stars(study1, study2)
@@ -488,8 +483,53 @@ md"""
 # Weighted Mean
 """
 
-# ╔═╡ 36f74c41-4190-4705-a656-61a1223ffed8
+# ╔═╡ f4505ad1-6026-4f07-b849-6f55401f2d80
+"""
+	filt_missing(vector; verbose, low, high)
 
+Returns a filter excluding NaN and missing values. Additionally, 
+can truncate values past low and high (defaulting to Infs).
+"""
+function filt_missing(col; verbose=false, low=-Inf, high=Inf)
+	filt =  not.(ismissing.(col)) .& not.(isnan.(col))
+	filt1 = high .> col .> low
+	if verbose
+		println("excluding ", sum(not.(filt1)[filt]), " outliers")
+	end
+	return filt .& filt1
+end
+
+# ╔═╡ 36d2d86f-6a75-46f4-b48f-36137e95e90d
+filt_missing(all_stars.RV_gaia)
+
+# ╔═╡ 8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
+"""
+	safe_weighted_mean(values, errors)
+
+Given a set of values with standard errors, computes
+the weighted mean between non-missing (and non-nan) values,
+returning the inverse varience weighted mean and the standard deviation.
+"""
+function safe_weighted_mean(values, errors)
+	filt = filt_missing(values)
+	filt .&= filt_missing(errors)
+	if sum(filt) == 0
+		return missing
+	end
+
+	x = float.(values[filt]) .± float.(errors[filt])
+
+	return weightedmean(x), std(values[filt])
+end
+
+# ╔═╡ db9a60bf-a7db-410d-ada2-0b6ed011e2c4
+
+
+# ╔═╡ 0d0c854c-b794-469d-8dba-2bf83a9f6d2f
+length(unique(all_stars.star_id))
+
+# ╔═╡ 36f74c41-4190-4705-a656-61a1223ffed8
+names(all_stars)
 
 # ╔═╡ 07070037-e64a-46eb-a23a-4cc7e35b4551
 unique(all_stars.study)
@@ -514,21 +554,8 @@ groupby(all_stars, "star_id")[1]
 # ╔═╡ d3333b48-aa4e-42c1-9e0a-bbff98e3647d
 all_studies = ["gaia", "apogee", "p20", "s18"]
 
-# ╔═╡ 8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
-function safe_weighted_mean(values, errors)
-	filt = filt_missing(values)
-	filt .&= filt_missing(errors)
-	if sum(filt) == 0
-		return missing
-	end
-
-	x = float.(values[filt]) .± float.(errors[filt])
-
-	return weightedmean(x), std(values[filt])
-end
-
 # ╔═╡ 77130b64-383e-4b3c-bb55-76f925db9986
-function average_by_star(all_stars, id_col="star_id")
+function average_by_star(all_stars; id_col="star_id", study_rv_names=all_studies)
 	averaged_stars = all_stars[1:0, :]
 
 	filt = .!isnan.(all_stars.RV_err)
@@ -549,6 +576,23 @@ function average_by_star(all_stars, id_col="star_id")
 		newrow[:, "RV_err"] .= μ.err
 		newrow[:, "RV_std"] .= σ
 		newrow[:, "RV_count"] .= size(group, 1)
+
+		for study in study_rv_names
+			ave = safe_weighted_mean(group[:, "RV_$study"], group[:, "RV_err_$(study)"])
+			if ismissing(ave)
+				μ = NaN ± NaN
+				σ = NaN
+			else
+				μ, σ = ave
+			end
+			newrow[:, "RV_$study"] .= μ.val
+			newrow[:, "RV_err_$(study)"] .= μ.err
+			
+			newrow[:, "RV_std_$(study)"] .= σ
+			newrow[:, "RV_count_$(study)"] .= sum(.!isnan.(group[:, "RV_$study"]))
+		end
+
+
 		append!(averaged_stars, newrow, cols=:union)
 	end
 
@@ -625,7 +669,25 @@ hist(memb_stars.RV)
 length(memb_stars.RV)
 
 # ╔═╡ 1823f690-81c9-471b-bdec-c9fe261544c1
+rv_test = [1.2, 1.5, 0.3, 0.9]
 
+# ╔═╡ 8a5615a0-c34c-4de5-8a62-543cdb613988
+rv_test_err = [0.01, 0.03, 0.025, 0.05]
+
+# ╔═╡ 8fb2fe7f-9f74-4cf6-9cef-4bac3ebc9ae4
+w_test = 1 ./ rv_test_err .^ 2
+
+# ╔═╡ a7071b79-f36d-453a-9f9e-2a16832f0785
+lguys.std(rv_test, w_test)
+
+# ╔═╡ c96b5112-7f07-4e7c-b42b-18b26055561a
+lguys.mean(rv_test, w_test)
+
+# ╔═╡ 2be7ce8f-f44b-4e57-b8a6-53b623376c4a
+1 / sqrt(sum(w_test)) # mean uncertainty
+
+# ╔═╡ 4ed42682-b81c-4635-b5a9-7a73857cc927
+safe_weighted_mean(rv_test, rv_test_err)
 
 # ╔═╡ ab27964f-b070-4328-81c2-6ecf4b8cec1e
 md"""
@@ -798,7 +860,7 @@ function compare_rv_mean(study1, rv_meas=rv_meas)
 	rv2  = rv_meas[:, "RV"]
 	rv2_err  = rv_meas[:, "RV_err"]
 
-	filt = filt_missing(rv1, true; low=rv_low, high=rv_high) .& filt_missing(rv2, true;  low=rv_low, high=rv_high)
+	filt = filt_missing(rv1; verbose=true, low=rv_low, high=rv_high) .& filt_missing(rv2;  verbose=true, low=rv_low, high=rv_high)
 
 	println("matched ", sum(filt), " stars")
 
@@ -945,7 +1007,7 @@ end
 
 # ╔═╡ 88e5fea7-d42c-4429-873f-93ddad293b19
 let 
-	global pace20_cleaned = average_by_star(pace20[pace20_filt, :], "ID")
+	global pace20_cleaned = average_by_star(pace20[pace20_filt, :], id_col="ID", study_rv_names=[])
 
 	filt_good = pace20_cleaned.RV_std .< 5pace20_cleaned.RV_err  .* sqrt.(pace20_cleaned.RV_count)
 
@@ -957,18 +1019,12 @@ end
 # ╔═╡ 6942bdca-1300-46be-8aa2-a3725d7fdfba
 apogee_memb_filt = (apogee.PSAT .> 0.2 ) .&& (apogee.RV .> rv_low) .&& (apogee.RV .< rv_high) .&& (apogee.RV_sigma ./ apogee.RV_err .< 5)
 
-# ╔═╡ 464a5e15-3485-4f74-b734-de62692ba750
-apogee.RV_co
-
 # ╔═╡ 133a324f-9a29-4f4e-a8b0-8a712e4f2493
-apogee_cleaned = average_by_star(apogee[apogee_memb_filt, :], "source_id")
-
-# ╔═╡ d10ead15-4124-428a-a9fe-78c19195a7cc
-
+apogee_cleaned = average_by_star(apogee[apogee_memb_filt, :], id_col="source_id", study_rv_names=[])
 
 # ╔═╡ 904ff35b-dbfa-4ab8-ae9a-59f87abf6c9d
 let 
-	global spencer_cleaned = average_by_star(spencer18_all, "ID")
+	global spencer_cleaned = average_by_star(spencer18_all, id_col="ID", study_rv_names=[])
 
 	filt_good = spencer_cleaned.RV_std ./ spencer_cleaned.RV_err .< 5 .* sqrt.(spencer_cleaned.RV_count)
 
@@ -978,11 +1034,14 @@ let
 end
 	
 
+# ╔═╡ 1901e3d8-dcb5-4bb2-8f13-7472b1c5b6e4
+all_studies
+
 # ╔═╡ ebdf8cfc-ebff-4331-bab2-998a734f2cd1
 datasets = Dict(
 	:apogee => apogee_cleaned,
-	:pace => pace20_cleaned,
-	:spencer => spencer_cleaned,
+	:p20 => pace20_cleaned,
+	:s18 => spencer_cleaned,
 	:sestito => graces,
 )
 
@@ -1002,7 +1061,22 @@ props = Dict(name => fit_rv_sigma(float.(data.RV), float.(data.RV_err)) for (nam
 for key in keys(props)
 	println(key)
 	println(props[key])
-	@info plot_sample_normal_fit(datasets[key], props[key], title=string(key))
+	fig =  plot_sample_normal_fit(datasets[key], props[key], title=string(key))
+	if key !== :sestito
+		rv = averaged_stars[:, "RV_$key"]
+		filt = filt_missing(rv) .& memb_filt
+		rv_err = averaged_stars[filt, "RV_err_$key"]
+		rv = rv[filt]
+
+		println(sum(filt))
+		h = histogram(Float64.(rv), normalization=:pdf)
+		
+		errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=:red)
+		println(fit_rv_sigma(rv, rv_err))
+		println()
+	end
+
+	@info fig
 end
 
 # ╔═╡ b5faa873-d5c9-447b-b90e-f693db26e6c2
@@ -1012,9 +1086,6 @@ md"""
 
 # ╔═╡ 8e7c650c-ebc5-4775-a725-0810b735cc36
 0.3 ⊕ 0.5
-
-# ╔═╡ f17c35af-27c2-40e8-9dc9-814c07f636f5
-atand(gsr.pmra, gsr.pmdec)
 
 # ╔═╡ 46434fa6-09df-4b02-9270-cbdcc9648e38
 let
@@ -1084,7 +1155,7 @@ rv_meas.RV .- rv_mean
 rv_meas.RV
 
 # ╔═╡ 7110364b-67ea-4e2a-b59f-a3dc9b292757
-averaged_stars.RV_gsr
+sum(isnan.(averaged_stars_w_vels.RV_gsr))
 
 # ╔═╡ e899faa9-580b-4aad-902e-382008048908
 function purity_given_p(psatlow, psathigh)
@@ -1241,7 +1312,7 @@ lguys.write_fits(joinpath("processed", "umi_all_rv.fits"), df_all)
 lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 
 # ╔═╡ Cell order:
-# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═202e0f8b-b417-4597-a737-7c60c0575fd3
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -1304,6 +1375,7 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═2eba0d13-c688-4a70-95e4-59bc0d21020b
 # ╠═bd51fe42-7e39-4cd8-8065-58ab9814f966
 # ╟─89552b84-d12e-4d88-a58e-8b89ad4b2569
+# ╠═ff236dd1-3097-44f6-8e12-00803a8bee42
 # ╠═e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 # ╠═7a77bf54-fff8-4906-b738-0d3c91bdf6aa
 # ╠═5b2fceff-9c3e-472d-9310-31e920137e41
@@ -1330,8 +1402,12 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═cd256d12-5c9e-436b-9473-ed3e7e713225
 # ╠═dfb4db7f-1d27-4e0b-9eeb-0afc2ca3d92a
 # ╠═578b9efe-9cd5-4b55-a321-4eea37bc43d1
+# ╠═f4505ad1-6026-4f07-b849-6f55401f2d80
+# ╠═8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
 # ╠═77130b64-383e-4b3c-bb55-76f925db9986
+# ╠═db9a60bf-a7db-410d-ada2-0b6ed011e2c4
 # ╠═782691d3-dd01-4a34-9db2-a18b0b6566e1
+# ╠═0d0c854c-b794-469d-8dba-2bf83a9f6d2f
 # ╠═36f74c41-4190-4705-a656-61a1223ffed8
 # ╠═2365da83-7be8-44ec-a399-d520d610014b
 # ╠═828cf7c4-d91e-4d02-8649-dd0194177f67
@@ -1344,7 +1420,6 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═29f47769-8d2c-4e9d-b5eb-79b168580a04
 # ╠═3655088f-8ae3-4edc-899d-466d909e5e6c
 # ╠═d3333b48-aa4e-42c1-9e0a-bbff98e3647d
-# ╠═8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
 # ╠═88ed48b4-baa9-4ac0-86e1-8348edcd59b4
 # ╠═222bb254-8b65-44d3-b3d2-b08fbcbe9950
 # ╠═6bc02c4f-31a2-4e4e-8612-e66f8cc9c93e
@@ -1358,6 +1433,12 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
 # ╠═1823f690-81c9-471b-bdec-c9fe261544c1
+# ╠═8a5615a0-c34c-4de5-8a62-543cdb613988
+# ╠═8fb2fe7f-9f74-4cf6-9cef-4bac3ebc9ae4
+# ╠═a7071b79-f36d-453a-9f9e-2a16832f0785
+# ╠═c96b5112-7f07-4e7c-b42b-18b26055561a
+# ╠═2be7ce8f-f44b-4e57-b8a6-53b623376c4a
+# ╠═4ed42682-b81c-4635-b5a9-7a73857cc927
 # ╟─ab27964f-b070-4328-81c2-6ecf4b8cec1e
 # ╠═23d4b7c4-61f9-4748-b3c4-80eaad551914
 # ╠═7dab615b-e0a1-431e-88c0-e1e9d9c29568
@@ -1405,10 +1486,9 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═2de62c9d-f76b-4e3b-9ad2-69d81842e507
 # ╠═88e5fea7-d42c-4429-873f-93ddad293b19
 # ╠═6942bdca-1300-46be-8aa2-a3725d7fdfba
-# ╠═464a5e15-3485-4f74-b734-de62692ba750
 # ╠═133a324f-9a29-4f4e-a8b0-8a712e4f2493
-# ╠═d10ead15-4124-428a-a9fe-78c19195a7cc
 # ╠═904ff35b-dbfa-4ab8-ae9a-59f87abf6c9d
+# ╠═1901e3d8-dcb5-4bb2-8f13-7472b1c5b6e4
 # ╠═ebdf8cfc-ebff-4331-bab2-998a734f2cd1
 # ╠═781a4656-76e1-4c6e-9057-611b90bb5649
 # ╠═2bae2760-76f1-4930-85cd-8001a8f6de7f
@@ -1417,7 +1497,6 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═eaf47845-95dd-4f7d-bf76-3d9b1154711a
 # ╟─b5faa873-d5c9-447b-b90e-f693db26e6c2
 # ╠═8e7c650c-ebc5-4775-a725-0810b735cc36
-# ╠═f17c35af-27c2-40e8-9dc9-814c07f636f5
 # ╠═46434fa6-09df-4b02-9270-cbdcc9648e38
 # ╠═dc4c0453-fed0-4733-9f59-0b2df506b45c
 # ╠═ce3067d3-55e6-43a1-9b7b-4cf53c09ee88
