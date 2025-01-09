@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -41,10 +41,10 @@ md"""
 models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = models_dir * "sculptor/1e6_V31_r3.2/vasiliev+21_mean/"
+model_dir = models_dir * "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "plummer_rs0.20"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
@@ -91,9 +91,6 @@ obs_today_err = lguys.ICRS(;
 	pmdec=obs_today_file["pmdec_err"],
 	radial_velocity=obs_today_file["radial_velocity_err"],
 )
-
-# ╔═╡ 25f2c551-6999-434a-91bc-5950a3ca35ba
-readdir("/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/orbit1")
 
 # ╔═╡ 240077b7-dc20-4cfa-9ada-d3aedcf36a75
 sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits"))
@@ -259,7 +256,7 @@ let
 	h = Arya.histogram2d(stars.xi, stars.eta, bins, weights=stars.weights)
 
 	p = heatmap!(h.xbins, h.ybins, h.values, 
-		colorscale=log10, colorrange=(1e-5*maximum(h.values), maximum(h.values)))
+		colorscale=log10, colorrange=(1e-10*maximum(h.values), maximum(h.values)))
 
 	Colorbar(fig[1, 2], p)
 
@@ -311,6 +308,24 @@ let
 	bins = LinRange(-dr, dr, 20)
 
 	h = mean_2d(stars,  stars.radial_velocity, bins=bins)
+
+	p = heatmap!(h.xbins, h.ybins, h.values, 
+	colormap=:redsblues, # colorrange=(50, 80)
+	)
+
+	Colorbar(fig[1, 2], p)
+
+	fig
+end
+
+# ╔═╡ 1c7b234b-c440-42c5-a601-b3e515ba31af
+let
+	dr = 2
+	fig, ax = xi_eta_axis(dr, dr)
+
+	bins = LinRange(-dr, dr, 20)
+
+	h = mean_2d(stars,  stars.radial_velocity_gsr, bins=bins)
 
 	p = heatmap!(h.xbins, h.ybins, h.values, 
 	colormap=:redsblues, # colorrange=(50, 80)
@@ -379,7 +394,7 @@ let
 	scatter!([sky_orbit.pmra[idx_f]], 
 		[sky_orbit.pmdec[idx_f]], markersize=10)
 
-	idx = idx_f - 20: idx_f + 20
+	idx = idx_f - 20: idx_f
 	lines!(sky_orbit.pmra[idx], sky_orbit.pmdec[idx])
 
 	Colorbar(fig[1, 2], h, label="stellar density")
@@ -449,7 +464,7 @@ let
 	scatter!([sky_orbit.distance[idx_f]], 
 		[sky_orbit.radial_velocity[idx_f]], markersize=10)
 	
-	idx = idx_f - 20: idx_f + 20
+	idx = idx_f - 20: idx_f
 	lines!(sky_orbit.distance[idx], sky_orbit.radial_velocity[idx])
 
 	
@@ -744,7 +759,6 @@ end
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
 # ╠═84dc77f7-14b3-4a2e-a556-c025d7df0095
 # ╠═2612e3a2-6e6e-494e-b140-720dd2db6ec2
-# ╠═25f2c551-6999-434a-91bc-5950a3ca35ba
 # ╠═240077b7-dc20-4cfa-9ada-d3aedcf36a75
 # ╠═9b5e75e7-171d-40e9-9148-718bb498c56d
 # ╠═8c8a3bad-3f8c-4bf3-8892-ee6b930b3f97
@@ -763,6 +777,7 @@ end
 # ╠═b4778d19-cb91-4f0f-97fa-4ef69448f849
 # ╠═7fa19be2-4014-4df0-821e-4c509eca4f28
 # ╠═96307998-07a0-45bf-bf10-cd14bfcfe20a
+# ╠═1c7b234b-c440-42c5-a601-b3e515ba31af
 # ╠═35c52910-089c-4507-956a-2b0649507495
 # ╠═2ef43371-bfae-4a65-8fa9-d1ab5ade32f1
 # ╠═1c242116-e66d-453b-ad62-b6a65cdbe284

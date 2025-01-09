@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -38,10 +38,10 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "plummer_rs0.20"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r4.2/vasiliev+21_smallperi"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -280,6 +280,19 @@ function v_rad_hist(snap, bins=100)
 	logr = log10.(lguys.calc_r(snap))
 	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad .* mass)
 	_, counts, _ = lguys.histogram(logr, x_bins, weights=mass)
+
+
+	return x_bins, v_bins ./ counts, err ./ counts
+end
+
+# ╔═╡ dfc045b0-2cf1-4397-b7e5-3b855767b71f
+function v_rad_hist_dm(snap, bins=100)
+
+
+	v_rad = lguys.calc_v_rad(snap)
+	logr = log10.(lguys.calc_r(snap))
+	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad)
+	_, counts, _ = lguys.histogram(logr, x_bins)
 
 
 	return x_bins, v_bins ./ counts, err ./ counts
@@ -528,13 +541,31 @@ let
 		limits=((nothing, 1.5), (-20, 20))
 	)
 	
-	x, y, ye = v_rad_hist(snap_f)
+	x, y, ye = v_rad_hist(snap_f, 150)
 	errscatter!(lguys.midpoints(x), y * V2KMS, yerr=ye*V2KMS)
 
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
 	text!(log10.(r_b_kpc), -20, text=L"r_b")
 
 	save(joinpath(fig_dir, "break_radius.pdf"), fig)
+	fig
+end
+
+# ╔═╡ ab55323b-d402-48e0-903f-dee904488f91
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel=L"log $r$ / kpc",
+		ylabel=L"mean 3D radial velocity in bin (km\,s$^{-1}$)",
+		limits=((nothing, 1.5), (-20, 20))
+	)
+	
+	x, y, ye = v_rad_hist_dm(snap_f, 200)
+	errscatter!(lguys.midpoints(x), y * V2KMS, yerr=ye*V2KMS)
+
+	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
+	text!(log10.(r_b_kpc), -20, text=L"r_b")
+
 	fig
 end
 
@@ -598,6 +629,54 @@ let
 end
   ╠═╡ =#
 
+# ╔═╡ df229124-325f-4f0c-9cf3-9930002b7767
+profiles = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarProfile)
+
+# ╔═╡ 49052b15-7cfc-488c-974e-7b9c1872d082
+profiles_3D = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
+
+# ╔═╡ 0112797c-ecb8-4ea7-8a66-365f9fbe952e
+let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		limits = (-2.5, 2, -20, 2),
+		xlabel = L"log $r$ / kpc",
+		ylabel = L"log $\Sigma_\star$",
+	)
+
+	colorrange = (prof_i.time, prof_f.time) .* T2GYR
+	for (_, prof) in profiles
+		lines!(prof.log_r, prof.log_Sigma, color=prof.time* T2GYR, colorrange=colorrange)
+	end
+
+
+	Colorbar(fig[1,2], label="time / Gyr", colorrange=colorrange)
+	
+	fig
+end
+
+# ╔═╡ b0b2948a-0299-4b90-83be-4bdcf2a75eaf
+let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		xlabel = L"log $r$ / kpc",
+		ylabel = L"log $\rho_\star$",
+		limits = (-2.5, 2, -15, 5)
+	)
+
+	colorrange = (prof_i.time, prof_f.time) .* T2GYR
+	for (_, prof) in profiles_3D
+		lines!(prof.log_r, log10.(prof.rho), color=prof.time* T2GYR, colorrange=colorrange)
+	end
+
+
+	Colorbar(fig[1,2], label="time / Gyr", colorrange=colorrange)
+	
+	fig
+end
+
 # ╔═╡ a955cee5-609e-46bd-8212-51e18c0d1e86
 properties = Dict(
 	"break_radius_kpc" => r_b_kpc,
@@ -651,8 +730,10 @@ end
 # ╟─1866c280-89c3-4a71-9dbf-50b583360145
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
+# ╠═dfc045b0-2cf1-4397-b7e5-3b855767b71f
 # ╠═27184a9d-07c9-4b4d-ad17-74ed279ed4e3
 # ╠═57d5decd-8259-4ec2-87ac-44d28625cd7b
+# ╠═ab55323b-d402-48e0-903f-dee904488f91
 # ╟─9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8
 # ╠═d7fece88-3327-4435-ab61-b45ff62b3b2e
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780
@@ -674,5 +755,9 @@ end
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
 # ╠═cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
 # ╠═d42795d0-bd69-4c2c-be5b-e27e85199ee3
+# ╠═df229124-325f-4f0c-9cf3-9930002b7767
+# ╠═49052b15-7cfc-488c-974e-7b9c1872d082
+# ╠═0112797c-ecb8-4ea7-8a66-365f9fbe952e
+# ╠═b0b2948a-0299-4b90-83be-4bdcf2a75eaf
 # ╠═a955cee5-609e-46bd-8212-51e18c0d1e86
 # ╠═a3311d9e-430b-49af-ac7c-460aa49e19bc

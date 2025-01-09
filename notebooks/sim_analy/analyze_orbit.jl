@@ -42,7 +42,7 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -342,7 +342,7 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-10:idx_f+2
+		idx = idx_f-10:idx_f
 	
 		scatter!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		

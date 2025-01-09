@@ -1,0 +1,14 @@
+theta0 = -141.4445322649014
+idx_peris = [2]
+t_last_peri = 0.9898184765624999
+apocentre = []
+period = nan
+pericentre = 0.01422518176440545
+idx_peri = 2
+idx_f = 107
+idx_apos = []
+t_peris = [2.0703125]
+dec0 = -52.82186815101022
+distance_f = 5.295386560108122
+ra0 = 254.63631542672755
+t_apos = []

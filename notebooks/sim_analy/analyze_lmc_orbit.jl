@@ -36,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi"
+modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -66,6 +66,9 @@ centresfile = joinpath(parentdir, "analysis", modelname, "centres.hdf5")
 
 # ╔═╡ 9c427388-c657-4bb7-bc0a-b4de3597c645
 skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
+
+# ╔═╡ 63d28179-452f-42e3-9ded-938efa7bb144
+
 
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
 md"""
@@ -122,8 +125,29 @@ md"""
 # plots
 """
 
+# ╔═╡ 78b1e507-14c3-4279-b502-d92ed5bfb27b
+idx_interest = [1, argmin(calc_r(x_scl_lmc))]
+
+# ╔═╡ 8535eb24-a43b-4680-a54a-a7bddb535999
+x_cen[:, idx_interest]
+
+# ╔═╡ d3738bfb-0fdb-4a02-a186-8fc4180bbe35
+x_lmc[:, idx_interest]
+
+# ╔═╡ d6086a06-0d65-42b4-a125-7b64dc167197
+x_lmc[:, end]
+
+# ╔═╡ 3410ae62-b91f-42c1-a8ee-9445565923d3
+LilGuys.calc_r((v_cen[:, idx_interest] .- v_lmc[:, idx_interest]) * V2KMS)
+
+# ╔═╡ 79147e9e-f09b-4e05-882f-367b31cbcef2
+
+
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
 LilGuys.plot_xyz(x_cen, x_cen_exp, x_lmc, labels=["n body", "point particle", "LMC"])
+
+# ╔═╡ b4c12b61-6827-4c63-bbbc-e708fdb8ba4b
+LilGuys.plot_xyz(x_cen, x_lmc, labels=["Scl", "LMC"], idx_scatter=fill(idx_interest, 2))
 
 # ╔═╡ c96035d2-8860-4609-96d3-116f0928fa14
 LilGuys.struct_to_dict((; a=1))
@@ -176,9 +200,6 @@ times
 # ╔═╡ 88ae0d01-2a5d-4434-8452-5f89ba9d55c3
 idx_gyr = [argmin(abs.(times .- i )) for i in -5:0]
 
-# ╔═╡ b4c12b61-6827-4c63-bbbc-e708fdb8ba4b
-LilGuys.plot_xyz(x_cen, x_lmc, labels=["Scl", "LMC"], idx_scatter=fill(idx_gyr, 2))
-
 # ╔═╡ a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
 let
 	fig = Figure()
@@ -191,6 +212,12 @@ let
 
 	fig
 end
+
+# ╔═╡ 8a17fad5-c41b-48d6-be30-ef52973880d1
+times[idx_interest]
+
+# ╔═╡ eb7a269a-2a20-4ea7-b52c-b74277df5617
+times[idx_interest]
 
 # ╔═╡ 761750fd-4b18-4c5f-8b79-0f87307e08a1
 LilGuys.plot_xyz(x_scl_lmc, times=times / T2GYR, idx_scatter=[idx_gyr])
@@ -220,8 +247,37 @@ let
 	fig
 end
 
+# ╔═╡ 1238e21a-75d1-4a57-a578-50e7ebb387ae
+	LilGuys.kpc_to_arcmin(LilGuys.calc_break_radius(0.15 / T2GYR, 10.6 / V2KMS), 83.2)
+
+# ╔═╡ cb4241fe-30d0-4a27-bc90-e3bdf15aa32e
+length(times)
+
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = calc_r(x_cen)
+
+# ╔═╡ 76a51188-2168-4cc6-b9e2-ede9f6ec34e4
+times[argmin(r)]
+
+# ╔═╡ cae63625-df19-4efc-95f2-58887e8fb759
+md"""
+For a specific mode
+"""
+
+# ╔═╡ 53d482ae-1e74-4b33-9392-90bc110c113d
+idx_f_2 = argmin(abs.(times .- -0.25))
+
+# ╔═╡ 335763ff-bca3-406c-b2a9-7769260cabad
+times[idx_f_2]
+
+# ╔═╡ 9d901528-b95c-4d91-899e-033ae68ae73d
+times[argmin(r)] - times[idx_f_2]
+
+# ╔═╡ d574d14c-c48b-4439-b533-7352c2858b8a
+calc_r(x_cen[:, idx_f_2] .- [8.122, 0, 0])
+
+# ╔═╡ b45cced1-51ef-432b-a800-24ba5d543f2a
+calc_r(x_scl_lmc[:, idx_f_2])
 
 # ╔═╡ Cell order:
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
@@ -238,6 +294,7 @@ r = calc_r(x_cen)
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 # ╠═bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
 # ╠═9c427388-c657-4bb7-bc0a-b4de3597c645
+# ╠═63d28179-452f-42e3-9ded-938efa7bb144
 # ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
@@ -252,6 +309,14 @@ r = calc_r(x_cen)
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
 # ╠═7bbbc936-7626-423b-bcaa-9870f320c432
 # ╠═88ae0d01-2a5d-4434-8452-5f89ba9d55c3
+# ╠═78b1e507-14c3-4279-b502-d92ed5bfb27b
+# ╠═8a17fad5-c41b-48d6-be30-ef52973880d1
+# ╠═8535eb24-a43b-4680-a54a-a7bddb535999
+# ╠═d3738bfb-0fdb-4a02-a186-8fc4180bbe35
+# ╠═d6086a06-0d65-42b4-a125-7b64dc167197
+# ╠═3410ae62-b91f-42c1-a8ee-9445565923d3
+# ╠═79147e9e-f09b-4e05-882f-367b31cbcef2
+# ╠═eb7a269a-2a20-4ea7-b52c-b74277df5617
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
 # ╠═b4c12b61-6827-4c63-bbbc-e708fdb8ba4b
 # ╠═761750fd-4b18-4c5f-8b79-0f87307e08a1
@@ -266,4 +331,13 @@ r = calc_r(x_cen)
 # ╠═01b57b06-c658-49e1-b61d-cf1c7e223723
 # ╠═a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
+# ╠═76a51188-2168-4cc6-b9e2-ede9f6ec34e4
+# ╠═1238e21a-75d1-4a57-a578-50e7ebb387ae
+# ╠═cb4241fe-30d0-4a27-bc90-e3bdf15aa32e
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
+# ╠═cae63625-df19-4efc-95f2-58887e8fb759
+# ╠═53d482ae-1e74-4b33-9392-90bc110c113d
+# ╠═335763ff-bca3-406c-b2a9-7769260cabad
+# ╠═9d901528-b95c-4d91-899e-033ae68ae73d
+# ╠═d574d14c-c48b-4439-b533-7352c2858b8a
+# ╠═b45cced1-51ef-432b-a800-24ba5d543f2a

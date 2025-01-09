@@ -34,7 +34,7 @@ Inputs
 """
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_smallperi"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -111,6 +111,8 @@ let
 	
 	Legend(fig[1, 2], ax)
 	
+	save(joinpath(figures_dir, "boundmass.pdf"), fig)
+
 	fig
 end
 
@@ -130,7 +132,7 @@ r_max = [f.r_circ_max for f in profiles]
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel=L"\log \; r / \textrm{kpc}", 
+		xlabel=L"\log \; r_\textrm{circ}\ /\ \textrm{kpc}", 
 		ylabel=L"$v_\textrm{circ}$ / km s$^{-1}$",
 		yscale=log10,
 		yticks=[1, 10, 20, 30, 40, 50, 60],
@@ -215,7 +217,7 @@ let
 	x = out.times[snap_idx]
 	lines!(x*T2GYR, v_max * V2KMS, label=L"maximum $v_\text{circ}$")
 	#scatter!(x, v_h, label=L"r=r_h")
-	axislegend(ax)
+	#axislegend(ax)
 
 	save(joinpath(figures_dir, "v_circ_time.pdf"), fig)
 
@@ -250,6 +252,47 @@ let
 
 	#text!(L"r_\textrm{break}", position=(log10.(r_break),-11.5), space=:data, rotation=π/2, align=(:left, :baseline))
 	save(joinpath(figures_dir, "density.pdf"), fig)
+
+	fig
+	# only include bound points in profile...
+end
+
+# ╔═╡ 871f7679-dbaa-4901-85ab-357b58588d46
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\log\rho_\textrm{DM}",
+	limits=((-2, 2.5), (-10, 0)))
+
+	colorrange = (prof_i.time, prof_f.time) .* T2GYR
+
+	for prof in profiles[1:5:end]
+		lines!(prof.log_r, log10.(prof.rho), color=prof.time * T2GYR, colorrange=colorrange)
+	end
+	
+	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
+
+	save(joinpath(figures_dir, "density_all_snapshots.pdf"), fig)
+
+	fig
+	# only include bound points in profile...
+end
+
+# ╔═╡ 48e54b34-4b22-4609-8928-ba6d8d027370
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"$\log\ r_\text{circ}$ / kpc", ylabel=L"\log\ v_\text{circ}\ /\ \text{km\,s^{-1}}",
+		limits=(-1, 2, -1.5, -0.5)
+	)
+
+	colorrange = (prof_i.time, prof_f.time) .* T2GYR
+
+	for prof in profiles[1:1:end]
+		lines!(log10.(prof.r_circ), log10.(prof.v_circ), color=prof.time * T2GYR, colorrange=colorrange)
+	end
+	
+	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
+
+	save(joinpath(figures_dir, "vcirc_rcirc_all_snapshots.pdf"), fig)
 
 	fig
 	# only include bound points in profile...
@@ -309,6 +352,8 @@ let
 
 	Colorbar(fig[1, 2], h, label="DM density")
 
+	save(joinpath(figures_dir, "xz_fin_projection.pdf"), fig)
+
 	fig
 end
 
@@ -355,7 +400,7 @@ end
 # ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
 # ╠═2470e05f-9215-45e4-88fc-daab0638272f
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
-# ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
+# ╟─0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
 # ╠═e6fc3297-c1b7-40a4-b2bb-98490a42604a
 # ╠═d57501a1-4764-4b23-962f-2d37547d7bcc
@@ -365,6 +410,8 @@ end
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
 # ╠═3aa62ecf-495a-434b-8008-02783bd5b56e
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
+# ╠═871f7679-dbaa-4901-85ab-357b58588d46
+# ╠═48e54b34-4b22-4609-8928-ba6d8d027370
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd
-# ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
+# ╟─4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf

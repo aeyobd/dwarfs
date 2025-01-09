@@ -1,0 +1,16 @@
+theta0 = 105.46485787677102
+idx_peris = [171]
+t_last_peri = 0.198
+apocentre = [169.236317040732]
+period = nan
+pericentre = 32.230458965094876
+idx_peri = 171
+
+# manual intervention here...
+idx_f = 192
+idx_apos = [9]
+t_peris = [-74.93222656249999]
+dec0 = -33.731804345244306
+distance_f = 61.408
+ra0 = 15.28921266393559
+t_apos = [-398.55843749999997]
