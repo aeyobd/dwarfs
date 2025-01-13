@@ -36,7 +36,7 @@ The most important variable is to set the modelname to the appropriate directory
 """
 
 # ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-modelname = "vasiliev24_M11"
+modelname = "EP20"
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 fig_dir = "./$modelname/figures"
@@ -257,15 +257,18 @@ end
 
 # ╔═╡ 4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 let 
-	idx_s =  peris .< quantile(peris, 2*p_value)
+	idx_s = quantile(peris, 0.5*p_value) .<  peris .< quantile(peris, 1.5*p_value)
 
+	println("peri ~ ", median(peris[idx_s]))
 	median_residual(observations[idx_s])
 	median_percen(observations[idx_s])
 end
 
 # ╔═╡ 34104429-05e0-40a6-83e5-078dbe346504
 let
-	idx_s =  peris .> quantile(peris, 1-2*p_value)
+	idx_s = quantile(peris, 1-0.5*p_value) .> peris .> quantile(peris, 1-1.5*p_value)
+	
+	println("peri ~ ", median(peris[idx_s]))
 
 	median_residual(observations[idx_s])
 	median_percen(observations[idx_s])
@@ -273,10 +276,11 @@ let
 end
 
 # ╔═╡ e5825c4a-b446-44a3-8fd5-d94664965aca
-median_residual(observations)
-
-# ╔═╡ ef57611c-2986-4b03-aa5a-ab45003edd72
-median_percen(observations)
+let
+	println("peri ~ ", median(peris))
+	median_residual(observations)
+	median_percen(observations)
+end
 
 # ╔═╡ 92aac8e8-d599-4a1e-965e-e653bc54c509
 dists = getproperty.(observations, :distance)
@@ -779,7 +783,6 @@ end
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 # ╠═34104429-05e0-40a6-83e5-078dbe346504
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
-# ╠═ef57611c-2986-4b03-aa5a-ab45003edd72
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╟─50baf5a6-fb5b-494e-95f3-53414a9f1cc0
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619

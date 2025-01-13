@@ -42,7 +42,11 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
+#modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
+modelname = "ursa_minor/1e6_v32_r5.0/orbit_mean"
+
+# ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
+t_min = 8
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -53,7 +57,7 @@ the below should hopefully be always the same
 parentdir = ENV["DWARFS_ROOT"]
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  "$parentdir/observations/sculptor/observed_properties.toml"
+properties_file =  "$parentdir/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
 orbit_file = joinpath(parentdir, "simulations", modelname, "orbit.csv")
@@ -111,7 +115,7 @@ md"""
 # ╔═╡ a1c992c6-ad12-4968-b105-adfa1f327e76
 let
 	fig = LilGuys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"])
-	save("$figdir/centre_xyz.pdf", fig)
+	@savefig "centre_xyz"
 	fig
 end
 
@@ -133,7 +137,7 @@ let
 
 	axislegend(ax)
 
-	save("$figdir/centre_r_t.pdf")
+	@savefig "centre_r_t"
 	fig
 end
 
@@ -174,9 +178,6 @@ end
 
 # ╔═╡ 319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 times = t * T2GYR
-
-# ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
-t_min = -5
 
 # ╔═╡ 9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
 t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
@@ -480,9 +481,10 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
 # ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
+# ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
+# ╠═d142b7bd-3002-4331-a725-577873c42f28
 # ╟─dd56b7ec-be11-447f-acc1-12750d82879b
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2
-# ╠═d142b7bd-3002-4331-a725-577873c42f28
 # ╠═0dd476fd-be53-4e9b-a686-a4462485c64c
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 # ╠═bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
@@ -512,7 +514,6 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
-# ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
 # ╠═9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
 # ╠═7646ea5b-f1b1-4934-be68-330139f7f838
 # ╠═d9df3376-6ca1-4701-afb5-2df994bb3442

@@ -41,16 +41,17 @@ md"""
 models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = models_dir * "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi/"
+#model_dir = models_dir * "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi/"
+model_dir = models_dir * "ursa_minor/1e6_v32_r5.0/orbit_mean/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.13"
+starsname = "exp2d_rs0.15"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
-fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
+figdir = joinpath(dirname(model_dir),  "stars", starsname, "figures"); mkpath(figdir)
 
 # ╔═╡ 44dec2f8-c149-461d-b586-56b73a97c0a2
-obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
+obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
@@ -235,7 +236,7 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10*maximum(hi.values), maximum(hi.values)), colormap=Reverse(:greys))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-5*maximum(hi.values), maximum(hi.values)), colormap=Reverse(:greys))
 
 	# idx = idx_f - 20: idx_f + 20
 	# lines!(sky_orbit.ra[idx], sky_orbit.dec[idx])
@@ -484,7 +485,7 @@ import StatsBase: weights, std
 # ╔═╡ 5355bcc3-2494-473d-9da7-fc38930b8ee7
 let
 	fig, ax = FigAxis(
-		limits = (-1, 2.5, 50, 150),
+		limits = (-1, 2.5, nothing, nothing),
 		xlabel = "log r",
 		ylabel="radial velocity"
 		
@@ -680,18 +681,21 @@ nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=150)
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
-prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/sculptor/processed/fiducial_sample_profile.toml")
+prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/ursa_minor/density_profiles/fiducial_profile.toml")
 
 # ╔═╡ b5fd1bcd-b554-48d3-8472-024cb0bd0792
 lguys.GalactocentricFrame().d
+
+# ╔═╡ db0d3377-0269-4308-830b-c6fc0da1f6f1
+dy_sigma = -0.7
 
 # ╔═╡ 901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel=L"\log r \ / \textrm{kpc}",
+		xlabel=L"\log r \ /\ \textrm{arcmin}",
 		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((-1, 2.2), (-5, 3))
+		limits=((-1, 2.5), (-5, 2))
 	)
 
 	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
@@ -700,16 +704,25 @@ let
 		color=:black
 	)
 
-	
 
-	scatter!(prof.log_r, prof.log_Sigma .+ 1.5, 
+	scatterlines!(prof.log_r, prof.log_Sigma .- dy_sigma, 
 			label="model")
 
-
-	
 	vlines!(log10(r_b_arcmin), color=:grey, label="break radius")
+
+	axislegend(position=:lb)
+	@savefig "density2d_vs_observations" fig
 	fig
 end
+
+# ╔═╡ f61a0f41-0b7f-4e62-acdb-f6e83361b84d
+figdir
+
+# ╔═╡ eb280539-f244-4cb9-83d5-e62ce37263c0
+isdefined(@__MODULE__, :figdir)
+
+# ╔═╡ b3105414-466d-4c3c-bb6c-0569d6adc834
+figdir
 
 # ╔═╡ c901bf9d-46bf-4cd7-af11-227d477663b4
 r_b_arcmin
@@ -720,7 +733,7 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L" r \ / \textrm{kpc}",
 		ylabel = L"\Gamma",
-		limits=((0, 120), (-35, 2))
+		limits=((0, 120), (-12, 2))
 	)
 
 
@@ -809,6 +822,10 @@ end
 # ╠═a8688258-e818-4b7a-b238-5629d99413ed
 # ╠═1fde438a-ad46-4b60-bc9f-fddc533d9cdb
 # ╠═b5fd1bcd-b554-48d3-8472-024cb0bd0792
+# ╠═db0d3377-0269-4308-830b-c6fc0da1f6f1
 # ╠═901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
+# ╠═f61a0f41-0b7f-4e62-acdb-f6e83361b84d
+# ╠═eb280539-f244-4cb9-83d5-e62ce37263c0
+# ╠═b3105414-466d-4c3c-bb6c-0569d6adc834
 # ╠═c901bf9d-46bf-4cd7-af11-227d477663b4
 # ╠═b6dff4d6-a89b-4b46-858a-5d490c47eeb7

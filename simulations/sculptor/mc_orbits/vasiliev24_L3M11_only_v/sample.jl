@@ -4,8 +4,8 @@ import LilGuys as lguys
 obs_props_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
 obs = lguys.coord_from_file(obs_props_filename)
-obs = lguys.coord_err_from_file(obs_props_filename)
-v_err = 6 # km/s
+err = lguys.coord_err_from_file(obs_props_filename)
+v_err = 80 # km/s
 x_err = 1e-3 # kpc
 
 function sample(N = 10_000)

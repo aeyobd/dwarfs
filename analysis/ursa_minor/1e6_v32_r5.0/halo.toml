@@ -1,0 +1,5 @@
+
+[profile.TruncNFW]
+trunc = 100
+v_circ_max = 0.1543
+r_circ_max = 5.0

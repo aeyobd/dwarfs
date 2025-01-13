@@ -25,6 +25,9 @@ using Measurements
 # ╔═╡ e7ab194c-63a4-4274-aaba-43c3d369ce0d
 using KernelDensity
 
+# ╔═╡ d6e23609-87f7-466c-b865-0aa1da1ecb9d
+using OrderedCollections
+
 # ╔═╡ 07a710d8-0ae4-4d9f-9759-002750730010
 md"""
 # Estimation of halo mass
@@ -460,6 +463,18 @@ pairplot(samples[:, [:MV, :L, :Ms]])
 # ╔═╡ 0af29495-0d78-4e32-bbf9-69587e8ae222
 pairplot(samples[:, [:Ms, :log_M200, :c]])
 
+# ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
+let
+	fig = pairplot(samples[:, [:Ms, :log_v_circ_max, :r_circ_max]], labels=Dict(
+	:Ms2 => L"$M_\star$", 
+	:V_max => L"$v_\textrm{circ, max}$ / km\,s$^{-1}$", 
+	:r_max => L"$r_\textrm{circ, max}$ / kpc", ))
+
+	save(joinpath(fig_dir, "v_max_r_max_mcmc.pdf"), fig)
+
+	fig
+end
+
 # ╔═╡ 4e1290b5-171e-4715-a87b-28a2cfcb4325
 samples.Ms * 1e4
 
@@ -493,33 +508,32 @@ md"""
 """
 
 # ╔═╡ 76003206-050b-4913-9ab3-d4c0c2dd05f8
-fig_dir = "./figures/"
-
-# ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
-let
-	fig = pairplot(samples[:, [:Ms, :log_v_circ_max, :r_circ_max]], labels=Dict(
-	:Ms2 => L"$M_\star$", 
-	:V_max => L"$v_\textrm{circ, max}$ / km\,s$^{-1}$", 
-	:r_max => L"$r_\textrm{circ, max}$ / kpc", ))
-
-	save(joinpath(fig_dir, "v_max_r_max_mcmc.pdf"), fig)
-
-	fig
-end
+figdir = "./figures/"
 
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
-halos_ex = Dict(
-	:mean => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 5.9),
-	:heavy => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.9),
-	:compact => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
-	:middle => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 4.2),
+halos_ex = OrderedDict(
+	:mean => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 5.0),
+	:heavy => NFW(v_circ_max = 32 / V2KMS, r_circ_max = 5.0),
+	:heavier => NFW(v_circ_max = 37 / V2KMS, r_circ_max = 5.0),
+	:compact => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 3.3)
 )
 
-# ╔═╡ 9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
+# ╔═╡ 3a4ae3e1-4b7c-492c-b9da-eda05bcbfa35
+for (label, halo) in halos_ex
+	println(label, "\t", calc_σv_star_mean(halo) * V2KMS)
+end
 
+# ╔═╡ 19a05251-f257-4846-a04e-9f292dc8e6a2
+for (label, halo) in halos_ex
+	vmax =  LilGuys.calc_v_circ_max(halo)
+	println(label, "\t", vmax * V2KMS, "\t", vmax)
+end
+
+# ╔═╡ 9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
+32 / V2KMS
 
 # ╔═╡ 8a06c0ad-2b48-48ba-a542-85926e164712
-labels_ex = [:mean, :heavy, :compact, :middle]
+
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
@@ -558,7 +572,7 @@ r_max_exp, (LilGuys.Ludlow.solve_rmax.(V_max_in, 0.1), LilGuys.Ludlow.solve_rmax
 log10(1 + 3.726 / r_max_exp)
 
 # ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
-
+Vc_best = median(samples.v_circ_max)
 
 # ╔═╡ 8196e6b2-8355-438c-abc1-ffce2e29b8f2
 let
@@ -568,9 +582,9 @@ let
 		limits=(0.2, 1.5, 1.2, 1.9)
 	)
 
-	for label in labels_ex
-		y = LilGuys.calc_v_circ_max(halos_ex[label]) * V2KMS
-		x = LilGuys.calc_r_circ_max(halos_ex[label]) 
+	for (label, halo) in halos_ex
+		y = LilGuys.calc_v_circ_max(halo) * V2KMS
+		x = LilGuys.calc_r_circ_max(halo) 
 		scatter!(log10(x), log10(y), label=string(label))
 	end
 
@@ -585,8 +599,8 @@ let
 	y = [v; reverse(v)]
 	poly!(x, y, color=(:grey, 0.2))
 
-	hspan!(1.49 - 0.1, 1.49+0.1, color=(COLORS[2], 0.1))
-	hlines!(1.49, color=(COLORS[2], 0.5), label="Fattahi+18")
+	hspan!(log10(Vc_best) - lMs_to_lVc_err, log10(Vc_best)+ lMs_to_lVc_err, color=(COLORS[2], 0.1))
+	hlines!(log10(Vc_best), color=(COLORS[2], 0.5), label="Fattahi+18")
 
 	x = log10.(samples.r_circ_max )
 	y = log10.(samples.v_circ_max)
@@ -599,6 +613,9 @@ let
 
 	fig
 end
+
+# ╔═╡ 8f5a2253-18da-49c6-b1ee-94e9e7ababb2
+lMs_to_lVc_err
 
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
 let
@@ -623,7 +640,7 @@ let
 
 	Colorbar(fig[1, 2], h, label="counts")
 
-	save(joinpath(fig_dir, "r_max_v_max_in.pdf"), fig)
+	@savefig "r_max_v_max_in"
 	
 	fig
 end
@@ -659,11 +676,16 @@ let
 	# scatter!(x[.!filt], y[.!filt], color=z[.!filt], colorrange=extrema(z[filt]), markersize=2)
 
 	lines!(log10.(Rc_mean), log10.(Vc_mean * V2KMS))
-
+	
+	for (label, halo) in halos_ex
+		y = LilGuys.calc_v_circ_max(halo) * V2KMS
+		x = LilGuys.calc_r_circ_max(halo) 
+		scatter!(log10(x), log10(y), label=string(label))
+	end
 
 	Colorbar(fig[1, 2], h, label=L"$\sigma_v$ / km\,s$^{-1}$")
 
-	save(joinpath(fig_dir, "r_max_v_max_in.pdf"), fig)
+	@savefig "r_max_v_max_in"
 	
 	fig
 end
@@ -838,8 +860,11 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
+# ╠═d6e23609-87f7-466c-b865-0aa1da1ecb9d
 # ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
 # ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
+# ╠═3a4ae3e1-4b7c-492c-b9da-eda05bcbfa35
+# ╠═19a05251-f257-4846-a04e-9f292dc8e6a2
 # ╠═9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
 # ╠═8a06c0ad-2b48-48ba-a542-85926e164712
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
@@ -855,6 +880,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═db89cc22-f770-4f10-b3c0-3bc3298fb6a3
 # ╠═21acda7b-a116-4bc1-af7d-e715e2b32b86
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
+# ╠═8f5a2253-18da-49c6-b1ee-94e9e7ababb2
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═41283b0b-6563-4b2b-b978-4e65f32c8240
 # ╠═fb835e20-957e-4866-8ba6-2e64df38f68e

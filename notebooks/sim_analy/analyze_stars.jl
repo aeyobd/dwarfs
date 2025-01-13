@@ -38,10 +38,14 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.13"
+starsname = "exp2d_rs0.15"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
+#model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v32_r5.0/orbit_mean"
+
+# ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
+obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -57,9 +61,6 @@ fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
 
 # ╔═╡ 973955ad-3214-42cf-831f-a782f1d2434a
 idx_i = 1 
-
-# ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
-obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
@@ -606,9 +607,13 @@ let
 end
   ╠═╡ =#
 
+# ╔═╡ df229124-325f-4f0c-9cf3-9930002b7767
+profiles = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarProfile)
+
+# ╔═╡ 49052b15-7cfc-488c-974e-7b9c1872d082
+profiles_3D = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
+
 # ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
-# ╠═╡ disabled = true
-#=╠═╡
 let
 	fig = Figure()
 
@@ -620,20 +625,14 @@ let
 		#yticks=[1, 0.1],
 	)
 
-	idx = 1:10:length(out)
-	vs = [calc_σv(out[i]) for i in idx]
 
-	scatter!(out.times[idx] * T2GYR, vs)
-	
+	times = [prof.time * T2GYR for (_, prof) in profiles_3D]
+
+	vs = [prof.sigma_vx * V2KMS for (_, prof) in profiles_3D]
+
+	scatter!(times, vs)
 	fig
 end
-  ╠═╡ =#
-
-# ╔═╡ df229124-325f-4f0c-9cf3-9930002b7767
-profiles = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarProfile)
-
-# ╔═╡ 49052b15-7cfc-488c-974e-7b9c1872d082
-profiles_3D = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
 
 # ╔═╡ 0112797c-ecb8-4ea7-8a66-365f9fbe952e
 let
@@ -698,13 +697,13 @@ end
 # ╟─b3a16249-b8d9-4a6b-9294-cd654a17dc17
 # ╠═2106bfe1-a53d-4ef8-9111-e191a8056351
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
+# ╠═9c42eb0a-029d-46f7-afb0-de03f82c5889
 # ╠═08aa0f76-3d74-45b5-b9e9-6abbf6350910
 # ╠═7c64a7c7-232b-47b6-973a-62e1ac21df3a
 # ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 # ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
 # ╠═8f9ee2a7-de43-43e0-8257-93ecc630044f
-# ╠═9c42eb0a-029d-46f7-afb0-de03f82c5889
 # ╟─396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
 # ╠═84dc77f7-14b3-4a2e-a556-c025d7df0095
