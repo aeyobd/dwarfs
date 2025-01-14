@@ -43,7 +43,7 @@ r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
 #modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
-modelname = "ursa_minor/1e6_v32_r5.0/orbit_mean"
+modelname = "ursa_minor/1e6_v37_r5.0/orbit_mean"
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
 t_min = 8
@@ -334,6 +334,11 @@ md"""
 # validating today
 """
 
+# ╔═╡ 54cf5233-a955-4831-86ad-23b72f15789d
+for property in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
+	println(property, "\t", obs_today[property], "\t", obs_today[property * "_err"], "\t", obs_c[idx_f, property])
+end
+
 # ╔═╡ cdabdc7d-76a1-45f5-b83a-2454576d3964
 let
 	for (x, y) in [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")]
@@ -532,6 +537,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
 # ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
+# ╠═54cf5233-a955-4831-86ad-23b72f15789d
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
 # ╟─3448ffc5-41e6-4208-b11f-2c00168bf50a
 # ╠═66435478-0619-47aa-a659-c06089951f72

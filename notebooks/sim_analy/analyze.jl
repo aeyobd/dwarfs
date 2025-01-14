@@ -35,7 +35,7 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v32_r5.0/orbit_mean"
+model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -180,7 +180,7 @@ let
 		ylabel=L"V_\textrm{circ}",
 	title="time = $(out.times[i]  * T2GYR) Gyr")
 
-	r, v = LilGuys.calc_v_circ(snap, filter_bound=true)
+	r, v = LilGuys.calc_v_circ(snap)
 	scatter!(log10.(r), v * V2KMS)
 
 	fit = LilGuys.fit_v_r_circ_max(snap)

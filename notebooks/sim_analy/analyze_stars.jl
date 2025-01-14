@@ -42,7 +42,7 @@ starsname = "exp2d_rs0.15"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
 #model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v32_r5.0/orbit_mean"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean"
 
 # ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
 obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"

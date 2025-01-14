@@ -26,6 +26,7 @@ Base.@kwdef struct Orbit
     position::Matrix{F}
     velocity::Matrix{F}
     acceleration::Union{Matrix{F}, Nothing} = nothing
+    del_a::Union{Matrix{F}, Nothing} = nothing
     pericenter::F = minimum(calc_r(position))
     apocenter::F = maximum(calc_r(position))
 end

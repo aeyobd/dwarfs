@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ 3a913d3f-db30-4ace-b9d0-b16889f7aa2c
+using LilGuys
+
 # ╔═╡ b918a965-9e54-42a4-9126-4dd614024ff5
 using StatsBase: median, weights, mad, std
 
@@ -28,22 +31,22 @@ A detailed analysis of the stars in sculptor
 import DensityEstimators as DE
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
+models_dir = "/arc7/home/dboyea/dwarfs/analysis/ursa_minor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e7_V31_r3.2/orbit_smallperi/"
+model_dir = "$models_dir/1e6_v32_r5.0/orbit_mean/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.08/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.15/final.fits"
+
+# ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
+obs_today_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 217527cb-7f25-4fd9-a4a8-78cb2c744c2b
 figdir = joinpath(dirname(starsfile), "figures")
 
 # ╔═╡ d1e9ed33-d600-441a-876d-0c0fcd5cca72
 mkpath(figdir)
-
-# ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 89ec03a2-2ec9-4b77-aba0-28af551a1366
 out = lguys.Output(model_dir)
@@ -561,7 +564,7 @@ let
 	)
 
 	filt = filt_cen
-	hist2d!(stars.pmra[filt], stars.pmdec[filt], weights=stars.weights[filt], limits=limits, colorscale=log10, colorrange=(1e-7, nothing), bins=100)
+	hist2d!(stars.pmra[filt], stars.pmdec[filt], weights=stars.weights[filt], limits=limits, colorscale=log10, colorrange=(1e-15, nothing), bins=100)
 
 	errscatter!(obs_today.pmra, obs_today.pmdec)
 	
@@ -680,8 +683,8 @@ function binned_median(x, y, bins; w)
 		s = weighted_mad(y[filt], (w[filt]))
 		y_l[i], y_h[i] = lguys.quantile(y[filt], (w[filt]), [0.16, 0.84])
 
-		y_l[i] = y_m[i] - s
-		y_h[i] = y_m[i] + s
+		# y_l[i] = -y_l[i] + y_m[i]
+		# y_h[i] =  y_h[i] - y_m[i]
 		
 	end
 
@@ -753,11 +756,11 @@ obs_labels = Dict(
 obs_dy = Dict(
 	:radial_velocity => 40,
 	:radial_velocity_gsr => 40,
-	:distance => 5,
-	:pmra => 0.1,
-	:pmra_gsr =>  0.1,
-	:pmdec =>  0.1,
-	:pmdec_gsr =>  0.1,
+	:distance => 20,
+	:pmra => 0.2,
+	:pmra_gsr =>  0.2,
+	:pmdec =>  0.2,
+	:pmdec_gsr =>  0.2,
 )
 
 # ╔═╡ 499f3cd7-b7fc-4fe2-acc0-5e2d2697c3d6
@@ -789,7 +792,7 @@ function plot_hist2d_coord(sym; xsym = :xi_p)
 end
 
 # ╔═╡ cc2be8c5-bdfc-4c55-815c-1ccc1d261678
-for sym in [:pmra, :pmra_gsr, :pmdec, :radial_velocity, :distance, ]
+for sym in [:pmra, :pmra_gsr, :pmdec, :pmdec_gsr, :radial_velocity, :distance, ]
 	@info plot_hist2d_coord(sym)
 end
 
@@ -811,7 +814,7 @@ function plot_obs_bin_means!(gs, ysym; xsym = :xi_p, eta_max=1, bins=bins)
 	x = stars[filt, xsym]
 
 	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_mean(x, y, bins, w=w)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
 
 	
 	yl0 = minimum(y_l)
@@ -848,7 +851,7 @@ function plot_obs_bin_means(ysym; xsym = :xi_p, eta_max=1, r_b_arcmin=r_b_arcmin
 	x = stars[filt, xsym]
 
 	x_m  = midpoints(bins)
-	y_m, y_l, y_h = binned_mean(x, y, bins, w=w)
+	y_m, y_l, y_h = binned_median(x, y, bins, w=w)
 
 	
 	fig = Figure()
@@ -884,7 +887,7 @@ let
 		ysym = [:pmra, :pmdec, :distance, :radial_velocity][i]
 
 		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
-		plot_obs_bin_means!(gs, ysym)	|> lguys.Plots.hide_grid!
+		plot_obs_bin_means!(gs, ysym)	|> lguys.hide_grid!
 
 
 	end
@@ -903,12 +906,15 @@ let
 		ysym = [:pmra_gsr, :pmdec_gsr, :distance, :radial_velocity_gsr][i]
 
 		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
-		plot_obs_bin_means!(gs, ysym, bins=bins_cen)	|> lguys.Plots.hide_grid!
+		plot_obs_bin_means!(gs, ysym)	|> lguys.hide_grid!
 
 	end
-
+	@savefig "velocities_along_orbit"
 	fig
 end
+
+# ╔═╡ 424f7b39-33cf-4158-8f00-781e98438b1e
+figdir
 
 # ╔═╡ c6224653-9dcd-4e17-9999-ccb69da6c222
 let
@@ -918,7 +924,7 @@ let
 		ysym = [:pmra_gsr, :pmdec_gsr, :distance, :radial_velocity_gsr][i]
 
 		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
-		plot_obs_bin_means!(gs, ysym, xsym=:eta_p, bins=bins_cen)	|> lguys.Plots.hide_grid!
+		plot_obs_bin_means!(gs, ysym, xsym=:eta_p)	|> lguys.hide_grid!
 
 	end
 
@@ -936,7 +942,7 @@ let
 		ysym = [:pmra, :pmdec, :distance, :radial_velocity][i]
 
 		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
-		plot_obs_bin_means!(gs, ysym; xsym=:eta_p)	|> lguys.Plots.hide_grid!
+		plot_obs_bin_means!(gs, ysym; xsym=:eta_p)	|> lguys.hide_grid!
 
 	end
 
@@ -1146,11 +1152,13 @@ end
 # ╔═╡ Cell order:
 # ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 # ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
+# ╠═3a913d3f-db30-4ace-b9d0-b16889f7aa2c
 # ╠═0e9e2085-bf96-4f9d-a758-8af36edf02da
 # ╠═b918a965-9e54-42a4-9126-4dd614024ff5
 # ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
+# ╠═a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 # ╠═217527cb-7f25-4fd9-a4a8-78cb2c744c2b
 # ╠═d1e9ed33-d600-441a-876d-0c0fcd5cca72
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
@@ -1162,7 +1170,6 @@ end
 # ╠═adca7da4-c7e5-4f24-9f50-0413c91fad1d
 # ╠═ccc714c4-b2dd-4c83-939b-f0ca3d04c255
 # ╠═c351926c-1e3d-44d7-8f39-6fb5893b9b0d
-# ╠═a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 # ╠═89ec03a2-2ec9-4b77-aba0-28af551a1366
 # ╠═24c24fd2-e615-4ad4-a19d-7b7a49ede6f5
 # ╠═14348e2e-053a-48ac-8e10-7c66ea13906e
@@ -1236,6 +1243,7 @@ end
 # ╠═5eaaa70a-3210-4ab2-9318-b56ad4962c22
 # ╠═6eb0507a-c7dd-4009-b699-ae6423623f63
 # ╠═041ba6c2-0a5c-4a59-b536-95db6e68716f
+# ╠═424f7b39-33cf-4158-8f00-781e98438b1e
 # ╠═c6224653-9dcd-4e17-9999-ccb69da6c222
 # ╠═13c53be9-4922-4872-8ebf-8ed147a72fff
 # ╠═4be2b3c0-98df-4d25-8200-a051a5dba4e9

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -41,19 +41,29 @@ import StatsBase: percentile
 # ╔═╡ 530c6c09-4454-4952-8351-dccbb4ed429f
 import TOML
 
+# ╔═╡ 835cafca-868b-4e94-955f-2eab4e7c2bc4
+import LilGuys: @savefig
+
 # ╔═╡ 93045024-a91d-4b31-9a5a-7c999afdb9ec
 md"""
 # Inputs
 """
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
-dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
+#dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
+dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/stars/"
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "exp2d_rs0.10"
+starsname = "exp2d_rs0.15"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")
+
+# ╔═╡ 79f224cf-198c-4527-8423-62d74c753d0a
+figdir = joinpath(dir, starsname, "figures")
+
+# ╔═╡ 66c89b32-e522-48c8-b5aa-a5845715ce28
+mkdir(figdir)
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -161,6 +171,11 @@ let
 	fig
 end
 
+# ╔═╡ d8623523-ffcc-4ceb-aafb-fe0cde23f469
+md"""
+Below shows the functional form of the stellar probabilities as a function of energy. We expect tboth curves to match almost perfectly
+"""
+
 # ╔═╡ a462157f-e991-4ee0-9a62-c0bb3c687e87
 let
 	fig = Figure()
@@ -169,15 +184,12 @@ let
 
 	h = 0.01
 	
-	lines!((df_E.psi), asinh.(df_E.probability ./ h), label="DM")
-	lines!((df_E.psi), asinh.(df_E.f_s ./ df_E.f ./ h), label="DM")
+	lines!((df_E.psi), asinh.(df_E.probability ./ h), label="interpolated")
+	lines!((df_E.psi), asinh.(df_E.f_s ./ df_E.f ./ h), label="ratio")
 
 	axislegend(ax, position=:lt)
 	fig
 end
-
-# ╔═╡ f2d82ee9-94f6-422b-a1be-a4a19cf49ca2
-
 
 # ╔═╡ 49f66f52-5c29-49d1-9e50-2be48f494ceb
 maximum(df_E.psi)
@@ -206,7 +218,7 @@ function calc_r_h(rs, masses)
 	M_in = cumsum(masses[_sort])
 	M_in ./= M_in[end]
 	idx_h = findfirst(M_in .> 0.5)
-	return rs[idx_h]
+	return rs[_sort][idx_h]
 end
 
 # ╔═╡ bec1ed0b-7a3d-4523-84ad-3fad4a7296cd
@@ -215,29 +227,49 @@ bins
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
 ν_s_nbody = lguys.calc_ρ_from_hist(10 .^ bins, histogram(df_probs.radii, 10 .^ bins, weights=df_probs.probability).values)
 
+# ╔═╡ 9e28a6e0-4375-414c-bbe4-287d4a13e22d
+md"""
+The below plot simply compares the simperical DM and stellar profiles
+"""
+
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 let
 	fig = Figure(size=(700, 500))
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
-		limits=((0, 1), (-15, 3))
+		limits=((-1.5, 1), (-15, 3)),
+		xlabel = "log r / kpc",
 		)
 
-	r_m = midpoints(bins)
-	lines!(log10.(df_E.radii), nm.log10.(df_E.rho), label="stars")
-	scatter!((r_m) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
-	
+	log_r_m = midpoints(bins)
+	lines!(log10.(df_E.radii), nm.log10.(df_E.rho), label="DM profile")
+	scatter!((log_r_m) , nm.log10.(ν_s_nbody), label="nbody stellar profile", color=COLORS[2])
+
+	axislegend()
 	fig
 end
+
+# ╔═╡ b5c587d4-df0b-451b-9e08-bd4a4ead0213
+md"""
+Below, we show the distribution in log radius / kpc for stars with non-zero stellar weights. Ideally, we are looking for a smooth distribution without huge outliers in pstar
+"""
 
 # ╔═╡ 33a26663-0c08-411b-902b-a509b2afa5ad
 let
 	fig = Figure()
-	Axis(fig[1,1], xlabel="log radii", ylabel="pstar > 0.025")
 
-	hist!(log10.(lguys.calc_r(snap)[snap.weights .> 2e-6]))
+	thresh = 1 / length(snap)
+
+	Axis(fig[1,1], xlabel="log radii", ylabel="pstar > $thresh")
+
+	hist!(log10.(lguys.calc_r(snap)[snap.weights .> thresh]))
 
 	fig
 end
+
+# ╔═╡ 2d1782c5-e544-4ee6-a872-c8a180bd0d72
+md"""
+Distribution of stellar weights. Would like this distribution to be continuous and without outliers towards higher stellar weights. Most particles will have tiny weights.
+"""
 
 # ╔═╡ 77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 let 
@@ -252,6 +284,11 @@ begin
 	r_hist = 5
 	N_hist = 50
 end
+
+# ╔═╡ 337055c4-55f4-4c02-ad69-473165ccfb64
+md"""
+Below, we plot the 2D density of DM and stars from the model, just to make sure nothing funny be happening. In both cases, the distribution should be spherical and continuous.
+"""
 
 # ╔═╡ a52e5e94-6068-4545-962f-e02a485b62f5
 let
@@ -307,6 +344,12 @@ end
 # ╔═╡ 89b7d969-2294-4d07-a6a3-fcfa92498d48
 lguys.arcmin_to_kpc(14, 83.2)
 
+# ╔═╡ cdcc6bf6-f15e-45f1-b837-1db4e0fdc654
+md"""
+This plot is the primary evaluation of how well the reconstructed stellar profile matches our expected version.
+We would like the residuals to be << 1 and the profile to qualitatively match well. At large radii, it is acceptable that the residuals diverge because the stellar mass may be entirely negligable here.
+"""
+
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
 	r = lguys.calc_r(snap)
@@ -314,7 +357,8 @@ let
 
 	
 	r_h2 = calc_r_h(r, ms)
-	println(r_h2)
+	println("rh = ", r_h)
+	println("rh n-body = ", r_h2)
 	
 	r_e = 10 .^ DensityEstimators.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.03)
 	ν_s_nbody = lguys.calc_ρ_from_hist(r_e, histogram(r, r_e, weights=ms).values)
@@ -327,10 +371,12 @@ let
 		limits=(nothing, (-15, 3))
 		)
 	
-	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody")
-	lines!(log10.(r), nm.log10.(ν_s), label="stars")
-	vlines!(log10(r_h), label="R_h")
-	vlines!(log10(r_h2), label="R_h2")
+	lines!(log10.(r), nm.log10.(ν_s), label="stars", color=:black)
+	
+	lines!(log10.(r) , nm.log10.(ν_s_nbody), label="nbody", color=COLORS[2])
+	vlines!(log10(r_h2), label=L"R_h")
+
+	axislegend(position=:lb)
 
 	ax2 = Axis(fig[2,1], 
 		xlabel=L"\log r / \textrm{kpc}", ylabel=L"\Delta\log \nu ", 
@@ -338,21 +384,28 @@ let
 
 
 	
-	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), label="")
+	scatter!(log10.(r), nm.log10.(ν_s_nbody) .- nm.log10.(ν_s), color=COLORS[2], label="")
 	hlines!([0], color="black", label="")
 
 	linkxaxes!(ax, ax2, )
 	rowsize!(fig.layout, 2, Auto(0.3))
 	hidexdecorations!(ax, grid=false)
+
+	@savefig "density_check"
 	fig
 end
 
 # ╔═╡ a2f72082-7145-42be-9f40-e00d18deb267
-
+sum(snap.weights .* (lguys.calc_r(snap) .< r_h))
 
 # ╔═╡ bf8305f4-a5b8-4c79-8a01-e2aa18e4a5c5
 md"""
 ## Testing 2D binning
+"""
+
+# ╔═╡ 2751e203-8c03-44ec-a072-e3078d9a4f7b
+md"""
+Similar to the last plot but for 2D binning. Just validating qualitative agreement.
 """
 
 # ╔═╡ 6dd92ee1-374d-47fa-ad61-b54764b23240
@@ -404,15 +457,13 @@ sum(.!isnan.(obs_mock.r_ell))
 # ╔═╡ 8561415c-7c5d-4c1a-8478-3b237c2cb360
 obs_mock
 
-# ╔═╡ f46e1c29-67cf-4508-9136-6162b44cde2c
-DensityEstimators.bins_min_width_equal_number(log10.(obs_mock.r_ell), N_per_bin_min=20, dx_min=0.03)
-
 # ╔═╡ ff51f97d-2404-49c6-9339-4b201d6a94a9
 let
 	ms = obs_mock.weights
 	R = obs_mock.r_ell
 	
-	bins = 	10 .^ DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=20, dx_min=0.03)
+	bins = 	DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=5, dx_min=0.03)
+	@info "using $(length(bins)) bins"
 
 	prof = lguys.StellarProfile(R, weights=ms, bins=bins, normalization=:central, r_centre=3)
 
@@ -438,6 +489,11 @@ end
 
 # ╔═╡ 03037c94-7f26-479c-9772-fa2682e3ba37
 import StatsBase: mean, std, weights
+
+# ╔═╡ ad02a484-11b1-479f-b9e0-0e16e64a5109
+md"""
+Velocity dispersion!
+"""
 
 # ╔═╡ 74845a4f-588b-44d3-a5e1-7155fd6a7b01
 let
@@ -472,10 +528,13 @@ end
 # ╠═b3663c19-c029-4a1e-ab82-a05177e3a5d0
 # ╠═530c6c09-4454-4952-8351-dccbb4ed429f
 # ╠═631a70f3-5284-4c3f-81ef-714455b876ee
+# ╠═835cafca-868b-4e94-955f-2eab4e7c2bc4
 # ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
 # ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
 # ╠═939cc89e-7273-4bb5-a13f-241139d922ea
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154
+# ╠═79f224cf-198c-4527-8423-62d74c753d0a
+# ╠═66c89b32-e522-48c8-b5aa-a5845715ce28
 # ╟─d76e6200-9401-4c2e-bd7c-53e79dd49415
 # ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
 # ╠═715f771b-686a-4643-a914-35ba6ca9042d
@@ -491,8 +550,8 @@ end
 # ╠═a5bc5ce3-8e33-4514-bc2d-4b4299f104f9
 # ╠═84fdc265-988c-40db-87e5-44ba55d0e412
 # ╠═6da679d4-6af6-4f42-b6e9-44ce20faa676
+# ╠═d8623523-ffcc-4ceb-aafb-fe0cde23f469
 # ╠═a462157f-e991-4ee0-9a62-c0bb3c687e87
-# ╠═f2d82ee9-94f6-422b-a1be-a4a19cf49ca2
 # ╠═49f66f52-5c29-49d1-9e50-2be48f494ceb
 # ╠═061cccde-82c1-4519-aec9-4fc92a67b348
 # ╟─9e2f1606-46aa-4e06-a31f-b03a383cccda
@@ -501,16 +560,22 @@ end
 # ╠═76200404-16aa-4caf-b247-3bc330b82868
 # ╠═bec1ed0b-7a3d-4523-84ad-3fad4a7296cd
 # ╠═6fba7fa7-9a50-4379-b376-5c07f3638411
-# ╠═a9335e17-a410-455a-9a9e-d63706a026bd
+# ╟─9e28a6e0-4375-414c-bbe4-287d4a13e22d
+# ╟─a9335e17-a410-455a-9a9e-d63706a026bd
+# ╠═b5c587d4-df0b-451b-9e08-bd4a4ead0213
 # ╠═33a26663-0c08-411b-902b-a509b2afa5ad
+# ╠═2d1782c5-e544-4ee6-a872-c8a180bd0d72
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 # ╠═90856551-fff8-4d15-be66-6353091b5e50
+# ╠═337055c4-55f4-4c02-ad69-473165ccfb64
 # ╠═a52e5e94-6068-4545-962f-e02a485b62f5
 # ╠═cc231e78-cfc0-4876-9f8b-980139f7d27f
 # ╠═89b7d969-2294-4d07-a6a3-fcfa92498d48
+# ╟─cdcc6bf6-f15e-45f1-b837-1db4e0fdc654
 # ╠═7f7d8cb9-761c-4f30-a336-ab5657144961
 # ╠═a2f72082-7145-42be-9f40-e00d18deb267
 # ╟─bf8305f4-a5b8-4c79-8a01-e2aa18e4a5c5
+# ╠═2751e203-8c03-44ec-a072-e3078d9a4f7b
 # ╠═6dd92ee1-374d-47fa-ad61-b54764b23240
 # ╟─99f274b4-91f3-41d0-b7d3-234badeb43d1
 # ╠═4396bced-cae8-4107-ac83-48cc3c4146f2
@@ -518,7 +583,7 @@ end
 # ╠═87b5b241-db72-45ee-b3a7-a394f99510d9
 # ╠═904576b4-2669-45d1-8078-310347f5fec0
 # ╠═8561415c-7c5d-4c1a-8478-3b237c2cb360
-# ╠═f46e1c29-67cf-4508-9136-6162b44cde2c
 # ╠═ff51f97d-2404-49c6-9339-4b201d6a94a9
 # ╠═03037c94-7f26-479c-9772-fa2682e3ba37
+# ╠═ad02a484-11b1-479f-b9e0-0e16e64a5109
 # ╠═74845a4f-588b-44d3-a5e1-7155fd6a7b01

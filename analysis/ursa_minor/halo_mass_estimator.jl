@@ -109,6 +109,9 @@ begin
 	# M_s_0 = 2.39e-3 # fornax
 end
 
+# ╔═╡ 667937b2-006f-4429-b134-91934adb53c8
+stellar_profile = LilGuys.Exp2D(R_s=0.13) # best fit to present day
+
 # ╔═╡ bdd43353-da4c-48fb-bb67-b2aec628dd71
 md"""
 ## Solving for Vcirc_max
@@ -366,9 +369,6 @@ lMs_to_lVc(log10(Ms_m*0.2))
 md"""
 ## Monte Carlo mass estimates
 """
-
-# ╔═╡ 667937b2-006f-4429-b134-91934adb53c8
-stellar_profile = LilGuys.Exp2D(R_s=0.13) # best fit to present day
 
 # ╔═╡ 5dc54372-14c4-424b-8419-55d639f00baa
 function calc_σv_star_mean_old(p; stellar_profile=stellar_profile, R_max=Inf, R = 10 .^ LinRange(-3, 3, 1000))
@@ -802,6 +802,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╟─fc490d05-d494-4771-9dec-7d1837485ff0
 # ╠═e338d0b5-fd4f-43ed-9379-27d50787d387
 # ╠═aec3d9a7-d447-4e9f-aa83-fa5b20541b5c
+# ╠═667937b2-006f-4429-b134-91934adb53c8
 # ╟─bdd43353-da4c-48fb-bb67-b2aec628dd71
 # ╟─ca65b2b1-8414-48dc-badb-09c2d50879ad
 # ╠═18a20162-1b0f-4da8-931d-5ff95da22f54
@@ -842,7 +843,6 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╟─122794fb-82ab-4f3c-a458-29462fbab1fd
 # ╠═5dc54372-14c4-424b-8419-55d639f00baa
 # ╠═28e09f56-7a1c-4fc9-95da-36ef0ed75a74
-# ╠═667937b2-006f-4429-b134-91934adb53c8
 # ╠═e65a951d-21ce-45fe-837c-825c782e76d2
 # ╠═bbd5e178-eddc-4e75-b4c5-252048b75fb4
 # ╠═b665cd0f-8669-4520-974b-9ab9fba8ad15
