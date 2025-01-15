@@ -38,7 +38,7 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.15"
+starsname = "exp2d_rs0.08"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
 #model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"

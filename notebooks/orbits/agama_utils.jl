@@ -66,7 +66,7 @@ end
     calc_orbit(phase, potential; N=10_000)
 
 Given an inital phase position and agama potential, computes the orbit.
-Returns a ve
+Time is in specified units.
 """
 function calc_orbit(coords, pot; N=10_001, time=10, units = :code)
     ic = make_agama_init(coords, units=units)
@@ -79,8 +79,6 @@ function calc_orbit(coords, pot; N=10_001, time=10, units = :code)
     elseif time isa AbstractVector
         time0 = time[1]
         tottime = time[end] - time[1]
-        println("start time: ", time0)
-        println("integration time: ", tottime)
         o = agama.orbit(ic=ic, time=tottime, timestart=time0, potential=pot, dtype="object")
         pyposvel = o(time)
     end
@@ -100,8 +98,6 @@ function calc_orbits(coords::AbstractVector, pot; N=10_000, time=10, units=:code
     elseif time isa AbstractVector
         time0 = time[1]
         tottime = time[end] - time[1]
-        println("start time: ", time0)
-        println("integration time: ", tottime)
         o = agama.orbit(ic=ic, time=tottime, timestart=time0, potential=pot, dtype="object")
         pyposvels = [oo(time) for oo in o]
     end

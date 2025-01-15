@@ -45,7 +45,7 @@ models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.15"
+starsname = "exp2d_rs0.08"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 figdir = joinpath(dirname(model_dir),  "stars", starsname, "figures"); mkpath(figdir)
@@ -274,7 +274,7 @@ let
 	h = Arya.histogram2d(stars.xi, stars.eta, bins, weights=stars.weights, normalization=:pdf)
 
 	p = heatmap!(h.xbins, h.ybins, h.values, 
-		colorscale=log10, colorrange=(1e-5*maximum(h.values), maximum(h.values)))
+		colorscale=log10, colorrange=(1e-7*maximum(h.values), maximum(h.values)))
 
 	Colorbar(fig[1, 2], p, label="fractional stellar density")
 

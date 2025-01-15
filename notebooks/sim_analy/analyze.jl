@@ -25,9 +25,6 @@ and make some nice projections of the DM in different orientations.
 All of the figures are saved to figures directory inside the model analysis directory. 
 """
 
-# ╔═╡ 589f2e18-d697-4fa1-a1bc-eb3c83ad73bf
-save = CairoMakie.save
-
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
 md"""
 Inputs
@@ -47,10 +44,10 @@ halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
 out =  Output(model_dir)
 
 # ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
-figures_dir = joinpath(model_dir, "figures")
+figdir = joinpath(model_dir, "figures")
 
 # ╔═╡ 63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
-mkpath(figures_dir)
+mkpath(figdir)
 
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
@@ -112,7 +109,7 @@ let
 	
 	Legend(fig[1, 2], ax)
 	
-	save(joinpath(figures_dir, "boundmass.pdf"), fig)
+	@savefig "boundmass"
 
 	fig
 end
@@ -164,7 +161,7 @@ let
 
 		
 	axislegend(ax, position=:rt)
-	save(joinpath(figures_dir, "v_circ_profiles.pdf"), fig)
+	@savefig "v_circ_profiles"
 	fig
 end
 
@@ -220,7 +217,7 @@ let
 	#scatter!(x, v_h, label=L"r=r_h")
 	#axislegend(ax)
 
-	save(joinpath(figures_dir, "v_circ_time.pdf"), fig)
+	@savefig "v_circ_time"
 
 	fig
 end
@@ -252,7 +249,7 @@ let
 	#scatter!(log10.(r_break), -10, marker=:utriangle, color=:black)
 
 	#text!(L"r_\textrm{break}", position=(log10.(r_break),-11.5), space=:data, rotation=π/2, align=(:left, :baseline))
-	save(joinpath(figures_dir, "density.pdf"), fig)
+	@savefig "dm_density"
 
 	fig
 	# only include bound points in profile...
@@ -272,7 +269,7 @@ let
 	
 	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
 
-	save(joinpath(figures_dir, "density_all_snapshots.pdf"), fig)
+	@savefig "density_all_snapshots"
 
 	fig
 	# only include bound points in profile...
@@ -293,7 +290,7 @@ let
 	
 	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
 
-	save(joinpath(figures_dir, "vcirc_rcirc_all_snapshots.pdf"), fig)
+	@savefig "vcirc_rcirc_all_snapshots"
 
 	fig
 	# only include bound points in profile...
@@ -376,14 +373,13 @@ let
 	
 	scatter!(midpoints(bins), values, label="final")
 
-	save(joinpath(figures_dir, "energy distribution.pdf"), fig)
+	@savefig "energy_distribution"
 	fig
 end
 
 # ╔═╡ Cell order:
 # ╠═bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
-# ╠═589f2e18-d697-4fa1-a1bc-eb3c83ad73bf
 # ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
 # ╠═14279a79-bf66-4b34-bf9f-735ff2886ea5
 # ╠═c260ee35-7eed-43f4-b07a-df4371397195

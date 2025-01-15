@@ -34,10 +34,10 @@ import DensityEstimators as DE
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/ursa_minor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_v32_r5.0/orbit_mean/"
+model_dir = "$models_dir/1e6_v37_r5.0/orbit_mean/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.15/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.08/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 obs_today_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"

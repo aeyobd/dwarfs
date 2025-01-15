@@ -37,10 +37,15 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v37_r5.0/orbit_mean/"
+#model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v37_r5.0/orbit_mean/"
+model_dir = ENV["DWARFS_ROOT"] * "/agama/halos/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
-name = "initial"
+#name = "initial"
+name = "asy_1e4"
+
+# ╔═╡ 8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
+paramname = "halo_asy.toml" # "../halo.toml"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -48,7 +53,7 @@ md"""
 """
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
-halo = lguys.load_profile(joinpath(model_dir, "../halo.toml"))
+halo = lguys.load_profile(joinpath(model_dir,paramname ))
 
 # ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
 halo.r_s
@@ -84,7 +89,7 @@ snap.v_cen * V2KMS
 prof = lguys.MassProfile3D(snap)
 
 # ╔═╡ 9fb58f1b-c98b-4a93-9683-ab478e44e2d7
-prof.v_circ_max * V2KMS
+prof.v_circ_max# * V2KMS
 
 # ╔═╡ 2e293959-9c05-4d9b-b889-a68584ca88f0
 prof.r_circ_max 
@@ -153,7 +158,7 @@ let
 	xlabel = "dx / kpc", ylabel="dy/kpc", title="initial")
 
 	bins = LinRange(-10, 10, 30)
-	Arya.hist2d!(ax, snap.positions[1, :] .- snap.x_cen[1], snap.positions[2, :] .- snap.x_cen[2], bins = bins, colorscale=log10)
+	Arya.hist2d!(ax, snap.positions[1, :] .- snap.x_cen[1], snap.positions[2, :] .- snap.x_cen[2], bins = bins, colorscale=log10, colorrange=(1, nothing))
 
 	fig
 end
@@ -180,7 +185,7 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
-	#limits=(-2, 5, -12, 2)
+	limits=(-2, 5, -12, 2)
 	)
 
 	log_r = LinRange(-2, 3, 1000)
@@ -240,7 +245,7 @@ let
 end
 
 # ╔═╡ f01efc63-c4ac-45ae-8dac-209819a6249e
-lguys.calc_M(halo, 2)
+lguys.calc_M(halo, 1)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
@@ -254,7 +259,11 @@ let
 end
 
 # ╔═╡ fddeb921-468b-4f00-b4cb-a6fc4faec555
-R200 = lguys.calc_R200(halo)
+if halo isa lguys.ExpCusp
+	R200 = 3halo.r_s
+else
+	R200 = lguys.calc_R200(halo)
+end
 
 # ╔═╡ da55fc43-69f7-4375-b8fc-c61dd606fb24
 N200 = sum(lguys.calc_r(snap) .< R200)
@@ -277,6 +286,9 @@ In our case,
 - N200 = $N200
 - so h= $grav_softening kpc
 """
+
+# ╔═╡ 9f0ba4f3-5abd-4b60-869a-693cf883025b
+
 
 # ╔═╡ db034d78-f647-4382-b5e1-5e4623350d96
 md"""
@@ -323,6 +335,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
 # ╠═d7a04cc7-369e-4687-b423-deda779f1c57
+# ╠═8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
 # ╟─eb17e47b-b650-4362-ba29-77344e37bc48
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
 # ╠═7f9db45f-38ea-4427-9af1-d5431429f612
@@ -351,6 +364,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═fddeb921-468b-4f00-b4cb-a6fc4faec555
 # ╠═da55fc43-69f7-4375-b8fc-c61dd606fb24
 # ╠═d841539a-f755-460f-9994-16229aadca6a
+# ╠═9f0ba4f3-5abd-4b60-869a-693cf883025b
 # ╟─db034d78-f647-4382-b5e1-5e4623350d96
 # ╠═7032a304-1448-4182-b22b-6083a2efea5d
 # ╠═ac22ac31-f4bf-497b-9971-c98a9900acfb
