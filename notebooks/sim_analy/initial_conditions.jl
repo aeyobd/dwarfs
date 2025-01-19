@@ -38,14 +38,14 @@ md"""
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
 #model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v37_r5.0/orbit_mean/"
-model_dir = ENV["DWARFS_ROOT"] * "/agama/halos/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/isolation/1e6_expcusp/s_0.0013/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 #name = "initial"
-name = "asy_1e4"
+name = "initial"
 
 # ╔═╡ 8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
-paramname = "halo_asy.toml" # "../halo.toml"
+paramname = "halo.toml" # "../halo.toml"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -90,6 +90,9 @@ prof = lguys.MassProfile3D(snap)
 
 # ╔═╡ 9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 prof.v_circ_max# * V2KMS
+
+# ╔═╡ 3d4f1a39-fbfc-4e07-8bd4-17e7813da5af
+prof.v_circ_max * V2KMS
 
 # ╔═╡ 2e293959-9c05-4d9b-b889-a68584ca88f0
 prof.r_circ_max 
@@ -345,6 +348,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═14e3b593-17b9-4acd-a9cb-d5923662a02c
 # ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
+# ╠═3d4f1a39-fbfc-4e07-8bd4-17e7813da5af
 # ╠═2e293959-9c05-4d9b-b889-a68584ca88f0
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e

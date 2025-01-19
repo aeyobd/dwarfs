@@ -1,0 +1,3 @@
+units = "vasiliev"
+N = 1000
+dt_max = 1

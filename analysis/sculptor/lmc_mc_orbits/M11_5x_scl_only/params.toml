@@ -1,0 +1,4 @@
+units = "vasiliev"
+dt_max = 1
+err_scale = 5
+N = 1000

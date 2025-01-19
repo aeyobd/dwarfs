@@ -32,13 +32,13 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean"
+model_dir = "/astro/dboyea/dwarfs/analysis/isolation/1e6_expcusp/fiducial"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
-halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
+halo = LilGuys.load_profile(joinpath(model_dir, "halo.toml"))
 
 # ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 out =  Output(model_dir)
@@ -279,7 +279,7 @@ end
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel=L"$\log\ r_\text{circ}$ / kpc", ylabel=L"\log\ v_\text{circ}\ /\ \text{km\,s^{-1}}",
-		limits=(-1, 2, 0.8, 1.6)
+		limits=(-2, 2, 0.8, 1.6)
 	)
 
 	colorrange = (prof_i.time, prof_f.time) .* T2GYR

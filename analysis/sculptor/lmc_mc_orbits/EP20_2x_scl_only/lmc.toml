@@ -1,0 +1,12 @@
+ra = 80.8
+ra_err = 0.0
+dec = -69.8
+dec_err = 0.0
+distance = 49.59
+distance_err = 0
+pmra = 1.910
+pmra_err = 0
+pmdec = 0.229
+pmdec_err = 0
+radial_velocity = 262 # this work
+radial_velocity_err = 0

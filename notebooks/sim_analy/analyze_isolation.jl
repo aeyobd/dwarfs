@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e7/fiducial"
+name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e6_expcusp/s_0.0013"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -87,7 +87,7 @@ let
 
 
 	for i in eachindex(profs)
-		lines!(profs[i].second.log_r_bins[2:end], profs[i].second.v_circ * V2KMS, color=i, colorrange=(1, length(profs)))
+		lines!(log10.(profs[i].second.r_circ), profs[i].second.v_circ * V2KMS, color=i, colorrange=(1, length(profs)))
 	end
 
 
@@ -265,7 +265,7 @@ end
 
 # ╔═╡ 91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
 let
-	fig = lguys.Plots.plot_xyz(out.x_cen)
+	fig = lguys.plot_xyz(out.x_cen)
 	fig.content[1].title = "centre"
 
 	save(figure_dir * "centre.pdf", fig)
@@ -274,7 +274,7 @@ let
 end
 
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
-lguys.Plots.plot_xyz(out.v_cen * V2KMS, units=" / km s⁻¹")
+lguys.plot_xyz(out.v_cen * V2KMS, units=" / km s⁻¹")
 
 # ╔═╡ 84f0bac9-5655-4acd-88db-8ba3114f712f
 let 
@@ -444,6 +444,9 @@ let
 	fig
 end
 
+# ╔═╡ 0eb8960a-ca00-4ed4-9b6d-37ef2b1a0a8e
+5/cbrt(1e6)
+
 # ╔═╡ Cell order:
 # ╠═7e548032-56a4-4b5c-bc47-ea86bb4cf917
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
@@ -501,3 +504,4 @@ end
 # ╠═564c6bcb-04be-4a1c-8f01-f7d76be74eb8
 # ╠═c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 # ╠═1a320f74-5cb7-44c5-8a59-c6fced771f52
+# ╠═0eb8960a-ca00-4ed4-9b6d-37ef2b1a0a8e

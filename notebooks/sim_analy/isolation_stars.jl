@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -33,16 +33,19 @@ import TOML
 import DensityEstimators: histogram
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = "/astro/dboyea/sculptor/isolation/1e6/fiducial/"
+modeldir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_expcusp/"
+
+# ╔═╡ 3aac17ed-d5a9-491c-b467-3a32ad8a3c39
+isodir = ENV["DWARFS_ROOT"] * "/analysis/isolation/1e6_expcusp/fiducial"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "stars/exp2d_rs0.10"
+starsname = "stars/exp2d_rs0.13"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
-starsfile = "$(starsname)_stars.hdf5"
+starsfile = "probabilities_stars.hdf5"
 
 # ╔═╡ b38a74d3-2a82-412d-981e-8466e403746e
-fig_name = joinpath(modeldir, dirname(starsfile), "figures", basename(starsname))
+fig_name = joinpath(modeldir, starsname, "figures")
 
 # ╔═╡ f13d237d-ce33-43aa-a1c7-796ac502c9fe
 halo_factor = 1
@@ -54,10 +57,10 @@ md"""
 
 # ╔═╡ 83fbe8a1-5d95-458a-87f2-b1d5c66846d2
 begin 
-	stellar_profiles, profile_labels = lguys.read_structs_from_hdf5(joinpath(modeldir, starsname * "_stars_profiles.hdf5"), lguys.StellarProfile3D)
+	stellar_profiles = lguys.read_structs_from_hdf5(joinpath(modeldir, starsname * "/stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
 	
-	snap_idxs = parse.(Int, profile_labels)
-	stellar_profiles = stellar_profiles[sortperm(snap_idxs)]
+	snap_idxs = parse.(Int, first.(stellar_profiles))
+	stellar_profiles = last.(stellar_profiles)[sortperm(snap_idxs)]
 	snap_idxs = sort(snap_idxs)
 
 	snap_idxs, stellar_profiles
@@ -65,13 +68,13 @@ end
 	
 
 # ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
-prob_df = lguys.read_hdf5_table(joinpath(modeldir, starsfile))
+prob_df = lguys.read_hdf5_table(joinpath(modeldir, starsname, starsfile))
 
 # ╔═╡ 312576e2-16da-4285-9c19-a7a8005acf25
 paramname = "$(starsname)"
 
 # ╔═╡ c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
-profile = lguys.load_profile(joinpath(modeldir, paramname) * ".toml")
+profile = lguys.load_profile(joinpath(modeldir, starsname, "profile.toml"))
 
 # ╔═╡ 7dfc4066-eee5-4118-9d12-48861aa66e03
 NamedTuple(d::Dict) = (; zip(Symbol.(keys(d)), values(d))...)
@@ -89,7 +92,7 @@ star_prof_f = stellar_profiles[end]
 probabilities = prob_df.probability
 
 # ╔═╡ e32e2d66-2dad-4f09-84f1-a3081e3891a7
-out = lguys.Output("$modeldir/out/", weights=probabilities)
+out = lguys.Output(isodir, weights=probabilities)
 
 # ╔═╡ 3150cdfd-7573-4db9-86b7-ef614150a7b9
 times = out.times * lguys.T2GYR
@@ -277,6 +280,7 @@ end
 # ╠═bb3b3395-a64d-4907-a4bd-1b3f621010b1
 # ╠═141d3b97-e344-4760-aa12-a48b1afb125c
 # ╠═5b1dd353-a437-47cd-94be-7da9684581da
+# ╠═3aac17ed-d5a9-491c-b467-3a32ad8a3c39
 # ╠═28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
 # ╠═21adbbe7-c8cc-4094-9e75-b68d97fa211a
 # ╠═b38a74d3-2a82-412d-981e-8466e403746e

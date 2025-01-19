@@ -24,10 +24,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Submit a job to SLURM with default or specified parameters.')
     parser.add_argument('--cores', type=int, default=1, 
                         help='number of nodes')
-    parser.add_argument('--script', default=None, type=int, 
-                        help='The script to run. Defaults to either run.sh for normal submition or rerun.sh for a resubmition (not implemented yet)')
-    parser.add_argument('--resubmit', default=None, type=int, 
-                        help='if specified, then we are resubmitting a job. Options are -1 (for last restartfile) or a nonnegative integer for the snapshot to restart from.')
+    parser.add_argument('--resubmit', action='store_true',
+                        help='if specified, then we are resubmitting a job. Runs rerun.sh')
     args = parser.parse_args()
 
     return args
@@ -48,11 +46,19 @@ def clean_dir(directory):
 
 
 def submit_job(args):
-    result = subprocess.run(
-        f"export SLURM_NTASKS={args.cores};" 
-         "nohup bash ./run.sh > log.out 2> err.out &", 
-         shell=True
-    )
+    if args.resubmit:
+        result = subprocess.run(
+            f"export SLURM_NTASKS={args.cores};" 
+             "nohup bash ./rerun.sh >> log.out 2>> err.out &", 
+             shell=True
+        )
+
+    else:
+        result = subprocess.run(
+            f"export SLURM_NTASKS={args.cores};" 
+             "nohup bash ./run.sh > log.out 2> err.out &", 
+             shell=True
+        )
 
     print("submitted nohup job")
 

@@ -51,10 +51,10 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 #dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
-dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/stars/"
+dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_expcusp/stars/"
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "exp2d_rs0.15"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")

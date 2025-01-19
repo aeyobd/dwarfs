@@ -1,0 +1,10 @@
+units = "vasiliev"
+dt_max = 1
+err_scale = 5
+N = 10000
+
+a_fric = 0.0
+a_fric_err = 0.2
+Mlmc = 30
+Mlmc_err = 0.0
+reflex_motion = false
