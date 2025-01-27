@@ -1,0 +1,32 @@
+# koposov2015
+ra = 342.9796
+ra_err = 0.0
+dec = -58.5689
+dec_err = 0.0
+
+distance = 56
+distance_err = 5
+pmra = 0.90
+pmra_err = 0.03 # plus gaia sys
+pmdec = -1.26
+pmdec_err = 0.03
+
+# chiti2023
+radial_velocity = -124.7
+radial_velocity_err = 1.0
+
+sigma_v = 3.8
+sigma_v_err = 0.7
+
+# munoz
+ellipticity = 0.39
+ellipticity_err = 0.2
+PA = 107.0
+PA_err = 18.0
+
+# theta_pm_gsr =
+
+Mv = -3.75
+Mv_err = 0.2
+M_L_s = 1.4 
+M_L_s_err = 0.3

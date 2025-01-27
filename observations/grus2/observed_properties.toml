@@ -1,0 +1,32 @@
+# simon 2020
+ra = 331.025
+ra_err = 0.0
+dec = -46.442
+dec_err = 0.0
+
+# Martinezvazquez2019
+distance = 55.2
+distance_err = 2.5
+pmra = 0.38
+pmra_err = 0.03
+pmdec = -1.46
+pmdec_err = 0.04
+
+radial_velocity = -110
+radial_velocity_err = 0.5
+
+sigma_v = nan
+sigma_v_err =nan 
+
+# munoz
+ellipticity = 0.0
+ellipticity_err = nan
+PA = 0.0
+PA_err = nan 
+
+# theta_pm_gsr =
+
+Mv = -3.5
+Mv_err = 0.3
+M_L_s = 1.4 
+M_L_s_err = 0.3

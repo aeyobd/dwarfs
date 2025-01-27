@@ -1,0 +1,32 @@
+ra = 210.02 #muñoz 2018
+ra_err = 0.0
+dec = 14.5135 
+dec_err = 0.0
+
+# DM 19.11, DallOra2006 ?
+distance = 66.4
+distance_err = 2.4
+pmra = -0.39
+pmra_err = 0.017 #0.002 + gaia sys
+pmdec = -1.06
+pmdec_err = 0.017 #0.002 + gaia sys
+
+# Koposov 2011
+radial_velocity = 101.8
+radial_velocity_err = 0.7
+
+sigma_v = 4.6
+sigma_v_err = 0.8
+
+# munoz
+ellipticity = 0.3
+ellipticity_err = 0.03
+PA = 6
+PA_err = 3
+
+# theta_pm_gsr =
+
+Mv = -6.02
+Mv_err = 0.25
+M_L_s = 1.4 
+M_L_s_err = 0.3

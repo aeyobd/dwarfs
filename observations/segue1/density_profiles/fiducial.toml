@@ -1,0 +1,15 @@
+filename = "../data/j24_2c.fits"
+
+ra = 151.7504
+dec = 16.0756
+PSAT_min = 0.2
+PA = 0.0
+
+pmra = -2.21
+pmdec = -3.34
+ellipticity = 0.0
+
+
+
+[profile_kwargs]
+num_per_bin = 5

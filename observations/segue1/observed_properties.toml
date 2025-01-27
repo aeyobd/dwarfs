@@ -1,0 +1,32 @@
+# munoz
+ra = 151.7504
+ra_err = 0.0
+dec = 16.0756
+dec_err = 0.0
+
+distance = 22.9
+distance_err = 2.1
+pmra = -2.21
+pmra_err = 0.06
+pmdec = -3.34
+pmdec_err = 0.05
+
+# simon 2011
+radial_velocity = 208.5
+radial_velocity_err = 0.9
+
+sigma_v = 3.7
+sigma_v_err = 1.4
+
+# munoz
+ellipticity =0.33
+ellipticity_err = 0.1
+PA = 77.0
+PA_err = 15.0
+
+# theta_pm_gsr =
+
+Mv = -1.5
+Mv_err =   0.73
+M_L_s = 1.4 
+M_L_s_err = 0.3

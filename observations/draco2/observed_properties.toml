@@ -1,0 +1,31 @@
+# longeard2018
+ra = 238.1983
+ra_err = 0.0
+dec = 64.56527
+dec_err = 0.0
+
+distance = 21.6
+distance_err = 0.5
+pmra = 1.08
+pmra_err = 0.07
+pmdec = 0.91
+pmdec_err = 0.08
+
+radial_velocity = -342.5
+radial_velocity_err = 1.2
+
+sigma_v = nan
+sigma_v_err = nan 
+
+# munoz
+ellipticity = 0.23
+ellipticity_err = 0.15
+PA = 76.0
+PA_err =  32.0
+
+# theta_pm_gsr =
+
+Mv = -0.8
+Mv_err = 1.0
+M_L_s = 1.4 
+M_L_s_err = 0.3

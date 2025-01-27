@@ -1,0 +1,15 @@
+filename = "../data/j24_2c.fits"
+
+ra = 210.02 #muñoz 2018
+dec = 14.5135 
+PSAT_min = 0.2
+PA = 6
+
+pmra = -0.39
+pmdec = -1.06
+ellipticity = 0.3
+
+
+
+[profile_kwargs]
+normalization = "mass"

@@ -1,0 +1,6 @@
+filename = "../data/j24_1c.fits"
+jax_filt = true
+
+[profile_kwargs]
+normalization = "mass"
+num_per_bin = 8
