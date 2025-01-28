@@ -1,0 +1,5 @@
+filename = "../data/jensen+24_1_comp_circ.fits"
+jax_filt = true
+
+[profile_kwargs]
+normalization = "mass"

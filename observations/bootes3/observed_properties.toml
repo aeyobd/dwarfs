@@ -33,3 +33,7 @@ Mv = -5.74
 Mv_err = 0.5
 M_L_s = 1.4 
 M_L_s_err = 0.3
+
+r_h = 33.03
+r_h_err = 2.5
+r_h_ref = "J24"

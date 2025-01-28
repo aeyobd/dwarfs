@@ -1,0 +1,26 @@
+ra = 28.772
+ra_err = 0.0
+dec = -68.253
+dec_err = 0.0
+distance = 71.1
+distance_err = 3.3
+pmra = nan
+pmra_err = nan
+pmdec = nan
+pmdec_err = nan
+radial_velocity = nan
+radial_velocity_err = nan
+
+# this work
+sigma_v = nan
+sigma_v_err = nan
+
+ellipticity = 0.03
+ellipticity_err = 0.13
+PA = 74
+PA_err = 80
+
+
+r_h = 1.02
+r_h_err = 0.18
+r_h_ref = "J24"

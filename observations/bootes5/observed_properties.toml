@@ -31,3 +31,7 @@ pmra_gsr = 0.12132892711576575
 pmdec_gsr = 0.0640406693907866
 radial_velocity_gsr = 81.16281301897497
 theta_pm_gsr = -39.64
+
+r_h = 33.03
+r_h_err = 2.5
+r_h_ref = "J24"
