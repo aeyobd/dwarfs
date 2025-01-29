@@ -1,0 +1,9 @@
+- Boo 3
+- Boo 5
+- DELVE2
+- Eri4
+- LeoMinor
+- Peg4
+- Pictoris1
+- Unions1
+- Virgo2

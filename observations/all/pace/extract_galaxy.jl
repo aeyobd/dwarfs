@@ -27,57 +27,66 @@ function extract_galaxy(galaxyname, df)
 
     properties = OrderedDict(
         "ra" => galaxy.ra,
-        "ra_err" => 0.0,
+        "ra_em" => 0.0,
+        "ra_ep" => 0.0,
         "ra_ref" => galaxy.ref_structure,
         "dec" => galaxy.dec,
-        "dec_err" => 0.0,
+        "dec_em" => 0.0,
+        "dec_ep" => 0.0,
         "dec_ref" => galaxy.ref_structure,
         "distance" => galaxy.distance,
-        "distance_err" => max(galaxy.distance_em, galaxy.distance_ep),
+        "distance_em" => galaxy.distance_em,
+        "distance_ep" => galaxy.distance_ep,
+        "distance_modulus" => galaxy.distance_modulus,
+        "distance_modulus_em" => galaxy.distance_modulus_em,
+        "distance_modulus_ep" => galaxy.distance_modulus_ep,
         "distance_ref" => galaxy.ref_distance,
         "pmra" => galaxy.pmra,
-        "pmra_err" => max(galaxy.pmra_em, galaxy.pmra_ep),
+        "pmra_em" => galaxy.pmra_em,
+        "pmra_ep" => galaxy.pmra_ep,
         "pmra_ref" => galaxy.ref_proper_motion,
         "pmdec" => galaxy.pmdec,
-        "pmdec_err" => max(galaxy.pmdec_em, galaxy.pmdec_ep),
+        "pmdec_em" => galaxy.pmdec_em,
+        "pmdec_ep" => galaxy.pmdec_ep,
         "pmdec_ref" => galaxy.ref_proper_motion,
         "radial_velocity" => galaxy.vlos_systemic,
-        "radial_velocity_err" => max(galaxy.vlos_systemic_em, galaxy.vlos_systemic_ep),
+        "radial_velocity_em" => galaxy.vlos_systemic_em,
+        "radial_velocity_ep" => galaxy.vlos_systemic_ep,
         "radial_velocity_ref" => galaxy.ref_vlos,
         "sigma_v" => galaxy.vlos_sigma,
-        "sigma_v_err" => max(galaxy.vlos_sigma_em, galaxy.vlos_sigma_ep),
+        "sigma_v_em" => galaxy.vlos_sigma_em,
+        "sigma_v_ep" => galaxy.vlos_sigma_ep,
         "sigma_v_ref" => galaxy.ref_vlos,
-        "PA" => galaxy.position_angle,
-        "PA_err" => max(galaxy.position_angle_em, galaxy.position_angle_ep),
-        "PA_ref" => galaxy.ref_structure,
+        "position_angle" => galaxy.position_angle,
+        "position_angle_em" => galaxy.position_angle_em,
+        "position_angle_ep" => galaxy.position_angle_ep,
+        "postiion_angle_ref" => galaxy.ref_structure,
         "ellipticity" => galaxy.ellipticity,
-        "ellipticity_err" => max(galaxy.ellipticity_em, galaxy.ellipticity_ep),
+        "ellipticity_em" => galaxy.ellipticity_em,
+        "ellipticity_ep" => galaxy.ellipticity_ep,
         "ellipticity_ref" => galaxy.ref_structure,
         "Mv" => galaxy.M_V,
-        "Mv_err" => max(galaxy.M_V_em, galaxy.M_V_ep),
+        "Mv_em" => galaxy.M_V_em,
+        "Mv_ep" => galaxy.M_V_ep,
+        "mv" => galaxy.apparent_magnitude_v,
+        "mv_em" => galaxy.apparent_magnitude_v_em,
+        "mv_ep" => galaxy.apparent_magnitude_v_ep,
+        "mv_ref" => galaxy.ref_m_v,
+        "rh" => galaxy.rhalf,
+        "rh_em" => galaxy.rhalf_em,
+        "rh_ep" => galaxy.rhalf_ep,
+        "rh_ref" => galaxy.ref_structure,
+        "metallicity" => galaxy.metallicity_spectroscopic,
+        "metallicity_em" => galaxy.metallicity_spectroscopic_em,
+        "metallicity_ep" => galaxy.metallicity_spectroscopic_ep,
+        "metallicity_ref" => galaxy.ref_metallicity_spectroscopic,
        )
+
     for key in keys(properties)
         if ismissing(properties[key])
             properties[key] = NaN
         end
     end
-
-    icrs = LilGuys.ICRS(
-        ra = properties["ra"],
-        dec = properties["dec"],
-        distance = properties["distance"],
-        pmra = properties["pmra"],
-        pmdec = properties["pmdec"],
-        radial_velocity = properties["radial_velocity"]
-       )
-
-    gsr = LilGuys.transform(LilGuys.GSR, icrs)
-
-    properties["pmra_gsr"] = gsr.pmra
-    properties["pmdec_gsr"] = gsr.pmdec
-    properties["radial_velocity_gsr"] = gsr.radial_velocity
-    properties["theta_pm_gsr"] = -39.64 # atand(pmra_gsr, pmdec_gsr)
-
 
     open("properties_$(galaxyname).toml", "w") do io
         TOML.print(io, properties)
