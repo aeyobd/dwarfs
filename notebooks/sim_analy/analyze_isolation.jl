@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e6_expcusp/s_0.0013"
+name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e6_c0.1/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -79,6 +79,12 @@ md"""
 
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
 fit = lguys.fit_v_r_circ_max(snaps[end])
+
+# ╔═╡ 9dc4f57d-2bb2-4718-9f9d-86445e23bd75
+calc_v_circ_max(halo) * V2KMS
+
+# ╔═╡ 72e84e62-b6c6-4afe-9708-7be49064d081
+calc_r_circ_max(halo)
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
@@ -467,6 +473,8 @@ end
 # ╠═5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═9a9f4dc1-3573-41ee-be1a-eee39d3371b0
+# ╠═9dc4f57d-2bb2-4718-9f9d-86445e23bd75
+# ╠═72e84e62-b6c6-4afe-9708-7be49064d081
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╠═7299dbaf-b332-4e53-85de-7acbfa0c3853
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e

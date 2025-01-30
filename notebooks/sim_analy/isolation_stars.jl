@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -33,13 +33,13 @@ import TOML
 import DensityEstimators: histogram
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_expcusp/"
+modeldir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V36_r4.8_c0.1/"
 
 # ╔═╡ 3aac17ed-d5a9-491c-b467-3a32ad8a3c39
-isodir = ENV["DWARFS_ROOT"] * "/analysis/isolation/1e6_expcusp/fiducial"
+isodir = ENV["DWARFS_ROOT"] * "/analysis/isolation/1e6_c0.1/fiducial"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "stars/exp2d_rs0.13"
+starsname = "stars/exp2d_rs0.08"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "probabilities_stars.hdf5"
@@ -165,7 +165,7 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel =  L"\log\, \rho_\star\; [10^{10} M_\odot / \textrm{kpc}^3]", 
-		limits=((-1.5, 0.8), (-15, 3))
+		limits=((-2.5, 0.8), (-15, 3))
 		)
 
 	lines!(star_prof_i.log_r, log10.(star_prof_i.rho))

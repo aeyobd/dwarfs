@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -23,9 +23,6 @@ md"""
 Given the stellar probabilty file, makes plots based on the 3D properties of the stars in the sample.
 """
 
-# ╔═╡ 145144a0-d93d-4bea-8603-655bb6c818aa
-save = Makie.save
-
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
 import DensityEstimators as DE
 
@@ -38,14 +35,14 @@ md"""
 """
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.08"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-#model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r4.2/vasiliev+21_smallperi"
+#model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean"
 
 # ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
-obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
+obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -53,11 +50,11 @@ stars_dir_in = joinpath(model_dir, "../stars/$starsname")
 # ╔═╡ 7c64a7c7-232b-47b6-973a-62e1ac21df3a
 stars_dir_out = joinpath(model_dir, "stars/$starsname")
 
+# ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
+figdir = joinpath(stars_dir_out,  "figures"); mkpath(figdir)
+
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = joinpath(stars_dir_in, "profile.toml")
-
-# ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
-fig_dir = joinpath(dirname(model_dir),  "figures"); mkpath(fig_dir)
 
 # ╔═╡ 973955ad-3214-42cf-831f-a782f1d2434a
 idx_i = 1 
@@ -153,7 +150,8 @@ let
 	colgap!(fig.layout, 1, 50.)
 
 	resize_to_layout!(fig)
-	save(joinpath(fig_dir, "density_xy_zoomout.pdf"), fig)
+	
+	@savefig "density_xy_zoomout"
 
 	
 	fig
@@ -189,7 +187,7 @@ let
 
     rowsize!(fig.layout, 1, ax.scene.viewport[].widths[1])
 
-	save(joinpath(fig_dir, "density_xy_if.pdf"), fig)
+	@savefig "density_xy_if"
 
 	fig
 end
@@ -458,6 +456,8 @@ let
 	)
 
 	axislegend()
+
+	@savefig "sigma_v_x_final"
 	fig
 	
 end
@@ -504,7 +504,7 @@ let
 	
 	axislegend(ax, position=:lb)
 	
-	save(joinpath(fig_dir, "rho_3d_if.pdf"), fig)
+	@savefig "rho_3d_if"
 
 	fig
 end
@@ -548,7 +548,7 @@ let
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
 	text!(log10.(r_b_kpc), -20, text=L"r_b")
 
-	save(joinpath(fig_dir, "break_radius.pdf"), fig)
+	@savefig "break_radius"
 	fig
 end
 
@@ -584,34 +584,173 @@ md"""
 # Evolutionary Properties
 """
 
-# ╔═╡ cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
-# ╠═╡ disabled = true
-#=╠═╡
-let
-	fig = Figure()
+# ╔═╡ e26b40a5-b69f-4c9c-baf3-0d8aea717a63
+function get_M_h(out, rh, skip=1)
 
-	n_rh = 10
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="normalized stellar mass within $n_rh rh",
-		# yscale=log10,
-		#yticks=[1, 0.1],
-	)
-	
+	idx = eachindex(out)[1:skip:end]
+	M = Vector{Float64}(undef, length(idx))
 
-	M_dm_h = get_M_h(out, n_rh * r_h)
-	scatter!(out.times[1:10:end] * lguys.T0, M_dm_h ./ M_dm_h[1])
-	
-	
-	fig
+	for (i, i_out) in enumerate(idx)
+		r = calc_r(out[i_out])
+		f = r .< rh
+		m = sum(out[i_out].weights[f])
+		M[i] = m
+	end
+
+	return out.times[idx], M
 end
-  ╠═╡ =#
+
+# ╔═╡ a985bc1a-6bf7-448a-b0d3-61bbac301819
+sum(prof_f.mass_in_shell_err[.!isnan.(prof_f.mass_in_shell_err)])
+
+# ╔═╡ ade76f31-e638-4061-bcbc-509d0512b162
+r_h = LilGuys.calc_r_h(profile)
+
+# ╔═╡ 9729d5e4-5e35-4432-82d0-ff53bd491e6e
+#t_dm_h, M_dm_h = get_M_h(out, n_rh * r_h)
+
+# ╔═╡ 16c7a61a-6ee4-43cb-8a46-136c8e3956dd
+prof_f.bound_mass
 
 # ╔═╡ df229124-325f-4f0c-9cf3-9930002b7767
 profiles = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarProfile)
 
 # ╔═╡ 49052b15-7cfc-488c-974e-7b9c1872d082
 profiles_3D = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
+
+# ╔═╡ 5b23eaca-c5ab-4907-ab92-7cb6bc0e0381
+function get_M_h_fast(profs, rh)
+
+	idx = eachindex(profs)
+	M = Vector{Float64}(undef, length(idx))
+	times = Vector{Float64}(undef, length(idx))
+	M_err = Vector{Float64}(undef, length(idx))
+
+	for i in idx
+		prof = profiles_3D[i].second
+		rs = prof.log_r
+		Ms = cumsum(prof.mass_in_shell)
+		M[i] = lguys.lerp(rs, Ms)(log10(rh))
+		times[i] = prof.time
+	end
+
+	s = sortperm(times[idx])
+	return times[idx][s], M[s]
+end
+
+# ╔═╡ 0f2af99f-355a-4477-aa5c-265dc509d458
+get_M_h_fast(profiles_3D, 1 * r_h)
+
+# ╔═╡ d97d7d5d-6f6d-4f4b-97fe-bb825b71ee80
+let
+	fig = Figure()
+
+	n_rh = 10
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="stellar mass within $(round(r_b_kpc, digits=2)) kpc (break radius)",
+		# yscale=log10,
+		#yticks=[1, 0.1],
+	)
+	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D,  r_b_kpc)
+
+	
+	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
+
+
+	@savefig "M_in_rb"
+	
+	fig
+end
+
+# ╔═╡ cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
+let
+	fig = Figure()
+
+	n_rh = 10
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="stellar mass within $n_rh rh",
+		# yscale=log10,
+		#yticks=[1, 0.1],
+	)
+	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D, n_rh * r_h)
+
+	
+	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
+
+
+	@savefig "M_in_10rh"
+	
+	fig
+end
+
+# ╔═╡ 7431ea86-7009-45e8-a0e5-5a84dd0a57ed
+let
+	fig = Figure()
+
+	n_rh = 5
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="stellar mass within $n_rh rh",
+		# yscale=log10,
+		#yticks=[1, 0.1],
+	)
+	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D, n_rh * r_h)
+
+	
+	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
+
+
+	@savefig "M_in_5rh"
+	
+	fig
+end
+
+# ╔═╡ c9fdee7a-9e7f-4941-8cd2-492cfd427509
+let
+	fig = Figure()
+
+	n_rh = 3
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="stellar mass within $n_rh rh",
+		# yscale=log10,
+		#yticks=[1, 0.1],
+	)
+	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D, n_rh * r_h)
+
+	
+	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
+
+
+	@savefig "M_in_3rh"
+	
+	fig
+end
+
+# ╔═╡ 23ef95b2-c35f-4e66-896c-54a66be59e61
+let
+	fig = Figure()
+
+	n_rh = 10
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="bound mass",
+		# yscale=log10,
+		#yticks=[1, 0.1],
+	)
+
+
+	times = [prof.time * T2GYR for (_, prof) in profiles_3D]
+
+	boundmass = [prof.bound_mass  for (_, prof) in profiles_3D]
+
+	scatter!(times, boundmass)
+
+	@savefig "boundmass"
+	fig
+end
 
 # ╔═╡ d42795d0-bd69-4c2c-be5b-e27e85199ee3
 let
@@ -631,15 +770,20 @@ let
 	vs = [prof.sigma_vx * V2KMS for (_, prof) in profiles_3D]
 
 	scatter!(times, vs)
+
+	@savefig "vcirc_time"
 	fig
 end
+
+# ╔═╡ 60ffd004-9770-4b96-8845-0d694cfbced8
+profiles_3D[1].second
 
 # ╔═╡ 0112797c-ecb8-4ea7-8a66-365f9fbe952e
 let
 	fig = Figure()
 	
 	ax = Axis(fig[1,1],
-		limits = (-2.5, 2, -20, 2),
+		limits = (-2.5, 2, -20, 3),
 		xlabel = L"log $r$ / kpc",
 		ylabel = L"log $\Sigma_\star$",
 	)
@@ -651,7 +795,9 @@ let
 
 
 	Colorbar(fig[1,2], label="time / Gyr", colorrange=colorrange)
-	
+
+	@savefig "Sigma_all_times"
+
 	fig
 end
 
@@ -672,7 +818,9 @@ let
 
 
 	Colorbar(fig[1,2], label="time / Gyr", colorrange=colorrange)
-	
+
+	@savefig "rho_all_times"
+
 	fig
 end
 
@@ -690,7 +838,6 @@ end
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
-# ╠═145144a0-d93d-4bea-8603-655bb6c818aa
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
@@ -700,8 +847,8 @@ end
 # ╠═9c42eb0a-029d-46f7-afb0-de03f82c5889
 # ╠═08aa0f76-3d74-45b5-b9e9-6abbf6350910
 # ╠═7c64a7c7-232b-47b6-973a-62e1ac21df3a
-# ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 # ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
+# ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
 # ╠═8f9ee2a7-de43-43e0-8257-93ecc630044f
 # ╟─396cd0a8-1d73-44dd-89db-3243fb9e8ac4
@@ -752,10 +899,22 @@ end
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 # ╠═d53669fc-84a1-4138-8445-5f31c3ec44a5
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
+# ╠═e26b40a5-b69f-4c9c-baf3-0d8aea717a63
+# ╠═5b23eaca-c5ab-4907-ab92-7cb6bc0e0381
+# ╠═a985bc1a-6bf7-448a-b0d3-61bbac301819
+# ╠═ade76f31-e638-4061-bcbc-509d0512b162
+# ╠═9729d5e4-5e35-4432-82d0-ff53bd491e6e
+# ╠═0f2af99f-355a-4477-aa5c-265dc509d458
+# ╠═16c7a61a-6ee4-43cb-8a46-136c8e3956dd
+# ╠═d97d7d5d-6f6d-4f4b-97fe-bb825b71ee80
 # ╠═cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
+# ╠═7431ea86-7009-45e8-a0e5-5a84dd0a57ed
+# ╠═c9fdee7a-9e7f-4941-8cd2-492cfd427509
+# ╠═23ef95b2-c35f-4e66-896c-54a66be59e61
 # ╠═d42795d0-bd69-4c2c-be5b-e27e85199ee3
 # ╠═df229124-325f-4f0c-9cf3-9930002b7767
 # ╠═49052b15-7cfc-488c-974e-7b9c1872d082
+# ╠═60ffd004-9770-4b96-8845-0d694cfbced8
 # ╠═0112797c-ecb8-4ea7-8a66-365f9fbe952e
 # ╠═b0b2948a-0299-4b90-83be-4bdcf2a75eaf
 # ╠═a955cee5-609e-46bd-8212-51e18c0d1e86

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -41,17 +41,17 @@ md"""
 models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-#model_dir = models_dir * "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi/"
-model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean/"
+model_dir = models_dir * "sculptor/1e6_V31_r4.2/vasiliev+21_smallperi/"
+#model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.08"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 figdir = joinpath(dirname(model_dir),  "stars", starsname, "figures"); mkpath(figdir)
 
 # ╔═╡ 44dec2f8-c149-461d-b586-56b73a97c0a2
-obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
+obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
@@ -678,7 +678,7 @@ md"""
 nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 
 # ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
-prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=150)
+prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
 prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/ursa_minor/density_profiles/fiducial_profile.toml")

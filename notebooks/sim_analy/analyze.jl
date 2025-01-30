@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -32,7 +32,7 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/isolation/1e6_expcusp/fiducial"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V36_r4.8_c0.1/vasiliev24_L3M11_extremeperi"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -142,7 +142,7 @@ let
 
 	r_model = 10 .^ LinRange(-2, 3, 1000)
 	v_model = calc_v_circ.(halo, r_model)
-	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="NFW")
+	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="analytic")
 	
 	lines!(log10.(prof_i.r_circ), prof_i.v_circ * V2KMS, label="initial")
 
@@ -328,10 +328,13 @@ let
 
 	resize_to_layout!(fig)
 
-	save(joinpath(figures_dir, "xy_cen_projection.pdf"), fig)
+	@savefig "xy_cen_projection"
 
 	fig
 end
+
+# ╔═╡ f7f8ed80-c715-43db-bebe-e62b14173ac6
+
 
 # ╔═╡ 4cd952f3-555d-401b-aa31-8b79a23ca42e
 let 
@@ -350,7 +353,7 @@ let
 
 	Colorbar(fig[1, 2], h, label="DM density")
 
-	save(joinpath(figures_dir, "xz_fin_projection.pdf"), fig)
+	@savefig "xz_fin_projection"
 
 	fig
 end
@@ -410,5 +413,6 @@ end
 # ╠═871f7679-dbaa-4901-85ab-357b58588d46
 # ╠═48e54b34-4b22-4609-8928-ba6d8d027370
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd
+# ╠═f7f8ed80-c715-43db-bebe-e62b14173ac6
 # ╟─4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf

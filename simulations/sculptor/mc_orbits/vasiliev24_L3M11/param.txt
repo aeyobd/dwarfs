@@ -20,7 +20,7 @@ MaxMemSize                1800    % in MByte
 
 %---- Caracteristics of run
 TimeBegin                 0
-TimeMax			  2120 # 10 Gyr, our time units are reversed
+TimeMax			  212 # 1 Gyr, our time units are reversed
 
 %---- Cosmological parameters
 Omega0	                  0

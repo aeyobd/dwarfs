@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -51,10 +51,10 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 #dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
-dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_expcusp/stars/"
+dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V36_r4.8_c0.1/stars/"
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "exp2d_rs0.13"
+starsname = "exp2d_rs0.08"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")
@@ -63,7 +63,7 @@ paramname = joinpath(dir, starsname, "profile.toml")
 figdir = joinpath(dir, starsname, "figures")
 
 # ╔═╡ 66c89b32-e522-48c8-b5aa-a5845715ce28
-mkdir(figdir)
+mkpath(figdir)
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""

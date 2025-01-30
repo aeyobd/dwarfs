@@ -36,7 +36,7 @@ md"""
 """
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi"
+modelname = "sculptor/1e6_expcusp/vasiliev24_L3M11_extremeperi"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -50,7 +50,7 @@ parentdir = ENV["DWARFS_ROOT"]
 properties_file =  "$parentdir/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = joinpath(parentdir, "simulations", modelname, "orbit.csv")
+orbit_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
 
 # ╔═╡ 460dfdff-7f5f-46bc-bd5c-4a43d916d157
 lmc_file = joinpath(parentdir, "analysis", modelname, "lmc_traj.csv")

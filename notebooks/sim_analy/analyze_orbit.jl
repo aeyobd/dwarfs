@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -17,6 +17,9 @@ end
 
 # ╔═╡ 2c702eb7-ebb6-44c9-8e01-ca52d011c014
 using HDF5
+
+# ╔═╡ 9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
+using Printf
 
 # ╔═╡ 8b41af50-9ae0-475b-bacc-3799e2949b30
 md"""
@@ -42,11 +45,11 @@ md"""
 r_h = 0.11 # order of mag, for chi sq fit
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-#modelname = "sculptor/1e6_V31_r3.2/vasiliev24_L3M11_extremeperi_iso"
+#modelname = "sculptor/1e6_V36_r4.8_c0.1/vasiliev24_L3M11_extremeperi"
 modelname = "ursa_minor/1e6_v37_r5.0/orbit_mean"
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
-t_min = 8
+t_min = 5
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -60,7 +63,7 @@ parentdir = ENV["DWARFS_ROOT"]
 properties_file =  "$parentdir/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = joinpath(parentdir, "simulations", modelname, "orbit.csv")
+orbit_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
 
 # ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 outfile = joinpath(parentdir, "analysis", modelname, "orbital_properties.toml")
@@ -73,7 +76,7 @@ skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
 
 # ╔═╡ 4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
 begin 
-	figdir = "./figures"
+	figdir = joinpath(parentdir, "analysis", modelname, "figures")
 	mkpath(figdir)
 end
 
@@ -205,6 +208,8 @@ let
 
 	scatter!(R[idx_f], z[idx_f], color=COLORS[2])
 	scatter!(R[1], z[1], color = COLORS[3], marker=:rtriangle, )
+
+	@savefig "R_z_centre"
 	fig
 end
 
@@ -217,8 +222,8 @@ let
 		yscale=log10
 	)
 	
-	lines!(t, χ2,)
-	scatter!(t[idx_f], χ2[idx_f])
+	lines!(t * T2GYR, χ2,)
+	scatter!(t[idx_f] * T2GYR, χ2[idx_f])
 
 	fig
 end
@@ -267,6 +272,9 @@ end
 # ╔═╡ 8d1508af-1715-4ef6-aab9-e95a02265913
 idx_peris, idx_apos = find_all_peris(r)
 
+# ╔═╡ ddd74bbb-df27-4150-b497-b1df5243f518
+r[idx_apos]
+
 # ╔═╡ efcbae60-cf7c-4e74-aae4-39d19b74b6fa
 idx_peri = maximum(idx_peris[idx_peris .< idx_f])
 
@@ -310,6 +318,9 @@ let
 	)
 	
 	Legend(fig[1, 2], ax)
+
+	@savefig "r_t_orbit"
+
 	fig
 end
 
@@ -336,29 +347,34 @@ md"""
 
 # ╔═╡ 54cf5233-a955-4831-86ad-23b72f15789d
 for property in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
-	println(property, "\t", obs_today[property], "\t", obs_today[property * "_err"], "\t", obs_c[idx_f, property])
+	dy = (obs_c[idx_f, property] - obs_c[idx_f-1, property])/2
+	
+	@printf "%20s\t%8.4f\t%8.4f\t%8.4f\t%8.4f\n" property obs_today[property] obs_today[property * "_err"]  obs_c[idx_f, property]  dy
 end
 
 # ╔═╡ cdabdc7d-76a1-45f5-b83a-2454576d3964
 let
-	for (x, y) in [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")]
-		fig = Figure()
-		ax = Axis(fig[1,1],
+
+	fig = Figure(size=(400, 600))
+	for i in 1:3
+		x, y = [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")][i]
+		ax = Axis(fig[i,1],
 			xlabel=x,
 			ylabel=y
 		)
 	
-		idx = idx_f-10:idx_f
+		idx = idx_f-3:idx_f
 	
-		scatter!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
+		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		
 		errscatter!([obs_today[x]], [obs_today[y]],
 			xerr=[obs_today[x * "_err"]], yerr=[obs_today[y * "_err"]]
 		)
 	
-	
-		@info fig
 	end
+
+	@savefig "skyorbit_agreement_today"
+	fig
 end
 
 # ╔═╡ 3448ffc5-41e6-4208-b11f-2c00168bf50a
@@ -507,6 +523,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
+# ╠═ddd74bbb-df27-4150-b497-b1df5243f518
 # ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╠═6d0612d6-8609-4832-80ae-4e8e78c557cc
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
@@ -537,6 +554,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
 # ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
+# ╠═9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
 # ╠═54cf5233-a955-4831-86ad-23b72f15789d
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
 # ╟─3448ffc5-41e6-4208-b11f-2c00168bf50a

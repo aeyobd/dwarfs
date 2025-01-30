@@ -38,14 +38,14 @@ md"""
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
 #model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v37_r5.0/orbit_mean/"
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/isolation/1e6_expcusp/s_0.0013/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V36_r4.8_c0.1/vasiliev24_L3M11_extremeperi/"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 #name = "initial"
 name = "initial"
 
 # ╔═╡ 8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
-paramname = "halo.toml" # "../halo.toml"
+paramname = "halo.toml"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -59,7 +59,10 @@ halo = lguys.load_profile(joinpath(model_dir,paramname ))
 halo.r_s
 
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
-lguys.calc_M(halo, 1)
+lguys.calc_M(halo, (1))
+
+# ╔═╡ 020bbb15-235d-468c-bc02-01f3b75708e9
+LilGuys.expint(Complex(-0.01))
 
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
 begin 
@@ -84,6 +87,9 @@ snap.x_cen
 
 # ╔═╡ 5ebe92b8-602e-42be-8751-58898b7323b0
 snap.v_cen * V2KMS
+
+# ╔═╡ c9cd2c2f-90b7-4d1c-8c48-586c1dac0257
+snap.v_cen
 
 # ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
 prof = lguys.MassProfile3D(snap)
@@ -268,11 +274,14 @@ else
 	R200 = lguys.calc_R200(halo)
 end
 
+# ╔═╡ 233c5aca-4966-4ba5-b5ac-f5d0e0a727dc
+EXTRA_SOFTENING = 1/sqrt(10)
+
 # ╔═╡ da55fc43-69f7-4375-b8fc-c61dd606fb24
 N200 = sum(lguys.calc_r(snap) .< R200)
 
 # ╔═╡ d841539a-f755-460f-9994-16229aadca6a
-grav_softening = 4R200 / sqrt(N200) / sqrt(10)
+grav_softening = 4R200 / sqrt(N200) * EXTRA_SOFTENING
 
 # ╔═╡ 5d5d72d6-8272-40c9-bce8-d7d90c670052
 md"""
@@ -344,7 +353,9 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═7f9db45f-38ea-4427-9af1-d5431429f612
 # ╠═0ccb9018-d88c-4cec-a8da-625be1289bfe
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
+# ╠═c9cd2c2f-90b7-4d1c-8c48-586c1dac0257
 # ╠═54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
+# ╠═020bbb15-235d-468c-bc02-01f3b75708e9
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═14e3b593-17b9-4acd-a9cb-d5923662a02c
 # ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
@@ -366,6 +377,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
 # ╟─5d5d72d6-8272-40c9-bce8-d7d90c670052
 # ╠═fddeb921-468b-4f00-b4cb-a6fc4faec555
+# ╠═233c5aca-4966-4ba5-b5ac-f5d0e0a727dc
 # ╠═da55fc43-69f7-4375-b8fc-c61dd606fb24
 # ╠═d841539a-f755-460f-9994-16229aadca6a
 # ╠═9f0ba4f3-5abd-4b60-869a-693cf883025b
