@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -13,13 +13,11 @@ begin
 
 	using Printf
 	import LilGuys as lguys
-
+	using LilGuys
+	
 	using Arya
 end
 
-
-# ╔═╡ acce474f-5b88-42dc-aa1b-840f3d3967b7
-using LilGuys
 
 # ╔═╡ 1be546d7-8b11-4dc5-9295-393d39f65123
 using OrderedCollections
@@ -33,10 +31,10 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 """
 
 # ╔═╡ b5b60b64-ad87-4219-a72a-4dc62d726f50
-modelname = "vasiliev24_L3M11_loose"
+modelname = "vasiliev24_L3M11_2x"
 
 # ╔═╡ cfcb9873-dd62-4a49-af01-7cc0668abe15
-fig_dir = "./$modelname/figures"
+figdir = "./$modelname/figures"
 
 # ╔═╡ 3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 md"""
@@ -104,8 +102,11 @@ end
 # ╔═╡ 2559bc4c-3bad-4d70-b02f-8fe48b772fb6
 special_orbits_dir = "$(modelname)_special_cases"
 
+# ╔═╡ a535118f-3483-4655-af7e-4933e9214e46
+orbit_ic = TOML.parsefile("$special_orbits_dir/simulation/initial_conditions.toml")["orbits"]
+
 # ╔═╡ e5f728b8-8412-4f57-ad38-a0a35bb08a48
-orbit_labels = ["mean", "smallperi", "largeperi"]
+orbit_labels = [o["name"] for o in orbit_ic]
 
 # ╔═╡ dcdca4a7-08a6-4d1b-a972-c386493207d0
 begin 
@@ -133,6 +134,9 @@ traj_lmc = CSV.read("$special_orbits_dir/lmc_traj.csv", DataFrame)
 md"""
 # plots
 """
+
+# ╔═╡ 94046401-1c2e-4bb8-9cd8-45fe750fad31
+mkpath(figdir)
 
 # ╔═╡ 9177dadb-2852-421f-a5d6-79b796bc9f44
 md"""
@@ -288,7 +292,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "peri_lmc_mc_corr.pdf"), fig)
+	@savefig "peri_lmc_mc_corr"
 	fig
 end
 
@@ -333,7 +337,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "t_perilmc_mc_corr.pdf"), fig)
+	@savefig "t_perilmc_mc_corr"
 	fig
 end
 
@@ -378,7 +382,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
@@ -423,7 +427,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "apo_mc_orbits_corr.pdf"), fig)
+	@savefig "apo_mc_orbits_corr"
 	fig
 end
 
@@ -468,7 +472,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "t_peri_mc_corr.pdf"), fig)
+	@savefig "t_peri_mc_corr"
 	fig
 end
 
@@ -547,6 +551,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
 		ylabel="Scl–MW distance / kpc",
+		limits=(nothing, nothing, 0, nothing)
 	)
 
 	for i in eachindex(orbit_labels)
@@ -558,7 +563,7 @@ let
 	Legend(fig[1, 2], ax)
 	lguys.hide_grid!(ax)
 
-	save(joinpath(fig_dir, "r_time_orbits.pdf"), fig)
+	@savefig "r_time_orbits"
 	fig
 end
 
@@ -593,7 +598,7 @@ let
 
 	resize_to_layout!(fig)
 
-	save(joinpath(fig_dir, "xyz_orbit.pdf"), fig)
+	@savefig "xyz_orbit"
 
 	fig
 end
@@ -624,7 +629,7 @@ let
 		lines!(R, z, label=orbit_labels[i])
 
 	end
-	save(joinpath(fig_dir, "R_z_orbit.pdf"), fig)
+	@savefig "R_z_orbit"
 
 	axislegend()
 	fig
@@ -766,7 +771,7 @@ begin
 	# orbit info
 	for i in 1:length(orbit_labels)
 		t = length(rs[i])
-		@printf "orbit: \t\t %i\n" i
+		@printf "orbit: \t\t %i \t %s \n" i orbit_labels[i]
 		
 		@printf "pericentre:\t %0.1f\n" df_peris_apos_special.pericentre[i]
 		@printf "apocentre: \t %0.1f\n" df_peris_apos_special.apocentre[i]
@@ -802,7 +807,6 @@ end
 # ╟─3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═0f1eadfc-bff3-42b8-beee-2765589671ac
-# ╠═acce474f-5b88-42dc-aa1b-840f3d3967b7
 # ╠═b8c9823f-ca6b-48bf-9140-40440562dac0
 # ╠═1be546d7-8b11-4dc5-9295-393d39f65123
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
@@ -815,6 +819,7 @@ end
 # ╠═26d616da-95ec-4fb9-b9a8-2f095d74c722
 # ╠═9a22d47b-8474-4596-b418-de33eb07c627
 # ╠═2559bc4c-3bad-4d70-b02f-8fe48b772fb6
+# ╠═a535118f-3483-4655-af7e-4933e9214e46
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
 # ╠═dcdca4a7-08a6-4d1b-a972-c386493207d0
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
@@ -822,6 +827,7 @@ end
 # ╠═384be6a6-f9d9-47e0-9792-aef6689dcbdb
 # ╠═4b29ef51-5047-4c8a-9692-a388a6e51c2b
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
+# ╠═94046401-1c2e-4bb8-9cd8-45fe750fad31
 # ╟─9177dadb-2852-421f-a5d6-79b796bc9f44
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
 # ╠═46b4242b-8af7-4233-8ecf-d86740b4c884

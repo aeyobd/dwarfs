@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -18,6 +18,9 @@ begin
 end
 
 
+# ╔═╡ bb90f6a2-cb19-43f1-ad04-a4b258b5812f
+using LilGuys
+
 # ╔═╡ e7ad41b9-2845-4a6d-8fc5-7c35544d766c
 using Statistics
 
@@ -27,13 +30,13 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 """
 
 # ╔═╡ e0d2af42-c9ad-42b8-b223-440d19ac1138
-modelname = "vasiliev24_L3M11_only_v"
+modelname = "vasiliev24_L3M11_2x"
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 p_value = 0.0014
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
-fig_dir = "./$modelname/figures"
+figdir = "./$modelname/figures"
 
 # ╔═╡ e4d8e811-6c9a-4500-bc59-c9aedd94bfbb
 extract_orbit = true
@@ -58,6 +61,9 @@ kms_label = L" / km\,s$^{-1}$"
 
 # ╔═╡ 6651d141-f6ca-4e8f-a785-5b14275b367c
 T2GYR = lguys.T2GYR
+
+# ╔═╡ 0fda708e-8d30-4065-b3bf-875167b1fa71
+mkpath(figdir)
 
 # ╔═╡ fbfece31-31dc-469a-89da-5dbde7e19127
 md"""
@@ -395,7 +401,7 @@ let
 
 
 	linkyaxes!(fig.content...)
-	save(joinpath(fig_dir, "perilmc.pdf"), fig)
+	@savefig "perilmc_corr"
 
 	fig
 end
@@ -445,7 +451,7 @@ let
 
 
 	linkyaxes!(fig.content...)
-	save(joinpath(fig_dir, "t_last_perilmc.pdf"), fig)
+	@savefig "t_last_perilmc"
 
 	fig
 end
@@ -497,9 +503,12 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
+
+# ╔═╡ e7826eb1-5add-4a5b-870a-4102f5f356a7
+?lguys.coords_from_df
 
 # ╔═╡ e9311003-b6af-4e09-907f-c3388d59287d
 let
@@ -739,10 +748,12 @@ end
 # ╠═e4d8e811-6c9a-4500-bc59-c9aedd94bfbb
 # ╟─581df0c4-a509-43d0-beef-c4cc67329d10
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═bb90f6a2-cb19-43f1-ad04-a4b258b5812f
 # ╠═e7ad41b9-2845-4a6d-8fc5-7c35544d766c
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
 # ╠═6651d141-f6ca-4e8f-a785-5b14275b367c
+# ╠═0fda708e-8d30-4065-b3bf-875167b1fa71
 # ╟─fbfece31-31dc-469a-89da-5dbde7e19127
 # ╟─b4f11f71-8857-4a6f-8917-b5e278362b0f
 # ╠═90bee0d7-e09b-4e38-a06c-a37ed80c376c
@@ -789,6 +800,7 @@ end
 # ╟─99cbc08e-5b0e-4748-9727-667e0eca2f74
 # ╟─456acc60-e7e1-428e-bd5d-bc72a18a146f
 # ╟─c48b4e73-480e-4a50-b5fc-db5f6c5b040e
+# ╠═e7826eb1-5add-4a5b-870a-4102f5f356a7
 # ╟─e9311003-b6af-4e09-907f-c3388d59287d
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb

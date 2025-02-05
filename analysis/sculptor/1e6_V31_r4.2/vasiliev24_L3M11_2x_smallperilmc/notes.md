@@ -1,0 +1,1 @@
+This model runs a 2Gyr orbit with 6-sigma shift in observables to acchieve an LMC pericentre of 19 kpc. Despite this relatively extreme pericentre, the stellar and DM are only very slightly affected. A substantially stronger pertubation is required to deviate significantly from the initial stellar profile.

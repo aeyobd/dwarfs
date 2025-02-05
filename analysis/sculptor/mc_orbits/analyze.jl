@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -36,13 +36,13 @@ The most important variable is to set the modelname to the appropriate directory
 """
 
 # ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-modelname = "vasiliev24_L3M11_plmc_err"
+modelname = "vasiliev24_L3M11_2x"
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 fig_dir = "./$modelname/figures"
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
-p_value = 0.001349898031630093 # 3sigma
+p_value = 0.0014 # 3sigma
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -176,6 +176,9 @@ function median_percen(observations)
 		@printf "     %-15s  = %8.3f ± %8.3f \n"  sym md err
 	end
 end
+
+# ╔═╡ 6c8b1c1e-d441-4f31-9017-a11caeab5af0
+lguys.GalactocentricFrame
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -778,6 +781,7 @@ end
 # ╠═c8aec4f8-975f-4bbc-b874-bf0172d35868
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 # ╠═34104429-05e0-40a6-83e5-078dbe346504
+# ╠═6c8b1c1e-d441-4f31-9017-a11caeab5af0
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
 # ╠═ef57611c-2986-4b03-aa5a-ab45003edd72
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
@@ -791,7 +795,7 @@ end
 # ╠═5f11f6ab-c9ab-4600-acca-a0bb84d81a12
 # ╠═44660b2f-6220-473b-bb2f-07e23b176491
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
-# ╟─c48b4e73-480e-4a50-b5fc-db5f6c5b040e
+# ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╠═8b6f95f7-284f-4133-b6f1-a22dd9c405f0
 # ╟─69e77193-29cc-4304-98a1-44828eaedf9f
