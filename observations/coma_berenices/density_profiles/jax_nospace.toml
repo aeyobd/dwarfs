@@ -1,0 +1,2 @@
+inherits = "jax.toml"
+psat_col = "PSAT_NOSPACE"

@@ -43,9 +43,10 @@ function main()
     jax_filt = pop!(params, "jax_filt", false)
 
     if jax_filt
+        psat_col = get(params, "psat_col", "PSAT")
         # use Jax's inbuilt columns
         stars = LilGuys.read_fits(params["filename"])
-        members = stars[stars.PSAT .> 0.2, :]
+        members = stars[stars[:, psat_col] .> 0.2, :]
         @info "$(size(members, 1)) stars selected"
     else
         filt_params = GaiaFilterParams(params)
