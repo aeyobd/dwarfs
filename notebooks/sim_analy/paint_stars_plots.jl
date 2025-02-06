@@ -51,10 +51,10 @@ md"""
 
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 #dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
-dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V36_r4.8_c0.1/stars/"
+dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r4.2/stars/"
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "exp2d_rs0.08"
+starsname = "exp2d_rs0.13"
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")
@@ -564,7 +564,7 @@ end
 # ╟─a9335e17-a410-455a-9a9e-d63706a026bd
 # ╠═b5c587d4-df0b-451b-9e08-bd4a4ead0213
 # ╠═33a26663-0c08-411b-902b-a509b2afa5ad
-# ╠═2d1782c5-e544-4ee6-a872-c8a180bd0d72
+# ╟─2d1782c5-e544-4ee6-a872-c8a180bd0d72
 # ╠═77e2c1e3-7756-4ab7-810a-03ccdc635aa1
 # ╠═90856551-fff8-4d15-be66-6353091b5e50
 # ╠═337055c4-55f4-4c02-ad69-473165ccfb64

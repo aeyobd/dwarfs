@@ -33,13 +33,13 @@ import TOML
 import DensityEstimators: histogram
 
 # ╔═╡ 5b1dd353-a437-47cd-94be-7da9684581da
-modeldir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V36_r4.8_c0.1/"
+modeldir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r4.2/"
 
 # ╔═╡ 3aac17ed-d5a9-491c-b467-3a32ad8a3c39
-isodir = ENV["DWARFS_ROOT"] * "/analysis/isolation/1e6_c0.1/fiducial"
+isodir = ENV["DWARFS_ROOT"] * "/analysis/isolation/1e7/fiducial"
 
 # ╔═╡ 28ba4f0f-6cc6-44e2-a7bc-4eee460d91b0
-starsname = "stars/exp2d_rs0.08"
+starsname = "stars/exp2d_rs0.13"
 
 # ╔═╡ 21adbbe7-c8cc-4094-9e75-b68d97fa211a
 starsfile = "probabilities_stars.hdf5"

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -35,8 +35,11 @@ md"""
 # inputs
 """
 
+# ╔═╡ 597cd4fe-8e50-4ab9-b933-c7d0a2c0a156
+galaxyname = "sculptor"
+
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "sculptor/1e6_expcusp/vasiliev24_L3M11_extremeperi"
+modelname = "$galaxyname/1e6_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -47,7 +50,7 @@ the below should hopefully be always the same
 parentdir = ENV["DWARFS_ROOT"]
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  "$parentdir/observations/sculptor/observed_properties.toml"
+properties_file =  "$parentdir/observations/$galaxyname/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
 orbit_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
@@ -284,6 +287,7 @@ calc_r(x_scl_lmc[:, idx_f_2])
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
+# ╠═597cd4fe-8e50-4ab9-b933-c7d0a2c0a156
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
 # ╟─dd56b7ec-be11-447f-acc1-12750d82879b
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2

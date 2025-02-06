@@ -32,13 +32,13 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e6_V36_r4.8_c0.1/vasiliev24_L3M11_extremeperi"
+model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
 
 # ╔═╡ d010a230-7331-4afd-86dc-380da0e0f720
-halo = LilGuys.load_profile(joinpath(model_dir, "halo.toml"))
+halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
 
 # ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 out =  Output(model_dir)

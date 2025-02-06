@@ -41,7 +41,7 @@ md"""
 models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = models_dir * "sculptor/1e6_V31_r4.2/vasiliev+21_smallperi/"
+model_dir = models_dir * "sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc/"
 #model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
@@ -687,7 +687,7 @@ prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/ursa_min
 lguys.GalactocentricFrame().d
 
 # ╔═╡ db0d3377-0269-4308-830b-c6fc0da1f6f1
-dy_sigma = -0.7
+dy_sigma = -0.60
 
 # ╔═╡ 901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
 let 
@@ -698,14 +698,14 @@ let
 		limits=((-1, 2.5), (-5, 2))
 	)
 
-	errscatter!(prof_expected.log_r, prof_expected.log_Sigma,
+	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ dy_sigma,
 		yerr=prof_expected.log_Sigma_err,
 		label="J+24",
 		color=:black
 	)
 
 
-	scatterlines!(prof.log_r, prof.log_Sigma .- dy_sigma, 
+	scatterlines!(prof.log_r, prof.log_Sigma, 
 			label="model")
 
 	vlines!(log10(r_b_arcmin), color=:grey, label="break radius")

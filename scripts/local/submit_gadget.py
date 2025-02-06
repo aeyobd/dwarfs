@@ -21,9 +21,9 @@ def main():
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Submit a job to SLURM with default or specified parameters.')
+    parser = argparse.ArgumentParser(description='Runs a nohup Gadget job')
     parser.add_argument('--cores', type=int, default=1, 
-                        help='number of nodes')
+                        help='number of cpu cores to use with. (BROKEN)')
     parser.add_argument('--resubmit', action='store_true',
                         help='if specified, then we are resubmitting a job. Runs rerun.sh')
     args = parser.parse_args()

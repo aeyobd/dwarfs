@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -31,22 +31,22 @@ A detailed analysis of the stars in sculptor
 import DensityEstimators as DE
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = "/arc7/home/dboyea/dwarfs/analysis/ursa_minor"
+models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_v37_r5.0/orbit_mean/"
+model_dir = "$models_dir/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.08/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.13/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"
+obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
 
 # ╔═╡ 217527cb-7f25-4fd9-a4a8-78cb2c744c2b
 figdir = joinpath(dirname(starsfile), "figures")
 
 # ╔═╡ d1e9ed33-d600-441a-876d-0c0fcd5cca72
-mkpath(figdir)
+mkdir(figdir)
 
 # ╔═╡ 89ec03a2-2ec9-4b77-aba0-28af551a1366
 out = lguys.Output(model_dir)
@@ -152,7 +152,7 @@ end
 idx_f = orbit_props["idx_f"]
 
 # ╔═╡ 816b9db9-26c6-4ac8-9a46-82209d2cdc85
-idx_orbit = idx_f - 5: idx_f + 5
+idx_orbit = idx_f - 5: idx_f
 
 # ╔═╡ e9e35643-168e-4e87-a880-6831b46145c7
 let 
@@ -184,7 +184,7 @@ end
 sky_orbit[idx_f, :].pmra, sky_orbit[idx_f, :].pmdec
 
 # ╔═╡ a89adc86-67a0-453f-b382-96f721f74d39
-diff(sky_orbit.ra)[idx_f], diff(sky_orbit.dec)[idx_f]
+diff(sky_orbit.ra)[idx_f-1], diff(sky_orbit.dec)[idx_f-1]
 
 # ╔═╡ 9419722f-9c65-45a7-b9c5-c666b22bf70e
 sind(orbit_props["theta0"] ), cosd(orbit_props["theta0"])

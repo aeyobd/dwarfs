@@ -41,26 +41,46 @@ md"""
 # inputs
 """
 
-# ╔═╡ b75f0fb1-be59-416c-a61f-4109bada9ae9
-r_h = 0.11 # order of mag, for chi sq fit
+# ╔═╡ 3953b76f-a726-4211-a6b8-5cf38149dcdf
+galaxyname = "sculptor"
 
-# ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-#modelname = "sculptor/1e6_V36_r4.8_c0.1/vasiliev24_L3M11_extremeperi"
-modelname = "ursa_minor/1e6_v37_r5.0/orbit_mean"
+# ╔═╡ b82b6e1f-3b62-4c2c-8795-689e33141dd6
+haloname = "1e7_V31_r4.2"
+
+# ╔═╡ bc6deac8-b70a-483b-9fd7-1413c6f17aa7
+mc_name = "vasiliev24_L3M11_2x"
+
+# ╔═╡ beec0858-5304-45b8-ba9a-233fee954e98
+mc_orbit = "smallperilmc"
+
+# ╔═╡ 079afa70-c7dc-4347-9ae3-8459ba2fa941
+orbitname = "$(mc_name)_$(mc_orbit)"
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
-t_min = 5
+t_min = -0.5
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
-the below should hopefully be always the same
+##### the below should hopefully be always the same
 """
+
+# ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
+modelname = "$galaxyname/$haloname/$orbitname"
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
 parentdir = ENV["DWARFS_ROOT"]
 
+# ╔═╡ e0741bfc-f15f-4dd2-be38-62832d8185af
+ic_file = joinpath(parentdir, "analysis", galaxyname, "mc_orbits", "$(mc_name)_special_cases/simulation/initial_conditions.toml")
+
+# ╔═╡ 941b90d6-54f4-49a9-8c8f-ffe54215f536
+orbits_ic = TOML.parsefile(ic_file)["orbits"]
+
+# ╔═╡ a2fbb942-6e29-4e23-87cf-91532f8d225c
+ic = only(orbits_ic[[o["name"] == mc_orbit for o in orbits_ic]])
+
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  "$parentdir/observations/ursa_minor/observed_properties.toml"
+properties_file =  "$parentdir/observations/$galaxyname/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
 orbit_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
@@ -86,13 +106,21 @@ md"""
 """
 
 # ╔═╡ 96a57df5-a7b7-447a-a4a6-2b05e391a5c6
-obs_today = TOML.parsefile(properties_file)
+begin 
+	obs_today = TOML.parsefile(properties_file)
+	if isdefined(@__MODULE__, :ic)
+		println("updating")
+		for (k, v) in ic
+			obs_today[k] = ic[k]
+		end
+	end
 
-# ╔═╡ a609f221-0721-4b4b-a393-49b386393c66
-obs_today["ra_err"] = r_h 
+	rh = obs_today["rh"] # arcminutes
 
-# ╔═╡ 68d805a4-c5eb-4f2c-ba10-48c2a53f2874
-obs_today["dec_err"] = r_h 
+	obs_today["ra_err"] = rh / 60 
+	obs_today["dec_err"] = rh / 60
+	obs_today
+end
 
 # ╔═╡ b250bf10-c228-4b14-938a-35561ae871d7
 h5open(centresfile, "r") do  f
@@ -227,6 +255,9 @@ let
 
 	fig
 end
+
+# ╔═╡ cb601d4f-0fd6-4d1d-8bf0-910471c729c6
+χ2[idx_f]
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = calc_r(x_cen)
@@ -500,11 +531,18 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
 # ╠═7bf1a839-b24e-4478-bdd3-200989779f68
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
-# ╠═b75f0fb1-be59-416c-a61f-4109bada9ae9
-# ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
+# ╠═3953b76f-a726-4211-a6b8-5cf38149dcdf
+# ╠═b82b6e1f-3b62-4c2c-8795-689e33141dd6
+# ╠═bc6deac8-b70a-483b-9fd7-1413c6f17aa7
+# ╠═beec0858-5304-45b8-ba9a-233fee954e98
+# ╠═079afa70-c7dc-4347-9ae3-8459ba2fa941
 # ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
-# ╠═d142b7bd-3002-4331-a725-577873c42f28
+# ╠═e0741bfc-f15f-4dd2-be38-62832d8185af
 # ╟─dd56b7ec-be11-447f-acc1-12750d82879b
+# ╠═941b90d6-54f4-49a9-8c8f-ffe54215f536
+# ╠═a2fbb942-6e29-4e23-87cf-91532f8d225c
+# ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
+# ╠═d142b7bd-3002-4331-a725-577873c42f28
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2
 # ╠═0dd476fd-be53-4e9b-a686-a4462485c64c
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
@@ -513,8 +551,6 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
 # ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
-# ╠═a609f221-0721-4b4b-a393-49b386393c66
-# ╠═68d805a4-c5eb-4f2c-ba10-48c2a53f2874
 # ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
 # ╠═b250bf10-c228-4b14-938a-35561ae871d7
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
@@ -535,6 +571,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═a179323f-4878-4021-b8d4-69ca733658cb
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9
+# ╠═cb601d4f-0fd6-4d1d-8bf0-910471c729c6
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 # ╠═9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
 # ╠═7646ea5b-f1b1-4934-be68-330139f7f838

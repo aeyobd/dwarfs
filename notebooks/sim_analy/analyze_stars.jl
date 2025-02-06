@@ -38,7 +38,7 @@ md"""
 starsname = "exp2d_rs0.13"
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e6_V31_r4.2/vasiliev+21_smallperi"
+model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
 #model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean"
 
 # ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
@@ -533,6 +533,9 @@ let
 	fig
 end
 
+# ╔═╡ eeed6799-b7f7-43d4-82bd-07f178b49f22
+r_b_kpc
+
 # ╔═╡ 57d5decd-8259-4ec2-87ac-44d28625cd7b
 let
 	fig = Figure()
@@ -878,6 +881,7 @@ end
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
 # ╠═dfc045b0-2cf1-4397-b7e5-3b855767b71f
 # ╠═27184a9d-07c9-4b4d-ad17-74ed279ed4e3
+# ╠═eeed6799-b7f7-43d4-82bd-07f178b49f22
 # ╠═57d5decd-8259-4ec2-87ac-44d28625cd7b
 # ╠═ab55323b-d402-48e0-903f-dee904488f91
 # ╟─9f9b525d-f6f6-4fc0-b5b9-036662fe8ba8

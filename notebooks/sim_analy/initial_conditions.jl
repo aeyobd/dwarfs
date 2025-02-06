@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -37,15 +37,15 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-#model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v37_r5.0/orbit_mean/"
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e6_V36_r4.8_c0.1/vasiliev24_L3M11_extremeperi/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e5_v37_r5.0/orbit_mean.1/"
+#model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 #name = "initial"
 name = "initial"
 
 # ╔═╡ 8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
-paramname = "halo.toml"
+paramname = "../halo.toml"
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -299,8 +299,11 @@ In our case,
 - so h= $grav_softening kpc
 """
 
-# ╔═╡ 9f0ba4f3-5abd-4b60-869a-693cf883025b
+# ╔═╡ 3fc4f98e-1652-49af-ad00-ec9b634b0715
+4R200 / sqrt(length(snap)) * EXTRA_SOFTENING
 
+# ╔═╡ b1a3577b-45dd-4a10-889d-1c05c2465433
+halo.r_s
 
 # ╔═╡ db034d78-f647-4382-b5e1-5e4623350d96
 md"""
@@ -380,7 +383,8 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═233c5aca-4966-4ba5-b5ac-f5d0e0a727dc
 # ╠═da55fc43-69f7-4375-b8fc-c61dd606fb24
 # ╠═d841539a-f755-460f-9994-16229aadca6a
-# ╠═9f0ba4f3-5abd-4b60-869a-693cf883025b
+# ╠═3fc4f98e-1652-49af-ad00-ec9b634b0715
+# ╠═b1a3577b-45dd-4a10-889d-1c05c2465433
 # ╟─db034d78-f647-4382-b5e1-5e4623350d96
 # ╠═7032a304-1448-4182-b22b-6083a2efea5d
 # ╠═ac22ac31-f4bf-497b-9971-c98a9900acfb
