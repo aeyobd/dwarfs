@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -280,6 +280,31 @@ let
 	fig
 end
 
+# ╔═╡ 95f75626-9edc-4c81-be40-8b595fa370d2
+let
+	fig, ax = FigAxis(
+		xlabel = "bp - rp",
+		ylabel = "G",
+		yreversed=true,
+		limits=(-0.5, 2.5, 15, 22)
+	)
+
+	filt = df.L_CMD_BKD .> 1e-20
+	filt .&= .!isnan.(df.L_CMD_BKD)
+	
+	p = scatter!(df.bp_rp[filt], df.phot_g_mean_mag[filt], color=(df.L_CMD_SAT ./ df.L_CMD_BKD)[filt], markersize=3, colorrange=(0, 5))
+
+	Colorbar(fig[1, 2], p, label="CMD likelihood")
+
+
+	lines!(iso.b_r .- A_v, iso.G .+ DM)
+
+	fig
+end
+
+# ╔═╡ 95225118-8f8f-4d5f-9c1f-0e28a06be445
+df.L_CMD_SAT ./ df.L_CMD_BKD
+
 # ╔═╡ 30c7bf30-2d50-4527-981e-d28acde0df5e
 let
 	fig, ax = FigAxis(
@@ -323,6 +348,12 @@ let
 	fig
 end
 
+# ╔═╡ 3e4589b6-2da2-44c3-9e87-b8b9c32728c9
+scl_circ.L_S_BKD
+
+# ╔═╡ 6bb5e991-72ab-46de-ae57-ffee2d7253ef
+
+
 # ╔═╡ 59038c14-c565-4be4-baf5-021ce89fea1a
 let
 	fig, ax = FigAxis(
@@ -336,6 +367,40 @@ let
 	)
 
 	Colorbar(fig[1, 2], p, label="spatial likelihood for satalite", )
+
+	fig
+end
+
+# ╔═╡ 83d10622-d0fc-43d7-93db-aca2192a5cdb
+let
+	fig, ax = FigAxis(
+		xlabel = "xi",
+		ylabel = "eta",
+	)
+
+	df = scl_circ
+	p = scatter!(df.xi, df.eta, color=df.L_S_SAT ./ df.L_S_BKD, 
+		markersize=3, colorscale=log10, colorrange=(1e-2, 1e2)
+	)
+
+	Colorbar(fig[1, 2], p, label="relative likelihood for satalite", )
+
+	fig
+end
+
+# ╔═╡ aa782894-b53c-4d62-b766-d5f6fd21c2e3
+let
+	fig, ax = FigAxis(
+		xlabel = "xi",
+		ylabel = "eta",
+	)
+
+	df = scl_circ
+	p = scatter!(df.xi, df.eta, color=df.L_S_SAT ./ df.L_S_BKD, 
+		markersize=3, colorscale=log10, colorrange=(1e-2, 1e2)
+	)
+
+	Colorbar(fig[1, 2], p, label="relative likelihood for satalite", )
 
 	fig
 end
@@ -525,6 +590,26 @@ let
 	filt = df.L_PM_SAT .> 0e-10
 	# filt .&= isfinite.(scl_ell.L_PM_SAT)
 	p = scatter!(df.pmra[filt], df.pmdec[filt], color=df.L_PM_SAT[filt], 
+		markersize=3, colorscale=log10, colorrange=(1e-2, 1e1)
+	)
+
+	Colorbar(fig[1, 2], p, label="pm likelihood (jax)", )
+
+	fig
+end
+
+# ╔═╡ e3380827-2c48-40e3-817f-b9301cb42b20
+let
+	fig, ax = FigAxis(
+		xlabel = "pmra",
+		ylabel = "pmdec",
+		limits=(-5, 5, -5, 5)
+	)
+
+	df = scl_ell
+	filt = df.L_PM_SAT .> 0e-10
+	# filt .&= isfinite.(scl_ell.L_PM_SAT)
+	p = scatter!(df.pmra[filt], df.pmdec[filt], color=df.L_PM_SAT[filt] ./ df.L_PM_BKD[filt], 
 		markersize=3, colorscale=log10, colorrange=(1e-2, 1e1)
 	)
 
@@ -826,12 +911,18 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═bfc412eb-ccae-4ae3-942a-ef8f8ea22fca
 # ╠═b2ac5282-d503-4c97-b7f3-8f92e043bcaf
 # ╠═a66757cf-a936-436c-8315-045fffe4fca3
+# ╠═95f75626-9edc-4c81-be40-8b595fa370d2
+# ╠═95225118-8f8f-4d5f-9c1f-0e28a06be445
 # ╠═30c7bf30-2d50-4527-981e-d28acde0df5e
 # ╠═04903a00-c480-4ba5-8852-9b7c100e285a
 # ╠═8550a1f6-8f54-43ee-9c9b-51e4ddd093b5
 # ╠═da5b85b2-6406-4ef0-9c53-15555a795fd7
 # ╠═3dc4d608-30b3-4c11-83e9-f5ae31df4786
+# ╠═3e4589b6-2da2-44c3-9e87-b8b9c32728c9
+# ╠═6bb5e991-72ab-46de-ae57-ffee2d7253ef
 # ╠═59038c14-c565-4be4-baf5-021ce89fea1a
+# ╠═83d10622-d0fc-43d7-93db-aca2192a5cdb
+# ╠═aa782894-b53c-4d62-b766-d5f6fd21c2e3
 # ╠═326619b2-01ca-4f60-8619-516dadc58b98
 # ╠═0e336f85-16ec-44f5-a664-35dc569a3af8
 # ╠═e9516503-2ef9-4ac3-97f5-b1c705bdd579
@@ -863,6 +954,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═81aaaaef-8fff-41b9-981b-cd4b08dc62cd
 # ╠═4accc157-bf98-42b9-b8bf-8395bff5f49f
 # ╠═54e97bc1-593b-4b74-8f77-433f5cad7b8b
+# ╠═e3380827-2c48-40e3-817f-b9301cb42b20
 # ╠═c6dda910-7ade-4668-9592-899264248339
 # ╟─ee79b752-fcdd-4742-af23-e40eb86edbe9
 # ╠═60deb437-7803-4ce3-b2eb-c2f3c78f4bc2

@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e5_v37_r5.0/orbit_mean.1/"
+model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v37_r5.0/orbit_mean.2/"
 #model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57

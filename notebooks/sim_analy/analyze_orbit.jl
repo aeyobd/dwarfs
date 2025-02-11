@@ -42,19 +42,20 @@ md"""
 """
 
 # ╔═╡ 3953b76f-a726-4211-a6b8-5cf38149dcdf
-galaxyname = "sculptor"
+galaxyname = "ursa_minor"
 
 # ╔═╡ b82b6e1f-3b62-4c2c-8795-689e33141dd6
-haloname = "1e7_V31_r4.2"
+haloname = "1e5_v37_r5.0"
 
 # ╔═╡ bc6deac8-b70a-483b-9fd7-1413c6f17aa7
-mc_name = "vasiliev24_L3M11_2x"
+mc_name = ""
 
 # ╔═╡ beec0858-5304-45b8-ba9a-233fee954e98
-mc_orbit = "smallperilmc"
+mc_orbit = "orbit_mean"
 
 # ╔═╡ 079afa70-c7dc-4347-9ae3-8459ba2fa941
-orbitname = "$(mc_name)_$(mc_orbit)"
+#orbitname = "$(mc_name)_$(mc_orbit)"
+orbitname = "orbit_mean.2"
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
 t_min = -0.5
@@ -71,7 +72,7 @@ modelname = "$galaxyname/$haloname/$orbitname"
 parentdir = ENV["DWARFS_ROOT"]
 
 # ╔═╡ e0741bfc-f15f-4dd2-be38-62832d8185af
-ic_file = joinpath(parentdir, "analysis", galaxyname, "mc_orbits", "$(mc_name)_special_cases/simulation/initial_conditions.toml")
+ic_file = joinpath(parentdir, "analysis", galaxyname, "mc_orbits", "$(mc_name)special_cases/simulation/initial_conditions.toml")
 
 # ╔═╡ 941b90d6-54f4-49a9-8c8f-ffe54215f536
 orbits_ic = TOML.parsefile(ic_file)["orbits"]
@@ -135,7 +136,7 @@ begin
 	orbit_expected = CSV.read(orbit_file, DataFrame)
 	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
 	v_cen_exp = transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
-
+	orbit_expected.t .-= orbit_expected.t[1]
 end
 
 # ╔═╡ 08c3df42-738b-47c4-aa6b-fc39a9cfc02f
@@ -394,7 +395,7 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f
+		idx = idx_f-3:idx_f+1
 	
 		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -43,7 +43,7 @@ md"""
 """
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e6_c0.1/fiducial"
+name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e5_beta0.5/fiducial"
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 halo = lguys.load_profile(joinpath(name, "halo.toml"))
@@ -349,6 +349,75 @@ md"""
 stellar distribution of initial and final snapshot
 """
 
+# ╔═╡ ba823177-97e7-43df-8b0a-2ab1f2bafbc0
+import LinearAlgebra: ⋅, ×
+
+# ╔═╡ fc34af5e-069c-47c5-8599-a97d520c1426
+NFW(v_circ_max = 0.1419, r_circ_max=4.2).r_s / 2.76 * 0.14
+
+# ╔═╡ 7f3e4b46-4356-4238-bd90-65349dcaa622
+function calc_β_prof(snap)
+	vel = snap.velocities .- snap.v_cen
+	pos = snap.positions .- snap.x_cen
+	N = size(vel, 2)
+
+	rs = 	lguys.calc_r(snap)
+	r_hat = pos ./ rs'
+	
+	ϕ_hat = hcat([r_hat[:, i] × [1,0,0] for i in 1:N]...)
+	ϕ_hat ./= calc_r(ϕ_hat)'
+	θ_hat = hcat([r_hat[:, i] × ϕ_hat[:, i] for i in 1:N]...)
+	θ_hat ./= calc_r(θ_hat)'
+
+	v_r = [snap.velocities[:, i] ⋅ r_hat[:, i] for i in 1:N]
+	v_ϕ = [snap.velocities[:, i] ⋅ ϕ_hat[:, i] for i in 1:N]
+	v_θ = [snap.velocities[:, i] ⋅ θ_hat[:, i] for i in 1:N]
+
+
+
+
+	Nq = 30
+	rcs = lguys.quantile(rs, LinRange(0, 1, Nq+1))
+
+	βs = zeros(Nq)
+	σ3d = zeros(Nq)
+
+	for i in 1:Nq
+
+		filt = rs .> rcs[i]
+		filt .&= rs .<= rcs[i+1]
+
+		sr = lguys.std(v_r[filt])
+		st = sqrt(lguys.std(v_θ[filt])^2 + lguys.std(v_ϕ[filt])^2)
+
+		βs[i] = 1 - st / 2sr
+		σ3d[i] = st^2 + sr^2
+	end
+
+	return rcs,σ3d, βs
+end
+
+# ╔═╡ 03da8ffc-247a-4580-8715-4d8e294b02a8
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel = "log r", 
+		ylabel = L"\beta",
+		
+	)
+
+	idx = eachindex(out)[1:10:end]
+	for i in idx
+		snap = out[i]
+		r, σ, β = calc_β_prof(snap)
+		x = midpoints(r)
+		
+		scatterlines!(log10.(x), β, color=i, colorrange=(1, length(out)))
+	end
+	
+	fig
+end
+
 # ╔═╡ e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 function calc_phase_dens(snap; bins=100)
 	rs = lguys.calc_r(snap)
@@ -502,6 +571,10 @@ end
 # ╠═3cc0df1f-dca3-4355-a969-3874aa414d1a
 # ╠═2dedc9e1-9b68-4c76-97da-4aba767de32d
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
+# ╠═ba823177-97e7-43df-8b0a-2ab1f2bafbc0
+# ╠═fc34af5e-069c-47c5-8599-a97d520c1426
+# ╠═7f3e4b46-4356-4238-bd90-65349dcaa622
+# ╠═03da8ffc-247a-4580-8715-4d8e294b02a8
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f
 # ╠═9996a264-743f-4d39-a5fe-1cda5b99930b

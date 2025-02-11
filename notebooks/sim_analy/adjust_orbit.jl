@@ -22,8 +22,28 @@ begin
 	np = pyimport("numpy")
 end
 
+# ╔═╡ b35b362e-f275-4d70-a703-f398a08b7a47
+using Measurements
+
+# ╔═╡ e13b1c88-75c4-498a-87c5-6d11c88fa569
+using OrderedCollections
+
 # ╔═╡ 481edcca-51a8-4f11-88ec-84939b223bdf
 include(ENV["DWARFS_ROOT"] * "/utils/agama_utils.jl")
+
+# ╔═╡ 9bfa1465-2ca9-495c-bab6-5110072f02ed
+md"""
+# Adjusting Orbits
+
+The goal of this notebook is to update the initial position and velocity of an n-body simulation to better agree with the desired present-day kinematics. There are two different frameworks for facilitating this transformation. One is to use angular momentum (which a shift in initial angular momentum should be approximantly conserved) and a second is to use actions. 
+
+The angular momentum framework is potential independent and is more physically understandable. However, there is complexity in defining a useful frame of reference and especially in adjusting positions to better line up with the observed positions. 
+"""
+
+# ╔═╡ 0c21b10f-ad86-4894-8959-721742d2a2c1
+md"""
+I prefer the actions/angles framwork. For a test-particle orbit, the actions are conserved and action angles linearly increase with time. Thus, the deviations from the test-particle orbit in the N-body simulation should (to first order) be easily corrected by equivialnt shifts in the action (angle) initial conditions. The challenge with this framework is action (angles) are more nontrival quantities to calculate and depend on our knowledge of the potential. I use `agama` to compute these quantities, and in a fixed (azimuthal) potential, this framework should be a good approximation. 
+"""
 
 # ╔═╡ b4c4733c-3c62-4480-9fc7-0511a20a0357
 py2mat(x) = pyconvert(Matrix{Float64}, x)'
@@ -41,10 +61,10 @@ py2f(x) = pyconvert(Float64, x)
 galaxyname = "ursa_minor"
 
 # ╔═╡ f5ec8d3e-d34d-481f-aec8-0113d7d9402a
-modelname = "1e6_v37_r5.0"
+modelname = "1e5_v37_r5.0"
 
 # ╔═╡ a80b0905-7638-495b-aa97-a83478005492
-orbitname = "orbit_mean"
+orbitname = "orbit_mean.2"
 
 # ╔═╡ c8e2c46d-917c-4fa8-a841-ea26430d17d3
 modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname, orbitname) * "/"
@@ -54,9 +74,6 @@ pot = agama.Potential(modeldir * "simulation/agama_potential.ini")
 
 # ╔═╡ 9cbf9f1e-1a61-48ae-9fd8-d4253a98f98b
 out = Output(modeldir)
-
-# ╔═╡ 992b7c5d-02c0-4978-a063-26dd80256ad9
-
 
 # ╔═╡ fd1adb47-9a55-49c9-b1ca-5009d91b0408
 begin 
@@ -83,6 +100,45 @@ v_cen = out.v_cen
 # ╔═╡ 11c39da0-cf98-4f3f-a08b-ec9075135adb
 times = out.times
 
+# ╔═╡ acf9bb4c-c03f-455f-bd12-65766f55bfaa
+md"""
+# Observational reference
+"""
+
+# ╔═╡ f0f7b2db-b926-46d5-a9bc-baa9cff0b6cf
+import TOML
+
+# ╔═╡ e279753d-6be6-4e47-a72a-dc0983acef5e
+idx_f = TOML.parsefile(modeldir * "orbital_properties.toml")["idx_f"]
+
+# ╔═╡ f7659682-7f06-4618-aa70-4f2c7d3ee838
+obs_props_file = joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/observed_properties.toml")
+
+# ╔═╡ 5906da72-48ce-44f6-b4d7-2738c2df64b5
+icrs = LilGuys.coord_from_file(obs_props_file)
+
+# ╔═╡ 1cc54a8f-44df-4f35-aa01-3244bdeae52e
+icrs_err = LilGuys.coord_err_from_file(obs_props_file)
+
+# ╔═╡ 80433cc8-2f9e-4cc4-b382-9183e60029d6
+r_h = TOML.parsefile(obs_props_file)["rh"] / 60
+
+# ╔═╡ 040e03a3-ce59-4ee2-bcdb-1b78168c1794
+icrs_u = LilGuys.ICRS(
+	ra = icrs.ra ± r_h,
+	dec = icrs.dec ± r_h,
+	pmra = icrs.pmra ± icrs_err.pmra,
+	pmdec = icrs.pmdec ± icrs_err.pmdec,
+	distance = icrs.distance ± icrs_err.distance,
+	radial_velocity = icrs.radial_velocity ± icrs_err.radial_velocity
+)
+
+# ╔═╡ 4fba414e-ea58-46b5-8e88-22282690df13
+gc = LilGuys.transform(Galactocentric, icrs_u)
+
+# ╔═╡ 1258d03a-d4c4-4047-97cc-0fe718f2107b
+gc2 = LilGuys.transform(Galactocentric, icrs)
+
 # ╔═╡ 9344b6b4-0b06-4638-bfe0-1c5b3d024d3c
 md"""
 # New initial conditions
@@ -94,6 +150,12 @@ function get_peri_apo(Φ, pos_i, vel_i, time=10/T2GYR)
 	orbit = calc_orbit(gc, Φ, time=time)
 	return extrema(calc_r(orbit.position))
 end
+
+# ╔═╡ 9a4c1b07-8b98-4d71-938e-736e0dcafc9b
+orbit_in = calc_orbit(gc2, pot, time=10/T2GYR)
+
+# ╔═╡ 53ce58a7-8ddd-4c3e-96b8-180c06623ce0
+calc_r(orbit_in.position)
 
 # ╔═╡ 34e54152-cebb-4364-b1b7-37e0dd4f10c8
 import LinearAlgebra: ⋅, ×
@@ -111,7 +173,10 @@ get_peri_apo(pot, pos_i, vel_i)
 L_in = pos_i × vel_i
 
 # ╔═╡ 7bcdef79-7391-4f35-902b-62d2dda1d858
-Φ_in(x) = pyconvert(Float64, pot.potential(x))
+Φ_in(x::AbstractVector{<:Real}) = pyconvert(Float64, pot.potential(x))
+
+# ╔═╡ 4f3330e4-455d-43ee-8cd1-244e3288393e
+Φ_in(x::AbstractMatrix{<:Real}) = py2vec(pot.potential(np.array(x')))
 
 # ╔═╡ 50b9fe74-de86-495c-8de7-f1e7e9b1bde5
 E_in = Φ_in(pos_i) + 1/2 * calc_r(vel_i)^2
@@ -159,15 +224,6 @@ function shift_initial_conditions(Φ, pos_i, vel_i; dE=0, dlogr=0, dLx=0, dLy=0,
 	return pos_new, vel_new
 end
 
-# ╔═╡ 62f1bb5e-b0e9-4d9c-af99-be0df8f7dca1
-LilGuys.find_zero(x -> -E_in + Φ_in([0,0,1] * x) + calc_r(L_in)^2 / (2*x^2), 80)
-
-# ╔═╡ d37c6844-cc84-489f-8041-c1e4c093b4b6
-LilGuys.find_zero(x -> -E_in + Φ_in([1,0,0] * x) + calc_r(L_in)^2 / (2*x^2), 2)
-
-# ╔═╡ 9facd961-6c18-4b4a-9e84-9a4db31600c1
-pos_new, vel_new = shift_initial_conditions(Φ_in, pos_i, vel_i, dE=0.05, dLx=-3)
-
 # ╔═╡ 19803b8e-df6a-41cd-a2dd-dc4f04f95a46
 x_cen[:, 1], v_cen[:, 1]
 
@@ -191,30 +247,67 @@ function get_actions(pot, pos, vel)
 	return py2mat(act_py), py2mat(ang_py)
 end
 
+# ╔═╡ 3ab820ad-1e95-4533-aa70-ad56b11b549a
+am = agama.ActionMapper(pot)
+
 # ╔═╡ 3b247e3e-6aab-4c3d-9904-94123ccb00b7
 function from_actions(pot, act, ang)
 	am = agama.ActionMapper(pot)
 
-	xv_py, Ohm = am(np.array(vcat(act, ang)'))
+	xv_py = am(np.array(vcat(act, ang)'))
 
 	xv = py2mat(xv_py)
 	return xv[1:3, :], xv[4:6, :]
 end
 
+# ╔═╡ 6b2fa1a5-6031-4c37-92ac-6a6088570dba
+function shift_actions(Φ, pos_i, vel_i; dJ, dθ)
+	act, ang = get_actions(Φ, pos_i, vel_i)
+	act .+= dJ
+	ang .+= dθ
+	
+
+	return from_actions(Φ, act, ang)
+end
+
+# ╔═╡ b3fd0308-2056-4d16-8ff2-bb4d17aaa131
+shift_actions(pot, pos_i, vel_i, dJ=zeros(3), dθ=zeros(3))
+
 # ╔═╡ 8303b321-1b95-4c7c-8c4f-d4c6f4e1b344
-act_nbody, _ = get_actions(pot, x_cen, v_cen)
+act_nbody, ang_nbody = get_actions(pot, x_cen, v_cen)
+
+# ╔═╡ e2831eac-7c7a-4972-98f9-c6c500e91a41
+x_obs = Measurements.value.(LilGuys.position_of(gc))
+
+# ╔═╡ 7ebc25cb-c10a-4b38-b170-760aeeff38bf
+v_obs = Measurements.value.(LilGuys.velocity_of(gc)) / V2KMS
+
+# ╔═╡ 275c9856-a706-4926-b76f-f26b8b51203f
+act_obs, ang_obs = get_actions(pot, x_obs, v_obs)
 
 # ╔═╡ 97fb1541-59b6-4a42-adf3-f3084478ea04
-act_exp, _ = get_actions(pot, x_cen_exp, v_cen_exp)
+act_exp, ang_exp = get_actions(pot, x_cen_exp, v_cen_exp)
 
-# ╔═╡ 3f958975-7abf-4564-9bac-432a87e66bcc
-gc = LilGuys.Galactocentric(pos_i, vel_i*V2KMS)
+# ╔═╡ 471fae8a-4998-4662-87e9-d4277f5f8604
+L_exp = LilGuys.calc_L_spec(x_cen_exp, v_cen_exp)
 
-# ╔═╡ 9a4c1b07-8b98-4d71-938e-736e0dcafc9b
-orbit_in = calc_orbit(gc, pot, time=10/T2GYR)
+# ╔═╡ 74a73f14-426b-45b6-afdd-55bc4a919b34
+L_nbody = LilGuys.calc_L_spec(x_cen, v_cen)
 
-# ╔═╡ 53ce58a7-8ddd-4c3e-96b8-180c06623ce0
-calc_r(orbit_in.position)
+# ╔═╡ 9da81ee9-5638-48dc-949e-603874b3f627
+dJ = [0.09, -0.4, -0.8]
+
+# ╔═╡ 0fef057f-2f68-447d-9926-8704536cc7e5
+dθ = [-0.09, 0.055, -0.05,]
+
+# ╔═╡ 9facd961-6c18-4b4a-9e84-9a4db31600c1
+begin 
+	pos_new, vel_new = shift_actions(pot, pos_i, vel_i, dJ=dJ, dθ=dθ)
+	#shift_initial_conditions(Φ_in, pos_i, vel_i, dE=0.01, dLz=-1.0, dLy=+0.0)
+	pos_new = vec(pos_new)
+	vel_new = vec(vel_new)
+	pos_new, vel_new
+end
 
 # ╔═╡ 80556944-3d5f-4e4b-b3e3-68b092d006cd
 gc_new = LilGuys.Galactocentric(pos_new, vel_new*V2KMS)
@@ -225,27 +318,31 @@ orbit = calc_orbit(gc_new, pot, time=10 / T2GYR)
 # ╔═╡ bb0195a0-d06d-4f72-8646-31ef848e987a
 x_new = orbit.position
 
+# ╔═╡ a419c394-d597-4f6f-812f-cd0a0bc7ea0e
+LilGuys.plot_xyz(x_cen_exp, x_new)
+
 # ╔═╡ af07bdd5-4baa-481d-a973-a4c119af6c5f
 v_new = orbit.velocity
 
 # ╔═╡ 3fa86c92-e6bd-41b6-bd64-cfd33f74b229
-act_new, _ = get_actions(pot, x_new, v_new)
+act_new, ang_new = get_actions(pot, x_new, v_new)
 
-# ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
-get_actions(pot, pos_new, vel_new)
-
-# ╔═╡ a419c394-d597-4f6f-812f-cd0a0bc7ea0e
-LilGuys.plot_xyz(orbit_in.position, x_cen_exp, x_new)
+# ╔═╡ f8e73044-8d07-4b09-81ee-54f7f7278496
+L_new = LilGuys.calc_L_spec(x_new, v_new)
 
 # ╔═╡ 9ea9076a-2d51-41ca-ac10-c71a7e379c79
 let
 	fig = Figure()
-	ax = Axis(fig[1,1])
-	lines!(out.times, calc_r(x_cen))
+	ax = Axis(fig[1,1],
+		xlabel = "time",
+		ylabel = L"r",
+	)
+	lines!(out.times, calc_r(x_cen), label = "nbody")
 
-	lines!(orbit_exp.t, calc_r(x_cen_exp))
-	lines!(orbit.time, calc_r(orbit.position))
+	lines!(orbit_exp.t, calc_r(x_cen_exp), label="initial point")
+	lines!(orbit.time, calc_r(orbit.position), label="next test")
 
+	axislegend()
 	fig
 end
 
@@ -254,11 +351,28 @@ let
 	fig = Figure()
 
 	for i in 1:3
-		ax = Axis(fig[i, 1])
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"J_%$coord"
+		)
 
-		lines!(out.times, act_nbody[i, :])
-		lines!(orbit_exp.t, act_exp[i, :])
-		lines!(orbit.time, act_new[i, :])
+		lines!(out.times .- out.times[idx_f], act_nbody[i, :])
+		lines!(orbit_exp.t .- orbit_exp.t[end], act_exp[i, :])
+		lines!(orbit.time .- orbit.time[end], act_new[i, :])
+		hlines!(act_obs[i], color="black")
+
+		didx = 5
+		acts = act_nbody[i, idx_f-didx:idx_f+didx]
+		act = LilGuys.mean(acts)
+		
+		dJ_suggested = act_obs[i] - act
+		println("i", "\t", dJ_suggested, "\t", LilGuys.std(acts))
+
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
 
 	end
 
@@ -266,25 +380,58 @@ let
 end
 
 
-# ╔═╡ f8e73044-8d07-4b09-81ee-54f7f7278496
-L_new = LilGuys.calc_L_spec(x_new, v_new)
+# ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
+get_actions(pot, pos_new, vel_new)
 
-# ╔═╡ 471fae8a-4998-4662-87e9-d4277f5f8604
-L_exp = LilGuys.calc_L_spec(x_cen_exp, v_cen_exp)
-
-# ╔═╡ 74a73f14-426b-45b6-afdd-55bc4a919b34
-L_nbody = LilGuys.calc_L_spec(x_cen, v_cen)
-
-# ╔═╡ 0f936517-1924-44db-ba03-2c7fd589afa3
+# ╔═╡ 706a0753-018a-48f7-8c77-23af747141fd
 let
 	fig = Figure()
 
 	for i in 1:3
-		ax = Axis(fig[i, 1])
+		coord = ["x", "y", "z"][i]
 
-		lines!(out.times, L_nbody[i, :])
-		lines!(orbit_exp.t, L_exp[i, :])
-		lines!(orbit.time, L_new[i, :])
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"\theta_%$coord",
+		)
+
+		idx =idx_f-5:idx_f+0
+		lines!(out.times[idx] .- out.times[idx_f], ang_nbody[i, idx])
+		hlines!(ang_obs[i], color="black")
+		println("i")
+		dθ_suggested = ang_obs[i] .- ang_nbody[i, idx_f]
+
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+		
+		println(dθ_suggested)
+	end
+
+	fig
+end
+
+
+# ╔═╡ 2af93853-0df1-45a5-ace6-75ad532e49dd
+let
+	fig = Figure()
+
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"\theta_%$coord",
+		)
+		
+		lines!(out.times , ang_nbody[i, :])
+		lines!(orbit_exp.t, ang_exp[i, :])
+		lines!(orbit.time, ang_new[i, :])
+
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+		println(ang_nbody[i, 1], "\t", ang_new[i, 1], "\t", dθ[i])
 
 	end
 
@@ -292,11 +439,50 @@ let
 end
 
 
-# ╔═╡ 0aea9fe2-65ef-42f3-bf58-fa3b81dbba8f
-write_ic = true
+# ╔═╡ 947aba67-2d02-40e7-9e9c-16a39a0617be
+act_nbody
 
-# ╔═╡ 061f913b-b842-41a3-aa9f-a918c86dab0a
-new_model_dir = joinpath(modeldir, "../$orbitname.1")
+# ╔═╡ 4473d1b0-fea7-4d87-8837-1966124f1cf0
+E_exp = Φ_in(x_cen_exp) .+ 1/2 * calc_r(v_cen_exp) .^2
+
+# ╔═╡ e2f1e41d-4996-4f81-8dda-35cf6ba0fbba
+E_new = Φ_in(x_new) .+ 1/2 * calc_r(v_new) .^2
+
+# ╔═╡ c2b025c6-0bd9-49be-9848-3f79e31e6140
+E_nbody = Φ_in(x_cen) .+ 1/2 * calc_r(v_cen) .^2
+
+# ╔═╡ b7049ed6-183a-4920-8d89-ac396979ae2b
+E_obs = Φ_in(Measurements.value.(LilGuys.position_of(gc))) .+ 1/2 * calc_r(Measurements.value.(LilGuys.velocity_of(gc) / V2KMS)) .^ 2
+
+# ╔═╡ da3f27fc-0f2c-4e03-bc36-ccbb5eee1ea2
+let
+	fig = Figure()
+
+	ax = Axis(fig[1,1])
+	
+	lines!(out.times, E_nbody)
+	lines!(orbit_exp.t, E_exp)
+	lines!(orbit_exp.t, E_new)
+
+	hlines!(E_obs, color="black")
+	fig
+end
+
+
+# ╔═╡ b1980d55-e36c-45d8-9ba1-1e6a6fbb5e10
+begin 
+	if endswith(orbitname, r"\.\d+")
+		num = match(r"\.(\d+)$", orbitname) |> only
+		newnum = parse(Int64, num) + 1
+		basename = match(r"(.*)\.\d+$", orbitname) |> only
+		
+	else
+		basename = orbitname
+		newnum = 1
+	end
+	
+	new_model_dir = joinpath(modeldir, "../$basename.$newnum")
+end
 
 # ╔═╡ 963bd378-2603-45b1-8623-979aad5c2538
 df_new = DataFrame(
@@ -309,18 +495,70 @@ df_new = DataFrame(
 	v_z = v_new[3, :],
 )
 
-# ╔═╡ 934e3300-61d6-48f9-af57-791b96bfb839
-0.037 * sqrt(10)
+# ╔═╡ 0aea9fe2-65ef-42f3-bf58-fa3b81dbba8f
+write_ic = false
 
 # ╔═╡ 4fda883d-7173-49c0-a56e-6572ebc80ba4
 if write_ic
-	if isdir(modeldir)
-		mkpath(new_model_dir)
+	if isdir(new_model_dir)
+		error("model directory exists")
+	else
+		mkdir(new_model_dir)
 	end
-	CSV.write("$new_model_dir/new_orbit.csv", df_new)
+	
+	CSV.write("$new_model_dir/next_orbit.csv", df_new)
+	open("$new_model_dir/shifts.toml", "w") do f
+		TOML.print(f, OrderedDict(
+			"lastmodel" => orbitname,
+			"dJ" => dJ,
+			"dθ" => dθ,
+		))
+	end
 end
 
+# ╔═╡ 96ef21f4-1915-46ed-9c82-94b3bba456ac
+L_obs = LilGuys.calc_L_spec(LilGuys.position_of(gc), LilGuys.velocity_of(gc) / V2KMS)
+
+# ╔═╡ 18b29878-b8e3-44e5-8843-ccde9c6bb273
+function plot_meas!(meas)
+	hlines!(Measurements.value(meas), color=:black, linestyle=:dot)
+
+	y = Measurements.value(meas)
+	ye = Measurements.uncertainty(meas)
+
+	hspan!(y-ye, y+ye, color=(:black, 0.2))
+
+end
+
+# ╔═╡ 0f936517-1924-44db-ba03-2c7fd589afa3
+let
+	fig = Figure()
+
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"L_%$coord",
+		)
+
+		lines!(out.times, L_nbody[i, :])
+		lines!(orbit_exp.t, L_exp[i, :])
+		lines!(orbit.time, L_new[i, :])
+		plot_meas!(L_obs[i])
+
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+	end
+
+	fig
+end
+
+
 # ╔═╡ Cell order:
+# ╟─9bfa1465-2ca9-495c-bab6-5110072f02ed
+# ╟─0c21b10f-ad86-4894-8959-721742d2a2c1
 # ╠═b18d1734-e40e-11ef-1007-314371eb1a54
 # ╠═4bc528f9-4ac0-407e-88a6-5e606117a3d3
 # ╠═c9786ddd-b2b0-401e-ab97-585fcbea31cb
@@ -334,55 +572,81 @@ end
 # ╠═a80b0905-7638-495b-aa97-a83478005492
 # ╠═c8e2c46d-917c-4fa8-a841-ea26430d17d3
 # ╠═de8bdfef-efca-4d2a-a9cd-a79ccc931b3f
+# ╠═e279753d-6be6-4e47-a72a-dc0983acef5e
 # ╠═9cbf9f1e-1a61-48ae-9fd8-d4253a98f98b
-# ╠═992b7c5d-02c0-4978-a063-26dd80256ad9
 # ╠═fd1adb47-9a55-49c9-b1ca-5009d91b0408
 # ╠═be68781b-d2f9-4f76-8120-aa9f99c4a0f5
 # ╠═17a0c0f3-37dc-4301-ac0c-3eaebdbdecdd
 # ╠═199a0b4c-b828-4070-8628-50c27d8664ee
 # ╠═4c8b7c67-c4c3-4616-82b7-546df559599d
 # ╠═11c39da0-cf98-4f3f-a08b-ec9075135adb
+# ╠═acf9bb4c-c03f-455f-bd12-65766f55bfaa
+# ╠═f0f7b2db-b926-46d5-a9bc-baa9cff0b6cf
+# ╠═f7659682-7f06-4618-aa70-4f2c7d3ee838
+# ╠═5906da72-48ce-44f6-b4d7-2738c2df64b5
+# ╠═1cc54a8f-44df-4f35-aa01-3244bdeae52e
+# ╠═b35b362e-f275-4d70-a703-f398a08b7a47
+# ╠═80433cc8-2f9e-4cc4-b382-9183e60029d6
+# ╠═040e03a3-ce59-4ee2-bcdb-1b78168c1794
+# ╠═4fba414e-ea58-46b5-8e88-22282690df13
+# ╠═1258d03a-d4c4-4047-97cc-0fe718f2107b
 # ╟─9344b6b4-0b06-4638-bfe0-1c5b3d024d3c
 # ╠═083eb8df-ed6f-4f01-a5f9-5029c6fd8e82
 # ╠═9a4c1b07-8b98-4d71-938e-736e0dcafc9b
 # ╠═53ce58a7-8ddd-4c3e-96b8-180c06623ce0
 # ╠═0b36f6e2-5e0e-43b1-aa0b-8de785748576
+# ╠═9c9a1dee-881d-4e7d-b9b3-321afde406da
 # ╠═2bb30ad3-2ddc-47bb-8356-8e7d647d5623
 # ╠═50b9fe74-de86-495c-8de7-f1e7e9b1bde5
-# ╠═9c9a1dee-881d-4e7d-b9b3-321afde406da
 # ╠═ac9008eb-02b4-40b2-83fa-486fb5f3676e
-# ╠═62f1bb5e-b0e9-4d9c-af99-be0df8f7dca1
-# ╠═d37c6844-cc84-489f-8041-c1e4c093b4b6
 # ╠═c3080823-05de-4dd4-8a37-8117e97e4561
+# ╠═6b2fa1a5-6031-4c37-92ac-6a6088570dba
 # ╠═34e54152-cebb-4364-b1b7-37e0dd4f10c8
 # ╠═ec74d9e2-b2ae-447d-b9c6-5d55dd464d28
 # ╠═fcb9b299-d660-48ba-afec-93c52a40d930
 # ╠═7bcdef79-7391-4f35-902b-62d2dda1d858
+# ╠═4f3330e4-455d-43ee-8cd1-244e3288393e
 # ╠═9facd961-6c18-4b4a-9e84-9a4db31600c1
 # ╠═19803b8e-df6a-41cd-a2dd-dc4f04f95a46
 # ╠═9d49a44d-7147-4d3b-b848-aedfe1216219
 # ╠═ecd27c0a-47a2-4fc3-8ade-7499fc36a496
+# ╠═b3fd0308-2056-4d16-8ff2-bb4d17aaa131
 # ╟─5bfc3f07-853e-45ea-984a-07a76c372a18
 # ╠═95149181-b6c1-429e-be8e-f46d1a2616ef
+# ╠═3ab820ad-1e95-4533-aa70-ad56b11b549a
 # ╠═3b247e3e-6aab-4c3d-9904-94123ccb00b7
 # ╠═bb0195a0-d06d-4f72-8646-31ef848e987a
 # ╠═af07bdd5-4baa-481d-a973-a4c119af6c5f
 # ╠═8303b321-1b95-4c7c-8c4f-d4c6f4e1b344
+# ╠═e2831eac-7c7a-4972-98f9-c6c500e91a41
+# ╠═7ebc25cb-c10a-4b38-b170-760aeeff38bf
+# ╠═275c9856-a706-4926-b76f-f26b8b51203f
 # ╠═97fb1541-59b6-4a42-adf3-f3084478ea04
 # ╠═3fa86c92-e6bd-41b6-bd64-cfd33f74b229
-# ╠═3f958975-7abf-4564-9bac-432a87e66bcc
 # ╠═80556944-3d5f-4e4b-b3e3-68b092d006cd
 # ╠═d5fda85b-45b8-442b-b604-4d45236301d4
 # ╠═b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
 # ╠═a419c394-d597-4f6f-812f-cd0a0bc7ea0e
 # ╠═9ea9076a-2d51-41ca-ac10-c71a7e379c79
-# ╠═b8f2475a-3588-4611-99ac-de156f25b853
 # ╠═f8e73044-8d07-4b09-81ee-54f7f7278496
 # ╠═471fae8a-4998-4662-87e9-d4277f5f8604
 # ╠═74a73f14-426b-45b6-afdd-55bc4a919b34
 # ╠═0f936517-1924-44db-ba03-2c7fd589afa3
-# ╠═0aea9fe2-65ef-42f3-bf58-fa3b81dbba8f
-# ╠═061f913b-b842-41a3-aa9f-a918c86dab0a
+# ╠═b8f2475a-3588-4611-99ac-de156f25b853
+# ╠═9da81ee9-5638-48dc-949e-603874b3f627
+# ╠═0fef057f-2f68-447d-9926-8704536cc7e5
+# ╠═706a0753-018a-48f7-8c77-23af747141fd
+# ╠═2af93853-0df1-45a5-ace6-75ad532e49dd
+# ╠═da3f27fc-0f2c-4e03-bc36-ccbb5eee1ea2
+# ╠═947aba67-2d02-40e7-9e9c-16a39a0617be
+# ╠═4473d1b0-fea7-4d87-8837-1966124f1cf0
+# ╠═e2f1e41d-4996-4f81-8dda-35cf6ba0fbba
+# ╠═c2b025c6-0bd9-49be-9848-3f79e31e6140
+# ╠═b7049ed6-183a-4920-8d89-ac396979ae2b
+# ╠═b1980d55-e36c-45d8-9ba1-1e6a6fbb5e10
 # ╠═963bd378-2603-45b1-8623-979aad5c2538
-# ╠═934e3300-61d6-48f9-af57-791b96bfb839
+# ╠═0aea9fe2-65ef-42f3-bf58-fa3b81dbba8f
+# ╠═e13b1c88-75c4-498a-87c5-6d11c88fa569
 # ╠═4fda883d-7173-49c0-a56e-6572ebc80ba4
+# ╠═96ef21f4-1915-46ed-9c82-94b3bba456ac
+# ╠═18b29878-b8e3-44e5-8843-ccde9c6bb273

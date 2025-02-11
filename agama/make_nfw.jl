@@ -23,13 +23,31 @@ function get_args()
             help="exponential cutoff radius in units of scale radius"
             arg_type=Float64
             default=100
+        "-b", "--beta"
+            help="Velocity anisotropy parameter"
+            arg_type=Float64
+            default=0.0
+        "-a", "--r-a"
+            help="Anisotropy scale radius"
+            arg_type=Float64
+            default=Inf
     end
 
     args = parse_args(s)
 
 
     if args["output"] === nothing
-        args["output"] = "halos/nfw_$(args["number"]).hdf5"
+        filename = "halos/nfw_$(args["number"])"
+
+        if args["beta"] != 0.0
+            filename = filename * "_beta$(args["beta"])"
+        end
+        if args["r-a"] != Inf
+            filename = filename * "_ra$(args["r-a"])"
+        end
+
+        @info "Saving to $filename.hdf5"
+        args["output"] = filename * ".hdf5"
     end
 
     args["number"] = convert(Int, parse(Float64, args["number"]))
@@ -45,6 +63,10 @@ end
 function main()
     args = get_args()
 
+    if isfile(args["output"])
+        throw(ArgumentError("Output file already exists"))
+    end
+
     cutoff = args["cutoff"]
     N = args["number"]
 
@@ -58,7 +80,9 @@ function main()
         outerCutoffRadius = cutoff*scaleRadius,
         cutoffStrength=1)
 
-    df = agama.DistributionFunction(type="QuasiSpherical", potential=pot)
+    df = agama.DistributionFunction(type="QuasiSpherical", potential=pot,
+        beta0=args["beta"], r_a=args["r-a"])
+
     gm = agama.GalaxyModel(pot, df)
 
     posvel, mass = gm.sample(N)

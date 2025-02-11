@@ -17,11 +17,11 @@ MaxMemSize                  2400    # TUNE to system (MB)
 
 #---Time
 TimeBegin                   0
-TimeMax	                    2120      # 10 Gyr
+TimeMax	                    2180      # 10 Gyr
 
 #---Output frequency
 OutputListOn                0
-TimeBetSnapshot             10      # change as needed
+TimeBetSnapshot             1     # change as needed
 TimeOfFirstSnapshot         0
 TimeBetStatistics           10      # change as needed 
 NumFilesPerSnapshot         1

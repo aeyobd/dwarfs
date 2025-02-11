@@ -32,7 +32,7 @@ This notebook was a quick exploration to see if the angular momentum decay of a 
 """
 
 # ╔═╡ f93754f6-7612-4cca-bf77-c1288dcd58f4
-modelname = "ursa_minor/1e6_v37_r5.0/orbit_mean"
+modelname = "ursa_minor/1e5_v37_r5.0/orbit_mean.1"
 
 # ╔═╡ ab029f52-8d09-486c-8c8d-af0ce4eb13d0
 modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", modelname) * "/"
@@ -360,6 +360,21 @@ end
 # ╔═╡ 94309696-9545-499e-990c-759c4488e1d2
 r_f = gc.x ⊕ gc.y ⊕ gc.z
 
+# ╔═╡ cb6cebfa-49aa-4e7a-967c-ee1cbdf0e211
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+
+	idx = 140:length(R)
+	lines!(R[idx], z[idx], color=times[idx])
+
+	R1 = gc.x .⊕ gc.y
+	z1 = gc.z
+	errscatter!(Measurements.value(R1), Measurements.value(z1))
+	fig
+end
+
 # ╔═╡ 117d309b-fb6c-4012-95cf-d2aa513e7c4e
 calc_χ2(val, exp) = (val .- Measurements.value(exp)) .^2 / Measurements.uncertainty(exp)^2
 
@@ -450,7 +465,7 @@ let
 
 	ylims!(-200, 100)
 	linkxaxes!(ax1, ax2, ax3, ax4, ax5)
-	xlims!(8.5, 9.5)
+	xlims!(9.5, 10.5)
 	fig
 end
 
@@ -540,21 +555,6 @@ let
 	lines!(orbit_exp.t * T2GYR * t_scale, orbit_exp.v_z * V2KMS)
 
 
-	fig
-end
-
-# ╔═╡ cb6cebfa-49aa-4e7a-967c-ee1cbdf0e211
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-
-
-	idx = 140:idx_f
-	lines!(R[idx], z[idx], color=times[idx])
-
-	R1 = gc.x .⊕ gc.y
-	z1 = gc.z
-	errscatter!(Measurements.value(R1), Measurements.value(z1))
 	fig
 end
 
