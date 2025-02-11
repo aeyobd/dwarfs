@@ -45,7 +45,7 @@ md"""
 galaxyname = "ursa_minor"
 
 # ╔═╡ b82b6e1f-3b62-4c2c-8795-689e33141dd6
-haloname = "1e5_v37_r5.0"
+haloname = "1e6_v37_r5.0"
 
 # ╔═╡ bc6deac8-b70a-483b-9fd7-1413c6f17aa7
 mc_name = ""
@@ -409,6 +409,109 @@ let
 	fig
 end
 
+# ╔═╡ 891f31ed-5565-4f43-ab82-b8bc3a76c1cf
+let
+
+	fig = Figure(size=(400, 600))
+	for i in 1:3
+		x, y = [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")][i]
+		ax = Axis(fig[i,1],
+			xlabel=x,
+			ylabel=y
+		)
+	
+		idx = idx_f-3:idx_f+1
+	
+		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=times[idx])
+		
+		errscatter!([obs_today[x]], [obs_today[y]],
+			xerr=[obs_today[x * "_err"]], yerr=[obs_today[y * "_err"]]
+		)
+	
+	end
+
+	@savefig "skyorbit_agreement_today"
+	fig
+end
+
+# ╔═╡ 293090a7-8ee0-442e-b70f-e6b7750ab319
+lerps = Dict(c => LilGuys.lerp(times, obs_c[:, c]) for c in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"])
+
+# ╔═╡ 052fb31a-788a-485f-b8d2-1cf49f6ffb4b
+
+
+# ╔═╡ e96a9789-22b8-433a-8a3c-182d7ec4e82a
+let
+	global obs_c_new, t_best, idx_best
+
+	
+	ts = LinRange(times[idx_f-1], times[idx_f+1], 1000)
+
+	obs_c_new = DataFrame()
+
+	for (k, v) in lerps
+		obs_c_new[!, k] = v.(ts)
+	end
+	obs_c_new[!, :times] = ts
+
+	obs_c_new
+
+	χ2s_new = calc_χ2s(obs_c_new, obs_today)
+
+	idx_best = argmin(χ2s_new)
+	t_best = ts[idx_best]
+	println(minimum(χ2s_new))
+
+	lines(ts, log10.(χ2s_new))
+
+end
+
+# ╔═╡ 225a8adb-82ee-4479-806e-15796e2b08e2
+let
+
+	fig = Figure(size=(400, 800))
+	for i in 1:6
+		x = "times"
+		y = ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"][i]
+
+		ax = Axis(fig[i,1],
+			xlabel=x,
+			ylabel=y
+		)
+	
+		idx = idx_f-3:idx_f+1
+	
+		scatterlines!(times[idx], obs_c[idx, y], color=log10.(χ2[idx]))
+		
+		errscatter!([times[idx_f]], [obs_today[y]], yerr=[obs_today[y * "_err"]]
+		)
+	
+		errscatter!([obs_c_new[idx_best, :times]], [obs_today[y]], yerr=[obs_today[y * "_err"]]
+		)
+
+
+		dy = obs_c_new[idx_best, y] - obs_today[y]
+		χ2i = (dy) / obs_today[y*"_err"]
+		
+		text!(0.1, 0.5, space=:relative, text="dy = $(round(dy, digits=2)) \n σ=$(round(χ2i, digits=2))")
+		if i < 6
+			hidexdecorations!(ax, grid=false, ticks=false)
+		end
+
+		
+	
+	end
+
+	@savefig "skyorbit_agreement_byvar"
+	fig
+end
+
+# ╔═╡ 5858e6d0-a501-43ee-9669-6a225a1df1c9
+Makie.spaces()
+
+# ╔═╡ a48b78df-588d-4f94-9252-badd27179deb
+obs_c
+
 # ╔═╡ 3448ffc5-41e6-4208-b11f-2c00168bf50a
 md"""
 # Stream Coordinate frame
@@ -595,6 +698,13 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
 # ╠═54cf5233-a955-4831-86ad-23b72f15789d
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
+# ╠═891f31ed-5565-4f43-ab82-b8bc3a76c1cf
+# ╠═225a8adb-82ee-4479-806e-15796e2b08e2
+# ╠═293090a7-8ee0-442e-b70f-e6b7750ab319
+# ╠═052fb31a-788a-485f-b8d2-1cf49f6ffb4b
+# ╠═e96a9789-22b8-433a-8a3c-182d7ec4e82a
+# ╠═5858e6d0-a501-43ee-9669-6a225a1df1c9
+# ╠═a48b78df-588d-4f94-9252-badd27179deb
 # ╟─3448ffc5-41e6-4208-b11f-2c00168bf50a
 # ╠═66435478-0619-47aa-a659-c06089951f72
 # ╠═78271e36-12b7-4edc-bfb0-20ecc597ab20

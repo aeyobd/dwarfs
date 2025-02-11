@@ -16,12 +16,6 @@ end
 # ╔═╡ 4bc528f9-4ac0-407e-88a6-5e606117a3d3
 using CSV, DataFrames
 
-# ╔═╡ c9786ddd-b2b0-401e-ab97-585fcbea31cb
-begin
-	using PythonCall
-	np = pyimport("numpy")
-end
-
 # ╔═╡ b35b362e-f275-4d70-a703-f398a08b7a47
 using Measurements
 
@@ -45,23 +39,11 @@ md"""
 I prefer the actions/angles framwork. For a test-particle orbit, the actions are conserved and action angles linearly increase with time. Thus, the deviations from the test-particle orbit in the N-body simulation should (to first order) be easily corrected by equivialnt shifts in the action (angle) initial conditions. The challenge with this framework is action (angles) are more nontrival quantities to calculate and depend on our knowledge of the potential. I use `agama` to compute these quantities, and in a fixed (azimuthal) potential, this framework should be a good approximation. 
 """
 
-# ╔═╡ b4c4733c-3c62-4480-9fc7-0511a20a0357
-py2mat(x) = pyconvert(Matrix{Float64}, x)'
-
-# ╔═╡ 60a4b629-ad00-436e-a9d4-a29201aa3e91
-py2vec(x) = pyconvert(Vector{Float64}, x)
-
-# ╔═╡ 8473ee55-78a6-45bc-9db5-ce4d9f636144
-py2f(x) = pyconvert(Float64, x)
-
-# ╔═╡ 1959e6a0-9ad0-4bb3-955f-662ae9024eb7
-⊕(x::Real, y::Real) = sqrt(x^2 + y^2)
-
 # ╔═╡ 121d4497-ee8c-40f0-a7a4-e04c6650cb25
 galaxyname = "ursa_minor"
 
 # ╔═╡ f5ec8d3e-d34d-481f-aec8-0113d7d9402a
-modelname = "1e5_v37_r5.0"
+modelname = "1e6_v37_r5.0"
 
 # ╔═╡ a80b0905-7638-495b-aa97-a83478005492
 orbitname = "orbit_mean.2"
@@ -295,10 +277,10 @@ L_exp = LilGuys.calc_L_spec(x_cen_exp, v_cen_exp)
 L_nbody = LilGuys.calc_L_spec(x_cen, v_cen)
 
 # ╔═╡ 9da81ee9-5638-48dc-949e-603874b3f627
-dJ = [0.09, -0.4, -0.8]
+dJ = [0.07, -0.1, 0.0]
 
 # ╔═╡ 0fef057f-2f68-447d-9926-8704536cc7e5
-dθ = [-0.09, 0.055, -0.05,]
+dθ = [-0.03, -0.05, 0.05,]
 
 # ╔═╡ 9facd961-6c18-4b4a-9e84-9a4db31600c1
 begin 
@@ -351,7 +333,7 @@ let
 	fig = Figure()
 
 	for i in 1:3
-		coord = ["x", "y", "z"][i]
+		coord = ["r", "z", "ϕ"][i]
 		
 		ax = Axis(fig[i, 1],
 			xlabel = "time",
@@ -364,7 +346,7 @@ let
 		hlines!(act_obs[i], color="black")
 
 		didx = 5
-		acts = act_nbody[i, idx_f-didx:idx_f+didx]
+		acts = act_nbody[i, idx_f-didx:idx_f]
 		act = LilGuys.mean(acts)
 		
 		dJ_suggested = act_obs[i] - act
@@ -388,7 +370,7 @@ let
 	fig = Figure()
 
 	for i in 1:3
-		coord = ["x", "y", "z"][i]
+		coord = ["r", "z", "ϕ"][i]
 
 		ax = Axis(fig[i, 1],
 			xlabel = "time",
@@ -398,7 +380,8 @@ let
 		idx =idx_f-5:idx_f+0
 		lines!(out.times[idx] .- out.times[idx_f], ang_nbody[i, idx])
 		hlines!(ang_obs[i], color="black")
-		println("i")
+
+		println("$i")
 		dθ_suggested = ang_obs[i] .- ang_nbody[i, idx_f]
 
 		if i < 3
@@ -412,12 +395,15 @@ let
 end
 
 
+# ╔═╡ e7aba352-84a1-417c-b25b-7d0503030e6a
+idx_f
+
 # ╔═╡ 2af93853-0df1-45a5-ace6-75ad532e49dd
 let
 	fig = Figure()
 
 	for i in 1:3
-		coord = ["x", "y", "z"][i]
+		coord = ["r", "z", "ϕ"][i]
 
 		ax = Axis(fig[i, 1],
 			xlabel = "time",
@@ -458,7 +444,10 @@ E_obs = Φ_in(Measurements.value.(LilGuys.position_of(gc))) .+ 1/2 * calc_r(Meas
 let
 	fig = Figure()
 
-	ax = Axis(fig[1,1])
+	ax = Axis(fig[1,1],
+		xlabel = "time",
+		ylabel = "energy"
+	)
 	
 	lines!(out.times, E_nbody)
 	lines!(orbit_exp.t, E_exp)
@@ -496,7 +485,7 @@ df_new = DataFrame(
 )
 
 # ╔═╡ 0aea9fe2-65ef-42f3-bf58-fa3b81dbba8f
-write_ic = false
+write_ic = true
 
 # ╔═╡ 4fda883d-7173-49c0-a56e-6572ebc80ba4
 if write_ic
@@ -561,12 +550,7 @@ end
 # ╟─0c21b10f-ad86-4894-8959-721742d2a2c1
 # ╠═b18d1734-e40e-11ef-1007-314371eb1a54
 # ╠═4bc528f9-4ac0-407e-88a6-5e606117a3d3
-# ╠═c9786ddd-b2b0-401e-ab97-585fcbea31cb
 # ╠═481edcca-51a8-4f11-88ec-84939b223bdf
-# ╠═b4c4733c-3c62-4480-9fc7-0511a20a0357
-# ╠═60a4b629-ad00-436e-a9d4-a29201aa3e91
-# ╠═8473ee55-78a6-45bc-9db5-ce4d9f636144
-# ╠═1959e6a0-9ad0-4bb3-955f-662ae9024eb7
 # ╠═121d4497-ee8c-40f0-a7a4-e04c6650cb25
 # ╠═f5ec8d3e-d34d-481f-aec8-0113d7d9402a
 # ╠═a80b0905-7638-495b-aa97-a83478005492
@@ -636,8 +620,9 @@ end
 # ╠═9da81ee9-5638-48dc-949e-603874b3f627
 # ╠═0fef057f-2f68-447d-9926-8704536cc7e5
 # ╠═706a0753-018a-48f7-8c77-23af747141fd
+# ╠═e7aba352-84a1-417c-b25b-7d0503030e6a
 # ╠═2af93853-0df1-45a5-ace6-75ad532e49dd
-# ╠═da3f27fc-0f2c-4e03-bc36-ccbb5eee1ea2
+# ╟─da3f27fc-0f2c-4e03-bc36-ccbb5eee1ea2
 # ╠═947aba67-2d02-40e7-9e9c-16a39a0617be
 # ╠═4473d1b0-fea7-4d87-8837-1966124f1cf0
 # ╠═e2f1e41d-4996-4f81-8dda-35cf6ba0fbba

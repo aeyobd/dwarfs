@@ -1,14 +1,20 @@
 using SpecialFunctions: erf
+using LilGuys
+using CairoMakie
+import Base: -, reverse
+
 using PythonCall
 agama = pyimport("agama")
 u = pyimport("astropy.units")
+np = pyimport("numpy")
 
-using LilGuys
-using CairoMakie
 
-import Base: -, reverse
 potential_dir = ENV["DWARFS_ROOT"] * "/agama/potentials/"
 
+py2mat(x) = pyconvert(Matrix{Float64}, x)'
+py2vec(x) = pyconvert(Vector{Float64}, x)
+py2f(x) = pyconvert(Float64, x)
+⊕(x::Real, y::Real) = sqrt(x^2 + y^2)
 
 # vasiliev units
 V_V2KMS = 1
@@ -346,4 +352,39 @@ function leap_frog(gc, acceleration;
     velocities_matrix = hcat(velocities...)
     accelerations_matrix = hcat(accelerations...)
     return Orbit(time=times, position=positions_matrix, velocity=velocities_matrix, acceleration=accelerations_matrix)
+end
+
+
+
+"""
+    from_actions(pot, act, ang; kwargs...)
+
+Computes the position and velocity from actions.
+Requires an agama potential, and 3xN arrays of 
+actions and action angles.
+"""
+function from_actions(pot, act, ang; kwargs...)
+    am = agama.ActionMapper(pot; kwargs...)
+
+    xv_py = am(np.array(vcat(act, ang)'))
+
+    xv = py2mat(xv_py)
+    return xv[1:3, :], xv[4:6, :]
+end
+
+
+"""
+    get_actions(pot, pos, vel; kwargs...)
+
+Computes the actions and action angles from position and velocity.
+Requires an agama potential, and 3xN arrays of
+positions and velocities.
+Returns 3xN arrays of actions and action angles.
+"""
+function get_actions(pot, pos, vel; kwargs...)
+    af = agama.ActionFinder(pot; kwargs...)
+
+    act_py, ang_py, freq_py = af(np.array(vcat(pos, vel)'), angles=true, frequencies=true)
+
+    return py2mat(act_py), py2mat(ang_py)
 end

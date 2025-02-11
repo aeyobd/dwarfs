@@ -41,17 +41,17 @@ md"""
 models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-model_dir = models_dir * "sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc/"
-#model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean/"
+#model_dir = models_dir * "sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc/"
+model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean.2/"
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.13"
+starsname = "exp2d_rs0.10"
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 figdir = joinpath(dirname(model_dir),  "stars", starsname, "figures"); mkpath(figdir)
 
 # ╔═╡ 44dec2f8-c149-461d-b586-56b73a97c0a2
-obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml"
+obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
@@ -695,7 +695,7 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L"\log r \ /\ \textrm{arcmin}",
 		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((-1, 2.5), (-5, 2))
+		limits=((-1, 2.5), (-6, 2))
 	)
 
 	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ dy_sigma,
@@ -726,6 +726,9 @@ figdir
 
 # ╔═╡ c901bf9d-46bf-4cd7-af11-227d477663b4
 r_b_arcmin
+
+# ╔═╡ 54912dae-b4d9-49b3-80ef-af6f277cd73b
+idx_f
 
 # ╔═╡ b6dff4d6-a89b-4b46-858a-5d490c47eeb7
 let 
@@ -828,4 +831,5 @@ end
 # ╠═eb280539-f244-4cb9-83d5-e62ce37263c0
 # ╠═b3105414-466d-4c3c-bb6c-0569d6adc834
 # ╠═c901bf9d-46bf-4cd7-af11-227d477663b4
+# ╠═54912dae-b4d9-49b3-80ef-af6f277cd73b
 # ╠═b6dff4d6-a89b-4b46-858a-5d490c47eeb7

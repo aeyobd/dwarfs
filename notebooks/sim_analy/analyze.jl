@@ -32,7 +32,7 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e5_V31_r3.2/orbit_mean"
+model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean.2"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -388,7 +388,7 @@ let
 	)
 
 	ax2 = Axis(fig[2,1], xlabel="log r / kpc", ylabel=L"\sigma",
-	limits=((-2, 2.5), (0, 20))
+	limits=((-2, 2.5), (0, 40))
 	)
 
 	for i in 1:30:length(out)
@@ -423,15 +423,6 @@ let
 
 	println(1 .- LilGuys.calc_β_prof(snap_test, r_bins=bins)[2])
 end
-
-# ╔═╡ 9c7aa2e3-3150-470c-9937-2cca112ca8ad
-import StatsBase
-
-# ╔═╡ 3bd29fc8-9fc1-48b3-9cb7-7f583bfb2fd7
-StatsBase.var
-
-# ╔═╡ d4f5375e-fba3-4d20-9822-d372487953be
-snap_i.x_cen
 
 # ╔═╡ Cell order:
 # ╠═bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
@@ -471,6 +462,3 @@ snap_i.x_cen
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 # ╠═e385f8cf-faa1-49bf-88c9-15c3d2489f90
 # ╠═5af581bc-613c-4728-9626-dbef0ebaef7d
-# ╠═9c7aa2e3-3150-470c-9937-2cca112ca8ad
-# ╠═3bd29fc8-9fc1-48b3-9cb7-7f583bfb2fd7
-# ╠═d4f5375e-fba3-4d20-9822-d372487953be
