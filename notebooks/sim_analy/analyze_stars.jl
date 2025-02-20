@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 340ffbbe-17bd-11ef-35c6-63505bb128b7
 begin 
 	using Pkg; Pkg.activate()
@@ -18,9 +30,17 @@ end
 # ╔═╡ d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 using LilGuys
 
+# ╔═╡ 283d335c-2941-4dc6-9a8e-c47b0864087c
+using PlutoUI
+
 # ╔═╡ 377284f2-dcee-44d3-9a04-728605cea92a
 md"""
 Given the stellar probabilty file, makes plots based on the 3D properties of the stars in the sample.
+"""
+
+# ╔═╡ 30ba4458-f21b-4777-987c-e65ecfd34258
+md"""
+# Setup
 """
 
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
@@ -29,20 +49,40 @@ import DensityEstimators as DE
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
 
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
+# ╔═╡ da3a9778-0f7c-482b-831b-d93a0d80a48c
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ ab06c999-3ff6-4580-a979-f0ddeb466569
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="ursa_minor"),
+	modelname = TextField(default="1e6_v37_r5.0/orbit"),
+	starsname = TextField(default="exp2d_rs0.13"),
+))
 
 # ╔═╡ 2106bfe1-a53d-4ef8-9111-e191a8056351
-starsname = "exp2d_rs0.10"
+starsname = inputs.starsname
 
 # ╔═╡ f0d74eaa-81e9-4b04-9765-24a0935b1430
-#model_dir = ENV["DWARFS_ROOT"] * "/analysis/sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
-model_dir = ENV["DWARFS_ROOT"] * "/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean.2"
+model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.galaxyname, inputs.modelname)
 
 # ╔═╡ 9c42eb0a-029d-46f7-afb0-de03f82c5889
-obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
+obs_today_filename =  ENV["DWARFS_ROOT"] * "/observations/$(inputs.galaxyname)/observed_properties.toml"
 
 # ╔═╡ 08aa0f76-3d74-45b5-b9e9-6abbf6350910
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
@@ -51,13 +91,20 @@ stars_dir_in = joinpath(model_dir, "../stars/$starsname")
 stars_dir_out = joinpath(model_dir, "stars/$starsname")
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
-figdir = joinpath(stars_dir_out,  "figures"); mkpath(figdir)
+FIGDIR = joinpath(stars_dir_out,  "figures")
+
+# ╔═╡ ff99e841-7cb0-4f86-8ac8-9cd19be7358f
+if isdir(stars_dir_out) && !isdir(FIGDIR)
+	mkdir(FIGDIR)
+end
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = joinpath(stars_dir_in, "profile.toml")
 
-# ╔═╡ 973955ad-3214-42cf-831f-a782f1d2434a
-idx_i = 1 
+# ╔═╡ 3acc8caf-5a7e-4a6d-84b2-b26680ffe377
+md"""
+initial & final snapshots
+"""
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
@@ -67,14 +114,11 @@ md"""
 # ╔═╡ 436a5be3-f597-4fc4-80a8-dc5af302ad66
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
-# ╔═╡ 8f9ee2a7-de43-43e0-8257-93ecc630044f
-idx_f = orbit_props["idx_f"]
-
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
 params = TOML.parsefile(paramsfile)
 
 # ╔═╡ 2612e3a2-6e6e-494e-b140-720dd2db6ec2
-obs_today_file = TOML.parsefile(obs_today_filename)
+obs_expected = TOML.parsefile(obs_today_filename)
 
 # ╔═╡ f9fe37ef-de81-4d69-9308-cda968851ed2
 df_probs = lguys.read_hdf5_table(stars_dir_in * "/probabilities_stars.hdf5")
@@ -88,6 +132,15 @@ length(probabilities)
 # ╔═╡ 6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
 out =  lguys.Output(model_dir, weights=probabilities)
 
+# ╔═╡ 93694113-9b3d-4a11-a34b-2a73350d2d87
+@bind idxs_in confirm(RangeSlider(1:length(out), default=1:orbit_props["idx_f"]))
+
+# ╔═╡ 973955ad-3214-42cf-831f-a782f1d2434a
+idx_i = idxs_in[1]
+
+# ╔═╡ 8f9ee2a7-de43-43e0-8257-93ecc630044f
+idx_f = idxs_in[end]
+
 # ╔═╡ 396a53a3-de0f-4d97-9693-40f3757d66f9
 snap_i = out[idx_i]
 
@@ -96,6 +149,12 @@ length(snap_i.masses)
 
 # ╔═╡ 6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
 snap_f = out[idx_f]
+
+# ╔═╡ 6f7c27ce-1328-45e5-b42c-768b76c47607
+t_f = snap_f.time
+
+# ╔═╡ 1d96e0ea-17b4-4964-9ca3-9b0f8195ee3f
+@assert t_f == out.times[idx_f]
 
 # ╔═╡ 5ee4f95d-0587-44ab-b543-9b7039d545e6
 md"""
@@ -648,110 +707,34 @@ get_M_h_fast(profiles_3D, 1 * r_h)
 let
 	fig = Figure()
 
-	n_rh = 10
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
-		ylabel="stellar mass within $(round(r_b_kpc, digits=2)) kpc (break radius)",
+		ylabel="log mass(R) / initial mass(R) ",
 		# yscale=log10,
 		#yticks=[1, 0.1],
 	)
+
+	for r in [1, 3, 10]
+		t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D,  r*r_h)
+		scatterlines!((t_dm_h2 .- t_f) * lguys.T2GYR, log10.(M_dm_h2) .- log10.(M_dm_h2[1]), label = "$r r_h")
+	end
+
+	
 	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D,  r_b_kpc)
 
-	
-	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
-
-
-	@savefig "M_in_rb"
-	
-	fig
-end
-
-# ╔═╡ cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
-let
-	fig = Figure()
-
-	n_rh = 10
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="stellar mass within $n_rh rh",
-		# yscale=log10,
-		#yticks=[1, 0.1],
-	)
-	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D, n_rh * r_h)
+	scatterlines!((t_dm_h2 .- t_f) * lguys.T2GYR, log10.(M_dm_h2) .- log10.(M_dm_h2[1]), color="black", label=L"r_b")
 
 	
-	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
-
-
-	@savefig "M_in_10rh"
-	
-	fig
-end
-
-# ╔═╡ 7431ea86-7009-45e8-a0e5-5a84dd0a57ed
-let
-	fig = Figure()
-
-	n_rh = 5
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="stellar mass within $n_rh rh",
-		# yscale=log10,
-		#yticks=[1, 0.1],
-	)
-	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D, n_rh * r_h)
-
-	
-	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
-
-
-	@savefig "M_in_5rh"
-	
-	fig
-end
-
-# ╔═╡ c9fdee7a-9e7f-4941-8cd2-492cfd427509
-let
-	fig = Figure()
-
-	n_rh = 3
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="stellar mass within $n_rh rh",
-		# yscale=log10,
-		#yticks=[1, 0.1],
-	)
-	t_dm_h2, M_dm_h2 = get_M_h_fast(profiles_3D, n_rh * r_h)
-
-	
-	scatterlines!(t_dm_h2 * lguys.T2GYR, M_dm_h2)
-
-
-	@savefig "M_in_3rh"
-	
-	fig
-end
-
-# ╔═╡ 23ef95b2-c35f-4e66-896c-54a66be59e61
-let
-	fig = Figure()
-
-	n_rh = 10
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="bound mass",
-		# yscale=log10,
-		#yticks=[1, 0.1],
-	)
-
-
-	times = [prof.time * T2GYR for (_, prof) in profiles_3D]
+	times = [(prof.time .- t_f) * T2GYR for (_, prof) in profiles_3D]
 
 	boundmass = [prof.bound_mass  for (_, prof) in profiles_3D]
 
-	scatter!(times, boundmass)
+	scatter!(times, log10.(boundmass), label="bound")
 
-	@savefig "boundmass"
+
+	axislegend(position=:lb)
+	@savefig "M_in"
+	
 	fig
 end
 
@@ -768,11 +751,16 @@ let
 	)
 
 
-	times = [prof.time * T2GYR for (_, prof) in profiles_3D]
+	times = [(prof.time .- t_f) * T2GYR for (_, prof) in profiles_3D]
 
 	vs = [prof.sigma_vx * V2KMS for (_, prof) in profiles_3D]
 
 	scatter!(times, vs)
+
+	v_m = obs_expected["sigma_v"]
+	v_e = obs_expected["sigma_v_err"]
+	hlines!(v_m, color=:black)
+	hspan!(v_m - v_e, v_m + v_e, color=(:black, 0.2))
 
 	@savefig "vcirc_time"
 	fig
@@ -791,9 +779,9 @@ let
 		ylabel = L"log $\Sigma_\star$",
 	)
 
-	colorrange = (prof_i.time, prof_f.time) .* T2GYR
+	colorrange = (prof_i.time .- t_f, prof_f.time .- t_f) .* T2GYR
 	for (_, prof) in profiles
-		lines!(prof.log_r, prof.log_Sigma, color=prof.time* T2GYR, colorrange=colorrange)
+		lines!(prof.log_r, prof.log_Sigma, color=(prof.time .- t_f)* T2GYR, colorrange=colorrange)
 	end
 
 
@@ -814,9 +802,9 @@ let
 		limits = (-2.5, 2, -15, 5)
 	)
 
-	colorrange = (prof_i.time, prof_f.time) .* T2GYR
+	colorrange = (prof_i.time .- t_f, prof_f.time .- t_f) .* T2GYR
 	for (_, prof) in profiles_3D
-		lines!(prof.log_r, log10.(prof.rho), color=prof.time* T2GYR, colorrange=colorrange)
+		lines!(prof.log_r, log10.(prof.rho), color=(prof.time .- t_f)* T2GYR, colorrange=colorrange)
 	end
 
 
@@ -840,18 +828,24 @@ end
 
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
+# ╠═ab06c999-3ff6-4580-a979-f0ddeb466569
+# ╟─30ba4458-f21b-4777-987c-e65ecfd34258
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
-# ╟─b3a16249-b8d9-4a6b-9294-cd654a17dc17
+# ╠═283d335c-2941-4dc6-9a8e-c47b0864087c
+# ╠═da3a9778-0f7c-482b-831b-d93a0d80a48c
+# ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
+# ╠═ff99e841-7cb0-4f86-8ac8-9cd19be7358f
 # ╠═2106bfe1-a53d-4ef8-9111-e191a8056351
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
 # ╠═9c42eb0a-029d-46f7-afb0-de03f82c5889
 # ╠═08aa0f76-3d74-45b5-b9e9-6abbf6350910
 # ╠═7c64a7c7-232b-47b6-973a-62e1ac21df3a
-# ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
 # ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
+# ╟─3acc8caf-5a7e-4a6d-84b2-b26680ffe377
+# ╠═93694113-9b3d-4a11-a34b-2a73350d2d87
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
 # ╠═8f9ee2a7-de43-43e0-8257-93ecc630044f
 # ╟─396cd0a8-1d73-44dd-89db-3243fb9e8ac4
@@ -865,6 +859,8 @@ end
 # ╠═6fb4b7e1-a22c-4ff8-bbe9-dbf5de5acd37
 # ╠═396a53a3-de0f-4d97-9693-40f3757d66f9
 # ╠═6feeaae2-cb01-46ad-ad1d-daaca1caf7ec
+# ╠═6f7c27ce-1328-45e5-b42c-768b76c47607
+# ╠═1d96e0ea-17b4-4964-9ca3-9b0f8195ee3f
 # ╟─5ee4f95d-0587-44ab-b543-9b7039d545e6
 # ╠═77479cd4-513c-4603-9aa0-1acd964c403a
 # ╠═7bc2c15c-33f7-43f3-a47f-ca39ffc22071
@@ -911,10 +907,6 @@ end
 # ╠═0f2af99f-355a-4477-aa5c-265dc509d458
 # ╠═16c7a61a-6ee4-43cb-8a46-136c8e3956dd
 # ╠═d97d7d5d-6f6d-4f4b-97fe-bb825b71ee80
-# ╠═cdbed68e-0da2-4648-a5d2-61b5b07fb4a2
-# ╠═7431ea86-7009-45e8-a0e5-5a84dd0a57ed
-# ╠═c9fdee7a-9e7f-4941-8cd2-492cfd427509
-# ╠═23ef95b2-c35f-4e66-896c-54a66be59e61
 # ╠═d42795d0-bd69-4c2c-be5b-e27e85199ee3
 # ╠═df229124-325f-4f0c-9cf3-9930002b7767
 # ╠═49052b15-7cfc-488c-974e-7b9c1872d082

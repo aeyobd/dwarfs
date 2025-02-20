@@ -1,0 +1,340 @@
+### A Pluto.jl notebook ###
+# v0.20.4
+
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ fa54e7aa-f477-45db-8dd9-56bd6b367604
+begin
+	import Pkg; Pkg.activate()
+
+	using CairoMakie
+	using Arya
+end
+
+# ╔═╡ d0112dc0-8cc1-4fdf-b30d-a3b89660d9b4
+begin
+	import SciPy
+	using QuadGK
+	using Measurements
+
+	import LinearAlgebra: diag
+	import NaNMath as nm
+
+end
+
+# ╔═╡ 60763b01-9c7b-4153-9b94-617820517927
+using Optimization, OptimizationOptimJL
+
+# ╔═╡ 37ee41d1-7b98-44f7-82ec-5b496622931b
+using Turing
+
+# ╔═╡ 27bd8a46-ee56-11ef-22e4-afe88d73af2d
+md"""
+The goal of this notebook is to fit the density profiles to e.g. King, Sersic, Exponential and save the best fit parameters for any dwarf + density profile combination.
+"""
+
+# ╔═╡ 25c3b74f-d8fa-4f4c-ae7c-71b137fb2ce7
+galaxyname = "ursa_minor"
+
+# ╔═╡ 20b8c05c-91a6-4dc2-9558-1b02be4983f2
+begin
+	using LilGuys
+	FIGDIR = joinpath(galaxyname, "figures")
+	FIGSUFFIX=".fit_density_profs"
+end
+
+# ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
+profilename = "jax_2c"
+
+# ╔═╡ bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
+md"""
+# Setup
+"""
+
+# ╔═╡ 20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
+begin
+	prof = LilGuys.StellarProfile(joinpath(galaxyname, "density_profiles/$(profilename)_profile.toml"))
+	if prof.normalization == "mass"
+		prof.log_Sigma .+= log10(sum(prof.counts))
+		prof.normalization = "none"
+	end
+
+	prof
+end
+
+# ╔═╡ 30154472-316b-4489-b1e5-f503447928cb
+log(0.1)
+
+# ╔═╡ 8d90dd5c-350a-45e6-b04c-9b2f85cf700b
+function objective_function(x, u, analytic_profile, names)
+	dlogx = u[1]
+	dlogy = u[2]
+	kwargs = [Symbol.(sym) => ui for (sym, ui) in zip(names, u[3:end])]
+	
+	h = analytic_profile(; M=1,  kwargs...)
+	
+	y_m = nm.log10.(LilGuys.calc_Σ.(h, 10 .^ (x .- dlogx))) .+ dlogy
+	return y_m
+end
+
+# ╔═╡ 7ff0bee2-3622-4573-81d5-8b8fa96cf461
+function fit_profile(prof, analytic_profile, names, p0; kwargs...)
+	
+	objective(x, u) = objective_function(x, u, analytic_profile, names)
+
+	w = 1 ./prof.log_Sigma_err .^ 2
+
+	local popt, covt, errs
+	try
+		popt, covt = LilGuys.curve_fit(objective, prof.log_r, prof.log_Sigma, w,  p0, )
+
+	catch e
+		@warn e
+		popt = fill(NaN, length(names) + 2)
+		errs = fill(NaN, length(names) + 2)
+	else
+		errs = sqrt.(diag(covt))
+	end
+
+	y_m = objective(prof.log_r, popt)
+	res = y_m .- prof.log_Sigma
+	chi2 = sum((res) .^ 2 .* w) ./ (length(w) - length(popt))
+
+
+	result = Dict()
+
+	names_all = ["log_r_s"; "log_Sigma"; names]
+
+	for (i, name) in enumerate(names_all)
+		result[name] = popt[i]
+		result[name * "_err"] = errs[i]
+	end
+
+	result["chi2"] = chi2
+	result["popt"] = popt
+	result["residuals"] = res
+	result["log_Sigma_pred"] = y_m
+
+	x_m = LinRange(-0.1 + minimum(prof.log_r), 0.1 + maximum(prof.log_r), 1000)
+	y_m = objective(x_m, popt)
+	result["log_Sigma_pred"] = y_m
+	result["log_r_pred"] = x_m
+
+	result["r_s"] = 10 .^ result["log_r_s"]
+	result["r_s_err"] =  result["log_r_s_err"] * log(10) * result["r_s"]
+
+	if analytic_profile <: LilGuys.Sersic
+		result["Mtot"] = LilGuys.calc_M_2D(LilGuys.Sersic(), 1000) * 10 .^ (result["log_Sigma"] + 2result["log_r_s"])
+	else
+		
+		kwargs = [Symbol.(sym) => ui for (sym, ui) in zip(names, popt[3:end])]
+		h = analytic_profile(; M=1, kwargs...)	
+	
+		result["Mtot"] = LilGuys.get_M_tot(h) * 10 .^ (result["log_Sigma"]  + 2result["log_r_s"])
+	end
+	
+	result["Mtot_err"] = result["Mtot"] * result["log_Sigma_err"] * log(10)
+	
+
+	return result
+end
+
+# ╔═╡ bc6db386-7ee6-4a9f-bd06-7e306d66e74e
+prof.counts
+
+# ╔═╡ b4995591-9c7b-43ba-9a7c-a9550476c64b
+LilGuys.calc_M_2D(LilGuys.Sersic(), 1000)
+
+# ╔═╡ 11b84ff0-7f35-4716-ae30-e05a1c5f88ba
+log_r_label = L"\log\, r\ /\ \mathrm{arcmin}"
+
+# ╔═╡ 3eb9992d-425d-4bec-94d2-da4f8dc59a8d
+log_sigma_label = L"$\log\, \Sigma $ /\ stars\ arcmin$^{-2}$"
+
+# ╔═╡ 7a274a8d-f6eb-4d9b-97c5-0372dc9520fe
+function plot_Σ_fit_res(obs, fit; res_max=1, nf=2, title="")
+    fig = Figure()
+    ax = Axis(fig[1, 1], 
+        ylabel=log_sigma_label, 
+		title=title,
+	)
+	
+    errscatter!(ax, obs.log_r, obs.log_Sigma, yerr=obs.log_Sigma_err)
+
+	log_r = fit["log_r_pred"]
+	pred = fit["log_Sigma_pred"]
+
+    lines!(ax, log_r, pred, color=COLORS[2])
+	
+    lines!(ax, log_r, pred, color=COLORS[2], linestyle=:dash)
+    
+    ax2 = Axis(fig[2, 1],
+        ylabel=L"\delta\log\Sigma", 
+    	xlabel=log_r_label,
+		limits = (nothing, (-res_max, res_max))
+	)
+
+
+	res = fit["residuals"]
+    errscatter!(ax2, obs.log_r, res, yerr=obs.log_Sigma_err, label="")
+
+    hlines!(0, color=:black)
+    
+    rowsize!(fig.layout, 2, Relative(1/4))
+
+    linkxaxes!(ax, ax2)
+    hidexdecorations!(ax, grid=false)
+    return fig
+end
+
+# ╔═╡ db8a3705-f4ea-4588-9885-0e03cd42c47b
+if !isdir(FIGDIR)
+	mkdir(FIGDIR)
+end
+
+# ╔═╡ 6d7a1522-e61e-4440-a2ff-64e625b15906
+let 
+	global sersic_fit
+	
+	analytic_profile = LilGuys.Sersic
+	names = ["n"]
+	
+	sersic_fit = fit_profile(prof, analytic_profile, names, [0.5, -0.0, 1.0])
+
+	fig = plot_Σ_fit_res(prof, sersic_fit, title="Sérsic", nf=length(names)+2)
+
+	@savefig "sersic"
+
+	fig
+end
+
+# ╔═╡ 93141f62-98e0-4c6b-b556-97f56f71d70c
+
+
+# ╔═╡ 76326a80-b709-4f96-a379-8aaea4d3af44
+let 
+	global exp_fit
+	analytic_profile = LilGuys.Exp2D
+	names = []
+	
+	exp_fit  = fit_profile(prof, analytic_profile, names, [0.0, 0.0])
+
+	fig = plot_Σ_fit_res(prof, exp_fit, title="Exp2D")
+
+	@savefig "exp2d"
+
+	fig
+end
+
+# ╔═╡ 9840c373-dbf2-4d26-85b5-15ecbbb2c657
+let 
+	global king_fit
+
+	
+	analytic_profile = LilGuys.KingProfile
+	names = ["c"]
+	
+	fit = fit_profile(prof, analytic_profile, names, [2.0, 2.0, 3.0])
+
+	fig = plot_Σ_fit_res(prof, fit, title="King")
+
+	king_fit = fit
+	@savefig "king"
+
+	fig
+end
+
+# ╔═╡ 88352faf-ce2a-4bd8-80bf-268d77601698
+let 
+	global plummer_fit
+	
+	analytic_profile = LilGuys.Plummer
+	names = []
+	
+	fit = fit_profile(prof, analytic_profile, names, [1.0, 0.0])
+
+	fig = plot_Σ_fit_res(prof, fit, title="Plummer")
+
+	@savefig "plummer"
+
+	plummer_fit = fit
+	fig
+end
+
+# ╔═╡ 03712608-6f01-482f-9971-687712de6a06
+sersic_fit
+
+# ╔═╡ 6f101561-2262-4012-9e17-aae2bd873d95
+
+
+# ╔═╡ a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
+begin
+	derived_props = OrderedDict()
+	derived_props["r_h"] = sersic_fit["r_s"]
+	derived_props["r_h_err"] =  sersic_fit["r_s_err"]
+
+	derived_props["chi2_sersic"] = sersic_fit["chi2"]
+	derived_props["M_sersic"] = sersic_fit["Mtot"]
+	derived_props["M_sersic_err"] = sersic_fit["Mtot_err"]
+
+	derived_props["n_sersic"] = sersic_fit["n"]
+	derived_props["n_sersic_err"] = sersic_fit["n_err"]
+
+	derived_props["r_s_exp"] = exp_fit["r_s"]
+	derived_props["r_s_exp_err"] =  exp_fit["r_s_err"]
+	derived_props["chi2_exp"] = exp_fit["chi2"]
+	derived_props["M_exp"] = exp_fit["Mtot"]
+	derived_props["M_exp_err"] = exp_fit["Mtot_err"]
+
+	if isdefined(@__MODULE__, :king_fit)
+		derived_props["r_s_king"] = king_fit["r_s"]
+		derived_props["r_s_king_err"] =  king_fit["r_s_err"]
+		derived_props["c_king"] = king_fit["c"]
+		derived_props["c_king_err"] =  king_fit["c_err"]
+		derived_props["chi2_king"] = king_fit["c_err"]
+		derived_props["M_king"] = king_fit["Mtot"]
+		derived_props["M_king_err"] = king_fit["Mtot_err"]
+	end
+
+	derived_props
+end
+
+# ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
+import TOML
+
+# ╔═╡ 456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca
+open(joinpath(galaxyname, "profile_fits.toml"), "w") do f
+	TOML.print(f, derived_props)
+end
+
+# ╔═╡ Cell order:
+# ╟─27bd8a46-ee56-11ef-22e4-afe88d73af2d
+# ╠═25c3b74f-d8fa-4f4c-ae7c-71b137fb2ce7
+# ╠═1238d232-a2c0-44e5-936b-62fd9137d552
+# ╟─bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
+# ╠═fa54e7aa-f477-45db-8dd9-56bd6b367604
+# ╠═20b8c05c-91a6-4dc2-9558-1b02be4983f2
+# ╠═d0112dc0-8cc1-4fdf-b30d-a3b89660d9b4
+# ╠═20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
+# ╠═60763b01-9c7b-4153-9b94-617820517927
+# ╠═37ee41d1-7b98-44f7-82ec-5b496622931b
+# ╠═30154472-316b-4489-b1e5-f503447928cb
+# ╠═8d90dd5c-350a-45e6-b04c-9b2f85cf700b
+# ╠═7ff0bee2-3622-4573-81d5-8b8fa96cf461
+# ╠═bc6db386-7ee6-4a9f-bd06-7e306d66e74e
+# ╠═7a274a8d-f6eb-4d9b-97c5-0372dc9520fe
+# ╠═b4995591-9c7b-43ba-9a7c-a9550476c64b
+# ╠═11b84ff0-7f35-4716-ae30-e05a1c5f88ba
+# ╠═3eb9992d-425d-4bec-94d2-da4f8dc59a8d
+# ╠═db8a3705-f4ea-4588-9885-0e03cd42c47b
+# ╠═6d7a1522-e61e-4440-a2ff-64e625b15906
+# ╠═93141f62-98e0-4c6b-b556-97f56f71d70c
+# ╠═76326a80-b709-4f96-a379-8aaea4d3af44
+# ╠═9840c373-dbf2-4d26-85b5-15ecbbb2c657
+# ╠═88352faf-ce2a-4bd8-80bf-268d77601698
+# ╠═03712608-6f01-482f-9971-687712de6a06
+# ╠═6f101561-2262-4012-9e17-aae2bd873d95
+# ╠═a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
+# ╠═84fe5bae-c470-4df8-86fa-51cdf4300f01
+# ╠═456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca

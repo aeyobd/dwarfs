@@ -1,0 +1,12 @@
+r_h = nan
+r_h_err = nan
+chi2_sersic = nan
+M_sersic = nan
+M_sersic_err = nan
+n_sersic = nan
+n_sersic_err = nan
+r_s_exp = nan
+r_s_exp_err = nan
+chi2_exp = nan
+M_exp = nan
+M_exp_err = nan

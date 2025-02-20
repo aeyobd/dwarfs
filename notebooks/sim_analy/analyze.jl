@@ -32,7 +32,7 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/orbit_mean.2"
+model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/orbit_smallperi.2"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -44,10 +44,10 @@ halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
 out =  Output(model_dir)
 
 # ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
-figdir = joinpath(model_dir, "figures")
+FIGDIR = joinpath(model_dir, "figures")
 
 # ╔═╡ 63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
-mkpath(figdir)
+mkpath(FIGDIR)
 
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))

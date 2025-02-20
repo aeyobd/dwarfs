@@ -40,9 +40,9 @@ position_angle_ep = 8
 position_angle_ref = "simonsmith+2024"
 
 
-rh = 3
-rh_err = 1
-rh_ref = "simonsmith+2024"
+r_h = 3
+r_h_err = 1
+r_h_ref = "simonsmith+2024"
 
 Mv = 2.2
 Mv_em = 0.3

@@ -62,7 +62,7 @@ ErrTolThetaMax                        1.0
 ErrTolForceAcc                        0.005
 TopNodeFactor                         1.0
 
-ActivePartFracForNewDomainDecomp      0.02
+ActivePartFracForNewDomainDecomp      1.5
 # ActivePartFracForPMinsteadOfEwald     0.05
 
 %---- Initial density estimate

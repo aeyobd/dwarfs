@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
 begin 
@@ -15,6 +27,7 @@ begin
 	import LilGuys as lguys
 
 	using Arya
+	using PlutoUI
 end
 
 
@@ -30,10 +43,13 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 """
 
 # ╔═╡ baf5a0e0-3ee1-4056-b3a5-15058b4a0e53
-modelname = "EP20"
+@bind modelname TextField(default="EP20")
 
 # ╔═╡ abac7f99-fc5d-4536-a845-52cc269deee7
-fig_dir = "./$modelname/figures"
+figdir = "./$(modelname)_special_cases/figures"
+
+# ╔═╡ b3e118f4-0503-4a6c-8f0d-d096bd0236a3
+using LilGuys; figdir
 
 # ╔═╡ 2559bc4c-3bad-4d70-b02f-8fe48b772fb6
 modelname_special = "$(modelname)_special_cases"
@@ -160,7 +176,7 @@ let
 
 	bins, counts, err = lguys.histogram(df_peris_apos.t_last_peri * lguys.T2GYR)
 	scatter!(lguys.midpoints(bins), counts)
-	vlines!(df_peris_apos_special.t_last_peri * lguys.T2GYR)
+	vlines!(df_peris_apos_special.t_last_peri * lguys.T2GYR, color=COLORS[1:3])
 
 	fig
 end
@@ -241,7 +257,7 @@ let
 			ax_kwargs...
 		)
 		x = [getproperty(o, sym) for o in observations]
-		scatter!(x, peris; plot_kwargs...)
+		scatter!(x, peris; rasterize=true, plot_kwargs...)
 		
 		for i in eachindex(orbit_labels)
 				x = getproperty(observations_special[i], sym)
@@ -254,7 +270,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
@@ -299,7 +315,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "apo_mc_orbits_corr.pdf"), fig)
+	@savefig "apo_mc_orbits_corr"
 	fig
 end
 
@@ -343,7 +359,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "t_last_peri.pdf"), fig)
+	@save "t_last_peri"
 	fig
 end
 
@@ -682,11 +698,12 @@ end
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
 # ╠═3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═b3e118f4-0503-4a6c-8f0d-d096bd0236a3
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
 # ╠═26d616da-95ec-4fb9-b9a8-2f095d74c722
-# ╠═38fd9158-7807-4a26-b534-b0bcb5dbb0e5
+# ╟─38fd9158-7807-4a26-b534-b0bcb5dbb0e5
 # ╠═9a22d47b-8474-4596-b418-de33eb07c627
 # ╠═dcdca4a7-08a6-4d1b-a972-c386493207d0
 # ╠═56631a4d-323e-42ac-ad71-3e35face895d

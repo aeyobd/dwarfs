@@ -1,21 +1,12 @@
 import LilGuys as lguys
+import TOML
 
 
 obs_props_filename = ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
-
-obs = lguys.coord_from_file(obs_props_filename)
-err = lguys.coord_err_from_file(obs_props_filename)
-err = lguys.ICRS(
-    ra = err.ra,
-    dec = err.dec,
-    distance = err.distance,
-    pmra = err.pmra,
-    pmdec = err.pmdec,
-    radial_velocity = err.radial_velocity,
-)
+obs_props = TOML.parsefile(obs_props_filename)
 
 function sample(N = 100_000)
-    mc_obs = lguys.rand_coords(obs, err, N)
+    mc_obs = lguys.rand_coords(obs_props, N)
 
     mc_phase = lguys.transform.(lguys.Galactocentric, mc_obs)
     pos = hcat([lguys.position_of(p) for p in mc_phase]...)

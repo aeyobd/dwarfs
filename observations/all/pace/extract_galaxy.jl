@@ -99,7 +99,7 @@ function to_pace_name(galaxyname)
         galaxyname = replace(galaxyname, "canesvenatici" => "canes_venatici")
     end
 
-    if galaxyname == "leo_t"
+    if galaxyname ∈ ["leo_t", "smc", "lmc"]
         return galaxyname
     end
 

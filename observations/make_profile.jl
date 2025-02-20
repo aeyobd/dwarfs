@@ -47,6 +47,10 @@ function main()
         # use Jax's inbuilt columns
         stars = LilGuys.read_fits(params["filename"])
         members = stars[stars[:, psat_col] .> 0.2, :]
+        props = TOML.parsefile(dirname(params["filename"]) * "/../observed_properties.toml")
+        
+        add_xi_eta!(members, props["ra"], props["dec"])
+        members[:, :r_ell] = 60*lguys.calc_r_ell(members.xi, members.eta, props["ellipticity"], props["position_angle"])
         @info "$(size(members, 1)) stars selected"
     else
         filt_params = GaiaFilterParams(params)

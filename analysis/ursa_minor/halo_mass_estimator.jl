@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -7,10 +7,15 @@ using InteractiveUtils
 # ╔═╡ 2c90aad4-87e7-11ee-2fbd-05f67c7e0343
 begin 
 	using Pkg; Pkg.activate()
-
-	using LilGuys
 	
 	using CairoMakie, Arya
+end
+
+# ╔═╡ bd0aa611-4e8e-4e43-b1a2-51e410f3d848
+begin
+	using LilGuys
+	FIGDIR = "./figures/"
+	FIGSUFFIX = ".halo_mass_estimator"
 end
 
 # ╔═╡ f4269d1a-940d-41da-9183-5130978f7d7b
@@ -74,7 +79,7 @@ Or for Fornax, Mstr = 2.39e7, leaving Vmax = 39.6km / s, r_max = 8
 """
 
 # ╔═╡ 60eba328-c047-4b59-8b8c-8b24a4884541
-import CairoMakie: save
+
 
 # ╔═╡ 21619de9-8960-46fe-8a0c-808776b33c6d
 import StatsBase: quantile, median
@@ -105,12 +110,10 @@ begin
 	M_L_star_err = obs_props["M_L_s_err"]
 	MV = obs_props["Mv"]
 	MV_err = obs_props["Mv_err"]
-	# M_s_0 = 2.56e5 # crater ii
-	# M_s_0 = 2.39e-3 # fornax
 end
 
 # ╔═╡ 667937b2-006f-4429-b134-91934adb53c8
-stellar_profile = LilGuys.Exp2D(R_s=0.13) # best fit to present day
+stellar_profile = LilGuys.Exp2D(R_s=0.10) # best fit to present day
 
 # ╔═╡ bdd43353-da4c-48fb-bb67-b2aec628dd71
 md"""
@@ -508,19 +511,31 @@ md"""
 """
 
 # ╔═╡ 76003206-050b-4913-9ab3-d4c0c2dd05f8
-figdir = "./figures/"
+
 
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = OrderedDict(
+	:heavy => NFW(v_circ_max = 37 / V2KMS, r_circ_max = 5.0),
+	:heavier => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.0),
+	:compact => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 2),
+	:both => NFW(v_circ_max = 38 / V2KMS, r_circ_max = 4.0),
 	:mean => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 5.0),
-	:heavy => NFW(v_circ_max = 32 / V2KMS, r_circ_max = 5.0),
-	:heavier => NFW(v_circ_max = 37 / V2KMS, r_circ_max = 5.0),
-	:compact => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 3.3)
 )
+
+# ╔═╡ f9d622f3-688c-4592-bdd6-25ea6e3b6665
+stellar_profile
 
 # ╔═╡ 3a4ae3e1-4b7c-492c-b9da-eda05bcbfa35
 for (label, halo) in halos_ex
 	println(label, "\t", calc_σv_star_mean(halo) * V2KMS)
+end
+
+# ╔═╡ d08cbd1a-7635-4679-aa95-6b17f34970ba
+r_h = LilGuys.calc_r_h(stellar_profile)
+
+# ╔═╡ 9d6d098b-c645-4f7c-987d-75744eb97714
+for (label, halo) in halos_ex
+	println(label, "\t", sqrt.(LilGuys.calc_M(halo, r_h) / LilGuys.calc_M(first(values(halos_ex)), r_h)))
 end
 
 # ╔═╡ 19a05251-f257-4846-a04e-9f292dc8e6a2
@@ -611,6 +626,50 @@ let
 	
 	axislegend(position=:lt, title="halo")
 
+	fig
+end
+
+# ╔═╡ 6cc2372a-208b-4839-b5c6-6f625fcc483c
+let
+	fig, ax = FigAxis(
+		ylabel=L"$\log\,v_\textrm{circ, max}$ / km\,s$^{-1}$",
+		xlabel=L"$\log\,r_\textrm{circ, max}$ / kpc",
+		limits=(0.2, 1.5, 1.2, 1.9)
+	)
+
+	
+	v = log10.(Vc_mean * V2KMS)
+	lines!(log10.(Rc_mean), v, color=:grey, label="Ludlow+16")
+	
+	xl = log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, 0.1))
+	xh =  log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, -0.1))
+	x = [xl; reverse(xh)]
+	y = [v; reverse(v)]
+	poly!(x, y, color=(:grey, 0.2))
+
+	hspan!(log10(Vc_best) - lMs_to_lVc_err, log10(Vc_best)+ lMs_to_lVc_err, color=(COLORS[2], 0.1))
+	hlines!(log10(Vc_best), color=(COLORS[2], 0.5), label="Fattahi+18")
+
+
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max )
+	z = samples.σv
+
+	σ_thresh = 10.5
+
+	#c = contour!(k, linewidth=6)
+	filt = z .>= σ_thresh
+	h = scatter!(x[filt], y[filt], color=z[filt], colorrange=extrema(z[filt]), markersize=5)
+
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max)
+	k = kde([x y])
+
+	contour!(k)
+
+	axislegend(position=:lt, title="halo")
+
+	Colorbar(fig[1,2], h, label="sigma v / kms")
 	fig
 end
 
@@ -737,6 +796,32 @@ LilGuys.calc_R200(halo_in)
 # ╔═╡ 84892a5a-f816-450b-9757-e4135a40aebc
 LilGuys.calc_v_circ_max(halo_in) * V2KMS
 
+# ╔═╡ 5495cf6e-c11e-473e-9e33-69cae8edc652
+md"""
+# Comparing halos
+"""
+
+# ╔═╡ 7799e88c-7f17-41d0-b0f3-a10e409f381f
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = L"$\log\ r$ / kpc",
+		ylabel = L"$\log\ v_\textrm{circ}$ / km\,$s^{-1}$",
+	)
+
+	x = LinRange(-2, 2, 1000)
+	r = 10 .^ x
+	for (label, halo) in halos_ex
+
+		y = @. log10(calc_v_circ(halo, r) * V2KMS)
+
+		lines!(x, y, label = string(label))
+	end
+
+	axislegend(position=:rb)
+	fig
+end
+
 # ╔═╡ cb42028b-eeb0-48a7-b23d-5abe792eb4f0
 md"""
 # calculating H
@@ -792,6 +877,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╟─33f433ec-e94e-41fd-a808-6254bf4d34ce
 # ╟─45ac95e4-a9a1-4f8f-9523-8f670f076ae5
 # ╠═2c90aad4-87e7-11ee-2fbd-05f67c7e0343
+# ╠═bd0aa611-4e8e-4e43-b1a2-51e410f3d848
 # ╠═60eba328-c047-4b59-8b8c-8b24a4884541
 # ╠═f4269d1a-940d-41da-9183-5130978f7d7b
 # ╠═ef991557-7bf7-4add-b29f-f16187297e46
@@ -863,7 +949,10 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═d6e23609-87f7-466c-b865-0aa1da1ecb9d
 # ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
 # ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
+# ╠═f9d622f3-688c-4592-bdd6-25ea6e3b6665
 # ╠═3a4ae3e1-4b7c-492c-b9da-eda05bcbfa35
+# ╠═d08cbd1a-7635-4679-aa95-6b17f34970ba
+# ╠═9d6d098b-c645-4f7c-987d-75744eb97714
 # ╠═19a05251-f257-4846-a04e-9f292dc8e6a2
 # ╠═9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
 # ╠═8a06c0ad-2b48-48ba-a542-85926e164712
@@ -880,6 +969,7 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═db89cc22-f770-4f10-b3c0-3bc3298fb6a3
 # ╠═21acda7b-a116-4bc1-af7d-e715e2b32b86
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
+# ╠═6cc2372a-208b-4839-b5c6-6f625fcc483c
 # ╠═8f5a2253-18da-49c6-b1ee-94e9e7ababb2
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═41283b0b-6563-4b2b-b978-4e65f32c8240
@@ -892,6 +982,8 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═ecda5f20-27cd-41a8-8545-9f3a6b91a80e
 # ╠═ab5bc36d-d203-45be-8e7d-d8c5c9473388
 # ╠═84892a5a-f816-450b-9757-e4135a40aebc
+# ╠═5495cf6e-c11e-473e-9e33-69cae8edc652
+# ╠═7799e88c-7f17-41d0-b0f3-a10e409f381f
 # ╟─cb42028b-eeb0-48a7-b23d-5abe792eb4f0
 # ╠═e582e62c-d851-4dd0-95d4-82fd1d97c26c
 # ╠═c3e1326c-772b-4d8c-aabe-a997b77bede4

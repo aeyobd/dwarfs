@@ -24,7 +24,7 @@ position_angle_err = 80
 position_angle_ref = "J+24"
 
 
-rh = 1.02
-rh_err = 0.18
-rh_ref = "J24"
+r_h = 1.02
+r_h_err = 0.18
+r_h_ref = "J24"
 

@@ -5,6 +5,7 @@ using ArgParse
 using LilGuys
 
 agama = pyimport("agama")
+SCRIPT_VERSION = "v0.1.1"
 
 
 function get_args()
@@ -61,23 +62,28 @@ end
 
 
 function main()
+    @info "$(@__FILE__) version $SCRIPT_VERSION"
+    @info "LilGuys version $(pkgversion(LilGuys))"
+
     args = get_args()
 
     if isfile(args["output"])
         throw(ArgumentError("Output file already exists"))
     end
 
+    @info "args = $args"
+
     cutoff = args["cutoff"]
     N = args["number"]
 
-    scaleRadius = 1
-    mass = 1
-    rho0 = mass / (4π * scaleRadius^3) 
+    r_s = 1
+    M_s = 1
+    rho_s = M_s / (4π * r_s^3) 
 
 
-    pot = agama.Potential(type="Spheroid", densityNorm=rho0,
-        gamma=1, beta=3, alpha=1, scaleRadius=scaleRadius,
-        outerCutoffRadius = cutoff*scaleRadius,
+    pot = agama.Potential(type="Spheroid", densityNorm=rho_s,
+        gamma=1, beta=3, alpha=1, scaleRadius=r_s,
+        outerCutoffRadius = cutoff*r_s,
         cutoffStrength=1)
 
     df = agama.DistributionFunction(type="QuasiSpherical", potential=pot,
@@ -93,10 +99,20 @@ function main()
     vel = posvel[4:6, :]
     mass = pyconvert(Float64, mass[1])
 
-
     snap = Snapshot(pos, vel, mass) 
-
     LilGuys.save(args["output"], snap)
+
+    halo_kwargs = Dict(
+       "profile.TruncNFW" => Dict("trunc" => cutoff, "M_s"=>M_s, "r_s"=>r_s)
+       "beta0" => args["beta"],
+       "r_a_om" => args["r-a"],
+      )
+
+    tomlfilename = splitext(args["output"])[1] * ".toml"
+
+    open(tomlfilename, "w") do f
+        TOML.print(f, halo_kwargs)
+    end
 end
 
 

@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
 begin 
@@ -18,6 +30,9 @@ begin
 	using Arya
 end
 
+
+# ╔═╡ ebd5dd3e-dbca-496f-a399-2349b9818efd
+using PlutoUI
 
 # ╔═╡ d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 using Statistics, Distributions
@@ -35,19 +50,56 @@ md"""
 The most important variable is to set the modelname to the appropriate directory.
 """
 
-# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-modelname = "EP20"
-
-# ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
-fig_dir = "./$modelname/figures"
-
-# ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
-p_value = 0.001349898031630093 # 3sigma
-
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
 ## Setup
 """
+
+# ╔═╡ 91731be5-a427-410b-a9db-fa627c30f29b
+import Distributions: Normal, cdf
+
+# ╔═╡ 1f0358e4-7b66-4d42-9bfa-9f5609e624a0
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 288a50dc-a640-49a7-8ccf-d201ef803364
+@bind inputs confirm(notebook_inputs(;
+	modelname = TextField(default=""),
+	sigma = NumberField(0:0.1:5, default=3),
+))
+
+# ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
+p_value = cdf(Normal(), -inputs.sigma)
+
+# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
+if inputs.modelname ∈ readdir(".")
+	modelname = inputs.modelname
+else
+	error("Model does not exist $(inputs.modelname)")
+	println(readdir("."))
+end
+
+# ╔═╡ d316cd07-ca0d-49d0-ad01-6472b5eea75b
+begin
+	using LilGuys
+	FIGDIR = "./$modelname/figures"
+	FIGSUFFIX = "..analyze"
+end
 
 # ╔═╡ 3b83205d-91c1-481e-9305-0d59bc692135
 coord_labels = Dict(
@@ -79,11 +131,21 @@ module SampleSetup
 	include(joinpath(modelname, "simulation/sample.jl"))
 end
 
+# ╔═╡ a2ff48e8-f83a-44a7-8e07-0e08fcc79eaf
+obs_props = SampleSetup.obs_props
+
 # ╔═╡ fa790a4d-e74f-479b-8ff6-aa2f23cb573d
-obs = SampleSetup.obs
+obs = lguys.ICRS(SampleSetup.obs_props)
 
 # ╔═╡ eff58c52-a32b-4faa-9b98-c8234d9b21fc
-err = SampleSetup.err
+err = ICRS(
+	ra = obs_props["ra_err"],
+	dec = obs_props["dec_err"],
+	distance = obs_props["distance_modulus_ep"] * obs_props["distance"] / 5 * log(10),
+	pmra = obs_props["pmra_err"],
+	pmdec = obs_props["pmdec_err"],
+	radial_velocity = obs_props["radial_velocity_err"],
+)
 
 # ╔═╡ 88536e86-cf2a-4dff-ae64-514821957d40
 md"""
@@ -351,7 +413,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
@@ -363,7 +425,7 @@ let
 	    y = peris
 
 		
-	    p = scatter(x, y, alpha=0.1, 
+	    p = scatter(x, y, alpha=0.1, rasterize=true, 
 			axis=(; xlabel=String(sym), ylabel="apocentre / kpc")
 		)
 	    @info p 
@@ -418,7 +480,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "t_last_peri.pdf"), fig)
+	@savefig "t_last_peri"
 	fig
 end
 
@@ -466,16 +528,16 @@ let
 		x_mod = LinRange(minimum(x), maximum(x), 1000)
 
 		mu_exp = getproperty(obs, sym)
-		err_exp = getproperty(err, sym)
-		y_mod = normal_dist.(x_mod, mu_exp, err_exp)
-		lines!(x_mod, y_mod, label="expected gaussian")
+		#err_exp = getproperty(err, sym)
+		# y_mod = normal_dist.(x_mod, mu_exp, err_exp)
+		# lines!(x_mod, y_mod, label="expected gaussian")
 			
 		axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
 	end
 
 	
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
@@ -751,17 +813,22 @@ end
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
-# ╠═6ca3fe17-3f13-43fe-967b-881078135ead
-# ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
+# ╟─288a50dc-a640-49a7-8ccf-d201ef803364
 # ╠═b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
+# ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
+# ╠═ebd5dd3e-dbca-496f-a399-2349b9818efd
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═d316cd07-ca0d-49d0-ad01-6472b5eea75b
+# ╠═91731be5-a427-410b-a9db-fa627c30f29b
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
+# ╠═1f0358e4-7b66-4d42-9bfa-9f5609e624a0
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
 # ╟─8f70add4-effe-437d-a10a-4e15228f9fec
 # ╠═b15fb3ac-2219-419a-854a-31a783acf891
 # ╠═9583b7d0-0d86-4346-998b-000ea68e94b6
+# ╠═a2ff48e8-f83a-44a7-8e07-0e08fcc79eaf
 # ╠═fa790a4d-e74f-479b-8ff6-aa2f23cb573d
 # ╠═eff58c52-a32b-4faa-9b98-c8234d9b21fc
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
@@ -800,7 +867,7 @@ end
 # ╟─69e77193-29cc-4304-98a1-44828eaedf9f
 # ╟─89b81ed0-82a1-4a81-a7fd-b6be0644a79d
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
-# ╟─6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
+# ╠═6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
 # ╟─ac81acd8-4a78-4230-bc70-3b78a861b618
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1

@@ -1,4 +1,7 @@
-[TruncNFW]
+beta0 = 0
+r_a_om = 0
+
+[profile.TruncNFW]
 r_s=1
 M_s=1
 trunc=100

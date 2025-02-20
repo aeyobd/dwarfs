@@ -30,9 +30,9 @@ position_angle_err = 1
 position_angle_ref = "munoz+2018"
 
 
-rh = 12.33
-rh_err = 0.05
-rh_ref = "MV2020"
+r_h = 12.33
+r_h_err = 0.05
+r_h_ref = "MV2020"
 
 Mv = -10.82
 Mv_err = 0.14

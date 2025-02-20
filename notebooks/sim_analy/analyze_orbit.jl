@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 061b1886-1878-11ef-3806-b91643300982
 begin 
 	using Pkg; Pkg.activate()
@@ -14,6 +26,9 @@ begin
 
 	using Arya
 end
+
+# ╔═╡ 6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
+using PlutoUI
 
 # ╔═╡ 2c702eb7-ebb6-44c9-8e01-ca52d011c014
 using HDF5
@@ -30,55 +45,77 @@ This notebook only uses the centres of the orbit, but then calculates useful qua
 
 """
 
+# ╔═╡ 27577252-53dc-415c-b9a1-82155ef9e4ca
+md"""
+# Setup
+"""
+
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
 import TOML
 
 # ╔═╡ 7bf1a839-b24e-4478-bdd3-200989779f68
 save = Makie.save
 
+# ╔═╡ 7834415a-b479-495b-998a-1d12f42f0dc6
+Slider = PlutoUI.Slider
+
 # ╔═╡ 643cd0bf-77b3-4201-9ff7-09dd5aee277c
 md"""
 # inputs
 """
 
+# ╔═╡ 0e2e7f93-09d1-4902-ad24-223df50d37cb
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ d94663e8-b30e-4712-8a3e-6ef7f954f141
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="ursa_minor"),
+	haloname = TextField(default="1e6_v37_r5.0"),
+	orbitname = TextField(default="orbit_"),
+	t_min = NumberField(-10:0.1:10),
+))
+
 # ╔═╡ 3953b76f-a726-4211-a6b8-5cf38149dcdf
-galaxyname = "ursa_minor"
+galaxyname = inputs.galaxyname
 
-# ╔═╡ b82b6e1f-3b62-4c2c-8795-689e33141dd6
-haloname = "1e6_v37_r5.0"
-
-# ╔═╡ bc6deac8-b70a-483b-9fd7-1413c6f17aa7
-mc_name = ""
-
-# ╔═╡ beec0858-5304-45b8-ba9a-233fee954e98
-mc_orbit = "orbit_mean"
+# ╔═╡ 24ed3bc1-37c6-4601-b941-0780c53a9630
+haloname = inputs.haloname
 
 # ╔═╡ 079afa70-c7dc-4347-9ae3-8459ba2fa941
-#orbitname = "$(mc_name)_$(mc_orbit)"
-orbitname = "orbit_mean.2"
+orbitname =  inputs.orbitname
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
-t_min = -0.5
+t_min = inputs.t_min
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
 ##### the below should hopefully be always the same
 """
 
+# ╔═╡ bc6deac8-b70a-483b-9fd7-1413c6f17aa7
+mc_name = ""
+
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
 modelname = "$galaxyname/$haloname/$orbitname"
 
 # ╔═╡ ac2c7484-9acd-4fda-9699-fdf17da507c2
 parentdir = ENV["DWARFS_ROOT"]
-
-# ╔═╡ e0741bfc-f15f-4dd2-be38-62832d8185af
-ic_file = joinpath(parentdir, "analysis", galaxyname, "mc_orbits", "$(mc_name)special_cases/simulation/initial_conditions.toml")
-
-# ╔═╡ 941b90d6-54f4-49a9-8c8f-ffe54215f536
-orbits_ic = TOML.parsefile(ic_file)["orbits"]
-
-# ╔═╡ a2fbb942-6e29-4e23-87cf-91532f8d225c
-ic = only(orbits_ic[[o["name"] == mc_orbit for o in orbits_ic]])
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
 properties_file =  "$parentdir/observations/$galaxyname/observed_properties.toml"
@@ -97,8 +134,8 @@ skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
 
 # ╔═╡ 4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
 begin 
-	figdir = joinpath(parentdir, "analysis", modelname, "figures")
-	mkpath(figdir)
+	FIGDIR = joinpath(parentdir, "analysis", modelname, "figures")
+	mkpath(FIGDIR)
 end
 
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
@@ -116,7 +153,7 @@ begin
 		end
 	end
 
-	rh = obs_today["rh"] # arcminutes
+	rh = obs_today["r_h"] # arcminutes
 
 	obs_today["ra_err"] = rh / 60 
 	obs_today["dec_err"] = rh / 60
@@ -162,9 +199,9 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
 	r = calc_r(x_cen)
-	lines!(t * T2GYR, r, label="model")
+	lines!(t * T2GYR, r, label="n-body")
 	lines!(T2GYR*(orbit_expected.t), calc_r(x_cen_exp),
-		label="expected"
+		label="point particle"
 	)
 
 	axislegend(ax)
@@ -631,20 +668,21 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
+# ╠═d94663e8-b30e-4712-8a3e-6ef7f954f141
+# ╟─27577252-53dc-415c-b9a1-82155ef9e4ca
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
 # ╠═7bf1a839-b24e-4478-bdd3-200989779f68
+# ╠═6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
+# ╠═7834415a-b479-495b-998a-1d12f42f0dc6
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
+# ╠═0e2e7f93-09d1-4902-ad24-223df50d37cb
 # ╠═3953b76f-a726-4211-a6b8-5cf38149dcdf
-# ╠═b82b6e1f-3b62-4c2c-8795-689e33141dd6
-# ╠═bc6deac8-b70a-483b-9fd7-1413c6f17aa7
-# ╠═beec0858-5304-45b8-ba9a-233fee954e98
+# ╠═24ed3bc1-37c6-4601-b941-0780c53a9630
 # ╠═079afa70-c7dc-4347-9ae3-8459ba2fa941
 # ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
-# ╠═e0741bfc-f15f-4dd2-be38-62832d8185af
 # ╟─dd56b7ec-be11-447f-acc1-12750d82879b
-# ╠═941b90d6-54f4-49a9-8c8f-ffe54215f536
-# ╠═a2fbb942-6e29-4e23-87cf-91532f8d225c
+# ╠═bc6deac8-b70a-483b-9fd7-1413c6f17aa7
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
 # ╠═d142b7bd-3002-4331-a725-577873c42f28
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2

@@ -31,16 +31,16 @@ A detailed analysis of the stars in sculptor
 import DensityEstimators as DE
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = "/arc7/home/dboyea/dwarfs/analysis/sculptor"
+models_dir = "/arc7/home/dboyea/dwarfs/analysis/ursa_minor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc/"
+model_dir = "$models_dir/1e6_v37_r5.0/orbit_mean.2/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.13/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.10/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = "/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml"
+obs_today_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 217527cb-7f25-4fd9-a4a8-78cb2c744c2b
 figdir = joinpath(dirname(starsfile), "figures")
@@ -185,6 +185,15 @@ sky_orbit[idx_f, :].pmra, sky_orbit[idx_f, :].pmdec
 
 # ╔═╡ a89adc86-67a0-453f-b382-96f721f74d39
 diff(sky_orbit.ra)[idx_f-1], diff(sky_orbit.dec)[idx_f-1]
+
+# ╔═╡ 93a266da-bbfa-4c83-9ed0-54a6283383f5
+sky_orbit.ra[idx_f], orbit_props["ra0"]
+
+# ╔═╡ 2fefefa3-ae22-4979-9cab-6d121306c739
+sky_orbit.dec[idx_f], orbit_props["dec0"]
+
+# ╔═╡ 37ef9662-e253-4d99-b26f-4141a58d738b
+lguys.mean(stars.ra, stars.weights .^ 3), lguys.mean(stars.dec, stars.weights .^ 3)
 
 # ╔═╡ 9419722f-9c65-45a7-b9c5-c666b22bf70e
 sind(orbit_props["theta0"] ), cosd(orbit_props["theta0"])
@@ -1186,6 +1195,9 @@ end
 # ╠═816b9db9-26c6-4ac8-9a46-82209d2cdc85
 # ╠═2c9e8ad0-bbff-4086-974e-89269868e324
 # ╠═a89adc86-67a0-453f-b382-96f721f74d39
+# ╠═93a266da-bbfa-4c83-9ed0-54a6283383f5
+# ╠═2fefefa3-ae22-4979-9cab-6d121306c739
+# ╠═37ef9662-e253-4d99-b26f-4141a58d738b
 # ╠═9419722f-9c65-45a7-b9c5-c666b22bf70e
 # ╟─12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
 # ╠═8dd15727-d9b0-47b2-a031-d7765ebd3fba

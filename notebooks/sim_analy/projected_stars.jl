@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 340ffbbe-17bd-11ef-35c6-63505bb128b7
 begin 
 	using Pkg; Pkg.activate()
@@ -15,8 +27,8 @@ begin
 	using Arya
 end
 
-# ╔═╡ d401ec4b-048e-4aae-85a8-f7f0d8e44a79
-using LilGuys
+# ╔═╡ acbb16c7-07ff-4793-b9b0-173678c93e2e
+using PlutoUI
 
 # ╔═╡ 33a75908-3d98-4006-a8ef-833d9a161b01
 using KernelDensity
@@ -26,41 +38,68 @@ md"""
 Makes some basic plots of a projected stellar file
 """
 
+# ╔═╡ 1de340a6-da4e-47a6-b499-ced8c469a70d
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="ursa_minor"),
+	modelname = TextField(default="1e6_v37_r5.0/orbit"),
+	starsname = TextField(default="exp2d_rs0.13"),
+))
+
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
 import DensityEstimators
 
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
 
-# ╔═╡ b3a16249-b8d9-4a6b-9294-cd654a17dc17
-md"""
-# Inputs
-"""
-
-# ╔═╡ cb6a58a6-9ba9-44b5-95a6-062965c13259
-models_dir = ENV["DWARFS_ROOT"] * "/analysis/"
+# ╔═╡ b80bb3ad-966a-4a9b-9ec5-6e6fab872a66
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
-#model_dir = models_dir * "sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc/"
-model_dir = models_dir * "ursa_minor/1e6_v37_r5.0/orbit_mean.2/"
+model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.galaxyname, inputs.modelname)
 
 # ╔═╡ 29988108-b02c-418c-a720-5766f47c39ff
-starsname = "exp2d_rs0.10"
+starsname = inputs.starsname
+
+# ╔═╡ 8b149ffe-cbfc-4026-b08f-130eab7c7093
+starsdir = joinpath(dirname(model_dir), "stars", starsname)
 
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
-figdir = joinpath(dirname(model_dir),  "stars", starsname, "figures"); mkpath(figdir)
+FIGDIR = joinpath(starsdir, "figures")
+
+# ╔═╡ d401ec4b-048e-4aae-85a8-f7f0d8e44a79
+begin 
+	using LilGuys
+	FIGDIR
+	FIGSUFFIX = ".projected_stars"
+end
+
+# ╔═╡ dadf0dd2-f4cb-4657-837a-f99d5dcdfe93
+if isdir(starsdir) && .!isdir(FIGDIR)
+	mkdir(FIGDIR)
+end
 
 # ╔═╡ 44dec2f8-c149-461d-b586-56b73a97c0a2
-obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml"
+obs_today_filename = ENV["DWARFS_ROOT"] * "/observations/$(inputs.galaxyname)/observed_properties.toml"
 
 # ╔═╡ 396cd0a8-1d73-44dd-89db-3243fb9e8ac4
 md"""
 # File loading
-"""
-
-# ╔═╡ b9d43c14-8b04-4c38-a35c-4aa29ca59635
-md"""
-## Misc
 """
 
 # ╔═╡ 436a5be3-f597-4fc4-80a8-dc5af302ad66
@@ -68,6 +107,9 @@ orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
 stars = lguys.read_fits(joinpath(model_dir, "stars", starsname, "final.fits"))
+
+# ╔═╡ 1e3d61ea-16d0-4bbf-a19e-03e54f0f5a0f
+stars_i = lguys.read_fits(joinpath(model_dir, "stars", starsname, "initial.fits"))
 
 # ╔═╡ 2612e3a2-6e6e-494e-b140-720dd2db6ec2
 obs_today_file = TOML.parsefile(obs_today_filename)
@@ -678,7 +720,10 @@ md"""
 nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 
 # ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
-prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:central, r_centre=3, bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
+prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:none, r_centre=3, bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
+
+# ╔═╡ 0fb0dfd7-8536-4d8f-b368-d5ca3dc74783
+prof_i = lguys.StellarProfile(stars_i.r_ell, weights=stars_i.weights, normalization=:none, r_centre=3, bins=lguys.Interface.bins_both(stars_i.r_ell, nothing, bin_width=0.05, num_per_bin=1))
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
 prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/ursa_minor/density_profiles/fiducial_profile.toml")
@@ -686,43 +731,72 @@ prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/ursa_min
 # ╔═╡ b5fd1bcd-b554-48d3-8472-024cb0bd0792
 lguys.GalactocentricFrame().d
 
-# ╔═╡ db0d3377-0269-4308-830b-c6fc0da1f6f1
-dy_sigma = -0.60
+# ╔═╡ f433b4f0-3214-469f-909a-3cc66d693263
+function get_normalization(prof)
+	return -lguys.mean(prof.log_Sigma[1:5])
+end
 
 # ╔═╡ 901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel=L"\log r \ /\ \textrm{arcmin}",
-		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((-1, 2.5), (-6, 2))
+		xlabel=L"\log\ r \ /\ \textrm{arcmin}",
+		ylabel = L"\log\ \Sigma\ /\ \textrm{fraction\ arcmin^{-2}}",
+		limits=((nothing, 2.5), (-6, nothing))
 	)
 
-	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ dy_sigma,
+	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ get_normalization(prof_expected),
 		yerr=prof_expected.log_Sigma_err,
 		label="J+24",
 		color=:black
 	)
 
 
-	scatterlines!(prof.log_r, prof.log_Sigma, 
-			label="model")
+	dy = get_normalization(prof)
+	
+	lines!(prof_i.log_r, prof_i.log_Sigma .+ dy, 
+			label="initial")
 
-	vlines!(log10(r_b_arcmin), color=:grey, label="break radius")
+	lines!(prof.log_r, prof.log_Sigma .+ dy, 
+			label="final")
+
+	vlines!(log10(r_b_arcmin), color=:grey, label="break radius", linestyle=:dot)
 
 	axislegend(position=:lb)
 	@savefig "density2d_vs_observations" fig
 	fig
 end
 
-# ╔═╡ f61a0f41-0b7f-4e62-acdb-f6e83361b84d
-figdir
+# ╔═╡ 35b870a6-7934-4729-ba92-ab62acc4139d
+let 
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel=L"\log r \ /\ \textrm{arcmin}",
+		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
+		limits=((nothing, 2.5), (-10, nothing))
+	)
 
-# ╔═╡ eb280539-f244-4cb9-83d5-e62ce37263c0
-isdefined(@__MODULE__, :figdir)
+	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ get_normalization(prof_expected),
+		yerr=prof_expected.log_Sigma_err,
+		label="J+24",
+		color=:black
+	)
 
-# ╔═╡ b3105414-466d-4c3c-bb6c-0569d6adc834
-figdir
+
+	dy = get_normalization(prof)
+	
+	lines!(prof_i.log_r, prof_i.log_Sigma .+ dy, 
+			label="initial")
+
+	lines!(prof.log_r, prof.log_Sigma .+ dy, 
+			label="final")
+
+	vlines!(log10(r_b_arcmin), color=:grey, label="break radius")
+
+	axislegend(position=:lb)
+	@savefig "density2d_vs_observations_nolim" fig
+	fig
+end
 
 # ╔═╡ c901bf9d-46bf-4cd7-af11-227d477663b4
 r_b_arcmin
@@ -757,23 +831,27 @@ end
 
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
+# ╟─1de340a6-da4e-47a6-b499-ced8c469a70d
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
-# ╟─b3a16249-b8d9-4a6b-9294-cd654a17dc17
-# ╠═cb6a58a6-9ba9-44b5-95a6-062965c13259
+# ╠═acbb16c7-07ff-4793-b9b0-173678c93e2e
+# ╠═33a75908-3d98-4006-a8ef-833d9a161b01
+# ╠═b80bb3ad-966a-4a9b-9ec5-6e6fab872a66
 # ╠═0a73bf88-3f46-4864-97f5-41705ea6913d
 # ╠═29988108-b02c-418c-a720-5766f47c39ff
+# ╠═8b149ffe-cbfc-4026-b08f-130eab7c7093
 # ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
+# ╠═dadf0dd2-f4cb-4657-837a-f99d5dcdfe93
 # ╠═44dec2f8-c149-461d-b586-56b73a97c0a2
 # ╟─396cd0a8-1d73-44dd-89db-3243fb9e8ac4
-# ╠═b9d43c14-8b04-4c38-a35c-4aa29ca59635
 # ╠═672bdffc-7d61-4727-82cf-c819ebf4aa99
 # ╠═9e1a868f-05a0-46d5-a554-7f59a762ec51
 # ╠═2d61ba92-d587-42bd-a1e3-1b03e1c6c884
 # ╠═436a5be3-f597-4fc4-80a8-dc5af302ad66
 # ╠═84dc77f7-14b3-4a2e-a556-c025d7df0095
+# ╠═1e3d61ea-16d0-4bbf-a19e-03e54f0f5a0f
 # ╠═2612e3a2-6e6e-494e-b140-720dd2db6ec2
 # ╠═240077b7-dc20-4cfa-9ada-d3aedcf36a75
 # ╠═9b5e75e7-171d-40e9-9148-718bb498c56d
@@ -786,7 +864,6 @@ end
 # ╠═e904f104-2d01-45f0-a6f1-2040131d8780
 # ╠═6ebfff07-c43f-4d4d-8604-9fd4f1de5d25
 # ╠═8ad01781-8b5d-4d57-a0b5-7a445fb09b5b
-# ╠═33a75908-3d98-4006-a8ef-833d9a161b01
 # ╠═9a5e143b-2295-4db9-a945-642fd6adeef0
 # ╠═7b4284a3-65bb-4338-ac9c-5ffd51ca8e80
 # ╠═edf68b42-4fe9-4e14-b7ed-739e89a1541a
@@ -823,13 +900,12 @@ end
 # ╟─a1578e05-dc0e-4ed3-b291-af59254e5eab
 # ╠═5fcd4b8c-7eb6-4d30-885d-25b857f1263c
 # ╠═a8688258-e818-4b7a-b238-5629d99413ed
+# ╠═0fb0dfd7-8536-4d8f-b368-d5ca3dc74783
 # ╠═1fde438a-ad46-4b60-bc9f-fddc533d9cdb
 # ╠═b5fd1bcd-b554-48d3-8472-024cb0bd0792
-# ╠═db0d3377-0269-4308-830b-c6fc0da1f6f1
+# ╠═f433b4f0-3214-469f-909a-3cc66d693263
 # ╠═901f5ba3-3dab-41ee-ba4b-50f2bf6ffeff
-# ╠═f61a0f41-0b7f-4e62-acdb-f6e83361b84d
-# ╠═eb280539-f244-4cb9-83d5-e62ce37263c0
-# ╠═b3105414-466d-4c3c-bb6c-0569d6adc834
+# ╠═35b870a6-7934-4729-ba92-ab62acc4139d
 # ╠═c901bf9d-46bf-4cd7-af11-227d477663b4
 # ╠═54912dae-b4d9-49b3-80ef-af6f277cd73b
 # ╠═b6dff4d6-a89b-4b46-858a-5d490c47eeb7
