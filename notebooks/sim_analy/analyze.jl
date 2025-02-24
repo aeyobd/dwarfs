@@ -32,7 +32,7 @@ Inputs
 
 # ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
 # model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v37_r5.0/orbit_smallperi.2"
+model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v38_r4.0/orbit_smallperi.4"
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -113,6 +113,9 @@ let
 
 	fig
 end
+
+# ╔═╡ ef2274ba-0220-49f5-8478-d5eac824c3ee
+
 
 # ╔═╡ e14fa4a1-6175-4b9f-ad01-525c1617fe63
 md"""
@@ -445,6 +448,7 @@ end
 # ╠═2470e05f-9215-45e4-88fc-daab0638272f
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
 # ╟─0fa11815-3ab0-4b19-9be7-186b7c2c1063
+# ╠═ef2274ba-0220-49f5-8478-d5eac824c3ee
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
 # ╠═e6fc3297-c1b7-40a4-b2bb-98490a42604a
 # ╠═d57501a1-4764-4b23-962f-2d37547d7bcc

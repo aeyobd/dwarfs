@@ -118,7 +118,10 @@ modelname = "$galaxyname/$haloname/$orbitname"
 parentdir = ENV["DWARFS_ROOT"]
 
 # ╔═╡ d142b7bd-3002-4331-a725-577873c42f28
-properties_file =  "$parentdir/observations/$galaxyname/observed_properties.toml"
+properties_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.toml")
+
+# ╔═╡ 61d788ec-3518-4e3a-8eef-59c86ae5fc1a
+obs_file =  "$parentdir/observations/$galaxyname/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
 orbit_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
@@ -135,7 +138,7 @@ skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
 # ╔═╡ 4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
 begin 
 	FIGDIR = joinpath(parentdir, "analysis", modelname, "figures")
-	mkpath(FIGDIR)
+	mkdir(FIGDIR)
 end
 
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
@@ -153,7 +156,7 @@ begin
 		end
 	end
 
-	rh = obs_today["r_h"] # arcminutes
+	rh = TOML.parsefile(obs_file)["r_h"]
 
 	obs_today["ra_err"] = rh / 60 
 	obs_today["dec_err"] = rh / 60
@@ -360,6 +363,9 @@ begin
 	t_last_peri = t[peri_filt[t_last_peri_arg]] * T2GYR
 	delta_t_peri = t[idx_f] * T2GYR - t_last_peri
 end
+
+# ╔═╡ f64dcd49-b0ca-4319-b615-5520b23d7818
+lcm
 
 # ╔═╡ 04d29fcb-70a0-414b-a487-7a18c44b9d58
 let
@@ -685,6 +691,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═bc6deac8-b70a-483b-9fd7-1413c6f17aa7
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
 # ╠═d142b7bd-3002-4331-a725-577873c42f28
+# ╠═61d788ec-3518-4e3a-8eef-59c86ae5fc1a
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2
 # ╠═0dd476fd-be53-4e9b-a686-a4462485c64c
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
@@ -729,6 +736,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═d81c1455-728a-4023-ad65-e3cce37a69f9
 # ╠═a5ce5442-73ca-4aaf-915a-72fe9936e791
 # ╠═7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
+# ╠═f64dcd49-b0ca-4319-b615-5520b23d7818
 # ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff

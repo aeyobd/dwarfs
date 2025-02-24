@@ -154,7 +154,7 @@ md"""
 obs_props_file = modeldir * "simulation/orbit.toml"
 
 # ╔═╡ eee089cf-fa34-454d-afc6-b195cbb80ed9
-r_h = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))["rh"] / 60
+r_h = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))["r_h"] / 60
 
 # ╔═╡ 5906da72-48ce-44f6-b4d7-2738c2df64b5
 icrs = LilGuys.coord_from_file(obs_props_file)
@@ -381,6 +381,9 @@ end
 # ╔═╡ 2ceeecba-d375-4de9-86c4-a7278c3d016f
 Number
 
+# ╔═╡ 25fb2bfa-609c-467c-83ae-4c8e7a4c29af
+
+
 # ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
 dθ_suggested = [ang_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
 
@@ -389,9 +392,9 @@ dθ_suggested = [ang_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
 	Jr = NumberField(-1:0.01:1, default=dJ_suggested[1]),
 	Jz = NumberField(-1:0.01:1, default=dJ_suggested[2]),
 	Jϕ = NumberField(-1:0.01:1, default=dJ_suggested[3]),
-	Θr = NumberField(-π:0.01:π, default=dθ_suggested[1]),
-	Θz = NumberField(-π:0.01:π, default=dθ_suggested[2]),
-	Θϕ = NumberField(-π:0.01:π, default=dθ_suggested[3]),
+	Θr = NumberField(-3.15:0.01:3.15, default=dθ_suggested[1]),
+	Θz = NumberField(-3.15:0.01:3.15, default=dθ_suggested[2]),
+	Θϕ = NumberField(-3.15:0.01:3.15, default=dθ_suggested[3]),
 ))
 
 # ╔═╡ 9da81ee9-5638-48dc-949e-603874b3f627
@@ -597,7 +600,7 @@ let write_ic
 	@info "writing  to $modeldir/next_orbit..."
 	
 	CSV.write("$modeldir/next_orbit.csv", df_new)
-	open("$modeldir/next_orbit_shifts.toml", "w") do f
+	open("$modeldir/next_orbit.toml", "w") do f
 		d = OrderedDict(
 			"lastmodel" => orbitname,
 			"dJ" => dJ,
@@ -624,9 +627,6 @@ let write_ic
 		d
 	end
 end
-
-# ╔═╡ 6946c00b-2f1d-4d97-8434-ca93cc6cf1c9
-obs_props
 
 # ╔═╡ 96ef21f4-1915-46ed-9c82-94b3bba456ac
 L_obs = LilGuys.calc_L_spec(LilGuys.position_of(gc), LilGuys.velocity_of(gc) / V2KMS)
@@ -752,6 +752,7 @@ end
 # ╠═0fef057f-2f68-447d-9926-8704536cc7e5
 # ╠═2ceeecba-d375-4de9-86c4-a7278c3d016f
 # ╠═ae8f7bbd-46ee-4fcb-900a-557e5bb11088
+# ╠═25fb2bfa-609c-467c-83ae-4c8e7a4c29af
 # ╠═571ae542-406c-4e62-9b8f-af34e777748f
 # ╠═706a0753-018a-48f7-8c77-23af747141fd
 # ╠═e7aba352-84a1-417c-b25b-7d0503030e6a
@@ -766,6 +767,5 @@ end
 # ╠═e13b1c88-75c4-498a-87c5-6d11c88fa569
 # ╠═0aea9fe2-65ef-42f3-bf58-fa3b81dbba8f
 # ╠═4fda883d-7173-49c0-a56e-6572ebc80ba4
-# ╠═6946c00b-2f1d-4d97-8434-ca93cc6cf1c9
 # ╠═96ef21f4-1915-46ed-9c82-94b3bba456ac
 # ╠═18b29878-b8e3-44e5-8843-ccde9c6bb273
