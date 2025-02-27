@@ -71,7 +71,7 @@ end
 # ╔═╡ ab06c999-3ff6-4580-a979-f0ddeb466569
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	modelname = TextField(default="1e6_v37_r5.0/orbit"),
+	modelname = TextField(60, default="1e6_v37_r5.0/orbit"),
 	starsname = TextField(default="exp2d_rs0.13"),
 ))
 
@@ -828,7 +828,7 @@ end
 
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
-# ╠═ab06c999-3ff6-4580-a979-f0ddeb466569
+# ╟─ab06c999-3ff6-4580-a979-f0ddeb466569
 # ╟─30ba4458-f21b-4777-987c-e65ecfd34258
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e

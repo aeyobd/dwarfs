@@ -24,58 +24,6 @@ V_T2GYR = 0.97779
 
 F = Float64
 
-"""
-Represents an orbit.
-"""
-Base.@kwdef struct Orbit
-    time::Vector{F}
-    position::Matrix{F}
-    velocity::Matrix{F}
-    acceleration::Union{Matrix{F}, Nothing} = nothing
-    del_a::Union{Matrix{F}, Nothing} = nothing
-    pericenter::F = minimum(calc_r(position))
-    apocenter::F = maximum(calc_r(position))
-end
-
-
-function (-)(a::Orbit, b::Orbit)
-    @assert isapprox(a.time, b.time, rtol=1e-6)
-
-    return Orbit(time=a.time, position=a.position - b.position, velocity=a.velocity - b.velocity)
-end
-
-
-function reverse(a::Orbit)
-    return Orbit(time=reverse(a.time), position=reverse(a.position, dims=2), velocity=reverse(a.velocity, dims=2))
-end
-
-function resample(a::Orbit, time::AbstractVector)
-    if a.time[2] < a.time[1]
-        a = reverse(a)
-    end
-    x = LilGuys.lerp(a.time, a.position[1, :]).(time)
-    y = LilGuys.lerp(a.time, a.position[2, :]).(time)
-    z = LilGuys.lerp(a.time, a.position[3, :]).(time)
-    v_x = LilGuys.lerp(a.time, a.velocity[1, :]).(time)
-    v_y = LilGuys.lerp(a.time, a.velocity[2, :]).(time)
-    v_z = LilGuys.lerp(a.time, a.velocity[3, :]).(time)
-
-    return Orbit(time=time, position=[x y z]', velocity=[v_x v_y v_z]')
-end
-
-
-function to_frame(a::Orbit)
-    df = DataFrame(
-        time = a.time,
-        x = a.position[1, :],
-        y = a.position[2, :],
-        z = a.position[3, :],
-        v_x = a.velocity[1, :],
-        v_y = a.velocity[2, :],
-        v_z = a.velocity[3, :]
-    )
-end
-
 function load_agama_potential(filename)
     return agama.Potential(joinpath(potential_dir, filename))
 end
@@ -128,17 +76,17 @@ end
 function from_agama_orbit(time, posvel; units=:code)
     posvel = pyconvert(Matrix{Float64}, posvel)'
 
-    position = posvel[1:3, :]
-    velocity = posvel[4:6, :]
+    positions = posvel[1:3, :]
+    velocities = posvel[4:6, :]
 
     if units == :physical
-        velocity = velocity ./ V2KMS
+        velocities = velocities ./ V2KMS
         time = time ./ T2GYR
     elseif units == :vasiliev
-        velocity = velocity ./ V2KMS
+        velocities = velocities ./ V2KMS
         time = time .* V_T2GYR ./ T2GYR
     end
-    return Orbit(time=time, position=position, velocity=velocity)
+    return Orbit(times=time, positions=positions, velocities=velocities)
 end
 
 function make_agama_init(coord::LilGuys.Galactocentric; units=:code)
@@ -351,7 +299,7 @@ function leap_frog(gc, acceleration;
     positions_matrix = hcat(positions...)
     velocities_matrix = hcat(velocities...)
     accelerations_matrix = hcat(accelerations...)
-    return Orbit(time=times, position=positions_matrix, velocity=velocities_matrix, acceleration=accelerations_matrix)
+    return Orbit(times=times, positions=positions_matrix, velocities=velocities_matrix, acceleration=accelerations_matrix)
 end
 
 

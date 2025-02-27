@@ -12,10 +12,14 @@ begin
 	using Arya
 end
 
+# ╔═╡ 51d52048-cd18-41ff-ac2b-41dfc097de16
+using DataFrames
+
+# ╔═╡ aae83e18-e739-4421-a763-37590cb7869a
+using PairPlots
+
 # ╔═╡ d0112dc0-8cc1-4fdf-b30d-a3b89660d9b4
 begin
-	import SciPy
-	using QuadGK
 	using Measurements
 
 	import LinearAlgebra: diag
@@ -64,7 +68,7 @@ begin
 end
 
 # ╔═╡ 30154472-316b-4489-b1e5-f503447928cb
-log(0.1)
+
 
 # ╔═╡ 8d90dd5c-350a-45e6-b04c-9b2f85cf700b
 function objective_function(x, u, analytic_profile, names)
@@ -102,7 +106,7 @@ function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 	chi2 = sum((res) .^ 2 .* w) ./ (length(w) - length(popt))
 
 
-	result = Dict()
+	result = OrderedDict()
 
 	names_all = ["log_r_s"; "log_Sigma"; names]
 
@@ -133,8 +137,9 @@ function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 	
 		result["Mtot"] = LilGuys.get_M_tot(h) * 10 .^ (result["log_Sigma"]  + 2result["log_r_s"])
 	end
-	
-	result["Mtot_err"] = result["Mtot"] * result["log_Sigma_err"] * log(10)
+
+	result["log_Mtot"] = log10.(result["Mtot"])
+	result["log_Mtot_err"] = result["log_Sigma_err"] .+ 2result["log_r_s_err"]
 	
 
 	return result
@@ -193,6 +198,195 @@ if !isdir(FIGDIR)
 	mkdir(FIGDIR)
 end
 
+# ╔═╡ 99315b4c-37c1-4287-bd71-c3339c8e76ad
+import FillArrays: I, Eye
+
+# ╔═╡ c3d9c4f3-6891-46e1-822e-5c217450f59b
+import LinearAlgebra: diagm, identity
+
+# ╔═╡ 1db8b0ed-233c-4006-a054-90abec2ab710
+LilGuys.Sersic(n=1, _b_n=1, R_h=5)
+
+# ╔═╡ 566f2f87-a840-416e-b71e-bcfbb747e39b
+function plot_chains(samples)
+	fig = Figure()
+
+	Nc = size(samples, 3)
+
+	labels = samples.info[:varname_to_symbol]
+
+	for (i, label) in enumerate(labels)
+		ax = Axis(fig[i, 1],
+			xlabel = "step",
+			ylabel = last(label) |> string
+		)
+		
+		for chain in 1:Nc
+			x = samples.value[:, i, chain]
+			lines!(x)
+		end
+
+		if i < length(labels)
+			hidexdecorations!(ax, ticks=false, grid=false, minorticks=false)
+		end
+	end
+
+	linkxaxes!(fig.content...)
+	fig
+end
+
+# ╔═╡ 3981b6f9-7ace-4de9-b72d-10168512689c
+function sample_model(turing_model, prof)
+	model = turing_model(prof.log_r, prof.log_Sigma, prof.log_Sigma_err)
+	
+	samples = mapreduce(c -> sample(model, NUTS(), MCMCThreads(), 1000, 4), chainscat, 1:4)
+
+	return samples
+end
+
+# ╔═╡ 4c2f7fd6-8dcc-49c2-8b8f-bfa31748e367
+
+
+# ╔═╡ 56af9242-91cc-46db-b532-c127450adfeb
+import Random: randperm
+
+# ╔═╡ 071356e5-53c4-462e-8448-7e5480dbfc0e
+function plot_samples!(df, log_Σ, argnames; x= LinRange(prof.log_r_bins[1], prof.log_r_bins[end], 1000), alpha=0.01,  kwargs...)
+	for row in eachrow(df)
+		kwargs_prof = Dict(argname => row[argname] for argname in argnames)
+		y = log_Σ(x; kwargs_prof...)
+
+		lines!(x, y, color=(:black, alpha); kwargs...)
+	end
+end
+
+# ╔═╡ 69b919f7-5985-4835-950a-ab7ad998d3fd
+function subsample(samples, N=300)
+	df = DataFrame(samples)
+	Ntot = size(df, 1)
+	if N > Ntot
+		@error "more draws requested than samples"
+	end
+
+	idx = randperm(Ntot)[1:N]
+	return df[idx, :]
+end
+
+# ╔═╡ e31c35b1-9b37-4c95-8344-6177b685d5ab
+function plot_samples_obs(samples, log_Σ, argnames)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label, 
+		ylabel = log_sigma_label,
+	)
+
+	
+	plot_samples!(samples, log_Σ, argnames)
+	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err, color=COLORS[2])
+
+	LilGuys.hide_grid!(ax)
+
+	median =
+	fig
+end
+
+# ╔═╡ 6cfaa5d7-988e-434b-82bc-ba88b2bc1d58
+
+
+# ╔═╡ 7115482e-0cc9-40ef-b63e-0ebad62bb949
+md"""
+# Fits
+"""
+
+# ╔═╡ a9e5aa14-6a11-436c-97ca-7afd5fd35478
+md"""
+## Sérsic
+"""
+
+# ╔═╡ a4d8323a-c668-452b-a958-17982177cac6
+function sersic_log_Σ(log_r; log_M_s, log_R_h, n)
+	r = 10 .^ log_r
+	prof = LilGuys.Sersic(n=n, R_h=10 .^ log_R_h, _b_n=LilGuys.guess_b_n(n))
+	Σ = LilGuys.calc_Σ.(prof, r)
+	y = @. log10(Σ)  .+ log_M_s
+
+	return y
+end
+
+# ╔═╡ 2a3adaf5-2a0d-4674-a160-a7844b7f1463
+@model function sersic_model(log_r, log_Σ, log_Σ_err)
+	n ~ Gamma(1)
+	log_R_h ~ Normal(0.0, 1.0)
+	log_M_s ~ Normal(4.0, 2.0)
+
+	log_σ ~ Normal(-1, 1)
+	
+	σ = 10 .^ log_σ
+	y_pred = sersic_log_Σ(log_r; log_M_s=log_M_s, log_R_h=log_R_h, n=n)
+	
+	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
+end
+
+# ╔═╡ d8642e10-4a42-4452-b655-111b349d51ee
+model = sersic_model(prof.log_r, prof.log_Sigma, prof.log_Sigma_err)
+
+# ╔═╡ dd327a8e-a83d-4423-b507-54033c7934c4
+samples_sersic = sample_model(sersic_model, prof)
+
+# ╔═╡ 8e38da2e-ab78-4d75-a2e1-962e8004ade5
+samples_sersic.info[:varname_to_symbol]
+
+# ╔═╡ 30a3d470-a187-4ec8-a8d4-e86c921f5da3
+median.(DataFrame(samples_sersic))
+
+# ╔═╡ 537cdd66-bec2-488a-967d-893bee2e95b9
+names(samples_sersic)
+
+# ╔═╡ 23c894b7-6739-4c6c-a830-6f83951351db
+df_summary = Turing.summarize(samples_sersic)
+
+# ╔═╡ efad6b83-73a5-4aea-944b-ddc1942ac71a
+plot_chains(samples_sersic)
+
+# ╔═╡ ebc0cbc2-d9f3-4cab-a3ee-6a21763f4d20
+pairplot(samples_sersic)
+
+# ╔═╡ 572083ca-534b-4830-ac54-f9d5c9083b53
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label, 
+		ylabel = log_sigma_label,
+	)
+
+
+	argnames = [:n, :log_M_s, :log_R_h]
+
+	df = subsample(samples_sersic)
+	plot_samples!(df, sersic_log_Σ, argnames)
+	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err, color=COLORS[2])
+
+	LilGuys.hide_grid!(ax)
+	hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+
+	ax_res = Axis(fig[2,1],
+		xlabel = log_r_label, 
+		ylabel = log_sigma_label,
+	)
+	y_preds = [sersic_log_Σ(prof.log_r, log_M_s=row.log_M_s, log_R_h = row.log_R_h, n=row.n) for row in eachrow(df)]
+
+	y_preds = hcat(y_preds...)
+	y_m = median.(eachrow(y_preds))
+	y_e = std.(eachrow(y_preds))
+
+
+	errscatter!(prof.log_r, prof.log_Sigma .- y_m, yerr=prof.log_Sigma_err, color=COLORS[2])
+	errscatter!(prof.log_r, zeros(length(y_m)), yerr=y_e, color=:black)
+	
+	rowsize!(fig.layout, 2, Relative(0.3))
+	fig
+end
+
 # ╔═╡ 6d7a1522-e61e-4440-a2ff-64e625b15906
 let 
 	global sersic_fit
@@ -209,8 +403,91 @@ let
 	fig
 end
 
-# ╔═╡ 93141f62-98e0-4c6b-b556-97f56f71d70c
+# ╔═╡ 5a54ce11-92b3-455d-a3b3-b147618585ae
+md"""
+## Exp2D
+"""
 
+# ╔═╡ cdc4390f-1efb-4550-b325-5c743890a5c6
+function exp2d_log_Σ(log_r; log_M, log_R_s)
+	r = 10 .^ log_r
+	prof = LilGuys.Exp2D(
+		R_s=10 .^ log_R_s, 
+		M = 10 .^ log_M
+	)
+	
+	Σ = LilGuys.calc_Σ.(prof, r)
+	y = @. log10(Σ)
+
+	return y
+end
+
+# ╔═╡ 7f367da6-4b49-4e74-9a93-d9fdf517b2bd
+@model function exp2d_model(log_r, log_Σ, log_Σ_err)
+	log_R_s ~ Normal(0.0, 1.0)
+	log_M ~ Normal(4.0, 2.0)
+
+	log_σ ~ Normal(-1, 1)
+	
+	σ = 10 .^ log_σ
+	y_pred = exp2d_log_Σ(log_r; log_M=log_M, log_R_s=log_R_s)
+	
+	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
+end
+
+# ╔═╡ faaae64f-ef85-44df-b62d-e6617d02c5b6
+# ╠═╡ disabled = true
+#=╠═╡
+samples_exp2d = sample_model(exp2d_model, prof)
+  ╠═╡ =#
+
+# ╔═╡ 900f0f00-ecff-426a-afa3-d7a20e00cd7d
+fit_profile(prof, LilGuys.Exp2D, [], [0.0, 0.0])
+
+# ╔═╡ 28600532-3a7e-491c-8113-e8253a8108c9
+#=╠═╡
+pairplot(samples_exp2d)
+  ╠═╡ =#
+
+# ╔═╡ bde4f544-7b5b-4224-9ce3-090fa7fe8311
+md"""
+## Plummer
+"""
+
+# ╔═╡ fbd8d5b6-3d48-4525-b99d-483c946cc6a3
+function log_Σ_plummer(log_r; log_M, log_R_s)
+	r = 10 .^ log_r
+	prof = LilGuys.Plummer(
+		r_s=10 .^ log_R_s, 
+		M = 10 .^ log_M
+	)
+	
+	Σ = LilGuys.calc_Σ.(prof, r)
+	y = @. log10(Σ)
+
+	return y
+end
+
+# ╔═╡ 81e50d1f-609b-46f5-b9e2-873dfeba1b45
+@model function model_plummer(log_r, log_Σ, log_Σ_err)
+	log_R_s ~ Normal(0.0, 1.0)
+	log_M ~ Normal(4.0, 2.0)
+
+	log_σ ~ Normal(-1, 1)
+	
+	σ = 10 .^ log_σ
+	y_pred = log_Σ_plummer(log_r; log_M=log_M, log_R_s=log_R_s)
+	
+	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
+end
+
+# ╔═╡ ad16e44b-4f56-4ff5-a85e-f619cbf0c24f
+samples_plummer= sample_model(model_plummer, prof)
+
+# ╔═╡ de7eb968-6616-491e-b258-d3f8be1134e8
+md"""
+# Old Fits
+"""
 
 # ╔═╡ 76326a80-b709-4f96-a379-8aaea4d3af44
 let 
@@ -314,6 +591,8 @@ end
 # ╠═1238d232-a2c0-44e5-936b-62fd9137d552
 # ╟─bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 # ╠═fa54e7aa-f477-45db-8dd9-56bd6b367604
+# ╠═51d52048-cd18-41ff-ac2b-41dfc097de16
+# ╠═aae83e18-e739-4421-a763-37590cb7869a
 # ╠═20b8c05c-91a6-4dc2-9558-1b02be4983f2
 # ╠═d0112dc0-8cc1-4fdf-b30d-a3b89660d9b4
 # ╠═20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
@@ -328,8 +607,42 @@ end
 # ╠═11b84ff0-7f35-4716-ae30-e05a1c5f88ba
 # ╠═3eb9992d-425d-4bec-94d2-da4f8dc59a8d
 # ╠═db8a3705-f4ea-4588-9885-0e03cd42c47b
+# ╠═99315b4c-37c1-4287-bd71-c3339c8e76ad
+# ╠═c3d9c4f3-6891-46e1-822e-5c217450f59b
+# ╠═1db8b0ed-233c-4006-a054-90abec2ab710
+# ╠═566f2f87-a840-416e-b71e-bcfbb747e39b
+# ╠═8e38da2e-ab78-4d75-a2e1-962e8004ade5
+# ╠═d8642e10-4a42-4452-b655-111b349d51ee
+# ╠═3981b6f9-7ace-4de9-b72d-10168512689c
+# ╠═4c2f7fd6-8dcc-49c2-8b8f-bfa31748e367
+# ╠═56af9242-91cc-46db-b532-c127450adfeb
+# ╠═071356e5-53c4-462e-8448-7e5480dbfc0e
+# ╠═69b919f7-5985-4835-950a-ab7ad998d3fd
+# ╠═e31c35b1-9b37-4c95-8344-6177b685d5ab
+# ╠═6cfaa5d7-988e-434b-82bc-ba88b2bc1d58
+# ╠═30a3d470-a187-4ec8-a8d4-e86c921f5da3
+# ╠═537cdd66-bec2-488a-967d-893bee2e95b9
+# ╟─7115482e-0cc9-40ef-b63e-0ebad62bb949
+# ╠═a9e5aa14-6a11-436c-97ca-7afd5fd35478
+# ╠═a4d8323a-c668-452b-a958-17982177cac6
+# ╠═2a3adaf5-2a0d-4674-a160-a7844b7f1463
+# ╠═dd327a8e-a83d-4423-b507-54033c7934c4
+# ╠═23c894b7-6739-4c6c-a830-6f83951351db
+# ╠═efad6b83-73a5-4aea-944b-ddc1942ac71a
+# ╠═ebc0cbc2-d9f3-4cab-a3ee-6a21763f4d20
+# ╠═572083ca-534b-4830-ac54-f9d5c9083b53
 # ╠═6d7a1522-e61e-4440-a2ff-64e625b15906
-# ╠═93141f62-98e0-4c6b-b556-97f56f71d70c
+# ╟─5a54ce11-92b3-455d-a3b3-b147618585ae
+# ╠═cdc4390f-1efb-4550-b325-5c743890a5c6
+# ╠═7f367da6-4b49-4e74-9a93-d9fdf517b2bd
+# ╠═faaae64f-ef85-44df-b62d-e6617d02c5b6
+# ╠═900f0f00-ecff-426a-afa3-d7a20e00cd7d
+# ╠═28600532-3a7e-491c-8113-e8253a8108c9
+# ╠═bde4f544-7b5b-4224-9ce3-090fa7fe8311
+# ╠═fbd8d5b6-3d48-4525-b99d-483c946cc6a3
+# ╠═81e50d1f-609b-46f5-b9e2-873dfeba1b45
+# ╠═ad16e44b-4f56-4ff5-a85e-f619cbf0c24f
+# ╟─de7eb968-6616-491e-b258-d3f8be1134e8
 # ╠═76326a80-b709-4f96-a379-8aaea4d3af44
 # ╠═9840c373-dbf2-4d26-85b5-15ecbbb2c657
 # ╠═88352faf-ce2a-4bd8-80bf-268d77601698

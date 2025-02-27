@@ -15,9 +15,6 @@ begin
 	using Arya
 end
 
-# ╔═╡ 3a913d3f-db30-4ace-b9d0-b16889f7aa2c
-using LilGuys
-
 # ╔═╡ b918a965-9e54-42a4-9126-4dd614024ff5
 using StatsBase: median, weights, mad, std
 
@@ -34,19 +31,22 @@ import DensityEstimators as DE
 models_dir = "/arc7/home/dboyea/dwarfs/analysis/ursa_minor"
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_v37_r5.0/orbit_mean.2/"
+model_dir = "$models_dir/1e6_v38_r4.0/orbit_smallperi.4/"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.10/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.09/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
 obs_today_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"
 
 # ╔═╡ 217527cb-7f25-4fd9-a4a8-78cb2c744c2b
-figdir = joinpath(dirname(starsfile), "figures")
+FIGDIR = joinpath(dirname(starsfile), "figures")
+
+# ╔═╡ 3a913d3f-db30-4ace-b9d0-b16889f7aa2c
+using LilGuys; FIGDIR
 
 # ╔═╡ d1e9ed33-d600-441a-876d-0c0fcd5cca72
-mkdir(figdir)
+mkdir(FIGDIR)
 
 # ╔═╡ 89ec03a2-2ec9-4b77-aba0-28af551a1366
 out = lguys.Output(model_dir)
@@ -291,7 +291,7 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10, maximum(hi.values)))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-6, maximum(hi.values)))
 
 	
 	Colorbar(fig[1, 2], h,

@@ -38,12 +38,10 @@ md"""
 Makes some basic plots of a projected stellar file
 """
 
-# ╔═╡ 1de340a6-da4e-47a6-b499-ced8c469a70d
-@bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="ursa_minor"),
-	modelname = TextField(default="1e6_v37_r5.0/orbit"),
-	starsname = TextField(default="exp2d_rs0.13"),
-))
+# ╔═╡ 145490bd-d87e-4153-865b-342506af8f5a
+md"""
+# Setup
+"""
 
 # ╔═╡ faeaf38d-8c06-4646-8179-57ffb05f720e
 import DensityEstimators
@@ -69,6 +67,13 @@ function notebook_inputs(; kwargs...)
 		"""
 	end
 end
+
+# ╔═╡ 1de340a6-da4e-47a6-b499-ced8c469a70d
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="ursa_minor"),
+	modelname = TextField(60, default="1e6_v37_r5.0/orbit"),
+	starsname = TextField(default="exp2d_rs0.13"),
+))
 
 # ╔═╡ 0a73bf88-3f46-4864-97f5-41705ea6913d
 model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.galaxyname, inputs.modelname)
@@ -174,7 +179,7 @@ end
 # ╔═╡ d7fece88-3327-4435-ab61-b45ff62b3b2e
 function mean_2d(obs_df, values; bins=100, centre=false, limits=nothing)
 	if centre
-		val_mean = lguys.mean(values, lguys.weights(obs_df.weights))
+		val_mean = lguys.mean(values, obs_df.weights)
 		println("centre: ", val_mean)
 		val = values .- val_mean
 	else
@@ -343,6 +348,9 @@ let
 	fig
 end
 
+# ╔═╡ 922c8d7d-1685-4c78-80ab-a9d4b6b425ce
+sky_orbit.radial_velocity[idx_f]
+
 # ╔═╡ 96307998-07a0-45bf-bf10-cd14bfcfe20a
 let
 	dr = 2
@@ -368,7 +376,7 @@ let
 
 	bins = LinRange(-dr, dr, 20)
 
-	h = mean_2d(stars,  stars.radial_velocity_gsr, bins=bins)
+	h = mean_2d(stars,  stars.radial_velocity_gsr, bins=bins, centre=true)
 
 	p = heatmap!(h.xbins, h.ybins, h.values, 
 	colormap=:redsblues, # colorrange=(50, 80)
@@ -378,6 +386,15 @@ let
 
 	fig
 end
+
+# ╔═╡ bae97026-90ac-401f-80a2-7d53f9b3594b
+hist(stars.radial_velocity_gsr, weights=stars.weights, bins=100)
+
+# ╔═╡ 312387f2-84b3-432a-85b1-2fcb8baa073c
+stars
+
+# ╔═╡ 3341a6c7-e92f-4e68-94d9-073095217a1c
+stars.radial_velocity_gsr[1]
 
 # ╔═╡ 35c52910-089c-4507-956a-2b0649507495
 filt_cen = stars.r_ell .< 2
@@ -389,7 +406,7 @@ filt_cen = stars.r_ell .< 2
 sky_orbit[idx_f, :]
 
 # ╔═╡ b3e68e32-c058-467d-b214-aab6a4cd1e19
-r_cut = 120 # arcmin
+r_cut = 60 # arcmin
 
 # ╔═╡ 9fed63d6-c139-4d28-b00c-37dc1b8dc004
 let 
@@ -487,7 +504,7 @@ let
 	
 	ax = Axis(fig[1,1],
 		xlabel="distance / kpc",
-		ylabel = L"$\tilde{v}_\textrm{rad}$ / km s$^{-1}$",
+		ylabel = L"${v}_\textrm{rad}$ / km s$^{-1}$",
 		limits=limits,
 		title="today",
 	)
@@ -526,6 +543,9 @@ import StatsBase: weights, std
 
 # ╔═╡ 5355bcc3-2494-473d-9da7-fc38930b8ee7
 let
+	dr = 40
+
+	
 	fig, ax = FigAxis(
 		limits = (-1, 2.5, nothing, nothing),
 		xlabel = "log r",
@@ -533,10 +553,12 @@ let
 		
 	)
 
+	bins = LinRange(sky_orbit.radial_velocity[idx_f] - dr, sky_orbit.radial_velocity[idx_f] + dr, 100)
+
 	hist2d!(log10.(stars.r_ell), stars.radial_velocity, weights=stars.weights,
 		colorscale=log10,
 		colorrange=(1e-8, 0.3),
-		bins=100
+		bins=(100, bins)
 	)
 	
 	fig
@@ -832,6 +854,7 @@ end
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╟─1de340a6-da4e-47a6-b499-ced8c469a70d
+# ╟─145490bd-d87e-4153-865b-342506af8f5a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
@@ -869,8 +892,12 @@ end
 # ╠═edf68b42-4fe9-4e14-b7ed-739e89a1541a
 # ╠═b4778d19-cb91-4f0f-97fa-4ef69448f849
 # ╠═7fa19be2-4014-4df0-821e-4c509eca4f28
+# ╠═922c8d7d-1685-4c78-80ab-a9d4b6b425ce
 # ╠═96307998-07a0-45bf-bf10-cd14bfcfe20a
 # ╠═1c7b234b-c440-42c5-a601-b3e515ba31af
+# ╠═bae97026-90ac-401f-80a2-7d53f9b3594b
+# ╠═312387f2-84b3-432a-85b1-2fcb8baa073c
+# ╠═3341a6c7-e92f-4e68-94d9-073095217a1c
 # ╠═35c52910-089c-4507-956a-2b0649507495
 # ╠═2ef43371-bfae-4a65-8fa9-d1ab5ade32f1
 # ╠═1c242116-e66d-453b-ad62-b6a65cdbe284

@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
 begin 
 	using Pkg; Pkg.activate()
@@ -16,6 +28,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ 987c3284-5a8f-463e-9c68-9011b348e076
+using PlutoUI
+
 # ╔═╡ bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 md"""
 Analyzes the dark matter particles and profiles for the simulation.
@@ -25,14 +40,43 @@ and make some nice projections of the DM in different orientations.
 All of the figures are saved to figures directory inside the model analysis directory. 
 """
 
+# ╔═╡ 99f96d71-b543-4680-a022-2195e6cca897
+md"""
+# Setup
+"""
+
+# ╔═╡ 5f2e646b-a7aa-453a-8afd-30b81ef07ff3
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ d3bd61d8-1e90-4787-b892-d90717f6be6e
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="ursa_minor"),
+	modelname = TextField(60, default="1e6_v37_r5.0/orbit_"),
+))
+
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
 md"""
 Inputs
 """
 
-# ╔═╡ 14279a79-bf66-4b34-bf9f-735ff2886ea5
-# model_dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi"
-model_dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v38_r4.0/orbit_smallperi.4"
+# ╔═╡ 3db38875-fe22-4cfd-8c5a-47f4a0fa7f3a
+model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.galaxyname, inputs.modelname)
 
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
@@ -47,7 +91,9 @@ out =  Output(model_dir)
 FIGDIR = joinpath(model_dir, "figures")
 
 # ╔═╡ 63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
-mkpath(FIGDIR)
+if !isdir(FIGDIR)
+mkdir(FIGDIR)
+end
 
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
@@ -428,10 +474,14 @@ let
 end
 
 # ╔═╡ Cell order:
-# ╠═bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
+# ╟─bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
+# ╟─d3bd61d8-1e90-4787-b892-d90717f6be6e
+# ╟─99f96d71-b543-4680-a022-2195e6cca897
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
+# ╠═987c3284-5a8f-463e-9c68-9011b348e076
+# ╠═5f2e646b-a7aa-453a-8afd-30b81ef07ff3
 # ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
-# ╠═14279a79-bf66-4b34-bf9f-735ff2886ea5
+# ╠═3db38875-fe22-4cfd-8c5a-47f4a0fa7f3a
 # ╠═c260ee35-7eed-43f4-b07a-df4371397195
 # ╠═d010a230-7331-4afd-86dc-380da0e0f720
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c

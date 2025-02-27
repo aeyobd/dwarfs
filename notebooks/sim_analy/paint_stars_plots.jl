@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ a893932c-f184-42bc-9a0e-0960f10520aa
 begin
 	import Pkg
@@ -11,6 +23,9 @@ begin
 	
 	import LilGuys as lguys
 end
+
+# ╔═╡ 1ff14ee1-3f98-4144-9493-7479e56e8790
+using PlutoUI
 
 # ╔═╡ 641946b3-e6f2-4d6d-8777-7698f353eb3d
 begin 
@@ -32,6 +47,31 @@ This script takes the outputs from the script `paint_stars.jl` and plots the res
 
 """
 
+# ╔═╡ 81dc2694-56ba-496a-85d1-cf2ecbaa2e67
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 420977eb-31df-44f3-a2eb-3209d66b10c2
+@bind inputs confirm(notebook_inputs(
+	modelname = TextField(60, default="ursa_minor/1e6_v3"),
+	starsname = TextField(default="exp2d_rs0.10"),
+))
+
 # ╔═╡ 81bf8451-f417-4e37-a234-07bb5317fff1
 import DensityEstimators: histogram
 
@@ -41,29 +81,26 @@ import StatsBase: percentile
 # ╔═╡ 530c6c09-4454-4952-8351-dccbb4ed429f
 import TOML
 
-# ╔═╡ 835cafca-868b-4e94-955f-2eab4e7c2bc4
-import LilGuys: @savefig
-
-# ╔═╡ 93045024-a91d-4b31-9a5a-7c999afdb9ec
-md"""
-# Inputs
-"""
-
 # ╔═╡ 48ce69f2-09d5-4166-9890-1ab768f3b59f
 #dir = "/astro/dboyea/dwarfs/analysis/sculptor/1e7_V31_r3.2/stars/"
-dir = "/astro/dboyea/dwarfs/analysis/ursa_minor/1e6_v38_r4.0/stars/"
+dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.modelname, "stars")
 
 # ╔═╡ 939cc89e-7273-4bb5-a13f-241139d922ea
-starsname = "exp2d_rs0.10"
+starsname = inputs.starsname
 
 # ╔═╡ 7809e324-ba5f-4520-b6e4-c7727c227154
 paramname = joinpath(dir, starsname, "profile.toml")
 
 # ╔═╡ 79f224cf-198c-4527-8423-62d74c753d0a
-figdir = joinpath(dir, starsname, "figures")
+FIGDIR = joinpath(dir, starsname, "figures")
+
+# ╔═╡ 835cafca-868b-4e94-955f-2eab4e7c2bc4
+import LilGuys: @savefig; FIGDIR
 
 # ╔═╡ 66c89b32-e522-48c8-b5aa-a5845715ce28
-mkpath(figdir)
+if !isdir(FIGDIR)
+	mkdir(FIGDIR)
+end
 
 # ╔═╡ d76e6200-9401-4c2e-bd7c-53e79dd49415
 md"""
@@ -522,6 +559,9 @@ end
 
 # ╔═╡ Cell order:
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
+# ╟─420977eb-31df-44f3-a2eb-3209d66b10c2
+# ╠═81dc2694-56ba-496a-85d1-cf2ecbaa2e67
+# ╠═1ff14ee1-3f98-4144-9493-7479e56e8790
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
 # ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
 # ╠═81bf8451-f417-4e37-a234-07bb5317fff1
@@ -529,7 +569,6 @@ end
 # ╠═530c6c09-4454-4952-8351-dccbb4ed429f
 # ╠═631a70f3-5284-4c3f-81ef-714455b876ee
 # ╠═835cafca-868b-4e94-955f-2eab4e7c2bc4
-# ╟─93045024-a91d-4b31-9a5a-7c999afdb9ec
 # ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
 # ╠═939cc89e-7273-4bb5-a13f-241139d922ea
 # ╠═7809e324-ba5f-4520-b6e4-c7727c227154

@@ -4,21 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
-begin 
-	import Pkg
-	Pkg.activate()
-	using CairoMakie
-	using DataFrames, CSV
-
-	using Printf
-	import LilGuys as lguys
-	using LilGuys
-	
-	using Arya
-end
-
-
 # ╔═╡ 1be546d7-8b11-4dc5-9295-393d39f65123
 using OrderedCollections
 
@@ -34,7 +19,23 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 modelname = "vasiliev24_L3M11_2x"
 
 # ╔═╡ cfcb9873-dd62-4a49-af01-7cc0668abe15
-figdir = "./$modelname/figures"
+FIGDIR = "./$modelname/figures"
+
+# ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
+begin 
+	import Pkg
+	Pkg.activate()
+	using CairoMakie
+	using DataFrames, CSV
+
+	using Printf
+	import LilGuys as lguys
+	using LilGuys
+	FIGDIR
+	
+	using Arya
+end
+
 
 # ╔═╡ 3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 md"""
@@ -106,7 +107,14 @@ special_orbits_dir = "$(modelname)_special_cases"
 orbit_ic = TOML.parsefile("$special_orbits_dir/simulation/initial_conditions.toml")["orbits"]
 
 # ╔═╡ e5f728b8-8412-4f57-ad38-a0a35bb08a48
-orbit_labels = [o["name"] for o in orbit_ic]
+if isdefined(@__MODULE__, :orbit_ic)
+	orbit_labels = [o["name"] for o in orbit_ic]
+else
+	orbit_labels = [string(i) for i in eachindex(snap.index)]
+end
+
+# ╔═╡ dd485bd4-1020-4501-bfaa-25ff77499cb6
+snap
 
 # ╔═╡ dcdca4a7-08a6-4d1b-a972-c386493207d0
 begin 
@@ -136,7 +144,7 @@ md"""
 """
 
 # ╔═╡ 94046401-1c2e-4bb8-9cd8-45fe750fad31
-mkpath(figdir)
+mkdir(figdir)
 
 # ╔═╡ 9177dadb-2852-421f-a5d6-79b796bc9f44
 md"""
@@ -821,6 +829,7 @@ end
 # ╠═2559bc4c-3bad-4d70-b02f-8fe48b772fb6
 # ╠═a535118f-3483-4655-af7e-4933e9214e46
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
+# ╠═dd485bd4-1020-4501-bfaa-25ff77499cb6
 # ╠═dcdca4a7-08a6-4d1b-a972-c386493207d0
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
 # ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f

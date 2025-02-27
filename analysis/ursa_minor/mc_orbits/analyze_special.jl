@@ -46,10 +46,10 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 @bind modelname TextField(default="EP20")
 
 # ╔═╡ abac7f99-fc5d-4536-a845-52cc269deee7
-figdir = "./$(modelname)_special_cases/figures"
+FIGDIR = "./$(modelname)_special_cases/figures"
 
 # ╔═╡ b3e118f4-0503-4a6c-8f0d-d096bd0236a3
-using LilGuys; figdir
+using LilGuys; FIGDIR
 
 # ╔═╡ 2559bc4c-3bad-4d70-b02f-8fe48b772fb6
 modelname_special = "$(modelname)_special_cases"
@@ -359,7 +359,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	@save "t_last_peri"
+	@savefig "t_last_peri"
 	fig
 end
 
@@ -419,19 +419,19 @@ let
 	)
 
 	for i in eachindex(orbit_labels)
-		lines!(out_special.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
+		lines!(-out_special.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
 	
 		hlines!([df_peris_apos_special.pericentre[i], df_peris_apos_special.apocentre[i]], linestyle=:dot)
 
-		scatter!(df_peris_apos_special.t_last_peri[i] * lguys.T2GYR, df_peris_apos_special.pericentre[i])
+		# scatter!(df_peris_apos_special.t_last_peri[i] * lguys.T2GYR, df_peris_apos_special.pericentre[i])
 		
-		scatter!(df_peris_apos_special.t_last_apo[i] * lguys.T2GYR, df_peris_apos_special.apocentre[i])
+		# scatter!(df_peris_apos_special.t_last_apo[i] * lguys.T2GYR, df_peris_apos_special.apocentre[i])
 	end
 
 	Legend(fig[1, 2], ax)
 	lguys.hide_grid!(ax)
 
-	save(joinpath(fig_dir, "r_time_orbits.pdf"), fig)
+	@savefig "r_time_orbits"
 	fig
 end
 
@@ -445,7 +445,7 @@ let
 
 	resize_to_layout!(fig)
 
-	save(joinpath(fig_dir, "xyz_orbit.pdf"), fig)
+	@savefig "xyz_orbit"
 
 	fig
 end
@@ -467,7 +467,7 @@ let
 		lines!(R, z, label=orbit_labels[i])
 
 	end
-	save(joinpath(fig_dir, "R_z_orbit.pdf"), fig)
+	@savefig  "R_z_orbit"
 
 	axislegend()
 	fig
@@ -702,7 +702,7 @@ end
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
-# ╠═26d616da-95ec-4fb9-b9a8-2f095d74c722
+# ╟─26d616da-95ec-4fb9-b9a8-2f095d74c722
 # ╟─38fd9158-7807-4a26-b534-b0bcb5dbb0e5
 # ╠═9a22d47b-8474-4596-b418-de33eb07c627
 # ╠═dcdca4a7-08a6-4d1b-a972-c386493207d0
