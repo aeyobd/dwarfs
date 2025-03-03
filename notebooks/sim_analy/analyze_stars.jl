@@ -114,6 +114,12 @@ md"""
 # ╔═╡ 436a5be3-f597-4fc4-80a8-dc5af302ad66
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
+# ╔═╡ d86a8f96-a6ee-4fdc-a8d7-322085c06e78
+orbit_props["idx_peris"]
+
+# ╔═╡ d374b131-6333-4bea-bcbf-f51e26e2438b
+orbit_props["idx_apos"]
+
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
 params = TOML.parsefile(paramsfile)
 
@@ -521,25 +527,11 @@ let
 	
 end
 
-# ╔═╡ b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
-@doc raw"""
-	calc_rb(σ, delta_t)
-
-Given a radial velocity dispersion σ (in km/s), and the time since the last pericentre (in Gyr), returns the break radius (in kpc).
-
-See peñarrubia et al. (200X) for the original equation.
-```math
-r_{\rm break} = C\,\sigma_{v}\,\Delta t
-```
-where $C=0.55$ is an empirical fit
-"""
-function calc_rb(σ, delta_t)
-	kpc_per_Gyr_per_kms = 1.0227
-	return 0.55 * σ * (delta_t) * kpc_per_Gyr_per_kms
-end
+# ╔═╡ 0ed9f676-8401-4b2d-8302-e4b635a2057f
+Δt = out.times[idx_f] - filter(x->x < out.times[idx_f], orbit_props["t_peris"])[end]
 
 # ╔═╡ 13a87549-1318-494c-9147-3f71095bf2ef
-r_b_kpc = calc_rb(σv, orbit_props["t_last_peri"])
+r_b_kpc = LilGuys.calc_break_radius(σv / V2KMS, Δt)
 
 # ╔═╡ 1866c280-89c3-4a71-9dbf-50b583360145
 let 
@@ -846,6 +838,8 @@ end
 # ╠═1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 # ╟─3acc8caf-5a7e-4a6d-84b2-b26680ffe377
 # ╠═93694113-9b3d-4a11-a34b-2a73350d2d87
+# ╠═d86a8f96-a6ee-4fdc-a8d7-322085c06e78
+# ╠═d374b131-6333-4bea-bcbf-f51e26e2438b
 # ╠═973955ad-3214-42cf-831f-a782f1d2434a
 # ╠═8f9ee2a7-de43-43e0-8257-93ecc630044f
 # ╟─396cd0a8-1d73-44dd-89db-3243fb9e8ac4
@@ -872,7 +866,7 @@ end
 # ╠═91daae57-94dc-4a8e-b981-75f1406e0768
 # ╠═44e065d8-e85b-4972-adc7-340a2af22a54
 # ╠═11d8c251-28ae-412c-8a96-646e19adef56
-# ╟─1866c280-89c3-4a71-9dbf-50b583360145
+# ╠═1866c280-89c3-4a71-9dbf-50b583360145
 # ╠═0c26f965-0381-4f79-a6ce-0772ae922b3f
 # ╠═6e34b91c-c336-4538-a961-60833d37f070
 # ╠═dfc045b0-2cf1-4397-b7e5-3b855767b71f
@@ -894,7 +888,7 @@ end
 # ╠═fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 # ╠═c2ccf9de-e3cd-4950-9a4d-6f425d261ccb
 # ╠═76438e61-d227-41cf-b9ea-e658bc389772
-# ╠═b9a4b2b7-be95-4ccb-ad74-9b761abfae8a
+# ╠═0ed9f676-8401-4b2d-8302-e4b635a2057f
 # ╠═13a87549-1318-494c-9147-3f71095bf2ef
 # ╠═54d0ee8e-52d6-4b8b-84a9-1ddc66659137
 # ╠═d53669fc-84a1-4138-8445-5f31c3ec44a5

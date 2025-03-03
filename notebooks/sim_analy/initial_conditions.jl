@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 6e08e538-bc82-11ee-1a75-d97f506d18c5
 begin
 	import Pkg; Pkg.activate()
@@ -16,6 +28,9 @@ end
 
 # ╔═╡ 01165464-35b2-43e9-9d52-d06fa9edf3cf
 using LilGuys
+
+# ╔═╡ 9303ace1-bd7c-4391-bace-8a0a8eccd251
+using PlutoUI
 
 # ╔═╡ f979f2a8-3420-4ede-a739-7d727dfdf818
 md"""
@@ -36,9 +51,32 @@ md"""
 # Input
 """
 
+# ╔═╡ 80da94f9-6fdd-4591-93e3-c98ea1479c65
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 21080ba9-d6df-4ba3-b4f9-e97f8d850dc6
+@bind inputs confirm(notebook_inputs(;
+	modelname = TextField(70, default="ursa_minor/1e6_v31_r4.0/orbitname"),
+))
+
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-model_dir = ENV["DWARFS_ROOT"] * "/simulations/ursa_minor/1e6_v38_r4.0/orbit_smallperi.4/"
-#model_dir = ENV["DWARFS_ROOT"] * "/simulations/sculptor/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
+model_dir = joinpath(ENV["DWARFS_ROOT"], "simulations", inputs.modelname)
 
 # ╔═╡ d7a04cc7-369e-4687-b423-deda779f1c57
 #name = "initial"
@@ -102,6 +140,12 @@ prof.v_circ_max * V2KMS
 
 # ╔═╡ 2e293959-9c05-4d9b-b889-a68584ca88f0
 prof.r_circ_max 
+
+# ╔═╡ 3cc4a870-da17-4c0a-8ab8-27e134c71044
+0.044 * 0.53612788
+
+# ╔═╡ bc127b27-c573-462b-84f1-66890391b49b
+
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
@@ -343,11 +387,14 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 
 # ╔═╡ Cell order:
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
+# ╠═21080ba9-d6df-4ba3-b4f9-e97f8d850dc6
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
 # ╠═01165464-35b2-43e9-9d52-d06fa9edf3cf
 # ╠═920546bd-4838-413c-b687-f891a7f5e985
+# ╠═9303ace1-bd7c-4391-bace-8a0a8eccd251
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
+# ╠═80da94f9-6fdd-4591-93e3-c98ea1479c65
 # ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
 # ╠═d7a04cc7-369e-4687-b423-deda779f1c57
 # ╠═8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
@@ -364,6 +411,8 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 # ╠═3d4f1a39-fbfc-4e07-8bd4-17e7813da5af
 # ╠═2e293959-9c05-4d9b-b889-a68584ca88f0
+# ╠═3cc4a870-da17-4c0a-8ab8-27e134c71044
+# ╠═bc127b27-c573-462b-84f1-66890391b49b
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0

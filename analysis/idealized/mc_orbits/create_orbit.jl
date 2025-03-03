@@ -25,17 +25,17 @@ begin
 	using PythonCall
 end
 
-# ╔═╡ dc8c001c-1af8-4a7b-8cdb-4678f5a24c8f
-using CairoMakie
-
-# ╔═╡ 6dfd08be-6833-4901-b8e3-70f854697728
-using PlutoUI
-
 # ╔═╡ c8d08554-186e-4e3d-8299-330b168d1f86
 using CSV, DataFrames
 
+# ╔═╡ dc8c001c-1af8-4a7b-8cdb-4678f5a24c8f
+using CairoMakie
+
 # ╔═╡ c12a5fe5-59dd-41db-9355-ca3e303c2c9e
 using OrderedCollections
+
+# ╔═╡ 6dfd08be-6833-4901-b8e3-70f854697728
+using PlutoUI
 
 # ╔═╡ 8335702e-2cc5-44df-a9c1-8df713ced453
 include(ENV["DWARFS_ROOT"] * "/utils/agama_utils.jl")
@@ -43,6 +43,11 @@ include(ENV["DWARFS_ROOT"] * "/utils/agama_utils.jl")
 # ╔═╡ 38fbfd8d-27f6-47d9-9fb5-167ee002b085
 md"""
 This notebook creates an idealized orbit in the specified plane with a given peri and apocentre.
+"""
+
+# ╔═╡ a0e59d38-38bb-48f5-bd76-df0ac36c790f
+md"""
+# Setup
 """
 
 # ╔═╡ 910f0e20-f077-4d83-aed7-58245469b6e0
@@ -69,6 +74,11 @@ end
 	apocentre = NumberField(10:0.1:300, default=100),
 	pericentre = NumberField(0.1:0.1:100, default=5),
 ))
+
+# ╔═╡ ad9a0a4b-c222-44e6-a2e0-e7243112a82a
+md"""
+# Orbit calculations
+"""
 
 # ╔═╡ 539105c2-c885-4a81-8be2-d25d1a7ba0f3
 Phi_py = agama.Potential("../agama_potential.ini")
@@ -106,6 +116,11 @@ gc = Galactocentric(x0, v0 * V2KMS)
 # ╔═╡ d8dfa384-d19a-43b1-bb8c-f30c7de05f34
 orbit = calc_orbit(gc, Phi_py, time = 10 / T2GYR)
 
+# ╔═╡ 805375f5-6ea2-478d-91da-44086ab959cc
+md"""
+# Plots & Checks
+"""
+
 # ╔═╡ 70b934f1-34a7-42ea-8d3f-41f3492f0a8d
 LilGuys.plot_xyz(orbit.positions)
 
@@ -127,7 +142,7 @@ end
 minimum(calc_r(orbit.positions))
 
 # ╔═╡ 7d681d34-2bf6-4aae-b2b6-3ef6759c19b8
-r_peri; @bind write_orbit CheckBox()
+r_peri; md"write orbit? $(@bind write_orbit CheckBox())"
 
 # ╔═╡ d78f8d6b-1a96-48c9-a67a-4b4f958eca44
 filename = "orbit_$(r_peri)_$(r_apo)"
@@ -154,17 +169,21 @@ if write_orbit
 	open(filename * ".toml", "w") do f
 		TOML.print(f, df_props)
 	end
-
+	@info "wrote orbit to $filename.csv & _.toml"
 end
 
 # ╔═╡ Cell order:
 # ╟─38fbfd8d-27f6-47d9-9fb5-167ee002b085
 # ╠═802de584-2a6b-4bab-8502-70ff50489246
+# ╟─a0e59d38-38bb-48f5-bd76-df0ac36c790f
 # ╠═8f8f7fea-f463-11ef-0daf-2b30c3565e25
+# ╠═c8d08554-186e-4e3d-8299-330b168d1f86
 # ╠═dc8c001c-1af8-4a7b-8cdb-4678f5a24c8f
+# ╠═c12a5fe5-59dd-41db-9355-ca3e303c2c9e
 # ╠═6dfd08be-6833-4901-b8e3-70f854697728
 # ╠═910f0e20-f077-4d83-aed7-58245469b6e0
 # ╠═8335702e-2cc5-44df-a9c1-8df713ced453
+# ╠═ad9a0a4b-c222-44e6-a2e0-e7243112a82a
 # ╠═539105c2-c885-4a81-8be2-d25d1a7ba0f3
 # ╠═c6f999ec-0e57-4c50-8afd-ec9d060181f0
 # ╠═f911eb19-ac18-4778-8f51-0d8e22dc9c09
@@ -177,15 +196,14 @@ end
 # ╠═5801fe76-0112-46d3-aff8-4b5f54932044
 # ╠═d3d9ca2f-6aa3-46ec-b144-491327e3688f
 # ╠═d8dfa384-d19a-43b1-bb8c-f30c7de05f34
+# ╟─805375f5-6ea2-478d-91da-44086ab959cc
 # ╠═70b934f1-34a7-42ea-8d3f-41f3492f0a8d
 # ╠═e4289648-e661-4209-ace5-92c4b736b811
 # ╠═0b840b8b-91b7-4fe1-9b6a-5926f02a7d2f
-# ╠═c8d08554-186e-4e3d-8299-330b168d1f86
 # ╠═7d681d34-2bf6-4aae-b2b6-3ef6759c19b8
 # ╠═d78f8d6b-1a96-48c9-a67a-4b4f958eca44
 # ╠═1fe08ed1-77bd-4efb-9193-1f0e2202733a
 # ╠═6c4dc92c-7f0c-4e0d-871e-494fb207cc4d
 # ╠═c9fc5439-8c5c-452e-a041-573fa82e1da2
 # ╠═24cda804-99f6-456c-9495-c37d6511e72a
-# ╠═c12a5fe5-59dd-41db-9355-ca3e303c2c9e
 # ╠═d3b89db4-bdfb-4274-a2e0-b359c650bd20
