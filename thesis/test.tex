@@ -1,0 +1,52 @@
+
+\DocumentMetadata{lang=en-CA}
+
+\documentclass[12pt,oneside,letterpaper]{report}
+\usepackage[T1]{fontenc}
+
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+
+%\usepackage{pxfonts} no schwa
+%\usepackage{garmond} I do not like math
+%\usepackage{stix2} no schwa
+
+
+%\usepackage{tipa}
+\usepackage[single]{accents}
+
+% \usepackage[encoding]{fontenc}
+
+\newcommand{\schwa}{ə}
+\newcommand{\eng}{\ng{}}
+\def\overcomma#1{%
+  \setbox0=\hbox{#1}% Save the base letter in box0.
+  \dimen0=\wd0       % Get its width.
+  \vbox{%
+    \hbox to \dimen0{\hfil,\hfil}% Create an hbox of the same width with a centered comma.
+    \nointerlineskip            % Prevent extra vertical space.
+    \box0                       % Place the base letter.
+  }%
+}
+
+
+\newcommand{\Lekwnen}{L\schwa{}\overcomma{k}\textsuperscript{w}\schwa{}\ng{}\schwa{ne}n}
+\title{Test}
+\author{Daniel A. Boyea}
+
+
+\date{\today}
+
+
+\begin{document}
+
+We acknowledge and respect the \Lekwnen{} (Songhees and X\textsuperscript{w}seps\schwa{}m/
+Esquimalt) Peoples on whose territory the university stands, and the
+\Lekwnen{} and ${\underaccent{\bar}{\rm W}}$S\'ANE\'C Peoples whose historical relationships with the
+land continue to this day. 
+
+
+\begin{equation}
+    \iint \frac{\rho}{r^2}\,d{\mathbf r} = \nabla \Phi 
+\end{equation}
+\end{document}

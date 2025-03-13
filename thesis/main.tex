@@ -1,0 +1,227 @@
+ %! TeX program = xelatex
+
+\DocumentMetadata{lang=en-CA}
+
+\documentclass[12pt,oneside,letterpaper]{report}
+
+\input{formatting}
+\input{acronyms}
+\usepackage[single]{accents}
+
+% useful commands
+% below are for statement
+\newcommand{\schwa}{ə}
+\newcommand{\eng}{\ng{}}
+%\newcommand{\overcomma}[1]{${\rm \accentset{\mbox{\normalfont ,}}{#1}}$}
+\newcommand{\Lekwnen}{L\schwa{}\overcomma{k}\textsuperscript{w}\schwa{}\ng{}\schwa{}n}
+\newcommand{\skipline}{\vspace{\baselineskip}}
+
+\def\overcomma#1{%
+  \setbox0=\hbox{#1}% Save the base letter in box0.
+  \dimen0=\wd0       % Get its width.
+  \vbox{%
+    \hbox to \dimen0{\hfil,\hfil}% Create an hbox of the same width with a centered comma.
+    \nointerlineskip            % Prevent extra vertical space.
+    \box0                       % Place the base letter.
+  }%
+}
+
+% for pandoc
+\newcommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+\newcommand{\about}[1]{${\sim} #1$}
+
+
+\title{Tidal to tell: \\
+    Does the Milky Way affect Sculptor and Ursa Minor?
+}
+\author{Daniel A. Boyea}
+
+
+\date{\today}
+
+
+\begin{document}
+% \linespread{1.25}
+
+\pagenumbering{roman}
+
+\makeatletter
+\begin{titlepage}
+   \begin{center}
+       \textbf{\@title}\\
+        \skipline
+
+        by\\
+        \skipline
+
+       \@author\\
+       B.Sc. The Ohio State University, 2023\\
+       \vspace*{3\baselineskip}
+    A Thesis Submitted in Partial Fulfillment of the Requirements for the Degree of\\
+    \skipline
+
+    MASTER OF SCIENCE \\
+    \skipline
+
+    in the Department of Physics and Astronomy\\
+       \vfill
+       ©\@author, 2025\\
+       University of Victoria\\
+       \vspace*{3\baselineskip}
+
+       All rights reserved. This thesis may not be reproduced in whole or in part,
+by photocopy or other means, without the permission of the author. \\
+\skipline
+   \end{center}
+We acknowledge and respect the \Lekwnen{} (Songhees and X\textsuperscript{w}seps\schwa{}m/
+Esquimalt) Peoples on whose territory the university stands, and the
+\Lekwnen{} and ${\underaccent{\bar}{\rm W}}$S\'ANE\'C Peoples whose historical relationships with the
+land continue to this day. 
+\end{titlepage}
+
+\addtocounter{page}{1}
+
+
+\addcontentsline{toc}{chapter}{Supervisory Committee}
+\begin{centering}
+\textbf{\@title}
+\skipline
+by\\
+\skipline
+\@author\\
+B.Sc. The Ohio State University, 2023\\
+\vspace*{3\baselineskip}
+\end{centering}
+
+\subsection*{Supervisory Committee}
+
+Dr. Julio Navarro, Supervisor\\
+Department of Astronomy \\
+\skipline
+
+\noindent Dr. Kim Venn, Co-Supervisor\\
+Department of Astronomy
+
+
+% Abstract of the paper
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+% context
+Scl and UMi are weird bois. 
+
+
+\newlength{\myw}
+\newlength{\myl}
+
+---\rule[2.4pt]{12pt}{0.6pt}
+\settowidth{\myw}{---}\the\myw
+
+{\bf ---}\rule[2.2pt]{12pt}{1.1pt}
+
+\settoheight{\myl}{---}\the\myl
+
+-\rule[2.4pt]{3pt}{0.75pt}
+I\rule{1.2pt}{8pt}
+{\bf I}\rule{2.0pt}{8pt}
+|\rule[-2pt]{0.6pt}{12pt}
+% \chapter*{Acknowledgements}
+% \addcontentsline{toc}{chapter}{Acknowledgements}
+% 
+% 
+% I hope that the people who helped me complete this project will appreciate how much they have helped me. This year has been an incredibly challenging journey---and perhaps I am not open enough about what it has been like. I undoubtedly would not have reached this day without everyone's help.
+% 
+% James Johnson---your mentorship and guidance throughout this project was critical. 
+% You helped me learn an incredible amount about being an astronomer, and I am forever grateful for how you have guided this project, through late nights and last-minute comments.  Wayne, for everything you do for everyone---you are the glue holding together our department and nobody can say thank you enough. 
+% David and Jennifer for helping this project move forward, by providing guidance at critical junctions and being part of my committee. Rolando, for being the non-astronomer thrown into this work, and pointing out the flaw of incomprehensibility in this work.
+% 
+% Even though you may have not been able to help me with the science, dear friends and family, you have been no less important in the completion of this work. 
+% Eric, even across the country, you have always been a point of support and stability, and I am always happy to be around you. Anya, you are a wonderful friend and I cannot thank you enough for your unconditional support this year, 
+% All my friends who are just wonderful, inspiring, and incredible people---Kaia, Maria, Autumn, Simon, Bailee, Aaliyah, Sanskruti, Alyssa, Harrison, Denis, Keith, and so many others. 
+% And my family (including Arya, my most lovable doodle)---I can not even being to thank you enough for simply helping me recover my health and make it to graduation. 
+% 
+% 
+% 
+
+
+
+%% Lists
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\chapter*{Symbols}
+
+
+\setlength{\tabcolsep}{0pt}
+\begin{longtable}{p{0.2\textwidth} p{0.8\textwidth}}
+$\rho$ & 3-dimensional mass density. \\
+
+$\Sigma$ & 2-dimensional density \\
+\end{longtable}
+
+\setlength{\tabcolsep}{6pt}
+\renewcommand*{\arraystretch}{1}
+
+
+\printglossary[type=\acronymtype,nonumberlist]
+\printglossary
+
+
+\newpage
+
+\pagenumbering{arabic}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%% BODY OF PAPER %%%%%%%%%%%%%%%%%%
+
+\chapter{Introduction}
+\input{introduction}
+
+
+
+\the\textwidth
+
+%%%%%%%%%%%%%%%%%%%% REFERENCES %%%%%%%%%%%%%%%%%%
+
+\newpage
+\bibliographystyle{aasjournal}
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{main} 
+
+
+%%%%%%%%%%%%%%%%% APPENDICES %%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+% \chapter*{Appendix}
+% \addcontentsline{toc}{chapter}{Appendix}
+% \renewcommand{\thesection}{A.\arabic{section}}
+% \renewcommand\thefigure{A.\arabic{figure}}    
+% \renewcommand\theequation{A.\arabic{equation}}    
+% \setcounter{figure}{0}
+% \setcounter{equation}{0}
+% 
+% \renewcommand*{\theHsection}{A.\arabic{section}}%
+% \renewcommand*{\theHsubsection}{A.\arabic{subsection}}%
+% \renewcommand*{\theHfigure}{A.\arabic{figure}}%
+% \renewcommand*{\theHequation}{A.\arabic{equation}}%
+
+
+
+\chapter{Model parameters}\label{sec:jack}
+
+
+
+
+⁄\end{document}
+
+
+
+

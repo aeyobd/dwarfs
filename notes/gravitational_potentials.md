@@ -12,6 +12,8 @@ $$
 $$
 $c$ is concentration parameter, $\rho_c$ is the critical density of the universe, and $r_s$ is the characteristic scale length of the halo.
 
+
+
 ### Some useful definitions
 
 The critical density of the universe is 
@@ -287,6 +289,12 @@ The acceleration is $a = -\nabla \Phi$.
 
 
 # 2D profiles
+
+Given the three dimensional density, we can compute the 2D density with 
+$$
+\Sigma(R) = 2\int_R^{\infty} \rho(r)\ \frac{r}{\sqrt{r^2 - R^2}} \ dr
+$$
+
 
 ## Exponential
 

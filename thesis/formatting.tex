@@ -1,0 +1,78 @@
+
+\usepackage{amsmath}
+
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+% \usepackage{libertine}
+% \usepackage{libertinust1math}
+\usepackage{microtype}
+
+\usepackage{graphicx}	% Including figure files
+\usepackage{booktabs}
+\usepackage{longtable}
+\graphicspath{{./figures/}} 
+\usepackage{isotope}
+\usepackage[tableposition=above]{caption}
+
+\usepackage{aas_macros}
+\usepackage{natbib}
+\usepackage[nottoc,numbib]{tocbibind}
+
+
+\setcitestyle{aysep={}} 
+\setcitestyle{notesep={; }} 
+
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,
+    urlcolor=black,
+    citecolor=black,
+    %pdftitle={The Galactic Chemical Evolution of Carbon},
+    %pdfauthor={Daniel A Boyea},
+    %pdfcreator={Themself},
+    %pdfkeywords={astronomy, supernovae, modeling, stellar yields, chemical evolution, galaxies, carbon},
+}
+
+\urlstyle{same}
+
+
+%%%%%%%%%%%%%%% Formatting %%%%%%%%%%%%%%%%%%
+\usepackage{titlesec}
+
+\titleformat{\chapter}{\normalfont\normalsize\centering\bf}{\thechapter.}{1em}{}
+\titleformat{\section}{\normalfont\normalsize\centering}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\centering}{\thesubsection}{1em}{}
+% \titlespacing*{\chapter}{0pt}{0pt}{40pt} 
+% \titlespacing*{\section}{0pt}{0pt}{20pt}
+\renewcommand{\contentsname}{Table of Contents}
+\AtBeginDocument{
+      \renewcommand{\bibsection}{\chapter*{\bibname}}
+  }
+
+
+\usepackage{etoolbox}% http://ctan.org/pkg/etoolbox
+\makeatletter
+% \patchcmd{<cmd>}{<search>}{<replace>}{<succes>}{<failure>}
+\patchcmd{\@chapter}{\addtocontents{lof}{\protect\addvspace{10\p@}}}{}{}{}% LoF
+\patchcmd{\@chapter}{\addtocontents{lot}{\protect\addvspace{10\p@}}}{}{}{}% LoT
+\makeatother
+
+\pagestyle{plain}
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+\counterwithout{equation}{chapter}
+
+\newcommand\T{\rule{0pt}{2.6ex}}       % Top strut
+\newcommand\B{\rule[-1.2ex]{0pt}{0pt}} % Bottom strut
+
+
+
+\setkeys{Gin}{width=\textwidth}
+
+
+%\usepackage{accsupp}
+%\usepackage[accsupp]{axessibility}

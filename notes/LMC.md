@@ -1,5 +1,17 @@
 
 
+# Introduction
+
+
+
+
+
+
+
+# Orbital constraints on LMC
+
+
+
 | parameter                | value                                 | Source              |
 | ------------------------ | ------------------------------------- | ------------------- |
 | $\alpha$                 | 80.8                                  | McChonnachie2012    |

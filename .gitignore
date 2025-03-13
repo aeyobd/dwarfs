@@ -70,3 +70,27 @@ to_enbid_d3n64.est
 
 # there are many potential files for V24
 pot/
+
+
+
+*acn
+*.acr
+*.alg
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.glg
+*.glo
+*.gls
+*.ist
+*.lof
+*.log
+*.lot
+*.pdf
+*.slg
+*.slo
+*.sls
+*.toc
+*.xdv

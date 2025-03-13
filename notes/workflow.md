@@ -52,7 +52,11 @@ As a more detailed procedure, from the start
 
 # Fundamentals
 
-Throughout this work, we use the following unit system:
+Jaclyn's data 
+
+https://www.canfar.net/storage/vault/list/jax/DSPHS_Gaia_eDR3/December_2022/1-Component_HB_Probabilities
+
+## Units
 
 | Quantity   | Units               |
 | ---------- | ------------------- |
@@ -64,63 +68,140 @@ Throughout this work, we use the following unit system:
 
 
 
-# Software
+# COSMA
 
-## Analysis tools
+N-body simulations are computationally expensive. I have been using [COSMA](https://www.dur.ac.uk/icc/cosma/), but the Canadian supercomputers or even a local machine would also work.
 
+Instructions to get an account: https://www.dur.ac.uk/resources/icc/cosma/gettingAnAccount.pdf. 
 
+I typically ssh into cosma to edit any files or run scripts.
 
-## Painting stars
+### Jupyter
 
-As stars are sufficiently spread out in a dwarf galaxy, we can assume that they are simply attached to a dark matter particle, with probabilities governed by the ratio of the distribution functions. 
+See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/. 
 
-To find the distribution function, we use Eddington inversion (eq. 4-140b in BT87)
+to launch a jupyter session, 
+
+``` bash
+ssh -i .ssh/id_ed25519_cosma -N -L 8443:login8b.cosma.dur.ac.uk:443 dc-boye1@login8b.cosma.dur.ac.uk
+```
+
+then open https://localhost:8443
+
+### Modules/Dependencies
+
+- `fftw` for fourier transforms
+- `openmpi` required for gadget
+- `gnu_comp` compiler
+- `hdf5` for files
+- `python`, using latest python version available
+- `julia`: some of my newer scripts are written in julia 
+
+### SLURM
+
+https://www.dur.ac.uk/icc/cosma/support/slurm/
+
+# Zeno
+
+Zeno is a collection of scripts with documentation on [ifa](https://home.ifa.hawaii.edu/users/barnes/software.html). In particular, we want the following programs
+
+Once zeno and my library is installed, the procedure to generate a halo is 
+
+- calculate the profile by running `./make_profile.sh nfw`. This will write the zeno-file nfw.gsp to `profiles` and also outputs a .csv file with the same name for normal people to read in
+- Create an nbody model by using `./make_halo.sh 1e4 profiles/nfw.gsp nfw_1e4` which in this example will generate a profile with 1e4 particles written to `halos/nfw_1e4`. 
+- Use the NBody model for sciences!
+
+### HaloGSP
+
+Reverse engineered documentation.
+
+HaloGSP generates the density profile ($\rho$, $M$, for each $r$). The parameters are:
+
+- `m_a=1`, the mass within the scale radius `a`. Note that this is not $M_s$
+- `a=1` is the scale radius
+- `b=4` is the radius the taper begins
+- `taper=exp` the taper formula (one of `exp`, `gauss`, or `sw`)
+- `npoint=257` the number of points to calculate the density ate
+- `rrange=1/4096:16` is the range the radii are calculated. The radii are evenly spaced in log r
+
+All taper modes are defined as piecewise densities which are continuous at $\rho_b = \rho_{\rm NFW}(b)$; i.e.
 $$
-f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right)
+\rho(r) = \begin{cases}
+\rho_{\rm NFW}(r) & r\le b \\
+\rho_{\rm taper}(r) & r > b
+\end{cases}
 $$
 
 
-In practice the right term is zero as $\Psi \to 0$ as $r\to\infty$. For example, if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$. 
+Internally, zeno uses $\rho_{\rm NFW}(r) = m_a / (4\pi\,A(1)\,r\,(a + r)^2)$ which is as expected. 
 
-# 
+The exponential taper is
+$$
+\rho_{e}(r) = \rho_b\,(b/r)^2\,\exp(-2\gamma\,(r/b-1))
+$$
+where $\gamma = b/(b+a) - 1/2$.
 
-## Agama
-
-I use [Agama](http://agama.software/) for the calculation of the potential. Agama is nice because we also have an LMC N-body potential and because it is written in c++, Agama interfaces with Gadget4 well but also can do orbit integration and action calculations. 
-
-Once the software is cloned, in the directory, 
-
-```
-python setup.py install --user
-```
-
-will install the library.
+The gaussian taper is
+$$
+\rho_g(r) = \rho_b (b/r)^2 \exp(-\gamma ((r/b)^2 - 1))
+$$
+and finally, the `sw` taper (not sure the abbreviation here, but intended to be fast) is
+$$
+\rho_{\rm sw}(r)/\rho_b = (r/b)^{\gamma_s}\,\exp(-(r-b)/a)
+$$
+where $\gamma \ne \gamma_s  = b/a - (a+3b)/(a+b)$.
 
 
 
-I have a custom fork of Agama which lets me calculate time-dependent quantities of potentials, which makes analyzing e.g. LMC potentials significantly easier. 
+### GSPModel & GSPRealize
 
-## Gadget4
+Zeno includes 2 (3?) programs to sample particles from the profile. `gspmodel` uses rejection sampling in velocities which does not actually create an equilibrium model. `gsprealize` instead uses the distribution functions to correctly sample velocities. There is also a `gsprealize_2.0` which I am entirely unsure of the differences.
 
-See gadget4 documentation  https://wwwmpa.mpa-garching.mpg.de/gadget4/
-
-The primary reason I am using Gadget4 now is that we can use Agama as the potential for the model, which allows for more complex
-
-I find it easiest to store the small changes from gadget4 as a patch. To generate the patch, use
+### Installation
 
 ```
-git diff --no-prefix > agama.patch
-```
-
-and to apply the patch, copy `agama/agama.patch` to the Gadget4 root directory and run in the Gadget directory. 
-
-```
-patch -p0 < agama.patch
+wget https://github.com/joshuabarnes/zeno/archive/refs/tags/v0.10.0-beta.tar.gz
 ```
 
 
 
-### Building
+add to bashrc
+
+```
+	export ZENOPATH="/Users/<yourname>/zeno"
+	export ZCC="gcc"
+	export ZCCFLAGS="-std=gnu99 -DLINUX -I$ZENOPATH/inc"
+	export ZLDFLAGS="-L$ZENOPATH/lib"
+	export ZENO_SAFE_SELECT="true"
+	export ZENO_MSG_OPTION="all"
+```
+
+can comment out graphics part of makefile so does not depend on GLUT / openGL (much easier to build in some environments)
+
+and run `make -f Zeno >& zenomake.log`.
+
+
+
+### Converting to HDF5
+
+Zeno produces a structured binary file, not useful for gadget.
+
+There are two possible methods here: using Rapha's modified zeno code (with a utility) or I have a julia script
+
+- `tsf` writes out the details of a halo file as text, which can then be read in with python (a bit roundabout but works)
+- `snapgadget` to convert to gadget format. 
+
+in `/cosma/home/durham/dc-boru1/zeno/bin` using ICFormat=1.
+
+https://github.com/kyleaoman/zeno
+
+then run with gadget for short amount of time to convert to convert output
+
+# Gadget4
+
+documentation: https://wwwmpa.mpa-garching.mpg.de/gadget4/
+
+## Building
 
 The source code can be cloned from https://gitlab.mpcdf.mpg.de/vrs/gadget4. I am working from my own fork of the repository. To make, run the make command in the main folder of the repository, e.g.
 
@@ -142,7 +223,7 @@ Gadget contains many compile-time settings. For this run we don't need many
 
 I do add in a `EXTERNALGRAVITY_MW` option to the makefile which allows the specification of our four component milky way potential (discussed elsewhere)
 
-### Running
+## Running
 
 To run gadget with one processer
 
@@ -166,7 +247,7 @@ sbatch submit_isolation
 
 Here is where all the other code options are stored. An overview of the important ones
 
-### Numerical Setup
+## Numerical Setup
 
 See @power+2003 for a discussion of this.
 
@@ -183,64 +264,147 @@ Asya gave the similar relation
 $$
 h = 0.005R_{\rm max} (N/1e6)^{-1/2}
 $$
-which is $5/4$ of the value from @power+2003. In practice we have been using an additional factor 1/sqrt(10) as this appears to give slightly beter convergence.
+which is $5/4$ of the value from @power+2003
 
 
 
-# Isolation run
+## Isolation Run
 
-# Orbital runs
+First, rescale profile with
+
+```bash
+python rescale.py snapshot_000.hdf5 iso_scaled.hdf5 2.11 2e8
+```
+
+for e.g. fornax with 2e8 Msun within 2.11 kpc scale radius
+
+# Gadget tests
+
+## Conservation laws
+
+- Momentum: $\sum m\,v_i={\rm constant}$ 
+- Angular momentum: $\sum m\,r\times v = {\rm constant}$ 
+- Energy
+  - $T = \sum \frac{1}{2} m v^2$
+  - $ U = \frac{1}{2} \sum_i \sum_{j\neq i} \frac{G m_i m_j}{|x_i - x_j|} = \frac{1}{2} \sum_i m_i \Phi(x_i)$. The factor of 1/2 is so we only count each pair once.
+  - $U_{\rm ext} = \sum_i m_i \Phi_{\rm ext}(x_i) $
+  - $T + U + U_{\rm ext} = {\rm constant}$
+
+## Two body
+
+Here, I just test a keplarian 2-body system. The solution is the same for the one-body system, so we expect Kepler's laws to hold--the orbit should be elliptical with a period
+$$
+P^2 = \frac{4\pi^2}{\mu} a^3
+$$
+where $\mu = G(m+m)$ is the reduced gravitational mass of the system, and $a$ is twice (?) the semi-major axis of one of the orbits.
+
+
+
+## Three body
+
+To test the three body problem, I just use the special case (...)
+
+
+
+## Hernquist  and NFW potential
+
+For a spherical potential $\Phi$, we know that the roots of 
+$$
+0=\frac{1}{r^2} + 2\frac{\Phi(r) - E}{L^2}
+$$
+provide us with the maximum and minimum orbital radius, $r_{\rm min}$ and $r_{\rm max}$. We can also calculate the period in $r$ with 
+$$
+T_{r} = \int_{r_{\rm min}}^{r_{\rm max}} \frac{2}{\sqrt{2|E-\Phi(r)| - \frac{L^2}{r^2}}}\ dr
+$$
+I verify these relations for the hernquist and NFW spherical potentials. 
+
+## Disk potential
+
+Disk potentials are more complex but we can still check the overall relationships & the behaviour of epicycles in the potential.
+
+# Postprocessing
 
 Gadget 4 will provide snapshots for each timestep, but now we have to compute useful observational and theoretical summaries of the galaxy's evolution.
 
-## Initial conditions & parameters
+## Painting stars
 
-Take a snapshot from the end of the isolation run, shift to the first apocentre on the point particle integrated orbit.
+As stars are sufficiently spread out in a dwarf galaxy, we can assume that they are simply attached to a dark matter particle, with probabilities governed by the ratio of the distribution functions. 
+
+To find the distribution function, we use Eddington inversion (eq. 4-140b in BT87)
+$$
+f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right)
+$$
 
 
-
-### Using Isolation results
-
-I group all of the simulations with the same halo (including scale factors) into the same directory. Paths to the appropriate files for each directory are always set in `paths.sh`. In the case for my orbit simulations, the `iso_paths.sh` in the top level halo directory sets the path to the isolation run and the name of the snapshot to rescale. The parameters of the halo are set in `halo.toml`, which is then rescaled with `rerescale.sh` which calls `rescale_nfw.jl` from LilGuys.
-
-**Note** that if we rescale the isolation run, the softening in the parameter file should be rescaled by the same amount
-
-### Setting up an orbit
-
-From the MCMC orbit analysis, the outputs produce orbit files named like `orbit.csv` which start from a pericentre and evolve to the present day. The orbit can also be manually set. Either way, in the main directory of an orbit, we can rescale the orbit.
-
-To validate the initial conditions, there is a notebook called `notebooks/sim_analy/initial_conditions.jl` which calculates the centre and DM profile to check that these values are what we expect for the model.
+In practice the right term is zero as $\Psi \to 0$ as $r\to\infty$, and if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$. 
 
 
 
-## Post processing
+## Action orbit corrections
 
-We need to first calculate the centres for each snapshot and combine these so that the LilGuys.jl `Output` class can efficiently read and analyze the snapshot.
+In ordinary evolution around the Milky Way, mass loss and tidal forces cause deviations from a point orbit. Predominantly, angular momentum will be lost, however ther positions and velocities may shift phase as well. To adjust the initial conditions to retain agreement with the desired present-day kinematics, we developed the following method to iteratively correct the initial positions. 
 
-The first step is to paint the stars onto a snapshot of the isolation run. I have been painting them on around snapshot 20 just to make sure the stars are both in equilibrium but also have time to relax. I, however, calculate the distribution function from the analytic DM profile (the assumed truncated NFW profile), which seems to work a little better than the empirical distribution function. In the `stars` directory of the halo (not the orbit), the script `calc_dist.sh` calculates the distribution function, saving it to `distribution_function.hdf5`, and calculates all of the radii and energies of the snapshot we are painting stars onto, (stored in `energies.hdf5`). Next, we create a directory here for each different stellar profile, containing a `profile.toml` which will be read in from `lguys.load_profile`. The stellar probabilities (and some other diagnostic files) are then calculated when you run `bash paint.sh`. 
-
-To make plotting easier, the 3D stellar profiles can be calculated periodically along the isolation run by running the `add_profiles.sh` script. To validate the accuracy & stability of the painted stellar system, the notebook `compare_stars_2d_isolation.ipynb` in `/analysis` will plot the profiles and velocity dispersion for each calculated profile, and if these seem to be constant in time, we are good to go!
-
-Next, we can apply these stars to an orbit run. I also create a directory called `stars` in each orbit run analysis directory. The script I have called `project.sh` in these directories will project the stars from the first (and adopted final) snapshot onto the sky (in 2d) to be analyzed like Gaia data. Additionally, the 2d and 3d profiles for each snapshot can be calculated with `add_profiles.sh` and the 1D density profile can be calculated with `stellar_profiles.sh`. 
-
-## Dark matter Analysis
-
-### Orbit validation
-
-All of the following discussion is carried out in `notebooks/sim_analy/analyze_orbit.jl`. 
-
-This script will check if the orbit is approximantly the same as the point particle. In detail, they should differ a little as escaping particles carry away angular momentum from the particle causing the orbit to shrink. We also calculate the time of each pericentre and apocentre at this point.
-
-The script also determines the best fit final time of the snapshot by calculating the $\chi^2$ of the position, proper motions, and distance/radial velocity of the snapshot in the ICRS frame. The properties are saved in the analysis directory as `orbital_properties.toml` and the projected orbit on the sky as `skyorbit.fits`.
-
-### Mass & Velocity profiles.
-
-
-
-## Stellar analysis
+1. Choice of final position. Likely, the orbi
 
 
 
 
 
-![image-20241109104358175](/Users/daniel/Library/Application Support/typora-user-images/image-20241109104358175.png)
+![image-20250222121907610](/Users/daniel/Library/Application Support/typora-user-images/image-20250222121907610.png)
+
+Essential next steps
+
+- *Shrinking spheres robust tests
+- *Coordinate constructors more tests
+- cylindrical coordinate frame & tests
+- velocity anisotropy first tests
+
+More features
+
+- Create working density centres
+- First tests for potentials
+- first tests for orbits
+- more tests for project.jl
+- interface.jl
+- io.jl
+
+# Code nomenclature
+
+snake case for all variable names. I prefer to keep nouns as variable names and verb phrases as functions (especially since if e.g. `position` is a function, then it is easy to accidentally overwrite this in the body of a function.)
+
+Symbols and domain-specific names are okay here, so referring back to this should help. 
+
+
+
+The below should be in code units
+
+- `position` 3-vector (column) of real x, y, and z coordinates
+  - `positions` is a matrix with three rows and `n` columns for `n` different individual positions
+- `velocity`: 3-vector (column) of 
+- `time`: A time coordinate
+  - `times`, vector of times for e.g. positions
+- `acceleration`: 
+- `\Phi`:
+- `E`: Normal, total energy
+- `\epsilon`: binding specific energy per particle
+- `L`: angular momentum
+- `J`: Action (3-vector) in Jr, Jz, Jphi order.
+- `\Theta`:  Action angles (3-vector) in same order.
+
+
+
+Observables (below) may also specify symmetric errors as `_err` or assymetric errors with `_em` and `_ep`. 
+
+- `ra`: Right ascension (ICRS J2000) in degrees
+- `dec`: Declination (ICRS J2000) in degrees
+- `distance`: heliocentric distance in kpc
+- `pmra`: Corrected proper motion in right ascension (mas/yr). Name is technically inconsistent with underscore rule but kept for consistency with Gaia
+- `pmdec`: Corrected proper motion in declination (mas/yr).
+- `radial_velocity`: Heliocentric line-of-sight radial velocity of a stars (km/s). 
+- `position_angle`: Position angle of satillite major axis in degrees (North to East). 
+- `ellipticity`: Ellipticity of satellite density profile (1 - b/a?)
+- `xi`, `eta`: tangent plane coordinates (ra / dec) in degrees. Based on `ra` and `dec` and presently assumed centre (probably from `observations/galaxyname/observed_properties.toml` or simulation centre)
+- `r_h`: Half light radius of satellite in *arcminutes*
+- 
+- `r_ell`: elliptical radius in units of arcminutes
+
