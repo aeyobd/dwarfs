@@ -1,2 +1,2 @@
 rsync -av ~/thesis/ .
-rsync -av ~/dwarfs_plots/thesis/plots/figures ~/thesis/figures
+rsync -av ~/dwarfs_figures/thesis/plots/figures ~/thesis/

@@ -1,4 +1,4 @@
-\subsection{Background \& Past Work}\label{background-past-work}
+\section{Background \& Past Work}\label{background-past-work}
 
 \begin{itemize}
 \tightlist
@@ -20,51 +20,186 @@
   Alternative processes and uncertainties in the evolution of dwarfs
 \end{itemize}
 
+\subsubsection{Sculptor}\label{sculptor}
+
+\begin{itemize}
+\tightlist
+\item
+  sestito+23a
+\item
+  tolstoy+22
+\item
+  battaglia+09
+\item
+  arroyo-polonio+22
+\end{itemize}
+
+\begin{table*}[t]
+\centering
+\caption{Measured properties of Sculptor}
+\label{tbl:Measured-properties-of-Sculptor}
+\begin{tabular}{lll}
+\toprule
+parameter & value & Source\\
+\midrule
+$\alpha$ & $15.0183 \pm 0.0012$˚ & M+18\\
+$\delta$ & $-33.7186 \pm 0.00072$˚ & M+18\\
+distance & $83.2 \pm 2$ kpc & Tran+22\\
+$\mu_\alpha \cos \delta$ & $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$ & MV20a\\
+$\mu_\delta$ & $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ & MV20a\\
+RV & $111.03 \pm 0.23$ & This work\\
+$\sigma_v$ & $9.61\pm0.16$ & This work\\
+$r_h$ & $12.33 \pm 0.05$ arcmin & MV20*\\
+ell & $0.36 \pm 0.01$ & M+18\\
+PA & $92\pm1$ & M+18\\
+$M_V$ & $-10.82\pm0.14$ & M+18\\
+$\Upsilon_\star$ & $1.5 \pm 0.3$ & assumed\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 \subsection{Gaia Membership Selection}\label{gaia-membership-selection}
 
 \begin{figure}
 \centering
 \includegraphics{figures/scl_selection.png}
-\caption{Sculptor selection criteria.}\label{fig:sculptor_selection}
+\caption{Sculptor selection criteria. This will be a super long caption
+to test the figure list.}\label{fig:sculptor_selection}
 \end{figure}
 
-We use J+24 data, updated PM from the MV 2020a catalogue.
-
-J+24 select members using a multi-component Baysian algorithm.
+We use J+24 data. J+24 select members using a multi-component Baysian
+algorithm:
 
 \begin{itemize}
-\tightlist
 \item
-  First, stars with poor Gaia astrometry, color excess nearby
-  parallaxes, and proper motions \textgreater{} 10 mas/yr are removed
+  Remove stars with poor astrometry or photometry, no colour excess
+  (\citet{lindegren+2018} equation C.2), 3\(\sigma\) consistency of
+  measured parallax with dwarf distance (near zero with
+  \citet{lindegren+2018} zero-point correction), and absolute RA and Dec
+  proper motions less than 10\(\,{\rm mas\ yr^{-1}}\).
+\item
+  Spatial likelihood based on a double exponential
+  \(\Sigma_\star \propto e^{-r/r_s} + B\,e^{-r/r_{\rm outer}}\) where
+  the inner scale radius is fixed.
 \item
   Stars are assigned a likelihood based on the location on the CMD
-  (assuming)
+  (using Padova isochrones including an intrinsic 0.1 CMD width in
+  colour convolved with colour and distance modulus)
+\item
+  Background KDE density maps for the CMD and PM are constructed using
+  the other quality-selected stars outside of \(5R_h\), where the
+  satellite density would be orders of magnitude less than the
+  background (even in the presence of extended tidal features).
+\item
+  Likelihoods normalized to unity to represnt a PDF
+
+  Membership probabilities are then given by
 \end{itemize}
 
-Simple cuts, such as selecting PM, CMD based on purely geometric cuts
-reveal a similar density profile.
+\[
+P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}} = \frac{1}{1 + \frac{(1-f_{\rm sat}){\cal L}_{\rm bg}}{f_{\rm sat}{\cal L}_{\rm sat} }}
+\]
 
-One caveat is the original algorithm takes spatial position into
-account. When deriving a density profile, this assumption may influence
-the derived density profile, especially when the galaxy density is
-fainter than the background of similar appearing stars. To remidy this
-and estimate where the background begins to take over, we also explore a
-cut based on the likelihood ratio of only the CMD and PM components.
+where \(f_{\rm sat}\) is the fraction of stars belonging to the system
+inside the given field, \({\cal L}_{\rm sat}\) is the likelihood of a
+star belonging to the satellite, and \({\cal L}_{\rm bg}\) is the
+likelihood of the star belonging to the background. Each likelihood is
+calculated as a product of the CMD, PM, and spatial likelihoods: \[
+{\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}
+\]
 
-\subsection{Searches for tidal tails}\label{searches-for-tidal-tails}
+Not shown here, we explore simple cuts of the stars, using absolute cuts
+in parallax, proper motions, and the CMD. The results are similar to the
+nospace model.
+
+The above formula suggests that a cut in \(P_{\rm sat}\) is equivalent
+to the cut in likelihoods \[
+\frac{{\cal L}_{\rm sat}}{{\cal L}_{\rm bg}} > \frac{(1-f_{\rm sat})/f_{\rm sat}}{1/P_{\rm sat}- 1}
+\]
+
+Note that if we remove the spatial component of the likelihood, then
+\(f_{\rm sat}\) represents a global normalization
+
+\subsubsection{Searches for tidal tails}\label{searches-for-tidal-tails}
 
 \begin{figure}
 \centering
-\includegraphics{/Users/daniel/Library/Application Support/typora-user-images/image-20250313132102118.png}
-\caption{image-20250313132102118}
+\includegraphics{figures/scl_tidal_tails.png}
+\caption{Density profiles}\label{fig:sculptor_tidal_tails}
 \end{figure}
+
+\begin{itemize}
+\item
+  The above figure shows the distribution of member stars (orange), PM
+  \& CMD only selected stars (blue) and all stars (passing quality cuts,
+  black)
+\item
+  There are no apparent overdensities in the PM \& CMD only selected
+  stars to suggest the presence of a tidal tail
+\item
+  This means that at least at the level of where the background density
+  dominates, we can exclude models which produce tidal tails brighter
+  than a density of
+  \(\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}\)
+  (TODO assuming a distance of \ldots{} and stellar mass of \ldots).
+\end{itemize}
 
 \subsection{Density Profile Reliability and
 Uncertainties}\label{density-profile-reliability-and-uncertainties}
 
-Given a set of probable members, the density profile is given by
-EQUATION, where we use \ldots{}
+\begin{itemize}
+\tightlist
+\item
+  How well do we know the density profiles?
+\item
+  What uncertainties affect derived density profiles?
+\item
+  Can we determine if Gaia, structural, or algorithmic systematics
+  introduce important errors in derived density profiles?
+\end{itemize}
+
+J+24's algorithm takes spatial position into account, assuming either a
+one or two component exponential density profile. When deriving a
+density profile, this assumption may influence the derived density
+profile, especially when the galaxy density is fainter than the
+background of similar appearing stars. To remedy this and estimate where
+the background begins to take over, we also explore a cut based on the
+likelihood ratio of only the CMD and PM components. This is in essence
+assuming that the spatial position of a star contains no information on
+it's membership probability (a uniform distribution like the background)
+
+To incorporate the structural uncertainties and robustly model the
+sampling uncertainty, we construct the following bootstrap model
+
+\begin{itemize}
+\item
+  Centre is varied by a centring error, estimated from the standard
+  normal error of the positions plus the systematic shift of the mean
+\item
+  Position angle and ellipticity are sampled from a normal distribution
+  given the reported uncertainties
+\item
+  \(f_{\rm sat}\) is sampled from \ldots{}
+
+  \textbf{TODO}: Look into normalization of Likelihoods and check how
+  \(f_{\rm sat}\) matters. If \(f_{\rm sat}\) is related to the
+  normalizations of fg / bg densities, and other likelihoods are
+  area-normalized to 1, then this makes life much easier.
+
+  Test if psat weighted density profiles are similar
+
+  Save MC density profile outputs
+\end{itemize}
+
+\begin{figure}
+\centering
+\includegraphics{figures/scl_density_methods.png}
+\caption[Density profiles]{add simple cuts \& delve to convince
+more\ldots{}}\label{fig:sculptor_observed_profiles}
+\end{figure}
+
+\section{Comparison of the Classical
+dwarfs}\label{comparison-of-the-classical-dwarfs}
 
 \begin{itemize}
 \tightlist
@@ -92,21 +227,9 @@ EQUATION, where we use \ldots{}
     galaxies will have higher \(n\)
   \end{itemize}
 \item
-  To better estimate the uncertanties due to unknown galaxy properties
+  To better estimate the uncertainties due to unknown galaxy properties
   and flexibility in the likelihood cut, we can
 \end{itemize}
-
-\begin{figure}
-\centering
-\includegraphics{figures/density_profiles_medley.png}
-\caption{Density profiles}\label{fig:sculptor_observed_profiles}
-\end{figure}
-
-Dark Matter is one of the biggest open questions in modern astronomy.
-Hello fig.~\ref{fig:sculptor}.
-
-\subsection{Comparison of the Classical
-dwarfs}\label{comparison-of-the-classical-dwarfs}
 
 \begin{figure}
 \centering
@@ -126,6 +249,9 @@ dwarfs}\label{comparison-of-the-classical-dwarfs}
 \caption{image-20250313130043114}
 \end{figure}
 
+\subsection{Radial Velocity
+Measurements}\label{radial-velocity-measurements}
+
 \subsection{Summary}\label{summary}
 
 \begin{itemize}
@@ -143,3 +269,6 @@ dwarfs}\label{comparison-of-the-classical-dwarfs}
     Deeper data would be required to robustly measure this
   \end{itemize}
 \end{itemize}
+
+\textbf{TODO}: Use updated density profiles (nospace) with uncertainties
+included to MCMC fit Sérsic profiles to every dwarf galaxy.
