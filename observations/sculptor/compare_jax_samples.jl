@@ -91,6 +91,9 @@ md"""
 # ╔═╡ 2dacbd3e-b027-44cd-bb39-d3bfcf99366f
 import Statistics: mean
 
+# ╔═╡ ad941746-1014-4385-a515-93979afc27fc
+CairoMakie.activate!(pt_per_unit =2, type="svg")
+
 # ╔═╡ 27d01941-3d40-4447-847f-e21191a20dd1
 md"""
 ## Added columnes
@@ -135,13 +138,13 @@ md"""
 data_dir = "data"
 
 # ╔═╡ 330a4e01-59e0-4eb6-9900-d23db1159dd5
-scl_ell = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2_comp_ell.fits"))
+scl_ell = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2c.fits"))
 
 # ╔═╡ b37ad796-1695-4665-b592-b68a99356907
-scl_circ = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2_comp_circ.fits"))
+scl_circ = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2c_circ.fits"))
 
 # ╔═╡ 39be2272-202a-4bb9-95cb-a9e584589d97
-scl_1comp = LilGuys.read_fits(joinpath(data_dir, "jensen+24_1_comp_circ.fits"))
+scl_1comp = LilGuys.read_fits(joinpath(data_dir, "jensen+24_1c.fits"))
 
 # ╔═╡ 08cf3854-66e9-4358-8925-e069f59f65e6
 scl_gaia = LilGuys.read_fits("data/gaia_4deg_cen.fits")
@@ -270,7 +273,7 @@ let
 		limits=(-0.5, 2.5, 15, 22)
 	)
 	
-	p = scatter!(df.bp_rp, df.phot_g_mean_mag, color=(df.L_CMD_SAT), markersize=3)
+	p = scatter!(df.bp_rp, df.phot_g_mean_mag, color=log10.(df.L_CMD_SAT), markersize=3, colorrange=(-5, 0))
 
 	Colorbar(fig[1, 2], p, label="CMD likelihood")
 
@@ -348,11 +351,14 @@ let
 	fig
 end
 
+# ╔═╡ c6412d90-adf0-4b69-8e35-24988e936970
+scl_circ.L_S_BKD[1] * π * 2^2
+
 # ╔═╡ 3e4589b6-2da2-44c3-9e87-b8b9c32728c9
 scl_circ.L_S_BKD
 
 # ╔═╡ 6bb5e991-72ab-46de-ae57-ffee2d7253ef
-
+sum(scl_circ.L_S_SAT) ./ length(scl_circ.L_S_SAT)
 
 # ╔═╡ 59038c14-c565-4be4-baf5-021ce89fea1a
 let
@@ -379,8 +385,8 @@ let
 	)
 
 	df = scl_circ
-	p = scatter!(df.xi, df.eta, color=df.L_S_SAT ./ df.L_S_BKD, 
-		markersize=3, colorscale=log10, colorrange=(1e-2, 1e2)
+	p = scatter!(df.xi, df.eta, color=log10.(df.L_S_SAT ./ df.L_S_BKD), 
+		markersize=3, colorrange=(-2, 2)
 	)
 
 	Colorbar(fig[1, 2], p, label="relative likelihood for satalite", )
@@ -406,10 +412,10 @@ let
 end
 
 # ╔═╡ 326619b2-01ca-4f60-8619-516dadc58b98
-rs = 0.28 * 60 
+rs = 0.255 * 60 
 
 # ╔═╡ 0e336f85-16ec-44f5-a664-35dc569a3af8
-re = 10.09/ 1.68
+re = 9.9/ 1.68
 
 # ╔═╡ e9516503-2ef9-4ac3-97f5-b1c705bdd579
 B = 0.015
@@ -420,6 +426,27 @@ B = 0.015
 # ╔═╡ ffc1a8a8-3851-43d7-b017-0c17ee991b6f
 l_s_sat_model(r) =  exp(-r / re) + B * exp(-r / rs) 
 
+# ╔═╡ 7db80896-4f26-42dc-89fd-abc0e9d74f73
+maximum(df.L_S_SAT)
+
+# ╔═╡ 72d8e9f8-ded8-404b-bbc4-62422a167d52
+LilGuys.integrate(r -> 2π*r*l_s_sat_model(r), 0, 120) * maximum(scl_ell.L_S_SAT) ./ 60 .^ 2
+
+# ╔═╡ 141154be-c9b0-4bde-b23c-49db69e02b96
+scl_circ.L_S_BKD[1] .* π * 2^2
+
+# ╔═╡ bbb42fc3-76a7-4611-ae21-d68160294afb
+extrema(r_ell)
+
+# ╔═╡ 94016cae-e0f8-4ead-af43-aa68473ab3d3
+sum(df.PSAT[df.F_BEST .== 1])
+
+# ╔═╡ b879d459-570a-4568-9a64-49e950fce39a
+ df.L_S_SAT ./ l_s_sat_model.(r_ell) 
+
+# ╔═╡ 39186086-e25d-4d81-95b4-61767a14c0f3
+df.L_S_SAT_Inner ./ exp.(-r_ell ./ re)
+
 # ╔═╡ cc1e4080-93a4-4616-bdfe-74f23a8b3bf2
 let
 	fig, ax = FigAxis(
@@ -427,7 +454,9 @@ let
 		limits=(0, 150, 0.1, 10)
 	)
 	
-	scatter!(r_ell, l_s_sat_model.(r_ell) ./ df.L_S_SAT .* maximum(df.L_S_SAT))
+	scatter!(r_ell, l_s_sat_model.(r_ell) ./ df.L_S_SAT .* maximum(df.L_S_SAT),
+		rasterize=true
+	)
 	hlines!(1)
 
 	fig
@@ -873,6 +902,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═ed4b328a-59a1-11ef-2a75-092fdb7659b8
 # ╠═2dacbd3e-b027-44cd-bb39-d3bfcf99366f
 # ╠═9d548f5a-223c-4827-b2d3-8361d0ced243
+# ╠═ad941746-1014-4385-a515-93979afc27fc
 # ╟─27d01941-3d40-4447-847f-e21191a20dd1
 # ╟─0d9da520-3d03-4d9a-8bb0-6d698e819abc
 # ╠═d452a47a-22a2-4523-a7cf-f7b668cc7dda
@@ -918,6 +948,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═8550a1f6-8f54-43ee-9c9b-51e4ddd093b5
 # ╠═da5b85b2-6406-4ef0-9c53-15555a795fd7
 # ╠═3dc4d608-30b3-4c11-83e9-f5ae31df4786
+# ╠═c6412d90-adf0-4b69-8e35-24988e936970
 # ╠═3e4589b6-2da2-44c3-9e87-b8b9c32728c9
 # ╠═6bb5e991-72ab-46de-ae57-ffee2d7253ef
 # ╠═59038c14-c565-4be4-baf5-021ce89fea1a
@@ -928,6 +959,13 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═e9516503-2ef9-4ac3-97f5-b1c705bdd579
 # ╠═b0ec46b5-8fbe-4514-9505-df638c534354
 # ╠═ffc1a8a8-3851-43d7-b017-0c17ee991b6f
+# ╠═7db80896-4f26-42dc-89fd-abc0e9d74f73
+# ╠═72d8e9f8-ded8-404b-bbc4-62422a167d52
+# ╠═141154be-c9b0-4bde-b23c-49db69e02b96
+# ╠═bbb42fc3-76a7-4611-ae21-d68160294afb
+# ╠═94016cae-e0f8-4ead-af43-aa68473ab3d3
+# ╠═b879d459-570a-4568-9a64-49e950fce39a
+# ╠═39186086-e25d-4d81-95b4-61767a14c0f3
 # ╠═cc1e4080-93a4-4616-bdfe-74f23a8b3bf2
 # ╠═bb030f67-ab58-40e8-83b8-e2dd7dbba3b3
 # ╠═61d1658a-57be-4ff1-a8a3-4fcfa98924d4

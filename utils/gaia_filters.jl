@@ -100,8 +100,8 @@ If these columns already exist, they are renamed to `xi_original`, `eta_original
 
 If θ is specified, than the orbital coordinate frame is also calculated as xi_p, eta_p.
 """
-function read_gaia_stars(filename, params; θ=nothing)
-    df = lguys.read_fits(filename)
+function read_gaia_stars(params; θ=nothing)
+    df = lguys.read_fits(params.filename)
 
     for col in ["r_ell", "xi", "eta"]
         if col ∈ names(df)
@@ -118,8 +118,8 @@ function read_gaia_stars(filename, params; θ=nothing)
     end
 
     if θ !== nothing
-    	df[:, :xi_p], df[:, :eta_p] = lguys.to_orbit_coords(df.ra, df.dec, 
-                                                            params.ra, params.dec, θ)
+        df[:, :xi_p], df[:, :eta_p] = lguys.to_orbit_coords(df.ra, df.dec, 
+                                                                params.ra, params.dec, θ)
     end
 
     if params.PSAT_col !== "PSAT"
@@ -139,6 +139,13 @@ function read_gaia_stars(filename, params; θ=nothing)
     end
 
 
+    # add some useful columns
+
+    df[!, :LL_S] = @. log10(df.L_S_SAT) - log10(df.L_S_BKD)
+    df[!, :LL_PM] = @. log10(df.L_PM_SAT) - log10(df.L_PM_BKD)
+    df[!, :LL_CMD] = @. log10(df.L_CMD_SAT) - log10(df.L_CMD_BKD)
+    df[!, :LL] = @. df.LL_S + df.LL_PM + df.LL_CMD
+    df[!, :LL_nospace] = @. df.LL_PM + df.LL_CMD
     return df
 end
 

@@ -5,6 +5,16 @@ using KernelDensity
 
 red = COLORS[6]
 
+const plot_labels = OrderedDict(
+	:xi => L"$\xi$\,/\,degrees",
+	:eta => L"$\eta$\,/\,degrees",
+	:xi_am => L"$\xi$\,/\,arcmin",
+	:eta_am => L"$\eta$\,/\,arcmin",
+	:G => "G (mag)",
+	:bp_rp => "BP – RP (mag)",
+	:pmra => L"$\mu_{\alpha*}$ / mas yr$^{-1}$",
+	:pmdec => L"$\mu_{\delta}$ / mas yr$^{-1}$",
+)
 
 """
     @savefig name [fig]
