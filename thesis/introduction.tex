@@ -12,7 +12,7 @@
   \begin{itemize}
   \tightlist
   \item
-    EN21, peñarrubia+09, etc.
+    \citet{EN2021}, \citet{PNM2008}, etc.
   \end{itemize}
 \item
   Instances of dwarfs undergoing weird processess
@@ -25,13 +25,14 @@
 \begin{itemize}
 \tightlist
 \item
-  sestito+23a
+  \citet{sestito+2023a}
 \item
-  tolstoy+22
+  \citet{tolstoy+2023}, \citet{arroyo-polonio+2023},
+  \citet{arroyo-polonio+2024}
 \item
-  battaglia+09
+  \citet{battaglia+2008}
 \item
-  arroyo-polonio+22
+  \citet{iorio+2019}
 \end{itemize}
 
 \begin{table*}[t]
@@ -62,9 +63,12 @@ $\Upsilon_\star$ & $1.5 \pm 0.3$ & assumed\\
 
 \begin{figure}
 \centering
-\includegraphics{figures/scl_selection.png}
-\caption{Sculptor selection criteria. This will be a super long caption
-to test the figure list.}\label{fig:sculptor_selection}
+\includegraphics{figures/scl_selection.pdf}
+\caption[Sculptor selection criteria]{The selection criteria for Scl
+members. Members are red and all field stars (satisfying quality
+criteria) are in light grey. \textbf{Top left:} tangent plane.
+\textbf{Top Right:} Colour magnitude
+diagram.}\label{fig:sculptor_selection}
 \end{figure}
 
 We use J+24 data. J+24 select members using a multi-component Baysian
@@ -108,31 +112,29 @@ calculated as a product of the CMD, PM, and spatial likelihoods: \[
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}
 \]
 
-Not shown here, we explore simple cuts of the stars, using absolute cuts
-in parallax, proper motions, and the CMD. The results are similar to the
-nospace model.
-
 The above formula suggests that a cut in \(P_{\rm sat}\) is equivalent
 to the cut in likelihoods \[
 \frac{{\cal L}_{\rm sat}}{{\cal L}_{\rm bg}} > \frac{(1-f_{\rm sat})/f_{\rm sat}}{1/P_{\rm sat}- 1}
 \]
 
 Note that if we remove the spatial component of the likelihood, then
-\(f_{\rm sat}\) represents a global normalization
+\(f_{\rm sat}\) represents a global normalization.
+
+Not shown here, we explore simple cuts of the stars, using absolute cuts
+in parallax, proper motions, and the CMD. The results are similar to the
+nospace model.
 
 \subsubsection{Searches for tidal tails}\label{searches-for-tidal-tails}
 
 \begin{figure}
 \centering
-\includegraphics{figures/scl_tidal_tails.png}
-\caption{Density profiles}\label{fig:sculptor_tidal_tails}
+\includegraphics{figures/scl_tidal_tails.pdf}
+\caption[Tidal tails]{The distribution of member stars (orange), PM \&
+CMD only selected stars (blue) and all stars (passing quality cuts,
+black).}\label{fig:sculptor_tidal_tails}
 \end{figure}
 
 \begin{itemize}
-\item
-  The above figure shows the distribution of member stars (orange), PM
-  \& CMD only selected stars (blue) and all stars (passing quality cuts,
-  black)
 \item
   There are no apparent overdensities in the PM \& CMD only selected
   stars to suggest the presence of a tidal tail
@@ -193,10 +195,11 @@ sampling uncertainty, we construct the following bootstrap model
 
 \begin{figure}
 \centering
-\includegraphics{figures/scl_density_methods.png}
-\caption[Density profiles]{add simple cuts \& delve to convince
-more\ldots{}}\label{fig:sculptor_observed_profiles}
+\includegraphics{figures/scl_density_methods.pdf}
+\caption{Density profiles}\label{fig:sculptor_observed_profiles}
 \end{figure}
+
+Figure:
 
 \section{Comparison of the Classical
 dwarfs}\label{comparison-of-the-classical-dwarfs}
@@ -233,26 +236,140 @@ dwarfs}\label{comparison-of-the-classical-dwarfs}
 
 \begin{figure}
 \centering
-\includegraphics{/Users/daniel/Library/Application Support/typora-user-images/image-20250313130050775.png}
-\caption{image-20250313130050775}
+\includegraphics{figures/classical_dwarf_profiles.pdf}
+\caption[Sculptor and UMi versus classical dwarfs]{Density profiles for
+each dwarf galaxy.}
 \end{figure}
 
-\begin{figure}
-\centering
-\includegraphics{/Users/daniel/Library/Application Support/typora-user-images/image-20250313130110550.png}
-\caption{image-20250313130110550}
-\end{figure}
+\textbf{TODO}: Use updated density profiles (nospace) with uncertainties
+included to MCMC fit Sérsic profiles to every dwarf galaxy.
 
-\begin{figure}
+\begin{table*}[t]
 \centering
-\includegraphics{/Users/daniel/Library/Application Support/typora-user-images/image-20250313130043114.png}
-\caption{image-20250313130043114}
-\end{figure}
+\caption{Sérsic profile fits and basic structural parameters for classical and bright dwarfs around the MW.}
+\label{tbl:Sérsic-profile-fits-and-basic-structural-parameters-for-classical-and-bright-dwarfs-around-the-MW}
+\begin{tabular}{llllll}
+\toprule
+galaxy & Ell. & Sersic Rh & sersic n & Sersic mass & \\
+\midrule
+Fornax &  &  &  &  & \\
+Leo I &  &  &  &  & \\
+Sculptor &  &  &  &  & \\
+Leo II &  &  &  &  & \\
+Carina &  &  &  &  & \\
+Sextans I &  &  &  &  & \\
+Ursa Minor &  &  &  &  & \\
+Draco &  &  &  &  & \\
+Canes Venatici I &  &  &  &  & \\
+Crater II &  &  &  &  & \\
+Bootes I &  &  &  &  & \\
+Bootes III &  &  &  &  & \\
+Antlia II &  &  &  &  & \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Cannot resolve
+
+\begin{itemize}
+\tightlist
+\item
+  reticulum II yyy
+\end{itemize}
 
 \subsection{Radial Velocity
 Measurements}\label{radial-velocity-measurements}
 
-\subsection{Summary}\label{summary}
+\section{Simulation-based
+motivations}\label{simulation-based-motivations}
+
+To motivate why a tidal interaction may give rise to the observed
+density profiles, we create a toy simulation following \citet{PNM2008}.
+
+\begin{itemize}
+\item
+  NFW initial conditions (sculptor like, vcm, rcm)
+\item
+  Evolved in x-y plane using \citet{EP2020} potential for
+  \textasciitilde{} 5Gyr with pericentre of 15 kpc and apocentre of 100
+  kpc.
+\item
+  Exponential initial stellar profile.
+\end{itemize}
+
+As a dark matter halo is perturbed on a pericentric passage with the
+milky way,
+
+\begin{itemize}
+\tightlist
+\item
+  Tidal stress heats halo slightly
+\item
+  Mass loss, particularly of loosely bound particles
+\end{itemize}
+
+The stellar component tracers will similarly follow the behaviour of the
+dark matter.
+
+An emperical estimate of where the simulation's stars are becoming
+unbound is, as stated in \citet{PNM2008}, the break radius \[
+R_b = C\,\sigma_{v}\,\Delta t
+\] where \(\sigma_v\) is the present line of sight velocity dispersion ,
+\(\delta t\) is the time since pericentre, and \(C \approx 0.55\) is a
+fit. The idea motivating this equation is stars in the inner regions
+will have dynamically equilibriated to the new potential (phase mixed),
+however the outer regions are no longer in steady state, so we have to
+wait until the crossing time reaches them as well.
+
+As illustrated in fig.~\ref{fig:toy_profiles}, the density profile
+initially stars off exponential. At increasing times since the first
+pericentric passage, the break radius, appearing as an apparent
+separation between the slopes of the inner and outer profile, increases.
+
+\begin{figure}
+\centering
+\includegraphics{figures/scl_umi_vs_idealized.pdf}
+\caption[Idealized simulations match Scl and UMi]{Sculptor and UMi's
+profiles are well-matched to an idealized
+simulation}\label{fig:toy_profiles}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{figures/idealized_break_radius.pdf}
+\caption[Break radius validation]{The break radius of the simulations is
+set by}\label{fig:idealized_break_radius}
+\end{figure}
+
+From this argument, we note that the following properties must be
+approximately true for tides to occur:
+
+\begin{itemize}
+\tightlist
+\item
+  Close enough pericentre. The other break radius \(r_J\) implies that
+  if the host density is 3x the satellite, stars will be lost
+\item
+  Corresponding time since last pericentre: If the time since last
+  pericentre is not \(\sim\) consistent with an observed break in the
+  density profile, then tides
+\item
+  Halo evolution. As found in \citet{EN2021}, galaxies evolve along well
+  defined tidal tracks (assuming spherical, isotropic, NFW halo, which
+  may not be true, see \ldots). These tracks tend to ``puff up'' the
+  stellar component while also removing dark matter mass, leaving a
+  smaller, compacter DM halo with a more extended stellar component.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    This information is mostly related to the statistical initial
+    distribution of satellites from cosmology {[}ludlow+2016;
+    \citet{fattahi+2018}{]}
+  \end{itemize}
+\end{itemize}
+
+\section{Summary}\label{summary}
 
 \begin{itemize}
 \tightlist
@@ -269,6 +386,3 @@ Measurements}\label{radial-velocity-measurements}
     Deeper data would be required to robustly measure this
   \end{itemize}
 \end{itemize}
-
-\textbf{TODO}: Use updated density profiles (nospace) with uncertainties
-included to MCMC fit Sérsic profiles to every dwarf galaxy.

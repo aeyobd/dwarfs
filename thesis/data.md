@@ -1,47 +1,6 @@
-# Background & Past Work
+# Gaia Membership Selection
 
-- What is dark matter? Why do we look at dwarfs?
-- Forms of dark matter, lambda-CDM, and dwarf galaxies
-- How does gravity affect dwarfs, theory of tidal perturbations
-  - @EN2021, @PNM2008, etc.
-- Instances of dwarfs undergoing weird processess
-- Alternative processes and uncertainties in the evolution of dwarfs
-
-## Sculptor
-
-- @sestito+2023a
-- @tolstoy+2023, @arroyo-polonio+2023, @arroyo-polonio+2024
-- @battaglia+2008
-- @iorio+2019
-
-## Ursa Minor
-
-- @sestito+2023b
-
-
-
-
-
-| parameter                | value                                                        | Source    |
-| ------------------------ | ------------------------------------------------------------ | --------- |
-| $\alpha$                 | $15.0183 \pm 0.0012$˚                                        | M+18      |
-| $\delta$                 | $-33.7186 \pm 0.00072$˚                                      | M+18      |
-| distance                 | $83.2 \pm 2$ kpc                                             | Tran+22   |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | MV20a     |
-| $\mu_\delta$             | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a     |
-| RV                       | $111.03 \pm 0.23$                                            | This work |
-| $\sigma_v$               | $9.61\pm0.16$                                                | This work |
-| $r_h$                    | $12.33 \pm 0.05$ arcmin                                      | MV20*     |
-| ell                      | $0.36 \pm 0.01$                                              | M+18      |
-| PA                       | $92\pm1$                                                     | M+18      |
-| $M_V$                    | $-10.82\pm0.14$                                              | M+18      |
-| $\Upsilon_\star$         | $1.5 \pm 0.3$                                                | assumed   |
-
-Table: Measured properties of Sculptor
-
-## Gaia Membership Selection
-
-![Sculptor selection criteria](figures/scl_selection.png){#fig:sculptor_selection}
+![Sculptor selection criteria](/Users/daniel/thesis/figures/scl_selection.png){#fig:sculptor_selection}
 
 Figure: The selection criteria for Scl members. Members are red and all field stars (satisfying quality criteria) are in light grey. **Top left:** tangent plane. **Top Right:** Colour magnitude diagram.
 
@@ -85,7 +44,7 @@ Not shown here, we explore simple cuts of the stars, using absolute cuts in para
 
 ### Searches for tidal tails
 
-![Tidal tails](figures/scl_tidal_tails.png){#fig:sculptor_tidal_tails}
+![Tidal tails](/Users/daniel/thesis/figures/scl_tidal_tails.png){#fig:sculptor_tidal_tails}
 
 Figure: The distribution of member stars (orange), PM & CMD only selected stars (blue) and all stars (passing quality cuts, black).
 
@@ -134,7 +93,7 @@ To incorporate the structural uncertainties and robustly model the sampling unce
 
 
 
-![Density profiles](figures/scl_density_methods.png){#fig:sculptor_observed_profiles}
+![Density profiles](/Users/daniel/thesis/figures/scl_density_methods.png){#fig:sculptor_observed_profiles}
 
 Figure: 
 
@@ -149,7 +108,7 @@ Figure:
   - The Sérsic index, $n$, is a measure of the deviation from an exponential. Exponentials have $n=1$, whereas more extended dwarf galaxies will have higher $n$
 - To better estimate the uncertainties due to unknown galaxy properties and flexibility in the likelihood cut, we can 
 
-![Sculptor and UMi versus classical dwarfs](figures/classical_dwarf_profiles.png)
+![Sculptor and UMi versus classical dwarfs](/Users/daniel/thesis/figures/classical_dwarf_profiles.png)
 
 Figure: Density profiles for each dwarf galaxy.
 
@@ -202,13 +161,13 @@ where $\sigma_v$ is the present line of sight velocity dispersion , $\delta t$ i
 
 As illustrated in @fig:toy_profiles, the density profile initially stars off exponential. At increasing times since the first pericentric passage, the break radius, appearing as an apparent separation between the slopes of the inner and outer profile, increases. 
 
-![Idealized simulations match Scl and UMi](figures/scl_umi_vs_idealized.png){#fig:toy_profiles}
+![Idealized simulations match Scl and UMi](/Users/daniel/thesis/figures/scl_umi_vs_idealized.png){#fig:toy_profiles}
 
 Figure: Sculptor and UMi's profiles are well-matched to an idealized simulation
 
 
 
-![Break radius validation](figures/idealized_break_radius.png){#fig:idealized_break_radius}
+![Break radius validation](/Users/daniel/thesis/figures/idealized_break_radius.png){#fig:idealized_break_radius}
 
 Figure: The break radius of the simulations is set by 
 
