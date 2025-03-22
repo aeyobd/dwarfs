@@ -61,6 +61,9 @@ md"""
 # Setup
 """
 
+# ╔═╡ 6cf3cb83-317e-40fa-be47-7a4e31a539ec
+CairoMakie.activate!(pt_per_unit=2, type="svg")
+
 # ╔═╡ 99315b4c-37c1-4287-bd71-c3339c8e76ad
 import FillArrays: I, Eye
 
@@ -92,7 +95,7 @@ end
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	profilename = TextField(default="jax_2c")
+	profilename = TextField(default="../processed/profile.mcmc_hist.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -109,7 +112,7 @@ begin
 end
 
 # ╔═╡ 11b84ff0-7f35-4716-ae30-e05a1c5f88ba
-log_r_label = L"\log\, r\ /\ \mathrm{arcmin}"
+log_R_label = L"\log\, r\ /\ \mathrm{arcmin}"
 
 # ╔═╡ 3eb9992d-425d-4bec-94d2-da4f8dc59a8d
 log_sigma_label = L"$\log\, \Sigma $ /\ stars\ arcmin$^{-2}$"
@@ -126,18 +129,46 @@ md"""
 
 # ╔═╡ 20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
 begin
-	prof = LilGuys.StellarProfile(joinpath(galaxyname, "density_profiles/$(profilename)_profile.toml"))
-	if prof.normalization == "mass"
-		prof.log_Sigma .+= log10(sum(prof.counts))
-		prof.normalization = "none"
+	prof_in = LilGuys.StellarProfile(joinpath(galaxyname, "density_profiles/$(profilename)"))
+	if prof_in.normalization == "mass"
+		prof_in.log_Sigma .-= prof_in.log_m_scale
+		prof_in.normalization = "none"
 	end
 
-	prof
+	prof_in
 end
+
+# ╔═╡ 249fed2c-e86a-47ab-a7a6-06f7c1edc01a
+
+
+# ╔═╡ 44a893d6-9a3d-4959-b76f-274635198aa2
+md"""
+not sure the bins are ddone right but should be okay???
+"""
+
+# ╔═╡ a0cb6ecd-59ab-4a7a-b95a-d55bfdd2d93b
+begin
+	_filt_prof = prof_in.log_Sigma_em .< 1
+	_filt_prof .&= prof_in.log_Sigma_ep .< 1
+	_filt_prof .&= isfinite.(prof_in.log_Sigma_em)
+	_filt_prof .&= isfinite.(prof_in.log_Sigma)
+	_filt_prof .&= isfinite.(prof_in.log_R)
+	_filt_bins = [false; _filt_prof] .|| [_filt_prof; false]
+
+	prof = (;
+		log_R = prof_in.log_R[_filt_prof],
+		log_Sigma = prof_in.log_Sigma[_filt_prof],
+		log_Sigma_err = max.(prof_in.log_Sigma_em[_filt_prof] .+ prof_in.log_Sigma_ep[_filt_prof]),
+		log_R_bins = prof_in.log_R_bins[_filt_bins],
+	)
+end
+
+# ╔═╡ 995a9a15-38d0-47c3-ba12-58ba8209497c
+
 
 # ╔═╡ 5026118a-85f6-4f71-bd0f-d25c4916c834
 "a list of log radii to sample analytic models over"
-log_r_model = LinRange(prof.log_r_bins[1], prof.log_r_bins[end], 1000)
+log_r_model = LinRange(prof.log_R_bins[1], prof.log_R_bins[end], 1000)
 
 # ╔═╡ 30154472-316b-4489-b1e5-f503447928cb
 md"""
@@ -161,6 +192,22 @@ function objective_function(x, u, analytic_profile, names; kwargs...)
 	return y_m
 end
 
+# ╔═╡ aa22fa06-8167-4d6e-aa05-399800370c1f
+function filter_prof(prof, log_R_max)
+	i_cut = findfirst(prof.log_R .> log_R_max)
+	if i_cut === nothing
+		return prof
+	end
+	i_cut = length(prof.log_R) - i_cut  + 1
+	@info "cutting $i_cut"
+	return (;
+		log_R = prof.log_R[begin:end-i_cut],
+		log_R_bins = prof.log_R_bins[begin:end-i_cut],
+		log_Sigma = prof.log_Sigma[begin:end-i_cut],
+		log_Sigma_err = prof.log_Sigma_err[begin:end-i_cut],
+	)
+end
+
 # ╔═╡ 7ff0bee2-3622-4573-81d5-8b8fa96cf461
 function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 	
@@ -170,7 +217,7 @@ function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 
 	local popt, covt, errs
 	try
-		popt, covt = LilGuys.curve_fit(objective, prof.log_r, prof.log_Sigma, w,  p0, )
+		popt, covt = LilGuys.curve_fit(objective, prof.log_R, prof.log_Sigma, w,  p0, )
 
 	catch e
 		@warn e
@@ -180,14 +227,14 @@ function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 		errs = sqrt.(diag(covt))
 	end
 
-	y_m = objective(prof.log_r, popt)
+	y_m = objective(prof.log_R, popt)
 	res = prof.log_Sigma .- y_m
 	chi2 = sum((res) .^ 2 .* w) ./ (length(w) - length(popt))
 
 
 	result = OrderedDict()
 
-	names_all = ["log_r_s"; "log_Sigma"; names]
+	names_all = ["log_R_s"; "log_Sigma"; names]
 
 	for (i, name) in enumerate(names_all)
 		result[name] = popt[i]
@@ -199,60 +246,57 @@ function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 	result["residuals"] = res
 	result["log_Sigma_pred"] = y_m
 
-	x_m = LinRange(-0.1 + minimum(prof.log_r), 0.1 + maximum(prof.log_r), 1000)
+	x_m = LinRange(-0.1 + minimum(prof.log_R), 0.1 + maximum(prof.log_R), 1000)
 	y_m = objective(x_m, popt)
 	result["log_Sigma_pred"] = y_m
-	result["log_r_pred"] = x_m
+	result["log_R_pred"] = x_m
 
-	result["r_s"] = 10 .^ result["log_r_s"]
-	result["r_s_err"] =  result["log_r_s_err"] * log(10) * result["r_s"]
+	result["R_s"] = 10 .^ result["log_R_s"]
+	result["R_s_err"] =  result["log_R_s_err"] * log(10) * result["R_s"]
 
 	if analytic_profile <: LilGuys.Sersic
-		result["Mtot"] = LilGuys.calc_M_2D(LilGuys.Sersic(), 1000) * 10 .^ (result["log_Sigma"] + 2result["log_r_s"])
+		result["Mtot"] = LilGuys.calc_M_2D(LilGuys.Sersic(), 1000) * 10 .^ (result["log_Sigma"] + 2result["log_R_s"])
 	else
 		
 		kwargs = [Symbol.(sym) => ui for (sym, ui) in zip(names, popt[3:end])]
 		h = analytic_profile(; M=1, kwargs...)	
 	
-		result["Mtot"] = LilGuys.get_M_tot(h) * 10 .^ (result["log_Sigma"]  + 2result["log_r_s"])
+		result["Mtot"] = LilGuys.get_M_tot(h) * 10 .^ (result["log_Sigma"]  + 2result["log_R_s"])
 	end
 
 	result["log_Mtot"] = log10.(result["Mtot"])
-	result["log_Mtot_err"] = result["log_Sigma_err"] .+ 2result["log_r_s_err"]
+	result["log_Mtot_err"] = result["log_Sigma_err"] .+ 2result["log_R_s_err"]
 	
 
 	return result
 end
 
-# ╔═╡ bc6db386-7ee6-4a9f-bd06-7e306d66e74e
-prof.counts
-
 # ╔═╡ 7a274a8d-f6eb-4d9b-97c5-0372dc9520fe
 function plot_Σ_fit_res(obs, fit; res_max=1, nf=2, title="")
-    fig = Figure()
+	fig = Figure(figsize=(3.25*72, 3.25*72))
     ax = Axis(fig[1, 1], 
         ylabel=log_sigma_label, 
 		title=title,
 	)
 	
-    errscatter!(ax, obs.log_r, obs.log_Sigma, yerr=obs.log_Sigma_err)
+    errorscatter!(ax, obs.log_R, obs.log_Sigma, yerror=obs.log_Sigma_err)
 
-	log_r = fit["log_r_pred"]
+	log_R = fit["log_R_pred"]
 	pred = fit["log_Sigma_pred"]
 
-    lines!(ax, log_r, pred, color=COLORS[2])
+    lines!(ax, log_R, pred, color=COLORS[2])
 	
-    lines!(ax, log_r, pred, color=COLORS[2], linestyle=:dash)
+    lines!(ax, log_R, pred, color=COLORS[2], linestyle=:dash)
     
     ax2 = Axis(fig[2, 1],
         ylabel=L"\delta\log\Sigma", 
-    	xlabel=log_r_label,
+    	xlabel=log_R_label,
 		limits = (nothing, (-res_max, res_max))
 	)
 
 
 	res = fit["residuals"]
-    errscatter!(ax2, obs.log_r, res, yerr=obs.log_Sigma_err, label="")
+    errorscatter!(ax2, obs.log_R, res, yerror=obs.log_Sigma_err, label="")
 
     hlines!(0, color=:black)
     
@@ -305,7 +349,7 @@ end
 Samples a model using the given number of threads and chains on each thread. Args passed to Turing.
 """
 function sample_model(turing_model, log_Σ, prof; sampler=NUTS(), threads=4, chains=16, kwargs...)
-	model = turing_model(log_Σ, prof.log_r, prof.log_Sigma, prof.log_Sigma_err)
+	model = turing_model(log_Σ, prof.log_R, prof.log_Sigma, prof.log_Sigma_err)
 
 	chains_per_thread = round(Int, chains / threads)
 	samples = mapreduce(c -> sample(model, sampler, MCMCThreads(), 1000, threads; kwargs...), chainscat, 1:chains_per_thread)
@@ -315,34 +359,34 @@ end
 
 # ╔═╡ 3d7e4658-97d5-4aff-baff-2ee87c688871
 """
-	predict(mcmc_fit, log_r)
+	predict(mcmc_fit, log_R)
 
-Predicts log_Σ given log_r and a mcmc fit model (assuming median best parameters).
+Predicts log_Σ given log_R and a mcmc fit model (assuming median best parameters).
 """
-function predict(mcmc_fit::MCMCFit, log_r::AbstractVector{<:Real})
+function predict(mcmc_fit::MCMCFit, log_R::AbstractVector{<:Real})
 	kwargs = Dict(arg => mcmc_fit.summary[only(findfirst(mcmc_fit.summary.parameters .== arg)), :median] for arg in mcmc_fit.model.argnames)
 
-	return mcmc_fit.model.log_Σ(log_r; kwargs...)
+	return mcmc_fit.model.log_Σ(log_R; kwargs...)
 end
 
 # ╔═╡ 5e31ad85-fbc5-459c-b6d4-b3493d3fd29f
 @doc raw"""
-	predict(mcmc_fit, log_r)
+	predict(mcmc_fit, log_R)
 
 Predicts $\log \Sigma$ given  $\log r$, an mcmc_model, and the specified iteration & chain.
 """
-function predict(mcmc_fit::MCMCFit, log_r::AbstractVector{<:Real}, i::Integer, c::Integer)
+function predict(mcmc_fit::MCMCFit, log_R::AbstractVector{<:Real}, i::Integer, c::Integer)
 	kwargs = Dict(arg => mcmc_fit.samples.value[i, arg, c] for arg in mcmc_fit.model.argnames)
 
-	return mcmc_fit.model.log_Σ(log_r; kwargs...)
+	return mcmc_fit.model.log_Σ(log_R; kwargs...)
 end
 
 # ╔═╡ 9a02adf8-9b90-4b4b-afcb-3ec5170f538b
 function get_χ2(fit, prof)
-	res = prof.log_Sigma .- predict(fit, prof.log_r) 
+	res = prof.log_Sigma .- predict(fit, prof.log_R) 
 	χ2 = sum(res .^ 2 ./ prof.log_Sigma_err .^ 2)
 
-	χ2_red = χ2 / (length(prof.log_r) - length(fit.model.argnames))
+	χ2_red = χ2 / (length(prof.log_R) - length(fit.model.argnames))
 
 	return χ2_red
 
@@ -393,7 +437,7 @@ Samples the provided density model assuming observations in `prof`.
 Kwargs passed to turing.
 """
 function sample_model(density_model::DensityModel; 
-		prof::LilGuys.StellarProfile=prof, 
+		prof=prof, 
 		kwargs...
 	)
 	
@@ -426,7 +470,7 @@ end
 
 # ╔═╡ 071356e5-53c4-462e-8448-7e5480dbfc0e
 function plot_samples!(df, log_Σ, argnames; 
-		x = log_r_model, 
+		x = log_R_model, 
 		alpha = 0.01, 
 		dy = zeros(length(x)),
 		kwargs...
@@ -442,7 +486,7 @@ end
 
 # ╔═╡ 566f2f87-a840-416e-b71e-bcfbb747e39b
 function plot_chains(samples)
-	fig = Figure()
+	fig = Figure(size=(3*72, 6*72))
 
 	Nc = size(samples, 3)
 
@@ -464,6 +508,7 @@ function plot_chains(samples)
 		end
 	end
 
+	rowgap!(fig.layout, 0)
 	linkxaxes!(fig.content...)
 	fig
 end
@@ -475,13 +520,13 @@ end
 function plot_samples_obs(mcmc_fit)
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		xlabel = log_r_label, 
+		xlabel = log_R_label, 
 		ylabel = log_sigma_label,
 	)
 
 	
 	plot_samples!(mcmc_fit.samples, mcmc_fit.log_Σ, mcmc_fit.model.argnames)
-	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err, color=COLORS[2])
+	errorscatter!(prof.log_R, prof.log_Sigma, yerror=prof.log_Sigma_err, color=COLORS[2])
 
 	LilGuys.hide_grid!(ax)
 
@@ -496,24 +541,24 @@ function plot_samples_residuals(mcmc_fit; res_ylims=nothing)
 	argnames = mcmc_fit.model.argnames
 	summary = mcmc_fit.summary
 	
-	x = LinRange(prof.log_r_bins[1], prof.log_r_bins[end], 1000)
+	x = LinRange(prof.log_R_bins[1], prof.log_R_bins[end], 1000)
 	df = subsample(samples)
 
-	fig = Figure()
+	fig = Figure(figsize=(3.25*72, 3.25*72))
 	ax = Axis(fig[1,1],
-		xlabel = log_r_label, 
+		xlabel = log_R_label, 
 		ylabel = log_sigma_label,
 	)
 
 	plot_samples!(df, log_Σ, argnames, x=x)
-	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err, color=COLORS[2])
+	errorscatter!(prof.log_R, prof.log_Sigma, yerror=prof.log_Sigma_err, color=COLORS[2])
 
 	LilGuys.hide_grid!(ax)
 	hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
 
 	# residuals
 	ax_res = Axis(fig[2,1],
-		xlabel = log_r_label, 
+		xlabel = log_R_label, 
 		ylabel = "residual",
 	)
 
@@ -528,9 +573,9 @@ function plot_samples_residuals(mcmc_fit; res_ylims=nothing)
 	hlines!(0, color=:black)
 	
 
-	y_m = log_Σ.(prof.log_r; kwargs_med...)
+	y_m = log_Σ.(prof.log_R; kwargs_med...)
 
-	errscatter!(prof.log_r, prof.log_Sigma .- y_m, yerr=prof.log_Sigma_err, color=COLORS[2])
+	errorscatter!(prof.log_R, prof.log_Sigma .- y_m, yerror=prof.log_Sigma_err, color=COLORS[2])
 
 	if isnothing(res_ylims)
 		y_max = maximum(prof.log_Sigma .- y_m .+ prof.log_Sigma_err)
@@ -558,31 +603,32 @@ md"""
 """
 
 # ╔═╡ a4d8323a-c668-452b-a958-17982177cac6
-function log_Σ_sersic(log_r; log_M_s, log_R_h, n)
-	r = 10 .^ log_r
+function log_Σ_sersic(log_R; log_M_s, log_R_h, n, log_Sigma_bg)
+	r = 10 .^ log_R
 	prof = LilGuys.Sersic(n=n, R_h=10 .^ log_R_h, _b_n=LilGuys.guess_b_n(n))
 	Σ = LilGuys.calc_Σ.(prof, r)
-	y = @. log10(Σ)  .+ log_M_s
+	y = @. log10(Σ + 10^log_Sigma_bg)  .+ log_M_s
 
 	return y
 end
 
 # ╔═╡ 2a3adaf5-2a0d-4674-a160-a7844b7f1463
-@model function sersic_turing_model(model_log_Σ, log_r, log_Σ, log_Σ_err)
+@model function sersic_turing_model(model_log_Σ, log_R, log_Σ, log_Σ_err)
 	n ~ Gamma(1)
 	log_R_h ~ Normal(0.0, 1.0)
 	log_M_s ~ Normal(4.0, 2.0)
+	log_Sigma_bg ~ Normal(-4.0, 4.0)
 
 	log_σ ~ Normal(-1, 1)
 	
 	σ = 10 .^ log_σ
-	y_pred = model_log_Σ(log_r; log_M_s=log_M_s, log_R_h=log_R_h, n=n)
+	y_pred = model_log_Σ(log_R; log_M_s=log_M_s, log_R_h=log_R_h, n=n, log_Sigma_bg=log_Sigma_bg)
 	
 	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
 end
 
 # ╔═╡ 29ee50a7-9287-46e7-a804-1aada9cd88b8
-sersic_model = DensityModel(log_Σ_sersic, sersic_turing_model, [:n, :log_M_s, :log_R_h])
+sersic_model = DensityModel(log_Σ_sersic, sersic_turing_model, [:n, :log_M_s, :log_R_h, :log_Sigma_bg])
 
 # ╔═╡ dd327a8e-a83d-4423-b507-54033c7934c4
 mcmc_fit_sersic = sample_model(sersic_model)
@@ -665,6 +711,75 @@ ml_fit_exp2d  = fit_profile(prof, LilGuys.Exp2D, [], [0.0, 0.0])
 
 # ╔═╡ 76326a80-b709-4f96-a379-8aaea4d3af44
 plot_Σ_fit_res(prof, ml_fit_exp2d, title="Exp2D")
+
+# ╔═╡ c2301858-2be3-4945-bef2-4525cd123030
+md"""
+### Inner exp2d
+"""
+
+# ╔═╡ 19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
+log_R_max_exp = let
+	ml_fit_exp2d_iter = []
+
+	ml_fit_exp2d_old = ml_fit_exp2d
+	log_R_max = log10(3) + ml_fit_exp2d_old["log_R_s"]
+
+	for i in 1:10
+		log_R_max_old = log_R_max
+		ml_fit_exp2d_new  = fit_profile(filter_prof(prof, log_R_max), LilGuys.Exp2D, [], [0.0, 0.0])
+		ml_fit_exp2d_old = ml_fit_exp2d_new
+		push!(ml_fit_exp2d_iter, ml_fit_exp2d_new)
+
+		log_R_max = log10(3) + ml_fit_exp2d_old["log_R_s"]
+
+		if log_R_max ≈ log_R_max_old rtol=1e-1
+			@info "converged by iteration $i"
+			break
+		else
+			@info "R max $log_R_max"
+		end
+	end
+
+	ml_fit_exp2d
+	log_R_max
+end
+
+# ╔═╡ 48f59ed4-209b-45c5-857f-3c309141e8a7
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel = log_R_label,
+		ylabel = log_sigma_label,
+	)
+
+	LilGuys.plot_density_prof!(ax, prof_in, label="input")
+	scatter!(prof.log_R, prof.log_Sigma, color=COLORS[2], label="mcmc input")
+	prof2 = filter_prof(prof, log_R_max_exp)
+	scatter!(prof2.log_R, prof2.log_Sigma, color=COLORS[3], label="exp input")
+
+	axislegend(position=:lb)
+	fig
+end
+
+# ╔═╡ 6922839a-1b5d-4a5c-8f68-50cd57d986a8
+model_exp2d_inner = DensityModel(log_Σ_exp2d, turing_model_exp2d, [:log_M, :log_R_s])
+
+# ╔═╡ bdf90521-e8f3-40e5-a61f-ab8503cce9fe
+mcmc_fit_exp2d_inner = sample_model(model_exp2d_inner, prof=filter_prof(prof, log_R_max_exp))
+
+# ╔═╡ 8e81babf-1963-4187-a8c5-0b1e1a325ab3
+plot_chains(mcmc_fit_exp2d_inner.samples)
+
+# ╔═╡ 6518f711-4912-421f-b169-7b7d4fb365e5
+pairplot(mcmc_fit_exp2d_inner.samples)
+
+# ╔═╡ 44500a4e-9be6-486b-94e7-364b1c64749a
+let
+	fig = plot_samples_residuals(mcmc_fit_exp2d_inner)
+
+	@savefig "exp2d_inner"
+	fig
+end
 
 # ╔═╡ bde4f544-7b5b-4224-9ce3-090fa7fe8311
 md"""
@@ -798,6 +913,7 @@ md"""
 all_fits = OrderedDict(
 	"sersic" => mcmc_fit_sersic,
 	"exp2d" => mcmc_fit_exp2d,
+	"exp2d_inner" => mcmc_fit_exp2d_inner,
 	"plummer" => mcmc_fit_plummer,
 	"king" => mcmc_fit_king,
 )
@@ -826,7 +942,7 @@ end
 import TOML
 
 # ╔═╡ 456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca
-open(joinpath(galaxyname, "$(profilename)_density_fits.toml"), "w") do f
+open(joinpath(galaxyname, "density_profiles/$(profilename)_density_fits.toml"), "w") do f
 	TOML.print(f, derived_props)
 end
 
@@ -834,8 +950,10 @@ end
 # ╟─27bd8a46-ee56-11ef-22e4-afe88d73af2d
 # ╟─9d3245ef-f774-4add-9b1d-60bb69b04c8d
 # ╠═72524f04-bd5b-4f4b-a41d-8c038c180ce0
+# ╠═48f59ed4-209b-45c5-857f-3c309141e8a7
 # ╟─bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 # ╠═fa54e7aa-f477-45db-8dd9-56bd6b367604
+# ╠═6cf3cb83-317e-40fa-be47-7a4e31a539ec
 # ╠═cd1e43e6-65e1-4efe-9290-62633ee340a9
 # ╠═51d52048-cd18-41ff-ac2b-41dfc097de16
 # ╠═99315b4c-37c1-4287-bd71-c3339c8e76ad
@@ -854,12 +972,16 @@ end
 # ╠═db8a3705-f4ea-4588-9885-0e03cd42c47b
 # ╟─8fdc3d18-6a3a-42eb-b0cb-d5cae1cd65d9
 # ╠═20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
+# ╠═249fed2c-e86a-47ab-a7a6-06f7c1edc01a
+# ╠═44a893d6-9a3d-4959-b76f-274635198aa2
+# ╠═a0cb6ecd-59ab-4a7a-b95a-d55bfdd2d93b
+# ╠═995a9a15-38d0-47c3-ba12-58ba8209497c
 # ╠═5026118a-85f6-4f71-bd0f-d25c4916c834
 # ╟─30154472-316b-4489-b1e5-f503447928cb
 # ╟─4970ae98-a08d-4308-b67e-e9306d4193a3
 # ╠═8d90dd5c-350a-45e6-b04c-9b2f85cf700b
+# ╠═aa22fa06-8167-4d6e-aa05-399800370c1f
 # ╠═7ff0bee2-3622-4573-81d5-8b8fa96cf461
-# ╠═bc6db386-7ee6-4a9f-bd06-7e306d66e74e
 # ╠═7a274a8d-f6eb-4d9b-97c5-0372dc9520fe
 # ╟─f91ae13d-4533-45aa-b835-d53fab594360
 # ╠═3abb1fb9-1e3a-4251-abfd-959d1faa0f87
@@ -899,6 +1021,13 @@ end
 # ╠═31725ed6-3e11-4526-9e99-d3ffda80f859
 # ╠═415397c4-f4b0-4e21-9df4-cf8faf761648
 # ╠═76326a80-b709-4f96-a379-8aaea4d3af44
+# ╠═c2301858-2be3-4945-bef2-4525cd123030
+# ╠═19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
+# ╠═6922839a-1b5d-4a5c-8f68-50cd57d986a8
+# ╠═bdf90521-e8f3-40e5-a61f-ab8503cce9fe
+# ╠═8e81babf-1963-4187-a8c5-0b1e1a325ab3
+# ╠═6518f711-4912-421f-b169-7b7d4fb365e5
+# ╠═44500a4e-9be6-486b-94e7-364b1c64749a
 # ╟─bde4f544-7b5b-4224-9ce3-090fa7fe8311
 # ╠═fbd8d5b6-3d48-4525-b99d-483c946cc6a3
 # ╠═81e50d1f-609b-46f5-b9e2-873dfeba1b45

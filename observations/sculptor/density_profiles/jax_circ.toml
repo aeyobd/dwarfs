@@ -1,0 +1,4 @@
+filename = "../data/jensen+24_2c_circ.fits"
+ellipticity = 0
+position_angle = 0
+PSAT_min = 0.2

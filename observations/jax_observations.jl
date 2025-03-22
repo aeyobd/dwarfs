@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -40,6 +40,9 @@ using Arya
 
 # ╔═╡ ae29bed0-6700-47f1-8952-35e867ce126b
 using OrderedCollections
+
+# ╔═╡ 65822789-b261-45be-817f-cba0e37b82ce
+include("../utils/gaia_filters.jl")
 
 # ╔═╡ 47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 md"""
@@ -78,6 +81,9 @@ import DensityEstimators: histogram
 # ╔═╡ 81c677bf-8372-4fd3-9d60-af8377485f1c
 import Statistics: cor
 
+# ╔═╡ 53c0567a-c845-486d-9510-1590cc0ee9ff
+CairoMakie.activate(type="svg", pt_per_unit=2)
+
 # ╔═╡ cf7aeb0a-d453-462a-b43d-a832567440fd
 diverging_cmap = Reverse(:bluesreds)
 
@@ -99,31 +105,11 @@ else
 	datafile = "$galaxyname/data/jensen+24_1c.fits"
 end
 
-# ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
-begin 
-	all_stars = lguys.read_fits(datafile)
+# ╔═╡ d87f28e5-cc94-4afc-9e70-ece1686db22c
+filt_params = GaiaFilterParams(filename=datafile, observed_properties)
 
-	all_stars[:, :r_ell_old] = all_stars[:, :r_ell]
-	all_stars.xi, all_stars.eta = lguys.to_tangent(all_stars.ra, all_stars.dec, observed_properties["ra"], observed_properties["dec"])
-
-	all_stars.r_ell = 60lguys.calc_r_ell(all_stars.xi, all_stars.eta, observed_properties["ellipticity"], observed_properties["position_angle"])
-	all_stars[!, :LL_S] = @. log10(all_stars.L_S_SAT / all_stars.L_S_BKD)
-	all_stars[!, :LL_PM] = @. log10(all_stars.L_PM_SAT / all_stars.L_PM_BKD)
-	all_stars[!, :LL_CMD] = @. log10(all_stars.L_CMD_SAT / all_stars.L_CMD_BKD)
-	all_stars[!, :LL] = @. log10(all_stars.L_SAT / all_stars.L_BKD)
-
-	all_stars[!, :LL_norm] = @. abs(all_stars.LL_S) + abs(all_stars.LL_PM) + abs(all_stars.LL_CMD)
-
-	all_stars[!, :f_LL_S] = @. all_stars.LL_S / all_stars.LL
-	all_stars[!, :f_LL_PM] = @. all_stars.LL_PM / all_stars.LL
-	all_stars[!, :f_LL_CMD] = @. all_stars.LL_CMD / all_stars.LL
-
-	all_stars[!, :f_LL_S_norm] = @. all_stars.LL_S / all_stars.LL_norm
-	all_stars[!, :f_LL_PM_norm] = @. all_stars.LL_PM / all_stars.LL_norm
-	all_stars[!, :f_LL_CMD_norm] = @. all_stars.LL_CMD / all_stars.LL_norm
-
-	all_stars
-end
+# ╔═╡ 338be0b8-e732-4202-a20f-9ca841516075
+all_stars = read_gaia_stars(filt_params)
 
 # ╔═╡ 7ed70894-48a8-46af-8c78-8a75cb39d957
 md"""
@@ -136,8 +122,11 @@ md"""
 each component of the cen_errs tuple below should be similar in magnitude
 """
 
+# ╔═╡ 082a06dd-eeb5-4761-a233-1ee89e8cb819
+best_stars = all_stars[all_stars.F_BEST .== 1.0, :]
+
 # ╔═╡ 88fbdd09-30be-4fc3-95ae-acce6e0018e1
-members = all_stars[all_stars.PSAT .> 0.2, :]
+members = best_stars[best_stars.PSAT .> 0.2, :]
 
 # ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
 cen = lguys.to_tangent(lguys.calc_centre2D(members.ra, members.dec, "mean")..., observed_properties["ra"], observed_properties["dec"])
@@ -155,10 +144,7 @@ cen_err = maximum(abs.(cen_errs))
 Nmemb = size(members, 1)
 
 # ╔═╡ 60d0e593-88fd-4b4c-9009-cc24a597c6d5
-members_nospace = all_stars[all_stars.PSAT_NOSPACE .> 0.2, :]
-
-# ╔═╡ 082a06dd-eeb5-4761-a233-1ee89e8cb819
-best_stars = all_stars[all_stars.F_BEST .== 1.0, :]
+members_nospace = best_stars[best_stars.PSAT_NOSPACE .> 0.2, :]
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -555,7 +541,7 @@ let
 	filt = members.r_ell .> 0
 	scatter!(ax, 60xi[filt], 60eta[filt], markersize=3, color=Arya.COLORS[3])
 
-	Colorbar(fig[1, 2], p, #ticks=[10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0],
+	Colorbar(fig[1, 2], p, ticks=Makie.automatic, minorticks=Makie.automatic,
 		label = "density / $density_scale"
 	)
 
@@ -630,32 +616,13 @@ md"""
 
 # ╔═╡ 12bf64e9-ae49-4f93-8572-660dbc86ffc1
 scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt(1 - observed_properties["ellipticity"]), 
+	rasterize=true,
 	axis = (;
 	xlabel = "r ell",
 	ylabel = "r ell jax",
 	aspect = DataAspect(),
 	)
 )
-
-# ╔═╡ 2b6f8f68-61ff-4052-901d-8f839044d969
-md"""
-The plot below sanity checks the calculation of `r_ell_max`. This should be the largest elliptical radius bin with complete star counts. The orange region should be a complete circle perfectly inscribed in the oblong, blue region.
-"""
-
-# ╔═╡ e34d7c3f-5d98-4b35-8abb-91afc16a2a08
-let
-	fig = Figure()
-	ax = PolarAxis(fig[1,1])
-	filt = best_stars.r_ell .< Inf
-	df = best_stars[filt, :]
-	scatter!(ax, atan.(df.xi, df.eta), df.r_ell, markersize=1)
-
-	
-	filt = best_stars.r_ell .< r_ell_max
-	df = best_stars[filt, :]
-	scatter!(ax, atan.(df.xi, df.eta), df.r_ell, markersize=2)
-	fig
-end
 
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
@@ -670,12 +637,15 @@ end
 # ╠═db1264b7-02c3-4b55-ae2b-9ce78aa1304a
 # ╠═81c677bf-8372-4fd3-9d60-af8377485f1c
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
+# ╠═53c0567a-c845-486d-9510-1590cc0ee9ff
 # ╠═cf7aeb0a-d453-462a-b43d-a832567440fd
 # ╟─2eb4aa78-0fea-460b-a18e-06a129c41504
 # ╠═9ecf79a8-2ed3-40c6-b555-a102250ecbd4
+# ╠═65822789-b261-45be-817f-cba0e37b82ce
 # ╠═4c8b9c30-f873-4756-a729-aa023b3a804e
 # ╠═26cf1867-02be-4d36-8c35-6c58a1feca27
-# ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
+# ╠═d87f28e5-cc94-4afc-9e70-ece1686db22c
+# ╠═338be0b8-e732-4202-a20f-9ca841516075
 # ╟─7ed70894-48a8-46af-8c78-8a75cb39d957
 # ╠═223abc41-5158-49c2-96bf-df55b7be1114
 # ╟─3abea230-2b95-40d3-9851-a91236f75c4a
@@ -731,5 +701,3 @@ end
 # ╠═9282a867-b9c7-4a50-b58a-da3ceb068cad
 # ╟─d2668f44-9cb7-4ab8-af49-1aef2baecdda
 # ╠═12bf64e9-ae49-4f93-8572-660dbc86ffc1
-# ╠═2b6f8f68-61ff-4052-901d-8f839044d969
-# ╟─e34d7c3f-5d98-4b35-8abb-91afc16a2a08

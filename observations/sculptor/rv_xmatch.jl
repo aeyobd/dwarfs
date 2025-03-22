@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -9,19 +9,19 @@ begin
 	import Pkg; Pkg.activate()
 	
 	using CSV, DataFrames
+	using PythonCall
 	using Arya
 	using CairoMakie
-	#using FITSIO
 	using Measurements
 
 	import LilGuys as lguys
 end
 
-# ╔═╡ 202e0f8b-b417-4597-a737-7c60c0575fd3
-using FITSIO
+# ╔═╡ 0bd80eb1-0efa-4c8c-98a5-89cfc4bc01b2
+using LoggingExtras
 
 # ╔═╡ d4123ffd-cb32-486e-a93d-f48d7112a831
-include("filter_utils.jl")
+include("../../utils/gaia_filters.jl")
 
 # ╔═╡ 811c5da0-7e70-4393-b59d-c0fdb89523ca
 md"""
@@ -31,6 +31,9 @@ This notebook loads in radial velocity data from several sources (including Tols
 
 With this catalogue, detailed radial velocity analysis can then be calculated.
 """
+
+# ╔═╡ 21234487-c727-427d-9814-0362239e15b7
+
 
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, kurtosis, sem
@@ -85,22 +88,16 @@ end
 obs_properties = TOML.parsefile("observed_properties.toml")
 
 # ╔═╡ 248c2d5f-85cc-44be-bc63-43d4af470182
-begin 
-	params = read_file("processed/fiducial.toml")
-	params["filename"] = "processed/j24_sculptor_all.fits"
-	params["PA"] = obs_properties["PA"]
-	params["ellipticity"] = obs_properties["ellipticity"]
-	params["PSAT_min"] = nothing
-	params = DensityParams(params)
-end
+params = GaiaFilterParams(obs_properties, filename="data/jensen+24_wide.fits")
 
-# ╔═╡ dfd2fbee-9993-4553-b693-6fb71a7b11a2
-FITS
+# ╔═╡ 47c5d697-8c3b-4492-817a-eaf6487460d5
+# ╠═╡ disabled = true
+#=╠═╡
+using LoggingExtras
+  ╠═╡ =#
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-begin #TODO: implement J24 crossmatching
-	j24 = load_stars(params.filename, params) # does not filter
-end
+j24 = read_gaia_stars(params)
 
 # ╔═╡ dd1eee07-bb37-4de3-8781-47edd794c1f3
 md"""
@@ -231,6 +228,9 @@ begin
 	apogee_all = apogee_all[:, [:source_id, :ra, :dec, :RV, :RV_err]]
 end
 
+# ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
+CairoMakie.activate!(type="svg", pt_per_unit=1)
+
 # ╔═╡ bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
 filt_apogee = sigma_clip(apogee_all.RV, 3)
 
@@ -311,7 +311,9 @@ begin
 		:e_Vlos => :RV_err,
 		:RAJ2000 => :ra,
 		:DEJ2000 => :dec,
-		:GaiaDR3 => :source_id
+		:GaiaDR3 => :source_id,
+		# :feh => :Fe_H,
+		# :e_feh => :Fe_H_err,
 	)
 
 
@@ -339,24 +341,25 @@ Note that we combine two dataframes, one with individual measurements and a seco
 """
 
 # ╔═╡ 77830e77-50a4-48b7-b070-8fbd7508c173
-let 
-	global walker09_single
+begin 
 	walker09_single = lguys.read_fits("$data_dir/walker+09_observations.fits") 
 	
-	walker09_single[!, "Galaxy"] = [s[1:3] for s in walker09_single.Target];
+	walker09_single[:, "Galaxy"] = [s[1:3] for s in walker09_single.Target];
 
+	walker09_single
 end
 
 # ╔═╡ dee71790-ffeb-477d-adbe-112731dfe134
-let 
-	global walker09_averaged = lguys.read_fits("$data_dir/walker+09_summary.fits")
+begin 
+	walker09_averaged = lguys.read_fits("$data_dir/walker+09_summary.fits")
 
 	rename!(walker09_averaged, 
 		"RAJ2000"=>"ra",
 		"DEJ2000" => "dec",
 		)
-	walker09_averaged[!, "Galaxy"] = [s[1:3] for s in walker09_averaged.Target]
+	walker09_averaged[:, "Galaxy"] = [s[1:3] for s in walker09_averaged.Target]
 
+	walker09_averaged
 end
 
 # ╔═╡ 56fd0ddd-e28b-4cb8-8928-111664a6ec92
@@ -536,7 +539,7 @@ let
 		aspect=DataAspect()
 	)
 
-	errscatter!(rv1[filt], rv2[filt], xerr=rv1_err[filt], yerr=rv2_err[filt])
+	errorscatter!(rv1[filt], rv2[filt], xerror=rv1_err[filt], yerror=rv2_err[filt])
 
 	lines!([80, 150], [80, 150], color=:black)
 	
@@ -573,7 +576,7 @@ function compare_rv(study1, study2)
 		aspect=DataAspect()
 	)
 
-	errscatter!(rv1[filt], rv2[filt], xerr=rv1_err[filt], yerr=rv2_err[filt])
+	errorscatter!(rv1[filt], rv2[filt], xerror=rv1_err[filt], yerror=rv2_err[filt])
 
 	lines!([90, 150], [90, 150], color=:black)
 	return fig
@@ -764,7 +767,7 @@ let
 		ygridvisible=false,
 	)
 
-	errscatter!(Measurements.value.(rv), Measurements.value.(vz) .- Measurements.value.(rv), 
+	errorscatter!(Measurements.value.(rv), Measurements.value.(vz) .- Measurements.value.(rv), 
 		#xerr=Measurements.uncertainty.(rv), yerr=Measurements.uncertainty.(vz),
 		alpha=0.03, 
 		color=:black
@@ -782,7 +785,7 @@ let
 		ygridvisible=false,
 	)
 
-	errscatter!(ϕ_pm, Measurements.value.(vz) .- Measurements.value.(rv), 
+	errorscatter!(ϕ_pm, Measurements.value.(vz) .- Measurements.value.(rv), 
 		#xerr=Measurements.uncertainty.(rv), yerr=Measurements.uncertainty.(vz),
 		alpha=0.03, 
 		color=:black
@@ -800,7 +803,7 @@ let
 		ygridvisible=false,
 	)
 
-	errscatter!(Measurements.value.(rv), Measurements.uncertainty.(vz) 
+	errorscatter!(Measurements.value.(rv), Measurements.uncertainty.(vz) 
  ./ Measurements.uncertainty.(rv), 
 		alpha=0.03, 
 		color=:black
@@ -847,7 +850,7 @@ function compare_rv_mean(study1, rv_meas=rv_meas)
 	y = float.(rv1[filt] .- rv2[filt])
 	xerr = float.(rv2_err[filt])
 	yerr = float.(rv1_err[filt])
-	errscatter!(x, y, xerr=xerr, yerr=yerr, alpha=0.1)
+	errorscatter!(x, y, xerror=xerr, yerror=yerr, alpha=0.1)
 	
 	hlines!(0, color=:black)
 	return fig
@@ -933,7 +936,7 @@ function plot_sample_normal_fit(sample, props; kwargs...)
 	)
 	h = histogram(Float64.(sample.RV), normalization=:pdf)
 	
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=:black)
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=:black)
 
 	μ, σ, _, _ = props
 	x_model = LinRange(80, 140, 1000)
@@ -951,7 +954,7 @@ let
 	)
 	h = histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -997,6 +1000,9 @@ datasets = Dict(
 # ╔═╡ ec4bc80f-22e6-49f9-a589-5c5bc9e50a8b
 props = Dict(name => fit_rv_sigma(float.(data.RV), float.(data.RV_err)) for (name, data) in datasets)
 
+# ╔═╡ fcf8f848-f8ce-41ab-9aa5-0507e90b28c7
+
+
 # ╔═╡ eaf47845-95dd-4f7d-bf76-3d9b1154711a
 for key in keys(props)
 	println(key)
@@ -1024,7 +1030,7 @@ let
 	)
 
 
-	errscatter!(x, y, yerr=yerr)
+	errorscatter!(x, y, yerror=yerr)
 	fig
 end
 
@@ -1043,7 +1049,7 @@ let
 	)
 
 
-	errscatter!(x, y, yerr=yerr)
+	errorscatter!(x, y, yerror=yerr)
 	fig
 end
 
@@ -1225,13 +1231,18 @@ sum(sum(eachcol(ismissing.(memb_stars))))
 # ╔═╡ 4fdccf0a-adfa-4f05-bb48-df8a1efba940
 out_df.:q__Fe_H__t23
 
-# ╔═╡ 1a0eac4e-4100-4da6-820b-19c34e283118
-lguys.write_fits(joinpath("processed", "sculptor_all_rv.fits"), out_df)
+# ╔═╡ 615f05fb-4907-40bc-9251-3065f565929b
+let
+	filename = "processed/sculptor_all_rv.fits"
+	rm(filename); 
+	lguys.write_fits(filename, out_df)
+	@info "wrote data"
+end
 
 # ╔═╡ Cell order:
 # ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╠═21234487-c727-427d-9814-0362239e15b7
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
-# ╠═202e0f8b-b417-4597-a737-7c60c0575fd3
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 # ╠═ef1bb6f5-00b8-405b-8702-244eca618644
@@ -1243,7 +1254,7 @@ lguys.write_fits(joinpath("processed", "sculptor_all_rv.fits"), out_df)
 # ╠═d4123ffd-cb32-486e-a93d-f48d7112a831
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═248c2d5f-85cc-44be-bc63-43d4af470182
-# ╠═dfd2fbee-9993-4553-b693-6fb71a7b11a2
+# ╠═47c5d697-8c3b-4492-817a-eaf6487460d5
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
 # ╟─dd1eee07-bb37-4de3-8781-47edd794c1f3
 # ╟─6f2359d8-332b-11ef-0db9-f1f06474c561
@@ -1261,6 +1272,7 @@ lguys.write_fits(joinpath("processed", "sculptor_all_rv.fits"), out_df)
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╟─45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
+# ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═4d63430e-f59c-4c68-97e1-7eaa5679e55f
 # ╠═bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
@@ -1379,6 +1391,7 @@ lguys.write_fits(joinpath("processed", "sculptor_all_rv.fits"), out_df)
 # ╟─5bee3041-fe7f-4f67-a73d-fb60ed006959
 # ╠═ebdf8cfc-ebff-4331-bab2-998a734f2cd1
 # ╠═ec4bc80f-22e6-49f9-a589-5c5bc9e50a8b
+# ╠═fcf8f848-f8ce-41ab-9aa5-0507e90b28c7
 # ╠═eaf47845-95dd-4f7d-bf76-3d9b1154711a
 # ╟─b5faa873-d5c9-447b-b90e-f693db26e6c2
 # ╠═46434fa6-09df-4b02-9270-cbdcc9648e38
@@ -1408,4 +1421,5 @@ lguys.write_fits(joinpath("processed", "sculptor_all_rv.fits"), out_df)
 # ╠═70290654-394f-4679-aaab-38345874e2e3
 # ╠═f1912692-d890-4f97-ba98-7b226f29e9c8
 # ╠═4fdccf0a-adfa-4f05-bb48-df8a1efba940
-# ╠═1a0eac4e-4100-4da6-820b-19c34e283118
+# ╠═0bd80eb1-0efa-4c8c-98a5-89cfc4bc01b2
+# ╠═615f05fb-4907-40bc-9251-3065f565929b

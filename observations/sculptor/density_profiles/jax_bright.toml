@@ -1,0 +1,8 @@
+filename = "../data/jensen+24_wide.fits"
+
+PSAT_min = 0.2
+
+g_max = 20.07828 # median for members
+g_min = 0.0
+
+[profile_kwargs]

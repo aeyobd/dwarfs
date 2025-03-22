@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -22,6 +22,9 @@ using Turing
 # ╔═╡ e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 using PairPlots
 
+# ╔═╡ 64ca10cd-5d46-43cc-8fec-64c87c72bdfd
+using LoggingExtras
+
 # ╔═╡ 6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 md"""
 This notebook takes the dataset created from velocity_xmatch.jl and analyzes it using MCMC to estimate the velocity dispersion and search for any possible velocity gradients.
@@ -37,6 +40,9 @@ import DensityEstimators: histogram, bins_equal_number
 md"""
 # Loading data tables
 """
+
+# ╔═╡ 93838644-cad6-4df3-b554-208b7afeb3b8
+import PythonCall
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 data_dir = "processed"
@@ -215,8 +221,29 @@ pairplot(samples[:, [:μ, :σ]])
 # ╔═╡ e93c66f7-394a-46bf-96c9-475494979548
 memb_stars
 
+# ╔═╡ 21a71cf7-efba-4b48-b280-92d6f1ea5d6d
+begin 
+	df_out = copy(memb_stars)
+	for colname in names(df_out)
+		col = df_out[!, colname]
+		if eltype(col) === Any
+			col = map(col) do x
+				if x isa String
+					x
+				elseif isnan(x)
+					""
+				else
+					error()
+				end
+			end
+			df_out[!, colname] = col
+		end
+	end
+	df_out
+end
+
 # ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
-lguys.write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), memb_stars)
+lguys.write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), df_out, overwrite=true)
 
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
@@ -265,7 +292,7 @@ let
 	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
 	
 	plot_samples!(samples_gsr, LinRange(40, 110, 100), thin=15)
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -322,7 +349,7 @@ df_r_ell_z = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.vz, memb_stars.vz
 
 # ╔═╡ 38da4da1-74f5-4661-89f2-4b25562a1faf
 function scatter_range!(df_r_ell)
-	errscatter!(df_r_ell.x, df_r_ell.μ, yerr=df_r_ell.μ_err, color=:black)
+	errorscatter!(df_r_ell.x, df_r_ell.μ, yerror=df_r_ell.μ_err, color=:black)
 	
 	errorbars!(df_r_ell.x, df_r_ell.μ .+ df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x,  direction = :x, color=:black)
 	errorbars!(df_r_ell.x, df_r_ell.μ .- df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x, direction = :x, color=:black)
@@ -388,7 +415,7 @@ let
 		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(60df_xi_p.x, df_xi_p.μ, yerr=df_xi_p.μ_err, color=:black)
+	errorscatter!(60df_xi_p.x, df_xi_p.μ, yerror=df_xi_p.μ_err, color=:black)
 
 	fig
 end
@@ -400,7 +427,7 @@ let
 		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(60df_eta_p.x, df_eta_p.μ, yerr=df_eta_p.μ_err, color=:black)
+	errorscatter!(60df_eta_p.x, df_eta_p.μ, yerror=df_eta_p.μ_err, color=:black)
 
 	fig
 end
@@ -412,7 +439,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(df_xi_p.x, df_xi_p.σ, yerr=df_xi_p.σ_err, color=:black)
+	errorscatter!(df_xi_p.x, df_xi_p.σ, yerror=df_xi_p.σ_err, color=:black)
 
 	fig
 end
@@ -430,7 +457,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(df_r_ell.x, df_r_ell.σ, yerr=df_r_ell.σ_err, color=:black)
+	errorscatter!(df_r_ell.x, df_r_ell.σ, yerror=df_r_ell.σ_err, color=:black)
 	hlines!(σ_m)
 
 	fig
@@ -443,7 +470,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(midpoints(bins), df_r_ell_z.σ, yerr=df_r_ell_z.σ_err, xerr=bin_errs, color=:black)
+	errorscatter!(midpoints(bins), df_r_ell_z.σ, yerror=df_r_ell_z.σ_err, xerror=bin_errs, color=:black)
 	hlines!(σ_m)
 
 	fig
@@ -725,7 +752,9 @@ end
 # ╠═e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 # ╠═c3298b45-7c5d-4937-8e4c-c87de36a1354
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
+# ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
+# ╠═64ca10cd-5d46-43cc-8fec-64c87c72bdfd
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
@@ -754,6 +783,7 @@ end
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 # ╠═e93c66f7-394a-46bf-96c9-475494979548
 # ╠═a162219f-df5a-41d8-bf54-927a355f6431
+# ╠═21a71cf7-efba-4b48-b280-92d6f1ea5d6d
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f
 # ╠═61e15c47-c454-48db-95f9-02abe052676e
 # ╠═d5938fc3-9c8a-4e33-8401-500b4201df14
