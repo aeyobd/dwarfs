@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -30,7 +30,7 @@ end
 using OrderedCollections
 
 # ╔═╡ e1c0f486-2917-4c3f-a909-f0091ee27c58
-CairoMakie.activate!(type="svg", pt_per_unit=2)
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
 @bind galaxyname confirm(TextField(default="sculptor"))
@@ -46,8 +46,8 @@ end
 function add_profile!(profiles, filename; label=filename)
 	filepath = joinpath(galaxyname, "density_profiles", filename)
 	if isfile(filepath)
-		prof = LilGuys.StellarProfile(filepath)
-		if prof.normalization == "mass"
+		prof = LilGuys.StellarDensityProfile(filepath)
+		if prof.log_m_scale != 0
 			prof.log_Sigma .-= prof.log_m_scale
 		end
 		
@@ -59,18 +59,20 @@ end
 
 # ╔═╡ 5295c0da-f77f-45b9-84bf-e174e2d5a521
 begin
-	profiles = OrderedDict{String, LilGuys.StellarProfile}()
+	profiles = OrderedDict{String, LilGuys.StellarDensityProfile}()
 	add_profile!(profiles, "jax_2c_profile.toml", label="2exp")
-	# add_profile!(profiles, "jax_profile.toml", label="exp")
+	add_profile!(profiles, "jax_profile.toml", label="1c")
+	add_profile!(profiles, "jax_LL_0_profile.toml", label="LL")
+	add_profile!(profiles, "simple_profile.toml", label="simple")
 	# add_profile!(profiles, "jax_LL_0_profile.toml", label="LLR cut")
 	# add_profile!(profiles, "jax_circ_profile.toml", label="2exp circ.")
 	# add_profile!(profiles, "../processed/profile.mcmc_hist_nostruct.toml", label="piecewise")
-	add_profile!(profiles, "../processed/profile.mcmc_hist.toml", label="piecewise w/ ell&PA")
+	#add_profile!(profiles, "../processed/profile.mcmc_hist.toml", label="piecewise w/ ell&PA")
 
 end
 
 # ╔═╡ cc9ac531-ef25-4573-9d35-4e4a25418adc
-[prof.normalization for (key, prof) in profiles]
+[prof.log_m_scale for (key, prof) in profiles]
 
 # ╔═╡ 33a4d4a2-8f2b-4339-9e89-cf3919c56918
 log_r_label = L"$\log\,R$ /  arcmin"
@@ -89,7 +91,10 @@ let
 	)
 
 	for (key, prof) in profiles
-		LilGuys.plot_density_prof!(ax, prof, label=key)
+		errorscatter!(prof.log_R, LilGuys.value.(prof.log_Sigma), 
+			yerror=LilGuys.ci_of.(prof.log_Sigma),
+			label = key
+		)
 	end
 
 	axislegend(position=:lb)
@@ -102,9 +107,11 @@ let
 
 	prof_ref = profiles[collect(keys(profiles))[begin]]
 	for (key, prof) in profiles
-		ym = LilGuys.lerp(prof_ref.log_R, prof_ref.log_Sigma).(prof.log_R)
+		ym = LilGuys.lerp(prof_ref.log_R, LilGuys.value.(prof_ref.log_Sigma)).(prof.log_R)
 		
-		errorscatter!(prof.log_R, prof.log_Sigma .- ym, yerror=collect(zip(prof.log_Sigma_em, prof.log_Sigma_ep)))
+		errorscatter!(prof.log_R, LilGuys.value.(prof.log_Sigma) .- ym, 
+					  yerror=LilGuys.ci_of.(prof.log_Sigma)
+					 )
 	end
 
 	hidexdecorations!(ax)

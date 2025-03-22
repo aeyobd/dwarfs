@@ -157,13 +157,13 @@ md"""
 The plots below show various subsamples of the dataset in different planes to get a handle on how generally members are selected using the J+24 algorithm.
 """
 
-# ╔═╡ 12aa5708-dfee-4b48-8835-69055ad82680
-md"member markersize: $(@bind member_markersize confirm(PlutoUI.NumberField(1:10, default=5)))"
-
 # ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
 md"""background: 
 $(@bind bg_markersize confirm(PlutoUI.NumberField(1:0.1:3; default=8/θmax^2)))
 """
+
+# ╔═╡ 12aa5708-dfee-4b48-8835-69055ad82680
+md"member markersize: $(@bind member_markersize confirm(PlutoUI.NumberField(1:10, default=bg_markersize)))"
 
 # ╔═╡ e4d42cbd-0166-43d8-838c-27a14956623b
 datasets = OrderedDict(
@@ -303,6 +303,19 @@ end
 	)
 )
 
+# ╔═╡ d9e9062d-12ce-47fe-9c38-5387afb1a854
+compare_samples(
+		(
+		:best => best_stars,
+	),
+	Dict(
+		:best => (;	alpha=0.1, markersize=2bg_markersize, color=:black, 
+			label="all" => (alpha=1, markersize=3),
+			rasterize=true,
+		),
+	)
+)
+
 # ╔═╡ 722a1f29-be6b-4fca-a9b3-8c304b6c4eb6
 let 
 	dθ = 60θmax
@@ -426,14 +439,14 @@ If there is crowding, the plot below should appear to have deviations in brightn
 
 # ╔═╡ 02d19c07-411f-40d6-9ac3-010ebfd4bdfe
 let 
-	dθ = θmax*60 / 2
+	dθ = θmax*60 / 10
 	fig = Figure()
 	ax = Axis(fig[1, 1], 
 		xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}",
 		aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
 	
 	h = scatter!(60*all_stars.xi, 60*all_stars.eta, color=all_stars.phot_g_mean_mag, 
-		colormap=:greys, markersize=3)
+		colormap=:greys, markersize=1)
 
 	Colorbar(fig[1,2], h, label="G mag")
 	fig
@@ -506,6 +519,7 @@ end
 # ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╠═dde9398a-26b4-4a66-a396-f5b6188f9674
+# ╠═d9e9062d-12ce-47fe-9c38-5387afb1a854
 # ╟─722a1f29-be6b-4fca-a9b3-8c304b6c4eb6
 # ╟─9c1947ef-b9d2-4a48-8e0e-f8d1b8e95124
 # ╠═1942cac0-2da8-4bec-80d0-a9302ddc9ea1
@@ -515,6 +529,6 @@ end
 # ╠═a5d834ed-6fd2-4f90-96a7-df393aca541e
 # ╟─4f538de6-8827-454f-a97f-8f6c2cd7ea3f
 # ╟─4a1bf5cb-6083-429f-8747-9ed0478f8f3e
-# ╟─02d19c07-411f-40d6-9ac3-010ebfd4bdfe
+# ╠═02d19c07-411f-40d6-9ac3-010ebfd4bdfe
 # ╟─ca63e89f-7ee1-49d9-8bc1-afcb755f9ebf
 # ╟─83b506bb-f385-464e-8f5c-7adfff45105a
