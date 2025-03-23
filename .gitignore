@@ -96,3 +96,5 @@ pot/
 *.xdv
 *.gz
 *.un~
+
+*.nvimlog
