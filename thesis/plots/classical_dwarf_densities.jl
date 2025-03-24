@@ -29,16 +29,19 @@ import TOML
 α = LilGuys.calc_R_h(LilGuys.Exp2D(R_s=1))
 
 # ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
-function load_profile(galaxyname; algname=nothing)
-	if galaxyname ∈ ["crater2", "antlia2"]
-		algname = "mcmc_hist_fast"
-	else
-		algname = "mcmc_hist"
-	end
-	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
-		"processed/profile.$(algname).toml")
+function load_profile(galaxyname; algname="simple")
+	# if galaxyname ∈ ["crater2", "antlia2"]
+	# 	algname = "mcmc_hist_fast"
+	# else
+	# 	algname = "mcmc_hist"
+	# end
+	# filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
+	# 	"processed/profile.$(algname).toml")
 	
-    prof = LilGuys.StellarProfile(filename)
+	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
+		"density_profiles/$(algname)_profile.toml")
+	
+    prof = LilGuys.StellarDensityProfile(filename)
 
 
 	density_fit = TOML.parsefile(filename * "_density_fits.toml")
@@ -51,8 +54,7 @@ function load_profile(galaxyname; algname=nothing)
 	
     prof = LilGuys.scale(prof, 1/R_h, 1/M_s)
 
-	filt = prof.log_Sigma_em .< 1
-	filt .&= prof.log_Sigma_ep .< 1
+	filt = max.(LilGuys.ci_of.(prof.log_Sigma_em)).< 1
 
 	prof.log_R = prof.log_R[filt]
 	prof.log_Sigma = prof.log_Sigma[filt]
@@ -68,12 +70,11 @@ galaxynames = [
 	"carina",
 	"sextans1",
 	"draco",
-	"canes_venatici1",
-	"crater2",
-	# "bootes1",
-	# "bootes3",
-	"antlia2"
+	
 ]
+
+# ╔═╡ f12de5d7-11ed-4840-8d98-37c11adb3768
+readdir("/cosma/home/durham/dc-boye1/data/dwarfs/observations/carina/density_profiles/")
 
 # ╔═╡ f4e8b66c-5f18-45fd-8859-32479d7227bc
 profiles = OrderedDict(name => load_profile(name) for name in galaxynames)
@@ -160,6 +161,7 @@ end
 # ╠═40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
 # ╠═552e9438-862f-4710-a7d4-c8d798b5f1aa
 # ╠═cf655228-1528-4e77-9629-07e99984951f
+# ╠═f12de5d7-11ed-4840-8d98-37c11adb3768
 # ╠═f4e8b66c-5f18-45fd-8859-32479d7227bc
 # ╠═8adc28b1-b0d0-4735-a1f1-ee3bb82e8ef2
 # ╠═c3b52d5a-a8b4-4207-a8c7-9d32914aca93
