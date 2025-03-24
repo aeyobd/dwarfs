@@ -37,8 +37,6 @@ function main()
 
     profile_kwargs = pop!(params, "profile_kwargs", Dict())
 
-    LLR_min = pop!(params, "LLR_min", 0)
-
     props = TOML.parsefile(dirname(params["filename"]) * "/../observed_properties.toml")
 
     params = LilGuys.dict_to_tuple(params)

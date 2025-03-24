@@ -46,7 +46,7 @@ Base.@kwdef struct GaiaFilterParams
     PSAT_col::String = "PSAT"
 
     "minimum log likelihood value for the satelite"
-    LL_cut::OptF = nothing
+    LLR_min::OptF = nothing
 
     "The maximum value of Gaia's renormalised unit weight error"
     ruwe_max::OptF = nothing
@@ -105,13 +105,26 @@ function GaiaFilterParams(dict::Dict; kwargs...)
         dict_common[key] = val
     end
 
-    @info "kwargs = $dict_common"
-    return GaiaFilterParams(; dict_common...)
+    params = GaiaFilterParams(; dict_common...)
+    @info "params:\n $params"
+
+    return params
 end
 
 
 function GaiaFilterParams(filename::String; kwargs...)
     return GaiaFilterParams(read_paramfile(filename); kwargs...)
+end
+
+
+function Base.print(io::IO, params::GaiaFilterParams)
+    d = LilGuys.struct_to_dict(params)
+    for (key, val) in d
+        if isnothing(val)
+            pop!(d, key)
+        end
+    end
+    TOML.print(io, d)
 end
 
 
@@ -134,7 +147,7 @@ function read_gaia_stars(params; θ=nothing)
     end
 
     add_xi_eta!(df, params.ra, params.dec)
-    R_ell = 60lguys.calc_R_ell(df.xi, df.eta, params.ellipticity, params.position_angle)
+    R_ell = lguys.calc_R_ell(df.xi, df.eta, params.ellipticity, params.position_angle)
     df[!, :R_ell] = R_ell
 
     if params.dist !== nothing
@@ -164,12 +177,14 @@ function read_gaia_stars(params; θ=nothing)
 
 
     # add some useful columns if J+24 data
-    if :L_S_SAT ∈ names(df)
-        df[!, :LL_S] = @. log10(df.L_S_SAT) - log10(df.L_S_BKD)
-        df[!, :LL_PM] = @. log10(df.L_PM_SAT) - log10(df.L_PM_BKD)
-        df[!, :LL_CMD] = @. log10(df.L_CMD_SAT) - log10(df.L_CMD_BKD)
-        df[!, :LL] = @. df.LL_S + df.LL_PM + df.LL_CMD
-        df[!, :LL_nospace] = @. df.LL_PM + df.LL_CMD
+    if "L_S_SAT" ∈ names(df)
+        df[!, :LLR_S] = @. log10(df.L_S_SAT) - log10(df.L_S_BKD)
+        df[!, :LLR_PM] = @. log10(df.L_PM_SAT) - log10(df.L_PM_BKD)
+        df[!, :LLR_CMD] = @. log10(df.L_CMD_SAT) - log10(df.L_CMD_BKD)
+        df[!, :LLR] = @. df.LLR_S + df.LLR_PM + df.LLR_CMD
+        df[!, :LLR_nospace] = @. df.LLR_PM + df.LLR_CMD
+    else
+        @info "not Jensen+24 table, not adding LLR keys"
     end
 
     return df
@@ -217,8 +232,8 @@ calculates and adds xi and eta to a `stars` DataFrame
 function add_xi_eta!(stars, ra0::Real, dec0::Real)
 	xi, eta = lguys.to_tangent(stars.ra, stars.dec, ra0, dec0)
 	
-	stars[:, "xi"] = xi
-	stars[:, "eta"] = eta
+	stars[:, "xi"] = 60xi
+	stars[:, "eta"] = 60eta
 	stars
 end
 
@@ -251,7 +266,7 @@ and pretty prints some notes
 """
 function apply_filter(df::DataFrame, func::Function, params...)
 	if any(params .== nothing)
-		filt = trues(size(df, 1))
+        filt = no_filter(df)
 	else
 		filt = func(df, params...)
 	end
@@ -284,7 +299,7 @@ function select_members(all_stars, params::GaiaFilterParams)
     ]
 
 
-    filt = trues(size(all_stars, 1))
+    filt = no_filter(all_stars)
 
     for f in filters
         filt .&= f(all_stars, params)
@@ -295,21 +310,25 @@ function select_members(all_stars, params::GaiaFilterParams)
 	return all_stars[filt, :]
 end
 
+function no_filter(all_stars)
+    return trues(size(all_stars, 1))
+end
 
-function fbest_filter(all_stars, fbest::Bool=true)
-    if fbest
+function fbest_filter(all_stars, only_fbest::Bool=true)
+    if only_fbest
         return all_stars.F_BEST .== 1.0
     else
-        return trues(size(all_stars, 1))
+        return no_filter(all_stars)
     end
 end
 
 
 function fbest_filter(all_stars, params::GaiaFilterParams)
-    if :F_BEST ∈ keys(all_stars)
-        return apply_filter(all_stars, f_best_filter, params.only_fbest)
+    if "F_BEST" ∈ names(all_stars)
+        return apply_filter(all_stars, fbest_filter, params.only_fbest)
     else
-        return trues(size(all_stars, 1))
+        @warn "\tmissing F_BEST in colnames"
+        return no_filter(all_stars)
     end
 end
 
@@ -342,7 +361,7 @@ function qso_filter(all_stars, params::GaiaFilterParams)
     if params.remove_qso
         return apply_filter(all_stars, qso_filter)
     else
-        return trues(size(all_stars, 1))
+        return no_filter(all_stars)
     end
 end
 
@@ -355,7 +374,7 @@ function galaxy_filter(all_stars, params::GaiaFilterParams)
     if params.remove_galaxy
         return apply_filter(all_stars, galaxy_filter)
     else
-        return trues(size(all_stars, 1))
+        return no_filter(all_stars)
     end
 end
 
@@ -372,7 +391,7 @@ end
 
 
 function R_ell_filter(all_stars, ra0, dec0, ellipticity, position_angle)
-    R_ell_max = 60*calc_R_max(all_stars.ra, all_stars.dec, ellipticity, position_angle, centre=(ra0, dec0))
+    R_ell_max = calc_R_max(all_stars.xi, all_stars.eta, ellipticity, position_angle)
 
     @info "\tmax R_ell = $R_ell_max"
     return all_stars.R_ell .< R_ell_max
@@ -383,7 +402,7 @@ function R_ell_filter(all_stars, params::GaiaFilterParams)
     if params.filt_R_max
         return apply_filter(all_stars, R_ell_filter, params.ra, params.dec, params.ellipticity, params.position_angle)
     else
-        return trues(size(all_stars, 1))
+        return no_filter(all_stars)
     end
 end
 
@@ -447,13 +466,13 @@ function psat_filter(all_stars, params::GaiaFilterParams)
 end
 
 
-function ll_filter(all_stars, ll_cut)
-    return all_stars.LL_nospace .> ll_cut
+function ll_filter(all_stars, LLR_min)
+    return all_stars.LLR_nospace .> LLR_min
 end
 
 
 function ll_filter(all_stars, params::GaiaFilterParams)
-    return apply_filter(all_stars, ll_filter, params.LL_cut)
+    return apply_filter(all_stars, ll_filter, params.LLR_min)
 end
 
 function parallax_filter(all_stars, dist, dist_err, n_sigma_dist)
@@ -573,15 +592,11 @@ end
     Calculates the approximate maximum elliptical radius which is complete
 in a set of points in ra, dec space.
 """
-function calc_R_max(ra, dec, args...; 
-        centre="mean",
+function calc_R_max(xi, eta, args...; 
         weights=nothing
     )
 
-    ra0, dec0 = lguys.calc_centre2D(ra, dec, centre, weights)
-
-    x, y = lguys.to_tangent(ra, dec, ra0, dec0)
-    x_p, y_p = lguys.shear_points_to_ellipse(x, y, args...)
+    xi_e, eta_e = lguys.shear_points_to_ellipse(xi, eta, args...)
 
     if length(args) == 3
         a, b, _ = args
@@ -593,14 +608,37 @@ function calc_R_max(ra, dec, args...;
         aspect = 1/aspect
     end
     
-    hull = convex_hull(x_p, y_p)
+    hull = convex_hull(xi_e, eta_e)
     R_max = min_distance_to_polygon(hull...)
         # @warn "R_ell: Convex hull not defined. Using max radius. Load Polyhedra to enable convex hull."
-    R_max_simple = maximum(@. sqrt(x_p^2 + y_p^2)) ./ sqrt(aspect)
-    @info "R_ell: R_max = $R_max, R_max_simple = $R_max_simple"
+    R_max_circ = maximum(@. sqrt(xi^2 + eta^2))
+    R_max_simple = R_max_circ ./ sqrt(aspect)
+    @info "\tR_max_convexhull = $(R_max)"
+    @info "\tR_max_symmetric = $(R_max_simple)"
+    @info "\tR_circ_max = $(R_max_circ)"
 
     return R_max
 end
+
+
+
+"""
+    convex_hull(x, y)
+Given a vector of x and y coordinates, returns
+the convex hull bounding the points.
+Filters out NaNs
+"""
+function convex_hull(x, y)
+    @assert length(x) == length(y)
+    filt = .!isnan.(x) .& .!isnan.(y)
+    @assert sum(filt) > 2
+
+    ps = [[x, e] for (x, e) in zip(x[filt], y[filt])]
+    p = Polyhedra.convexhull(ps...)
+    b = Polyhedra.planar_hull(p).points.points
+    return first.(b), last.(b)
+end
+
 
 function min_distance_to_polygon(x, y)
     min_dist = Inf
@@ -657,20 +695,3 @@ function distance_to_segment(a, b, p=zeros(2))
     return dist
 end
 
-
-
-"""
-    convex_hull(x, y)
-Given a vector of x and y coordinates, returns
-the convex hull bounding the points.
-"""
-function convex_hull(xi, eta)
-    @assert length(xi) == length(eta)
-    filt = .!isnan.(xi) .& .!isnan.(eta)
-    @assert sum(filt) > 2
-
-    ps = [[x, e] for (x, e) in zip(xi[filt], eta[filt])]
-    p = Polyhedra.convexhull(ps...)
-    b = Polyhedra.planar_hull(p).points.points
-    return first.(b), last.(b)
-end

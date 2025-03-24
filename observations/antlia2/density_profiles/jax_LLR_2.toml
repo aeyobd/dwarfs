@@ -1,2 +1,2 @@
 filename = "../data/jensen+24_1c.fits"
-LLR_cut = 2
+LLR_min = 2

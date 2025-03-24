@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -29,8 +29,11 @@ include("../utils/gaia_filters.jl")
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "fornax"
+	galaxy = "draco"
 end
+
+# ╔═╡ 13078689-53b0-4eb4-9408-ddbb6ebad69f
+import PythonCall
 
 # ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
 import TOML
@@ -160,7 +163,7 @@ maximum(best_stars.xi .⊕ best_stars.eta) * 60
 r_max = maximum(best_stars.xi .⊕ best_stars.eta) * 60 * sqrt(1 - obs_props["ellipticity"])
 
 # ╔═╡ 5feaa9b0-ca44-48d6-80d1-16303a34005f
-prof_simple = LilGuys.StellarProfile(best_stars.R_ell[best_stars.PSAT .> 0.2], bins=log10.(bins)[bins .< r_max], errors=:weighted, normalization=:none)
+prof_simple = LilGuys.StellarDensityProfile(best_stars.R_ell[best_stars.PSAT .> 0.2], bins=log10.(bins)[bins .< r_max], errors=:weighted, normalization=:none)
 
 # ╔═╡ 9bee7d00-d281-4d2d-ab9a-cbd3333f0e8e
 sum(prof_simple.counts)
@@ -169,10 +172,10 @@ sum(prof_simple.counts)
 sum(prof_simple.counts)
 
 # ╔═╡ ab124afe-c94a-44d9-8869-bd4d4cee3fbd
-prof_weighted = LilGuys.StellarProfile(best_stars.R_ell, weights=best_stars.PSAT, bins=log10.(bins)[bins .< r_max], errors=:weighted,  normalization=:none)
+prof_weighted = LilGuys.StellarDensityProfile(best_stars.R_ell, weights=best_stars.PSAT, bins=log10.(bins)[bins .< r_max], errors=:weighted,  normalization=:none)
 
 # ╔═╡ babcaaa8-8d95-4dcb-b22b-5e36c10c57dd
-prof_bernoulli = LilGuys.StellarProfile(best_stars.R_ell, weights=best_stars.PSAT, bins=log10.(bins)[bins .< r_max], errors=:bernoulli,  normalization=:none)
+prof_bernoulli = LilGuys.StellarDensityProfile(best_stars.R_ell, weights=best_stars.PSAT, bins=log10.(bins)[bins .< r_max], errors=:bernoulli,  normalization=:none)
 
 # ╔═╡ 24a65d65-6e0b-4108-8041-79fee06cd28a
 md"""
@@ -225,7 +228,7 @@ let
 	
 	global fsats = Matrix{Float64}(undef, Ns, Nc)
 	global psats = Matrix{Float64}(undef, Ns, Nc)
-	global profiles = Vector{LilGuys.StellarProfile}(undef, Nc)
+	global profiles = Vector{LilGuys.StellarDensityProfile}(undef, Nc)
 
 	for i in 1:skip:Nc
 		if i % 200 == 0
@@ -243,7 +246,7 @@ let
 		psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
 		psats[:, i] .= psat
 
-		prof = LilGuys.StellarProfile(radii, bins=log10.(bins), weights=psat, errors=:weighted)
+		prof = LilGuys.StellarDensityProfile(radii, bins=log10.(bins), weights=psat, errors=:weighted)
 
 		profiles[i] = prof
 	end
@@ -290,7 +293,12 @@ let
 	skip = 10
 	
 	for h in profiles[1:skip:end]
-		scatter!(h.log_R[2:end-1] .+ 0.01*randn(length(h.log_R) - 2), h.log_Sigma[2:end-1], color=:black, alpha=0.1, markersize=1)
+		x = h.log_R
+		y =  LilGuys.middle_of.(h.log_Sigma)
+		x .+= 0.01randn(length(x))
+
+		filt = isfinite.(y)
+		scatter!(x[filt], y[filt], color=:black, alpha=0.1, markersize=1)
 	end
 
 	@savefig "scatter_profiles"
@@ -304,30 +312,17 @@ let
 	ax = Axis(fig[1,1],
 		xlabel = log_r_label,
 		ylabel = L"\Gamma",
-		limits = (nothing, nothing, -6, 2)
+		limits = (0, nothing, -6, 2)
 	)
 	skip = 10
 	
 	for h in profiles[1:skip:end]
-		scatter!(h.log_R[2:end-1] .+ 0.01*randn(length(h.log_R) - 2), h.Gamma[2:end-1], color=:black, alpha=0.1, markersize=1)
-	end
+		x = h.log_R[2:end-1] 
+		y =  LilGuys.middle_of.(h.Gamma[2:end-1])
+		x .+= 0.01randn(length(x))
 
-
-	fig
-end
-
-# ╔═╡ e52cac33-9611-437b-98b3-bdf20fc771e0
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = log_r_label,
-		ylabel = "Gamma max",
-		limits = (nothing, nothing, 0, nothing)
-	)
-	skip = 10
-	
-	for h in profiles[1:skip:end]
-		scatter!(h.log_R[2:end-1] .+ 0.01*randn(length(h.log_R) - 2), h.Gamma_max[2:end-1], color=:black, alpha=0.1, markersize=1)
+		filt = isfinite.(y)
+		scatter!(x[filt], y[filt], color=:black, alpha=0.1, markersize=1)
 	end
 
 
@@ -365,24 +360,50 @@ end
 # ╔═╡ c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
 all_Sigmas = hcat([prof.log_Sigma for prof in profiles]...)
 
+# ╔═╡ 4ed70b6a-9468-4352-b8e0-d364f95ceed8
+all_Gammas = hcat([prof.Gamma for prof in profiles]...)
+
 # ╔═╡ 084a491c-e53a-4371-9c5b-f9450ec5deec
 sum(isnan.(all_Sigmas))
 
 # ╔═╡ 428d53fd-39cd-40f3-ac6b-389f637e351e
 all_Sigmas[isnan.(all_Sigmas)] .= -Inf
 
-# ╔═╡ 9451cfcd-582e-40d6-af78-939f4b9ac161
-begin
-	log_Sigmas = dropdims(median(all_Sigmas, dims=2), dims=2)
-	log_Sigma_em_int = log_Sigmas .- quantile.(eachrow(all_Sigmas),pvalue)
-	log_Sigma_ep_int =  quantile.(eachrow(all_Sigmas), 1-pvalue) .- log_Sigmas
+# ╔═╡ 1edd1eeb-f45e-4a6b-b88e-6d966e3fbc18
+function row_quantile(A, q)
+	results = zeros(size(A, 1))
+	for (i, row) in enumerate(eachrow(A))
+		if any(ismissing.(row) .|| isnan.(row))
+			results[i] = NaN
+		else
+			results[i] = quantile(row, q)
+		end
+	end
 
-	log_Sigma_em_stat = dropdims(median(hcat([prof.log_Sigma_em for prof in profiles]...), dims=2), dims=2)
-	log_Sigma_ep_stat = dropdims(median(hcat([prof.log_Sigma_ep for prof in profiles]...), dims=2), dims=2)
+	return results
+end
+
+# ╔═╡ f811ad20-f0d4-4561-a723-ab00c63e09d1
+function reduce_samples(all_Sigmas)
+	log_Sigmas = dropdims(median(LilGuys.middle_of.(all_Sigmas), dims=2), dims=2)
+	log_Sigma_em_int = log_Sigmas .-  row_quantile(LilGuys.middle_of.(all_Sigmas), pvalue)
+	log_Sigma_ep_int =  row_quantile(LilGuys.middle_of.(all_Sigmas), 1-pvalue) .- log_Sigmas
+
+	log_Sigma_em_stat = dropdims(median(LilGuys.low_of.(all_Sigmas), dims=2), dims=2)
+	log_Sigma_ep_stat = dropdims(median(LilGuys.high_of.(all_Sigmas), dims=2), dims=2)
 
 	log_Sigma_em = log_Sigma_em_int .+ log_Sigma_em_stat
 	log_Sigma_ep = log_Sigma_ep_int .+ log_Sigma_ep_stat
+
+	log_Sigma_u = LilGuys.Measurement.(log_Sigmas, log_Sigma_em, log_Sigma_ep)
+	return log_Sigma_u
 end
+
+# ╔═╡ 9451cfcd-582e-40d6-af78-939f4b9ac161
+log_Sigma = reduce_samples(all_Sigmas)
+
+# ╔═╡ 276cc743-bd92-48f4-92ba-c159594c5919
+Gammas = reduce_samples(all_Gammas)
 
 # ╔═╡ d98b5b58-42a9-4119-bec2-b8435b35eb03
 
@@ -445,11 +466,70 @@ infoout = joinpath(galaxy, "processed", "info$FIGSUFFIX.log")
 # ╔═╡ 28b67692-45a9-435d-8862-882b0f06f947
 starsout = joinpath(galaxy, "processed", "stars$FIGSUFFIX.fits")
 
+# ╔═╡ 2b2d6698-27a8-404d-a23d-c76f60cd057b
+
+
+# ╔═╡ 880027a6-1caf-421a-90c8-905f38d5caca
+
+
 # ╔═╡ aa1cf084-0444-448e-bc88-87fbfc0d7ef0
 profiles[1].Gamma
 
 # ╔═╡ bf8d5936-1a4e-47c2-bb22-531ab344b8ad
 filt_max = bins[2:end] .< r_max
+
+# ╔═╡ 4482bead-75a5-413f-b442-e60ab3d3ec88
+prof_mc = LilGuys.StellarDensityProfile(
+	R_units = "arcmin",
+	log_Sigma=log_Sigma[filt_max],
+	log_R = midpoints(bins)[filt_max],
+	log_R_bins=log10.(bins[bins.< r_max]), # use normal bins for these
+	Gamma=Gammas[filt_max],
+
+)
+
+# ╔═╡ 7c02d24f-7d59-410b-99bc-93513afa4c5d
+let
+	fig = Figure(size=(5*72, 3*72))
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label,
+		ylabel = log_Sigma_label,
+	)
+	jitter=0.01
+
+	LilGuys.plot_log_Σ!(ax, prof_mc, label="mc hist")
+	LilGuys.plot_log_Σ!(ax, prof_weighted, label="weighted")
+	LilGuys.plot_log_Σ!(ax, prof_simple, label="cut")
+	
+	Legend(fig[1,2], ax)
+
+
+	ax_res = Axis(fig[2,1],
+		xlabel = log_r_label,
+		ylabel = "residual",
+		limits=(nothing, nothing, -1, 1)
+	)
+
+
+	errorscatter!(prof_mc.log_R, prof_mc.log_Sigma .- prof_simple.log_Sigma, 
+		yerror = collect(zip(prof_mc.log_Sigma_em, prof_mc.log_Sigma_ep)),
+		label="mc hist")
+	
+	errorscatter!(prof_weighted.log_R .+ jitter, prof_weighted.log_Sigma .- prof_simple.log_Sigma, 
+		yerror = collect(zip(prof_weighted.log_Sigma_em, prof_weighted.log_Sigma_ep)),
+		label="weighted")
+	
+	errorscatter!(prof_simple.log_R .- jitter, prof_simple.log_Sigma .- prof_simple.log_Sigma, 
+		yerror = collect(zip(prof_simple.log_Sigma_em, prof_simple.log_Sigma_ep)),
+		label="simple.")
+
+	rowsize!(fig.layout, 2, Relative(0.3))
+	rowgap!(fig.layout, 0)
+	hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+	linkxaxes!(ax_res, ax)
+
+	@savefig "density_versus_simple"
+end
 
 # ╔═╡ a562c141-8626-4242-9f6a-c381a4da619b
 function median_of(profiles, key)
@@ -482,72 +562,6 @@ function err_of(profiles, key)
 	return (@. max(h[filt_max]-m, m-l[filt_max]) + e[filt_max])
 end
 
-# ╔═╡ 4482bead-75a5-413f-b442-e60ab3d3ec88
-prof_mc = LilGuys.StellarProfile(
-	R_units = "arcmin",
-	log_Sigma=log_Sigmas[filt_max],
-	log_Sigma_em=log_Sigma_em[filt_max],
-	log_Sigma_ep=log_Sigma_ep[filt_max],
-	log_R_bins=log10.(bins[bins.< r_max]), # use normal bins for these
-	log_R=midpoints(log10.(bins))[filt_max],
-	counts=median_of(profiles, "counts"),
-	mass_per_annulus=median_of(profiles, "mass_per_annulus"),
-	mass_per_annulus_err=err_of(profiles, "mass_per_annulus"),
-	M_in=median_of(profiles, "M_in"),
-	M_in_err=err_of(profiles, "M_in"),
-	Sigma=median_of(profiles, "Sigma"),
-	Sigma_err=err_of(profiles, "Sigma"),
-	Sigma_m=median_of(profiles, "Sigma_m"),
-	Sigma_m_err=err_of(profiles, "Sigma_m"),
-	Gamma=median_of(profiles, "Gamma"),
-	Gamma_err=err_of(profiles, "Gamma"),
-	Gamma_max=median_of(profiles, "Gamma_max"),
-	Gamma_max_err=err_of(profiles, "Gamma_max"),
-)
-
-# ╔═╡ 7c02d24f-7d59-410b-99bc-93513afa4c5d
-let
-	fig = Figure(size=(5*72, 3*72))
-	ax = Axis(fig[1,1],
-		xlabel = log_r_label,
-		ylabel = log_Sigma_label,
-	)
-	jitter=0.01
-
-	LilGuys.plot_density_prof!(ax, prof_mc, label="mc hist")
-	LilGuys.plot_density_prof!(ax, prof_weighted, label="weighted")
-	LilGuys.plot_density_prof!(ax, prof_simple, label="cut")
-	
-	Legend(fig[1,2], ax)
-
-
-	ax_res = Axis(fig[2,1],
-		xlabel = log_r_label,
-		ylabel = "residual",
-		limits=(nothing, nothing, -1, 1)
-	)
-
-
-	errorscatter!(prof_mc.log_R, prof_mc.log_Sigma .- prof_simple.log_Sigma, 
-		yerror = collect(zip(prof_mc.log_Sigma_em, prof_mc.log_Sigma_ep)),
-		label="mc hist")
-	
-	errorscatter!(prof_weighted.log_R .+ jitter, prof_weighted.log_Sigma .- prof_simple.log_Sigma, 
-		yerror = collect(zip(prof_weighted.log_Sigma_em, prof_weighted.log_Sigma_ep)),
-		label="weighted")
-	
-	errorscatter!(prof_simple.log_R .- jitter, prof_simple.log_Sigma .- prof_simple.log_Sigma, 
-		yerror = collect(zip(prof_simple.log_Sigma_em, prof_simple.log_Sigma_ep)),
-		label="simple.")
-
-	rowsize!(fig.layout, 2, Relative(0.3))
-	rowgap!(fig.layout, 0)
-	hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
-	linkxaxes!(ax_res, ax)
-
-	@savefig "density_versus_simple"
-end
-
 # ╔═╡ 52d66c81-64cc-4eee-bad9-b9728c38c97b
 psat_err
 
@@ -567,12 +581,13 @@ let
 	stars_new[!, :PSAT_ep] = psat_ep
 	stars_new[!, :f_sat] = median.(eachrow(fsats))
 
-	LilGuys.write_fits(starsout, stars_new)
+	LilGuys.write_fits(starsout, stars_new, overwrite=true)
 end	
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
+# ╠═13078689-53b0-4eb4-9408-ddbb6ebad69f
 # ╠═408d70ee-ab1c-4630-bd75-21358cd55489
 # ╠═d1de613c-c3bb-4843-859e-7b8df54bafe0
 # ╠═109b91c2-c0ad-4683-849b-a56da5766ee4
@@ -622,14 +637,17 @@ end
 # ╠═ad85b789-8f43-489b-a41c-a966e08d78ad
 # ╠═f2c43c30-b069-4d17-8d61-be801d85b245
 # ╠═08424d6a-6a21-45d2-9b1a-d28e129c8158
-# ╠═e52cac33-9611-437b-98b3-bdf20fc771e0
 # ╠═af3db174-950d-46be-8d9c-61df70beb40e
 # ╠═36bb1876-5937-44fe-bb1c-add10470371d
 # ╠═6470edfd-bd06-43b7-aa5e-a80645af78fb
 # ╠═c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
+# ╠═4ed70b6a-9468-4352-b8e0-d364f95ceed8
 # ╠═084a491c-e53a-4371-9c5b-f9450ec5deec
 # ╠═428d53fd-39cd-40f3-ac6b-389f637e351e
+# ╠═1edd1eeb-f45e-4a6b-b88e-6d966e3fbc18
+# ╠═f811ad20-f0d4-4561-a723-ab00c63e09d1
 # ╠═9451cfcd-582e-40d6-af78-939f4b9ac161
+# ╠═276cc743-bd92-48f4-92ba-c159594c5919
 # ╠═7c02d24f-7d59-410b-99bc-93513afa4c5d
 # ╠═d98b5b58-42a9-4119-bec2-b8435b35eb03
 # ╠═8abe3d92-f9e8-4e89-96ec-14eaf9482e64
@@ -640,6 +658,8 @@ end
 # ╠═a93579f2-d37d-492c-95e6-02bd7491dc8c
 # ╠═639c7d31-8693-45dd-88be-492b124804e9
 # ╠═28b67692-45a9-435d-8862-882b0f06f947
+# ╠═2b2d6698-27a8-404d-a23d-c76f60cd057b
+# ╠═880027a6-1caf-421a-90c8-905f38d5caca
 # ╠═4482bead-75a5-413f-b442-e60ab3d3ec88
 # ╠═aa1cf084-0444-448e-bc88-87fbfc0d7ef0
 # ╠═bf8d5936-1a4e-47c2-bb22-531ab344b8ad
