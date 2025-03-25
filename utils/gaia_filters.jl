@@ -118,7 +118,7 @@ end
 
 
 function Base.print(io::IO, params::GaiaFilterParams)
-    d = LilGuys.struct_to_dict(params)
+    d = lguys.struct_to_dict(params)
     for (key, val) in d
         if isnothing(val)
             pop!(d, key)

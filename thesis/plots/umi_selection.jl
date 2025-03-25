@@ -43,7 +43,7 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 """
 
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
-galaxyname = "sculptor"
+galaxyname = "ursa_minor"
 
 # ╔═╡ 0004f638-c57a-4dab-8b97-c77840cafbbf
 import TOML
@@ -63,7 +63,7 @@ obs_dir = ENV["DWARFS_ROOT"] * "/observations/"
 observed_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/" * galaxyname * "/observed_properties.toml")
 
 # ╔═╡ 26cf1867-02be-4d36-8c35-6c58a1feca27
-datafile = obs_dir * "/$galaxyname/data/jensen+24_wide.fits"
+datafile = obs_dir * "/$galaxyname/data/jensen+24_2c.fits"
 
 # ╔═╡ 90cec348-1947-4091-a5dd-ae67cf80fddb
 filt_params = GaiaFilterParams(observed_properties, filename=datafile)
@@ -84,7 +84,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/processed/sculptor_memb_rv.fits")
+rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/sculptor_memb_rv.fits")
 
 # ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
 LilGuys.mean(isfinite.(rv_members.RV_t23))

@@ -35,12 +35,6 @@ The goal of this notebook is to determine the background density of a given dens
 This is likely better done with a bayesian analysis
 """
 
-# ╔═╡ 4a985c25-0077-4eae-b2f9-9e7d4caa3c28
-import NaNMath as nm
-
-# ╔═╡ e1c0f486-2917-4c3f-a909-f0091ee27c58
-CairoMakie.activate!(type=:png)
-
 # ╔═╡ cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
 @bind galaxyname confirm(TextField(default="sculptor"))
 
@@ -52,13 +46,19 @@ begin
 end
 
 # ╔═╡ 7557d9c9-891a-4bce-88d6-f04e06e81738
-@bind profilename confirm(TextField(default="jax_LL_0_profile.toml"))
+@bind profilename confirm(TextField(default="jax_LLR_0_profile.toml"))
 
 # ╔═╡ fe484bae-bd19-41c0-9d9d-7a6446b99039
 @bind n_bins_bg confirm(NumberField(1:1:100))
 
 # ╔═╡ cb844ce4-334c-45ce-8343-d38722ec185b
-@bind n_bins_cut confirm(NumberField(0:1:100, default=1))
+@bind n_bins_cut confirm(NumberField(0:1:100))
+
+# ╔═╡ 4a985c25-0077-4eae-b2f9-9e7d4caa3c28
+import NaNMath as nm
+
+# ╔═╡ e1c0f486-2917-4c3f-a909-f0091ee27c58
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ ed0c091b-d638-428e-800e-d0aacda2b01c
 profpath = joinpath(galaxyname, "density_profiles", profilename)
@@ -80,10 +80,10 @@ filt_bg = (Nb-n_bins_bg-n_bins_cut+1):(Nb-n_bins_cut)
 Sigmas_bg = prof.log_Sigma[end-n_bins_bg-n_bins_cut+1:end-n_bins_cut]
 
 # ╔═╡ 3a35f811-11cf-4154-86c0-c016a6253631
-Sigmas_bg_err = maximum.(LilGuys.ci_of.(Sigmas_bg))
+Sigmas_bg_err = maximum.(LilGuys.credible_interval.(Sigmas_bg))
 
 # ╔═╡ 3cc7bd35-0f9f-48c9-aeb1-d29cc8381869
-Sigmas_bg_m = LilGuys.value.(Sigmas_bg)
+Sigmas_bg_m = LilGuys.middle.(Sigmas_bg)
 
 # ╔═╡ f56378dd-e0dd-4856-a192-d7c2b7fa0222
 Sigma_bg = LilGuys.mean(Sigmas_bg_m, 1 ./ Sigmas_bg_err .^ 2)
@@ -125,11 +125,11 @@ let
 		yticks = Makie.automatic,
 	)
 
-	errorscatter!(prof.log_R, LilGuys.value.(prof.log_Sigma), 
-		yerror=LilGuys.ci_of.(prof.log_Sigma),
+	errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma), 
+		yerror=LilGuys.credible_interval.(prof.log_Sigma),
 	)
 
-	scatter!(prof.log_R[filt_bg], LilGuys.value.(prof.log_Sigma)[filt_bg], color=COLORS[3])
+	scatter!(prof.log_R[filt_bg], LilGuys.middle.(prof.log_Sigma)[filt_bg], color=COLORS[2])
 	fig
 end
 
@@ -143,15 +143,15 @@ let
 		yticks = Makie.automatic,
 	)
 
-	errorscatter!(prof.log_R, LilGuys.value.(prof.log_Sigma), 
-		yerror=LilGuys.ci_of.(prof.log_Sigma),
+	errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma), 
+		yerror=LilGuys.credible_interval.(prof.log_Sigma),
 	)
 
-	scatter!(prof.log_R[filt_bg], LilGuys.value.(prof.log_Sigma)[filt_bg], color=COLORS[3])
+	scatter!(prof.log_R[filt_bg], LilGuys.middle.(prof.log_Sigma)[filt_bg], color=COLORS[3])
 
 
-	errorscatter!(prof_sub.log_R, LilGuys.value.(prof_sub.log_Sigma), 
-		yerror=LilGuys.ci_of.(prof_sub.log_Sigma),
+	errorscatter!(prof_sub.log_R, LilGuys.middle.(prof_sub.log_Sigma), 
+		yerror=LilGuys.credible_interval.(prof_sub.log_Sigma),
 	)
 
 	hlines!(Sigma_bg)
@@ -185,14 +185,15 @@ end
 
 # ╔═╡ Cell order:
 # ╠═4a6522fd-39ec-4cba-8494-b4a50a19d9fb
-# ╠═02612c68-042b-11f0-2f84-e9431cc0ee83
-# ╠═4a985c25-0077-4eae-b2f9-9e7d4caa3c28
-# ╠═e1c0f486-2917-4c3f-a909-f0091ee27c58
-# ╠═abead192-161f-4375-899f-2c769d40cbfb
 # ╠═cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
 # ╠═7557d9c9-891a-4bce-88d6-f04e06e81738
 # ╠═fe484bae-bd19-41c0-9d9d-7a6446b99039
 # ╠═cb844ce4-334c-45ce-8343-d38722ec185b
+# ╠═8a1b3f9e-4a88-4527-b9ee-ebb97b3cfc8d
+# ╠═02612c68-042b-11f0-2f84-e9431cc0ee83
+# ╠═4a985c25-0077-4eae-b2f9-9e7d4caa3c28
+# ╠═e1c0f486-2917-4c3f-a909-f0091ee27c58
+# ╠═abead192-161f-4375-899f-2c769d40cbfb
 # ╠═898d2c8b-b761-4a69-b561-658a644f44df
 # ╠═ed0c091b-d638-428e-800e-d0aacda2b01c
 # ╠═7b07b18f-8048-4947-b72c-ffaf69306a44
@@ -208,7 +209,6 @@ end
 # ╠═a0b6e938-be54-45e1-9433-3f68f2cbb8da
 # ╠═33a4d4a2-8f2b-4339-9e89-cf3919c56918
 # ╠═e04789ef-2f38-4233-b2bb-426deebf451f
-# ╠═8a1b3f9e-4a88-4527-b9ee-ebb97b3cfc8d
 # ╠═21814a70-ce10-43f9-bb02-91bf15da860f
 # ╠═c35fcdeb-1165-4fa6-882f-d2a24eff41fb
 # ╠═b74aee7a-6f7b-43ca-8c30-baa68d679c6f

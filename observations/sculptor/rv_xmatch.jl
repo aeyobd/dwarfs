@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -12,13 +12,12 @@ begin
 	using PythonCall
 	using Arya
 	using CairoMakie
-	using Measurements
 
 	import LilGuys as lguys
 end
 
-# ╔═╡ 0bd80eb1-0efa-4c8c-98a5-89cfc4bc01b2
-using LoggingExtras
+# ╔═╡ 7ed5bcf5-dfc3-4e79-a608-d503124a1e96
+using LilGuys
 
 # ╔═╡ d4123ffd-cb32-486e-a93d-f48d7112a831
 include("../../utils/gaia_filters.jl")
@@ -90,12 +89,6 @@ obs_properties = TOML.parsefile("observed_properties.toml")
 # ╔═╡ 248c2d5f-85cc-44be-bc63-43d4af470182
 params = GaiaFilterParams(obs_properties, filename="data/jensen+24_wide.fits")
 
-# ╔═╡ 47c5d697-8c3b-4492-817a-eaf6487460d5
-# ╠═╡ disabled = true
-#=╠═╡
-using LoggingExtras
-  ╠═╡ =#
-
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
 j24 = read_gaia_stars(params)
 
@@ -166,9 +159,6 @@ end
 # ╔═╡ 89729357-a2e7-4684-bde4-5b1684080f27
 dart
 
-# ╔═╡ 96eda577-555e-4ec4-bd92-3700f9b668e5
-mean(dart.RV) ± sem(dart.RV)
-
 # ╔═╡ 61a678df-7bb3-4daf-a9eb-1eae3ec1fbaf
 std(dart.RV)
 
@@ -204,10 +194,15 @@ md"""
 APOGEE DR 17 sample from federico's paper
 """
 
+# ╔═╡ 0e14808d-df92-419b-b272-f3a08f4b86b1
+apogee_raw = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
+
+# ╔═╡ 935eb3c3-e63c-4581-afe7-5be47407b2e1
+apogee_raw.FE_H_ERR
+
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 begin 
-	apogee_all = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
-
+	apogee_all = copy(apogee_raw)
 	rename!(apogee_all, 
 		"Elliptical half-light radii"=>"r_h",
 		"VHELIO_AVG"=>"RV",
@@ -216,7 +211,9 @@ begin
 		"GAIAEDR3_PMDEC"=>"pmdec",
 		"GAIAEDR3_SOURCE_ID" => "source_id",
 		"RA (deg)"=>"ra",
-		"Dec (deg)"=>"dec"
+		"Dec (deg)"=>"dec",
+		"FE_H" => "fe_h",
+		"FE_H_ERR" => "fe_h_err"
 	)
 
 	_apogee_all_filt = not.(ismissing.(apogee_all.RV))
@@ -225,7 +222,11 @@ begin
 
 	apogee_all[!, :RV] = float.(apogee_all.RV)
 
-	apogee_all = apogee_all[:, [:source_id, :ra, :dec, :RV, :RV_err]]
+	apogee_all = apogee_all[:, [:source_id, :ra, :dec, :RV, :RV_err, :fe_h, :fe_h_err]]
+	apogee_all[ismissing.(apogee_all.fe_h), :fe_h] .= NaN
+	apogee_all[ismissing.(apogee_all.fe_h_err), :fe_h_err] .= NaN
+
+	apogee_all
 end
 
 # ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
@@ -239,6 +240,9 @@ apogee = apogee_all[filt_apogee, :]
 
 # ╔═╡ 1bc2541c-69ac-40aa-94f5-743707ca5a66
 hist(apogee.RV)
+
+# ╔═╡ 63792b12-dde2-4361-88b2-1f5a789631ff
+hist(filter(isfinite, apogee.fe_h))
 
 # ╔═╡ 27063de7-01d4-48a8-a06f-cc24aec662d2
 md"""
@@ -278,23 +282,35 @@ md"""
 ## GMOS alla Federico
 """
 
+# ╔═╡ 8e0095e7-2198-439d-bd19-976bdb1d3766
+gmos_raw = CSV.read("$data_dir/sestito+23_gmos.csv", DataFrame)
+
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
-let
-	global gmos = CSV.read("$data_dir/sestito+23_gmos.csv", DataFrame)
+begin
+	gmos = copy(gmos_raw) 
 	rename!(gmos,
 		"RA"=>"ra",
-		"Dec"=>"dec"
+		"Dec"=>"dec",
+		"met_mean" => "fe_h",
+		"met_err" => "fe_h_err"
 	)
 
-	gmos_rv_sys_err = 13.3
-	gmos.RV_err .= @. sqrt(gmos.RV_err^2 + gmos_rv_sys_err^2)
+	let
+		gmos_rv_sys_err = 13.3
+		gmos.RV_err .= @. sqrt(gmos.RV_err^2 + gmos_rv_sys_err^2)
+	
+		filt, idx = xmatch(gmos, j24)
+		println(filt)
+		gmos[!, :source_id] = j24.source_id[idx]
 
-	filt, idx = xmatch(gmos, j24)
-	println(filt)
-	gmos[!, :source_id] = j24.source_id[idx]
+	end
 
-	gmos = gmos
+	
+	gmos
 end
+
+# ╔═╡ 1151914d-b20f-4e46-8b25-e0d995e8b866
+hist(filter(isfinite, gmos.fe_h))
 
 # ╔═╡ c31f9e07-c520-443b-94dc-787519021d01
 md"""
@@ -312,8 +328,8 @@ begin
 		:RAJ2000 => :ra,
 		:DEJ2000 => :dec,
 		:GaiaDR3 => :source_id,
-		# :feh => :Fe_H,
-		# :e_feh => :Fe_H_err,
+		:__Fe_H_ => :fe_h,
+		:e__Fe_H_ => :fe_h_err,
 	)
 
 
@@ -328,6 +344,9 @@ tolstoy23 = tolstoy23_all[filt_tolstoy, :]
 
 # ╔═╡ 1d01f9a2-2b77-4ad0-9893-b31562de7924
 filt_tolstoy .&= tolstoy23_all.Mem .== "m"
+
+# ╔═╡ f064e833-5a6b-44be-9a5b-75599b39d150
+hist(filter(isfinite, tolstoy23.fe_h))
 
 # ╔═╡ 180fac98-678c-4a14-966c-385387c60ac3
 md"""
@@ -396,7 +415,8 @@ begin
 
 	println("failed to match ", sum(not.(filt)))
 	
-	rename!(walker09_all, "__HV_" => "RV", "e__HV_" => "RV_err")
+	rename!(walker09_all, "__HV_" => "RV", "e__HV_" => "RV_err",
+		   )
 
 	walker09_all[isnan.(walker09_all.RV_err), :RV_err] .= walker09_all.e_HV[isnan.(walker09_all.RV_err)]
 
@@ -602,9 +622,10 @@ function safe_weighted_mean(values, errors)
 		return missing
 	end
 
-	x = float.(values[filt]) .± float.(errors[filt])
+	w = disallowmissing(1/errors[filt] .^ 2)
+	x = disallowmissing(values[filt])
 
-	return weightedmean(x), std(values[filt])
+	return LilGuys.mean(x, w), LilGuys.std(x, w), sqrt(1/sum(w))
 end
 
 # ╔═╡ 88ed48b4-baa9-4ac0-86e1-8348edcd59b4
@@ -641,9 +662,9 @@ RV_a_std = [safe_weighted_mean(rvs[i, :], rv_errs[i, :]) for i in 1:size(rvs, 1)
 begin
 	filt_is_meas = not.(ismissing.(RV_a_std))
 	rv_meas = copy(all_stars[filt_is_meas, :])
-	RV = Measurements.value.(first.(RV_a_std[filt_is_meas]))
-	RV_err = Measurements.uncertainty.(first.(RV_a_std[filt_is_meas]))
-	RV_std = (last.(RV_a_std[filt_is_meas]))
+	RV = first.(RV_a_std[filt_is_meas])
+	RV_std = [x[2] for x in RV_a_std[filt_is_meas]]
+	RV_err = last.(RV_a_std[filt_is_meas])
 
 	rv_meas[!, :RV] = RV
 	rv_meas[!, :RV_err] = RV_err
@@ -697,17 +718,26 @@ md"""
 # Corrected coordinate frame
 """
 
-# ╔═╡ 23d4b7c4-61f9-4748-b3c4-80eaad551914
-distance = obs_properties["distance"] ± obs_properties["distance_err"]
-
 # ╔═╡ 7dab615b-e0a1-431e-88c0-e1e9d9c29568
 ra0, dec0 = obs_properties["ra"], obs_properties["dec"]
+
+# ╔═╡ 57a77527-a14c-47a2-8949-1cbdafc49994
+import Measurements: ±
+
+# ╔═╡ 96eda577-555e-4ec4-bd92-3700f9b668e5
+mean(dart.RV) ± sem(dart.RV)
+
+# ╔═╡ 23d4b7c4-61f9-4748-b3c4-80eaad551914
+distance = obs_properties["distance"] ± float.(obs_properties["distance_err"])
+
+# ╔═╡ 5930b133-3e3c-43be-9ed6-f125ea4418d4
+import Measurements
 
 # ╔═╡ c0accd82-17a7-437c-9ba8-4db437071a5b
 icrs = [
 	lguys.ICRS(
-		ra=row.ra ± 0, dec=row.dec ± 0, 
-		distance=82.3 ± 2, pmra=row.pmra ± row.pmra_error,
+		ra=row.ra, dec=row.dec, 
+		distance=distance, pmra=row.pmra ± row.pmra_error,
 		pmdec=row.pmdec ± row.pmdec_error, 
 		radial_velocity = row.RV ± row.RV_err
 	) for row in eachrow(rv_meas)]
@@ -736,9 +766,6 @@ maximum(ϕ_pm)
 # ╔═╡ 9492f559-2a37-4d86-8247-2d217a387d8c
 v_tan = @. sqrt(vra^2 + vdec^2)
 
-# ╔═╡ 6f7a98dd-77cf-42a0-888d-8e34e2a0490f
-rv = [o.radial_velocity for o in gsr]
-
 # ╔═╡ cc68349e-da2f-4a73-92f5-6a021237accc
 vz = @. rv * cosd(ϕ_pm) + sind(ϕ_pm) * (vdec * cosd(θ_pm) + vra * sind(θ_pm))
 
@@ -756,6 +783,9 @@ vtot2 = @. sqrt(rv^2 + vra^2 + vdec^2)
 
 # ╔═╡ 58e5855a-9279-4f1c-bc63-52d471e63389
 vtot1 ./ vtot2
+
+# ╔═╡ 6f7a98dd-77cf-42a0-888d-8e34e2a0490f
+rv = [o.radial_velocity for o in gsr]
 
 # ╔═╡ 13f3ac83-2fb3-4537-a3e6-bdb83d8ba72a
 let
@@ -1234,7 +1264,9 @@ out_df.:q__Fe_H__t23
 # ╔═╡ 615f05fb-4907-40bc-9251-3065f565929b
 let
 	filename = "processed/sculptor_all_rv.fits"
-	rm(filename); 
+	if isfile(filename)
+		rm(filename); 
+	end
 	lguys.write_fits(filename, out_df)
 	@info "wrote data"
 end
@@ -1246,6 +1278,7 @@ end
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 # ╠═ef1bb6f5-00b8-405b-8702-244eca618644
+# ╠═7ed5bcf5-dfc3-4e79-a608-d503124a1e96
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═da5a3b57-72bc-46e1-b1a0-6c02eb101626
@@ -1254,7 +1287,6 @@ end
 # ╠═d4123ffd-cb32-486e-a93d-f48d7112a831
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═248c2d5f-85cc-44be-bc63-43d4af470182
-# ╠═47c5d697-8c3b-4492-817a-eaf6487460d5
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
 # ╟─dd1eee07-bb37-4de3-8781-47edd794c1f3
 # ╟─6f2359d8-332b-11ef-0db9-f1f06474c561
@@ -1271,23 +1303,29 @@ end
 # ╠═e731c5ea-ef35-4973-af22-09d8ca6e3624
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╟─45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
+# ╠═0e14808d-df92-419b-b272-f3a08f4b86b1
+# ╠═935eb3c3-e63c-4581-afe7-5be47407b2e1
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═4d63430e-f59c-4c68-97e1-7eaa5679e55f
 # ╠═bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
 # ╠═1bc2541c-69ac-40aa-94f5-743707ca5a66
+# ╠═63792b12-dde2-4361-88b2-1f5a789631ff
 # ╟─27063de7-01d4-48a8-a06f-cc24aec662d2
 # ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
 # ╠═2e7ce524-573e-45c9-b0f4-ce9fea68e026
 # ╠═f8775eb1-2cb9-4d81-8c02-39c43ceb9b45
 # ╠═b6de4afb-9362-4618-a114-df460031e4f9
+# ╠═8e0095e7-2198-439d-bd19-976bdb1d3766
 # ╠═b7345279-4f80-47ad-a726-537571849eae
+# ╠═1151914d-b20f-4e46-8b25-e0d995e8b866
 # ╟─c31f9e07-c520-443b-94dc-787519021d01
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
 # ╠═b36c2a37-2359-4a1a-98fc-3a1cd17fd790
 # ╠═1864bc12-cbc2-4fd4-84a8-6bb300f17c1b
 # ╠═1d01f9a2-2b77-4ad0-9893-b31562de7924
+# ╠═f064e833-5a6b-44be-9a5b-75599b39d150
 # ╠═180fac98-678c-4a14-966c-385387c60ac3
 # ╠═5dd59d8b-d3f1-448a-a63c-8dca9e27c18e
 # ╠═77830e77-50a4-48b7-b070-8fbd7508c173
@@ -1350,6 +1388,8 @@ end
 # ╟─ab27964f-b070-4328-81c2-6ecf4b8cec1e
 # ╠═23d4b7c4-61f9-4748-b3c4-80eaad551914
 # ╠═7dab615b-e0a1-431e-88c0-e1e9d9c29568
+# ╠═57a77527-a14c-47a2-8949-1cbdafc49994
+# ╠═5930b133-3e3c-43be-9ed6-f125ea4418d4
 # ╠═c0accd82-17a7-437c-9ba8-4db437071a5b
 # ╠═d0842a73-dd1b-452f-97f9-50a23668fe14
 # ╠═11461563-dbcd-48fc-a97a-1a0391538462
@@ -1421,5 +1461,4 @@ end
 # ╠═70290654-394f-4679-aaab-38345874e2e3
 # ╠═f1912692-d890-4f97-ba98-7b226f29e9c8
 # ╠═4fdccf0a-adfa-4f05-bb48-df8a1efba940
-# ╠═0bd80eb1-0efa-4c8c-98a5-89cfc4bc01b2
 # ╠═615f05fb-4907-40bc-9251-3065f565929b

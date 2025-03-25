@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -21,9 +21,6 @@ using Turing
 
 # ╔═╡ e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 using PairPlots
-
-# ╔═╡ 64ca10cd-5d46-43cc-8fec-64c87c72bdfd
-using LoggingExtras
 
 # ╔═╡ 6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 md"""
@@ -54,7 +51,7 @@ data_dir = "processed"
 import TOML
 
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
-obs_properties = TOML.parsefile("/astro/dboyea/dwarfs/observations/sculptor/observed_properties.toml")
+obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
 
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
 begin
@@ -84,7 +81,7 @@ fig_dir = "./figures/"
 
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
 begin 
-	memb_filt = rv_meas.PSAT .> 0.2
+	memb_filt = rv_meas.LLR_nospace .> 0.0 # ignore spatial 
 	memb_filt .&= 150 .> rv_meas.RV .> 60
 
 	quality_score = rv_meas.RV_std ./ rv_meas.RV_err
@@ -92,6 +89,9 @@ begin
 
 	memb_filt .&= quality_score .< 5
 end
+
+# ╔═╡ c42195da-406a-43f3-a2ad-8c11adabce25
+mean(quality_score .> 5)
 
 # ╔═╡ 74b10a3e-1342-454f-8eed-77b371f81edf
 lines(histogram(quality_score, normalization=:none))
@@ -102,11 +102,17 @@ sum(quality_score .< Inf)
 # ╔═╡ 015f2345-74d4-4296-b0dc-35d6e13ad8cc
 sum(quality_score .< 5)
 
+# ╔═╡ 59395e95-e04b-4782-b7d6-ef1945249b3f
+rv_meas[isfinite.(rv_meas.RV_gmos), :].LLR_nospace
+
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
 
 # ╔═╡ 7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 hist(memb_stars.RV)
+
+# ╔═╡ f9d4eade-c648-4f20-8403-07be993fb8c1
+sum(isfinite.(memb_stars.RV_gmos))
 
 # ╔═╡ a1938588-ca40-4844-ab82-88c4254c435b
 length(memb_stars.RV)
@@ -213,7 +219,7 @@ samples = DataFrame(sample(normal_dist(memb_stars.RV, memb_stars.RV_err), NUTS(0
 scatter(memb_stars.radial_velocity_gsr, memb_stars.RV .- memb_stars.radial_velocity_gsr, color=memb_stars.xi_p)
 
 # ╔═╡ b18e4622-41e0-4700-9e4b-3dbebeefea53
-describe(samples)
+summary(samples)
 
 # ╔═╡ bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 pairplot(samples[:, [:μ, :σ]])
@@ -254,7 +260,7 @@ let
 	h = histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
 	plot_samples!(samples, LinRange(70, 150, 100), thin=15)
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -502,9 +508,6 @@ end
 
 # ╔═╡ 9b4a0a1f-4b0c-4c90-b871-2bd244f0a908
 not = !
-
-# ╔═╡ 30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
-sum(not.(ismissing.(memb_stars.RV_gmos)))
 
 # ╔═╡ f2313731-5b83-42d6-b624-c618bfb0bb5c
 rv_mean_gsr = median(samples_gsr.μ)
@@ -754,18 +757,20 @@ end
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-# ╠═64ca10cd-5d46-43cc-8fec-64c87c72bdfd
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╠═4c1a5aac-4bad-4eba-aa61-ccd317113633
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
+# ╠═c42195da-406a-43f3-a2ad-8c11adabce25
 # ╠═74b10a3e-1342-454f-8eed-77b371f81edf
 # ╠═d8800a31-1ed3-422f-ac51-90f18cf61c29
 # ╠═015f2345-74d4-4296-b0dc-35d6e13ad8cc
+# ╠═59395e95-e04b-4782-b7d6-ef1945249b3f
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
+# ╠═f9d4eade-c648-4f20-8403-07be993fb8c1
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
 # ╠═6734991c-16c0-4424-a2bb-84bfa811121f
 # ╠═1b97d0e5-7a77-44a5-b609-ed8945cd959c
@@ -799,7 +804,6 @@ end
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
 # ╠═c50f68d7-74c3-4c36-90c5-a5262982ed9f
 # ╠═f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
-# ╠═30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
 # ╠═38da4da1-74f5-4661-89f2-4b25562a1faf
 # ╠═86776e68-d47f-43ed-b37f-432c864050bb
 # ╠═e05ec20a-3165-4360-866e-3e8cae8665e5

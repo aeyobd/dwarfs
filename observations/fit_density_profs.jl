@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -39,13 +39,6 @@ using Optimization, OptimizationOptimJL
 # ╔═╡ 37ee41d1-7b98-44f7-82ec-5b496622931b
 using Turing
 
-# ╔═╡ d0112dc0-8cc1-4fdf-b30d-a3b89660d9b4
-begin
-	using Measurements
-	import LinearAlgebra: diag
-	import NaNMath as nm
-end
-
 # ╔═╡ 27bd8a46-ee56-11ef-22e4-afe88d73af2d
 md"""
 The goal of this notebook is to fit the density profiles to e.g. King, Sersic, Exponential and save the best fit parameters for any dwarf + density profile combination.
@@ -62,13 +55,19 @@ md"""
 """
 
 # ╔═╡ 6cf3cb83-317e-40fa-be47-7a4e31a539ec
-CairoMakie.activate!(pt_per_unit=2, type="svg")
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 99315b4c-37c1-4287-bd71-c3339c8e76ad
 import FillArrays: I, Eye
 
 # ╔═╡ c3d9c4f3-6891-46e1-822e-5c217450f59b
 import LinearAlgebra: diagm, identity
+
+# ╔═╡ d0112dc0-8cc1-4fdf-b30d-a3b89660d9b4
+begin
+	import LinearAlgebra: diag
+	import NaNMath as nm
+end
 
 # ╔═╡ 56af9242-91cc-46db-b532-c127450adfeb
 import Random: randperm
@@ -95,7 +94,7 @@ end
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	profilename = TextField(default="../processed/profile.mcmc_hist.toml")
+	profilename = TextField(default="jax_profile.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -129,10 +128,10 @@ md"""
 
 # ╔═╡ 20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
 begin
-	prof_in = LilGuys.StellarProfile(joinpath(galaxyname, "density_profiles/$(profilename)"))
-	if prof_in.normalization == "mass"
+	prof_in = LilGuys.StellarDensityProfile(joinpath(galaxyname, "density_profiles/$(profilename)"))
+	if prof_in.log_m_scale != 0
 		prof_in.log_Sigma .-= prof_in.log_m_scale
-		prof_in.normalization = "none"
+		prof_in.notes["normalization"] = "none"
 	end
 
 	prof_in
@@ -148,27 +147,30 @@ not sure the bins are ddone right but should be okay???
 
 # ╔═╡ a0cb6ecd-59ab-4a7a-b95a-d55bfdd2d93b
 begin
-	_filt_prof = prof_in.log_Sigma_em .< 1
-	_filt_prof .&= prof_in.log_Sigma_ep .< 1
-	_filt_prof .&= isfinite.(prof_in.log_Sigma_em)
-	_filt_prof .&= isfinite.(prof_in.log_Sigma)
+	_filt_prof = LilGuys.lower_error.(prof_in.log_Sigma) .< 1
+	_filt_prof .&= LilGuys.upper_error.(prof_in.log_Sigma) .< 1
+	_filt_prof .&= isfinite.(LilGuys.lower_error.(prof_in.log_Sigma))
+	_filt_prof .&= isfinite.(LilGuys.middle.(prof_in.log_Sigma))
 	_filt_prof .&= isfinite.(prof_in.log_R)
 	_filt_bins = [false; _filt_prof] .|| [_filt_prof; false]
 
 	prof = (;
 		log_R = prof_in.log_R[_filt_prof],
-		log_Sigma = prof_in.log_Sigma[_filt_prof],
-		log_Sigma_err = max.(prof_in.log_Sigma_em[_filt_prof] .+ prof_in.log_Sigma_ep[_filt_prof]),
+		log_Sigma = middle.(prof_in.log_Sigma[_filt_prof]),
+		log_Sigma_err = max.(LilGuys.lower_error.(prof_in.log_Sigma)[_filt_prof],  upper_error.(prof_in.log_Sigma)[_filt_prof]),
 		log_R_bins = prof_in.log_R_bins[_filt_bins],
 	)
 end
+
+# ╔═╡ d382db17-36c3-4a7c-884e-c93b6b00603f
+prof
 
 # ╔═╡ 995a9a15-38d0-47c3-ba12-58ba8209497c
 
 
 # ╔═╡ 5026118a-85f6-4f71-bd0f-d25c4916c834
 "a list of log radii to sample analytic models over"
-log_r_model = LinRange(prof.log_R_bins[1], prof.log_R_bins[end], 1000)
+log_R_model = LinRange(prof.log_R_bins[1], prof.log_R_bins[end], 1000)
 
 # ╔═╡ 30154472-316b-4489-b1e5-f503447928cb
 md"""
@@ -188,7 +190,7 @@ function objective_function(x, u, analytic_profile, names; kwargs...)
 	
 	h = analytic_profile(; ana_kwargs..., kwargs...)
 	
-	y_m = nm.log10.(LilGuys.calc_Σ.(h, 10 .^ (x .- dlogx))) .+ dlogy
+	y_m = nm.log10.(LilGuys.surface_density.(h, 10 .^ (x .- dlogx))) .+ dlogy
 	return y_m
 end
 
@@ -255,13 +257,13 @@ function fit_profile(prof, analytic_profile, names, p0; kwargs...)
 	result["R_s_err"] =  result["log_R_s_err"] * log(10) * result["R_s"]
 
 	if analytic_profile <: LilGuys.Sersic
-		result["Mtot"] = LilGuys.calc_M_2D(LilGuys.Sersic(), 1000) * 10 .^ (result["log_Sigma"] + 2result["log_R_s"])
+		result["Mtot"] = LilGuys.mass_2D(LilGuys.Sersic(), 1000) * 10 .^ (result["log_Sigma"] + 2result["log_R_s"])
 	else
 		
 		kwargs = [Symbol.(sym) => ui for (sym, ui) in zip(names, popt[3:end])]
-		h = analytic_profile(; M=1, kwargs...)	
+		h = analytic_profile(; M=1.0, kwargs...)	
 	
-		result["Mtot"] = LilGuys.get_M_tot(h) * 10 .^ (result["log_Sigma"]  + 2result["log_R_s"])
+		result["Mtot"] = LilGuys.mass(h) * 10 .^ (result["log_Sigma"]  + 2result["log_R_s"])
 	end
 
 	result["log_Mtot"] = log10.(result["Mtot"])
@@ -606,7 +608,7 @@ md"""
 function log_Σ_sersic(log_R; log_M_s, log_R_h, n, log_Sigma_bg)
 	r = 10 .^ log_R
 	prof = LilGuys.Sersic(n=n, R_h=10 .^ log_R_h, _b_n=LilGuys.guess_b_n(n))
-	Σ = LilGuys.calc_Σ.(prof, r)
+	Σ = LilGuys.surface_density.(prof, r)
 	y = @. log10(Σ + 10^log_Sigma_bg)  .+ log_M_s
 
 	return y
@@ -667,7 +669,7 @@ function log_Σ_exp2d(log_r; log_M, log_R_s)
 		M = 10 .^ log_M
 	)
 	
-	Σ = LilGuys.calc_Σ.(prof, r)
+	Σ = LilGuys.surface_density.(prof, r)
 	y = @. log10(Σ)
 
 	return y
@@ -717,12 +719,15 @@ md"""
 ### Inner exp2d
 """
 
+# ╔═╡ 0a070858-01c8-4cdc-bb8d-f5d587371cdb
+R_s_inner = 3
+
 # ╔═╡ 19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
 log_R_max_exp = let
 	ml_fit_exp2d_iter = []
 
 	ml_fit_exp2d_old = ml_fit_exp2d
-	log_R_max = log10(3) + ml_fit_exp2d_old["log_R_s"]
+	log_R_max = log10(R_s_inner) + ml_fit_exp2d_old["log_R_s"]
 
 	for i in 1:10
 		log_R_max_old = log_R_max
@@ -730,7 +735,7 @@ log_R_max_exp = let
 		ml_fit_exp2d_old = ml_fit_exp2d_new
 		push!(ml_fit_exp2d_iter, ml_fit_exp2d_new)
 
-		log_R_max = log10(3) + ml_fit_exp2d_old["log_R_s"]
+		log_R_max = log10(R_s_inner) + ml_fit_exp2d_old["log_R_s"]
 
 		if log_R_max ≈ log_R_max_old rtol=1e-1
 			@info "converged by iteration $i"
@@ -752,7 +757,7 @@ let
 		ylabel = log_sigma_label,
 	)
 
-	LilGuys.plot_density_prof!(ax, prof_in, label="input")
+	LilGuys.plot_log_Σ!(ax, prof_in, label="input")
 	scatter!(prof.log_R, prof.log_Sigma, color=COLORS[2], label="mcmc input")
 	prof2 = filter_prof(prof, log_R_max_exp)
 	scatter!(prof2.log_R, prof2.log_Sigma, color=COLORS[3], label="exp input")
@@ -794,7 +799,7 @@ function log_Σ_plummer(log_r; log_M, log_R_s)
 		M = 10 .^ log_M
 	)
 	
-	Σ = LilGuys.calc_Σ.(prof, r)
+	Σ = LilGuys.surface_density.(prof, r)
 	y = @. log10(Σ)
 
 	return y
@@ -854,7 +859,7 @@ function log_Σ_king(log_r; log_M, log_R_s, c)
 		c=c
 	)
 	
-	Σ = LilGuys.calc_Σ.(prof, r)
+	Σ = LilGuys.surface_density.(prof, r)
 	y = @. log10(Σ)
 
 	return y
@@ -966,6 +971,7 @@ end
 # ╠═20b8c05c-91a6-4dc2-9558-1b02be4983f2
 # ╠═1238d232-a2c0-44e5-936b-62fd9137d552
 # ╠═25c3b74f-d8fa-4f4c-ae7c-71b137fb2ce7
+# ╠═d382db17-36c3-4a7c-884e-c93b6b00603f
 # ╠═62cce84c-e985-4bd2-8c2d-ab15ed239b99
 # ╠═11b84ff0-7f35-4716-ae30-e05a1c5f88ba
 # ╠═3eb9992d-425d-4bec-94d2-da4f8dc59a8d
@@ -1022,6 +1028,7 @@ end
 # ╠═415397c4-f4b0-4e21-9df4-cf8faf761648
 # ╠═76326a80-b709-4f96-a379-8aaea4d3af44
 # ╠═c2301858-2be3-4945-bef2-4525cd123030
+# ╠═0a070858-01c8-4cdc-bb8d-f5d587371cdb
 # ╠═19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
 # ╠═6922839a-1b5d-4a5c-8f68-50cd57d986a8
 # ╠═bdf90521-e8f3-40e5-a61f-ab8503cce9fe

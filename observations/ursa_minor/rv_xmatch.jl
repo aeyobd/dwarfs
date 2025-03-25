@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -14,11 +14,9 @@ begin
 	#using FITSIO
 	using Measurements
 
+	import PythonCall
 	import LilGuys as lguys
 end
-
-# ╔═╡ 202e0f8b-b417-4597-a737-7c60c0575fd3
-using FITSIO
 
 # ╔═╡ d4123ffd-cb32-486e-a93d-f48d7112a831
 include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
@@ -31,6 +29,9 @@ This notebook loads in radial velocity data from several sources (including Tols
 
 With this catalogue, detailed radial velocity analysis can then be calculated.
 """
+
+# ╔═╡ 12e0e7ad-925b-47dc-a1d8-c56e65ffaa4c
+
 
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, kurtosis, sem
@@ -1314,7 +1315,7 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
-# ╠═202e0f8b-b417-4597-a737-7c60c0575fd3
+# ╠═12e0e7ad-925b-47dc-a1d8-c56e65ffaa4c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 # ╠═ef1bb6f5-00b8-405b-8702-244eca618644
