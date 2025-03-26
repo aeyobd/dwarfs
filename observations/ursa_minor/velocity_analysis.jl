@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -26,6 +26,9 @@ using PairPlots
 md"""
 This notebook takes the dataset created from velocity_xmatch.jl and analyzes it using MCMC to estimate the velocity dispersion and search for any possible velocity gradients.
 """
+
+# ╔═╡ ee0b7b2b-ffd1-4548-a6c6-b99ffdc44ac9
+import PythonCall
 
 # ╔═╡ d2888213-61e3-4a6f-872b-48a075640ef5
 import TOML
@@ -64,6 +67,9 @@ begin
 	rv_meas
 
 end
+
+# ╔═╡ 25277f27-f98b-476a-93f6-946ce19e57ed
+sum(rv_meas.ID_p20 .> 0)
 
 # ╔═╡ 4c1a5aac-4bad-4eba-aa61-ccd317113633
 fig_dir = "./figures/"
@@ -214,7 +220,7 @@ pairplot(samples[:, [:μ, :σ]])
 memb_stars
 
 # ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
-lguys.write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), memb_stars)
+lguys.write_fits(joinpath(data_dir, "rv_members.fits"), memb_stars)
 
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
@@ -225,7 +231,7 @@ let
 	h = histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
 	plot_samples!(samples, LinRange(rv_low, rv_high, 100), thin=15)
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -311,20 +317,20 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 end	
 
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = bins_equal_number(memb_stars.r_ell, n=10)
+bins = bins_equal_number(memb_stars.R_ell, n=10)
 
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
-df_r_ell = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.RV, memb_stars.RV_err, bins)
+df_r_ell = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.RV, memb_stars.RV_err, bins)
 
 # ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
-df_r_ell_z = calc_binned_mu_sigma(memb_best.r_ell, memb_best.VZ, memb_best.VZ_err, bins, μ_min=-110, μ_max=-40)
+df_r_ell_z = calc_binned_mu_sigma(memb_best.R_ell, memb_best.VZ, memb_best.VZ_err, bins, μ_min=-110, μ_max=-40)
 
 # ╔═╡ 45d217cc-bc7e-463a-a528-229b16e9d112
 hist(memb_best.VZ)
 
 # ╔═╡ 38da4da1-74f5-4661-89f2-4b25562a1faf
 function scatter_range!(df_r_ell)
-	errscatter!(df_r_ell.x, df_r_ell.μ, yerr=df_r_ell.μ_err, color=:black)
+	errorscatter!(df_r_ell.x, df_r_ell.μ, yerror=df_r_ell.μ_err, color=:black)
 	
 	errorbars!(df_r_ell.x, df_r_ell.μ .+ df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x,  direction = :x, color=:black)
 	errorbars!(df_r_ell.x, df_r_ell.μ .- df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x, direction = :x, color=:black)
@@ -337,7 +343,7 @@ let
 		ylabel = L"RV / km s$^{-1}$"
 	)
 
-	scatter!(memb_stars.r_ell, memb_stars.RV, color=COLORS[3], alpha=0.1)
+	scatter!(memb_stars.R_ell, memb_stars.RV, color=COLORS[3], alpha=0.1)
 
 	scatter_range!(df_r_ell)
 
@@ -381,7 +387,7 @@ let
 	h = histogram(Float64.(memb_stars.RV_gsr), 30, normalization=:pdf)
 	
 	plot_samples!(samples_vz, LinRange(-110, -40, 100), thin=15)
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -416,7 +422,7 @@ let
 		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(60df_xi_p.x, df_xi_p.μ, yerr=df_xi_p.μ_err, color=:black)
+	errorscatter!(60df_xi_p.x, df_xi_p.μ, yerror=df_xi_p.μ_err, color=:black)
 
 	fig
 end
@@ -428,7 +434,7 @@ let
 		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(60df_eta_p.x, df_eta_p.μ, yerr=df_eta_p.μ_err, color=:black)
+	errorscatter!(60df_eta_p.x, df_eta_p.μ, yerror=df_eta_p.μ_err, color=:black)
 
 	fig
 end
@@ -440,7 +446,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(df_xi_p.x, df_xi_p.σ, yerr=df_xi_p.σ_err, color=:black)
+	errorscatter!(df_xi_p.x, df_xi_p.σ, yerror=df_xi_p.σ_err, color=:black)
 
 	fig
 end
@@ -458,7 +464,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(df_r_ell.x, df_r_ell.σ, yerr=df_r_ell.σ_err, color=:black)
+	errorscatter!(df_r_ell.x, df_r_ell.σ, yerror=df_r_ell.σ_err, color=:black)
 	hlines!(σ_m)
 
 	fig
@@ -471,7 +477,7 @@ let
 		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
 	)
 
-	errscatter!(midpoints(bins), df_r_ell_z.σ, yerr=df_r_ell_z.σ_err, xerr=bin_errs, color=:black)
+	errorscatter!(midpoints(bins), df_r_ell_z.σ, yerror=df_r_ell_z.σ_err, xerror=bin_errs, color=:black)
 	hlines!(σ_m)
 
 	fig
@@ -901,6 +907,7 @@ end
 # ╔═╡ Cell order:
 # ╠═6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
+# ╠═ee0b7b2b-ffd1-4548-a6c6-b99ffdc44ac9
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -911,6 +918,7 @@ end
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═fe953ab7-1c13-4bd9-acfd-ec033a481e3d
 # ╠═49e9aefb-a1cb-4211-8dc3-2344ef3427e5
+# ╠═25277f27-f98b-476a-93f6-946ce19e57ed
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94

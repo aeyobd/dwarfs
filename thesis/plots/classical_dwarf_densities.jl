@@ -64,9 +64,9 @@ end
 
 # ╔═╡ 552e9438-862f-4710-a7d4-c8d798b5f1aa
 galaxynames = [
-	#"fornax",
-	#"leo1",
-	#"leo2",
+	"fornax",
+	"leo1",
+	"leo2",
 	"carina",
 	"sextans1",
 	"draco",	

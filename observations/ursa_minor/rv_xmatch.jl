@@ -94,11 +94,8 @@ end
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
 obs_properties = TOML.parsefile("observed_properties.toml")
 
-# ╔═╡ dfd2fbee-9993-4553-b693-6fb71a7b11a2
-FITS
-
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = lguys.read_fits("processed/j24_umi_all.fits")
+j24 = lguys.read_fits("data/jensen+24_2c.fits")
 
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
@@ -106,9 +103,7 @@ md"""
 """
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
-begin 
-	apogee_all = lguys.read_fits("$data_dir/apogee_xmatch.fits")
-end
+apogee_all = lguys.read_fits("$data_dir/apogee_xmatch.fits")
 
 # ╔═╡ 4e8b7258-76fa-404f-91ca-8cfda241a332
 sum(apogee_all.RV_flag)
@@ -204,12 +199,19 @@ begin
 
 	pace20.ra = pace20.RAJ2000
 	pace20.dec = pace20.DEJ2000
-
+	
+	pace20.source_id[ismissing.(pace20.source_id)] .= -pace20.ID[ismissing.(pace20.source_id)]
 	pace20
 end
 
 # ╔═╡ d415ba9e-75c0-4192-8761-dbda70e43a73
 filt_p20, idx_p20 = xmatch(j24, pace20)
+
+# ╔═╡ 1e6ff00b-eee8-4e03-8b54-e27d6cbb6f16
+round(Int, pace20.source_id[5] )
+
+# ╔═╡ 3056ca82-9ffe-4065-b207-ad958aaab08b
+pace20.source_id[1] 
 
 # ╔═╡ 0313553f-7a05-492b-99b9-9648e98baad4
 pace20[pace20.ID .== 721, :].ra
@@ -261,13 +263,19 @@ unique(apogee_all.source_id)
 # ╔═╡ bc4fd1bb-fb30-4581-8952-891293476345
 unique(pace20.source_id) == pace20.source_id
 
+# ╔═╡ c235cd75-cada-4d8f-a380-43af619eaa24
+sum(.!isnan.(j24.dr2_radial_velocity_error))
+
 # ╔═╡ a85d8d3f-197a-4f7f-97cd-5e2523a885d7
 let
-	global rv_gaia =  j24[.!isnan.(j24.radial_velocity_error), :]
-	rv_gaia[:, :RV] = rv_gaia.radial_velocity
-	rv_gaia[:, :RV_err] = rv_gaia.radial_velocity_error
+	global rv_gaia =  j24[.!isnan.(j24.dr2_radial_velocity_error), :]
+	rv_gaia[:, :RV] = rv_gaia.dr2_radial_velocity
+	rv_gaia[:, :RV_err] = rv_gaia.dr2_radial_velocity_error
 
 end
+
+# ╔═╡ b94b7591-018b-47d7-8af8-be0c4b3ea49f
+
 
 # ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
 let
@@ -280,8 +288,8 @@ let
 	append!(all_stars, add_xmatch(j24, rv_gaia, "gaia"), cols=:union)
 	append!(all_stars, add_xmatch(j24, graces, "s24"), cols=:union)
 
-	# pace 2020 includes stars not in gaia
-	filt_pace = .!ismissing.(all_stars.ID_p20) .&& all_stars.source_id .< 0
+
+	filt_pace = (.!ismissing.(all_stars.ID_p20)) .&& ismissing.(all_stars.ra)
 	all_stars[filt_pace, :ra] = all_stars.ra_p20[filt_pace]
 	all_stars[filt_pace, :dec] = all_stars.dec_p20[filt_pace]
 	all_stars[filt_pace, :pmra] .= NaN
@@ -291,7 +299,10 @@ let
 	all_stars[filt_pace, :PSAT] = all_stars.PMR_p20[filt_pace]
 
 	all_stars[!, :star_id] .= ""
-	in_gaia = all_stars.source_id .> 0
+
+	# pace 2020 includes stars not in gaia
+	in_gaia = abs.(all_stars.source_id) .> 10000
+
 	all_stars[in_gaia, :star_id] = ["GaiaDR3 $i" for i in all_stars.source_id[in_gaia]]
 
 	
@@ -302,7 +313,7 @@ let
 
 	add_xi_eta!(all_stars, obs_properties["ra"], obs_properties["dec"])
 
-	all_stars[:, "r_ell"] = 60lguys.calc_r_ell(all_stars.xi, all_stars.eta, obs_properties["ellipticity"], obs_properties["PA"])
+	all_stars[:, "R_ell"] = lguys.calc_R_ell(all_stars.xi, all_stars.eta, obs_properties["ellipticity"], obs_properties["position_angle"])
 	all_stars
 end
 
@@ -312,11 +323,17 @@ unique(all_stars.study)
 # ╔═╡ ac200cf0-714c-4b66-855a-e204735c7c04
 sum(ismissing.(all_stars.study))
 
+# ╔═╡ 0c8bceff-8ec3-471e-ac1b-e0d6caecfa66
+all_stars[ismissing.(all_stars.ra) .&& ((abs.(all_stars.source_id) .> 10000)), :].source_id
+
+# ╔═╡ 28bf5ad2-26f0-4a25-890f-2f8c80f9e6e6
+all_stars[(ismissing.(all_stars.ra)), :ID_p20]
+
 # ╔═╡ eec5c292-b7d0-49cf-83dc-283c400b9c05
 "RV" ∈ names(rv_gaia)
 
 # ╔═╡ 3e37a9dd-fa57-45f8-999e-e499b760a420
-j24[.!isnan.(j24.radial_velocity), :]
+j24[.!isnan.(j24.dr2_radial_velocity), :]
 
 # ╔═╡ 14d30389-c25c-426c-99f5-68fe98aabc7f
 all_stars[ismissing.(all_stars.RV), :].dec_p20
@@ -446,7 +463,7 @@ function compare_rv(study1, study2; limits=(nothing, nothing, nothing, nothing))
 		limits=limits
 	)
 
-	errscatter!(df[:, rv_col_1], df[:, rv_col_2], xerr=df[:, "RV_err_$(study1)"], yerr=df[:, "RV_err_$(study2)"])
+	errorscatter!(df[:, rv_col_1], df[:, rv_col_2], xerror=df[:, "RV_err_$(study1)"], yerror=df[:, "RV_err_$(study2)"])
 
 	ll = [min(minimum(df[:, rv_col_1]), minimum(df[:, rv_col_2])),
 		max(maximum(df[:, rv_col_1]), maximum(df[:, rv_col_2])),
@@ -768,7 +785,7 @@ let
 		ygridvisible=false,
 	)
 
-	errscatter!(Measurements.value.(rv), Measurements.value.(vz) .- Measurements.value.(rv), 
+	errorscatter!(Measurements.value.(rv), Measurements.value.(vz) .- Measurements.value.(rv), 
 		#xerr=Measurements.uncertainty.(rv), yerr=Measurements.uncertainty.(vz),
 		alpha=0.03, 
 		color=:black
@@ -804,7 +821,7 @@ let
 		ygridvisible=false,
 	)
 
-	errscatter!(ϕ_pm, Measurements.value.(vz) .- Measurements.value.(rv), 
+	errorscatter!(ϕ_pm, Measurements.value.(vz) .- Measurements.value.(rv), 
 		#xerr=Measurements.uncertainty.(rv), yerr=Measurements.uncertainty.(vz),
 		alpha=0.03, 
 		color=:black
@@ -822,7 +839,7 @@ let
 		ygridvisible=false,
 	)
 
-	errscatter!(Measurements.value.(rv), Measurements.uncertainty.(vz) 
+	errorscatter!(Measurements.value.(rv), Measurements.uncertainty.(vz) 
  ./ Measurements.uncertainty.(rv), 
 		alpha=0.03, 
 		color=:black
@@ -884,7 +901,7 @@ function compare_rv_mean(study1, rv_meas=rv_meas)
 	y = float.(rv1[filt] .- rv2[filt])
 	xerr = float.(rv2_err[filt])
 	yerr = float.(rv1_err[filt])
-	errscatter!(x, y, xerr=xerr, yerr=yerr, alpha=0.1)
+	errorscatter!(x, y, xerror=xerr, yerror=yerr, alpha=0.1)
 	
 	hlines!(0, color=:black)
 	return fig
@@ -951,7 +968,7 @@ function plot_sample_normal_fit(sample, props; kwargs...)
 	)
 	h = histogram(Float64.(sample.RV), normalization=:pdf)
 	
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=:black)
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=:black)
 
 	μ, σ, _, _ = props
 	x_model = LinRange(rv_low, rv_high, 1000)
@@ -969,7 +986,7 @@ let
 	)
 	h = histogram(Float64.(memb_stars.RV), 30, normalization=:pdf)
 	
-	errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=COLORS[6])
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -1016,6 +1033,9 @@ let
 
 	pace20_cleaned = pace20_cleaned[filt_good, :]
 end
+
+# ╔═╡ 721080b2-e57b-4353-84a3-41f1fb740d92
+pace20_cleaned
 
 # ╔═╡ 6942bdca-1300-46be-8aa2-a3725d7fdfba
 apogee_memb_filt = (apogee.PSAT .> 0.2 ) .&& (apogee.RV .> rv_low) .&& (apogee.RV .< rv_high) .&& (apogee.RV_sigma ./ apogee.RV_err .< 5)
@@ -1072,7 +1092,7 @@ for key in keys(props)
 		println(sum(filt))
 		h = histogram(Float64.(rv), normalization=:pdf)
 		
-		errscatter!(midpoints(h.bins), h.values, yerr=h.err, color=:red)
+		errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=:red)
 		println(fit_rv_sigma(rv, rv_err))
 		println()
 	end
@@ -1103,7 +1123,7 @@ let
 	)
 
 
-	errscatter!(x, y, yerr=yerr)
+	errorscatter!(x, y, yerror=yerr)
 	fig
 end
 
@@ -1123,7 +1143,7 @@ let
 	)
 
 
-	errscatter!(x, y, yerr=yerr)
+	errorscatter!(x, y, yerror=yerr)
 	fig
 end
 
@@ -1307,10 +1327,10 @@ end
 df_all.RV
 
 # ╔═╡ 1a0eac4e-4100-4da6-820b-19c34e283118
-lguys.write_fits(joinpath("processed", "umi_all_rv.fits"), df_all)
+lguys.write_fits(joinpath("processed", "umi_all_rv.fits"), df_all, overwrite=true)
 
 # ╔═╡ 46b539eb-c195-4ca4-922d-63298afaebbc
-lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
+lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -1329,7 +1349,6 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═3d8b3c55-153b-4a4a-9289-78f34df07abc
 # ╠═d415ba9e-75c0-4192-8761-dbda70e43a73
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
-# ╠═dfd2fbee-9993-4553-b693-6fb71a7b11a2
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
@@ -1352,12 +1371,15 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═b48ea14d-48d7-4953-8d6a-b84bce1a4788
 # ╠═180fac98-678c-4a14-966c-385387c60ac3
 # ╠═19d8aa00-14d1-4270-8e8c-9b8907779e3b
+# ╠═1e6ff00b-eee8-4e03-8b54-e27d6cbb6f16
+# ╠═3056ca82-9ffe-4065-b207-ad958aaab08b
 # ╠═0313553f-7a05-492b-99b9-9648e98baad4
 # ╠═dd136efd-ed53-4472-ac73-2cd97a4cdad2
 # ╠═6f1ff560-c458-48cd-8d7f-9f3dd7631b08
 # ╠═26092ed5-6283-4bf9-8ee1-60a8cf15e1ef
 # ╠═1c6074eb-bafa-439c-aa55-ee7a5c3a58d5
 # ╠═cdf27cbc-fd37-412f-a926-e1f86f836bb8
+# ╠═721080b2-e57b-4353-84a3-41f1fb740d92
 # ╠═36cdb5ff-65a3-4c5c-b274-4d7da53d2ab4
 # ╠═1ca9b968-87d0-46cc-a1fe-634717ac7446
 # ╠═fe6fa910-f41e-4657-836b-7eda2f0cddb2
@@ -1365,8 +1387,12 @@ lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged)
 # ╠═51468818-3e4e-4445-b23f-4df757c80478
 # ╠═ac200cf0-714c-4b66-855a-e204735c7c04
 # ╠═bc4fd1bb-fb30-4581-8952-891293476345
+# ╠═c235cd75-cada-4d8f-a380-43af619eaa24
 # ╠═a85d8d3f-197a-4f7f-97cd-5e2523a885d7
+# ╠═b94b7591-018b-47d7-8af8-be0c4b3ea49f
 # ╠═e472cbb6-258e-4303-85e2-56f26358c97b
+# ╠═0c8bceff-8ec3-471e-ac1b-e0d6caecfa66
+# ╠═28bf5ad2-26f0-4a25-890f-2f8c80f9e6e6
 # ╠═eec5c292-b7d0-49cf-83dc-283c400b9c05
 # ╠═3e37a9dd-fa57-45f8-999e-e499b760a420
 # ╠═14d30389-c25c-426c-99f5-68fe98aabc7f

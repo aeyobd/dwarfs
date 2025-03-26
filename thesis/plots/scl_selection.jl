@@ -30,6 +30,9 @@ end
 # ╔═╡ 69c98029-165c-407b-9a63-a27e06e30e45
 include("paper_style.jl")
 
+# ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
+include("utils.jl")
+
 # ╔═╡ d3bd7158-ea70-47a0-9800-9bfc08f3557c
 include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 
@@ -49,7 +52,7 @@ galaxyname = "sculptor"
 import TOML
 
 # ╔═╡ cf7aeb0a-d453-462a-b43d-a832567440fd
-diverging_cmap = Reverse(:bluesreds)
+
 
 # ╔═╡ 2eb4aa78-0fea-460b-a18e-06a129c41504
 md"""
@@ -148,6 +151,11 @@ function compare_samples(datasets, scatter_kwargs)
 	for (label, df) in datasets
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
 	end
+
+	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
+	text!(4observed_properties["r_h"], 0, text=L"3r_h", color=:black)
+
+	
 	axislegend(position=:lt)
 
 
@@ -191,7 +199,7 @@ function compare_samples(datasets, scatter_kwargs)
 end
 
 # ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
-COLORS
+
 
 # ╔═╡ 2d474904-ec96-41e7-bd17-8969ea5e3c40
 let
@@ -253,6 +261,7 @@ rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
+# ╠═a4848423-9be3-48d7-98c2-8d1096eb2560
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7

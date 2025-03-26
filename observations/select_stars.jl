@@ -47,7 +47,7 @@ function main()
     stars = read_gaia_stars(filt_params)
     members = select_members(stars, filt_params)
 
-    LilGuys.write_fits(args["output"], members)
+    LilGuys.write_fits(args["output"], members, overwrite=true)
 end
 
 

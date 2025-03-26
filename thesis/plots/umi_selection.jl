@@ -30,6 +30,9 @@ end
 # ╔═╡ 69c98029-165c-407b-9a63-a27e06e30e45
 include("paper_style.jl")
 
+# ╔═╡ 9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
+include("utils.jl")
+
 # ╔═╡ d3bd7158-ea70-47a0-9800-9bfc08f3557c
 include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 
@@ -84,10 +87,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/sculptor_memb_rv.fits")
-
-# ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
-LilGuys.mean(isfinite.(rv_members.RV_t23))
+rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/rv_members.fits")
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -148,6 +148,10 @@ function compare_samples(datasets, scatter_kwargs)
 	for (label, df) in datasets
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
 	end
+	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
+	text!(4observed_properties["r_h"], 0, text=L"3r_h", color=:black)
+
+	
 	axislegend(position=:lt)
 
 
@@ -190,26 +194,8 @@ function compare_samples(datasets, scatter_kwargs)
 	fig
 end
 
-# ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
-COLORS
-
-# ╔═╡ 2d474904-ec96-41e7-bd17-8969ea5e3c40
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-
-	for (i, col) in enumerate([ :fe_h_t23, :fe_h_apogee, :fe_h_gmos,])
-		errcol = "fe_h_err_" * split(string(col), "_")[end]
-		filt = map(isfinite, rv_members[!, col])
-
-		errorscatter!(log10.(rv_members.R_ell[filt]), rv_members[filt, col], yerror=rv_members[filt, errcol], color=COLORS[i])
-
-	end
-	fig
-end
-
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "scl_selection" compare_samples(
+@savefig "umi_selection" compare_samples(
 		(
 		:best => best_stars,
 		:members_nospace => members_nospace,
@@ -227,12 +213,12 @@ end
 			color=COLORS[1]
 		),
 		:members => (;
-			markersize=1,
+			markersize=3,
 			label = "probable members" =>(alpha=1, markersize=3),
 			color=:transparent,
 			strokewidth=0.3,
 			strokecolor = COLORS[2],
-			alpha=0.3,
+			alpha=1,
 		),
 		:rv => (;
 			markersize=2,
@@ -244,15 +230,13 @@ end
 	)
 )
 
-# ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
-rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
-
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
+# ╠═9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
@@ -269,7 +253,6 @@ rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
-# ╠═13f558a3-a42e-4384-ac6e-2a036f6e634f
 # ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
 # ╠═965217b8-b2a5-485b-83de-cac887065b19
 # ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
@@ -279,7 +262,4 @@ rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
 # ╠═8a4f4283-5699-44ca-956a-869a41177f05
 # ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
-# ╠═430fae9d-c708-4447-80ce-aabf19b161d2
-# ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
-# ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0

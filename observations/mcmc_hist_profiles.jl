@@ -294,7 +294,7 @@ let
 	
 	for h in profiles[1:skip:end]
 		x = h.log_R
-		y =  LilGuys.middle_of.(h.log_Sigma)
+		y =  LilGuys.middle.(h.log_Sigma)
 		x .+= 0.01randn(length(x))
 
 		filt = isfinite.(y)
@@ -318,7 +318,7 @@ let
 	
 	for h in profiles[1:skip:end]
 		x = h.log_R[2:end-1] 
-		y =  LilGuys.middle_of.(h.Gamma[2:end-1])
+		y =  LilGuys.middle.(h.Gamma[2:end-1])
 		x .+= 0.01randn(length(x))
 
 		filt = isfinite.(y)
@@ -385,12 +385,12 @@ end
 
 # ╔═╡ f811ad20-f0d4-4561-a723-ab00c63e09d1
 function reduce_samples(all_Sigmas)
-	log_Sigmas = dropdims(median(LilGuys.middle_of.(all_Sigmas), dims=2), dims=2)
-	log_Sigma_em_int = log_Sigmas .-  row_quantile(LilGuys.middle_of.(all_Sigmas), pvalue)
-	log_Sigma_ep_int =  row_quantile(LilGuys.middle_of.(all_Sigmas), 1-pvalue) .- log_Sigmas
+	log_Sigmas = dropdims(median(LilGuys.middle.(all_Sigmas), dims=2), dims=2)
+	log_Sigma_em_int = log_Sigmas .-  row_quantile(LilGuys.middle.(all_Sigmas), pvalue)
+	log_Sigma_ep_int =  row_quantile(LilGuys.middle.(all_Sigmas), 1-pvalue) .- log_Sigmas
 
-	log_Sigma_em_stat = dropdims(median(LilGuys.low_of.(all_Sigmas), dims=2), dims=2)
-	log_Sigma_ep_stat = dropdims(median(LilGuys.high_of.(all_Sigmas), dims=2), dims=2)
+	log_Sigma_em_stat = dropdims(median(LilGuys.lower_error.(all_Sigmas), dims=2), dims=2)
+	log_Sigma_ep_stat = dropdims(median(LilGuys.upper_error.(all_Sigmas), dims=2), dims=2)
 
 	log_Sigma_em = log_Sigma_em_int .+ log_Sigma_em_stat
 	log_Sigma_ep = log_Sigma_ep_int .+ log_Sigma_ep_stat
@@ -512,15 +512,15 @@ let
 
 
 	errorscatter!(prof_mc.log_R, prof_mc.log_Sigma .- prof_simple.log_Sigma, 
-		yerror = collect(zip(prof_mc.log_Sigma_em, prof_mc.log_Sigma_ep)),
+		yerror = LilGuys.error_interval.(prof_mc.log_Sigma),
 		label="mc hist")
 	
 	errorscatter!(prof_weighted.log_R .+ jitter, prof_weighted.log_Sigma .- prof_simple.log_Sigma, 
-		yerror = collect(zip(prof_weighted.log_Sigma_em, prof_weighted.log_Sigma_ep)),
+		yerror = LilGuys.error_interval.(prof_weighted.log_Sigma),
 		label="weighted")
 	
 	errorscatter!(prof_simple.log_R .- jitter, prof_simple.log_Sigma .- prof_simple.log_Sigma, 
-		yerror = collect(zip(prof_simple.log_Sigma_em, prof_simple.log_Sigma_ep)),
+		yerror = LilGuys.error_interval.(prof_simple.log_Sigma),
 		label="simple.")
 
 	rowsize!(fig.layout, 2, Relative(0.3))

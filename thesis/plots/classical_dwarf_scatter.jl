@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -33,17 +33,17 @@ obs_dir = joinpath(ENV["DWARFS_ROOT"], "observations")
 
 # ╔═╡ 24505198-6110-4398-abe3-158499d7894d
 galaxies = [
-	"antlia2",
-    "bootes1",
-    "bootes3",
-    "crater2",
+	#"antlia2",
+ #   "bootes1",
+  #  "bootes3",
+   # "crater2",
     "carina",
-    "canes_venatici1",
+    #"canes_venatici1",
     "draco",
     "fornax",
     "leo2",
     "leo1",
-    "reticulum2",
+    #"reticulum2",
     "sextans1",
     "sculptor",
     "ursa_minor",
@@ -57,7 +57,7 @@ function load_density_fit(galaxyname; algname=nothing)
 		algname = "mcmc_hist"
 	end
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
-		"processed/profile.$(algname).toml")
+		"density_profiles/jax_profile.toml")
 
 
 	density_fit = TOML.parsefile(filename * "_density_fits.toml")
@@ -79,7 +79,7 @@ Mv = [prop["Mv"] for prop in properties]
 ellipticity = [prop["ellipticity"] for prop in properties]
 
 # ╔═╡ 9439fcd0-8a1a-4ac9-9e80-8a6b5a8e9a0c
-α = LilGuys.calc_R_h(LilGuys.Exp2D())
+α = LilGuys.R_h(LilGuys.Exp2D())
 
 # ╔═╡ 19af5904-5d5a-4a7a-81b0-edf9fef78441
 R_h = α * [fit["log_R_s_exp2d_inner"] for fit in density_fits]
@@ -120,7 +120,7 @@ let
 	ax = Axis(fig[1,1],
 	    xlabel = "absolute magnitude (Mv)",
 	    ylabel = L"Sérsic $n$",
-		limits = (-15, nothing, 0, 2.5)
+		limits = (-15, nothing, 0.5, 1.5)
 	    )
 	hlines!(1, color=(:black, 0.2), linestyle=:dash)
 

@@ -46,7 +46,7 @@ begin
 end
 
 # ╔═╡ 7557d9c9-891a-4bce-88d6-f04e06e81738
-@bind profilename confirm(TextField(default="jax_LLR_0_profile.toml"))
+@bind profilename confirm(TextField(default="delve_rgb_profile.toml"))
 
 # ╔═╡ fe484bae-bd19-41c0-9d9d-7a6446b99039
 @bind n_bins_bg confirm(NumberField(1:1:100))
@@ -80,7 +80,7 @@ filt_bg = (Nb-n_bins_bg-n_bins_cut+1):(Nb-n_bins_cut)
 Sigmas_bg = prof.log_Sigma[end-n_bins_bg-n_bins_cut+1:end-n_bins_cut]
 
 # ╔═╡ 3a35f811-11cf-4154-86c0-c016a6253631
-Sigmas_bg_err = maximum.(LilGuys.credible_interval.(Sigmas_bg))
+Sigmas_bg_err = maximum.(LilGuys.error_interval.(Sigmas_bg))
 
 # ╔═╡ 3cc7bd35-0f9f-48c9-aeb1-d29cc8381869
 Sigmas_bg_m = LilGuys.middle.(Sigmas_bg)
@@ -126,7 +126,7 @@ let
 	)
 
 	errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma), 
-		yerror=LilGuys.credible_interval.(prof.log_Sigma),
+		yerror=LilGuys.error_interval.(prof.log_Sigma),
 	)
 
 	scatter!(prof.log_R[filt_bg], LilGuys.middle.(prof.log_Sigma)[filt_bg], color=COLORS[2])
@@ -144,14 +144,14 @@ let
 	)
 
 	errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma), 
-		yerror=LilGuys.credible_interval.(prof.log_Sigma),
+		yerror=LilGuys.error_interval.(prof.log_Sigma),
 	)
 
 	scatter!(prof.log_R[filt_bg], LilGuys.middle.(prof.log_Sigma)[filt_bg], color=COLORS[3])
 
 
 	errorscatter!(prof_sub.log_R, LilGuys.middle.(prof_sub.log_Sigma), 
-		yerror=LilGuys.credible_interval.(prof_sub.log_Sigma),
+		yerror=LilGuys.error_interval.(prof_sub.log_Sigma),
 	)
 
 	hlines!(Sigma_bg)
