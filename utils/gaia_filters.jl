@@ -142,7 +142,7 @@ function read_gaia_stars(params; θ=nothing)
 
     for col in ["R_ell", "r_ell", "xi", "eta"]
         if col ∈ names(df)
-            df[!, Symbol(col * "_original")] = df[!, col]
+            rename!(df, col => col * "_j+24")
         end
     end
 
