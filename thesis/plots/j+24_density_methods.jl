@@ -29,10 +29,10 @@ import PythonCall
 import TOML
 
 # ╔═╡ b11f3588-9904-46ef-8f35-a7c1d623e020
-log_r_ell_label = L"\log\ R\,/\,\textrm{arcmin}"
+log_r_ell_label = L"\log\,R\,/\,R_h"
 
 # ╔═╡ d42a0cd3-cc8e-4a24-8887-7100f3927961
-log_Σ_label = L"$\log \Sigma$\,/\,stars\ arcmin$^{-2}$"
+log_Σ_label = L"$\log\,\Sigma$\,/\,stars\ ${R_h}^{-2}$"
 
 # ╔═╡ 389fefd6-60fd-4dd8-ba77-29e87b4ed846
 obs_props_scl = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
@@ -47,8 +47,10 @@ obs_props_fornax = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/fornax/obs
 function load_profile(galaxyname, algname="jax")
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
 		"density_profiles/$(algname)_profile.toml")
+	obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/observed_properties.toml")
 	
     prof = LilGuys.StellarDensityProfile(filename)
+	prof = LilGuys.scale(prof, 1/obs_props["r_h"], 1)
 
 	prof
 end
@@ -65,7 +67,7 @@ import Statistics: median
 # ╔═╡ 5917e45e-50bb-441f-9d12-6901025a81f3
 begin 
 	profiles = OrderedDict(
-		"PSAT" => load_profile("sculptor", "jax_2c"),
+		"fiducial" => load_profile("sculptor", "jax_2c"),
 		"circ" => load_profile("sculptor", "jax_circ"),
 		"simple" => load_profile("sculptor", "simple"),
 		"bright" => load_profile("sculptor", "jax_bright"),
@@ -94,8 +96,8 @@ function compare_densities(profiles, r_h)
 					  label=name)
 	end
 
-	arrows!([log10(r_h)], [-2], [0], [-0.5], arrowsize=6)
-	text!([log10(r_h)], [-2], text=L"R_h")
+	#arrows!([log10(r_h)], [-2], [0], [-0.5], arrowsize=6)
+	#text!([log10(r_h)], [-2], text=L"R_h")
 
 	axislegend(position=:lb)
 	ax2 = Axis(fig[2,1],
@@ -135,16 +137,34 @@ function compare_densities(profiles, r_h)
 end
 
 # ╔═╡ d6509ab8-9923-443b-8b96-50e4f59498ab
-@savefig "scl_density_methods" compare_densities(profiles, obs_props_scl["r_h"])
+@savefig "scl_density_methods_extra" compare_densities(profiles, obs_props_scl["r_h"])
+
+# ╔═╡ 27abef4c-62cf-4c82-a76f-38b735569328
+begin 
+	profiles_scl = OrderedDict(
+		"fiducial" => load_profile("sculptor", "jax_2c"),
+		"CMD+PM" => load_profile("sculptor", "jax_LLR_0"),
+		"all" => load_profile("sculptor", "best"),
+		"bg subtracted" => load_profile("sculptor", "best_sub"),
+	)
+
+	# profiles_umi["bright"] = LilGuys.scale(profiles_umi["bright"], 1, 2)
+	# #profiles["DELVE"] = LilGuys.scale(profiles["DELVE"], 1, 7000/1197)
+	# profiles_umi["DELVE"] = LilGuys.scale(profiles_umi["DELVE"], 1, 0.6)
+
+	profiles_scl
+end
+
+# ╔═╡ dbeae6d9-1dd7-403b-80ac-82b20d047c3b
+@savefig "scl_density_methods" compare_densities(profiles_scl, obs_props_scl["r_h"])
 
 # ╔═╡ c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 begin 
 	profiles_umi = OrderedDict(
-		"PSAT" => load_profile("ursa_minor", "jax_2c"),
-		#"circ" => load_profile("ursa_minor", "jax_circ"),
-		"simple" => load_profile("ursa_minor", "simple"),
-		# "bright" => load_profile("ursa_minor", "jax_bright"),
-		# "DELVE" => load_profile("ursa_minor", "delve_rgb_sub"),
+		"fiducial" => load_profile("ursa_minor", "jax_2c"),
+		"CMD+PM" => load_profile("ursa_minor", "jax_LLR_0"),
+		"all" => load_profile("ursa_minor", "best"),
+		"bg subtracted" => load_profile("ursa_minor", "best_sub"),
 	)
 
 	# profiles_umi["bright"] = LilGuys.scale(profiles_umi["bright"], 1, 2)
@@ -160,12 +180,10 @@ end
 # ╔═╡ 7c64d26a-bddd-4159-98d2-3a0f8d2125f5
 begin 
 	profiles_fornax = OrderedDict(
-		"PSAT" => load_profile("fornax", "jax"),
-		#"circ" => load_profile("fornax", "jax_circ"),
-		"simple" => load_profile("fornax", "simple"),
-		# "bright" => load_profile("fornax", "jax_bright"),
-		# #"DELVE" => load_profile("delve"),
-		# "DELVE" => load_profile("fornax", "delve_rgb_sub"),
+		"fiducial" => load_profile("fornax", "jax"),
+		"CMD+PM" => load_profile("fornax", "jax_LLR_0"),
+		"all" => load_profile("fornax", "best"),
+		"bg subtracted" => load_profile("fornax", "best_sub"),
 	)
 
 	# profiles["bright"] = LilGuys.scale(profiles["bright"], 1, 2)
@@ -195,6 +213,8 @@ end
 # ╠═5917e45e-50bb-441f-9d12-6901025a81f3
 # ╠═30a60b7d-630a-4fa3-ac57-e873655ad754
 # ╠═d6509ab8-9923-443b-8b96-50e4f59498ab
+# ╠═27abef4c-62cf-4c82-a76f-38b735569328
+# ╠═dbeae6d9-1dd7-403b-80ac-82b20d047c3b
 # ╠═c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 # ╠═18b9cf25-527e-4bac-91ca-5d1fa69293c8
 # ╠═7c64d26a-bddd-4159-98d2-3a0f8d2125f5

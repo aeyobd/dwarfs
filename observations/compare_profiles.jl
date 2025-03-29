@@ -64,9 +64,10 @@ begin
 	add_profile!(profiles, "jax_profile.toml", label="1c")
 	add_profile!(profiles, "jax_LLR_0_sub_profile.toml", label="LL")
 	add_profile!(profiles, "simple_sub_profile.toml", label="simple")
+	add_profile!(profiles, "../mcmc/hist_fast_profile.toml", label="hist")
+
 	# add_profile!(profiles, "jax_LL_0_profile.toml", label="LLR cut")
 	# add_profile!(profiles, "jax_circ_profile.toml", label="2exp circ.")
-	# add_profile!(profiles, "../processed/profile.mcmc_hist_nostruct.toml", label="piecewise")
 	#add_profile!(profiles, "../processed/profile.mcmc_hist.toml", label="piecewise w/ ell&PA")
 
 end
@@ -91,6 +92,7 @@ let
 		xlabel = log_r_label,
 		ylabel = log_Sigma_label,
 		yticks = Makie.automatic,
+		limits=(nothing, nothing, -4, nothing)
 	)
 
 	for (key, prof) in profiles
@@ -108,9 +110,13 @@ let
 	prof_ref = profiles[collect(keys(profiles))[begin]]
 	for (key, prof) in profiles
 		ym = LilGuys.lerp(prof_ref.log_R, LilGuys.middle.(prof_ref.log_Sigma)).(prof.log_R)
-		
-		errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma) .- ym, 
-					  yerror=LilGuys.error_interval.(prof.log_Sigma)
+
+		filt = isfinite.(prof.log_Sigma) 
+
+		y =  LilGuys.middle.(prof.log_Sigma) .- ym
+		ye = LilGuys.error_interval.(prof.log_Sigma)
+		errorscatter!(prof.log_R[filt], y[filt], 
+					  yerror=ye[filt]
 					 )
 	end
 
@@ -130,7 +136,7 @@ let
 	
 	ax = Axis(fig[1,1],
 		xlabel = log_r_label,
-		ylabel = log_Sigma_label,
+		ylabel = L"\Gamma",
 		yticks = Makie.automatic,
 	)
 

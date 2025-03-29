@@ -94,7 +94,7 @@ end
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	profilename = TextField(default="jax_profile.toml")
+	profilename = TextField(default="../mcmc/hist_fast_profile.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -532,7 +532,6 @@ function plot_samples_obs(mcmc_fit)
 
 	LilGuys.hide_grid!(ax)
 
-	median =
 	fig
 end
 

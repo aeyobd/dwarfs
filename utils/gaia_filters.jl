@@ -1,6 +1,7 @@
 import TOML
 using Arya
 using Makie
+import PythonCall # enable fits
 import LilGuys as lguys
 import Polyhedra
 using DataFrames: DataFrame, names, rename!

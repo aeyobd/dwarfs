@@ -32,9 +32,6 @@ using DataFrames, CSV
 # ╔═╡ 2f62c5c2-e397-463b-9e73-f554c31a7b85
 using PairPlots
 
-# ╔═╡ 3d31db99-0d07-42fc-a437-215e29913021
-using OrderedCollections: OrderedDict
-
 # ╔═╡ 287cea0a-2745-4720-88b5-96d92742b382
 md"""
 This notebook checks the variance in assigned bin indicies due to uncertainty in structural parameters. Typically, this can vary ~ 
@@ -58,8 +55,8 @@ end
 # ╔═╡ 6014a851-525b-4565-b074-fbdd26a8ce2b
 bin_width = 0.05
 
-# ╔═╡ e53cdf92-f17d-40ae-9785-c00b7e33aeba
-PSAT_min = 0.2
+# ╔═╡ bfbc975e-2fae-4912-8165-774759ef4869
+
 
 # ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
 import TOML
@@ -93,7 +90,13 @@ obs_props = MCMCUtils.get_obs_props(galaxy)
 stars = MCMCUtils.get_fits(galaxy, obs_props)
 
 # ╔═╡ 5c58e059-7e5c-41b6-accd-7020beda42f8
-f_cen = LilGuys.mean(stars.PSAT[stars.R_ell .< obs_props["r_h"]/3])
+f_cen = LilGuys.mean(stars.PSAT[stars.R_ell .< obs_props["r_h"]]/2)
+
+# ╔═╡ 08ab794f-02a9-4835-98ca-b0c01a19c60a
+num_per_bin_default = max(round(Int, LilGuys.Interface.default_n_per_bin(stars.R_ell[stars.PSAT .> 0.2], nothing)), 2)
+
+# ╔═╡ 11756aee-a4be-46d8-ad0e-3e2fc0089d2d
+@bind num_per_bin NumberField(1:1000, default=num_per_bin_default)
 
 # ╔═╡ 43d159c4-1599-4138-96b9-c9447a8d6315
 md"""
@@ -123,35 +126,14 @@ md"""
 # Analysis
 """
 
-# ╔═╡ 81876bbe-a200-49ce-9155-5e3c98bc1db5
-MCMCUtils.centring_stats(stars, PSAT_min=0.2)
-
-# ╔═╡ dbd3a8ce-bd01-492c-a741-00f310091e7e
-MCMCUtils.centring_stats(stars, PSAT_min=0.8)
-
-# ╔═╡ e7af37c8-801a-41ba-8f67-50011a144b5d
-MCMCUtils.centring_stats(stars, PSAT_min=0.99)
-
-# ╔═╡ 6e10ff2d-6621-4f82-8bdf-42fa606bbb8f
-MCMCUtils.centring_stats(stars, PSAT_min=0.999)
-
-# ╔═╡ a8289faa-8f9a-463d-b0ea-f20cd900cee0
-MCMCUtils.centring_stats(stars, PSAT_min=0.9999)
-
-# ╔═╡ 3cc1745a-8d6a-4560-8815-26f049538c9e
-members = stars[stars.PSAT .> PSAT_min, :]
-
-# ╔═╡ 374439b8-767c-4872-991a-90298c9a6dd6
-N_min_clean = max(round(Int, LilGuys.Interface.default_n_per_bin(members.R_ell, nothing)), 2)
-
-# ╔═╡ 08ab794f-02a9-4835-98ca-b0c01a19c60a
-num_per_bin_default = max(round(Int, LilGuys.Interface.default_n_per_bin(members.R_ell, nothing)), 2) / f_cen
-
-# ╔═╡ 11756aee-a4be-46d8-ad0e-3e2fc0089d2d
-@bind num_per_bin NumberField(1:10000, default=num_per_bin_default)
-
 # ╔═╡ 028fb0dd-0076-4061-92cc-be08ec1b92d8
 mc_params = MCMCUtils.StructuralParams(stars, obs_props, num_per_bin=num_per_bin)
+
+# ╔═╡ 91867748-9b36-4f62-9310-8b778935776b
+mc_params
+
+# ╔═╡ 69327dc7-a82a-441e-901f-7474f4520575
+bins = mc_params.bins
 
 # ╔═╡ 33e02945-2ab5-4f55-b3d5-e8855d86f120
 let 
@@ -161,17 +143,99 @@ let
 		yticks = LogTicks(Arya.DefaultLinearTicks),
 		xlabel = log_r_label,
 		ylabel = "counts",
-		limits=(nothing, nothing, 1, 1e6),
+		limits=(nothing, nothing, 1, 3e4),
 		xlabelsize=12
 	)
 	
-	stephist!(log10.(members.R_ell), bins=log10.(mc_params.bins), label="PSAT > 0.2")
-	stephist!(log10.(stars.R_ell), bins=log10.(mc_params.bins), label="best")
+	stephist!(log10.(stars.R_ell[stars.PSAT .> 0.2]), bins=log10.(bins), label="PSAT > 0.2")
+	stephist!(log10.(stars.R_ell), bins=log10.(bins), label="best")
 
 	axislegend(position=:lt)
 	@savefig "hist_bin_choices"
 	fig
 end
+
+# ╔═╡ b515beab-8624-4ef1-ad0c-c6f548c74c0b
+mc_params.bins
+
+# ╔═╡ 82b3b170-729f-463e-9063-756a34840555
+MCMCUtils.perturbed_radii(stars, mc_params)
+
+# ╔═╡ 5d75c6ae-7e74-4ba0-8e4d-9e1a77e26748
+function sample_bins(data=stars, params=mc_params, bins=bins)
+	radii = MCMCUtils.perturbed_radii(data, mc_params)
+	bin_idx = DE.bin_indices(radii, bins)
+end
+
+# ╔═╡ a06cc670-efb0-4ad3-b8fd-5b58ac6cb003
+begin
+	Nsamples = 1000
+	bin_idxs = Matrix{Float64}(undef, length(stars.xi), Nsamples)
+	for i in 1:Nsamples
+		bin_idxs[:, i] = sample_bins()
+	end
+	bin_idxs
+end
+
+# ╔═╡ 79cf9232-1abe-4466-832b-67207fbc2e11
+best_idx = round.(LilGuys.mean(eachcol(bin_idxs)))
+
+# ╔═╡ 39f5e329-c32e-44bc-829e-f62a616cc88c
+d_idx = bin_idxs .- best_idx
+
+# ╔═╡ 9b303e04-62f2-4e72-a4fc-2019645764dd
+scatter(log10.(stars.R_ell), LilGuys.std(eachcol(d_idx)), rasterize=true)
+
+# ╔═╡ 9d12630d-7180-4d72-aa83-182b61d6fe79
+scatter(log10.(stars.R_ell), best_idx, rasterize=true)
+
+# ╔═╡ 0b859f82-3c1a-4be7-b2be-e742ce3f1f9c
+hist(LilGuys.std(eachcol(bin_idxs)))
+
+# ╔═╡ 067aaf2b-e6d2-4466-bd4d-d1b7f1aa17a6
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+			  yscale=log10,
+			  yticks = Makie.automatic,
+			 )
+		
+	hist!(vec(d_idx))
+	fig
+end
+
+# ╔═╡ 586c11c9-5933-4c5a-9e4f-3184e4a8c84f
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+			  yscale=log10,
+			  yticks = Makie.automatic,
+			 )
+
+	filt = stars.PSAT .> 0.2
+	hist!(vec(d_idx[filt, :]))
+	fig
+end
+
+# ╔═╡ 30ab89ef-6ce5-4a02-b2ae-9040b441c58d
+md"""
+Statistical summary of how much these variances matter
+"""
+
+# ╔═╡ cea39c5b-5e80-46e2-b41f-560a05a8bcac
+LilGuys.mean(vec(d_idx[stars.PSAT .> 0.2, :]) .== 0)
+
+# ╔═╡ 0cafe9c4-fb47-4acc-a514-686caa693a69
+LilGuys.mean(vec(d_idx[stars.PSAT .> 0.2, :]) .< 2)
+
+# ╔═╡ 34d1e570-3745-4508-9995-74750f434253
+LilGuys.mean(vec(d_idx[stars.PSAT .> 0.2, :]) .< 4)
+
+# ╔═╡ 176ffc99-bdc1-4f50-836f-5cf504610ce9
+LilGuys.mean(vec(d_idx[stars.PSAT .> 0.2, :]) .< 10)
+
+# ╔═╡ 4f2787f0-5f6b-4a31-a7b0-60c8ebe9ef8c
+LilGuys.mean(vec(d_idx[stars.PSAT .> 0.2, :]) .< 20)
 
 # ╔═╡ c162fbb4-21c6-4b91-833b-b7911fa83699
 md"""
@@ -189,9 +253,6 @@ end
 # ╔═╡ 45c7b5f1-b118-4ef6-afbd-2ee755713b75
 outfile_bins = joinpath(gal_dir, "default_bins.toml")
 
-# ╔═╡ 360f23d8-934f-4a40-9e3a-a0aa75e4d495
-outfile_params = joinpath(gal_dir, "default_bins_params.toml")
-
 # ╔═╡ be1c03e9-c152-4e5d-8106-38516f4dcf0f
 open(outfile_bins, "w") do f
 	d = LilGuys.struct_to_dict(mc_params)
@@ -202,34 +263,12 @@ open(outfile_bins, "w") do f
 	d
 end
 
-# ╔═╡ 03bc0ea8-7f1e-4f1e-988e-45fbf3daa52c
-open(outfile_params, "w") do f
-	d = OrderedDict(
-		"f_sat_cen" => f_cen,
-		"PSAT" => PSAT_min,
-		"num_per_bin" => num_per_bin,
-		"bin_width" => bin_width,
-		"centring_error" => LilGuys.struct_to_dict(
-			MCMCUtils.centring_stats(stars, PSAT_min=PSAT_min))
-	)
-
-	TOML.print(f, d)
-	@info "wrote info to $outfile_params"
-
-	d
-end
-
-# ╔═╡ e2162d45-66b7-42d0-acf5-e3c0fa6b5db2
-LilGuys.struct_to_dict(
-			MCMCUtils.centring_stats(stars, PSAT_min=PSAT_min))
-
 # ╔═╡ Cell order:
 # ╠═287cea0a-2745-4720-88b5-96d92742b382
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═6014a851-525b-4565-b074-fbdd26a8ce2b
-# ╠═e53cdf92-f17d-40ae-9785-c00b7e33aeba
+# ╠═bfbc975e-2fae-4912-8165-774759ef4869
 # ╠═5c58e059-7e5c-41b6-accd-7020beda42f8
-# ╠═374439b8-767c-4872-991a-90298c9a6dd6
 # ╠═08ab794f-02a9-4835-98ca-b0c01a19c60a
 # ╠═11756aee-a4be-46d8-ad0e-3e2fc0089d2d
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
@@ -246,6 +285,7 @@ LilGuys.struct_to_dict(
 # ╟─04053b71-bd55-40d7-885d-6df67035e3d6
 # ╠═e06cd77a-cd95-40f1-997f-d2e90adcba67
 # ╠═b9cf2c23-6c9a-44f5-9740-22caf4959831
+# ╠═91867748-9b36-4f62-9310-8b778935776b
 # ╟─43d159c4-1599-4138-96b9-c9447a8d6315
 # ╠═e609b6e9-343e-487f-8b0b-fd79c7783e8c
 # ╠═8e665feb-1a41-440c-a813-163cbf3be4f8
@@ -254,18 +294,26 @@ LilGuys.struct_to_dict(
 # ╠═33e02945-2ab5-4f55-b3d5-e8855d86f120
 # ╠═24a65d65-6e0b-4108-8041-79fee06cd28a
 # ╠═028fb0dd-0076-4061-92cc-be08ec1b92d8
-# ╠═81876bbe-a200-49ce-9155-5e3c98bc1db5
-# ╠═dbd3a8ce-bd01-492c-a741-00f310091e7e
-# ╠═e7af37c8-801a-41ba-8f67-50011a144b5d
-# ╠═6e10ff2d-6621-4f82-8bdf-42fa606bbb8f
-# ╠═a8289faa-8f9a-463d-b0ea-f20cd900cee0
-# ╠═3cc1745a-8d6a-4560-8815-26f049538c9e
+# ╠═69327dc7-a82a-441e-901f-7474f4520575
+# ╠═b515beab-8624-4ef1-ad0c-c6f548c74c0b
+# ╠═82b3b170-729f-463e-9063-756a34840555
+# ╠═5d75c6ae-7e74-4ba0-8e4d-9e1a77e26748
+# ╠═a06cc670-efb0-4ad3-b8fd-5b58ac6cb003
+# ╠═39f5e329-c32e-44bc-829e-f62a616cc88c
+# ╠═9d12630d-7180-4d72-aa83-182b61d6fe79
+# ╠═9b303e04-62f2-4e72-a4fc-2019645764dd
+# ╠═79cf9232-1abe-4466-832b-67207fbc2e11
+# ╠═0b859f82-3c1a-4be7-b2be-e742ce3f1f9c
+# ╠═067aaf2b-e6d2-4466-bd4d-d1b7f1aa17a6
+# ╠═586c11c9-5933-4c5a-9e4f-3184e4a8c84f
+# ╠═30ab89ef-6ce5-4a02-b2ae-9040b441c58d
+# ╠═cea39c5b-5e80-46e2-b41f-560a05a8bcac
+# ╠═0cafe9c4-fb47-4acc-a514-686caa693a69
+# ╠═34d1e570-3745-4508-9995-74750f434253
+# ╠═176ffc99-bdc1-4f50-836f-5cf504610ce9
+# ╠═4f2787f0-5f6b-4a31-a7b0-60c8ebe9ef8c
 # ╠═c162fbb4-21c6-4b91-833b-b7911fa83699
 # ╠═a352dddb-c3a6-49ef-8238-43fe808c675d
 # ╠═3a556e21-bf2e-4d89-b97c-e09d428bfa9c
 # ╠═45c7b5f1-b118-4ef6-afbd-2ee755713b75
-# ╠═360f23d8-934f-4a40-9e3a-a0aa75e4d495
 # ╠═be1c03e9-c152-4e5d-8106-38516f4dcf0f
-# ╠═3d31db99-0d07-42fc-a437-215e29913021
-# ╠═03bc0ea8-7f1e-4f1e-988e-45fbf3daa52c
-# ╠═e2162d45-66b7-42d0-acf5-e3c0fa6b5db2

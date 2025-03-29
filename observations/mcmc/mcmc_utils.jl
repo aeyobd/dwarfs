@@ -84,8 +84,8 @@ function GaiaData(df::DataFrame)
 end
 
 
-function StructuralParams(data, obs_props; kwargs...)
-    cen_err = centring_error(data)
+function StructuralParams(data, obs_props; PSAT_min=0.99, kwargs...)
+    cen_err = centring_error(data, PSAT_min=PSAT_min)
     bins = default_bins(data; kwargs...)
     return StructuralParams(cen_err, 
         obs_props["ellipticity"], read_error(obs_props, "ellipticity"),
@@ -111,16 +111,36 @@ end
 
 
 """
-    centring_error(data)
+    centring_error(data; PSAT_min)
 
 Given J+24 data, returns the centring error
 """
-function centring_error(data)
-    err_stat = (sem(filter(r->r.PSAT .> 0.2, data).xi) + sem(filter(r->r.PSAT .> 0.2, data).eta))/2
-    err_sys = max(abs(mean(data.xi)), abs(mean(data.eta)))
-
+function centring_error(data; PSAT_min=0.99)
+    stats = centring_stats(data, PSAT_min=PSAT_min)
+    err_sys = max(abs(stats.eta_sys), abs(stats.xi_sys))
+    err_stat = sqrt((stats.xi_stat^2 + stats.eta_stat^2)/2)
     return err_sys + err_stat
 end
+
+
+"""
+    centring_stats(data; PSAT_min)
+
+Given J+24 data, returns the centring statistics
+"""
+function centring_stats(data; PSAT_min=0.99)
+    members = filter(r->r.PSAT>PSAT_min, data)
+
+
+    return (;
+        xi_stat = sem(members.xi),
+        xi_sys = mean(members.xi),
+        eta_stat = sem(members.eta),
+        eta_sys = mean(members.eta),
+        counts = size(members, 1),
+       )
+end
+
 
 
 
@@ -159,7 +179,7 @@ function default_bins(stars; bin_width = 0.05, num_per_bin=nothing)
 end
 
 
-function Σ_hist(radii::Vector{<:Real}, bins::Vector{<:Real}, Σs::Vector{<:Real})
+function Σ_hist(radii::AbstractVector{<:Real}, bins::Vector{<:Real}, Σs::AbstractVector{<:Real})
     bin_idx = DE.bin_indices(radii, bins)
     Nbins = length(bins)
 

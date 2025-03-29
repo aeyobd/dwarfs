@@ -46,7 +46,9 @@ function load_profile(galaxyname; algname="jax")
 
 	density_fit = TOML.parsefile(filename * "_density_fits.toml")
 	R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
-	@info "R_h = $R_h arcmin"
+	R_h_u = α * 10 ^ LilGuys.Measurement(density_fit["log_R_s_exp2d_inner"], density_fit["log_R_s_exp2d_inner_em"], density_fit["log_R_s_exp2d_inner_ep"])
+	@info "R_h = $R_h_u arcmin"
+	@info "counts = $(sum(prof.counts))"
 
 	Σ_h = 10 .^ LilGuys.lerp(prof.log_R, middle.(prof.log_Sigma))(log10(R_h))
 	M_s = Σ_h * R_h .^ 2
@@ -84,6 +86,13 @@ prof_umi = load_profile("ursa_minor")
 # ╔═╡ b31bfb7e-8550-4f97-8b42-91b92edaa255
 CairoMakie.activate!(type="svg", pt_per_unit=2)
 
+# ╔═╡ dea5ec9f-7f31-42eb-b8f7-6ca5d22e9f0b
+begin 
+	plummer = LilGuys.Plummer()
+	Σ_0 = surface_density(plummer, 1)
+	plummer = LilGuys.Plummer(M = 1/surface_density(plummer, 1))
+end
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 let
 	fig = Figure()
@@ -97,11 +106,11 @@ let
 
     x = LinRange(-1.4, 1, 1000)
     y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y, color=:black, label="Sérsic (n=1)")
+    lines!(x, y, color=:black, label="Exp2D")
     
 
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=2), exp10.(x)))
-    lines!(x, y, color=:black, label="Sérsic (n=2)", linestyle=:dash)
+    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
+    lines!(x, y, color=:black, label="Plummer", linestyle=:dash)
 
 
 	for (galaxy, prof) in profiles
@@ -127,11 +136,11 @@ let
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
 	
     y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Sérsic (n=1)")
+    lines!(x, y .- f(x), color=:black, label="Exp2D")
     
 
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=2), exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Sérsic (n=2)", linestyle=:dash)
+    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
+    lines!(x, y .- f(x), color=:black, label="Plummer", linestyle=:dash)
 
 	
 	for (galaxy, prof) in profiles
@@ -173,8 +182,8 @@ let
     lines!(x, y, color=:black, label="Sérsic (n=1)")
     
 
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=2), exp10.(x)))
-    lines!(x, y, color=:black, label="Sérsic (n=2)", linestyle=:dash)
+    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
+    lines!(x, y, color=:black, label="Plummer", linestyle=:dash)
 
 	axislegend(position=:lb, merge=true, unique=true)
 
@@ -199,8 +208,8 @@ let
     lines!(x, y .- f(x), color=:black, label="Sérsic (n=1)")
     
 
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=2), exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Sérsic (n=2)", linestyle=:dash)
+    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
+    lines!(x, y .- f(x), color=:black, label="Plummer", linestyle=:dash)
 
 
 	linkxaxes!(ax, ax_res)
@@ -224,5 +233,6 @@ end
 # ╠═c3b52d5a-a8b4-4207-a8c7-9d32914aca93
 # ╠═b31bfb7e-8550-4f97-8b42-91b92edaa255
 # ╠═6d2bff6d-b347-49c4-87df-ad58d8a27ff3
+# ╠═dea5ec9f-7f31-42eb-b8f7-6ca5d22e9f0b
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═f706fc01-fade-4d4f-97d3-ce08264ec680
