@@ -1,0 +1,11 @@
+f_sat_cen = 0.12541296996846205
+PSAT = 0.2
+num_per_bin = 80
+bin_width = 0.15
+
+[centring_error]
+xi_sys = -2.253694440982976
+xi_stat = 2.07336974068882
+eta_stat = 1.5988139016598193
+counts = 50
+eta_sys = 1.377687611413696

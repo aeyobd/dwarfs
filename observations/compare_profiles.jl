@@ -92,7 +92,7 @@ let
 		xlabel = log_r_label,
 		ylabel = log_Sigma_label,
 		yticks = Makie.automatic,
-		limits=(nothing, nothing, -4, nothing)
+		limits=(nothing, nothing, -4, 2)
 	)
 
 	for (key, prof) in profiles
@@ -155,6 +155,9 @@ end
 # ╔═╡ 035abb97-067a-4b3b-abf3-d2713a2da8b6
 [(key => prof.Gamma) for (key, prof) in profiles]
 
+# ╔═╡ 27164128-5562-48e0-ab4b-e13965287946
+
+
 # ╔═╡ 21ee9c3c-6884-4240-8bd6-96a2bac74498
 LilGuys.projecteddensity
 
@@ -173,4 +176,5 @@ LilGuys.projecteddensity
 # ╠═21814a70-ce10-43f9-bb02-91bf15da860f
 # ╠═2f1a42a3-e100-4413-a039-a20244ada256
 # ╠═035abb97-067a-4b3b-abf3-d2713a2da8b6
+# ╠═27164128-5562-48e0-ab4b-e13965287946
 # ╠═21ee9c3c-6884-4240-8bd6-96a2bac74498

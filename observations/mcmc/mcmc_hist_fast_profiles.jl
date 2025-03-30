@@ -13,9 +13,6 @@ begin
 	using LilGuys
 end
 
-# ╔═╡ 408d70ee-ab1c-4630-bd75-21358cd55489
-using PlutoUI
-
 # ╔═╡ 67ddb57a-9ee7-4f4c-848f-d0b77fba1855
 using DataFrames, CSV
 
@@ -29,16 +26,10 @@ using OrderedCollections
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "draco"
-	skip = 1
+	galaxy = "antlia2"
+	skip = 10
 	all_profiles = true
 end
-
-# ╔═╡ 40755684-2881-44f8-9fe6-09c211bbfe45
-
-
-# ╔═╡ a9143cf4-7f12-4929-952c-a01150fd2ae9
-
 
 # ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
 import TOML
@@ -54,14 +45,8 @@ outdir = joinpath("..", galaxy, "mcmc")
 # ╔═╡ b94c3346-bd31-409e-ad6f-5e7afb891ad1
 FIGDIR = joinpath(outdir, "figures"); FIGSUFFIX=".mcmc_hist_fast"
 
-# ╔═╡ 8bbd8c9f-2d35-47d9-8c30-0c86c14d6ce4
-
-
-# ╔═╡ 57a19d65-59d9-46cf-8916-d9ac3a4dc92b
-
-
 # ╔═╡ 133a025f-407f-49eb-9e02-0c620d5b77ba
-CairoMakie.activate!(type="svg", pt_per_unit=2)
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 0aa44389-f320-4274-abdd-0d7f88006a4d
 log_r_label = L"$\log\,R_\textrm{ell}$ / arcmin"
@@ -154,6 +139,12 @@ let
 
 end
 
+# ╔═╡ 2027b636-bb17-4004-941e-b715ba8d0216
+psat_min = 1e-10
+
+# ╔═╡ 8abe3d92-f9e8-4e89-96ec-14eaf9482e64
+Nsteps = size(df_chains, 1)
+
 # ╔═╡ 939aa449-26ea-4d2d-8773-42a73c3d0410
 if all_profiles
 	Nbins = length(bins) - 1
@@ -162,13 +153,14 @@ if all_profiles
 	Ns = size(stars, 1)
 
 	idxs = 1:skip:Nc
-	global fsats = Matrix{Float64}(undef, Ns, length(idxs))
-	global psats = Matrix{Float64}(undef, Ns, length(idxs))
-	global profiles = Vector{LilGuys.StellarDensityProfile}(undef, length(idxs))
+	fsats = Matrix{Float64}(undef, Ns, length(idxs))
+	psats = Matrix{Float64}(undef, Ns, length(idxs))
+	profiles = Vector{LilGuys.StellarDensityProfile}(undef, length(idxs))
 
-	for (i, idx) in enumerate(idxs)
-		if i % 200 == 0
-			@info "calculated $i / $(length(idxs))"
+	Threads.@threads for i in eachindex(idxs)
+		idx = idxs[i]
+		if i % 10 == 0
+			@info "sample $i"
 		end
 		
 		params = [df_chains[idx, "params[$j]"] for j in 1:Nbins]
@@ -194,9 +186,6 @@ if all_profiles
 	end
 
 end
-
-# ╔═╡ 8abe3d92-f9e8-4e89-96ec-14eaf9482e64
-Nsteps = size(df_chains, 1)
 
 # ╔═╡ ba280361-c910-483a-9108-fd4be4906606
 sum(middle.(10 .^ profiles[1].log_Sigma) .* diff(exp10.(profiles[1].log_R_bins) .^ 2) .* π)
@@ -250,12 +239,17 @@ let
 	skip = 100
 
 	for i in 1:skip:size(psats, 2)
-		scatter!(stars.PSAT, psats[:, i], color=:black, alpha=0.1, markersize=2, rasterize=true)
+		y = psats[:, i]
+		filt = 1e-6 .< y .< 1-1e-6
+		scatter!(stars.PSAT[filt], y[filt], color=:black, alpha=0.1, markersize=2, rasterize=true)
 	end
 	@savefig "j+24_vs_mcmc"
 	
 	fig
 end
+
+# ╔═╡ b2b89764-7990-4441-bd3c-5f369fbbaceb
+size(psats)
 
 # ╔═╡ ad85b789-8f43-489b-a41c-a966e08d78ad
 let
@@ -445,10 +439,7 @@ end
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
-# ╠═40755684-2881-44f8-9fe6-09c211bbfe45
-# ╠═a9143cf4-7f12-4929-952c-a01150fd2ae9
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
-# ╠═408d70ee-ab1c-4630-bd75-21358cd55489
 # ╠═d1de613c-c3bb-4843-859e-7b8df54bafe0
 # ╠═67ddb57a-9ee7-4f4c-848f-d0b77fba1855
 # ╠═e74e6a96-a18e-40bf-ade8-07ce0e30e5c4
@@ -456,8 +447,6 @@ end
 # ╠═1f497448-9ea2-460f-b403-618b78b47565
 # ╠═11d9d9f5-0fb7-4b06-bd4a-36bdb1f00188
 # ╠═b94c3346-bd31-409e-ad6f-5e7afb891ad1
-# ╠═8bbd8c9f-2d35-47d9-8c30-0c86c14d6ce4
-# ╠═57a19d65-59d9-46cf-8916-d9ac3a4dc92b
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
 # ╠═0aa44389-f320-4274-abdd-0d7f88006a4d
 # ╠═36ef5f0d-3a14-4e5d-a2fb-f6626a941d5f
@@ -479,8 +468,9 @@ end
 # ╟─6685cdec-7c99-45ca-98c8-f6439dfd7290
 # ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
 # ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
-# ╠═939aa449-26ea-4d2d-8773-42a73c3d0410
+# ╠═2027b636-bb17-4004-941e-b715ba8d0216
 # ╠═8abe3d92-f9e8-4e89-96ec-14eaf9482e64
+# ╠═939aa449-26ea-4d2d-8773-42a73c3d0410
 # ╠═ba280361-c910-483a-9108-fd4be4906606
 # ╠═36f7e33d-0ee3-4ea3-bb0f-3cedd34da773
 # ╠═36bb1876-5937-44fe-bb1c-add10470371d
@@ -494,6 +484,7 @@ end
 # ╠═c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
 # ╠═81e5a128-c1ed-4a8a-8bb6-e4efd0593c80
 # ╠═da737b3e-f28a-4917-91d6-eea97458ddb0
+# ╠═b2b89764-7990-4441-bd3c-5f369fbbaceb
 # ╠═ad85b789-8f43-489b-a41c-a966e08d78ad
 # ╠═f2c43c30-b069-4d17-8d61-be801d85b245
 # ╠═94d6a13f-1165-4d8f-a40a-a4cfa9224093

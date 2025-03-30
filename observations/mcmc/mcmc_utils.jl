@@ -39,7 +39,7 @@ end
 
 
 function get_data_filename(galaxy)
-	filenames = ["jensen+24_1c.fits", "jensen+24_2c.fits", "jensen+24_wide.fits", "j24_1c.fits", "j24_2c.fits"]
+	filenames = ["j24_1c.fits", "j24_2c.fits", "jensen+24_1c.fits", "jensen+24_2c.fits", "jensen+24_wide.fits"]
 	filename = ""
     dir = "../$galaxy/data"
 	for file in filenames

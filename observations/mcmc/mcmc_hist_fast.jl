@@ -21,7 +21,7 @@ using DataFrames, CSV
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "sextans1"
+	galaxy = "carina2"
 end
 
 # ╔═╡ af1d827c-bb7e-4875-936e-cfec7578f7db

@@ -44,7 +44,7 @@ This notebook checks the variance in assigned bin indicies due to uncertainty in
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	@bind galaxy confirm(TextField(default="galaxy"))
 end
 
 # ╔═╡ 7ff855b9-7a1e-422e-b8a5-1cb5ecfe368f
@@ -91,6 +91,12 @@ obs_props = MCMCUtils.get_obs_props(galaxy)
 
 # ╔═╡ e06cd77a-cd95-40f1-997f-d2e90adcba67
 stars = MCMCUtils.get_fits(galaxy, obs_props)
+
+# ╔═╡ a955c503-c834-4719-89d0-a0004c33ea15
+@info sum(stars.PSAT .> 0.2)
+
+# ╔═╡ f9ea040c-0d80-4ccc-a990-010d72a5647e
+sum(stars.PSAT)
 
 # ╔═╡ 5c58e059-7e5c-41b6-accd-7020beda42f8
 f_cen = LilGuys.mean(stars.PSAT[stars.R_ell .< obs_props["r_h"]/3])
@@ -151,7 +157,13 @@ num_per_bin_default = max(round(Int, LilGuys.Interface.default_n_per_bin(members
 @bind num_per_bin NumberField(1:10000, default=num_per_bin_default)
 
 # ╔═╡ 028fb0dd-0076-4061-92cc-be08ec1b92d8
-mc_params = MCMCUtils.StructuralParams(stars, obs_props, num_per_bin=num_per_bin)
+mc_params = MCMCUtils.StructuralParams(stars, obs_props, num_per_bin=num_per_bin, bin_width=bin_width)
+
+# ╔═╡ da4218ef-34ed-4464-81ad-fb8fa216fb9a
+@info length(mc_params.bins)
+
+# ╔═╡ ff4e7ea9-fbd9-4e07-87ca-934ff8961393
+mc_params.bins
 
 # ╔═╡ 33e02945-2ab5-4f55-b3d5-e8855d86f120
 let 
@@ -228,6 +240,10 @@ LilGuys.struct_to_dict(
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═6014a851-525b-4565-b074-fbdd26a8ce2b
 # ╠═e53cdf92-f17d-40ae-9785-c00b7e33aeba
+# ╠═a955c503-c834-4719-89d0-a0004c33ea15
+# ╠═f9ea040c-0d80-4ccc-a990-010d72a5647e
+# ╠═da4218ef-34ed-4464-81ad-fb8fa216fb9a
+# ╠═ff4e7ea9-fbd9-4e07-87ca-934ff8961393
 # ╠═5c58e059-7e5c-41b6-accd-7020beda42f8
 # ╠═374439b8-767c-4872-991a-90298c9a6dd6
 # ╠═08ab794f-02a9-4835-98ca-b0c01a19c60a

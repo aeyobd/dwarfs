@@ -1,7 +1,7 @@
 f_sat_cen = 0.0872624961302375
 PSAT = 0.2
 num_per_bin = 160
-bin_width = 0.05
+bin_width = 0.08
 
 [centring_error]
 xi_sys = 9.961406153442109
