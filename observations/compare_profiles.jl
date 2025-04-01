@@ -33,7 +33,7 @@ using OrderedCollections
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
-@bind galaxyname confirm(TextField(default="sculptor"))
+@bind galaxyname confirm(TextField(default="draco"))
 
 # ╔═╡ 898d2c8b-b761-4a69-b561-658a644f44df
 begin
@@ -65,6 +65,7 @@ begin
 	add_profile!(profiles, "jax_LLR_0_sub_profile.toml", label="LL")
 	add_profile!(profiles, "simple_sub_profile.toml", label="simple")
 	add_profile!(profiles, "../mcmc/hist_fast_profile.toml", label="hist")
+	add_profile!(profiles, "../mcmc/hist_struct_profile.toml", label="hist struct")
 
 	# add_profile!(profiles, "jax_LL_0_profile.toml", label="LLR cut")
 	# add_profile!(profiles, "jax_circ_profile.toml", label="2exp circ.")
@@ -138,6 +139,7 @@ let
 		xlabel = log_r_label,
 		ylabel = L"\Gamma",
 		yticks = Makie.automatic,
+		limits=(nothing, nothing, -12, 4)
 	)
 
 	for (key, prof) in profiles
@@ -156,10 +158,67 @@ end
 [(key => prof.Gamma) for (key, prof) in profiles]
 
 # ╔═╡ 27164128-5562-48e0-ab4b-e13965287946
+begin
+	profiles_eq = OrderedDict{String, LilGuys.StellarDensityProfile}()
+	add_profile!(profiles_eq, "jax_2c_eqw_profile.toml", label="2exp")
+	add_profile!(profiles_eq, "jax_eqw_profile.toml", label="1c")
+	add_profile!(profiles_eq, "jax_LLR_0_eqw_profile.toml", label="LL")
+	add_profile!(profiles_eq, "simple_eqw_sub_profile.toml", label="simple")
+	add_profile!(profiles_eq, "best_eqw_profile.toml", label="best")
 
+	# add_profile!(profiles, "jax_LL_0_profile.toml", label="LLR cut")
+	# add_profile!(profiles, "jax_circ_profile.toml", label="2exp circ.")
+	#add_profile!(profiles, "../processed/profile.mcmc_hist.toml", label="piecewise w/ ell&PA")
+
+end
+
+# ╔═╡ 99732187-a038-424e-b31d-15aff4a2afaa
+profiles_eq["LL"]
 
 # ╔═╡ 21ee9c3c-6884-4240-8bd6-96a2bac74498
-LilGuys.projecteddensity
+let
+	fig = Figure(size=(4*72, 3*72))
+	
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label,
+		ylabel = log_Sigma_label,
+		yticks = Makie.automatic,
+		limits=(nothing, nothing, -4, 2)
+	)
+
+	for (key, prof) in profiles_eq
+		LilGuys.plot_log_Σ!(ax, prof, label=key)
+	end
+
+	axislegend(position=:lb)
+
+	ax2 = Axis(fig[2,1],
+		xlabel = log_r_label,
+		ylabel = L"\log\Sigma / \Sigma_\textrm{%$(collect(keys(profiles))[begin])}",
+		limits=(nothing, nothing, -1, 1)
+	)
+
+	prof_ref = profiles_eq[collect(keys(profiles_eq))[begin]]
+	for (key, prof) in profiles_eq
+		ym = LilGuys.lerp(prof_ref.log_R, LilGuys.middle.(prof_ref.log_Sigma)).(prof.log_R)
+
+		filt = isfinite.(prof.log_Sigma) .& isfinite.(prof_ref.log_Sigma)
+
+		y =  LilGuys.middle.(prof.log_Sigma) .- ym
+		ye = LilGuys.error_interval.(prof.log_Sigma)
+		errorscatter!(prof.log_R[filt], y[filt], 
+					  yerror=ye[filt]
+					 )
+	end
+
+	hidexdecorations!(ax)
+
+	linkxaxes!(ax, ax2)
+	rowsize!(fig.layout, 2, Relative(1/4))
+	rowgap!(fig.layout, 0.)
+
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╠═02612c68-042b-11f0-2f84-e9431cc0ee83
@@ -177,4 +236,5 @@ LilGuys.projecteddensity
 # ╠═2f1a42a3-e100-4413-a039-a20244ada256
 # ╠═035abb97-067a-4b3b-abf3-d2713a2da8b6
 # ╠═27164128-5562-48e0-ab4b-e13965287946
+# ╠═99732187-a038-424e-b31d-15aff4a2afaa
 # ╠═21ee9c3c-6884-4240-8bd6-96a2bac74498

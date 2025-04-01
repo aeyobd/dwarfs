@@ -38,11 +38,11 @@ begin
 	import PythonCall # enable fits
 	using LilGuys
 
-	FIGDIR = joinpath(galaxy, "figures"); FIGSUFFIX=".mcmc_hist"
+	FIGDIR = joinpath(galaxy, "figures"); FIGSUFFIX=".bins_test"
 end
 
 # ╔═╡ 6014a851-525b-4565-b074-fbdd26a8ce2b
-bin_width = 0.05
+@bind bin_width confirm(NumberField(0.01:0.01:0.5, default=0.05))
 
 # ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
 import TOML
@@ -87,13 +87,22 @@ md"""
 # ╔═╡ b9cf2c23-6c9a-44f5-9740-22caf4959831
 obs_props = TOML.parsefile(joinpath(galaxy, "observed_properties.toml"))
 
+# ╔═╡ a823c38b-e843-4896-bb3f-448d2400356f
+filt_params = GaiaFilters.GaiaFilterParams(obs_props, filename = datafile,)
+
 # ╔═╡ f01b0b37-5fdf-4c72-92cb-7b1cbd6c88b9
 all_stars = GaiaFilters.read_gaia_stars(
-	GaiaFilters.GaiaFilterParams(obs_props, filename = datafile,)
+	filt_params
 )
 
-# ╔═╡ 91867748-9b36-4f62-9310-8b778935776b
-best_stars = filter(r->r.F_BEST == 1, all_stars)
+# ╔═╡ 2e3681c1-015c-40d5-a933-b5bc4f6b3f85
+best_stars = GaiaFilters.select_members(all_stars, filt_params)
+
+# ╔═╡ 9ca9652b-64e8-4105-a9f6-6b499a31e6b1
+R_ell = maximum(best_stars.R_ell)
+
+# ╔═╡ 7c46769e-0fd8-4001-a00d-1aed26552801
+members = filter(r->r.PSAT > 0.2, best_stars)
 
 # ╔═╡ 43d159c4-1599-4138-96b9-c9447a8d6315
 md"""
@@ -110,19 +119,6 @@ where $f$ is a model for the fraction of stars in a small region belonging to th
 md"""
 # Histogram model
 """
-
-# ╔═╡ e7bf7a13-afca-49b8-8771-f7914adb347b
-function hist_fractions(bins, params, x)
-	i = DE.bin_indices(x, bins)
-	return params[i]
-end
-
-# ╔═╡ 1a5e8de2-0d74-48a9-aead-0855602734f3
-# ╠═╡ disabled = true
-#=╠═╡
-bins = 10 .^ LilGuys.Interface.bins_both(log10.(best_stars.r_ell), nothing, bin_width=bin_width_min, num_per_bin=N_per_bin_min)
-
-  ╠═╡ =#
 
 # ╔═╡ 41afbd13-c22f-46f3-8d1f-43285ccf867e
 bins = 10 .^ LilGuys.bins_equal_width(log10.(best_stars.R_ell), nothing, bin_width=bin_width)
@@ -151,7 +147,7 @@ let
 		xlabelsize=12
 	)
 	
-	stephist!(log10.(best_stars.R_ell[best_stars.PSAT .> 0.2]), bins=log10.(bins), label="PSAT > 0.2")
+	stephist!(log10.(members.R_ell), bins=log10.(bins), label="PSAT > 0.2")
 	stephist!(log10.(best_stars.R_ell), bins=log10.(bins), label="best")
 
 	axislegend(position=:lt)
@@ -167,48 +163,38 @@ let
 
 	)
 
+	prof = LilGuys.StellarDensityProfile(members.R_ell, bins=log10.(bins))
+	prof.log_Sigma[.!isfinite.(prof.log_Sigma)] .= minimum(prof.log_Sigma[isfinite.(prof.log_Sigma)]) .- 1
+	LilGuys.plot_log_Σ!(ax, prof)
+
 	prof = LilGuys.StellarDensityProfile(best_stars.R_ell, bins=log10.(bins))
 	prof.log_Sigma[.!isfinite.(prof.log_Sigma)] .= minimum(prof.log_Sigma[isfinite.(prof.log_Sigma)]) .- 1
-	scatter!(prof.log_R, prof.log_Sigma)
+	LilGuys.plot_log_Σ!(ax, prof)
 	vlines!(log10(obs_props["r_h"]))
 	fig
 end
 
-# ╔═╡ 9bf31971-1c10-4020-946e-d8cfebf6596a
+# ╔═╡ 8a23338b-f994-4710-b27c-2d12f608f3c1
+
+
+# ╔═╡ 21ad2129-b2e2-459c-ab44-629ae16b027c
+log10.(bins)
+
+# ╔═╡ fef42ea7-6465-4493-956c-7848eaba9200
+minimum(log10.(best_stars.R_ell))
+
+# ╔═╡ 52a087d1-2a47-4b58-b131-5c09061cae76
+log10(R_ell)
+
+# ╔═╡ b2d864b4-e1a9-499d-9f44-4e93614d41f4
+print(log10.(filter(x->x<=R_ell, bins)))
+
+# ╔═╡ 5056894a-7582-4c1c-b881-888d46e1e2c3
 md"""
-# Outputs
+```
+inherits = "bins_eqw.toml"
+```
 """
-
-# ╔═╡ 8c565a28-84bc-4bc7-8a0e-b2e0dff76665
-if !isdir(joinpath(galaxy, "processed"))
-	mkdir(joinpath(galaxy, "processed"))
-end
-
-# ╔═╡ d1009491-62de-42d7-89ad-b41b8385aaaf
-samplesout = joinpath(galaxy, "processed", "samples$FIGSUFFIX.csv")
-
-# ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
-profout = joinpath(galaxy, "processed", "profile$FIGSUFFIX.toml")
-
-# ╔═╡ 639c7d31-8693-45dd-88be-492b124804e9
-infoout = joinpath(galaxy, "processed", "info$FIGSUFFIX.log")
-
-# ╔═╡ b1487f12-76b2-4a2f-8d50-4e80f90b1d9d
-binsout = joinpath(galaxy, "processed", "info$FIGSUFFIX.toml")
-
-# ╔═╡ bf8d5936-1a4e-47c2-bb22-531ab344b8ad
-#=╠═╡
-filt_max = bins[2:end] .< R_max
-  ╠═╡ =#
-
-# ╔═╡ ebdfb5dc-b996-4ead-a61f-ebb9f93adf0e
-open(binsout, "w") do f
-	TOML.print(f, OrderedDict(
-		"binwidth" => bin_width,
-		"bins" => bins,
-	)
-	)
-end
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
@@ -225,12 +211,13 @@ end
 # ╠═36ef5f0d-3a14-4e5d-a2fb-f6626a941d5f
 # ╟─04053b71-bd55-40d7-885d-6df67035e3d6
 # ╠═b9cf2c23-6c9a-44f5-9740-22caf4959831
+# ╠═a823c38b-e843-4896-bb3f-448d2400356f
 # ╠═f01b0b37-5fdf-4c72-92cb-7b1cbd6c88b9
-# ╠═91867748-9b36-4f62-9310-8b778935776b
+# ╠═2e3681c1-015c-40d5-a933-b5bc4f6b3f85
+# ╠═9ca9652b-64e8-4105-a9f6-6b499a31e6b1
+# ╠═7c46769e-0fd8-4001-a00d-1aed26552801
 # ╟─43d159c4-1599-4138-96b9-c9447a8d6315
 # ╟─1d9b3718-45d7-4765-ac7d-017dbf939ec8
-# ╠═e7bf7a13-afca-49b8-8771-f7914adb347b
-# ╠═1a5e8de2-0d74-48a9-aead-0855602734f3
 # ╠═41afbd13-c22f-46f3-8d1f-43285ccf867e
 # ╠═8e665feb-1a41-440c-a813-163cbf3be4f8
 # ╠═c8ca665d-0c63-442f-8b67-8ec175d38b06
@@ -238,11 +225,9 @@ end
 # ╠═9eb25479-df26-4a86-bb6b-9b14f404ee93
 # ╠═33e02945-2ab5-4f55-b3d5-e8855d86f120
 # ╠═dac9bbd7-8fac-4fab-8e74-7e1fea166616
-# ╟─9bf31971-1c10-4020-946e-d8cfebf6596a
-# ╠═8c565a28-84bc-4bc7-8a0e-b2e0dff76665
-# ╠═d1009491-62de-42d7-89ad-b41b8385aaaf
-# ╠═a93579f2-d37d-492c-95e6-02bd7491dc8c
-# ╠═639c7d31-8693-45dd-88be-492b124804e9
-# ╠═b1487f12-76b2-4a2f-8d50-4e80f90b1d9d
-# ╠═bf8d5936-1a4e-47c2-bb22-531ab344b8ad
-# ╠═ebdfb5dc-b996-4ead-a61f-ebb9f93adf0e
+# ╠═8a23338b-f994-4710-b27c-2d12f608f3c1
+# ╠═21ad2129-b2e2-459c-ab44-629ae16b027c
+# ╠═fef42ea7-6465-4493-956c-7848eaba9200
+# ╠═52a087d1-2a47-4b58-b131-5c09061cae76
+# ╠═b2d864b4-e1a9-499d-9f44-4e93614d41f4
+# ╠═5056894a-7582-4c1c-b881-888d46e1e2c3

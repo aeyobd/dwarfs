@@ -45,7 +45,8 @@ function main()
     stars = read_gaia_stars(filt_params)
     members = select_members(stars, filt_params)
 
-    if "bins" ∈ keys(params)
+    if "bins" ∈ keys(profile_kwargs)
+        @info "bins in kwargs"
         if profile_kwargs["bins"] == "equal-number"
             profile_kwargs["bins"] = LilGuys.bins_equal_number
         end

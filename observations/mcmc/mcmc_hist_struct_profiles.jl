@@ -27,7 +27,7 @@ if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
 	galaxy = "draco"
-	skip = 1
+	skip = 10
 	all_profiles = true
 end
 
@@ -77,10 +77,10 @@ struct_params = MCMCUtils.StructuralParams(; LilGuys.dict_to_tuple(TOML.parsefil
 bins = struct_params.bins
 
 # ╔═╡ 6f016a8e-38ae-4f05-a7ee-c292ac0e5741
-df_chains = CSV.read(joinpath(outdir, "samples.mcmc_hist_fast.csv"), DataFrame)
+df_chains = CSV.read(joinpath(outdir, "samples.mcmc_hist_struct.csv"), DataFrame)
 
 # ╔═╡ 3e99a9b9-ba06-47ee-bce7-5720a4eb1944
-df_summary = CSV.read(joinpath(outdir, "summary.mcmc_hist_fast.csv"), DataFrame)
+df_summary = CSV.read(joinpath(outdir, "summary.mcmc_hist_struct.csv"), DataFrame)
 
 # ╔═╡ 24a65d65-6e0b-4108-8041-79fee06cd28a
 md"""
@@ -115,74 +115,100 @@ md"""
 # ╔═╡ d254b67b-8017-4bbf-ba04-50b5b76f48f0
 prof_counts = LilGuys.StellarDensityProfile(stars.R_ell, bins=log10.(bins),  errors=:weighted)
 
+# ╔═╡ 2027b636-bb17-4004-941e-b715ba8d0216
+psat_min = 1e-10
+
+# ╔═╡ 0ce6ef33-bc26-4869-ba59-b3cf9e6f3c06
+Nstruct = length(unique(df_chains.sample_struct))
+
+# ╔═╡ 7d8ba386-6335-470a-b8c0-2f3684030e6f
+Nstars = size(stars, 1)
+
+# ╔═╡ 1bf4c226-df62-4910-81e3-e1c3671ef4ce
+@assert issorted(df_chains.sample_struct)
+
+# ╔═╡ 152a5403-5d14-4ef0-8d30-621f9eabcd46
+Nbins = length(bins) - 1
+
+# ╔═╡ 68049f27-8b1f-4d92-9186-06091243cf64
+Nsteps = convert(Int, size(df_chains, 1) / Nstruct / Nbins)
+
 # ╔═╡ f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
 let
 	skip = 1
 	Nbins = length(bins) - 1
 
-	Nc = size(df_chains, 1)
-	Ns = size(stars, 1)
 	
-	global log_Sigmas_fast = Matrix{Float64}(undef, Nbins, Nc)
+	global log_Sigmas_fast = Matrix{Float64}(undef, Nbins, Nsteps*Nstruct)
 	areas = diff(π * bins .^2)
 	counts = prof_counts.counts
 
-	for i in 1:skip:Nc
+	groups_all = groupby(df_chains, [:sample_struct, :iteration, :chain])
+	for i in 1:Nsteps*Nstruct
 		if i % 200 == 0
-			@info "calculated $i / $Nc"
+			@info "calculated $i / $(Nsteps*Nstruct)"
 		end
 		
-		params = [df_chains[i, "params[$j]"] for j in 1:Nbins]
+		params = groups_all[i].log_Σ
 		f_sat = exp10.(params) ./(1 .+ exp10.(params))
 		log_Sigmas_fast[:, i] .= log10.( f_sat .* counts ./ areas)
 	end
 
 end
 
-# ╔═╡ 2027b636-bb17-4004-941e-b715ba8d0216
-psat_min = 1e-10
-
-# ╔═╡ 8abe3d92-f9e8-4e89-96ec-14eaf9482e64
-Nsteps = size(df_chains, 1)
-
 # ╔═╡ 939aa449-26ea-4d2d-8773-42a73c3d0410
 if all_profiles
-	Nbins = length(bins) - 1
 
-	Nc = size(df_chains, 1)
-	Ns = size(stars, 1)
+	idxs = 1:skip:Nsteps
+	Nidx = length(idxs)
+	fsats = Matrix{Float64}(undef, Nstars, Nstruct * Nidx)
+	psats = Matrix{Float64}(undef, Nstars, Nstruct * Nidx)
+	profiles = Vector{LilGuys.StellarDensityProfile}(undef, Nstruct * Nidx)
 
-	idxs = 1:skip:Nc
-	fsats = Matrix{Float64}(undef, Ns, length(idxs))
-	psats = Matrix{Float64}(undef, Ns, length(idxs))
-	profiles = Vector{LilGuys.StellarDensityProfile}(undef, length(idxs))
-
-	Threads.@threads for i in eachindex(idxs)
-		idx = idxs[i]
+	struct_groups =  groupby(df_chains, :sample_struct)
+	Threads.@threads for i in 1:Nstruct
+		df = struct_groups[i]
 		if i % 10 == 0
 			@info "sample $i"
 		end
-		
-		params = [df_chains[idx, "params[$j]"] for j in 1:Nbins]
-		radii = MCMCUtils.perturbed_radii(stars, struct_params)
 
-		Σ = MCMCUtils.Σ_hist(radii, bins, params)
-		f = 10 .^ Σ ./ (1 .+ 10 .^ Σ)
-		fsats[:, i] .= f
+		d_xi = df_chains[Nsteps * (i-1) + 1, "d_xi"]
+		d_eta = df_chains[Nsteps * (i-1) + 1, "d_eta"]
+		ellipticity = df_chains[Nsteps * (i-1) + 1, "ellipticity"]
+		position_angle = df_chains[Nsteps * (i-1) + 1, "position_angle"]
+		radii = LilGuys.calc_R_ell(
+			stars.xi .+ d_xi,
+			stars.eta .+ d_eta,
+			ellipticity,
+			position_angle
+		)
+		sample_groups = groupby(df, [:iteration, :chain])
 
-		Ls = stars.L_CMD_SAT .* stars.L_PM_SAT
-		Lb = stars.L_CMD_BKD .* stars.L_PM_BKD
-		psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
-		psats[:, i] .= psat
+		for j in eachindex(idxs)
+			df_s = sample_groups[j]
+			idx_out = (i-1) * Nidx + j
+			idx_df = (i-1) * Nsteps + j
+			params = df_s[!, "log_Σ"]
+			@assert df_s.bin |> issorted
 
-		weights = zeros(length(psat))
-		filt = psat .> 0
-		weights[filt] = rand(Dirichlet(psat[filt]))
-		weights .*= sum(psat)
-		prof = LilGuys.StellarDensityProfile(radii, bins=log10.(bins), 
-			weights=weights, errors=:weighted)
-
-		profiles[i] = prof
+			Σ = MCMCUtils.Σ_hist(radii, bins, params)
+			f = 10 .^ Σ ./ (1 .+ 10 .^ Σ)
+			fsats[:, i] .= f
+	
+			Ls = stars.L_CMD_SAT .* stars.L_PM_SAT
+			Lb = stars.L_CMD_BKD .* stars.L_PM_BKD
+			psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
+			psats[:, idx_out] .= psat
+	
+			weights = zeros(length(psat))
+			filt = psat .> 0
+			weights[filt] = rand(Dirichlet(psat[filt]))
+			weights .*= sum(psat)
+			prof = LilGuys.StellarDensityProfile(radii, bins=log10.(bins), 
+				weights=weights, errors=:weighted)
+	
+			profiles[idx_out] = prof
+		end
 	end
 
 end
@@ -273,7 +299,7 @@ let
 		ylabel =log_Sigma_label,
 		limits = (nothing, nothing, -8, 3)
 	)
-	skip = 10
+	skip = 100
 	
 	for h in profiles[1:skip:end]
 		filt = isfinite.(h.log_Sigma)
@@ -293,7 +319,7 @@ let
 		ylabel = L"\Gamma",
 		limits = (nothing, nothing, -10, 2)
 	)
-	skip = 10
+	skip = 1000
 	
 	for h in profiles[1:skip:end]
 
@@ -316,7 +342,7 @@ if !isdir(outdir)
 end
 
 # ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
-profout = joinpath(outdir, "hist_fast_profile.toml")
+profout = joinpath(outdir, "hist_struct_profile.toml")
 
 # ╔═╡ 28b67692-45a9-435d-8862-882b0f06f947
 starsout = joinpath(outdir, "stars$FIGSUFFIX.fits")
@@ -337,9 +363,9 @@ let
 		ylabel =log_Sigma_label,
 		limits = (nothing, nothing, -8, 3)
 	)
-	skip = 10
+	skip = 100
 	
-	for i in 1:skip:Nsteps
+	for i in 1:skip:size(log_Sigmas_fast, 2)
 		y = log_Sigmas_fast[2:end-1, i]
 		x = prof_counts.log_R[2:end-1] .+ 0.01*randn(length(prof_counts.log_R) - 2)
 		
@@ -428,6 +454,8 @@ open(joinpath(outdir, "hist_fast_approx_profile.toml"), "w") do f
 end
 
 # ╔═╡ 8b05449b-6d03-40cc-b4d8-9230303c15c1
+# ╠═╡ disabled = true
+#=╠═╡
 let
 	stars_new = copy(stars)
 	stars_new[!, :PSAT] = middle.(psats_pm)
@@ -437,6 +465,7 @@ let
 
 	LilGuys.write_fits(starsout, stars_new, overwrite=true)
 end	
+  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
@@ -470,7 +499,11 @@ end
 # ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
 # ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
 # ╠═2027b636-bb17-4004-941e-b715ba8d0216
-# ╠═8abe3d92-f9e8-4e89-96ec-14eaf9482e64
+# ╠═0ce6ef33-bc26-4869-ba59-b3cf9e6f3c06
+# ╠═68049f27-8b1f-4d92-9186-06091243cf64
+# ╠═7d8ba386-6335-470a-b8c0-2f3684030e6f
+# ╠═1bf4c226-df62-4910-81e3-e1c3671ef4ce
+# ╠═152a5403-5d14-4ef0-8d30-621f9eabcd46
 # ╠═939aa449-26ea-4d2d-8773-42a73c3d0410
 # ╠═ba280361-c910-483a-9108-fd4be4906606
 # ╠═36f7e33d-0ee3-4ea3-bb0f-3cedd34da773

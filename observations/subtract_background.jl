@@ -46,7 +46,7 @@ begin
 end
 
 # ╔═╡ 7557d9c9-891a-4bce-88d6-f04e06e81738
-@bind profilename confirm(TextField(default="best_profile.toml"))
+@bind profilename confirm(TextField(default="best_eqw_profile.toml"))
 
 # ╔═╡ fe484bae-bd19-41c0-9d9d-7a6446b99039
 @bind n_bins_bg confirm(NumberField(1:1:100))
@@ -65,7 +65,10 @@ profpath = joinpath(galaxyname, "density_profiles", profilename)
 
 
 # ╔═╡ 7b07b18f-8048-4947-b72c-ffaf69306a44
-prof = LilGuys.StellarDensityProfile(profpath)
+prof_all = LilGuys.StellarDensityProfile(profpath)
+
+# ╔═╡ d0560f4f-39e5-48d1-a361-7a9f513e0fa0
+prof = LilGuys.filter_empty_bins(prof_all)
 
 # ╔═╡ 858c7c17-8e6e-47f6-aa29-30573c4a2b8a
 Nb = length(prof.log_R)
@@ -125,11 +128,18 @@ let
 		yticks = Makie.automatic,
 	)
 
+	LilGuys.plot_log_Σ!(ax, prof_all)
+
+
+	scatter!(prof.log_R[filt_bg], LilGuys.middle.(prof.log_Sigma)[filt_bg], strokecolor=COLORS[4], color=:transparent, strokewidth=1, markersize=6)
+	
+	hlines!(Sigma_bg, color=:black)
+
 	errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma), 
 		yerror=LilGuys.error_interval.(prof.log_Sigma),
-	)
+		size=2
+				 )
 
-	scatter!(prof.log_R[filt_bg], LilGuys.middle.(prof.log_Sigma)[filt_bg], color=COLORS[2])
 	fig
 end
 
@@ -197,6 +207,7 @@ end
 # ╠═898d2c8b-b761-4a69-b561-658a644f44df
 # ╠═ed0c091b-d638-428e-800e-d0aacda2b01c
 # ╠═7b07b18f-8048-4947-b72c-ffaf69306a44
+# ╠═d0560f4f-39e5-48d1-a361-7a9f513e0fa0
 # ╠═858c7c17-8e6e-47f6-aa29-30573c4a2b8a
 # ╠═c2206a3a-f41e-4b23-93ad-5ec23874d943
 # ╠═22b1035d-43f5-48e8-ac9e-5bb5a954887e

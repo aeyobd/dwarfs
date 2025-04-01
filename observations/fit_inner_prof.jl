@@ -49,6 +49,9 @@ md"""
 The only inputs are the name of the galaxy and the name of the profile to load (in galaxyname/density_profiles/) 
 """
 
+# ╔═╡ 0a070858-01c8-4cdc-bb8d-f5d587371cdb
+R_s_inner = 3
+
 # ╔═╡ bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 md"""
 # Setup
@@ -101,8 +104,8 @@ end
 
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="leo2"),
-	profilename = TextField(default="../mcmc/hist_fast_profile.toml")
+	galaxyname = TextField(default="galaxy"),
+	profilename = TextField(default="jax_eqw_profile.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -115,7 +118,7 @@ galaxyname = inputs.galaxyname
 begin
 	using LilGuys
 	FIGDIR = joinpath(galaxyname, "figures")
-	FIGSUFFIX=".fit_density_profs"
+	FIGSUFFIX=".fit_inner_prof"
 end
 
 # ╔═╡ 11b84ff0-7f35-4716-ae30-e05a1c5f88ba
@@ -145,8 +148,51 @@ begin
 	prof_in
 end
 
-# ╔═╡ 249fed2c-e86a-47ab-a7a6-06f7c1edc01a
+# ╔═╡ 2d9df1e2-1824-4f53-82dd-86afad6600ea
+prof_in
 
+# ╔═╡ 249fed2c-e86a-47ab-a7a6-06f7c1edc01a
+function find_longest_consecutive_non_nan(arr)
+    max_len = 0
+    max_start = 0
+    max_end = 0
+    current_len = 0
+    current_start = 0
+
+    for i in eachindex(arr)
+        if isfinite(arr[i])
+            if current_len == 0
+                current_start = i
+            end
+            current_len += 1
+        else
+            if current_len > max_len
+                max_len = current_len
+                max_start = current_start
+                max_end = i - 1
+            end
+            current_len = 0
+        end
+    end
+
+    # Check the last segment after loop ends
+    if current_len > max_len
+        max_len = current_len
+        max_start = current_start
+        max_end = lastindex(arr)
+    end
+
+    return max_len > 0 ? (max_start:max_end) : nothing
+end
+
+# ╔═╡ 40df79ee-9518-44e2-9920-85d2725e2b5c
+prof_in.log_Sigma[find_longest_consecutive_non_nan(prof_in.log_Sigma)]
+
+# ╔═╡ 067aa3c5-f961-4eef-a2d1-949812243f12
+
+
+# ╔═╡ 3727ae70-1fa9-4291-8cfb-af3aa47be0cf
+prof_in.log_Sigma
 
 # ╔═╡ 44a893d6-9a3d-4959-b76f-274635198aa2
 md"""
@@ -155,11 +201,7 @@ not sure the bins are ddone right but should be okay???
 
 # ╔═╡ a0cb6ecd-59ab-4a7a-b95a-d55bfdd2d93b
 begin
-	_filt_prof = LilGuys.lower_error.(prof_in.log_Sigma) .< 1
-	_filt_prof .&= LilGuys.upper_error.(prof_in.log_Sigma) .< 1
-	_filt_prof .&= isfinite.(LilGuys.lower_error.(prof_in.log_Sigma))
-	_filt_prof .&= isfinite.(LilGuys.middle.(prof_in.log_Sigma))
-	_filt_prof .&= isfinite.(prof_in.log_R)
+	_filt_prof = eachindex(prof_in.log_Sigma) .∈ [find_longest_consecutive_non_nan(prof_in.log_Sigma)]
 	_filt_bins = [false; _filt_prof] .|| [_filt_prof; false]
 
 	prof = (;
@@ -606,63 +648,6 @@ md"""
 # Fits
 """
 
-# ╔═╡ a9e5aa14-6a11-436c-97ca-7afd5fd35478
-md"""
-## Sérsic
-"""
-
-# ╔═╡ a4d8323a-c668-452b-a958-17982177cac6
-function log_Σ_sersic(log_R; log_M_s, log_R_h, n, log_Sigma_bg)
-	r = 10 .^ log_R
-	prof = LilGuys.Sersic(n=n, R_h=10 .^ log_R_h, _b_n=LilGuys.guess_b_n(n))
-	Σ = LilGuys.surface_density.(prof, r)
-	y = @. log10(Σ + 10^log_Sigma_bg)  .+ log_M_s
-
-	return y
-end
-
-# ╔═╡ 2a3adaf5-2a0d-4674-a160-a7844b7f1463
-@model function sersic_turing_model(model_log_Σ, log_R, log_Σ, log_Σ_err)
-	n ~ Gamma(1)
-	log_R_h ~ Normal(0.0, 1.0)
-	log_M_s ~ Normal(4.0, 2.0)
-	log_Sigma_bg ~ Normal(-4.0, 4.0)
-
-	log_σ ~ Normal(-1, 1)
-	
-	σ = 10 .^ log_σ
-	y_pred = model_log_Σ(log_R; log_M_s=log_M_s, log_R_h=log_R_h, n=n, log_Sigma_bg=log_Sigma_bg)
-	
-	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
-end
-
-# ╔═╡ 29ee50a7-9287-46e7-a804-1aada9cd88b8
-sersic_model = DensityModel(log_Σ_sersic, sersic_turing_model, [:n, :log_M_s, :log_R_h, :log_Sigma_bg])
-
-# ╔═╡ dd327a8e-a83d-4423-b507-54033c7934c4
-mcmc_fit_sersic = sample_model(sersic_model)
-
-# ╔═╡ efad6b83-73a5-4aea-944b-ddc1942ac71a
-plot_chains(mcmc_fit_sersic.samples)
-
-# ╔═╡ ebc0cbc2-d9f3-4cab-a3ee-6a21763f4d20
-pairplot(mcmc_fit_sersic.samples)
-
-# ╔═╡ 61b28598-11fd-4ef3-bb7b-527482815eaa
-let
-	fig = plot_samples_residuals(mcmc_fit_sersic)
-
-	@savefig "sersic_density_mcmc_fits"
-	
-	fig
-end
-
-# ╔═╡ 85731957-d441-47ad-b67b-ef1ea5b56c77
-ml_fit_sersic = fit_profile(prof, LilGuys.Sersic, ["n"], [0.5, 0.5, 1.0])
-
-# ╔═╡ 6d7a1522-e61e-4440-a2ff-64e625b15906
-plot_Σ_fit_res(prof, ml_fit_sersic, title="Sérsic", nf=3)
-
 # ╔═╡ 5a54ce11-92b3-455d-a3b3-b147618585ae
 md"""
 ## Exp2D
@@ -726,9 +711,6 @@ md"""
 ### Inner exp2d
 """
 
-# ╔═╡ 0a070858-01c8-4cdc-bb8d-f5d587371cdb
-R_s_inner = 3
-
 # ╔═╡ 19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
 log_R_max_exp = let
 	ml_fit_exp2d_iter = []
@@ -742,7 +724,7 @@ log_R_max_exp = let
 		ml_fit_exp2d_old = ml_fit_exp2d_new
 		push!(ml_fit_exp2d_iter, ml_fit_exp2d_new)
 
-		log_R_max = log10(R_s_inner) + ml_fit_exp2d_old["log_R_s"]
+		log_R_max = min(log_R_max, log10(R_s_inner) + ml_fit_exp2d_old["log_R_s"])
 
 		if log_R_max ≈ log_R_max_old rtol=1e-1
 			@info "converged by iteration $i"
@@ -794,128 +776,32 @@ let
 	fig
 end
 
-# ╔═╡ bde4f544-7b5b-4224-9ce3-090fa7fe8311
+# ╔═╡ 718c9f03-e128-4233-8875-5b1d79141e3d
 md"""
-## Plummer
+# Double exponential
 """
 
-# ╔═╡ fbd8d5b6-3d48-4525-b99d-483c946cc6a3
-function log_Σ_plummer(log_r; log_M, log_R_s)
+# ╔═╡ cfc67825-2563-48d7-b25e-3c3081dad384
+function log_Σ_double_exp2d(log_r; log_M, log_R_s, B, log_R_b)
 	r = 10 .^ log_r
-	prof = LilGuys.Plummer(
-		r_s=10 .^ log_R_s, 
+	prof = LilGuys.Exp2D(
+		R_s=10 .^ log_R_s, 
 		M = 10 .^ log_M
 	)
-	
-	Σ = LilGuys.surface_density.(prof, r)
-	y = @. log10(Σ)
 
-	return y
-end
-
-# ╔═╡ 81e50d1f-609b-46f5-b9e2-873dfeba1b45
-@model function turing_model_plummer(log_Σ_plummer, log_r, log_Σ, log_Σ_err)
-	log_R_s ~ Normal(0.0, 1.0)
-	log_M ~ Normal(4.0, 2.0)
-
-	log_σ ~ Normal(-1, 1)
-	
-	σ = 10 .^ log_σ
-	y_pred = log_Σ_plummer(log_r; log_M=log_M, log_R_s=log_R_s)
-	
-	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
-end
-
-# ╔═╡ 2b71aaa2-30a5-4c25-aa3a-3da5fdc75f10
-model_plummer = DensityModel(log_Σ_plummer, turing_model_plummer, [:log_M, :log_R_s])
-
-# ╔═╡ ad16e44b-4f56-4ff5-a85e-f619cbf0c24f
-mcmc_fit_plummer = sample_model(model_plummer)
-
-# ╔═╡ e8168f09-b8d1-42fc-93eb-16063417795c
-plot_chains(mcmc_fit_plummer.samples)
-
-# ╔═╡ 8ae13c5e-0bd0-4a37-977a-92b4730be75a
-pairplot(mcmc_fit_plummer.samples)
-
-# ╔═╡ 7d47a188-b26a-4beb-8bca-d6761bf21ee6
-ml_fit_plummer = fit_profile(prof, LilGuys.Plummer, [], [1.0, 0.0])
-
-# ╔═╡ 3407d0ad-856e-415b-948a-3592b3f6b28c
-let 
-	fig = plot_samples_residuals(mcmc_fit_plummer)
-
-	@savefig "plummer_density_mcmc_fits"
-
-	fig
-end
-
-# ╔═╡ 22b49e19-30b4-40dd-b641-6a8f477aa541
-plot_Σ_fit_res(prof, ml_fit_plummer, title="Plummer")
-
-# ╔═╡ 9be6bf5f-aa72-4f44-8a7d-42ca74e017f4
-md"""
-## King
-"""
-
-# ╔═╡ 1c1ff4cb-69b6-48a4-ab8d-df6b403ecab1
-function log_Σ_king(log_r; log_M, log_R_s, c)
-	r = 10 .^ log_r
-	prof = LilGuys.KingProfile(
-		R_s=10 .^ log_R_s, 
-		M = 10 .^ log_M, 
-		c=c
+	prof2 = LilGuys.Exp2D(
+		R_s=10 .^ log_R_b, 
+		M = 10 .^ (log_M)
 	)
 	
-	Σ = LilGuys.surface_density.(prof, r)
-	y = @. log10(Σ)
+	Σ = LilGuys.surface_density.(prof, r) .+ B .* surface_density.(prof2, r)
+	y = @. nm.log10(Σ)
 
 	return y
 end
 
-# ╔═╡ 9a8b3d0b-783c-451d-811c-e25846d840a7
-@model function turing_model_king(log_Σ_king, log_r, log_Σ, log_Σ_err)
-	log_R_s ~ Normal(0.0, 1.0)
-	log_M ~ Normal(4.0, 2.0)
-	c ~ truncated(Gamma(10), 1, Inf)
-
-	log_σ ~ Normal(-1, 1)
-	
-	σ = 10 .^ log_σ
-	y_pred = log_Σ_king(log_r; log_M=log_M, log_R_s=log_R_s, c=c)
-	
-	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
-end
-
-# ╔═╡ 4a0a40cd-f408-4969-87be-6d0eae29c09a
-model_king = DensityModel(log_Σ_king, turing_model_king, [:log_M, :log_R_s, :c])
-
-# ╔═╡ 8e95dc0d-d020-4062-8a88-908055783bef
-mcmc_fit_king = sample_model(model_king)
-
-# ╔═╡ 288e87ab-b2da-4e1a-97fc-84c9841669fa
-plot_chains(mcmc_fit_king.samples)
-
-# ╔═╡ 4b316372-11e4-42dc-b12f-e74637a35824
-
-
-# ╔═╡ 4d70a044-7954-48df-a8b2-07ac930ee0bb
-ml_fit_king = fit_profile(prof, LilGuys.KingProfile, ["c"], [2.0, 2.0, 3.0], M=1)
-
-# ╔═╡ 942a9c71-e568-4828-bfd5-6072d587bf47
-pairplot(mcmc_fit_king.samples)
-
-# ╔═╡ 6473e3e9-393b-4952-8600-a16506cd0537
-let 
-	fig = plot_samples_residuals(mcmc_fit_king)
-
-	@savefig "king_density_mcmc_fits"
-
-	fig
-end
-
-# ╔═╡ 9840c373-dbf2-4d26-85b5-15ecbbb2c657
-plot_Σ_fit_res(prof, ml_fit_king, title="King")
+# ╔═╡ 37dfb46d-e6d5-4e45-91e5-75b58c246e49
+α = LilGuys.R_h(LilGuys.Exp2D())
 
 # ╔═╡ de7eb968-6616-491e-b258-d3f8be1134e8
 md"""
@@ -924,11 +810,8 @@ md"""
 
 # ╔═╡ 6f101561-2262-4012-9e17-aae2bd873d95
 all_fits = OrderedDict(
-	"sersic" => mcmc_fit_sersic,
 	"exp2d" => mcmc_fit_exp2d,
 	"exp2d_inner" => mcmc_fit_exp2d_inner,
-	"plummer" => mcmc_fit_plummer,
-	"king" => mcmc_fit_king,
 )
 
 # ╔═╡ a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
@@ -954,8 +837,75 @@ end
 # ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
 import TOML
 
+# ╔═╡ 367580e2-6b3f-43fd-aa85-78e818375778
+obs_props = TOML.parsefile("$galaxyname/observed_properties.toml")
+
+# ╔═╡ 62f7e3e3-ae56-4aee-a059-a2a511735d04
+log_R_s_in = log10(obs_props["r_h"] / α)
+
+# ╔═╡ 4f0a4093-957d-44a9-94ba-9158910ad381
+log_R_s_err = 10 * get(obs_props, "r_h_em", get(obs_props, "r_h_err", NaN)) / obs_props["r_h"] / log(10) 
+
+# ╔═╡ dddcca98-ba5d-4b57-ac09-bed82f0d8bba
+@model function turing_model_double_exp2d(exp2d_log_Σ, log_r, log_Σ, log_Σ_err)
+	log_R_s ~ Normal(log_R_s_in, log_R_s_err)
+	log_M ~ Normal(4.0, 2.0)
+	B ~ Normal(0.0, 0.5)
+	log_R_b ~ truncated(Normal(log_R_s, 1.0), lower=log_R_s)
+
+	log_σ ~ Normal(-1, 1)
+	
+	σ = 10 .^ log_σ
+	y_pred = exp2d_log_Σ(log_r; log_M=log_M, log_R_s=log_R_s, B=B, log_R_b=log_R_b)
+	
+	log_Σ ~ MvNormal(y_pred, diagm(log_Σ_err.^2) + Eye(length(log_Σ)) * σ .^2)
+end
+
+# ╔═╡ fb2873a4-ee45-42fd-90a4-1740c0727024
+model_double_exp2d = DensityModel(log_Σ_double_exp2d, turing_model_double_exp2d, [:log_M, :log_R_s, :B, :log_R_b])
+
+# ╔═╡ e3e1d338-43f0-4b90-9a58-fbc1e2c4084b
+mcmc_fit_double_exp2d = sample_model(model_double_exp2d)
+
+# ╔═╡ f6ea9457-ad79-4818-afb4-9908779ec40a
+plot_chains(mcmc_fit_double_exp2d.samples)
+
+# ╔═╡ 6b8de2de-2eef-4dc2-b7d3-e6f775c8cd3f
+pairplot(mcmc_fit_double_exp2d.samples)
+
+# ╔═╡ 5e26aad1-ae85-4f0f-a901-8492afa32412
+LilGuys.mean(DataFrame(mcmc_fit_double_exp2d.samples).B .< 0)
+
+# ╔═╡ 70c9a2cc-dfc0-46f6-9e0d-3412f4b7e03d
+let
+	fig = plot_samples_residuals(mcmc_fit_double_exp2d)
+
+	@savefig "double_exp2d_actual"
+	fig
+end
+
+# ╔═╡ 7bea74e5-9a8d-4e25-9c7c-4ee8c68c4714
+mcmc_fit_fake_exp2d = MCMCFit(
+	 mcmc_fit_exp2d.model,
+	mcmc_fit_double_exp2d.samples,
+    mcmc_fit_double_exp2d.summary,
+    mcmc_fit_double_exp2d.χ2,
+    mcmc_fit_double_exp2d.lp,
+)
+
+# ╔═╡ a0ec6d3c-319d-488a-9e7e-c9533d51a3ea
+let
+	fig = plot_samples_residuals(mcmc_fit_fake_exp2d)
+
+	@savefig "double_exp2d"
+	fig
+end
+
+# ╔═╡ 4a102150-f6f0-4235-963e-b2c05cda39b2
+log_R_s_in, log_R_s_err
+
 # ╔═╡ 456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca
-open(joinpath(galaxyname, "density_profiles/$(profilename)_density_fits.toml"), "w") do f
+open(joinpath(galaxyname, "density_profiles/$(profilename)_inner_fits.toml"), "w") do f
 	TOML.print(f, derived_props)
 end
 
@@ -963,6 +913,8 @@ end
 # ╟─27bd8a46-ee56-11ef-22e4-afe88d73af2d
 # ╟─9d3245ef-f774-4add-9b1d-60bb69b04c8d
 # ╠═72524f04-bd5b-4f4b-a41d-8c038c180ce0
+# ╠═0a070858-01c8-4cdc-bb8d-f5d587371cdb
+# ╠═2d9df1e2-1824-4f53-82dd-86afad6600ea
 # ╠═48f59ed4-209b-45c5-857f-3c309141e8a7
 # ╟─bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 # ╠═fa54e7aa-f477-45db-8dd9-56bd6b367604
@@ -989,6 +941,9 @@ end
 # ╟─8fdc3d18-6a3a-42eb-b0cb-d5cae1cd65d9
 # ╠═20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
 # ╠═249fed2c-e86a-47ab-a7a6-06f7c1edc01a
+# ╠═40df79ee-9518-44e2-9920-85d2725e2b5c
+# ╠═067aa3c5-f961-4eef-a2d1-949812243f12
+# ╠═3727ae70-1fa9-4291-8cfb-af3aa47be0cf
 # ╠═44a893d6-9a3d-4959-b76f-274635198aa2
 # ╠═a0cb6ecd-59ab-4a7a-b95a-d55bfdd2d93b
 # ╠═995a9a15-38d0-47c3-ba12-58ba8209497c
@@ -1017,16 +972,6 @@ end
 # ╠═e31c35b1-9b37-4c95-8344-6177b685d5ab
 # ╠═7779ec2e-1053-47e9-8d51-897d5063bb85
 # ╟─7115482e-0cc9-40ef-b63e-0ebad62bb949
-# ╟─a9e5aa14-6a11-436c-97ca-7afd5fd35478
-# ╠═a4d8323a-c668-452b-a958-17982177cac6
-# ╠═2a3adaf5-2a0d-4674-a160-a7844b7f1463
-# ╠═29ee50a7-9287-46e7-a804-1aada9cd88b8
-# ╠═dd327a8e-a83d-4423-b507-54033c7934c4
-# ╠═efad6b83-73a5-4aea-944b-ddc1942ac71a
-# ╠═ebc0cbc2-d9f3-4cab-a3ee-6a21763f4d20
-# ╠═61b28598-11fd-4ef3-bb7b-527482815eaa
-# ╠═85731957-d441-47ad-b67b-ef1ea5b56c77
-# ╠═6d7a1522-e61e-4440-a2ff-64e625b15906
 # ╟─5a54ce11-92b3-455d-a3b3-b147618585ae
 # ╠═cdc4390f-1efb-4550-b325-5c743890a5c6
 # ╠═7f367da6-4b49-4e74-9a93-d9fdf517b2bd
@@ -1038,34 +983,28 @@ end
 # ╠═415397c4-f4b0-4e21-9df4-cf8faf761648
 # ╠═76326a80-b709-4f96-a379-8aaea4d3af44
 # ╠═c2301858-2be3-4945-bef2-4525cd123030
-# ╠═0a070858-01c8-4cdc-bb8d-f5d587371cdb
 # ╠═19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
 # ╠═6922839a-1b5d-4a5c-8f68-50cd57d986a8
 # ╠═bdf90521-e8f3-40e5-a61f-ab8503cce9fe
 # ╠═8e81babf-1963-4187-a8c5-0b1e1a325ab3
 # ╠═6518f711-4912-421f-b169-7b7d4fb365e5
 # ╠═44500a4e-9be6-486b-94e7-364b1c64749a
-# ╟─bde4f544-7b5b-4224-9ce3-090fa7fe8311
-# ╠═fbd8d5b6-3d48-4525-b99d-483c946cc6a3
-# ╠═81e50d1f-609b-46f5-b9e2-873dfeba1b45
-# ╠═2b71aaa2-30a5-4c25-aa3a-3da5fdc75f10
-# ╠═ad16e44b-4f56-4ff5-a85e-f619cbf0c24f
-# ╠═e8168f09-b8d1-42fc-93eb-16063417795c
-# ╠═8ae13c5e-0bd0-4a37-977a-92b4730be75a
-# ╠═7d47a188-b26a-4beb-8bca-d6761bf21ee6
-# ╠═3407d0ad-856e-415b-948a-3592b3f6b28c
-# ╠═22b49e19-30b4-40dd-b641-6a8f477aa541
-# ╟─9be6bf5f-aa72-4f44-8a7d-42ca74e017f4
-# ╠═1c1ff4cb-69b6-48a4-ab8d-df6b403ecab1
-# ╠═9a8b3d0b-783c-451d-811c-e25846d840a7
-# ╠═4a0a40cd-f408-4969-87be-6d0eae29c09a
-# ╠═8e95dc0d-d020-4062-8a88-908055783bef
-# ╠═288e87ab-b2da-4e1a-97fc-84c9841669fa
-# ╠═4b316372-11e4-42dc-b12f-e74637a35824
-# ╠═4d70a044-7954-48df-a8b2-07ac930ee0bb
-# ╠═942a9c71-e568-4828-bfd5-6072d587bf47
-# ╠═6473e3e9-393b-4952-8600-a16506cd0537
-# ╠═9840c373-dbf2-4d26-85b5-15ecbbb2c657
+# ╠═718c9f03-e128-4233-8875-5b1d79141e3d
+# ╠═cfc67825-2563-48d7-b25e-3c3081dad384
+# ╠═37dfb46d-e6d5-4e45-91e5-75b58c246e49
+# ╠═62f7e3e3-ae56-4aee-a059-a2a511735d04
+# ╠═4f0a4093-957d-44a9-94ba-9158910ad381
+# ╠═dddcca98-ba5d-4b57-ac09-bed82f0d8bba
+# ╠═fb2873a4-ee45-42fd-90a4-1740c0727024
+# ╠═e3e1d338-43f0-4b90-9a58-fbc1e2c4084b
+# ╠═f6ea9457-ad79-4818-afb4-9908779ec40a
+# ╠═4a102150-f6f0-4235-963e-b2c05cda39b2
+# ╠═6b8de2de-2eef-4dc2-b7d3-e6f775c8cd3f
+# ╠═5e26aad1-ae85-4f0f-a901-8492afa32412
+# ╠═367580e2-6b3f-43fd-aa85-78e818375778
+# ╠═70c9a2cc-dfc0-46f6-9e0d-3412f4b7e03d
+# ╠═a0ec6d3c-319d-488a-9e7e-c9533d51a3ea
+# ╠═7bea74e5-9a8d-4e25-9c7c-4ee8c68c4714
 # ╟─de7eb968-6616-491e-b258-d3f8be1134e8
 # ╠═6f101561-2262-4012-9e17-aae2bd873d95
 # ╠═a406d50a-468e-4b8a-ac0d-2bc4ea8e4251

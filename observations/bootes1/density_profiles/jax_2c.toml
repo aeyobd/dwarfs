@@ -1,5 +1,2 @@
 filename = "../data/j24_2c.fits"
-jax_filt = true
-
-[profile_kwargs]
-normalization = "mass"
+PSAT_min = 0.2
