@@ -29,7 +29,7 @@ import TOML
 α = LilGuys.R_h(LilGuys.Exp2D(R_s=1))
 
 # ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
-function load_profile(galaxyname; algname="jax")
+function load_profile(galaxyname; algname="../mcmc/hist_fast")
 	# if galaxyname ∈ ["crater2", "antlia2"]
 	# 	algname = "mcmc_hist_fast"
 	# else
@@ -39,9 +39,9 @@ function load_profile(galaxyname; algname="jax")
 	# 	"processed/profile.$(algname).toml")
 	@info galaxyname
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
-		"density_profiles/$(algname)_eqw_profile.toml")
+		"density_profiles/$(algname)_profile.toml")
 	
-    prof = LilGuys.StellarDensityProfile(filename) |> LilGuys.filter_empty_bins
+    prof = LilGuys.StellarDensityProfile(filename) 
 
 
 	density_fit = TOML.parsefile(filename * "_inner_fits.toml")
@@ -100,7 +100,7 @@ let
 	ax = Axis(fig[1,1], 
 		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
 				xticks = -2:1:1,
-		limits=(-1, nothing, -4.2, 1.1)
+		limits=(nothing, nothing, -3.1, 1)
 
 	)
 
@@ -130,7 +130,7 @@ let
 		ylabel = L"\delta \log\,\Sigma",
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
-		limits=(-1, 1.0, -1.2, 1.2)
+		limits=(-1.4, 1, -1, 1)
 	)
 
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
@@ -156,7 +156,7 @@ let
 	rowsize!(fig.layout, 2, Relative(1/4))
 	hidexdecorations!(ax, ticks=false, minorticks=false)
 
-	@savefig "classical_dwarf_profiles"
+	#@savefig "classical_dwarf_profiles"
 	fig
 end
 

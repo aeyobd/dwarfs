@@ -92,6 +92,9 @@ rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/proc
 # ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
 LilGuys.mean(isfinite.(rv_members.RV_t23))
 
+# ╔═╡ 90ec91b3-02a8-41d7-a5a1-76cf6e84fd00
+548.5 / 72.27
+
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
 # Utilities
@@ -134,7 +137,7 @@ Arya.update_fontsize!(12)
 # ╔═╡ 77b7678f-158f-46cb-82b1-2e719ec6895a
 function compare_samples(datasets, scatter_kwargs) 
 	fig = Figure(
-		size = (5.39*72, 1.5*5.39*72),
+		size = (4*72, 6*72),
 	)
 
 	# tangent
@@ -194,7 +197,7 @@ function compare_samples(datasets, scatter_kwargs)
 
 	rowsize!(fig.layout, 1, Aspect(1, 1))
 
-	resize_to_layout!(fig)
+	#resize_to_layout!(fig)
 	fig
 end
 
@@ -226,34 +229,84 @@ end
 	),
 	Dict(
 		:best => (;	alpha=0.1, markersize=1, color=:black, 
-			label="all" => (alpha=1, markersize=3),
+			label="all" => (alpha=1, markersize=2),
 			rasterize=10,
 		),
 		:members_nospace => (;
 			alpha=1, markersize=1,
-			label = "CMD + PM" =>(alpha=1, markersize=3),
+			label = "CMD + PM" =>(alpha=1, markersize=2),
 			color=COLORS[1]
 		),
 		:members => (;
-			markersize=1,
-			label = "probable members" =>(alpha=1, markersize=3),
-			color=:transparent,
-			strokewidth=0.3,
-			strokecolor = COLORS[2],
-			alpha=0.3,
+			markersize=1.5,
+			label = "probable members" =>(alpha=1, markersize=1.5*2),
+			#color=:transparent,
+			#strokewidth=0.3,
+			color = COLORS[2],
+			alpha=1,
 		),
 		:rv => (;
 			markersize=2,
-			marker=:xcross,
-			label = "RV members" =>(alpha=1, markersize=3),
+			#marker=:xcross,
+			label = "RV members" =>(alpha=1, markersize=2*2),
 			color = COLORS[4],
-			strokewidth=0
+			#strokewidth=0
 		),
 	)
 )
 
+# ╔═╡ bbe2f4a2-69cc-4d88-b717-f5bbc4cd0465
+@savefig "scl_psat_selection" compare_samples(
+		(
+		:best => best_stars,
+		:members => members,
+		:members_strict => best_stars[best_stars.PSAT .> 0.5, :],
+		:members_strictest => best_stars[best_stars.PSAT .> 0.99, :],
+	),
+	Dict(
+		:best => (;	alpha=0.1, markersize=1, color=:black, 
+			label="all" => (alpha=1, markersize=2),
+			rasterize=10,
+		),
+		:members => (;
+			markersize=1,
+			label = "probable members" =>(alpha=1, markersize=1.5*2),
+			#color=:transparent,
+			#strokewidth=0.3,
+			color = COLORS[1],
+			alpha=1,
+		),
+		:members_strict => (;
+			markersize=1,
+			#marker=:xcross,
+			label = "strict members" =>(alpha=1, markersize=2*2),
+			color = COLORS[2],
+			#strokewidth=0
+		),
+		:members_strictest => (;
+			markersize=1,
+			#marker=:xcross,
+			label = "strictest members" =>(alpha=1, markersize=2*2),
+			color = COLORS[4],
+			#strokewidth=0
+		),
+	)
+)
+
+# ╔═╡ 5feb4f16-3128-4ad4-a2b2-c07b4286d5d1
+hist(best_stars.PSAT; axis=(yscale=log10, xlabel="PSAT", ylabel="count", yticks=Makie.automatic), bins=40)
+
 # ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
 rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
+
+# ╔═╡ 9a62b3e5-96f1-438b-8fdf-f8427efd145b
+sum(best_stars.PSAT .> 0.95)
+
+# ╔═╡ 34758293-664e-4126-a172-32456e9c9d1c
+sum(0.05 .< best_stars.PSAT .< 0.95)
+
+# ╔═╡ d5a037a8-e024-4d44-93bb-1cb7265ea2b1
+sum(best_stars.PSAT .< 0.01)
 
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
@@ -279,6 +332,7 @@ rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
 # ╠═13f558a3-a42e-4384-ac6e-2a036f6e634f
+# ╠═90ec91b3-02a8-41d7-a5a1-76cf6e84fd00
 # ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
 # ╠═965217b8-b2a5-485b-83de-cac887065b19
 # ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
@@ -291,4 +345,9 @@ rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═430fae9d-c708-4447-80ce-aabf19b161d2
 # ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
+# ╠═bbe2f4a2-69cc-4d88-b717-f5bbc4cd0465
+# ╠═5feb4f16-3128-4ad4-a2b2-c07b4286d5d1
 # ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
+# ╠═9a62b3e5-96f1-438b-8fdf-f8427efd145b
+# ╠═34758293-664e-4126-a172-32456e9c9d1c
+# ╠═d5a037a8-e024-4d44-93bb-1cb7265ea2b1

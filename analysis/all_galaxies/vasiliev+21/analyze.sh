@@ -1,6 +1,9 @@
 #!/bin/bash
 
 simdir="$DWARFS_ROOT/simulations/all_galaxies/vasiliev+21"
+rm simulation
+rm combined.hdf5
+
 ln -s $simdir simulation
 
 combine_outputs.py simulation/out

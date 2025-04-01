@@ -64,8 +64,8 @@ begin
 	add_profile!(profiles, "jax_profile.toml", label="1c")
 	add_profile!(profiles, "jax_LLR_0_sub_profile.toml", label="LL")
 	add_profile!(profiles, "simple_sub_profile.toml", label="simple")
-	add_profile!(profiles, "../mcmc/hist_fast_profile.toml", label="hist")
 	add_profile!(profiles, "../mcmc/hist_struct_profile.toml", label="hist struct")
+	add_profile!(profiles, "../mcmc/hist_fast_profile.toml", label="hist")
 
 	# add_profile!(profiles, "jax_LL_0_profile.toml", label="LLR cut")
 	# add_profile!(profiles, "jax_circ_profile.toml", label="2exp circ.")
@@ -97,7 +97,7 @@ let
 	)
 
 	for (key, prof) in profiles
-		LilGuys.plot_log_Σ!(ax, prof, label=key)
+		LilGuys.plot_log_Σ!(ax, prof, label=key, size=2)
 	end
 
 	axislegend(position=:lb)

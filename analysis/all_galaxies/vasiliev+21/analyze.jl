@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -40,6 +40,9 @@ I have three different models
 
 """
 
+# ╔═╡ 75a0e369-4a4a-48a0-8504-5a9744dc292a
+CairoMakie.activate!(type=:png)
+
 # ╔═╡ 17bc4283-3673-4ba6-8d8a-b4928d2745fe
 md"""
 ## Data Loading
@@ -48,8 +51,14 @@ md"""
 # ╔═╡ 33b80e4c-09d8-414e-9464-c3fe891e7081
 out = Output(".")
 
+# ╔═╡ 07d0d7db-98fd-44d4-8e44-5a498292a467
+
+
 # ╔═╡ 987eceae-b2ff-4b0f-af5c-36f4a6b88a7d
 out_nbody = Output("../vasiliev+21_nbody")
+
+# ╔═╡ cb5066cd-cd18-4e1a-a54a-882f1ce26321
+out_ep20 = Output("../EP2020")
 
 # ╔═╡ 805a81e4-d76c-4306-891e-9d6cc105cb25
 out_nolmc = Output("../vasiliev+21_nolmc")
@@ -63,6 +72,9 @@ end
 
 # ╔═╡ 065439a0-2e10-463f-9a84-7a5ac1595ab0
 positions = LilGuys.extract_vector(out, :positions) |> split_dim
+
+# ╔═╡ 70e32c80-e4cf-4f11-a236-70e9502019c5
+positions_ep20 = LilGuys.extract_vector(out_ep20, :positions) |> split_dim
 
 # ╔═╡ 6f22e772-0996-417d-b477-d475caef1ba6
 positions_nbody = LilGuys.extract_vector(out_nbody, :positions) |> split_dim
@@ -129,7 +141,7 @@ LilGuys.plot_xyz(positions_nbody..., limits=tuple(fill((-r_max, r_max), 3)...))
 LilGuys.plot_xyz(positions_nolmc..., limits=tuple(fill((-r_max, r_max), 3)...))
 
 # ╔═╡ bc657b37-ef38-4d02-99f8-e79df5afa1fa
-r_nbody = [calc_r(pos, pos1) for (pos, pos1) in zip(positions, positions_nbody)]
+r_nbody = [LilGuys.radii(pos, pos1) for (pos, pos1) in zip(positions, positions_nbody)]
 
 # ╔═╡ 135a45a1-ab83-4916-bc39-478328627ba2
 idx_worst = sortperm([r[end] for r in r_nbody], rev=true)
@@ -158,7 +170,7 @@ let
 end
 
 # ╔═╡ 4e6ac68a-55f1-4d67-966f-d90664e4c5e9
-r_diff_lmc= [calc_r(pos, pos1) for (pos, pos1) in zip(positions, positions_nolmc)]
+r_diff_lmc= [radii(pos, pos1) for (pos, pos1) in zip(positions, positions_nolmc)]
 
 # ╔═╡ 7a9d0ea8-f09b-4e95-a826-90752467b832
 idx_worst_lmc = sortperm([r[end] for r in r_diff_lmc], rev=true)
@@ -210,6 +222,7 @@ function extract_galaxy(name)
 		galaxy = name,
 		positions = positions[i],
 		pos_nolmc = positions_nolmc[i],
+		pos_ep20 = positions_ep20[i],
 		pos_lmc = positions[i] .- pos_lmc,
 		positions_nbody = positions_nbody[i],
 		velocities = velocities[i],
@@ -218,16 +231,16 @@ function extract_galaxy(name)
 end
 
 # ╔═╡ 4698ceae-a636-45b3-a271-cc476309d4b6
-
+radii
 
 # ╔═╡ 2bbefc84-e251-4c53-97ce-e354c44c9b54
 function plot_radii(gal_orbits)
 
-	r_mw = calc_r(gal_orbits.positions)
-	r_nbody = calc_r(gal_orbits.positions_nbody)
-	r_lmc = calc_r(gal_orbits.pos_lmc)
-	r_nolmc = calc_r(gal_orbits.pos_nolmc)
-	r_lmc_nbody = calc_r(gal_orbits.positions_nbody, pos_lmc)
+	r_mw = radii(gal_orbits.positions)
+	r_nbody = radii(gal_orbits.positions_nbody)
+	r_lmc = radii(gal_orbits.pos_lmc)
+	r_nolmc = radii(gal_orbits.pos_nolmc)
+	r_lmc_nbody = radii(gal_orbits.positions_nbody, pos_lmc)
 
 	fig = Figure(
 	)
@@ -355,7 +368,7 @@ scl = extract_galaxy("sculptor")
 smc = extract_galaxy("smc")
 
 # ╔═╡ 458ada32-0ca3-4bac-848e-a79daa2871f3
-r_scl = [minimum(calc_r(pos, scl.positions_nbody)) for pos in positions_nbody]
+r_scl = [minimum(radii(pos, scl.positions_nbody)) for pos in positions_nbody]
 
 # ╔═╡ 6b72ea04-fdba-4230-9202-efeb7b4f1f32
 sort_scl = sortperm(r_scl)
@@ -371,14 +384,14 @@ Which satellites become the closest to Sculptor?
 # ╔═╡ 9f4c8ba4-c9bc-4497-af8a-f8e8d37b0ebd
 let
 	fig = Figure(
-		size=(800, 400)
+		size=(400, 300)
 	)
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "distance from Scl")
 
 	for i in 2:10 # skip sculptor
 		gal = extract_galaxy(galaxies[sort_scl][i])
 		@info "galaxy $(gal.galaxy), mass $(gal.mass)"
-		r = calc_r(scl.positions_nbody, gal.positions_nbody)
+		r = radii(scl.positions_nbody, gal.positions_nbody)
 
 		lines!(-T2GYR * times, log10.(r), label = gal.galaxy)
 	end
@@ -398,6 +411,9 @@ filt_scl_peri = 20:40
 # ╔═╡ a42e1019-ce0d-4c9e-a765-a72e4faaee1d
 LilGuys.plot_xyz(scl.pos_lmc[:, filt_scl_peri], smc.pos_lmc[:, filt_scl_peri], labels=["Scl", "SMC"])
 
+# ╔═╡ f21009ee-1385-4592-8b27-900d7dd9a07d
+LilGuys.plot_xyz(scl.pos_ep20)
+
 # ╔═╡ 2f695966-ebdb-4d32-b2df-b3b68fc3d2af
 LilGuys.plot_xyz(scl.positions .- smc.positions, scl.positions .- pos_lmc, labels=["Scl", "SMC"])
 
@@ -411,7 +427,7 @@ LilGuys.plot_xyz(scl.positions[:, filt_scl_peri], pos_lmc[:, filt_scl_peri], smc
 LilGuys.plot_xyz(scl.pos_lmc[:, 20:40] .- smc.pos_lmc[:, 20:40])
 
 # ╔═╡ c99520f6-42d7-4b9f-8041-60bb1abecb81
-r_scl_smc = calc_r(scl.positions .- smc.positions)
+r_scl_smc = radii(scl.positions .- smc.positions)
 
 # ╔═╡ 086237e5-9e88-4647-8804-0aac36291a04
 times[20:30] * T2GYR
@@ -428,10 +444,10 @@ let
 
 	t = -times * T2GYR
 
-	lines!(t, calc_r(scl.positions .- pos_lmc), label="LMC")
+	lines!(t, radii(scl.positions .- pos_lmc), label="LMC")
 	lines!(t, r_scl_smc, label="SMC")
-	lines!(t, calc_r(scl.positions_nbody .- smc.positions_nbody), linestyle=:dot, label="SMC + nbody")
-	lines!(t, calc_r(scl.positions_nbody .- pos_lmc), linestyle=:dot, label="LMC + nbody")
+	lines!(t, radii(scl.positions_nbody .- smc.positions_nbody), linestyle=:dot, label="SMC + nbody")
+	lines!(t, radii(scl.positions_nbody .- pos_lmc), linestyle=:dot, label="LMC + nbody")
 
 	axislegend()
 	fig
@@ -461,7 +477,7 @@ md"""
 boo1 = extract_galaxy("bootes1")
 
 # ╔═╡ 364ff46e-1a0c-41f3-a38d-a0a08b424511
-r_boo1 = [minimum(calc_r(pos, boo1.positions_nbody)) for pos in positions_nbody]
+r_boo1 = [minimum(radii(pos, boo1.positions_nbody)) for pos in positions_nbody]
 
 # ╔═╡ a205beda-024b-4a5d-8b10-47ec03520b9e
 sort_boo1 = sortperm(r_boo1)
@@ -475,7 +491,7 @@ let
 	for i in 2:10 # skip sculptor
 		gal = extract_galaxy(galaxies[sort_boo1][i])
 		@info "galaxy $(gal.galaxy), mass $(gal.mass)"
-		r = calc_r(boo1.positions_nbody, gal.positions_nbody)
+		r = radii(boo1.positions_nbody, gal.positions_nbody)
 
 		lines!(-T2GYR * times, log10.(r), label = "$(gal.galaxy), $(gal.mass)")
 	end
@@ -489,7 +505,7 @@ end
 boo3 = extract_galaxy("bootes3")
 
 # ╔═╡ 156f8f25-edce-4334-95b7-1b12c7b282b7
-r_boo3 = [minimum(calc_r(pos, boo3.positions_nbody)) for pos in positions_nbody]
+r_boo3 = [minimum(radii(pos, boo3.positions_nbody)) for pos in positions_nbody]
 
 # ╔═╡ 5bc24806-3f5c-4fb2-8f20-6cbcc5ac4d25
 sort_boo3 = sortperm(r_boo3)
@@ -503,9 +519,9 @@ let
 	for i in 2:10 # skip sculptor
 		gal = extract_galaxy(galaxies[sort_boo3][i])
 		@info "galaxy $(gal.galaxy), mass $(gal.mass)"
-		r = calc_r(boo3.positions_nbody, gal.positions_nbody)
+		r = radii(boo3.positions_nbody, gal.positions_nbody)
 
-		lines!(-T2GYR * times, log10.(r), label = "$(gal.galaxy), $(gal.mass)")
+		lines!(-T2GYR * times, log10.(r), label = "$(gal.galaxy), $(round(gal.mass, digits=2))")
 	end
 
 	Legend(fig[1,2], ax)
@@ -527,21 +543,31 @@ let
 	perilmc = Float64[]
 	apolmc = Float64[]
 
+	peris_ep = Float64[]
+	apos_ep = Float64[]
+
 	for gal in galaxies
 		orbit = extract_galaxy(gal)
-		peri, apo = extrema(calc_r(orbit.positions))
+		peri, apo = extrema(radii(orbit.positions))
 		push!(peris, peri)
 		push!(apos, apo)
 
-		peri, apo = extrema(calc_r(orbit.positions, pos_lmc))
+		peri, apo = extrema(radii(orbit.pos_ep20))
+		push!(peris_ep, peri)
+		push!(apos_ep, apo)
+		
+		peri, apo = extrema(radii(orbit.positions, pos_lmc))
 		push!(perilmc, peri)
 		push!(apolmc, apo)
 	end
 
-	new_properties[!, :peri] = peris
-	new_properties[!, :apos] = apos
-	new_properties[!, :perilmc] = perilmc
-	new_properties[!, :apolmc] = apolmc
+	new_properties[!, :peri] = peris_ep
+	new_properties[!, :apos] = apos_ep
+	new_properties[!, :peri_v21] = perilmc
+	new_properties[!, :apo_v21] = apolmc
+
+	new_properties[!, :perilmc_v21] = perilmc
+	new_properties[!, :apolmc_v21] = apolmc
 	
 	new_properties
 end
@@ -555,12 +581,16 @@ CSV.write("properties_w_orbits.csv", new_properties)
 # ╟─dc02d2bc-edc2-48ae-ae80-f743d3815c94
 # ╠═bb4f68d6-a3ad-11ef-3e0b-53acf2fe8870
 # ╠═b0c7516c-c5ec-4e29-a5ff-ecedccc0f50d
+# ╠═75a0e369-4a4a-48a0-8504-5a9744dc292a
 # ╟─17bc4283-3673-4ba6-8d8a-b4928d2745fe
 # ╠═33b80e4c-09d8-414e-9464-c3fe891e7081
+# ╠═07d0d7db-98fd-44d4-8e44-5a498292a467
 # ╠═987eceae-b2ff-4b0f-af5c-36f4a6b88a7d
+# ╠═cb5066cd-cd18-4e1a-a54a-882f1ce26321
 # ╠═805a81e4-d76c-4306-891e-9d6cc105cb25
 # ╠═1a05f83d-da8f-46f5-9c0d-2b2cf7f7e203
 # ╠═065439a0-2e10-463f-9a84-7a5ac1595ab0
+# ╠═70e32c80-e4cf-4f11-a236-70e9502019c5
 # ╠═6f22e772-0996-417d-b477-d475caef1ba6
 # ╠═c5c269fe-1c5d-45ee-9e3b-ae674bc3721c
 # ╠═1eec667a-edb6-4aa1-873a-8852a5e0a823
@@ -630,6 +660,7 @@ CSV.write("properties_w_orbits.csv", new_properties)
 # ╠═125009ef-4f3c-4869-a892-306091769a1f
 # ╠═b2da19e3-e570-40e6-90fe-21c1afaae45a
 # ╠═a42e1019-ce0d-4c9e-a765-a72e4faaee1d
+# ╠═f21009ee-1385-4592-8b27-900d7dd9a07d
 # ╠═2f695966-ebdb-4d32-b2df-b3b68fc3d2af
 # ╠═91635892-504e-4337-a9c9-d56466c9f10c
 # ╠═ed6a1c88-32ef-4932-b1ef-f026e8cc8ae2

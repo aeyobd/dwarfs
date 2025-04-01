@@ -16,8 +16,8 @@ function sample()
 
     # transform to phase space coordinates
     mc_phase = [lguys.transform(lguys.Galactocentric, o) for o in obs]
-    pos = hcat([lguys.position_of(p) for p in mc_phase]...)
-    vel = hcat([lguys.velocity_of(p) for p in mc_phase]...)
+    pos = hcat([lguys.position(p) for p in mc_phase]...)
+    vel = hcat([lguys.velocity(p) for p in mc_phase]...)
 
     pos ./= lguys.R2KPC
     vel ./= lguys.V2KMS
@@ -26,8 +26,8 @@ function sample()
     vcircmax = lguys.vel_from_M_s_fattahi.(Mstar)
     rcircmax = lguys.Ludlow.solve_rmax.(vcircmax)
     halos = [lguys.TruncNFW(v_circ_max=v, r_circ_max=r, trunc=10) for (v, r) in zip(vcircmax, rcircmax)]
-    Ms = [lguys.calc_M(halo, 10) for halo in halos]
-    println(Ms)
+    Ms = [lguys.mass(halo, 10) for halo in halos]
+    println("Masses = ", Ms)
 
     snap = lguys.Snapshot(pos, vel, Ms, index=index)
 
@@ -37,5 +37,5 @@ end
 
 function (@main)(ARGS)
     snap = sample()
-    lguys.save("initial.hdf5", snap)
+    lguys.write("initial.hdf5", snap)
 end

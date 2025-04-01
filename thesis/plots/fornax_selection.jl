@@ -30,7 +30,7 @@ end
 # ╔═╡ 69c98029-165c-407b-9a63-a27e06e30e45
 include("paper_style.jl")
 
-# ╔═╡ 9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
+# ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
 include("utils.jl")
 
 # ╔═╡ d3bd7158-ea70-47a0-9800-9bfc08f3557c
@@ -46,13 +46,13 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 """
 
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
-galaxyname = "ursa_minor"
+galaxyname = "fornax"
 
 # ╔═╡ 0004f638-c57a-4dab-8b97-c77840cafbbf
 import TOML
 
 # ╔═╡ cf7aeb0a-d453-462a-b43d-a832567440fd
-diverging_cmap = Reverse(:bluesreds)
+
 
 # ╔═╡ 2eb4aa78-0fea-460b-a18e-06a129c41504
 md"""
@@ -66,7 +66,7 @@ obs_dir = ENV["DWARFS_ROOT"] * "/observations/"
 observed_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/" * galaxyname * "/observed_properties.toml")
 
 # ╔═╡ 26cf1867-02be-4d36-8c35-6c58a1feca27
-datafile = obs_dir * "/$galaxyname/data/jensen+24_2c.fits"
+datafile = obs_dir * "/$galaxyname/data/jensen+24_1c.fits"
 
 # ╔═╡ 90cec348-1947-4091-a5dd-ae67cf80fddb
 filt_params = GaiaFilterParams(observed_properties, filename=datafile)
@@ -85,9 +85,6 @@ Nmemb = size(members, 1)
 
 # ╔═╡ 60d0e593-88fd-4b4c-9009-cc24a597c6d5
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
-
-# ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/rv_members.fits")
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -148,6 +145,7 @@ function compare_samples(datasets, scatter_kwargs)
 	for (label, df) in datasets
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
 	end
+
 	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
 	text!(4observed_properties["r_h"], 0, text=L"3r_h", color=:black)
 
@@ -195,12 +193,12 @@ function compare_samples(datasets, scatter_kwargs)
 end
 
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "umi_selection" compare_samples(
+@savefig "fornax_selection" compare_samples(
 		(
 		:best => best_stars,
 		:members_nospace => members_nospace,
 		:members => members,
-		:rv => rv_members,
+		#:rv => rv_members,
 	),
 	Dict(
 		:best => (;	alpha=0.1, markersize=1, color=:black, 
@@ -213,7 +211,7 @@ end
 			color=COLORS[1]
 		),
 		:members => (;
-			markersize=1.5,
+			markersize=1,
 			label = "probable members" =>(alpha=1, markersize=3),
 			#color=:transparent,
 			#strokewidth=0.3,
@@ -223,9 +221,9 @@ end
 		:rv => (;
 			markersize=2,
 			#marker=:xcross,
-			label = "RV members" =>(alpha=1, markersize=5),
+			label = "RV members" =>(alpha=1, markersize=4),
 			color = COLORS[4],
-			strokewidth=0
+			#strokewidth=0
 		),
 	)
 )
@@ -236,7 +234,7 @@ end
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
-# ╠═9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
+# ╠═a4848423-9be3-48d7-98c2-8d1096eb2560
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
@@ -252,7 +250,6 @@ end
 # ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
-# ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
 # ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
 # ╠═965217b8-b2a5-485b-83de-cac887065b19
 # ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
