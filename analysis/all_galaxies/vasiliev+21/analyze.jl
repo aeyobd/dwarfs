@@ -51,9 +51,6 @@ md"""
 # ╔═╡ 33b80e4c-09d8-414e-9464-c3fe891e7081
 out = Output(".")
 
-# ╔═╡ 07d0d7db-98fd-44d4-8e44-5a498292a467
-
-
 # ╔═╡ 987eceae-b2ff-4b0f-af5c-36f4a6b88a7d
 out_nbody = Output("../vasiliev+21_nbody")
 
@@ -62,6 +59,14 @@ out_ep20 = Output("../EP2020")
 
 # ╔═╡ 805a81e4-d76c-4306-891e-9d6cc105cb25
 out_nolmc = Output("../vasiliev+21_nolmc")
+
+# ╔═╡ 326a759d-11e0-4311-a575-ca8a96d3e058
+md"""
+## Analysis
+"""
+
+# ╔═╡ 015c5e87-b5f6-4766-a8ff-bd26dd5f6046
+peris_ep20 = LilGuys.peris_apos(out_ep20)
 
 # ╔═╡ 1a05f83d-da8f-46f5-9c0d-2b2cf7f7e203
 function split_dim(M; dim=2)
@@ -117,6 +122,9 @@ obs_props[obs_props.galaxyname .== "sculptor", :]
 
 # ╔═╡ 744f3812-1548-4f79-b704-fb037157f0a0
 galaxies = obs_props.galaxyname
+
+# ╔═╡ 929d138d-3336-453c-95c0-0d8a9196f725
+peris_ep20[galaxies .== ["sculptor"], :].t_last_peri * T2GYR
 
 # ╔═╡ 6bd28b7c-d170-4914-b662-989a33a7a361
 md"""
@@ -314,9 +322,6 @@ plot_orbit("draco2")
 
 # ╔═╡ c5c6c637-dbe1-4fe4-aabe-4785a19e8c45
 plot_orbit("bootes1")
-
-# ╔═╡ c0ca9bc3-1e05-4831-be92-b582170b314f
-
 
 # ╔═╡ 7ca7ff6e-1300-4846-9a3a-9eda31e0c452
 plot_orbit("bootes3")
@@ -546,7 +551,7 @@ let
 	peris_ep = Float64[]
 	apos_ep = Float64[]
 
-	for gal in galaxies
+	for (i, gal) in enumerate(galaxies)
 		orbit = extract_galaxy(gal)
 		peri, apo = extrema(radii(orbit.positions))
 		push!(peris, peri)
@@ -555,14 +560,19 @@ let
 		peri, apo = extrema(radii(orbit.pos_ep20))
 		push!(peris_ep, peri)
 		push!(apos_ep, apo)
+
+		@info (peri, peris_ep20.pericentre[i])
 		
 		peri, apo = extrema(radii(orbit.positions, pos_lmc))
 		push!(perilmc, peri)
 		push!(apolmc, apo)
+
 	end
 
-	new_properties[!, :peri] = peris_ep
-	new_properties[!, :apos] = apos_ep
+	new_properties[!, :peri] = peris_ep20.pericentre
+	new_properties[!, :t_last_peri] = peris_ep20.t_last_peri
+	new_properties[!, :t_last_apo] = peris_ep20.t_last_apo
+	new_properties[!, :apos] = peris_ep20.apocentre
 	new_properties[!, :peri_v21] = perilmc
 	new_properties[!, :apo_v21] = apolmc
 
@@ -584,10 +594,12 @@ CSV.write("properties_w_orbits.csv", new_properties)
 # ╠═75a0e369-4a4a-48a0-8504-5a9744dc292a
 # ╟─17bc4283-3673-4ba6-8d8a-b4928d2745fe
 # ╠═33b80e4c-09d8-414e-9464-c3fe891e7081
-# ╠═07d0d7db-98fd-44d4-8e44-5a498292a467
 # ╠═987eceae-b2ff-4b0f-af5c-36f4a6b88a7d
 # ╠═cb5066cd-cd18-4e1a-a54a-882f1ce26321
 # ╠═805a81e4-d76c-4306-891e-9d6cc105cb25
+# ╠═326a759d-11e0-4311-a575-ca8a96d3e058
+# ╠═015c5e87-b5f6-4766-a8ff-bd26dd5f6046
+# ╠═929d138d-3336-453c-95c0-0d8a9196f725
 # ╠═1a05f83d-da8f-46f5-9c0d-2b2cf7f7e203
 # ╠═065439a0-2e10-463f-9a84-7a5ac1595ab0
 # ╠═70e32c80-e4cf-4f11-a236-70e9502019c5
@@ -636,7 +648,6 @@ CSV.write("properties_w_orbits.csv", new_properties)
 # ╠═5c588311-809b-4ba7-ac59-19b19b6e81a8
 # ╠═595c0582-76f9-413e-91a2-ded9794c31f0
 # ╠═c5c6c637-dbe1-4fe4-aabe-4785a19e8c45
-# ╠═c0ca9bc3-1e05-4831-be92-b582170b314f
 # ╠═7ca7ff6e-1300-4846-9a3a-9eda31e0c452
 # ╠═d252cffe-176a-4d21-81ba-b27b07611a9d
 # ╠═a91cd2ea-62a0-41bb-bbb6-ab4f2f2224fb

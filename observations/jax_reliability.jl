@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -20,7 +20,6 @@ end
 begin 
 	import Pkg; Pkg.activate()
 
-	using FITSIO
 	using DataFrames 
 	using CSV
 	using CairoMakie
@@ -55,9 +54,6 @@ Some plots to understand the reliability of density profiles derived from the J+
 We want to know if the choice of a spatial component affects the derived density profile and at what point these profile may become unreliable.
 """
 
-# ╔═╡ 303ff946-ecdc-42c3-8289-c13e7a8cfe7c
-import FileIO: FileIO, @format_str
-
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
 md"""
 galaxyname: $(@bind galaxyname confirm(TextField(default="galaxy")))
@@ -65,6 +61,7 @@ galaxyname: $(@bind galaxyname confirm(TextField(default="galaxy")))
 
 # ╔═╡ 1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 begin 
+	import PythonCall
 	import LilGuys as lguys
 	using LilGuys
 	FIGDIR = joinpath(galaxyname, "figures")
@@ -90,13 +87,7 @@ import Statistics: cor
 diverging_cmap = Reverse(:bluesreds)
 
 # ╔═╡ fe7050d0-fede-44c0-8a8e-5d3dcaf0d1fb
-CairoMakie.activate!(type="png")
-
-# ╔═╡ ff41b9a8-e25c-4fc8-b00f-0d74ea6a1d31
-FigAxis(px_)[1]
-
-# ╔═╡ a955fb87-3674-48dc-8dbd-2c61926d195d
-fig 
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 2eb4aa78-0fea-460b-a18e-06a129c41504
 md"""
@@ -110,10 +101,16 @@ observed_properties = TOML.parsefile(galaxyname * "/observed_properties.toml")
 readdir("$galaxyname/data")
 
 # ╔═╡ 26cf1867-02be-4d36-8c35-6c58a1feca27
-if isfile("$galaxyname/data/jensen+24_2c.fits")
-	datafile = "$galaxyname/data/jensen+24_2c.fits"
-else
-	datafile = "$galaxyname/data/jensen+24_1c.fits"
+datafile = let
+	datafile = ""
+	for filename in ["jensen+24_2c.fits", "jensen+24_1c.fits", "j24_2c.fits", "j24_1c.fits"] 
+		if isfile("$galaxyname/data/$filename")
+			@info filename
+			datafile = "$galaxyname/data/$filename"
+			break
+		end
+	end
+	datafile 
 end
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
@@ -122,8 +119,10 @@ begin
 
 	all_stars[:, :r_ell_old] = all_stars[:, :r_ell]
 	all_stars.xi, all_stars.eta = lguys.to_tangent(all_stars.ra, all_stars.dec, observed_properties["ra"], observed_properties["dec"])
+	all_stars.xi .*= 60
+	all_stars.eta .*= 60
 
-	all_stars.r_ell = 60lguys.calc_r_ell(all_stars.xi, all_stars.eta, observed_properties["ellipticity"], observed_properties["position_angle"])
+	all_stars.r_ell = lguys.calc_R_ell(all_stars.xi, all_stars.eta, observed_properties["ellipticity"], observed_properties["position_angle"])
 	all_stars[!, :LL_S] = @. log10(all_stars.L_S_SAT / all_stars.L_S_BKD)
 	all_stars[!, :LL_PM] = @. log10(all_stars.L_PM_SAT / all_stars.L_PM_BKD)
 	all_stars[!, :LL_CMD] = @. log10(all_stars.L_CMD_SAT / all_stars.L_CMD_BKD)
@@ -135,9 +134,9 @@ begin
 	all_stars[!, :f_LL_PM] = @. all_stars.LL_PM / all_stars.LL
 	all_stars[!, :f_LL_CMD] = @. all_stars.LL_CMD / all_stars.LL
 
-	all_stars[!, :f_LL_S_norm] = @. all_stars.LL_S / all_stars.LL_norm
-	all_stars[!, :f_LL_PM_norm] = @. all_stars.LL_PM / all_stars.LL_norm
-	all_stars[!, :f_LL_CMD_norm] = @. all_stars.LL_CMD / all_stars.LL_norm
+	all_stars[!, :f_LL_S_norm] = @. all_stars.LL_S/ all_stars.LL_norm
+	all_stars[!, :f_LL_PM_norm] = @. (all_stars.LL_PM) / all_stars.LL_norm
+	all_stars[!, :f_LL_CMD_norm] = @. (all_stars.LL_CMD) / all_stars.LL_norm
 
 	all_stars
 end
@@ -153,8 +152,11 @@ md"""
 each component of the cen_errs tuple below should be similar in magnitude
 """
 
+# ╔═╡ 082a06dd-eeb5-4761-a233-1ee89e8cb819
+best_stars = all_stars[all_stars.F_BEST .== 1.0, :]
+
 # ╔═╡ 88fbdd09-30be-4fc3-95ae-acce6e0018e1
-members = all_stars[all_stars.PSAT .> 0.2, :]
+members = best_stars[best_stars.PSAT .> 0.2, :]
 
 # ╔═╡ 223abc41-5158-49c2-96bf-df55b7be1114
 cen = lguys.to_tangent(lguys.calc_centre2D(members.ra, members.dec, "mean")..., observed_properties["ra"], observed_properties["dec"])
@@ -172,10 +174,7 @@ cen_err = maximum(abs.(cen_errs))
 Nmemb = size(members, 1)
 
 # ╔═╡ 60d0e593-88fd-4b4c-9009-cc24a597c6d5
-members_nospace = all_stars[all_stars.PSAT_NOSPACE .> 0.2, :]
-
-# ╔═╡ 082a06dd-eeb5-4761-a233-1ee89e8cb819
-best_stars = all_stars[all_stars.F_BEST .== 1.0, :]
+members_nospace = best_stars[best_stars.LL_CMD .+ best_stars.LL_PM .> 0, :]
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -190,15 +189,15 @@ xi_label = L"\xi\,/\,degrees"
 
 # ╔═╡ 965217b8-b2a5-485b-83de-cac887065b19
 plot_labels = OrderedDict(
-	:xi => L"$\xi$\,/\,degrees",
-	:eta => L"$\eta$\,/\,degrees",
+	:xi => L"$\xi$\,/\,arcmin",
+	:eta => L"$\eta$\,/\,arcmin",
 	:xi_am => L"$\xi$\,/\,arcmin",
 	:eta_am => L"$\eta$\,/\,arcmin",
 	:G => "G (mag)",
 	:bp_rp => "BP – RP (mag)",
 	:pmra => L"$\mu_{\alpha*}$ / mas yr$^{-1}$",
 	:pmdec => L"$\mu_{\delta}$ / mas yr$^{-1}$",
-	:r_ell => L"$r_\textrm{ell}$ / arcmin",
+	:r_ell => L"$\log\,R_\textrm{ell}$ / arcmin",
 	:LL => L"\log\,\mathcal{L}_\textrm{sat} \, /\,\mathcal{L}_\textrm{MW}"
 )
 
@@ -219,6 +218,9 @@ md"""
 md"""
 These maps are just for reference, to see how strongly each component of the likelihood varies in that parameter space.
 """
+
+# ╔═╡ 39e8c546-4ac9-4625-8d20-993fda164924
+
 
 # ╔═╡ b06445ed-6290-42e8-bdb8-20f0372518c2
 let
@@ -241,61 +243,73 @@ let
 	fig
 end
 
+# ╔═╡ be068880-4902-4f36-b0fc-bdec31bf6453
+colorrange_L = (-5, 1)
+
 # ╔═╡ 2a8e13bd-b8ca-4cf3-b61b-096af218265b
 let
 	fig = Figure()
 
 	ax = Axis(fig[1,1],
-		xlabel = "xi",
-		ylabel = "eta",
+		xlabel = plot_labels[:xi],
+		ylabel =  plot_labels[:eta],
 		aspect=DataAspect(),
 		)
 	
 	p = scatter!((best_stars.xi), (best_stars.eta), color=log10.(best_stars.L_S_SAT),
 		markersize=3,
-		#colorrange=(-1, 0)
+		colorrange=colorrange_L,
+		rasterize = true,
 	)
 	LilGuys.hide_grid!(ax)
 
 	Colorbar(fig[1,2], p, label="log L_S_SAT", )
-	
+
+	@savefig "L_space"
 	fig
 end
 
 # ╔═╡ 25dd2e38-1c78-4ef6-95ef-d38a0e80f0e4
 let 
-	f = Figure()
-	ax =  Axis(f[1,1], yreversed=true,
-	xlabel="bp - rp",
-	ylabel = "G",
+	fig = Figure()
+	ax =  Axis(fig[1,1], yreversed=true,
+	xlabel=plot_labels[:bp_rp],
+	ylabel = plot_labels[:G],
+	aspect = 1
 )
 	LilGuys.hide_grid!(ax)
 
 	
 	h = scatter!(best_stars.bp_rp, best_stars.phot_g_mean_mag, color=log10.(best_stars.L_CMD_SAT), 
-		markersize = 3
+		markersize = 3,
+				 colorrange = colorrange_L, rasterize=true
 	)
 
-	Colorbar(f[1, 2], h, label="log L_CMD_SAT")
-	f
+	Colorbar(fig[1, 2], h, label="log L_CMD_SAT")
+	@savefig "L_cmd_sat"
+	fig
 end
 
 # ╔═╡ 1b63c1ee-0a46-49c6-880e-c1742055605e
 let 
-	f = Figure()
-	ax =  Axis(f[1,1], yreversed=true,
-	xlabel="bp - rp",
-	ylabel = "G",
-)
+	fig = Figure()
+	ax =  Axis(fig[1,1], yreversed=true,
+		xlabel= plot_labels[:bp_rp],
+		ylabel = plot_labels[:G],
+	)
 
 	
 	h = scatter!(best_stars.bp_rp, best_stars.phot_g_mean_mag, color=log10.(best_stars.L_CMD_BKD), 
-		markersize = 3
+		markersize = 3,
+				 colorrange = colorrange_L,
+				 rasterize=true
 	)
 
 	LilGuys.hide_grid!(ax)
-	Colorbar(f[1, 2], h, label="log L_CMD_BKD")
-	f
+	Colorbar(fig[1, 2], h, label="log L_CMD_BKD")
+
+	@savefig "L_cmd_bg"
+	fig
 end
 
 # ╔═╡ 643773f0-2b03-46f7-8df4-579b3c708909
@@ -321,19 +335,21 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1],
-		xlabel = "pmra",
-		ylabel = "pmdec",
+		xlabel = plot_labels[:pmra],
+		ylabel = plot_labels[:pmdec],
 		aspect=DataAspect(),
 		)
 	
 	p = scatter!((best_stars.pmra), (best_stars.pmdec), color=log10.(best_stars.L_PM_SAT),
-		colorrange=(-30, 1),
+		colorrange=colorrange_L,
+				 rasterize=true,
 		markersize=3
 	)
 	LilGuys.hide_grid!(ax)
 
 	Colorbar(fig[1,2], p, label="log L_PM_SAT", )
-	
+
+	@savefig "L_pm_sat"
 	fig
 end
 
@@ -348,11 +364,15 @@ let
 		)
 	
 	p = scatter!((best_stars.pmra), (best_stars.pmdec), color=log10.(best_stars.L_PM_BKD),
-		markersize=3
+		markersize=3,
+				 rasterize=true,
+				 colorrange = colorrange_L
 	)
 	LilGuys.hide_grid!(ax)
 
 	Colorbar(fig[1,2], p, label="log L_PM_BKD", )
+
+	@savefig "L_pm_bg"
 	
 	fig
 end
@@ -640,22 +660,29 @@ function plot_corr(best_stars; markersize=3, title="")
 end
 
 # ╔═╡ b4f816f0-0abe-43c2-bf5b-48a2eb2b99c8
-plot_corr(members, title="members")
+@savefig "LL_corr_memb" plot_corr(members, title="members")
 
 # ╔═╡ dc280eae-4f10-4167-9545-c70d67af2d8f
 let
 	fig = plot_corr(best_stars[best_stars.LL .> 0, :], markersize=5, title = "LLR > 0")
 
-	@savefig "LL_corr_trunc"
+	@savefig "LL_corr_0"
 
 	fig
+end
+
+# ╔═╡ f818db1d-9d5e-48a0-87eb-88d2c396a979
+let
+	fig = plot_corr(best_stars[best_stars.LL .> -5, :], title="LLR > -5")
+
+	@savefig "LL_cor_-5" fig
 end
 
 # ╔═╡ fb3a27be-62c7-41ab-ba5d-761efb74c044
 let
 	fig = plot_corr(best_stars[best_stars.LL .> -10, :], title="LLR > -10")
 
-	fig
+	@savefig "LL_cor_-10" fig
 end
 
 # ╔═╡ b4363369-4590-4446-9f4a-9f71ff31a870
@@ -680,17 +707,23 @@ let
 
 	ax = Axis(fig[1,1],
 		xlabel = "LL",
-		ylabel = "f spatial",
-		limits=(-30, 10, -1.5, 3)
+		ylabel = "LL_S  - LL",
+		limits=(-10, 10, -6, 12)
 	)
 
 	filt = best_stars.LL .|> isfinite
-	scatter!(best_stars.LL[filt], (best_stars.f_LL_S[filt]), markersize=3, label = "best")
-	scatter!(members.LL, (members.f_LL_S), label = "members")
+	filt .&= best_stars.f_LL_S .|> isfinite
+	scatter!(best_stars.LL[filt],  (best_stars.f_LL_S[filt]), markersize=3, label = "best")
+
+	# members = best_stars[filt .&& (best_stars.PSAT .> 0.2), :]
+	# scatter!(members.LL, 10 .^ ( members.f_LL_S), label = "members")
 
 	axislegend()
 	fig
 end
+
+# ╔═╡ 7839945f-07ac-4693-a5d0-e451ac9c88b6
+maximum(best_stars.LL[isfinite.(best_stars.f_LL_S)])
 
 # ╔═╡ 79ac654d-7de9-4a2c-bc5d-2f8c8a7e057f
 let
@@ -699,7 +732,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel = "LL",
 		ylabel = "f spatial normed",
-		limits=(-30, 10, -1, 1)
+		limits=(-30, 10, 0, 1)
 	)
 
 	filt = best_stars.LL .|> isfinite
@@ -725,9 +758,12 @@ let
 		limits=(0, 1.5, 0, 1.5),
 		aspect = DataAspect(),
 	)
-	
-	scatter!(abs.(best_stars.f_LL_S), abs.(best_stars.f_LL_S_norm), markersize=3)
-	scatter!(abs.(members.f_LL_S), abs.(members.f_LL_S_norm))
+
+	filt = @. isfinite(best_stars.f_LL_S_norm) & isfinite(best_stars.f_LL_S)
+	scatter!(abs.(best_stars.f_LL_S[filt]), abs.(best_stars.f_LL_S_norm[filt]), markersize=3)
+
+	filt = @. isfinite(members.f_LL_S_norm) & isfinite(members.f_LL_S)
+	scatter!(abs.(members.f_LL_S[filt]), abs.(members.f_LL_S_norm[filt]))
 
 	fig
 end
@@ -742,9 +778,11 @@ let
 		limits=(0, 3, 0, 1.5),
 		aspect = DataAspect(),
 	)
-	
-	scatter!(abs.(best_stars.f_LL_CMD), abs.(best_stars.f_LL_CMD_norm), markersize=3)
-	scatter!(abs.(members.f_LL_CMD), abs.(members.f_LL_CMD_norm))
+
+	filt = best_stars.f_LL_CMD .|> isfinite
+	scatter!(abs.(best_stars.f_LL_CMD)[filt], abs.(best_stars.f_LL_CMD_norm)[filt], markersize=3)
+	filt = members.f_LL_CMD .|> isfinite
+	scatter!(abs.(members.f_LL_CMD)[filt], abs.(members.f_LL_CMD_norm)[filt])
 
 	fig
 end
@@ -759,9 +797,10 @@ let
 		limits=(0, 3, 0, 1.5),
 		aspect = DataAspect(),
 	)
-	
-	scatter!(abs.(best_stars.f_LL_PM), abs.(best_stars.f_LL_PM_norm), markersize=3)
-	scatter!(abs.(members.f_LL_PM), abs.(members.f_LL_PM_norm))
+	filt = best_stars.f_LL_PM .|> isfinite
+	scatter!(abs.(best_stars.f_LL_PM)[filt], abs.(best_stars.f_LL_PM_norm)[filt], markersize=3)
+	filt = members.f_LL_PM .|> isfinite
+	scatter!(abs.(members.f_LL_PM)[filt], abs.(members.f_LL_PM_norm)[filt])
 
 	fig
 end
@@ -813,11 +852,30 @@ end
 # ╔═╡ 8bebb46c-f62f-4e4c-9334-a83a7d930c97
 Cycled(2)
 
+# ╔═╡ 7747f767-7c04-4761-8f80-13d04590ea77
+LilGuys.histogram(randn(10))[2]
+
+# ╔═╡ 45eb621b-5cd1-4fa6-8e4a-6ab7642da044
+
+
 # ╔═╡ 84b10da6-92f2-4ccc-b548-5106f379e09f
-function binhists!(xs, ys; limits=nothing, kwargs...)
+function binhists!(xs, ys; limits=nothing, N_min = 30, binwidth=0.2, kwargs...)
 
-	bins = DE.bins_equal_number(xs)
+	filt = @. isfinite(xs) & isfinite(ys)
+	xs = xs[filt]
+	ys = ys[filt]
 
+	if limits === nothing
+		limits = extrema(ys)
+	end
+	bin_width = max(LilGuys.default_bin_width(xs, nothing), 0.1)
+	bins = LilGuys.bins_equal_width(xs, nothing, bin_width=bin_width)
+	counts = LilGuys.histogram(xs, bins)[2]
+	filt = counts .< N_min
+	counts[filt] .= NaN
+	filt_bins = LilGuys.find_longest_consecutive_finite(counts)
+
+	bins = bins[filt_bins]
 	idxs = DE.bin_indices(xs, bins)
 
 	yh_max = 0.9 * minimum(diff(bins))
@@ -825,11 +883,11 @@ function binhists!(xs, ys; limits=nothing, kwargs...)
 	h_ys= []
 	h_xs = []
 	dys = []
-	for i in unique(idxs)
+	for i in 1:length(bins)-1
 		filt = idxs .== i
 		y = ys[filt]
 		xm = midpoints(bins)[i]
-		h = DE.histogram(y, limits=limits)
+		h = DE.histogram(y, range(limits..., step=binwidth))
 		push!(h_ys, h.values)
 		push!(h_xs, midpoints(h.bins))
 		push!(dys, xm)
@@ -848,22 +906,28 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		ylabel = "log r ell / arcmin",
+		ylabel = "log R ell / arcmin",
 		xlabel = "fsat space"
 	)
 
 	xs = members_nospace.r_ell .|> log10
 	ys = members_nospace.f_LL_S_norm
 
-	binhists!(xs, ys, label = "spatial", color=COLORS[1])
+	binhists!(xs, ys, label = "spatial", color=COLORS[1], binwidth=0.05)
 
 	ys = members_nospace.f_LL_PM_norm
-	binhists!(xs, ys, label = "PM", color=COLORS[2])
+	binhists!(xs, ys, label = "PM", color=COLORS[2], binwidth=0.05)
 
 	ys = members_nospace.f_LL_CMD_norm
-	binhists!(xs, ys, label = "CMD", color=COLORS[3])
+	binhists!(xs, ys, label = "CMD", color=COLORS[3], binwidth=0.05)
 	fig
 end
+
+# ╔═╡ 7f6ab236-bb1c-4fa4-9418-a5d7c3adee3c
+DE.histogram([-1.95, 2.5])
+
+# ╔═╡ fd866124-9194-4489-83f1-1a40229e828e
+sum(isinf.(members_nospace.f_LL_PM_norm))
 
 # ╔═╡ 184f312a-6e6c-43cc-9864-75b4846224c2
 let
@@ -905,13 +969,16 @@ let
 		title = "All stars"
 	)
 
-	limits = (-10, 5)
+	limits = (-5, 5)
 
 	df = best_stars[best_stars.LL .> -Inf, :]
 	
 	xs = df.r_ell .|> log10
-	ys = df.LL_S
 
+	ys = df.LL
+	binhists!(xs, ys,limits=limits,  label = "total", color=:black)
+	
+	ys = df.LL_S
 	binhists!(xs, ys, limits=limits, label = "spatial", color=COLORS[1])
 
 	ys = df.LL_PM
@@ -920,12 +987,12 @@ let
 	ys = df.LL_CMD
 	binhists!(xs, ys,limits=limits,  label = "CMD", color=COLORS[3])
 
-	ys = df.LL
-	binhists!(xs, ys,limits=limits,  label = "total", color=:black)
 
-	vlines!(minimum(best_stars.LL[best_stars.PSAT .> 0.2]))
+	vlines!(minimum(best_stars.LL[best_stars.PSAT .> 0.2]), color=COLORS[4], label = "PSAT = 0.2 cut")
 
 	Legend(fig[1,2], ax, unique=true)
+
+	@savefig "LL_hist_hists_all"
 	fig
 end
 
@@ -1075,7 +1142,7 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		xlabel = "log r ell / arcmin",
+		xlabel = plot_labels[:r_ell],
 		ylabel = "LLR",
 		limits=(nothing, nothing, -10, 10),
 	)
@@ -1098,8 +1165,8 @@ let
 	medianscatter!(xs .- jitter, ys, label = "CMD")
 
 
-	hlines!(minimum(members.LL), label = "cutoff")
-	Legend(fig[1,2], ax)
+	hlines!(minimum(members.LL), label = "cutoff", color=:black)
+	Legend(fig[1,2], ax, unique=true, merge=true)
 	fig
 end
 
@@ -1141,6 +1208,9 @@ md"""
 ## Fractional contributions on the sky
 """
 
+# ╔═╡ 3f1ee903-d732-4447-84ad-d8111537c6d0
+r_field = sqrt(maximum(@. best_stars.xi^2 + best_stars.eta^2 ))
+
 # ╔═╡ e3f951ed-3725-4ece-bf59-cb6998fdf170
 function plot_f_l_tangent(best_stars; title="", markersize=5)
 	fig = Figure(
@@ -1150,34 +1220,16 @@ function plot_f_l_tangent(best_stars; title="", markersize=5)
 	filt = best_stars.PSAT .> 0.2
 	df = best_stars[filt, :]
 
-
+	local p
 	for i in 1:3
 		col = [:f_LL_S_norm, :f_LL_PM_norm, :f_LL_CMD_norm][i]
 		label = ["space", "proper motion", "CMD"][i]
-		
-		ax = Axis(fig[1,i],
-			title = label,
-			xlabel = "f likelihood",
-			ylabel = "counts",
-			limits=(-1, 1, 0, nothing),
-		)
-		LilGuys.hide_grid!(ax)
-
-		h = histogram(df[:, col])
-		
-		x = [h.bins[1]; midpoints(h.bins); h.bins[end]]
-		y = [0; h.values; 0]
-		lines!(x, y, color=x,
-			colorrange=(-1, 1),
-			colormap=diverging_cmap,
-		)
 
 		
-		ax = Axis(fig[2,i],
-			xlabel = "ξ / degree",
-			ylabel = "η / degree",
-			aspect=DataAspect(),
-			#limits = (-2, 2, -2, 2)
+		ax_scat = Axis(fig[1,i],
+			xlabel = plot_labels[:xi],
+			ylabel = plot_labels[:eta],
+			limits = (-r_field, r_field, -r_field, r_field),
 			title = i == 2 ? title : ""
 			)
 		
@@ -1187,31 +1239,89 @@ function plot_f_l_tangent(best_stars; title="", markersize=5)
 			colorrange=(-1, 1),
 			colormap=diverging_cmap,
 		)
-		
-		LilGuys.hide_grid!(ax)
+
+		#hideydecorations!(ax, ticks=false, minorticks=false)
+
+		if i > 1
+			hideydecorations!(ax_scat, ticks=false, minorticks=false)
+		end
+
+
 	end
 
 
 
-	rowsize!(fig.layout, 1, Relative(0.2))
-	rowgap!(fig.layout, 1, 0)
+	#rowsize!(fig.layout, 1, Relative(0.2))
+	rowsize!(fig.layout, 1, Aspect(1.0, 1.0))
+	#rowgap!(fig.layout, 1, 0)
+	colgap!(fig.layout, 40)
+	Colorbar(fig[1, 4], p, label = L"f_x")
 
 	return fig
 end
+
+# ╔═╡ 3218b643-72e8-462a-a8ba-00b21954c88c
+function plot_f_l_hist(best_stars; title="", markersize=5)
+	fig = Figure(
+	)
+
+	filt = best_stars.PSAT .> 0.2
+	df = best_stars[filt, :]
+
+	ax_hist = Axis(fig[1, 1], 
+		xlabel = L"f_x",
+		ylabel = "counts"
+		)
+	local p
+	for i in 1:3
+		col = [:f_LL_S_norm, :f_LL_PM_norm, :f_LL_CMD_norm][i]
+		label = ["space", "proper motion", "CMD"][i]
+
+		h = histogram(df[:, col])
+		
+		x = [h.bins[1]; midpoints(h.bins); h.bins[end]]
+		y = [0; h.values; 0]
+		lines!(ax_hist, x, y,
+			   label=label
+		)
+	end
+
+	axislegend(position=:lt)
+	return fig
+end
+
+# ╔═╡ b42e1e15-e186-4d61-bcf9-736deee6a772
+hist(10 .^ members.f_LL_S_norm .+ 10 .^ members.f_LL_PM_norm .+ 10 .^ members.f_LL_CMD_norm |> x->filter(isfinite, x))
 
 # ╔═╡ e4e6239f-9fdd-433b-8a39-ffaeaf96b59d
 let
 	fig = plot_f_l_tangent(members, title="members")
 
-	@savefig "xi_eta_vs_f"
+	@savefig "tangent_fracs_memb"
 	fig
 end
 
 # ╔═╡ 363dfc70-ec52-44ed-ade4-f88322247871
 let
-	fig = plot_f_l_tangent(best_stars[best_stars.LL .> 0, :], title="LL > 0")
+	fig = plot_f_l_tangent(best_stars[best_stars.LL .> -10, :], title="LL > -10")
 
-	@savefig "xi_eta_vs_f"
+	@savefig "tangent_fracs_LLR_-10"
+	fig
+end
+
+# ╔═╡ 5a0bcbdc-e849-41b7-8ad6-c5e38d093f47
+let
+	fig = plot_f_l_tangent(best_stars[best_stars.LL .> -5, :], title="LL > -5")
+
+	@savefig "tangent_fracs_LLR_-5"
+	fig
+end
+
+# ╔═╡ 9a3fe856-bf87-4473-9a28-f486ac074590
+let
+	fig = plot_f_l_hist(best_stars[best_stars.LL .> -5, :], title="LL > -5")
+
+	@savefig "hist_fracs_LLR_-5"
 	fig
 end
 
@@ -1270,7 +1380,6 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 
 # ╔═╡ Cell order:
 # ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
-# ╠═303ff946-ecdc-42c3-8289-c13e7a8cfe7c
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═8acddd07-0eff-47a6-a364-f7f58680bd9c
@@ -1284,8 +1393,6 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 # ╠═cf7aeb0a-d453-462a-b43d-a832567440fd
 # ╠═fe7050d0-fede-44c0-8a8e-5d3dcaf0d1fb
-# ╠═ff41b9a8-e25c-4fc8-b00f-0d74ea6a1d31
-# ╠═a955fb87-3674-48dc-8dbd-2c61926d195d
 # ╟─2eb4aa78-0fea-460b-a18e-06a129c41504
 # ╠═9ecf79a8-2ed3-40c6-b555-a102250ecbd4
 # ╠═4c8b9c30-f873-4756-a729-aa023b3a804e
@@ -1308,13 +1415,15 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╟─b0aec8b4-410f-4678-ad8c-cb055b743bd3
 # ╟─3c2ee4bb-d594-47e7-a7f3-5b7c9e38b7d4
 # ╟─b191b7b8-28ed-4aee-b376-b2bdf22abc29
+# ╟─39e8c546-4ac9-4625-8d20-993fda164924
 # ╟─b06445ed-6290-42e8-bdb8-20f0372518c2
-# ╟─2a8e13bd-b8ca-4cf3-b61b-096af218265b
-# ╟─25dd2e38-1c78-4ef6-95ef-d38a0e80f0e4
-# ╟─1b63c1ee-0a46-49c6-880e-c1742055605e
-# ╟─643773f0-2b03-46f7-8df4-579b3c708909
-# ╟─cad88ab4-1ada-4cc3-8ef0-d4674500d57e
-# ╟─18252c3c-d4d6-46f2-8277-33a700ab4074
+# ╠═be068880-4902-4f36-b0fc-bdec31bf6453
+# ╠═2a8e13bd-b8ca-4cf3-b61b-096af218265b
+# ╠═25dd2e38-1c78-4ef6-95ef-d38a0e80f0e4
+# ╠═1b63c1ee-0a46-49c6-880e-c1742055605e
+# ╠═643773f0-2b03-46f7-8df4-579b3c708909
+# ╠═cad88ab4-1ada-4cc3-8ef0-d4674500d57e
+# ╠═18252c3c-d4d6-46f2-8277-33a700ab4074
 # ╟─d47a8d02-6c63-41fd-95b5-85550d1f5a85
 # ╟─b7e7e245-3732-453c-a2ec-3fe84c65c012
 # ╟─87f29963-2c7f-4d8f-8631-f70197d315c0
@@ -1330,16 +1439,18 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╠═f54c50ae-0e03-4917-899f-81a30f116b3f
 # ╠═b4f816f0-0abe-43c2-bf5b-48a2eb2b99c8
 # ╟─dc280eae-4f10-4167-9545-c70d67af2d8f
-# ╟─fb3a27be-62c7-41ab-ba5d-761efb74c044
+# ╠═f818db1d-9d5e-48a0-87eb-88d2c396a979
+# ╠═fb3a27be-62c7-41ab-ba5d-761efb74c044
 # ╟─b4363369-4590-4446-9f4a-9f71ff31a870
 # ╟─00d4679d-6c55-4929-bbd3-c796479ba70d
 # ╟─6be3bd9d-c257-444f-87ab-2b3956fc83aa
 # ╟─4ad0330e-f1d7-4d62-b6f9-f49be1aa0d80
 # ╠═9a2ca944-dd5c-43f5-b70d-ab3d67b42743
-# ╟─79ac654d-7de9-4a2c-bc5d-2f8c8a7e057f
+# ╠═7839945f-07ac-4693-a5d0-e451ac9c88b6
+# ╠═79ac654d-7de9-4a2c-bc5d-2f8c8a7e057f
 # ╟─479c9cad-8cae-4d9b-87d3-79a816b3af82
-# ╟─a7dbb8bf-8c82-4ace-9f17-e9aa159a84ff
-# ╟─ec4a8ca8-a4b9-41d7-a369-8049b2a98795
+# ╠═a7dbb8bf-8c82-4ace-9f17-e9aa159a84ff
+# ╠═ec4a8ca8-a4b9-41d7-a369-8049b2a98795
 # ╠═32fd5ed6-fb41-456c-bd05-d28ad013c2c7
 # ╟─301f42ce-437f-4d45-a186-42df47303f25
 # ╠═74dddfdd-0195-446c-b499-9963d3b73059
@@ -1347,8 +1458,12 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╠═24e23b26-e5ca-4e5c-bea0-ecccb9a385ae
 # ╠═62a6fb8a-c49e-477f-a2a9-c21e9e006013
 # ╠═8bebb46c-f62f-4e4c-9334-a83a7d930c97
+# ╠═7747f767-7c04-4761-8f80-13d04590ea77
+# ╠═45eb621b-5cd1-4fa6-8e4a-6ab7642da044
 # ╠═84b10da6-92f2-4ccc-b548-5106f379e09f
 # ╠═7ff47e82-efd7-45a3-abcc-9d8b0e764e8e
+# ╠═7f6ab236-bb1c-4fa4-9418-a5d7c3adee3c
+# ╠═fd866124-9194-4489-83f1-1a40229e828e
 # ╠═184f312a-6e6c-43cc-9864-75b4846224c2
 # ╠═f229556e-4b94-41ad-a523-ad50509a8ed8
 # ╠═b1b1b73a-b0ca-4776-84db-b9be3c94a949
@@ -1362,9 +1477,14 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╠═e5cb3522-a756-4ca0-b843-b38d66ed6a7a
 # ╠═6417beb2-eeaf-4c50-9fd5-ffeaf46bf64a
 # ╟─3c05db74-0cc1-4893-a468-b495c0121118
+# ╠═3f1ee903-d732-4447-84ad-d8111537c6d0
 # ╠═e3f951ed-3725-4ece-bf59-cb6998fdf170
+# ╠═3218b643-72e8-462a-a8ba-00b21954c88c
+# ╠═b42e1e15-e186-4d61-bcf9-736deee6a772
 # ╠═e4e6239f-9fdd-433b-8a39-ffaeaf96b59d
 # ╠═363dfc70-ec52-44ed-ade4-f88322247871
+# ╠═5a0bcbdc-e849-41b7-8ad6-c5e38d093f47
+# ╠═9a3fe856-bf87-4473-9a28-f486ac074590
 # ╟─c68ff47f-97de-4bbb-8b0a-42d837da21f7
 # ╟─8d497b75-a47d-42d1-9e54-e15bfb1db805
 # ╟─d2668f44-9cb7-4ab8-af49-1aef2baecdda

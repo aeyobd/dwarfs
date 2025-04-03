@@ -49,14 +49,24 @@ obs_props_umi = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/ob
 # ╔═╡ d50cc41b-9465-4481-86d9-c8cf221e1978
 obs_props_fornax = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/fornax/observed_properties.toml")
 
+# ╔═╡ 9ab4431d-e64f-44c9-a641-f16a524f3c19
+α = LilGuys.R_h(LilGuys.Exp2D())
+
+# ╔═╡ 9c594ea7-8670-4235-8bde-cb2d670fe2c3
+function get_R_h(galaxyname)	
+	
+	obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/density_profiles/jax_eqw_profile.toml_inner_fits.toml")
+
+	R_h = α * 10 ^ obs_props["log_R_s_exp2d_inner"]
+end
+
 # ╔═╡ 5d005025-8d6e-4d06-8b38-8aedd6189dfe
 function load_profile(galaxyname, algname="jax")
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
 		"density_profiles/$(algname)_profile.toml")
-	obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/observed_properties.toml")
-	
+	R_h = get_R_h(galaxyname)
     prof = LilGuys.StellarDensityProfile(filename)
-	prof = LilGuys.scale(prof, 1/obs_props["r_h"], 1)
+	prof = LilGuys.scale(prof, 1/ R_h, 1.0)
 
 	prof
 end
@@ -70,33 +80,35 @@ update_theme!(
 # ╔═╡ c51c6f13-b5ed-4671-9f08-4adb4f7b38b7
 import Statistics: median
 
-# ╔═╡ 5917e45e-50bb-441f-9d12-6901025a81f3
-begin 
-	profiles = OrderedDict(
-		"fiducial" => load_profile("sculptor", "jax_2c"),
-		"circ" => load_profile("sculptor", "jax_circ"),
-		"simple" => load_profile("sculptor", "simple"),
-		"bright" => load_profile("sculptor", "jax_bright"),
-		#"DELVE" => load_profile("delve"),
-		"DELVE" => load_profile("sculptor", "delve_rgb_sub"),
-	)
-
-	profiles["bright"] = LilGuys.scale(profiles["bright"], 1, 2)
-	#profiles["DELVE"] = LilGuys.scale(profiles["DELVE"], 1, 7000/1197)
-	profiles["DELVE"] = LilGuys.scale(profiles["DELVE"], 1, 0.6)
-
-	profiles
-end
-
 # ╔═╡ ffaddffc-bbd0-4a08-9422-71bf872eb750
 df_peris = CSV.read(ENV["DWARFS_ROOT"] * "/analysis/all_galaxies/vasiliev+21/properties_w_orbits.csv", DataFrame)
 
 
+# ╔═╡ 50c692f7-93df-4edc-af0b-bb901a1bc907
+function get_R_break(galaxyname, obs_props)
+	dt = df_peris.t_last_peri[df_peris.galaxyname .== galaxyname] |> only
+	dist = obs_props["distance"]
+	sigma_v = obs_props["sigma_v"] / V2KMS
+	r_b_kpc = LilGuys.break_radius(sigma_v, dt)
+	R_b_arcmin = LilGuys.kpc2arcmin(r_b_kpc, dist)
+
+	return R_b_arcmin / get_R_h(galaxyname)
+end
+
+# ╔═╡ 78159e3a-e11b-4118-8024-8dc594e8f2e3
+obs_props_scl
+
 # ╔═╡ 4be65b34-fbb9-46fe-9c8c-462abb5d0571
 typeof((;))
 
+# ╔═╡ abdaea6d-504f-4708-8185-c63dcf90bad9
+ana = LilGuys.Sersic(n=1)
+
 # ╔═╡ 30a60b7d-630a-4fa3-ac57-e873655ad754
-function compare_densities(profiles, r_h; styles=nothing)
+function compare_densities(profiles; 
+		R_b_R_h=nothing, styles=nothing, reference=collect(keys(profiles))[begin],
+		prof_ana = nothing, y_R_b=nothing
+	)
 	
 	fig = Figure()
 	ax = Axis(fig[1,1], 
@@ -104,6 +116,17 @@ function compare_densities(profiles, r_h; styles=nothing)
 		ylabel = log_Σ_label,
 	)
 
+	prof_ref = profiles[reference]
+	log_Sigma_ref = LilGuys.lerp(prof_ref.log_R, LilGuys.middle.(prof_ref.log_Sigma))
+
+	if prof_ana !== nothing
+		x = LinRange(extrema(prof_ref.log_R_bins)..., 1000)
+	
+		y = @. log10(surface_density(prof_ana, 10 .^ x))
+		y .+= log_Sigma_ref(0)
+		lines!(x, y, label="Exp2D", color=:black)
+	end
+	
 	for (name, prof) in profiles
 
 		if styles !== nothing
@@ -117,21 +140,31 @@ function compare_densities(profiles, r_h; styles=nothing)
 			label=name, kwargs...)
 	end
 
-	#arrows!([log10(r_h)], [-2], [0], [-0.5], arrowsize=6)
-	#text!([log10(r_h)], [-2], text=L"R_h")
+	
+	if R_b_R_h !== nothing
+		x = log10(R_b_R_h)
+		if y_R_b === nothing
+			y_R_b = log_Sigma_ref(x)
+		end
+		
+		arrows!([x], [y_R_b+1], [0], [-0.5], arrowsize=6)
+		
+		text!([x], [y_R_b+1], text=L"R_b")
+	end
 
+	
 	axislegend(position=:lb)
 	ax2 = Axis(fig[2,1],
 		xlabel = log_r_ell_label,
-		ylabel = L"\log\Sigma / \Sigma_\textrm{%$(collect(keys(profiles))[begin])}",
+		ylabel = L"\log\Sigma / \Sigma_\textrm{%$reference}",
 		limits=(nothing, nothing, -1, 1)
 	)
 
 	hlines!(0, color=:black)
 
-	prof_ref = profiles[collect(keys(profiles))[begin]]
+	
 	for (key, prof) in profiles
-		ym = LilGuys.lerp(prof_ref.log_R, LilGuys.middle.(prof_ref.log_Sigma)).(prof.log_R)
+		ym = log_Sigma_ref.(prof.log_R)
 		filt = prof.log_R .< prof_ref.log_R[end]
 		filt .&= prof.log_R .> prof_ref.log_R[1]
 		filt .&= isfinite.(ym)
@@ -161,8 +194,26 @@ function compare_densities(profiles, r_h; styles=nothing)
 	fig
 end
 
+# ╔═╡ 5917e45e-50bb-441f-9d12-6901025a81f3
+begin 
+	profiles = OrderedDict(
+		"fiducial" => load_profile("sculptor", "jax_2c"),
+		"circ" => load_profile("sculptor", "jax_circ"),
+		"simple" => load_profile("sculptor", "simple"),
+		"bright" => load_profile("sculptor", "jax_bright"),
+		#"DELVE" => load_profile("delve"),
+		"DELVE" => load_profile("sculptor", "delve_rgb_sub"),
+	)
+
+	profiles["bright"] = LilGuys.scale(profiles["bright"], 1, 2)
+	#profiles["DELVE"] = LilGuys.scale(profiles["DELVE"], 1, 7000/1197)
+	profiles["DELVE"] = LilGuys.scale(profiles["DELVE"], 1, 0.6)
+
+	profiles
+end
+
 # ╔═╡ d6509ab8-9923-443b-8b96-50e4f59498ab
-@savefig "scl_density_methods_extra" compare_densities(profiles, obs_props_scl["r_h"])
+@savefig "scl_density_methods_extra" compare_densities(profiles)
 
 # ╔═╡ c9e23e51-c2de-427f-8429-d620796e1baa
 load_profile("sculptor", "best_eqw_sub") #|> LilGuys.filter_empty_bins
@@ -170,9 +221,9 @@ load_profile("sculptor", "best_eqw_sub") #|> LilGuys.filter_empty_bins
 # ╔═╡ 27abef4c-62cf-4c82-a76f-38b735569328
 begin 
 	profiles_scl = OrderedDict(
-		"probable members" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
-		"CMD + PM" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"all" => load_profile("sculptor", "best_eqw") |> LilGuys.filter_empty_bins,
+		"CMD + PM" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
+		"probable members" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("sculptor", "best_eqw_sub"),
 	)
 
@@ -202,15 +253,36 @@ plot_kwargs = Dict(
 	)
 )
 
+# ╔═╡ 0a029aaa-c23d-4126-bd21-323d978e1548
+R_b_scl = get_R_break("sculptor", obs_props_scl)
+
+# ╔═╡ 72c8e61d-03af-4bac-ae60-0f0d0ff19492
+R_b_umi = get_R_break("ursa_minor", obs_props_umi)
+
+# ╔═╡ b14b8b05-2d08-4e6b-bb85-dcd01038518f
+R_b_fornax = get_R_break("fornax", obs_props_fornax)
+
+# ╔═╡ 1ae40816-8e73-4633-821c-4bcc94411954
+get_R_h("sculptor")
+
+# ╔═╡ 87306766-32d0-4458-a114-89bc91626b37
+get_R_h("ursa_minor")
+
+# ╔═╡ d8379fd7-ecf5-4cd6-ba7a-adb49c3b475d
+get_R_h("fornax")
+
+# ╔═╡ 19be0190-af5d-479b-b859-8f1c1e46bba1
+
+
 # ╔═╡ dbeae6d9-1dd7-403b-80ac-82b20d047c3b
-@savefig "scl_density_methods" compare_densities(profiles_scl, obs_props_scl["r_h"], styles=plot_kwargs)
+@savefig "scl_density_methods" compare_densities(profiles_scl, styles=plot_kwargs, R_b_R_h=R_b_scl, reference="probable members", y_R_b=-1.7)
 
 # ╔═╡ c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 begin 
 	profiles_umi = OrderedDict(
-		"probable members" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
-		"CMD + PM" => load_profile("ursa_minor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"all" => load_profile("ursa_minor", "best_eqw") |> LilGuys.filter_empty_bins,
+		"CMD + PM" => load_profile("ursa_minor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
+		"probable members" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("ursa_minor", "best_eqw_sub"),
 	)
 
@@ -222,14 +294,17 @@ begin
 end
 
 # ╔═╡ 18b9cf25-527e-4bac-91ca-5d1fa69293c8
-@savefig "umi_density_methods" compare_densities(profiles_umi, obs_props_umi["r_h"], styles=plot_kwargs)
+@savefig "umi_density_methods" compare_densities(profiles_umi, 
+	styles=plot_kwargs, R_b_R_h=R_b_fornax, reference="probable members",
+	
+)
 
 # ╔═╡ 7c64d26a-bddd-4159-98d2-3a0f8d2125f5
 begin 
 	profiles_fornax = OrderedDict(
-		"probable members" => load_profile("fornax", "jax_eqw") |> LilGuys.filter_empty_bins,
-		"CMD + PM" => load_profile("fornax", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"all" => load_profile("fornax", "best_eqw") |> LilGuys.filter_empty_bins,
+		"CMD + PM" => load_profile("fornax", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
+		"probable members" => load_profile("fornax", "jax_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("fornax", "best_eqw_sub") ,
 	)
 
@@ -241,7 +316,10 @@ begin
 end
 
 # ╔═╡ 188ce016-6011-45c3-9823-eafdc94f9617
-@savefig "fornax_density_methods" compare_densities(profiles_fornax, obs_props_fornax["r_h"], styles=plot_kwargs)
+@savefig "fornax_density_methods" compare_densities(profiles_fornax, styles=plot_kwargs, R_b_R_h=R_b_fornax, reference="probable members")
+
+# ╔═╡ 8a2b9a99-7b11-4910-a097-420f765396e5
+get_R_break
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -254,21 +332,34 @@ end
 # ╠═389fefd6-60fd-4dd8-ba77-29e87b4ed846
 # ╠═fd74ebb7-625e-4396-a91a-37045a283a08
 # ╠═d50cc41b-9465-4481-86d9-c8cf221e1978
+# ╠═9ab4431d-e64f-44c9-a641-f16a524f3c19
+# ╠═9c594ea7-8670-4235-8bde-cb2d670fe2c3
 # ╠═5d005025-8d6e-4d06-8b38-8aedd6189dfe
 # ╠═78a7391b-511a-45b8-b4e1-52b0bb675058
 # ╠═e7ae2044-a31e-4a98-b496-3b1b3be056f0
 # ╠═c51c6f13-b5ed-4671-9f08-4adb4f7b38b7
-# ╠═5917e45e-50bb-441f-9d12-6901025a81f3
 # ╠═5fc7e171-0fce-40f7-bc22-2aa02bb3694f
 # ╠═ffaddffc-bbd0-4a08-9422-71bf872eb750
+# ╠═50c692f7-93df-4edc-af0b-bb901a1bc907
+# ╠═78159e3a-e11b-4118-8024-8dc594e8f2e3
 # ╠═4be65b34-fbb9-46fe-9c8c-462abb5d0571
+# ╠═abdaea6d-504f-4708-8185-c63dcf90bad9
 # ╠═30a60b7d-630a-4fa3-ac57-e873655ad754
+# ╠═5917e45e-50bb-441f-9d12-6901025a81f3
 # ╠═d6509ab8-9923-443b-8b96-50e4f59498ab
 # ╠═c9e23e51-c2de-427f-8429-d620796e1baa
 # ╠═27abef4c-62cf-4c82-a76f-38b735569328
 # ╠═cc8c0231-d568-4ac8-a090-428fdea08696
+# ╠═0a029aaa-c23d-4126-bd21-323d978e1548
+# ╠═72c8e61d-03af-4bac-ae60-0f0d0ff19492
+# ╠═b14b8b05-2d08-4e6b-bb85-dcd01038518f
+# ╠═1ae40816-8e73-4633-821c-4bcc94411954
+# ╠═87306766-32d0-4458-a114-89bc91626b37
+# ╠═d8379fd7-ecf5-4cd6-ba7a-adb49c3b475d
+# ╠═19be0190-af5d-479b-b859-8f1c1e46bba1
 # ╠═dbeae6d9-1dd7-403b-80ac-82b20d047c3b
 # ╠═c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 # ╠═18b9cf25-527e-4bac-91ca-5d1fa69293c8
 # ╠═7c64d26a-bddd-4159-98d2-3a0f8d2125f5
 # ╠═188ce016-6011-45c3-9823-eafdc94f9617
+# ╠═8a2b9a99-7b11-4910-a097-420f765396e5
