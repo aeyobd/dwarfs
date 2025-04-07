@@ -12,8 +12,9 @@ def rename_url(blocks, i):
                     print("Found image at ", url, file=sys.stderr)
                     if url.startswith("figures"):
                         url_new = path.splitext(url)[0] + ".pdf"
-                        con2.url = url_new
-                        print("Renaming ", url,"=>", con2.url, file=sys.stderr)
+                        if path.isfile(url_new):
+                            con2.url = url_new
+                            print("Renaming ", url,"=>", con2.url, file=sys.stderr)
 
 
 def process_figures(doc):

@@ -7,173 +7,106 @@
 - Instances of dwarfs undergoing weird processess
 - Alternative processes and uncertainties in the evolution of dwarfs
 
+The classical dwarfs are some of the earliest discovered systems, begining with @shapley1938
+
+
+
+
+
 ## Sculptor
+
+![scl_image](figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}
+
+Figure: Sculptor image from DES DR 2 via HiPS2FITS.
+
+
+
+![Idealized simulations match Scl and UMi](figures/scl_umi_vs_penarrubia.png){#fig:toy_profiles}
+
+Figure: Sculptor and UMi's profiles are well-matched to @PNM2008. 
+
+# 
+
+Sculptor (Scl) is one of the first discovered dwarf galaxies of the Milky Way (Shapley 1938; only preceded by the SMC and LMC!). As a classical dwarf spheroidal, Scl is relatively bright and compact. 
+
+Since the initial discovery of Scl, most authors have noted that Scl has a slight ellipticity ($0.36$), often attributed to tidal effects. However, this does not align with the absolute proper motion or orbital path of the galaxy. 
+
+While Scl has a relatively large pericentre (greater than 50kpc), @Sestito+23 detect that the galaxy likely has an excess of stars in the outskirts (past about 60 arcminutes). This excess is perhaps one of the clearest indications that Scl may be affected by tides. Here, our goal is to determine if under a $\Lambda$ CMD paradigm with DM-only simulations, tidal effects of the Milky Way (or LMC) may indeed be consistent with these observations, or if these observations may reveal instead a extended stellar "halo" or second component of the galaxy—illustrating a complex formation for the galaxy.
+
+Figure: Image of Sculptor from DES.
+
+Theoretical work on Sculptor
+
+- @battaglia+2008
+- @iorio+2019
+
+Observational work on Scl
 
 - @sestito+2023a
 - @tolstoy+2023, @arroyo-polonio+2023, @arroyo-polonio+2024
-- @battaglia+2008
-- @iorio+2019
+- @eskridge1988
+
+| parameter                | value                                                        | Source            |
+| ------------------------ | ------------------------------------------------------------ | ----------------- |
+| $\alpha$                 | $15.0183 \pm 0.0012$˚                                        | M+18              |
+| $\delta$                 | $-33.7186 \pm 0.00072$˚                                      | M+18              |
+| distance                 | $83.2 \pm 2$ kpc                                             | Tran+22           |
+| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | MV20a             |
+| $\mu_\delta$             | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a             |
+| RV                       | $111.2 \pm 0.2$                                              | arroyo-polonio+24 |
+| $\sigma_v$               | $9.7\pm0.2$                                                  | arroyo-polonio+24 |
+| $R_h$                    | $12.33 \pm 0.05$ arcmin                                      | MV20*             |
+| $R_{h,inner}$            | $8.69 \pm 0.2$ arcmin                                        | this work?        |
+| ell                      | $0.36 \pm 0.01$                                              | M+18              |
+| PA                       | $92\pm1$                                                     | M+18              |
+| $M_V$                    | $-10.82\pm0.14$                                              | M+18              |
+
+Table: Measured properties of Sculptor
+
+Can I just cite @arroyo-polonio+2024 for velocity information for Sculptor? They correct for binary and do a more detailed discussion of rotation. 
 
 ## Ursa Minor
 
 - @sestito+2023b
 
+- @pace+2020
 
+![Ursa Minor Image](figures/umi_image.jpg){#fig:umi_image width=390pt height=390pt}
+
+Figure: Ursa Minor Dwarf. Composite Public data/Giuseppe Donatiello. Updated image in 2022. https://www.flickr.com/photos/133259498@N05/page8
 
 
 
 | parameter                | value                                                        | Source    |
 | ------------------------ | ------------------------------------------------------------ | --------- |
-| $\alpha$                 | $15.0183 \pm 0.0012$˚                                        | M+18      |
-| $\delta$                 | $-33.7186 \pm 0.00072$˚                                      | M+18      |
-| distance                 | $83.2 \pm 2$ kpc                                             | Tran+22   |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | MV20a     |
-| $\mu_\delta$             | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a     |
-| RV                       | $111.03 \pm 0.23$                                            | This work |
-| $\sigma_v$               | $9.61\pm0.16$                                                | This work |
-| $r_h$                    | $12.33 \pm 0.05$ arcmin                                      | MV20*     |
-| ell                      | $0.36 \pm 0.01$                                              | M+18      |
-| PA                       | $92\pm1$                                                     | M+18      |
-| $M_V$                    | $-10.82\pm0.14$                                              | M+18      |
-| $\Upsilon_\star$         | $1.5 \pm 0.3$                                                | assumed   |
+| $\alpha$                 | $ 227.2420 \pm 0.0045$˚                                      | M+18      |
+| $\delta$                 | $67.2221 \pm 0.00158$˚                                       | M+18      |
+| distance                 | $70.1 \pm 2.9$ kpc                                           |           |
+| $\mu_\alpha \cos \delta$ | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | MV20a     |
+| $\mu_\delta$             | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a     |
+| RV                       | $-245 \pm 1$ km s$^{-1}$                                     | This work |
+| $\sigma_v$               | $9 \pm 0.6$                                                  | This work |
+| $r_h$                    | $18.2 \pm 0.1$ arcmin                                        | M+18      |
+| ell                      | $0.55 \pm 0.01$                                              | M+18      |
+| PA                       | $50 \pm 1^\circ$                                             | M+18      |
+| $M_V$                    | $-9.03 \pm 0.05$                                             | M+18      |
 
-Table: Measured properties of Sculptor
+Table: Measured properties of Ursa Minor
 
-## Gaia Membership Selection
 
-![Sculptor selection criteria](figures/scl_selection.png){#fig:sculptor_selection}
 
-Figure: The selection criteria for Scl members. Members are red and all field stars (satisfying quality criteria) are in light grey. **Top left:** tangent plane. **Top Right:** Colour magnitude diagram.
 
-We use J+24 data. J+24 select members using a multi-component Baysian algorithm:
 
-- Remove stars with poor astrometry or photometry, no colour excess (@lindegren+2018 equation C.2), 3$\sigma$ consistency of measured parallax with dwarf distance (near zero with @lindegren+2018 zero-point correction), and absolute RA and Dec proper motions less than 10$\,{\rm mas\ yr^{-1}}$.
+## Theoretical Background
 
-- Spatial likelihood based on a double exponential $\Sigma_\star \propto e^{-r/r_s} + B\,e^{-r/r_{\rm outer}}$ where the inner scale radius is fixed. 
+- Cosmology foundations
+- NFW plot (density or energy), maybe borrow from paper?
+  - Explain origin of NFW
+- Dwarf galaxy formation, halos
+- Evolution under tidal field
+- 
 
-- Stars are assigned a likelihood based on the location on the CMD (using Padova isochrones including an intrinsic 0.1 CMD width in colour convolved with colour and distance modulus)
 
-- Background KDE density maps for the CMD and PM are constructed using the other quality-selected stars outside of $5R_h$, where the satellite density would be orders of magnitude less than the background (even in the presence of extended tidal features).
-
-- Likelihoods normalized to unity to represnt a PDF
-
-  
-
-  Membership probabilities are then given by
-
-$$
-P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}} = \frac{1}{1 + \frac{(1-f_{\rm sat}){\cal L}_{\rm bg}}{f_{\rm sat}{\cal L}_{\rm sat} }}
-$$
-
-where $f_{\rm sat}$ is the fraction of stars belonging to the system inside the given field, ${\cal L}_{\rm sat}$ is the likelihood of a star belonging to the satellite, and ${\cal L}_{\rm bg}$ is the likelihood of the star belonging to the background. Each likelihood is calculated as a product of the CMD, PM, and spatial likelihoods:
-$$
-{\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}
-$$
-
-The above formula suggests that a cut in $P_{\rm sat}$ is equivalent to the cut in likelihoods
-$$
-\frac{{\cal L}_{\rm sat}}{{\cal L}_{\rm bg}} > \frac{(1-f_{\rm sat})/f_{\rm sat}}{1/P_{\rm sat}- 1}
-$$
-
-Note that if we remove the spatial component of the likelihood, then $f_{\rm sat}$ represents a global normalization.
-
-
-
-Not shown here, we explore simple cuts of the stars, using absolute cuts in parallax, proper motions, and the CMD. The results are similar to the nospace model.
-
-
-
-### Searches for tidal tails
-
-![Tidal tails](figures/scl_tidal_tails.png){#fig:sculptor_tidal_tails}
-
-Figure: The distribution of member stars (orange), PM & CMD only selected stars (blue) and all stars (passing quality cuts, black).
-
-
-
-
-
-- There are no apparent overdensities in the PM & CMD only selected stars to suggest the presence of a tidal tail
-
-- This means that at least at the level of where the background density dominates, we can exclude models which produce tidal tails brighter than a density of $\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}$ (TODO assuming a distance  of ... and stellar mass of ...). 
-
-  
-
-
-## Density Profile Reliability and Uncertainties
-
-- How well do we know the density profiles? 
-- What uncertainties affect derived density profiles? 
-- Can we determine if Gaia, structural, or algorithmic systematics introduce important errors in derived density profiles?
-
-
-
-J+24's algorithm takes spatial position into account, assuming either a one or two component exponential density profile. When deriving a density profile, this assumption may influence the derived density profile, especially when the galaxy density is fainter than the background of similar appearing stars. To remedy this and estimate where the background begins to take over, we also explore a cut based on the likelihood ratio of only the CMD and PM components. This is in essence assuming that the spatial position of a star contains no information on it's membership probability (a uniform distribution like the background)
-
-To incorporate the structural uncertainties and robustly model the sampling uncertainty, we construct the following bootstrap model
-
-- Centre is varied by a centring error, estimated from the standard normal error of the positions plus the systematic shift of the mean
-
-- Position angle and ellipticity are sampled from a normal distribution given the reported uncertainties 
-
-- $f_{\rm sat}$ is sampled from ...
-
-  
-
-  **TODO**: Look into normalization of Likelihoods and check how $f_{\rm sat}$ matters. If $f_{\rm sat}$ is related to the normalizations of fg / bg densities, and other likelihoods are area-normalized to 1, then this makes life much easier. 
-
-  Test if psat weighted density profiles are similar
-
-  Save MC density profile outputs
-
-  
-
-  
-
-  
-
-
-
-![Density profiles](figures/scl_density_methods.png){#fig:sculptor_observed_profiles}
-
-Figure: 
-
-
-
-# Comparison of the Classical dwarfs
-
-- Using J+24 data, we validate
-  - Check that PSAT, magnitude, no-space do not affect density profile shape too significantly
-- Our "high quality" members all have > 50 member stars and do not depend too highly on the spatial component, mostly corresponding to the classical dwarfs
-- We fit Sérsic profiles to each galaxy
-  - The Sérsic index, $n$, is a measure of the deviation from an exponential. Exponentials have $n=1$, whereas more extended dwarf galaxies will have higher $n$
-- To better estimate the uncertainties due to unknown galaxy properties and flexibility in the likelihood cut, we can 
-
-![Sculptor and UMi versus classical dwarfs](figures/classical_dwarf_profiles.png)
-
-Figure: Density profiles for each dwarf galaxy.
-
-
-
-**TODO**: Use updated density profiles (nospace) with uncertainties included to MCMC fit Sérsic profiles to every dwarf galaxy. 
-
-- Fornax
-- Leo I
-- Sculptor
-- Leo II
-- Carina 
-- Sextans I
-- Ursa Minor
-- Draco
-- Antlia II?
-
-## Radial Velocity Measurements
-
-
-
-
-
-# Simulation-based motivations
 
 To motivate why a tidal interaction may give rise to the observed density profiles, we create a toy simulation following @PNM2008. 
 
@@ -201,31 +134,4 @@ where $\sigma_v$ is the present line of sight velocity dispersion , $\delta t$ i
 
 
 As illustrated in @fig:toy_profiles, the density profile initially stars off exponential. At increasing times since the first pericentric passage, the break radius, appearing as an apparent separation between the slopes of the inner and outer profile, increases. 
-
-![Idealized simulations match Scl and UMi](figures/scl_umi_vs_idealized.png){#fig:toy_profiles}
-
-Figure: Sculptor and UMi's profiles are well-matched to an idealized simulation
-
-
-
-![Break radius validation](figures/idealized_break_radius.png){#fig:idealized_break_radius}
-
-Figure: The break radius of the simulations is set by 
-
-
-
-From this argument, we note that the following properties must be approximately true for tides to occur:
-
-- Close enough pericentre. The other break radius $r_J$ implies that if the host density is 3x the satellite, stars will be lost
-- Corresponding time since last pericentre: If the time since last pericentre is not $\sim$ consistent with an observed break in the density profile, then tides 
-- Halo evolution. As found in @EN2021, galaxies evolve along well defined tidal tracks (assuming spherical, isotropic, NFW halo, which may not be true, see ...). These tracks tend to "puff up" the stellar component while also removing dark matter mass, leaving a smaller, compacter DM halo with a more extended stellar component.
-  - This information is mostly related to the statistical initial distribution of satellites from cosmology [ludlow+2016; @fattahi+2018]
-
-# Summary
-
-- Of the classical dwarfs, UMi & Scl stand out statistically, with high $n$ given their luminosity
-- Including fainter dwarf galaxies, Boo 3 and Boo 1 appear to also have extended density profiles
-  - Deeper data would be required to robustly measure this
-
-
 

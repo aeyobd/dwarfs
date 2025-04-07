@@ -76,6 +76,23 @@ Instructions to get an account: https://www.dur.ac.uk/resources/icc/cosma/gettin
 
 I typically ssh into cosma to edit any files or run scripts.
 
+### System
+
+Cosma has several serves. Personally, i only have access to cosma5/cosma. This means it is best practice to also login to cosma5 so that compiled software works properly, as each system has a different architecture. My cosma ssh config looks like
+
+```
+Host cosma
+  User dc-boye1
+  IgnoreUnknown UseKeychain
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519_cosma
+  HostName login5b.cosma.dur.ac.uk
+  ForwardX11 yes
+  ForwardX11Trusted yes
+```
+
+
+
 ### Jupyter
 
 See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/. 
@@ -83,10 +100,12 @@ See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/.
 to launch a jupyter session, 
 
 ``` bash
-ssh -i .ssh/id_ed25519_cosma -N -L 8443:login8b.cosma.dur.ac.uk:443 dc-boye1@login8b.cosma.dur.ac.uk
+ssh -i .ssh/id_ed25519_cosma -N -L 8443:login5c.cosma.dur.ac.uk:443 dc-boye1@login5c.cosma.dur.ac.uk
 ```
 
 then open https://localhost:8443
+
+- TODO: julia does not seem to behave in jupyter on cosma. 
 
 ### Modules/Dependencies
 
@@ -350,9 +369,7 @@ In ordinary evolution around the Milky Way, mass loss and tidal forces cause dev
 
 
 
-![image-20250222121907610](/Users/daniel/Library/Application Support/typora-user-images/image-20250222121907610.png)
-
-Essential next steps
+![image-20250325011544103](/Users/daniel/Library/Application Support/typora-user-images/image-20250325011544103.png)Essential next steps
 
 - *Shrinking spheres robust tests
 - *Coordinate constructors more tests

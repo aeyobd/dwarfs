@@ -1,190 +1,202 @@
 # Gaia Membership Selection
 
-![Sculptor selection criteria](/Users/daniel/thesis/figures/scl_selection.png){#fig:sculptor_selection}
+Gaia provides unprecedented accuracy in proper motions and magnitudes. As such, Gaia data is uniquely excellent to produce low-contamination samples of likely member stars belonging to satellites. Here, we breifly describe J+24's membership estimation and discuss how this informs our observational knoledge of each galaxies density profile. In general, J+24 use a Bayesian framework incorporating proper motion (PM, colour-magnitude diagram (CMD), and spatial information to determine the probability that a given star belongs to the satellite. J+24 extends @MV2020a (see also @pace+li2019, etc.).
 
-Figure: The selection criteria for Scl members. Members are red and all field stars (satisfying quality criteria) are in light grey. **Top left:** tangent plane. **Top Right:** Colour magnitude diagram.
+J+24 select stars initially from Gaia satisfying: 
 
-We use J+24 data. J+24 select members using a multi-component Baysian algorithm:
+- High quality astrometry (`ruwe <= 1.3`)
+- 3$\sigma$ consistency of measured parallax with dwarf distance + uncertainty (near zero with @lindegren+2018 zero-point correction)
+-  Absolute RA and Dec proper motions less than 10$\,{\rm mas\ yr^{-1}}$
+- Good photometry
+- No colour excess (@lindegren+2018 equation C.2)
+- G > 22 and less than 5$\sigma$ above TRGB, and between -0.5 and 2.5 in Bp - Rp.  
 
-- Remove stars with poor astrometry or photometry, no colour excess (@lindegren+2018 equation C.2), 3$\sigma$ consistency of measured parallax with dwarf distance (near zero with @lindegren+2018 zero-point correction), and absolute RA and Dec proper motions less than 10$\,{\rm mas\ yr^{-1}}$.
-
-- Spatial likelihood based on a double exponential $\Sigma_\star \propto e^{-r/r_s} + B\,e^{-r/r_{\rm outer}}$ where the inner scale radius is fixed. 
-
-- Stars are assigned a likelihood based on the location on the CMD (using Padova isochrones including an intrinsic 0.1 CMD width in colour convolved with colour and distance modulus)
-
-- Background KDE density maps for the CMD and PM are constructed using the other quality-selected stars outside of $5R_h$, where the satellite density would be orders of magnitude less than the background (even in the presence of extended tidal features).
-
-- Likelihoods normalized to unity to represnt a PDF
-
-  
-
-  Membership probabilities are then given by
-
+J+24 calculate the probability that any star belongs to either the satellite or the MW background as
 $$
-P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}} = \frac{1}{1 + \frac{(1-f_{\rm sat}){\cal L}_{\rm bg}}{f_{\rm sat}{\cal L}_{\rm sat} }}
+P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}}
 $$
 
-where $f_{\rm sat}$ is the fraction of stars belonging to the system inside the given field, ${\cal L}_{\rm sat}$ is the likelihood of a star belonging to the satellite, and ${\cal L}_{\rm bg}$ is the likelihood of the star belonging to the background. Each likelihood is calculated as a product of the CMD, PM, and spatial likelihoods:
+where the satellite (sat) and background (bg) likelihoods are simply the product of the PM, CMD, and spatial components: 
 $$
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}
 $$
 
-The above formula suggests that a cut in $P_{\rm sat}$ is equivalent to the cut in likelihoods
-$$
-\frac{{\cal L}_{\rm sat}}{{\cal L}_{\rm bg}} > \frac{(1-f_{\rm sat})/f_{\rm sat}}{1/P_{\rm sat}- 1}
-$$
+The satellite likelihood is constructed as
 
-Note that if we remove the spatial component of the likelihood, then $f_{\rm sat}$ represents a global normalization.
+- CMD: The CMD is from  Padova [@girardi+2002] isochrone at 12 Gyr with a colour width of 0.1 mag  plus the Gaia colour uncertanty and the observed metallicity of the dwarf. The HB is modelled as a constant magnitude extending blue of the CMD with a 0.1 mag width plus the mean colour error. A likelihood map is constructed by sampling the distance modulus in addition to the CMD width, taking the maximum of RGB and HB likelihoods.
+- Spatial: A single exponential ($\Sigma \propto e^{R_{\rm ell} / R_s}$) using mean values of the structural parameters (**verify**). For Scl and UMi, this is instead a double exponential $\Sigma_\star \propto e^{-R/R_s} + B\,e^{-R/R_{\rm outer}}$ where the inner exponential remains fixed and structural parameters are not accounted for. Structural parameter uncertainties are not accounted for.
+- PM. A bivariate gaussian with variance and covariance equal to each star's proper motions. Each star's proper motions uncertainty are assumed to be the dominant uncertainty. 
+
+The background likelihood is constructed as:
+
+- CMD : Constructed as a KDE using the other quality-selected stars outside of $5R_h$ in the catalogue. The width of each star is projected as a bivariate Gaussian.
+- PM: same as CMD except in PM space.
+- Spatial: a constant likelihood. 
+
+Note that each likelihood map is normalized over the respective parameter space. In order to represent the difference in frequency of background and forground stars, $f_{\rm sat}$ represents the field fraction of member stars.  
+
+In J+24, a MCMC simulation is ran using the above likelihood to solve for the following parameters
+
+- Systemic proper motions $\mu_\alpha$, $\mu_\delta$. Prior: within 5$\sigma$ of single component case w/ systematic uncertainties. Single component prior is based on MV2020 (RV members / expected velocity dispersion of halo at distance?)
+- $f_{\rm sat}$ density normalization (uniform between 0 and 1)
+- Spatial component parameters $B$ and $R_{\rm outer}$ for extended profiles (Scl and UMi here.)
+
+The median parameters from the simulation are then used to calculate the final $P_{\rm sat}$ values we use here. 
+
+We adopt a probability cut of $P_{\rm sat} = 0.2$ as our fiducial sample. Most stars are assigned probabilities close to 0 or 1, so the choice of probability threshhold is not too significant. Additionally, even for a probability cut of 0.2, the purity of the resulting sample with RV measurements is very high (~90%, J+24). (Note: there is likely a high systematic bias in using stars with RV measurements to measure purity. Fainter stars have poorer measurements and distant stars are less likely to have been targeted. )
+
+## Resulting Samples
 
 
 
-Not shown here, we explore simple cuts of the stars, using absolute cuts in parallax, proper motions, and the CMD. The results are similar to the nospace model.
+![Sculptor selection criteria](figures/scl_selection.png){#fig:sculptor_selection}
+
+Figure: The selection criteria for Scl members. Probable members (2-component) are orange, and all field stars (satisfying quality criteria) are in light grey. **Top:** Tangent plane. **Bottom left:** Colour magnitude diagram. **Bottom right:** Proper motion. 
 
 
+
+![Ursa Minor Selection](figures/umi_selection.png){#fig:umi_selection}
+
+Figure: Similar to @fig:sculptor_selection except for Ursa Minor. UMi features a very extended density profile with some stars ~ 6$R_h$ including a RV member. UMi is also highly elliptical compared to other classical dwarfs. 
+
+
+
+
+
+Fornax(figures/fornax_selection.png){#fig:fornax_selection}
+
+Figure: Similar to @fig:sculptor_selection except for Fornax. Note that we only use one-component probabilities here. Fornax is the quintessential unperturbed dwarf galaxy. 
 
 ### Searches for tidal tails
 
-![Tidal tails](/Users/daniel/thesis/figures/scl_tidal_tails.png){#fig:sculptor_tidal_tails}
-
-Figure: The distribution of member stars (orange), PM & CMD only selected stars (blue) and all stars (passing quality cuts, black).
-
-
-
-
-
 - There are no apparent overdensities in the PM & CMD only selected stars to suggest the presence of a tidal tail
+
+- We have tried selective matched filter 
 
 - This means that at least at the level of where the background density dominates, we can exclude models which produce tidal tails brighter than a density of $\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}$ (TODO assuming a distance  of ... and stellar mass of ...). 
 
   
 
+## Density Profiles
+
+Our primary observational constraint is the density profile of a dwarf galaxy. 
+
+To derive density profiles, we use 0.05 dex bins in log radius (i.e. the bins are derived from 10^(minimum(logR):0.05:maximum(logR))). The density in each bin is then (from Poisson statistics)
+$$
+\Sigma_b = N_{\rm memb} / A_{\rm bin} \pm \sqrt{N_{\rm memb}} / A_{\rm bin}
+$$
+where $N_{\rm memb}$ is the number of members in the bin and $A_{\rm bin}$ is the area of the bin. As discussed below, these uncertainties underrepresent the true uncertainty on multiple accounts. We retain Poisson errors for simplicity here. 
+
+
+
+In Figures @fig:scl_observed_profiles, @fig:umi_observed_profiles, @fig_fornax_observed_profiles, we show the derived density profiles for each galaxy for samples similar to in the selection plots above. In each case, all samples are the same towards the inner regions of the satellite, illustrating that these density profiles are dominated by satellite stars in the centre. The sample containing all stars reaches a plateau at the total background in the field. However, restricting stars to being most likely satellite members by CMD + PM, the background is much lower. This plateau likely represents the real background of background stars which could be mistaken as members.  Finally, we have the probable members and bg-subtracted densities. BG subtracted is based on the `all` density profile, subtracting the mean background density for stars beyond the last point of the BG subtracted profile. 
+
+Note that the probable members (fiducial) density profile continues to confidently estimate the density profile below the CMD+PM likely star background. These points are likely unreliable (see discussion below). However, before this point, both the BG subtracted and probable members density profiles are strikingly similar. Assumptions about the details of the likelihood and spatial dependence have marginal influence on the resulting density profile when the satellite is higher density than the background. 
+
+![Sculptor density profiles](figures/scl_density_methods.png){#fig:scl_observed_profiles}
+
+Figure: The density profile of Sculptor for different selection criteria. *probable members* selects stars with PSAT > 0.2 considering PM, CMD, and spatial, *CMD+PM* select stars more likely to be members according to CMD and PM only, *all* selects any high quality star, and *BG subtracted* is the background-subtracted density derived from high-quality stars. 
+
+
+
+![Ursa Minor density profiles](figures/umi_density_methods.png){#fig:umi_observed_profiles}
+
+Figure: Similar to @fig:scl_observed_profiles except for Ursa Minor.
+
+
+
+![Fornax density profiles](figures/fornax_density_methods.png){#fig:fornax_observed_profiles}
+
+Figure: Similar to @fig:scl_observed_profiles except for Fornax.
+
+
+
+# Comparison of the Classical dwarfs
+
+Classical dwarfs are often the brightest dwarfs in the sky.c The density profiles of classical dwarf galaxies is thus well measured, enabling detailed comparisons. 
+
+
+
+| galaxy     | R_h (exp inner 3Rs) | num cand |
+| ---------- | ------------------- | -------- |
+| Fornax     | $17.8\pm0.6$        | 23,154   |
+| Leo I      | $3.7\pm0.2$         | 1,242    |
+| Sculptor   | $9.4\pm0.3$         | 6,888    |
+| Leo II     | $2.4\pm0.3$         | 347      |
+| Carina     | $8.7\pm0.4$         | 2,389    |
+| Sextans I  | $20.2 \pm0.9$       | 1,830    |
+| Ursa Minor | $11.7 \pm 0.5$      | 2,122    |
+| Draco      | $7.3\pm0.3$         | 1,781    |
+
+Using the same methods above, we select members from J+24's stellar probabilities. We use the one-component exponential density profiles with 
+
+
+
+Figure: Density profiles for each dwarf galaxy. Here, we use the 1-component exponential stellar probabilities from J+24. Dwarf galaxies are scaled by our derived $R_h$ values.
 
 ## Density Profile Reliability and Uncertainties
 
 - How well do we know the density profiles? 
 - What uncertainties affect derived density profiles? 
 - Can we determine if Gaia, structural, or algorithmic systematics introduce important errors in derived density profiles?
+- Using J+24 data, we validate
+  - Check that PSAT, magnitude, no-space do not affect density profile shape too significantly
+- Our "high quality" members all have > 50 member stars and do not depend too highly on the spatial component, mostly corresponding to the classical dwarfs
 
 
 
 J+24's algorithm takes spatial position into account, assuming either a one or two component exponential density profile. When deriving a density profile, this assumption may influence the derived density profile, especially when the galaxy density is fainter than the background of similar appearing stars. To remedy this and estimate where the background begins to take over, we also explore a cut based on the likelihood ratio of only the CMD and PM components. This is in essence assuming that the spatial position of a star contains no information on it's membership probability (a uniform distribution like the background)
 
-To incorporate the structural uncertainties and robustly model the sampling uncertainty, we construct the following bootstrap model
+## Caveats
 
-- Centre is varied by a centring error, estimated from the standard normal error of the positions plus the systematic shift of the mean
+The J+24 method was designed to determine high probability members for spectroscopic followup in particular. Note that we instead care about retrieving a reliable density profile.
 
-- Position angle and ellipticity are sampled from a normal distribution given the reported uncertainties 
+In particular, in @fig:umi_observed_profiles, notice that the PSAT method produces artifically small errorbars even when the density is >1dex below the local background. These stars are likely selecting stars from the statistical MW background consistent with UMi PM / CMD, recovering the assumed density profile. As a result, the reliability of faint features in these density profiles is questionable and a more robust analysis, removing this particular density assumtion, would be required to more appropriately represent the knowledge of the density profile as the background begins to dominate. 
 
-- $f_{\rm sat}$ is sampled from ...
+J+24 do not account for structural uncertainties in dwarfs. This is a not insignificant source of uncertainty in the derived density profile
 
-  
-
-  **TODO**: Look into normalization of Likelihoods and check how $f_{\rm sat}$ matters. If $f_{\rm sat}$ is related to the normalizations of fg / bg densities, and other likelihoods are area-normalized to 1, then this makes life much easier. 
-
-  Test if psat weighted density profiles are similar
-
-  Save MC density profile outputs
-
-  
-
-  
-
-  
+We assume constant ellipticity and position angle. Dwarf galaxies, in reality, are not necessarily smooth and constant.
 
 
 
-![Density profiles](/Users/daniel/thesis/figures/scl_density_methods.png){#fig:sculptor_observed_profiles}
-
-Figure: 
+# Comparison and conclusions
 
 
 
-# Comparison of the Classical dwarfs
+To illustrate the differences between each dwarf galaxy, in @fig:classical_dwarfs_densities, we compare Scl, UMi, and Fnx against exponential and plummer density profiles (**TODO: state these somewhere**). While all dwarfs have marginal differences in the inner regions, each dwarf diverges in the outer regions relative to an exponential. In particular, while Fnx is underdense, Scl and UMi are both overdense, approximately fitting a Plummer density profile instead. 
 
-- Using J+24 data, we validate
-  - Check that PSAT, magnitude, no-space do not affect density profile shape too significantly
-- Our "high quality" members all have > 50 member stars and do not depend too highly on the spatial component, mostly corresponding to the classical dwarfs
-- We fit Sérsic profiles to each galaxy
-  - The Sérsic index, $n$, is a measure of the deviation from an exponential. Exponentials have $n=1$, whereas more extended dwarf galaxies will have higher $n$
-- To better estimate the uncertainties due to unknown galaxy properties and flexibility in the likelihood cut, we can 
-
-![Sculptor and UMi versus classical dwarfs](/Users/daniel/thesis/figures/classical_dwarf_profiles.png)
-
-Figure: Density profiles for each dwarf galaxy.
+In summary, we have used J+24 data to derive the density profiles for Fornax, Sculptor, and Ursa Minor. In each case, the density profile is robust against different selection criteria. Both Sculptor (Ursa Minor) show strong (weak) evidence for deviations from an exponential profile. We will explore a tidal explanation for these features in this work.
 
 
 
-**TODO**: Use updated density profiles (nospace) with uncertainties included to MCMC fit Sérsic profiles to every dwarf galaxy. 
+![Classical dwarf density profiles](figures/scl_umi_fornax_exp_fit.png){#fig:classical_dwarfs_densities}
 
-- Fornax
-- Leo I
-- Sculptor
-- Leo II
-- Carina 
-- Sextans I
-- Ursa Minor
-- Draco
-- Antlia II?
+Figure: The density profiles of Sculptor, Ursa Minor, and Fornax compared to Exp2D and Plummer density profiles. Dwarf galaxies are scaled to the same half-light radius and density at half-light radius (fit from the inner 3 scale radii exponential recursively. )
 
-## Radial Velocity Measurements
+# Appendix / Extra Notes
+
+## Additional density profile tests
 
 
 
+![Density profiles](figures/scl_density_methods_extra.png){#fig:sculptor_observed_profiles}
 
+Figure: Density profiles for various assumptions for Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a 2-component bayesian model assuming circular radii, simple is the series of simple cuts described in Appendix ?, bright is the sample of the brightest half of stars (scaled by 2), DELVE is a sample of  RGB  stars (background subtracted and rescaled to match).
 
-# Simulation-based motivations
-
-To motivate why a tidal interaction may give rise to the observed density profiles, we create a toy simulation following @PNM2008. 
-
-- NFW initial conditions (sculptor like, vcm, rcm)
-
-- Evolved in x-y plane using @EP2020 potential for ~ 5Gyr with pericentre of 15 kpc and apocentre of 100 kpc. 
-
-- Exponential initial stellar profile.
-
-  
-
-As a dark matter halo is perturbed on a pericentric passage with the milky way,
-
-- Tidal stress heats halo slightly
-- Mass loss, particularly of loosely bound particles
-
-The stellar component tracers will similarly follow the behaviour of the dark matter. 
-
-An emperical estimate of where the simulation's stars are becoming unbound is, as stated in @PNM2008, the break radius
-$$
-R_b = C\,\sigma_{v}\,\Delta t
-$$
-where $\sigma_v$ is the present line of sight velocity dispersion , $\delta t$ is the time since pericentre, and $C \approx 0.55$ is a fit. The idea motivating this equation is stars in the inner regions will have dynamically equilibriated to the new potential (phase mixed), however the outer regions are no longer in steady state, so we have to wait until the crossing time reaches them as well.
+Note that a full rigorous statistical analysis would require a simulation study of injecting dwarfs into Gaia and assessing the reliability of various methods of membership and density profiles. This is beyond the scope of this thesis. 
 
 
 
-As illustrated in @fig:toy_profiles, the density profile initially stars off exponential. At increasing times since the first pericentric passage, the break radius, appearing as an apparent separation between the slopes of the inner and outer profile, increases. 
+```
+SELECT TOP 1000
+       *
+FROM delve_dr2.objects
+WHERE 11 < ra
+and ra < 19
+and -37.7 < dec
+and dec < -29.7
 
-![Idealized simulations match Scl and UMi](/Users/daniel/thesis/figures/scl_umi_vs_idealized.png){#fig:toy_profiles}
-
-Figure: Sculptor and UMi's profiles are well-matched to an idealized simulation
-
-
-
-![Break radius validation](/Users/daniel/thesis/figures/idealized_break_radius.png){#fig:idealized_break_radius}
-
-Figure: The break radius of the simulations is set by 
-
-
-
-From this argument, we note that the following properties must be approximately true for tides to occur:
-
-- Close enough pericentre. The other break radius $r_J$ implies that if the host density is 3x the satellite, stars will be lost
-- Corresponding time since last pericentre: If the time since last pericentre is not $\sim$ consistent with an observed break in the density profile, then tides 
-- Halo evolution. As found in @EN2021, galaxies evolve along well defined tidal tracks (assuming spherical, isotropic, NFW halo, which may not be true, see ...). These tracks tend to "puff up" the stellar component while also removing dark matter mass, leaving a smaller, compacter DM halo with a more extended stellar component.
-  - This information is mostly related to the statistical initial distribution of satellites from cosmology [ludlow+2016; @fattahi+2018]
-
-# Summary
-
-- Of the classical dwarfs, UMi & Scl stand out statistically, with high $n$ given their luminosity
-- Including fainter dwarf galaxies, Boo 3 and Boo 1 appear to also have extended density profiles
-  - Deeper data would be required to robustly measure this
+```
 
 
 

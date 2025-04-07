@@ -5,4 +5,6 @@ pandocoptions="--filter pandoc-crossref --citeproc -M --top-level-division=secti
 
 pandoc $pandocoptions -o abstract.tex abstract.md
 pandoc $pandocoptions -o introduction.tex introduction.md
+pandoc $pandocoptions -o data.tex data.md
+pandoc $pandocoptions -o methods.tex methods.md
 latexmk -xelatex -f main.tex

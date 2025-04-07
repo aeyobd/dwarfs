@@ -35,8 +35,8 @@
 \newcommand{\about}[1]{${\sim} #1$}
 
 
-\title{From tides to tails: \\
-    Does the Milky Way affect Sculptor and Ursa Minor?
+\title{Timid tides or tall tails? \\
+    Investigating the outer reaches of the Sculptor and Ursa Minor dwarf galaxies
 }
 \author{Daniel A. Boyea}
 
@@ -157,7 +157,11 @@ Department of Astronomy
 \input{introduction}
 
 
+\chapter{Data Selection}
+\input{data}
 
+\chapter{Methods}
+\input{methods}
 
 %%%%%%%%%%%%%%%%%%%% REFERENCES %%%%%%%%%%%%%%%%%%
 
@@ -198,6 +202,14 @@ textwidth: \the\textwidth
 ---\rule[2.4pt]{12pt}{0.6pt}
 \settowidth{\myw}{---}\the\myw
 
+En dash
+\settowidth{\myw}{--}\the\myw
+--\rule[2.4pt]{6pt}{0.6pt}
+
+Hyphen
+\settowidth{\myw}{-}\the\myw -
+
+
 {\bf ---}\rule[2.2pt]{12pt}{1.1pt}
 
 \settoheight{\myl}{---}\the\myl
@@ -206,6 +218,7 @@ textwidth: \the\textwidth
 I\rule{1.2pt}{8pt}
 {\bf I}\rule{2.0pt}{8pt}
 |\rule[-2pt]{0.6pt}{12pt}
+\the\textheight
 
 
 ⁄\end{document}

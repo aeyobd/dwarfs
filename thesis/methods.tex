@@ -1,0 +1,232 @@
+\section{Simulation Methods}\label{simulation-methods}
+
+In this section, we discuss our simulation methods from orbital
+estimation to initial conditions to simulation parameters and software.
+
+We use Agama \citep{vasiliev} for potential specification and initial
+conditions, and Gadget-4 \citep{springle2021} for orbit integration and
+dark matter simulations (with a custom patch to integrate with Agama).
+
+\subsection{Potential}\label{potential}
+
+Our fiducial potential is as described in \citet{EP2020}. This potential
+is an analytic approximation of \citet{McMillan2011}, consisting of a
+stellar Bulge, disk, and a dark matter NFW halo. The specific parameters
+are
+
+\subsubsection{Bulge}\label{bulge}
+
+Hernquist potential with \(r_s=1.3\), mass = 2.1.
+
+The \citet{hernquist1990} density profile for the galactic bulge is
+parameterized in terms of a characteristic mass, \(M\), and radius
+\(a\).
+
+Density Profile \[
+\rho(r) = \frac{M}{2\pi} \frac{a}{r} \frac{1}{(r+a)^3}
+\]
+
+\subsubsection{Disk}\label{disk}
+
+\begin{itemize}
+\tightlist
+\item
+  Thin disk. miyamoto+nagai disk with parameters \(a=3.944\),
+  \(b=0.311\), \(M=3.944\),
+\item
+  Thick disk. miyamoto+nagai disk with parameters \(a=4.4\), \(b=0.92\),
+  and \(M=2\)
+\end{itemize}
+
+\[
+\Phi(R, z) = \frac{-GM}{\left(R^2 + \left[a + \sqrt{z^2 + b^2}\right]^{2}\right)^{1/2}}
+\]
+
+for convenience, we define the helper variables,
+\(S = \sqrt{z^2 + b^2}\) and \(D = \sqrt{R^2 + (a+S)^2}\), so the
+potential simplifies to \[
+\Phi(R, z) = \frac{-GM}{D}
+\]
+
+\[
+\rho = \frac{b^2 M}{4\pi} \frac{aR^2 + (a+3r)(a + r)^2}{S^3 D^5}
+\]
+
+\subsubsection{Halo}\label{halo}
+
+Mvir=115, r=20.2, c=9.545
+
+\begin{itemize}
+\tightlist
+\item
+  NFW Dark matter halo. \(M_s=79.5\) (double check). and \(r_s = 20.2\).
+\end{itemize}
+
+Variations to the potential of the inner disk (exclusion of a bar)
+should minimally affect our results as no orbit we consider reaches less
+than \textasciitilde15 kpc of the MW centre.
+
+\textbf{Figure:} Circular velocity profile of \citet{EP2020} potential.
+
+\subsection{Orbital Estimation}\label{orbital-estimation}
+
+To estimate the orbits of a dwarf galaxy, we perform a Monte Carlo
+sampling of the present-day observables. We integrate each sampled
+observable back in time for 10 Gyr in Gadget as massless point
+particles.
+
+We use the astropy v4 galactocentric frame. This frame assumes
+\ldots\ldots{}
+
+\subsection{Initial conditions}\label{initial-conditions}
+
+We use Agama (cite) to generate initial conditions. We initially assume
+galaxies are described by an NFW dark matter potential and the stars are
+merely collisionless tracers embedded in this potential
+
+\subsubsection{Stellar Probabilities}\label{stellar-probabilities}
+
+We assign stellar probabilities via Eddington inversion using the
+following method:
+
+\begin{itemize}
+\tightlist
+\item
+  \(\Psi\) is taken as known from the underlying assumed analytic dark
+  matter potential.
+\item
+  \(\rho_\star\) is
+\end{itemize}
+
+\subsubsection{Stellar profiles}\label{stellar-profiles}
+
+We consider several different stellar profiles in this work.
+
+\paragraph{Exp2D}\label{exp2d}
+
+The 2D exponential stellar profile is given by \[
+\Sigma_\star(R) = A e^{-R / R_s}
+\] where \(A\) is some normalization and \(R_s\) is the exponential
+scale radius. The 3D deprojected profile is found through abel inversion
+(e.g.~Rapha\ldots), i.e. \[
+\rho_\star (r) = \int dR = xxx
+\]
+
+\paragraph{Plummer}\label{plummer}
+
+\subsection{Dark Matter simulations}\label{dark-matter-simulations}
+
+See \citet{power+2003} for a discussion of this.
+
+The gravitational softening is based on: \[
+h_{grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}}
+\]
+
+I in fact find that dividing the softening by a factor of sqrt(10) gives
+slightly more precise results with a negligible increase in compute
+time.
+
+\section{Appendix: Convergence tests and Simulation
+Parameters}\label{appendix-convergence-tests-and-simulation-parameters}
+
+Here, we describe some convergence tests to ensure our methods and
+results are minimally impacted by numerical limitations and assumptions.
+See \citet{power2003} for a detailed discussion of various assumptions
+and parameters used in N-body simulations.
+
+\subsubsection{Particle Number.}\label{particle-number.}
+
+\subsubsection{Timestepping}\label{timestepping}
+
+\subsubsection{Gravitational methods}\label{gravitational-methods}
+
+\subsubsection{Gravitational accuracy}\label{gravitational-accuracy}
+
+\subsubsection{Fiducial Parameters}\label{fiducial-parameters}
+
+\begin{verbatim}
+# -----------------------------------IO---------------------------------------
+
+#---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
+
+#---File formats 
+ICFormat                    3       # use HDF5
+SnapFormat                  3 
+
+#---Mem & CPU limits
+TimeLimitCPU                86400   # TUNE
+CpuTimeBetRestartFile       7200    # TUNE 
+MaxMemSize                  2400    # TUNE to system (MB)
+
+#---Time
+TimeBegin                   0
+TimeMax                       2120      # 10 Gyr
+
+#---Output frequency
+OutputListOn                0
+TimeBetSnapshot             10      # change as needed
+TimeOfFirstSnapshot         0       # MATCH to TimeBegin
+TimeBetStatistics           10      # change as needed 
+NumFilesPerSnapshot         1
+MaxFilesWithConcurrentIO    1 
+
+
+# ----------------------------------Gravity-----------------------------------
+
+# MATCH all the below if continuing run
+
+#---Timestep accuracy
+ErrTolIntAccuracy           0.01    # MATCH
+CourantFac                  0.1     # ignored; for SPH
+MaxSizeTimestep             0.5     # MATCH
+MinSizeTimestep             0.0 
+
+#---Tree algorithm
+TypeOfOpeningCriterion      1       # 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5     # mostly used for Barnes-Hut
+ErrTolThetaMax              1.0     # (used only for relative)
+ErrTolForceAcc              0.005   # (used only for relative)
+
+#---Domain decomposition: should only affect performance
+TopNodeFactor                       3.0
+ActivePartFracForNewDomainDecomp    0.02
+
+#---Gravitational Softening
+SofteningComovingClass0      # FILL IN
+SofteningMaxPhysClass0       0      # ignored; for cosmological
+SofteningClassOfPartType0    0
+SofteningClassOfPartType1    0
+
+
+#--------------------------------Misc-------------------------------------
+
+# probably do not need to change the options below 
+
+#---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
+
+#---Cosmological Parameters 
+ComovingIntegrationOn     0 # no cosmology
+Omega0                    0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+Hubble                      100
+BoxSize                     0
+
+#---SPH
+ArtBulkViscConst             0.8
+MinEgySpec                   0
+InitGasTemp                  100
+
+#---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1
+\end{verbatim}
