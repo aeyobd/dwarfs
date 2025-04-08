@@ -52,6 +52,9 @@ The only inputs are the name of the galaxy and the name of the profile to load (
 # ╔═╡ 0a070858-01c8-4cdc-bb8d-f5d587371cdb
 R_s_inner = 3
 
+# ╔═╡ 6b818039-3fde-492a-bcd6-d52a5ef4b0cb
+
+
 # ╔═╡ bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 md"""
 # Setup
@@ -111,6 +114,9 @@ end
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
 profilename = inputs.profilename
 
+# ╔═╡ d1302080-dfb4-458f-85ba-d6999fc7aa88
+profbasename = split(basename(profilename), "_profile")[1]
+
 # ╔═╡ 25c3b74f-d8fa-4f4c-ae7c-71b137fb2ce7
 galaxyname = inputs.galaxyname
 
@@ -118,7 +124,7 @@ galaxyname = inputs.galaxyname
 begin
 	using LilGuys
 	FIGDIR = joinpath(galaxyname, "figures")
-	FIGSUFFIX=".fit_inner_prof"
+	FIGSUFFIX="$profbasename.fit_inner_prof"
 end
 
 # ╔═╡ 11b84ff0-7f35-4716-ae30-e05a1c5f88ba
@@ -711,6 +717,9 @@ md"""
 ### Inner exp2d
 """
 
+# ╔═╡ ed9e7de1-20c8-4630-be37-70e03ed40054
+
+
 # ╔═╡ 19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
 log_R_max_exp = let
 	ml_fit_exp2d_iter = []
@@ -756,11 +765,26 @@ let
 	fig
 end
 
+# ╔═╡ cefc40b6-1210-405e-90f9-9d6be3b3734e
+filter_prof(prof, log_R_max_exp)
+
 # ╔═╡ 6922839a-1b5d-4a5c-8f68-50cd57d986a8
 model_exp2d_inner = DensityModel(log_Σ_exp2d, turing_model_exp2d, [:log_M, :log_R_s])
 
 # ╔═╡ bdf90521-e8f3-40e5-a61f-ab8503cce9fe
 mcmc_fit_exp2d_inner = sample_model(model_exp2d_inner, prof=filter_prof(prof, log_R_max_exp))
+
+# ╔═╡ 9b965a09-6fad-4133-96a9-310ed3eb3026
+R_s_fit = mcmc_fit_exp2d_inner.summary.median[mcmc_fit_exp2d_inner.summary.parameters .== :log_R_s] |> only
+
+# ╔═╡ ad4b9c13-9397-44e6-944c-fef3bdf5403b
+@assert ≈(log_R_max_exp, R_s_fit + log10(R_s_inner) , atol=0.1) "R does not match fit"
+
+# ╔═╡ 5aadee00-dafc-4938-9074-336e6dfa11e5
+log_R_max_exp, R_s_fit + log10(R_s_inner)
+
+# ╔═╡ a2c3aab6-4471-4bf2-a61a-f83f4f8aa6ff
+filter_prof(prof,  R_s_fit + log10(R_s_inner))
 
 # ╔═╡ 8e81babf-1963-4187-a8c5-0b1e1a325ab3
 plot_chains(mcmc_fit_exp2d_inner.samples)
@@ -914,7 +938,9 @@ end
 # ╟─9d3245ef-f774-4add-9b1d-60bb69b04c8d
 # ╠═72524f04-bd5b-4f4b-a41d-8c038c180ce0
 # ╠═0a070858-01c8-4cdc-bb8d-f5d587371cdb
+# ╠═6b818039-3fde-492a-bcd6-d52a5ef4b0cb
 # ╠═2d9df1e2-1824-4f53-82dd-86afad6600ea
+# ╠═d1302080-dfb4-458f-85ba-d6999fc7aa88
 # ╠═48f59ed4-209b-45c5-857f-3c309141e8a7
 # ╟─bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 # ╠═fa54e7aa-f477-45db-8dd9-56bd6b367604
@@ -983,7 +1009,13 @@ end
 # ╠═415397c4-f4b0-4e21-9df4-cf8faf761648
 # ╠═76326a80-b709-4f96-a379-8aaea4d3af44
 # ╠═c2301858-2be3-4945-bef2-4525cd123030
+# ╠═ed9e7de1-20c8-4630-be37-70e03ed40054
+# ╠═ad4b9c13-9397-44e6-944c-fef3bdf5403b
+# ╠═5aadee00-dafc-4938-9074-336e6dfa11e5
+# ╠═cefc40b6-1210-405e-90f9-9d6be3b3734e
+# ╠═a2c3aab6-4471-4bf2-a61a-f83f4f8aa6ff
 # ╠═19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
+# ╠═9b965a09-6fad-4133-96a9-310ed3eb3026
 # ╠═6922839a-1b5d-4a5c-8f68-50cd57d986a8
 # ╠═bdf90521-e8f3-40e5-a61f-ab8503cce9fe
 # ╠═8e81babf-1963-4187-a8c5-0b1e1a325ab3

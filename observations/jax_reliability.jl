@@ -127,6 +127,7 @@ begin
 	all_stars[!, :LL_PM] = @. log10(all_stars.L_PM_SAT / all_stars.L_PM_BKD)
 	all_stars[!, :LL_CMD] = @. log10(all_stars.L_CMD_SAT / all_stars.L_CMD_BKD)
 	all_stars[!, :LL] = @. log10(all_stars.L_SAT / all_stars.L_BKD)
+	all_stars[!, :LL_nospace] = @. all_stars.LL_PM + all_stars.LL_CMD
 
 	all_stars[!, :LL_norm] = @. abs(all_stars.LL_S) + abs(all_stars.LL_PM) + abs(all_stars.LL_CMD)
 
@@ -662,6 +663,9 @@ end
 # ╔═╡ b4f816f0-0abe-43c2-bf5b-48a2eb2b99c8
 @savefig "LL_corr_memb" plot_corr(members, title="members")
 
+# ╔═╡ da4cbd6e-9560-40bf-aa73-f1fcb6d7bf29
+LLR_min = round(minimum(members.LL), digits=2)
+
 # ╔═╡ dc280eae-4f10-4167-9545-c70d67af2d8f
 let
 	fig = plot_corr(best_stars[best_stars.LL .> 0, :], markersize=5, title = "LLR > 0")
@@ -676,6 +680,13 @@ let
 	fig = plot_corr(best_stars[best_stars.LL .> -5, :], title="LLR > -5")
 
 	@savefig "LL_cor_-5" fig
+end
+
+# ╔═╡ be18bdf6-d5dc-4ff4-92cb-979f238f431b
+let
+	fig = plot_corr(best_stars[best_stars.LL .> LLR_min - 2, :], title="LLR > $(round(LLR_min - 2, digits=2))")
+
+	@savefig "LL_cor_m2" fig
 end
 
 # ╔═╡ fb3a27be-62c7-41ab-ba5d-761efb74c044
@@ -1217,8 +1228,7 @@ function plot_f_l_tangent(best_stars; title="", markersize=5)
 		size=(800, 500)
 	)
 
-	filt = best_stars.PSAT .> 0.2
-	df = best_stars[filt, :]
+	df = best_stars
 
 	local p
 	for i in 1:3
@@ -1230,7 +1240,7 @@ function plot_f_l_tangent(best_stars; title="", markersize=5)
 			xlabel = plot_labels[:xi],
 			ylabel = plot_labels[:eta],
 			limits = (-r_field, r_field, -r_field, r_field),
-			title = i == 2 ? title : ""
+			title = label,
 			)
 		
 		p = scatter!(df.xi, df.eta,
@@ -1317,11 +1327,19 @@ let
 	fig
 end
 
+# ╔═╡ b940cf5c-2cd4-4ebf-927c-8a8b36da50af
+let
+	fig = plot_f_l_tangent(best_stars[best_stars.LL_nospace .> 0, :], title="LL > 0")
+
+	@savefig "tangent_fracs_LLR_nospace_0"
+	fig
+end
+
 # ╔═╡ 9a3fe856-bf87-4473-9a28-f486ac074590
 let
-	fig = plot_f_l_hist(best_stars[best_stars.LL .> -5, :], title="LL > -5")
+	fig = plot_f_l_hist(best_stars[best_stars.LL_nospace .> 0, :], title="LL > -5")
 
-	@savefig "hist_fracs_LLR_-5"
+	@savefig "hist_fracs_LLR_nospace_0"
 	fig
 end
 
@@ -1379,7 +1397,7 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 )
 
 # ╔═╡ Cell order:
-# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═8acddd07-0eff-47a6-a364-f7f58680bd9c
@@ -1438,8 +1456,10 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╟─3a52eba9-e07d-4445-a322-1c4b8bb33024
 # ╠═f54c50ae-0e03-4917-899f-81a30f116b3f
 # ╠═b4f816f0-0abe-43c2-bf5b-48a2eb2b99c8
+# ╠═da4cbd6e-9560-40bf-aa73-f1fcb6d7bf29
 # ╟─dc280eae-4f10-4167-9545-c70d67af2d8f
 # ╠═f818db1d-9d5e-48a0-87eb-88d2c396a979
+# ╠═be18bdf6-d5dc-4ff4-92cb-979f238f431b
 # ╠═fb3a27be-62c7-41ab-ba5d-761efb74c044
 # ╟─b4363369-4590-4446-9f4a-9f71ff31a870
 # ╟─00d4679d-6c55-4929-bbd3-c796479ba70d
@@ -1484,6 +1504,7 @@ scatter(all_stars.r_ell, all_stars.r_ell_old * observed_properties["r_h"] * sqrt
 # ╠═e4e6239f-9fdd-433b-8a39-ffaeaf96b59d
 # ╠═363dfc70-ec52-44ed-ade4-f88322247871
 # ╠═5a0bcbdc-e849-41b7-8ad6-c5e38d093f47
+# ╠═b940cf5c-2cd4-4ebf-927c-8a8b36da50af
 # ╠═9a3fe856-bf87-4473-9a28-f486ac074590
 # ╟─c68ff47f-97de-4bbb-8b0a-42d837da21f7
 # ╟─8d497b75-a47d-42d1-9e54-e15bfb1db805

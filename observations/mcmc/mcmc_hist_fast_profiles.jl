@@ -26,8 +26,8 @@ using OrderedCollections
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "draco"
-	skip = 1
+	galaxy = "antlia2"
+	skip = 10
 	all_profiles = true
 end
 
@@ -187,6 +187,44 @@ if all_profiles
 
 end
 
+# ╔═╡ 7f4377ad-ab77-487e-87fc-87cd0c1df40d
+let
+	skip = 1
+	Nbins = length(bins) - 1
+
+	Nc = size(df_chains, 1)
+	Ns = size(stars, 1)
+	
+	global profiles_nostruct = Vector{LilGuys.StellarDensityProfile}(undef, length(idxs))
+	radii = stars.R_ell
+
+	Threads.@threads for i in eachindex(idxs)
+		idx = idxs[i]
+		if i % 10 == 0
+			@info "sample $i"
+		end
+		
+		params = [df_chains[idx, "params[$j]"] for j in 1:Nbins]
+		Σ = MCMCUtils.Σ_hist(radii, bins, params)
+		f = 10 .^ Σ ./ (1 .+ 10 .^ Σ)
+		fsats[:, i] .= f
+
+		Ls = stars.L_CMD_SAT .* stars.L_PM_SAT
+		Lb = stars.L_CMD_BKD .* stars.L_PM_BKD
+		psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
+
+		weights = zeros(length(psat))
+		filt = psat .> 0
+		weights[filt] = rand(Dirichlet(psat[filt]))
+		weights .*= sum(psat)
+		prof = LilGuys.StellarDensityProfile(radii, bins=log10.(bins), 
+			weights=weights, errors=:weighted)
+
+		profiles_nostruct[i] = prof	
+	end
+
+end
+
 # ╔═╡ ba280361-c910-483a-9108-fd4be4906606
 sum(middle.(10 .^ profiles[1].log_Sigma) .* diff(exp10.(profiles[1].log_R_bins) .^ 2) .* π)
 
@@ -195,18 +233,6 @@ sum(psats[:, 1])
 
 # ╔═╡ 36bb1876-5937-44fe-bb1c-add10470371d
 pvalue = 0.16
-
-# ╔═╡ c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
-all_Sigmas = hcat([prof.log_Sigma for prof in profiles]...)
-
-# ╔═╡ 084a491c-e53a-4371-9c5b-f9450ec5deec
-sum(isnan.(all_Sigmas))
-
-# ╔═╡ 428d53fd-39cd-40f3-ac6b-389f637e351e
-all_Sigmas[isnan.(all_Sigmas)] .= -Inf
-
-# ╔═╡ f4d9ddee-9ca9-4e5a-9d6c-a18e866ba71a
-all_Sigmas_m = middle.(all_Sigmas)
 
 # ╔═╡ 053d441b-9b1b-4c1a-bc96-fa5b1e9f059e
 function to_measurements(A::Matrix; pvalue=pvalue)
@@ -219,17 +245,43 @@ function to_measurements(A::Matrix; pvalue=pvalue)
 	return Measurement.(m, m .- l, h .- m)
 end
 
+# ╔═╡ c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
+all_Sigmas = hcat([prof.log_Sigma for prof in profiles]...)
+
+# ╔═╡ 8c03d71d-2fbf-4ef4-b8f8-f2ebbe694434
+all_Gammas = hcat([prof.Gamma for prof in profiles]...)
+
+# ╔═╡ 33f16b18-1787-4768-847e-10f877825e38
+all_Sigmas_nostruct = hcat([prof.log_Sigma for prof in profiles_nostruct]...)
+
+# ╔═╡ 084a491c-e53a-4371-9c5b-f9450ec5deec
+sum(isnan.(all_Sigmas))
+
+# ╔═╡ 428d53fd-39cd-40f3-ac6b-389f637e351e
+all_Sigmas[isnan.(all_Sigmas)] .= -Inf
+
+# ╔═╡ f4d9ddee-9ca9-4e5a-9d6c-a18e866ba71a
+all_Sigmas_m = middle.(all_Sigmas)
+
 # ╔═╡ 6470edfd-bd06-43b7-aa5e-a80645af78fb
 psats_pm = to_measurements(psats)
 
 # ╔═╡ 5f5bcf71-f306-45db-ba76-af69e88675c2
 log_Sigma_slow = to_measurements(middle.(all_Sigmas))
 
+# ╔═╡ 0e13c17b-2a09-4699-a0a6-4836d303ccc2
+log_Sigma_nostruct = to_measurements(middle.(all_Sigmas_nostruct))
+
 # ╔═╡ c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
 log_Sigma_fast = to_measurements(log_Sigmas_fast)
 
 # ╔═╡ 81e5a128-c1ed-4a8a-8bb6-e4efd0593c80
 sum(stars.PSAT)
+
+# ╔═╡ b8ba7f13-6a1a-43d5-90db-930196dfbbe4
+md"""
+# Plots
+"""
 
 # ╔═╡ da737b3e-f28a-4917-91d6-eea97458ddb0
 let
@@ -327,6 +379,7 @@ prof_mc_slow = LilGuys.StellarDensityProfile(
 	log_Sigma=log_Sigma_slow,
 	log_R_bins=log10.(bins),
 	log_R=midpoints(log10.(bins)),
+	#Gamma = to_measurements(middle.(all_Gammas))
 )
 
 # ╔═╡ 94d6a13f-1165-4d8f-a40a-a4cfa9224093
@@ -364,6 +417,17 @@ prof_mc = LilGuys.StellarDensityProfile(
 		log_R=midpoints(log10.(bins)),
 	)
 
+# ╔═╡ 4e4624d7-a858-486f-9930-75b9adf9c269
+mean.(eachrow(.!isfinite.(all_Gammas)))
+
+# ╔═╡ 4106ea1f-948f-42fb-9a19-64580a94ce9a
+prof_mc_nostruct = LilGuys.StellarDensityProfile(
+		R_units = "arcmin",
+		log_Sigma=log_Sigma_nostruct,
+		log_R_bins=log10.(bins), # use normal bins for these
+		log_R=midpoints(log10.(bins)),
+	)
+
 # ╔═╡ 7c02d24f-7d59-410b-99bc-93513afa4c5d
 let
 	fig = Figure(size=(5*72, 3*72))
@@ -372,18 +436,25 @@ let
 		ylabel = log_Sigma_label,
 		limits = (nothing, nothing, -12, 4)
 	)
-	jitter=0.01
+	jitter=0.04
 
 	profs = OrderedDict(
 		"mc hist" => prof_mc_slow,
 		"mc hist approx" => prof_mc,
+		"mc hist nostruct" => prof_mc_nostruct,
 		"weighted" => prof_weighted,
 		"fiducial" => prof_simple,
 	)
 
 	
 	for (label, prof) in profs
-		LilGuys.plot_log_Σ!(ax, prof, label=label)
+
+		filt = isfinite.(prof.log_Sigma)
+		x = prof.log_R[filt]
+		y = prof.log_Sigma[filt] 
+
+		yerr = error_interval.(y)
+		errorscatter!(x .+ jitter * LilGuys.randu(-1, 1), y, yerror=yerr, label=label, )	
 	end
 
 	Legend(fig[1,2], ax)
@@ -406,7 +477,7 @@ let
 		y = prof.log_Sigma[filt] - prof_ref.log_Sigma[filt]
 		yerr = LilGuys.error_interval.(prof.log_Sigma[filt])
 
-		errorscatter!(x, y, yerror=yerr, label=label)
+		errorscatter!(x .+ jitter * LilGuys.randu(-1, 1), y, yerror=yerr, label=label)
 	end
 
 	rowsize!(fig.layout, 2, Relative(0.3))
@@ -425,6 +496,11 @@ end
 # ╔═╡ 17b68535-445d-4203-861f-f278090de89a
 open(joinpath(outdir, "hist_fast_approx_profile.toml"), "w") do f
 	print(f, prof_mc)
+end
+
+# ╔═╡ cdeeb6c0-f807-419f-bba1-f54f50979da0
+open(joinpath(outdir, "hist_fast_nostruct_profile.toml"), "w") do f
+	print(f, prof_mc_nostruct)
 end
 
 # ╔═╡ 8b05449b-6d03-40cc-b4d8-9230303c15c1
@@ -469,21 +545,26 @@ end
 # ╟─6685cdec-7c99-45ca-98c8-f6439dfd7290
 # ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
 # ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
+# ╠═7f4377ad-ab77-487e-87fc-87cd0c1df40d
 # ╠═2027b636-bb17-4004-941e-b715ba8d0216
 # ╠═8abe3d92-f9e8-4e89-96ec-14eaf9482e64
 # ╠═939aa449-26ea-4d2d-8773-42a73c3d0410
 # ╠═ba280361-c910-483a-9108-fd4be4906606
 # ╠═36f7e33d-0ee3-4ea3-bb0f-3cedd34da773
 # ╠═36bb1876-5937-44fe-bb1c-add10470371d
+# ╠═053d441b-9b1b-4c1a-bc96-fa5b1e9f059e
 # ╠═c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
+# ╠═8c03d71d-2fbf-4ef4-b8f8-f2ebbe694434
+# ╠═33f16b18-1787-4768-847e-10f877825e38
 # ╠═084a491c-e53a-4371-9c5b-f9450ec5deec
 # ╠═428d53fd-39cd-40f3-ac6b-389f637e351e
 # ╠═f4d9ddee-9ca9-4e5a-9d6c-a18e866ba71a
-# ╠═053d441b-9b1b-4c1a-bc96-fa5b1e9f059e
 # ╠═6470edfd-bd06-43b7-aa5e-a80645af78fb
 # ╠═5f5bcf71-f306-45db-ba76-af69e88675c2
+# ╠═0e13c17b-2a09-4699-a0a6-4836d303ccc2
 # ╠═c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
 # ╠═81e5a128-c1ed-4a8a-8bb6-e4efd0593c80
+# ╠═b8ba7f13-6a1a-43d5-90db-930196dfbbe4
 # ╠═da737b3e-f28a-4917-91d6-eea97458ddb0
 # ╠═b2b89764-7990-4441-bd3c-5f369fbbaceb
 # ╠═ad85b789-8f43-489b-a41c-a966e08d78ad
@@ -497,6 +578,9 @@ end
 # ╠═28b67692-45a9-435d-8862-882b0f06f947
 # ╠═4482bead-75a5-413f-b442-e60ab3d3ec88
 # ╠═bf8d5936-1a4e-47c2-bb22-531ab344b8ad
+# ╠═4e4624d7-a858-486f-9930-75b9adf9c269
+# ╠═4106ea1f-948f-42fb-9a19-64580a94ce9a
 # ╠═6f2a4b25-b9ea-4560-ba6e-fc22af9f23e6
 # ╠═17b68535-445d-4203-861f-f278090de89a
+# ╠═cdeeb6c0-f807-419f-bba1-f54f50979da0
 # ╠═8b05449b-6d03-40cc-b4d8-9230303c15c1

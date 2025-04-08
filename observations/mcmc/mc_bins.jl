@@ -56,7 +56,7 @@ begin
 end
 
 # ╔═╡ 6014a851-525b-4565-b074-fbdd26a8ce2b
-bin_width = 0.05
+bin_width = 0.1
 
 # ╔═╡ e53cdf92-f17d-40ae-9785-c00b7e33aeba
 PSAT_min = 0.2

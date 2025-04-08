@@ -30,7 +30,7 @@ using PlutoUI
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	@bind galaxy confirm(TextField(default="galaxy"))
 end
 
 # ╔═╡ 7ff855b9-7a1e-422e-b8a5-1cb5ecfe368f

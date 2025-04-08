@@ -84,8 +84,8 @@ begin
 	memb_filt = rv_meas.LLR_nospace .> 0.0 # ignore spatial 
 	memb_filt .&= 150 .> rv_meas.RV .> 60
 
-	quality_score = rv_meas.RV_std ./ rv_meas.RV_err
-	quality_score[isnan.(rv_meas.RV_std)] .= 0
+	quality_score = rv_meas.RV_sigma ./ rv_meas.RV_err
+	quality_score[isnan.(rv_meas.RV_sigma) .|| (rv_meas.RV_sigma .== 0)] .= 0
 
 	memb_filt .&= quality_score .< 5
 end
@@ -94,7 +94,7 @@ end
 mean(quality_score .> 5)
 
 # ╔═╡ 74b10a3e-1342-454f-8eed-77b371f81edf
-lines(histogram(quality_score, normalization=:none))
+lines(histogram(filter(isfinite, quality_score), normalization=:none))
 
 # ╔═╡ d8800a31-1ed3-422f-ac51-90f18cf61c29
 sum(quality_score .< Inf)
@@ -278,7 +278,7 @@ std(memb_stars.RV)
 mean(memb_stars.radial_velocity_gsr)
 
 # ╔═╡ 9ffcc0b0-11a1-4962-b64e-59a731f22bd8
-samples_gsr = DataFrame(sample(normal_dist(memb_stars.radial_velocity_gsr, memb_stars.RV_err, μ_min=30, μ_max=100), NUTS(0.65), 10000))
+samples_gsr = DataFrame(sample(normal_dist(memb_stars.vz, memb_stars.vz_err, μ_min=30, μ_max=100), NUTS(0.65), 10000))
 
 # ╔═╡ 3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 pairplot(samples_gsr[:, [:μ, :σ]])
@@ -298,6 +298,78 @@ let
 	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
 	
 	plot_samples!(samples_gsr, LinRange(40, 110, 100), thin=15)
+	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
+
+	fig
+end
+
+# ╔═╡ 062994bc-fb0c-4f08-b7f7-7cc6714bad1e
+md"""
+## Gradient
+"""
+
+# ╔═╡ 42c24e51-77d2-4c3e-a367-0f52c9e52d0d
+"""
+Fits a normal (gaussian) distribution to 3d data with errors (to include spatial gradient)
+"""
+@model function normal_gradient(x, xerr, ξ, η; μ_min=90, μ_max=120)
+	μ ~ Uniform(μ_min, μ_max)
+	A ~ Normal(0, 0.1)
+	B ~ Normal(0, 0.1)
+	m = @. μ + A*ξ + B*η
+	σ ~ LogNormal(2.5, 1) # approx 1 - 100 km / s, very broad but should cover all
+	s = @. sqrt(σ^2 + xerr^2)
+
+	x ~ MvNormal(m, s)
+end
+
+# ╔═╡ cb440be7-1f0e-4a20-b15a-82b1820d1ced
+samples_gradient = sample(normal_gradient(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta, μ_min=30, μ_max=100), 
+						  NUTS(0.65), MCMCThreads(), 1000, 16)
+
+# ╔═╡ e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
+pairplot(samples_gradient)
+
+# ╔═╡ d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
+sqrt((0.073/0.017)^2 + (0.043 / 0.026)^2)
+
+# ╔═╡ 184b4a5d-cbab-44b2-9620-bf928ad81d0e
+df_gradient = DataFrame(samples_gradient)
+
+# ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
+scatter(df_gradient.A, df_gradient.B, alpha=0.1, markersize=1, 
+		axis=(;
+			  limits=(-0.2, 0.2, -0.2, 0.2), 
+			  aspect=DataAspect(),
+			  xlabel = "A",
+			  ylabel = "B",
+			 )
+	   )
+
+# ╔═╡ b827e765-646c-4928-9f66-c64e7a20539f
+sum(df_gradient.A .> 0)
+
+# ╔═╡ 6371d804-cc73-4ce1-9b36-79fa61780d75
+median(atand.(df_gradient.B ./ df_gradient.A))
+
+# ╔═╡ 70a22ef4-2eb1-4094-94e3-5a13fb51b9e6
+median(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2)) * 60
+
+# ╔═╡ 183f572a-bc0f-435b-a656-2ee2a3057559
+quantile(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2), [0.16, 0.5, 0.84]) * 60
+
+# ╔═╡ d3fb7136-7600-4782-ba97-f2f785fb3c0a
+quantile(atand.(df_gradient.B ./ df_gradient.A), [0.16, 0.5, 0.84]) 
+
+# ╔═╡ 3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
+let
+	fig, ax = FigAxis(
+		xlabel=L"radial velocity / km s$^{-1}$",
+		ylabel="density"
+	)
+	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
+	
+	plot_samples!(DataFrame(samples_gradient), LinRange(40, 110, 100), thin=15)
 	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
@@ -345,13 +417,13 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 end	
 
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = bins_equal_number(memb_stars.r_ell, n=10)
+bins = bins_equal_number(memb_stars.R_ell, n=10)
 
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
-df_r_ell = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.RV, memb_stars.RV_err, bins)
+df_r_ell = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.RV, memb_stars.RV_err, bins)
 
 # ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
-df_r_ell_z = calc_binned_mu_sigma(memb_stars.r_ell, memb_stars.vz, memb_stars.vz_err, bins, μ_min=40)
+df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.vz_err, bins, μ_min=40)
 
 # ╔═╡ 38da4da1-74f5-4661-89f2-4b25562a1faf
 function scatter_range!(df_r_ell)
@@ -368,7 +440,7 @@ let
 		ylabel = L"RV / km s$^{-1}$"
 	)
 
-	scatter!(memb_stars.r_ell, memb_stars.RV, color=COLORS[3], alpha=0.1)
+	scatter!(memb_stars.R_ell, memb_stars.RV, color=COLORS[3], alpha=0.1)
 
 	scatter_range!(df_r_ell)
 
@@ -382,7 +454,7 @@ let
 		ylabel = L"RV / km s$^{-1}$"
 	)
 
-	scatter!(memb_stars.r_ell, memb_stars.vz, color=COLORS[3], alpha=0.1)
+	scatter!(memb_stars.R_ell, memb_stars.vz, color=COLORS[3], alpha=0.1)
 
 	scatter_range!(df_r_ell_z)
 
@@ -500,7 +572,7 @@ let
 		ylabel = L"RV / km s$^{-1}$"
 	)
 	
-	scatter!(log10.(memb_stars.r_ell), memb_stars.RV)
+	scatter!(log10.(memb_stars.R_ell), memb_stars.RV)
 
 
 	fig
@@ -799,6 +871,19 @@ end
 # ╠═d321f8ac-1044-45ec-8e1c-a2d8395b6917
 # ╠═931ed52e-5e7a-4692-b568-ae26ea44b638
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
+# ╠═062994bc-fb0c-4f08-b7f7-7cc6714bad1e
+# ╠═42c24e51-77d2-4c3e-a367-0f52c9e52d0d
+# ╠═cb440be7-1f0e-4a20-b15a-82b1820d1ced
+# ╠═e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
+# ╠═d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
+# ╠═184b4a5d-cbab-44b2-9620-bf928ad81d0e
+# ╠═0ca7dc1b-3b41-4089-9c89-20c6e48213ea
+# ╠═b827e765-646c-4928-9f66-c64e7a20539f
+# ╠═6371d804-cc73-4ce1-9b36-79fa61780d75
+# ╠═70a22ef4-2eb1-4094-94e3-5a13fb51b9e6
+# ╠═183f572a-bc0f-435b-a656-2ee2a3057559
+# ╠═d3fb7136-7600-4782-ba97-f2f785fb3c0a
+# ╠═3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
 # ╠═7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7

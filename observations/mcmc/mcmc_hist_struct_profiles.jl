@@ -26,7 +26,7 @@ using OrderedCollections
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "draco"
+	galaxy = "reticulum2"
 	skip = 10
 	all_profiles = true
 end

@@ -24,10 +24,6 @@ include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 # ╔═╡ 811c5da0-7e70-4393-b59d-c0fdb89523ca
 md"""
 # Radial Velocity CrossMatch
-
-This notebook loads in radial velocity data from several sources (including Tolstoy+23, APOGEE, DART, and Fedrico++'s GMOS observations) and consolidates this data into a single combined radial velocity catalogue cross-matched with J+24's membership calculations.
-
-With this catalogue, detailed radial velocity analysis can then be calculated.
 """
 
 # ╔═╡ 12e0e7ad-925b-47dc-a1d8-c56e65ffaa4c
@@ -412,6 +408,9 @@ md"""
 # ╔═╡ 93d185f2-1eaa-4d35-87dd-b84f385483de
 
 
+# ╔═╡ 36d2d86f-6a75-46f4-b48f-36137e95e90d
+filt_missing(all_stars.RV_gaia)
+
 # ╔═╡ 66e5693f-90cc-4b49-8a0c-8d92ea9e8cdd
 function get_matching_stars(study1, study2)
 	rv_col_1 = "RV_$study1"
@@ -516,9 +515,6 @@ function filt_missing(col; verbose=false, low=-Inf, high=Inf)
 	end
 	return filt .& filt1
 end
-
-# ╔═╡ 36d2d86f-6a75-46f4-b48f-36137e95e90d
-filt_missing(all_stars.RV_gaia)
 
 # ╔═╡ 8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
 """
@@ -754,9 +750,6 @@ maximum(ϕ_pm)
 # ╔═╡ 9492f559-2a37-4d86-8247-2d217a387d8c
 v_tan = @. sqrt(vra^2 + vdec^2)
 
-# ╔═╡ 6f7a98dd-77cf-42a0-888d-8e34e2a0490f
-rv = [o.radial_velocity for o in gsr]
-
 # ╔═╡ cc68349e-da2f-4a73-92f5-6a021237accc
 vz = @. rv * cosd(ϕ_pm) + sind(ϕ_pm) * (vdec * cosd(θ_pm) + vra * sind(θ_pm))
 
@@ -774,6 +767,9 @@ vtot2 = @. sqrt(rv^2 + vra^2 + vdec^2)
 
 # ╔═╡ 58e5855a-9279-4f1c-bc63-52d471e63389
 vtot1 ./ vtot2
+
+# ╔═╡ 6f7a98dd-77cf-42a0-888d-8e34e2a0490f
+rv = [o.radial_velocity for o in gsr]
 
 # ╔═╡ 13f3ac83-2fb3-4537-a3e6-bdb83d8ba72a
 let
@@ -1333,7 +1329,7 @@ lguys.write_fits(joinpath("processed", "umi_all_rv.fits"), df_all, overwrite=tru
 lguys.write_fits(joinpath("processed", "umi_averaged_rv.fits"), df_averaged, overwrite=true)
 
 # ╔═╡ Cell order:
-# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═12e0e7ad-925b-47dc-a1d8-c56e65ffaa4c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220

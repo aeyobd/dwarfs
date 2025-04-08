@@ -21,7 +21,7 @@ using DataFrames, CSV
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "draco"
+	galaxy = "reticulum2"
 end
 
 # ╔═╡ af1d827c-bb7e-4875-936e-cfec7578f7db
@@ -103,9 +103,6 @@ end
 # ╔═╡ 562fe2c7-3ed4-4adb-af7f-1eca2aa35d8b
 Nbins = length(bins) - 1	
 
-# ╔═╡ ba5ceef7-ac10-46f7-a89b-30f38b6ddec1
-
-
 # ╔═╡ df84d941-7ddf-4c1c-96bb-1858b49bb710
 Lsat = stars.L_CMD_SAT .* stars.L_PM_SAT
 
@@ -119,7 +116,7 @@ Nstruct = 1024
 Nchains = 1
 
 # ╔═╡ ef076143-de9e-4768-a64e-7fb4f88e6ec5
-Nsteps = 100
+Nsteps = 300
 
 # ╔═╡ c3fe069d-c4dd-4b4e-a0b0-100f6f4d253d
 import Logging
@@ -167,17 +164,6 @@ begin
 		chain_dfs[i] = dfs
 	end
 end
-
-# ╔═╡ 370146c4-0414-467e-8a3b-ff3e0fdd09e0
-md"""
-# processing
-"""
-
-# ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
-df_out = vcat(chain_dfs...)
-
-# ╔═╡ 89cd85c9-d588-49cb-9f0f-19f1e66f1bec
-df_out
 
 # ╔═╡ ec5e0fff-0105-4c08-925a-2b771d7d78a2
 # ╠═╡ disabled = true
@@ -233,6 +219,17 @@ let
 
 end
   ╠═╡ =#
+
+# ╔═╡ 370146c4-0414-467e-8a3b-ff3e0fdd09e0
+md"""
+# processing
+"""
+
+# ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
+df_out = vcat(chain_dfs...)
+
+# ╔═╡ 89cd85c9-d588-49cb-9f0f-19f1e66f1bec
+df_out
 
 # ╔═╡ 5320bb1c-c866-44a0-a451-c159b93d8805
 let
@@ -381,7 +378,6 @@ CSV.write(summaryout, summaries)
 # ╠═12d15434-e919-460c-ad1d-a1880ed6562f
 # ╠═c38c2f54-1a6d-4bfd-966a-0ddf66ab94da
 # ╠═562fe2c7-3ed4-4adb-af7f-1eca2aa35d8b
-# ╠═ba5ceef7-ac10-46f7-a89b-30f38b6ddec1
 # ╠═df84d941-7ddf-4c1c-96bb-1858b49bb710
 # ╠═97cbf4b6-025d-461b-b82e-044f86b713c1
 # ╠═8ad26d05-6551-4a18-a01a-4803225a2ff2

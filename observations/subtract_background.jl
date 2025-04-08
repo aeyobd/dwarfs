@@ -91,6 +91,19 @@ Sigmas_bg_m = LilGuys.middle.(Sigmas_bg)
 # ╔═╡ f56378dd-e0dd-4856-a192-d7c2b7fa0222
 Sigma_bg = LilGuys.mean(Sigmas_bg_m, 1 ./ Sigmas_bg_err .^ 2)
 
+# ╔═╡ 2b94f88e-4410-4fa5-a5b7-7496b6a6834c
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+		
+	errorscatter!(collect(1:n_bins_bg), Sigmas_bg, yerror=error_interval.(Sigmas_bg))
+
+	hlines!(Sigma_bg)
+
+	fig
+
+end
+
 # ╔═╡ 63ffa29a-9157-4af5-ba08-dc945e70240d
 Sigma_bg_err = sqrt(1/LilGuys.sum(Sigmas_bg_err .^ -2))
 
@@ -212,6 +225,7 @@ end
 # ╠═c2206a3a-f41e-4b23-93ad-5ec23874d943
 # ╠═22b1035d-43f5-48e8-ac9e-5bb5a954887e
 # ╠═5816a3be-20b9-447d-8efa-889e5603bed3
+# ╠═2b94f88e-4410-4fa5-a5b7-7496b6a6834c
 # ╠═3a35f811-11cf-4154-86c0-c016a6253631
 # ╠═3cc7bd35-0f9f-48c9-aeb1-d29cc8381869
 # ╠═f56378dd-e0dd-4856-a192-d7c2b7fa0222
