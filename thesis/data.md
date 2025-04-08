@@ -63,7 +63,7 @@ Figure: Similar to @fig:sculptor_selection except for Ursa Minor. UMi features a
 
 
 
-Fornax(figures/fornax_selection.png){#fig:fornax_selection}
+
 
 Figure: Similar to @fig:sculptor_selection except for Fornax. Note that we only use one-component probabilities here. Fornax is the quintessential unperturbed dwarf galaxy. 
 
@@ -89,7 +89,7 @@ where $N_{\rm memb}$ is the number of members in the bin and $A_{\rm bin}$ is th
 
 
 
-In Figures @fig:scl_observed_profiles, @fig:umi_observed_profiles, @fig_fornax_observed_profiles, we show the derived density profiles for each galaxy for samples similar to in the selection plots above. In each case, all samples are the same towards the inner regions of the satellite, illustrating that these density profiles are dominated by satellite stars in the centre. The sample containing all stars reaches a plateau at the total background in the field. However, restricting stars to being most likely satellite members by CMD + PM, the background is much lower. This plateau likely represents the real background of background stars which could be mistaken as members.  Finally, we have the probable members and bg-subtracted densities. BG subtracted is based on the `all` density profile, subtracting the mean background density for stars beyond the last point of the BG subtracted profile. 
+In Figures @fig:scl_observed_profiles, @fig:umi_observed_profiles, we show the derived density profiles for each galaxy for samples similar to in the selection plots above. In each case, all samples are the same towards the inner regions of the satellite, illustrating that these density profiles are dominated by satellite stars in the centre. The sample containing all stars reaches a plateau at the total background in the field. However, restricting stars to being most likely satellite members by CMD + PM, the background is much lower. This plateau likely represents the real background of background stars which could be mistaken as members.  Finally, we have the probable members and bg-subtracted densities. BG subtracted is based on the `all` density profile, subtracting the mean background density for stars beyond the last point of the BG subtracted profile. 
 
 Note that the probable members (fiducial) density profile continues to confidently estimate the density profile below the CMD+PM likely star background. These points are likely unreliable (see discussion below). However, before this point, both the BG subtracted and probable members density profiles are strikingly similar. Assumptions about the details of the likelihood and spatial dependence have marginal influence on the resulting density profile when the satellite is higher density than the background. 
 

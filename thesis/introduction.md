@@ -13,7 +13,7 @@ The classical dwarfs are some of the earliest discovered systems, begining with 
 
 ## Cosmological context
 
-![Cosmological Power Spectrum](/Users/daniel/Library/Application Support/typora-user-images/image-20250408091622850.png)
+![Cosmological Power Spectrum](figures/power_spectrum.png){#fig:cosmological_power_spectrum width=100% }
 
 Figure: figure 1 from @bechtol+2022. 
 
@@ -31,9 +31,7 @@ Figure: Sculptor image from DES DR 2 via HiPS2FITS.
 
 ![Idealized simulations match Scl and UMi](figures/scl_umi_vs_penarrubia.png){#fig:toy_profiles}
 
-Figure: Sculptor and UMi's profiles are well-matched to @PNM2008. 
-
-# 
+Figure: Sculptor and UMi's profiles are well-matched to @PNM2008.  
 
 Sculptor (Scl) is one of the first discovered dwarf galaxies of the Milky Way (Shapley 1938; only preceded by the SMC and LMC!). As a classical dwarf spheroidal, Scl is relatively bright and compact. 
 

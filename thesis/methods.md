@@ -6,7 +6,7 @@ We use Agama [@agama] for potential specification and initial conditions, and Ga
 
 ## Potential 
 
-Our fiducial potential is as described in @EP2020. This potential is an analytic approximation of @McMillan2011, consisting of a stellar Bulge, disk, and a dark matter NFW halo. @fig:v_circ_potential plots the circular velocity profiles. 
+Our fiducial potential is as described in @EP2020. This potential is an analytic approximation of @mcmillan2011, consisting of a stellar Bulge, disk, and a dark matter NFW halo. @fig:v_circ_potential plots the circular velocity profiles. 
 
 The @hernquist1990 density profile for the galactic bulge is parameterized in terms of a characteristic mass, $M$, and radius $a$. 
 
