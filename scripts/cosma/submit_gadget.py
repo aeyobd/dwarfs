@@ -72,7 +72,9 @@ def create_sbatch_script(args, resubmit):
 #SBATCH --output            %j.out
 #SBATCH --time              {args.time}
 #SBATCH --nodes             {args.nodes}
-#SBATCH --ntasks-per-node   80
+#SBATCH --ntasks-per-node   16
+#SBATCH --partition         cosma
+#SBATCH --account           durham
 
 source {script_dir}/slurm_header.sh
 bash run.sh

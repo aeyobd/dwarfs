@@ -7,7 +7,7 @@
 #endif
 
 #ifdef HAVE_HDF5
-#include "/usr/include/hdf5.h"
+#include "hdf5.h"
 #endif
 
 FLOAT  f_ext(int i, int j);

@@ -20,7 +20,7 @@ TreeAllocFactor             1.0
 
 %---Time
 TimeBegin                   0
-TimeMax                     117
+TimeMax                     1176
 
 %---Output frequency
 OutputListOn                0

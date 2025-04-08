@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #ifdef HAVE_HDF5
-#include "/usr/include/hdf5.h"
+#include "hdf5.h"
 #endif
 
 #include "allvars.h"

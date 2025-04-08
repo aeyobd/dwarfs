@@ -50,7 +50,7 @@ OPT   +=  -DOUTPUTTIMESTEP
 #--------------------------------------- Things for special behaviour
 #OPT   +=  -DNOGRAVITY     
 #OPT   +=  -DNOTREERND 
-#OPT   +=  -DNOTYPEPREFIX_FFTW        
+OPT   +=  -DNOTYPEPREFIX_FFTW        
 #OPT   +=  -DLONG_X=60
 #OPT   +=  -DLONG_Y=5
 #OPT   +=  -DLONG_Z=0.2
@@ -96,9 +96,22 @@ MPICHLIB =  -lmpich
 
 #--------------------------------------- Select target computer
 
-SYSTYPE="raphalinux"
+SYSTYPE="cosma"
 
 #--------------------------------------- Adjust settings for target computer
+
+ifeq ($(SYSTYPE),"cosma")
+CC       =  mpicc   
+OPTIMIZE =  -O3 -Wall -DH5_USE_16_API -g
+GSL_INCL =  -I/cosma/local/gsl/2.8/include
+GSL_LIBS =  -L/cosma/local/gsl/2.8/lib  -Wl,"-R /cosma/local/gsl/2.8/lib"
+FFTW_INCL=  -I/cosma/local/fftw//gnu_13.1.0_ompi_4.1.5/3.3.10/include
+FFTW_LIBS=  -L/cosma/local/fftw//gnu_13.1.0_ompi_4.1.5/3.3.10/lib
+MPICHLIB =
+HDF5INCL =  -I/cosma/local/hdf5//gnu_13.1.0/1.12.2/include
+HDF5LIB  =  -L/cosma/local/hdf5//gnu_13.1.0/1.12.2/lib
+endif
+
 
 ifeq ($(SYSTYPE),"raphalinux")
 CC       =  mpicc   
@@ -139,7 +152,11 @@ CFLAGS = $(OPTIONS) $(GSL_INCL) $(FFTW_INCL) $(HDF5INCL)
 
 
 ifeq (NOTYPEPREFIX_FFTW,$(findstring NOTYPEPREFIX_FFTW,$(OPT)))    # fftw installed with type prefix?
+ifeq ($(SYSTYPE),"cosma")
+  FFTW_LIB = $(FFTW_LIBS)  -lfftw3_mpi -lfftw3
+else
   FFTW_LIB = $(FFTW_LIBS) -lrfftw_mpi -lfftw_mpi -lrfftw -lfftw
+endif
 else
 ifeq (DOUBLEPRECISION_FFTW,$(findstring DOUBLEPRECISION_FFTW,$(OPT)))
   FFTW_LIB = $(FFTW_LIBS) -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
