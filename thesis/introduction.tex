@@ -23,12 +23,24 @@
 The classical dwarfs are some of the earliest discovered systems,
 begining with \citet{shapley1938}
 
+\subsection{Cosmological context}\label{cosmological-context}
+
+\begin{figure}
+\centering
+\includegraphics{/Users/daniel/Library/Application Support/typora-user-images/image-20250408091622850.png}
+\caption[Cosmological Power Spectrum]{figure 1 from
+\citet{bechtol+2022}.}
+\end{figure}
+
+Figure: Density profiles of comological simulated halos, matching
+approximantly the NFW formula.
+
 \subsection{Sculptor}\label{sculptor}
 
 \begin{figure}
 \centering
 \includegraphics[width=5.41667in,height=5.41667in]{figures/scl_des_dr2.png}
-\caption[scl\_image]{Sculptor image from DES DR 2 via
+\caption[Picture of Sculptor]{Sculptor image from DES DR 2 via
 HiPS2FITS.}\label{fig:scl_image}
 \end{figure}
 
@@ -51,16 +63,15 @@ However, this does not align with the absolute proper motion or orbital
 path of the galaxy.
 
 While Scl has a relatively large pericentre (greater than 50kpc),
-\citet{Sestito+23} detect that the galaxy likely has an excess of stars
-in the outskirts (past about 60 arcminutes). This excess is perhaps one
-of the clearest indications that Scl may be affected by tides. Here, our
-goal is to determine if under a \(\Lambda\) CMD paradigm with DM-only
-simulations, tidal effects of the Milky Way (or LMC) may indeed be
-consistent with these observations, or if these observations may reveal
-instead a extended stellar ``halo'' or second component of the
-galaxy---illustrating a complex formation for the galaxy.
-
-Figure: Image of Sculptor from DES.
+\citet{sestito+2023a} detect that the galaxy likely has an excess of
+stars in the outskirts (past about 60 arcminutes). This excess is
+perhaps one of the clearest indications that Scl may be affected by
+tides. Here, our goal is to determine if under a \(\Lambda\) CMD
+paradigm with DM-only simulations, tidal effects of the Milky Way (or
+LMC) may indeed be consistent with these observations, or if these
+observations may reveal instead a extended stellar ``halo'' or second
+component of the galaxy---illustrating a complex formation for the
+galaxy.
 
 Theoretical work on Sculptor
 
@@ -98,10 +109,10 @@ $\delta$ & $-33.7186 \pm 0.00072$˚ & M+18\\
 distance & $83.2 \pm 2$ kpc & Tran+22\\
 $\mu_\alpha \cos \delta$ & $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$ & MV20a\\
 $\mu_\delta$ & $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ & MV20a\\
-RV & $111.4 \pm 0.2$ & This work\\
-$\sigma_v$ & $9.61\pm0.16$ & This work\\
+RV & $111.2 \pm 0.2$ & arroyo-polonio+24\\
+$\sigma_v$ & $9.7\pm0.2$ & arroyo-polonio+24\\
 $R_h$ & $12.33 \pm 0.05$ arcmin & MV20*\\
-$R_h$ & $8.69 \pm 0.2$ arcmin & this work?\\
+$R_{h,inner}$ & $8.69 \pm 0.2$ arcmin & this work?\\
 ell & $0.36 \pm 0.01$ & M+18\\
 PA & $92\pm1$ & M+18\\
 $M_V$ & $-10.82\pm0.14$ & M+18\\
@@ -125,7 +136,7 @@ rotation.
 \begin{figure}
 \centering
 \includegraphics[width=5.41667in,height=5.41667in]{figures/umi_image.jpg}
-\caption[Ursa Minor Image]{Ursa Minor Dwarf. Composite Public
+\caption[Picture of Ursa Minor]{Ursa Minor Dwarf. Composite Public
 data/Giuseppe Donatiello. Updated image in 2022.
 https://www.flickr.com/photos/133259498@N05/page8}\label{fig:umi_image}
 \end{figure}
@@ -159,6 +170,12 @@ $M_V$ & $-9.03 \pm 0.05$ & M+18\\
 \tightlist
 \item
   Cosmology foundations
+
+  \begin{itemize}
+  \tightlist
+  \item
+    power spectrum plot
+  \end{itemize}
 \item
   NFW plot (density or energy), maybe borrow from paper?
 
@@ -169,9 +186,18 @@ $M_V$ & $-9.03 \pm 0.05$ & M+18\\
   \end{itemize}
 \item
   Dwarf galaxy formation, halos
+\end{itemize}
+
+N-body DM simulations
+
+\begin{itemize}
+\tightlist
+\item
+  Collisionless Boltzmann equation and meaning of such simulations
+\item
+  Assumptions \& context \& past work
 \item
   Evolution under tidal field
-\item
 \end{itemize}
 
 To motivate why a tidal interaction may give rise to the observed
@@ -216,3 +242,124 @@ As illustrated in fig.~\ref{fig:toy_profiles}, the density profile
 initially stars off exponential. At increasing times since the first
 pericentric passage, the break radius, appearing as an apparent
 separation between the slopes of the inner and outer profile, increases.
+
+\subsection{Introduction to Dark Matter
+simulations}\label{introduction-to-dark-matter-simulations}
+
+In this section, we will cover
+
+\begin{itemize}
+\tightlist
+\item
+  How are dark matter simulations conducted
+\item
+  Interpretations and uncertainties
+\item
+  Methods
+\end{itemize}
+
+\begin{figure}
+\centering
+\includegraphics{/Users/daniel/thesis/figures/idealized_break_radius.png}
+\caption[Break radius validation]{The break radius of the simulations is
+set by}\label{fig:idealized_break_radius}
+\end{figure}
+
+From this argument, we note that the following properties must be
+approximately true for tides to occur:
+
+\begin{itemize}
+\tightlist
+\item
+  Close enough pericentre. The other break radius \(r_J\) implies that
+  if the host density is 3x the satellite, stars will be lost
+\item
+  Corresponding time since last pericentre: If the time since last
+  pericentre is not \(\sim\) consistent with an observed break in the
+  density profile, then tides
+\item
+  Halo evolution. As found in \citet{EN2021}, galaxies evolve along well
+  defined tidal tracks (assuming spherical, isotropic, NFW halo, which
+  may not be true, see \ldots). These tracks tend to ``puff up'' the
+  stellar component while also removing dark matter mass, leaving a
+  smaller, compacter DM halo with a more extended stellar component.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    This information is mostly related to the statistical initial
+    distribution of satellites from cosmology {[}ludlow+2016;
+    \citet{fattahi+2018}{]}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Potentials}\label{potentials}
+
+From the \citet{nfw1996} paper, eqns. 3 \& 4 \[
+\frac{\rho}{\rho_c} = \frac{\delta_c}{(r/r_s)(1+r/r_s)^2}
+\] where \[
+\delta_c = \frac{200}{3}\frac{c^3}{[\ln(1+c)-c/(1+c)]}
+\] \(c\) is concentration parameter, \(\rho_c\) is the critical density
+of the universe, and \(r_s\) is the characteristic scale length of the
+halo.
+
+The NFW halo is sometimes described by \(M_{200}\). \(r_{200}\) is the
+radius at which the mean density of the halo interior to \(r_{200}\) is
+200 times the critical density of the universe, and \(M_{200}\) is the
+mass contained inside \(r_{200}\). As equations: \[
+\rho_{200} = 200\rho_{c} = \frac{M_{200}}{(4\pi/3) r_{200}^3}
+\]
+
+\[
+r_{200} = \sqrt[3]{\frac{1}{200}\frac{3M_{200}}{4\pi \rho_{\rm c
+}}}
+\]
+
+\[
+M_{200} = \frac{4\pi}{3} r_{200}^3\ \rho_{200}
+\]
+
+\(M_{200}\) is also sometimes called the virial mass of the halo.
+\(r_{200}\) is directly related to \(r_s\) by \[
+r_{200} = c\,r_s
+\]
+
+Another useful definition is \[
+A(x) \equiv \log (1+x) - \frac{x}{1+x}.
+\]
+
+We will also define a dimensionless radius \[
+x \equiv r/r_s.
+\]
+
+A simple substitution to the definition gives
+
+\[
+\rho(x) =  \frac{\rho_s/3}{x\ (1+x)^2}
+\] where \[
+\rho_s = \frac{c^3}{A(c)} \rho_{200}
+\] and \(A(c)\) is as above. The characteristic density can also be
+written in terms of scale mass, \(M_s = M_{200}/{A(c)}\) (see below),
+giving \[
+\rho_s = \frac{c^3}{A(c)} \frac{M_{200}}{(4\pi/3)\ r_{200}^3}  = \frac{3M_s}{4\pi\, {r_s}^3}
+\] Note that the NFW density profile is the same as an alpha-beta-gamma
+profile where \(\alpha=\gamma=1\) and \(\beta =3\).
+
+\subsubsection{Circular velocity}\label{circular-velocity}
+
+The circular velocity in terms of
+\(v_{200} = \sqrt{G M_{200} / R_{200}}\) is \[
+\left(v_{\rm circ}/v_{200}\right)^2 = \frac{A(x)/x}{A(c)/c},
+\]
+
+or in terms of \(M_s\) and \(r_s\), \[
+v_{\rm circ}^2 = \frac{G M(r)}{r} = \frac{G M_s A(r/r_s)}{r}.
+\] Another parameterization of the NFW profile is in terms of the
+maximum circular velocity \(v_{\rm circ}^{\rm max}\) and the radius at
+which it is reached \(r_{\rm circ}^{\rm max}\). Given the scale radius,
+\[
+r_{\rm circ}^{\rm max} = \alpha\ r_s
+\]
+
+where \(\alpha\approx2.16258\), and \(v_{\rm circ}^{\rm max}\) can be
+found from either of the equations above.

@@ -3,30 +3,24 @@
 In this section, we discuss our simulation methods from orbital
 estimation to initial conditions to simulation parameters and software.
 
-We use Agama \citep{vasiliev} for potential specification and initial
-conditions, and Gadget-4 \citep{springle2021} for orbit integration and
-dark matter simulations (with a custom patch to integrate with Agama).
+We use Agama \citep{agama} for potential specification and initial
+conditions, and Gadget-4 \citep{gadget4} for orbit integration and dark
+matter simulations (with a custom patch to integrate with Agama).
 
 \subsection{Potential}\label{potential}
 
 Our fiducial potential is as described in \citet{EP2020}. This potential
 is an analytic approximation of \citet{McMillan2011}, consisting of a
-stellar Bulge, disk, and a dark matter NFW halo. The specific parameters
-are
-
-\subsubsection{Bulge}\label{bulge}
-
-Hernquist potential with \(r_s=1.3\), mass = 2.1.
+stellar Bulge, disk, and a dark matter NFW halo.
+fig.~\ref{fig:v_circ_potential} plots the circular velocity profiles.
 
 The \citet{hernquist1990} density profile for the galactic bulge is
 parameterized in terms of a characteristic mass, \(M\), and radius
 \(a\).
 
-Density Profile \[
+\[
 \rho(r) = \frac{M}{2\pi} \frac{a}{r} \frac{1}{(r+a)^3}
-\]
-
-\subsubsection{Disk}\label{disk}
+\] Hernquist potential with \(r_s=1.3\), mass = 2.1.
 
 \begin{itemize}
 \tightlist
@@ -42,20 +36,6 @@ Density Profile \[
 \Phi(R, z) = \frac{-GM}{\left(R^2 + \left[a + \sqrt{z^2 + b^2}\right]^{2}\right)^{1/2}}
 \]
 
-for convenience, we define the helper variables,
-\(S = \sqrt{z^2 + b^2}\) and \(D = \sqrt{R^2 + (a+S)^2}\), so the
-potential simplifies to \[
-\Phi(R, z) = \frac{-GM}{D}
-\]
-
-\[
-\rho = \frac{b^2 M}{4\pi} \frac{aR^2 + (a+3r)(a + r)^2}{S^3 D^5}
-\]
-
-\subsubsection{Halo}\label{halo}
-
-Mvir=115, r=20.2, c=9.545
-
 \begin{itemize}
 \tightlist
 \item
@@ -64,25 +44,62 @@ Mvir=115, r=20.2, c=9.545
 
 Variations to the potential of the inner disk (exclusion of a bar)
 should minimally affect our results as no orbit we consider reaches less
-than \textasciitilde15 kpc of the MW centre.
+than \textasciitilde15 kpc of the MW centre. We exclude the mass
+evolution of the halo from this analysis. Over 10 Gyr, this would be
+fairly significant (\textasciitilde2x in MW mass) but since we want to
+determine the upper limit of tidal effects, it is safe to neglect this.
+
+\begin{figure}
+\centering
+\includegraphics{figures/v_circ_potential.pdf}
+\caption{Circular velocity of potential}\label{fig:v_circ_potential}
+\end{figure}
 
 \textbf{Figure:} Circular velocity profile of \citet{EP2020} potential.
+We also show the MW and LMC potential from \citet{vasiliev2024} for
+their L3M11 model.
 
 \subsection{Orbital Estimation}\label{orbital-estimation}
 
 To estimate the orbits of a dwarf galaxy, we perform a Monte Carlo
 sampling of the present-day observables. We integrate each sampled
-observable back in time for 10 Gyr in Gadget as massless point
-particles.
+observable back in time for 10 Gyr in Gadget as massless point particles
+outputing every 0.5Myr (with otherwise similar parameters to n-body runs
+below.)
 
-We use the astropy v4 galactocentric frame. This frame assumes
-\ldots\ldots{}
+To convert from Gaia to galactocentric coordinates, we use the astropy
+v4 galactocentric frame. This frame assumes an
+
+\begin{itemize}
+\tightlist
+\item
+  J2000 `ra' = 17h45m37.224s, `dec' = -28°56'10.23'' (appendix),
+  `pmracosdec=-3.151±0.018 mas/yr', `pmdec=-5.547±0.026' (Table 2). from
+  \citet{reid+brunthaler2004}
+\item
+  distance = 8.122 ± 0.033 kpc, solar radial velocity = 11 + 1.9 ± 3
+  km/s. from \citet{gravitycollaboration+2018}.
+\item
+  `z\_sun' = 20.8±0.3pc from bennett+bovy2019
+\item
+  `v\_sun' is slightly more complicated, relying on parameters from
+  above and using the procedure described in \citet{drimmel+poggio2018}.
+  This results in
+
+  \begin{itemize}
+  \tightlist
+  \item
+    `v\_sun' = {[}-12.9 ± 3.0, 245.6 ± 1.4, 7.78 ± 0.08{]} km/s
+  \end{itemize}
+\end{itemize}
 
 \subsection{Initial conditions}\label{initial-conditions}
 
-We use Agama (cite) to generate initial conditions. We initially assume
-galaxies are described by an NFW dark matter potential and the stars are
-merely collisionless tracers embedded in this potential
+We use Agama \citep{agama} to generate initial conditions. We initially
+assume galaxies are described by an NFW dark matter potential (REF) and
+the stars are merely collisionless tracers embedded in this potential.
+We adopt a truncation radius of 100 times the scale radius (likely
+larger than necessary, but should not affect results.)
 
 \subsubsection{Stellar Probabilities}\label{stellar-probabilities}
 
@@ -95,12 +112,27 @@ following method:
   \(\Psi\) is taken as known from the underlying assumed analytic dark
   matter potential.
 \item
-  \(\rho_\star\) is
+  \(\rho_\star\) is pre-specified or calculated via abel integration /
+  deprojection
+\item
+  \(f(\epsilon)\) (the energy distribution function) is determined by
+  Edington inversion
 \end{itemize}
 
-\subsubsection{Stellar profiles}\label{stellar-profiles}
+To find the distribution function, we use Eddington inversion (eq.
+4-140b in BT87) \[
+f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right)
+\]
 
-We consider several different stellar profiles in this work.
+where \({\cal E}\) is the binding energy, and \(\Psi\) is the potential
+normalized to go to zero at infinity. In practice the right, boundary
+term is zero as \(\Psi \to 0\) as \(r\to\infty\), and if
+\(\rho \propto r^{-n}\) at large \(r\) and \(\Psi \sim r^{-1}\) then
+\(d\rho / d\Psi \sim r^{-n+1}\) which goes to zero provided that
+\(n > 1\).
+
+We consider both a Plummer and 2-dimensional exponential (Exp2D) stellar
+profile:
 
 \paragraph{Exp2D}\label{exp2d}
 
@@ -109,43 +141,154 @@ The 2D exponential stellar profile is given by \[
 \] where \(A\) is some normalization and \(R_s\) is the exponential
 scale radius. The 3D deprojected profile is found through abel inversion
 (e.g.~Rapha\ldots), i.e. \[
-\rho_\star (r) = \int dR = xxx
-\]
+\rho_\star (r) =- \frac{1}{\pi}\int_r^\infty \frac{d\Sigma}{dR} \frac{1}{\sqrt{R^2 - r^2}} dR  = \frac{\Sigma_0}{\pi R_s^2}\,K_0(r/R_s)
+\] where \(K_0\) is the 0th order modified Bessel function of the second
+type.
 
 \paragraph{Plummer}\label{plummer}
 
-\subsection{Dark Matter simulations}\label{dark-matter-simulations}
-
-See \citet{power+2003} for a discussion of this.
-
-The gravitational softening is based on: \[
-h_{grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}}
+A Plummer profile is defined by \[
+\Sigma(R) = \frac{M}{4\pi R_s^2} \left(1 + \frac{R^2}{R_s^2}\right)^{-2} ,
+\] where \(M\) is the total mass and \(R_s\) is the characteristic scale
+radius. The density is \[
+\rho(r) = \frac{3M}{4\pi\,R_s^3} \left(1 + \frac{r^2}{R_s^2}\right)^{-5/2}.
 \]
 
-I in fact find that dividing the softening by a factor of sqrt(10) gives
-slightly more precise results with a negligible increase in compute
-time.
+\subsection{Dark Matter simulations}\label{dark-matter-simulations}
+
+We adopt a softening length of \[
+h_{\rm grav} = 0.014 \left(\frac{r_s}{2.76\,{\rm kpc}}\right)\left(\frac{N}{10^7}\right)^{-1/2}
+\] see appendix for a discussion of this choice, which is similar to the
+\citet{power+2003} suggested softening.
+
+\subsubsection{Analysis}\label{analysis}
+
+Shrinking spheres centres inspired by \citet{power+2003}
+
+\begin{itemize}
+\tightlist
+\item
+  Recursively shrink radius by 0.975 quantile and recalculating centroid
+  until radius is less than \textasciitilde1kpc
+\item
+  Remove bound particles (using instantanious potential).
+\item
+  Use previous snapshot centre and acceleration to predict new centre
+  for next snapshot.
+\end{itemize}
 
 \section{Appendix: Convergence tests and Simulation
 Parameters}\label{appendix-convergence-tests-and-simulation-parameters}
 
 Here, we describe some convergence tests to ensure our methods and
 results are minimally impacted by numerical limitations and assumptions.
-See \citet{power2003} for a detailed discussion of various assumptions
+See \citet{power+2003} for a detailed discussion of various assumptions
 and parameters used in N-body simulations.
 
-\subsubsection{Particle Number.}\label{particle-number.}
+\subsubsection{Softening}\label{softening}
 
-\subsubsection{Timestepping}\label{timestepping}
+\citet{power+2003} suggest the empirical rule that the ideal softening
+(balancing integration time and only compromising resolution in
+collisional regime) is \[
+h_{grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}}
+\]
 
-\subsubsection{Gravitational methods}\label{gravitational-methods}
+For our isolation halo (\(M_s=2.7\), \(r_s=2.76\)) and with \(10^7\)
+particles, this works out to be \(0.044\,{\rm kpc}\).We adpoted the
+slightly smaller softening which was reduced by a factor of
+\(\sqrt{10}\) based on initial numerical experiments. However, this
+choice is likely too small and a larger softening would minimally impact
+our results but improve computation speed.
 
-\subsubsection{Gravitational accuracy}\label{gravitational-accuracy}
+\subsubsection{Particle Number}\label{particle-number}
+
+As discussed in \citet{power+2003}, the region where density is
+converged is related to the region which becomes collisionally relaxed
+over the time of the universe (so about 5-10 Gyr). (i.e.~where the
+collisionless assumption breaks down). The relaxation timescale is given
+by \(t_{\rm relax} = t_{\rm circ} N(r) / 8\ln N(r)\) or otherwise, \[
+t_{\rm relax}(r) := t_{\rm circ}(r) \frac{N(r)}{8\,\ln N(r)}
+= {t_{\rm circ}(r_{200})} \frac{\sqrt{200}}{8} \frac{N(r)}{\ln N(r)} \left(\frac{\bar \rho (r)}{\rho_{\textrm crit}}\right)^{-1/2}
+\] This works out to be about 6-10 times (increasing with particle
+number) our adopted softening length for NFW halos given our
+assumptions. As such, at full resolution, we can only trust density
+profiles down to \(10\epsilon\) or about
+\(0.14\,{\rm kpc} (r_s/2.76\,{\rm kpc})\), just enough to resolve
+stellar density profiles.
+
+Note that by decreasing the truncation radius, the effective particle
+number is improved, so future experiments could be less generous with
+this parameter to improve computational performance (order 30\% better
+resolution).
+
+\begin{figure}
+\centering
+\includegraphics{figures/iso_converg_num.pdf}
+\caption[num convergence]{Numerical convergence test for circular
+velocity as a function of log radius for simulations with different
+total numbers of particles in isolation. Residuals in lower panel are
+relative to NFW. The initial conditions are dotted and the converged
+radius is marked by arrows (REF).}
+\end{figure}
+
+\subsubsection{Timestepping and force
+accuracy}\label{timestepping-and-force-accuracy}
+
+In general, we use adaptive timestepping and relative opening criteria
+for gravitational force computations. To verify that these choices and
+associated accuracy parameters minimally impact convergence or speed, we
+show a few more isolation runs (using only 1e5 particles)
+
+\begin{itemize}
+\tightlist
+\item
+  constant timestep (\ldots), approximantly half of minimum timestep
+  with adaptive timestepping
+\item
+  geometric opening, with \(\theta = 0.5\).
+\item
+  strict integration accuracy, (facc = \ldots.)
+\end{itemize}
+
+\subsubsection{Alternative methods}\label{alternative-methods}
+
+\begin{itemize}
+\tightlist
+\item
+  FMM
+\item
+  PMM-tree
+\item
+  Gadget2
+\item
+  etc.
+\end{itemize}
 
 \subsubsection{Fiducial Parameters}\label{fiducial-parameters}
 
+Note that we use code units which assume that \(G=1\) for convenience
+and numerical stability. The conversion between code units to physical
+units is (for our convention):
+
+\begin{itemize}
+\tightlist
+\item
+  1 length = 1 kpc
+\item
+  1 mass unit = \(10^{10}\) Msun
+\item
+  1 velocity unit = 207.4 km/s
+\item
+  1 time unit = 4.715 Myr
+\end{itemize}
+
+Most parameters below are not too relevant or have been discussed or are
+merely dealing with cpu and IO details. The changes between simulation
+runs primarily affect the integration time, output frequency, and
+softening. Otherwise, we leave all other parameters fixed.
+
 \begin{verbatim}
-# -----------------------------------IO---------------------------------------
+#======IO parameters======
 
 #---Filenames
 InitCondFile                initial
@@ -158,9 +301,9 @@ ICFormat                    3       # use HDF5
 SnapFormat                  3 
 
 #---Mem & CPU limits
-TimeLimitCPU                86400   # TUNE
-CpuTimeBetRestartFile       7200    # TUNE 
-MaxMemSize                  2400    # TUNE to system (MB)
+TimeLimitCPU                86400
+CpuTimeBetRestartFile       7200
+MaxMemSize                  2400
 
 #---Time
 TimeBegin                   0
@@ -168,25 +311,24 @@ TimeMax                       2120      # 10 Gyr
 
 #---Output frequency
 OutputListOn                0
-TimeBetSnapshot             10      # change as needed
-TimeOfFirstSnapshot         0       # MATCH to TimeBegin
-TimeBetStatistics           10      # change as needed 
+TimeBetSnapshot             10
+TimeOfFirstSnapshot         0 
+TimeBetStatistics           10
 NumFilesPerSnapshot         1
 MaxFilesWithConcurrentIO    1 
 
 
-# ----------------------------------Gravity-----------------------------------
+#=======Gravity======
 
-# MATCH all the below if continuing run
 
 #---Timestep accuracy
-ErrTolIntAccuracy           0.01    # MATCH
+ErrTolIntAccuracy           0.01
 CourantFac                  0.1     # ignored; for SPH
-MaxSizeTimestep             0.5     # MATCH
+MaxSizeTimestep             0.5
 MinSizeTimestep             0.0 
 
 #---Tree algorithm
-TypeOfOpeningCriterion      1       # 0: Barnes-Hut, 1: Relative
+TypeOfOpeningCriterion      1       # Relative
 ErrTolTheta                 0.5     # mostly used for Barnes-Hut
 ErrTolThetaMax              1.0     # (used only for relative)
 ErrTolForceAcc              0.005   # (used only for relative)
@@ -196,13 +338,13 @@ TopNodeFactor                       3.0
 ActivePartFracForNewDomainDecomp    0.02
 
 #---Gravitational Softening
-SofteningComovingClass0      # FILL IN
+SofteningComovingClass0      0.044  # HALO dependent
 SofteningMaxPhysClass0       0      # ignored; for cosmological
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0
 
 
-#--------------------------------Misc-------------------------------------
+#=======Miscellanius=======
 
 # probably do not need to change the options below 
 

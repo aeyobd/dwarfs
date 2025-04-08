@@ -145,6 +145,22 @@ Figure: Similar to fig.~\ref{fig:sculptor_selection} except for Fornax.
 Note that we only use one-component probabilities here. Fornax is the
 quintessential unperturbed dwarf galaxy.
 
+\subsubsection{Searches for tidal tails}\label{searches-for-tidal-tails}
+
+\begin{itemize}
+\item
+  There are no apparent overdensities in the PM \& CMD only selected
+  stars to suggest the presence of a tidal tail
+\item
+  We have tried selective matched filter
+\item
+  This means that at least at the level of where the background density
+  dominates, we can exclude models which produce tidal tails brighter
+  than a density of
+  \(\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}\)
+  (TODO assuming a distance of \ldots{} and stellar mass of \ldots).
+\end{itemize}
+
 \subsection{Density Profiles}\label{density-profiles}
 
 Our primary observational constraint is the density profile of a dwarf
@@ -331,81 +347,6 @@ exponential recursively. )}\label{fig:classical_dwarfs_densities}
 \end{figure}
 
 \section{Appendix / Extra Notes}\label{appendix-extra-notes}
-
-\subsection{Does Scl show tidal tails}\label{does-scl-show-tidal-tails}
-
-\subsubsection{Searches for tidal tails}\label{searches-for-tidal-tails}
-
-\begin{itemize}
-\item
-  There are no apparent overdensities in the PM \& CMD only selected
-  stars to suggest the presence of a tidal tail
-\item
-  We have tried selective matched filter
-\item
-  This means that at least at the level of where the background density
-  dominates, we can exclude models which produce tidal tails brighter
-  than a density of
-  \(\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}\)
-  (TODO assuming a distance of \ldots{} and stellar mass of \ldots).
-\end{itemize}
-
-\subsection{Radial velocity modeling}\label{radial-velocity-modeling}
-
-For Scl and UMi, to derive robust RV measurements, we compile a variety
-of literature radial velocity data and compute the radial velocity and
-velocity dispersion.
-
-For Scl, we compile and cross match data from
-
-We present a combined sample crossmatching the studies
-\citep{sestito+23}, apogee, \citep{walker+2009}, and \citet{tolstoy+23},
-containing a total of 2466 stars with measurements. Note that
-\citet{battaglia+2009} is superceded by \citet{tolstoy+23}. If multiple
-samples measure the same star, then we take the weighted mean of the
-measurements. We flag stars with a measurement dispersion greater than
-5\(\sigma\) of the combined measurement error and stars outside of the
-range 60-150 km/s as these are likely too far off to be members (and the
-intrinsic velocity dispersion and systematic errors are the dominant
-contributors to dispersion.)
-
-Note that there is, in detail, small projection effects to the radial
-velocities, especially as we move towards 1 degree from the centre of
-the galaxy. We define the perpendicular tangent plane velocity \(v_z\)
-to be \[
-v_z = v_{\rm los,\ gsr} \cos\theta + v_{\rm tan} \sin\theta
-\] where \(v_{\rm tan}\) is the tangental systematic proper motion of
-the system. Note that variations in proper motions due to the intrinsic
-velocity dispersion of the system (of order 10 km/s) would introduce
-only a 0.17 km/s error in the particular velocity. Typically, proper
-motions are not measured well enough for individual stars for this to
-matter (requiring \(\mu {\rm as}\) precision :/ )
-
-To fit the systematic radial velocity, we use the Bayesian model \[
-v_z \sim N(v_0, \sigma_v + \delta v_z)\\
-v_0 \sim U() \\
-\sigma_v \sim N?
-\] for Sculptor, and only changing the priors above for Ursa Minor \[
-v_0 = \\
-\sigma_v = \\
-\]
-
-To test if there is a spatial gradient in velocity, we construct a new
-model \[
-v_z = N(v_0 + a \xi + b \eta, \sigma_v + \delta v_z)
-\]
-
-\begin{figure}
-\centering
-\includegraphics{figures/scl_v_z_obs_scatter.pdf}
-\caption{Sculptor radial velocity observations}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics{figures/umi_v_z_obs_scatter.pdf}
-\caption{Sculptor radial velocity observations}
-\end{figure}
 
 \subsection{Additional density profile
 tests}\label{additional-density-profile-tests}
