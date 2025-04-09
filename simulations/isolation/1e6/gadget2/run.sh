@@ -1,2 +1,2 @@
 #!/bin/bash 
-time  mpirun -np $SLURM_NTASKS $DWARFS_ROOT/Gadget2/Gadget2 param.txt > log.out
+mpirun -np $SLURM_NTASKS $DWARFS_ROOT/gadget2_iso/Gadget2 param.txt > log.out

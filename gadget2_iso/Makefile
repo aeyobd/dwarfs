@@ -96,7 +96,7 @@ MPICHLIB =  -lmpich
 
 #--------------------------------------- Select target computer
 
-SYSTYPE="cosma"
+SYSTYPE="niagara"
 
 #--------------------------------------- Adjust settings for target computer
 
@@ -123,6 +123,19 @@ FFTW_LIBS=  -L/astro/errani/fftw2/lib
 MPICHLIB =
 HDF5INCL =  -I/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include
 HDF5LIB  =  -L/usr/lib/x86_64-linux-gnu/hdf5/openmpi/lib -lhdf5 -lz 
+endif
+
+
+ifeq ($(SYSTYPE),"niagara")
+CC       =  mpicc   
+OPTIMIZE =  -O3 -Wall -DH5_USE_16_API -g
+GSL_INCL =  -I/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/gsl/2.7/include
+GSL_LIBS =  -L//cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/gsl/2.7/lib  -Wl,"-R //cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/gsl/2.7/lib"
+FFTW_INCL=  -I/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/fftw/3.3.10/include
+FFTW_LIBS=  -L/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/fftw/3.3.10/lib
+MPICHLIB =
+HDF5INCL =  -I/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/hdf5/1.14.2/include
+HDF5LIB  =  -L/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/hdf5/1.14.2/lib -lhdf5 -lz 
 endif
 
 ifneq (HAVE_HDF5,$(findstring HAVE_HDF5,$(OPT))) 
@@ -152,11 +165,7 @@ CFLAGS = $(OPTIONS) $(GSL_INCL) $(FFTW_INCL) $(HDF5INCL)
 
 
 ifeq (NOTYPEPREFIX_FFTW,$(findstring NOTYPEPREFIX_FFTW,$(OPT)))    # fftw installed with type prefix?
-ifeq ($(SYSTYPE),"cosma")
-  FFTW_LIB = $(FFTW_LIBS)  -lfftw3_mpi -lfftw3
-else
   FFTW_LIB = $(FFTW_LIBS) -lrfftw_mpi -lfftw_mpi -lrfftw -lfftw
-endif
 else
 ifeq (DOUBLEPRECISION_FFTW,$(findstring DOUBLEPRECISION_FFTW,$(OPT)))
   FFTW_LIB = $(FFTW_LIBS) -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
@@ -165,6 +174,13 @@ else
 endif
 endif
 
+ifeq ($(SYSTYPE),"cosma")
+  FFTW_LIB = $(FFTW_LIBS)  -lfftw3_mpi -lfftw3
+endif
+
+ifeq ($(SYSTYPE),"niagara")
+  FFTW_LIB = $(FFTW_LIBS)  -lfftw3_omp -lfftw3
+endif
 
 LIBS   =   $(HDF5LIB) -g  $(MPICHLIB)  $(GSL_LIBS) -lgsl -lgslcblas -lm $(FFTW_LIB) 
 
