@@ -120,9 +120,27 @@ Outside Department
 % context
 \input{abstract.tex}
 
-% \chapter*{Acknowledgements}
-% \addcontentsline{toc}{chapter}{Acknowledgements}
-% 
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+
+%Julio Navarro, my supervisor. Rapha and other collegues
+
+%Friends and family and collegues (fill in later).
+
+
+This work has made use of data from the European Space Agency (ESA) mission
+{\it Gaia} (\url{https://www.cosmos.esa.int/gaia}), processed by the {\it Gaia}
+Data Processing and Analysis Consortium (DPAC,
+\url{https://www.cosmos.esa.int/web/gaia/dpac/consortium}). Funding for the DPAC
+has been provided by national institutions, in particular the institutions
+participating in the {\it Gaia} Multilateral Agreement. 
+\citep{gaiacollaboration+2016, gaiacollaboration+2023}.
+
+
+This research made use of hips2fits,\footnote{https://alasky.cds.unistra.fr/hips-image-services/hips2fits} a service provided by CDS.
+
+
+
 
 %% Lists
 
@@ -194,36 +212,10 @@ Outside Department
 
 
 
-\chapter{Model parameters}\label{sec:jack}
+\chapter{Model parameters}
 
+\input{numerical_convergence}
 
-\chapter{Font properties}
-
-textwidth: \the\textwidth
-
-\newlength{\myw}
-\newlength{\myl}
-
----\rule[2.4pt]{12pt}{0.6pt}
-\settowidth{\myw}{---}\the\myw
-
-En dash
-\settowidth{\myw}{--}\the\myw
---\rule[2.4pt]{6pt}{0.6pt}
-
-Hyphen
-\settowidth{\myw}{-}\the\myw -
-
-
-{\bf ---}\rule[2.2pt]{12pt}{1.1pt}
-
-\settoheight{\myl}{---}\the\myl
-
--\rule[2.4pt]{3pt}{0.75pt}
-I\rule{1.2pt}{8pt}
-{\bf I}\rule{2.0pt}{8pt}
-|\rule[-2pt]{0.6pt}{12pt}
-\the\textheight
 
 
 ⁄\end{document}

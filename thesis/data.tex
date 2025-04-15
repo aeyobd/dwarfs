@@ -5,32 +5,37 @@ As such, Gaia data is uniquely excellent to produce low-contamination
 samples of likely member stars belonging to satellites. Here, we breifly
 describe J+24's membership estimation and discuss how this informs our
 observational knoledge of each galaxies density profile. In general,
-J+24 use a Bayesian framework incorporating proper motion (PM,
+J+24 use a Bayesian framework incorporating proper motion (PM),
 colour-magnitude diagram (CMD), and spatial information to determine the
 probability that a given star belongs to the satellite. J+24 extends
-\citet{MV2020a} (see also \citet{pace+li2019}, etc.).
+\citet{MV2020a} (see also \citet{pace+li2019}, \citet{battaglia+2022},
+\citet{pace+erkal+li2022}, etc.).
 
-J+24 select stars initially from Gaia satisfying:
+J+24 select stars initially from Gaia within a 2--4 degree circular
+region centred on the dwarf satisfying:
 
 \begin{itemize}
 \tightlist
 \item
+  Solved parallax, proper motions, colour, and magnitudes.
+\item
   High quality astrometry (\texttt{ruwe\ \textless{}=\ 1.3})
 \item
   3\(\sigma\) consistency of measured parallax with dwarf distance +
-  uncertainty (near zero with \citet{lindegren+2018} zero-point
-  correction)
+  uncertainty (typically near zero; with \citet{lindegren+2018}
+  zero-point correction).
 \item
   Absolute RA and Dec proper motions less than
-  10\(\,{\rm mas\ yr^{-1}}\)
-\item
-  Good photometry
+  10\(\,{\rm mas\ yr^{-1}}\) (corresponding to tangental velocities of
+  \(\gtrsim 500\) km/s at distances larger than 10 kpc.)
 \item
   No colour excess (\citet{lindegren+2018} equation C.2)
 \item
-  G \textgreater{} 22 and less than 5\(\sigma\) above TRGB, and between
+  G \textless{} 22 and less than 5\(\sigma\) above TRGB, and between
   -0.5 and 2.5 in Bp - Rp.
 \end{itemize}
+
+Photometry is dereddened using \citet{schlegel+1988} extenction.
 
 J+24 calculate the probability that any star belongs to either the
 satellite or the MW background as \[
@@ -47,22 +52,25 @@ The satellite likelihood is constructed as
 \begin{itemize}
 \tightlist
 \item
-  CMD: The CMD is from Padova \citep{girardi+2002} isochrone at 12 Gyr
-  with a colour width of 0.1 mag plus the Gaia colour uncertanty and the
-  observed metallicity of the dwarf. The HB is modelled as a constant
-  magnitude extending blue of the CMD with a 0.1 mag width plus the mean
-  colour error. A likelihood map is constructed by sampling the distance
-  modulus in addition to the CMD width, taking the maximum of RGB and HB
-  likelihoods.
+  CMD: The CMD is the lowest metallicity isochrone from Padova
+  \citep{girardi+2002} with age 12 Gyr with a colour width of 0.1 mag
+  plus the Gaia colour uncertainty at each magnitude. The HB is modelled
+  as a constant magnitude extending blue of the CMD. The HB magnitude is
+  the mean magnitude of HB stars from most metal poor isochrone with a
+  0.1 mag width plus the mean colour error. A likelihood map is
+  constructed by sampling the distance modulus in addition to the CMD
+  width, taking the maximum of RGB and HB likelihoods.
 \item
   Spatial: A single exponential
-  (\(\Sigma \propto e^{R_{\rm ell} / R_s}\)) using mean values of the
-  structural parameters (\textbf{verify}). For Scl and UMi, this is
-  instead a double exponential
+  (\(\Sigma \propto e^{R_{\rm ell} / R_s}\)) accounting for structural
+  uncertainty (sampled over position angle, ellipticity, and half light
+  radius).
+\item
+  Alternative spatial: For Scl and UMi, this is instead a double
+  exponential
   \(\Sigma_\star \propto e^{-R/R_s} + B\,e^{-R/R_{\rm outer}}\) where
-  the inner exponential remains fixed and structural parameters are not
-  accounted for. Structural parameter uncertainties are not accounted
-  for.
+  the inner exponential remains fixed. Structural parameter
+  uncertainties are not accounted for.
 \item
   PM. A bivariate gaussian with variance and covariance equal to each
   star's proper motions. Each star's proper motions uncertainty are
@@ -74,16 +82,17 @@ The background likelihood is constructed as:
 \begin{itemize}
 \tightlist
 \item
-  CMD : Constructed as a KDE using the other quality-selected stars
-  outside of \(5R_h\) in the catalogue. The width of each star is
-  projected as a bivariate Gaussian.
+  CMD : Constructed as a density map using the other quality-selected
+  stars outside of \(5R_h\) in the catalogue. The map is a sum of
+  bivariate gaussians for each star with standard deviations based on
+  the Gaia uncertainties.
 \item
   PM: same as CMD except in PM space.
 \item
   Spatial: a constant likelihood.
 \end{itemize}
 
-Note that each likelihood map is normalized over the respective
+Note that each likelihood map is normalized over the respective 2D
 parameter space. In order to represent the difference in frequency of
 background and forground stars, \(f_{\rm sat}\) represents the field
 fraction of member stars.
@@ -94,18 +103,21 @@ for the following parameters
 \begin{itemize}
 \tightlist
 \item
-  Systemic proper motions \(\mu_\alpha\), \(\mu_\delta\). Prior: within
-  5\(\sigma\) of single component case w/ systematic uncertainties.
-  Single component prior is based on MV2020 (RV members / expected
-  velocity dispersion of halo at distance?)
+  Systemic proper motions \(\mu_\alpha\), \(\mu_\delta\). Single
+  component prior is same as \citet{MV2020}: a normal distribution with
+  mean 0 and standard deviation 100 km/s. If 2-component spatial,
+  instead is a uniform distribution spanning 5\(\sigma\) of single
+  component case w/ systematic uncertainties.
 \item
-  \(f_{\rm sat}\) density normalization (uniform between 0 and 1)
+  \(f_{\rm sat}\) density normalization. Prior is a uniform distribution
+  between 0 and 1.
 \item
-  Spatial component parameters \(B\) and \(R_{\rm outer}\) for extended
+  Spatial component parameters \(B\) is uniform from 0-1 and
+  \(R_{\rm outer}\) is uniform and greater than \(R_s\) for extended
   profiles (Scl and UMi here.)
 \end{itemize}
 
-The median parameters from the simulation are then used to calculate the
+The mode of each parameter from the MCMC are then used to calculate the
 final \(P_{\rm sat}\) values we use here.
 
 We adopt a probability cut of \(P_{\rm sat} = 0.2\) as our fiducial
@@ -119,9 +131,40 @@ and distant stars are less likely to have been targeted. )
 
 \subsection{Resulting Samples}\label{resulting-samples}
 
+In figures fig.~\ref{fig:sculptor_selection},
+fig.~\ref{fig:umi_selction}, we illustrate the resulting samples from
+the algorithm. In each case, each criteria plays a roll: proper motions
+are centred around the dwarf systemic motion, the CMD is well defined,
+and stars only within a few \(R_h\) are included. We also plot the RV
+members found in general and in \citet{sestito+2024},
+\citet{sestito+2024b}.
+
+The tangent plane, \(\xi\), \(\eta\), is the projection that
+
+We also illustrate the approximate result of removing the spatial
+component from the likelihood. We define the CMD+PM selection as stars
+satisfying \[
+{\cal L}_{\rm CMD,\ sat}\ {\cal L}_{\rm PM,\ sat} > {\cal L}_{\rm CMD,\ bg}\ {\cal L}_{\rm PM,\ bg}
+\]
+
+These stars appear similar to the fiducial (probable members) sample,
+but instead also appear as an approximately uniform distribution across
+the entire field. This illustrates the approximate background of stars
+which may be confused as members. Additionally, since there is no clear
+spatial structure in the CMD+PM sample, it is unlikely that there are
+tidal tails detectable with Gaia. Not shown here, we also try a variety
+of simpler, absolute cuts and thresholds, finding no extended structure
+beyond what is detected in J+24.
+
+This means that at least at the level of where the background density
+dominates, we can exclude models which produce tidal tails brighter than
+a density of
+\(\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}\)
+(TODO assuming a distance of \ldots{} and stellar mass of \ldots).
+
 \begin{figure}
 \centering
-\includegraphics{figures/scl_selection.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_selection.pdf}}
 \caption[Sculptor selection criteria]{The selection criteria for Scl
 members. Probable members (2-component) are orange, and all field stars
 (satisfying quality criteria) are in light grey. \textbf{Top:} Tangent
@@ -131,33 +174,13 @@ right:} Proper motion.}\label{fig:sculptor_selection}
 
 \begin{figure}
 \centering
-\includegraphics{figures/umi_selection.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_selection.pdf}}
 \caption[Ursa Minor Selection]{Similar to
 fig.~\ref{fig:sculptor_selection} except for Ursa Minor. UMi features a
 very extended density profile with some stars \textasciitilde{} 6\(R_h\)
 including a RV member. UMi is also highly elliptical compared to other
 classical dwarfs.}\label{fig:umi_selection}
 \end{figure}
-
-Figure: Similar to fig.~\ref{fig:sculptor_selection} except for Fornax.
-Note that we only use one-component probabilities here. Fornax is the
-quintessential unperturbed dwarf galaxy.
-
-\subsubsection{Searches for tidal tails}\label{searches-for-tidal-tails}
-
-\begin{itemize}
-\item
-  There are no apparent overdensities in the PM \& CMD only selected
-  stars to suggest the presence of a tidal tail
-\item
-  We have tried selective matched filter
-\item
-  This means that at least at the level of where the background density
-  dominates, we can exclude models which produce tidal tails brighter
-  than a density of
-  \(\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}\)
-  (TODO assuming a distance of \ldots{} and stellar mass of \ldots).
-\end{itemize}
 
 \subsection{Density Profiles}\label{density-profiles}
 
@@ -169,9 +192,9 @@ bins are derived from 10\^{}(minimum(logR):0.05:maximum(logR))). The
 density in each bin is then (from Poisson statistics) \[
 \Sigma_b = N_{\rm memb} / A_{\rm bin} \pm \sqrt{N_{\rm memb}} / A_{\rm bin}
 \] where \(N_{\rm memb}\) is the number of members in the bin and
-\(A_{\rm bin}\) is the area of the bin. As discussed below, these
-uncertainties underrepresent the true uncertainty on multiple accounts.
-We retain Poisson errors for simplicity here.
+\(A_{\rm bin}\) is the area of the bin's annulus in 2D. As discussed
+below, these uncertainties underrepresent the true uncertainty on
+multiple accounts. We retain Poisson errors for simplicity here.
 
 In Figures fig.~\ref{fig:scl_observed_profiles},
 fig.~\ref{fig:umi_observed_profiles}, we show the derived density
@@ -199,7 +222,7 @@ background.
 
 \begin{figure}
 \centering
-\includegraphics{figures/scl_density_methods.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_density_methods.pdf}}
 \caption[Sculptor density profiles]{The density profile of Sculptor for
 different selection criteria. \emph{probable members} selects stars with
 PSAT \textgreater{} 0.2 considering PM, CMD, and spatial, \emph{CMD+PM}
@@ -211,7 +234,7 @@ stars.}\label{fig:scl_observed_profiles}
 
 \begin{figure}
 \centering
-\includegraphics{figures/umi_density_methods.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_density_methods.pdf}}
 \caption[Ursa Minor density profiles]{Similar to
 fig.~\ref{fig:scl_observed_profiles} except for Ursa
 Minor.}\label{fig:umi_observed_profiles}
@@ -219,7 +242,7 @@ Minor.}\label{fig:umi_observed_profiles}
 
 \begin{figure}
 \centering
-\includegraphics{figures/fornax_density_methods.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fornax_density_methods.pdf}}
 \caption[Fornax density profiles]{Similar to
 fig.~\ref{fig:scl_observed_profiles} except for
 Fornax.}\label{fig:fornax_observed_profiles}
@@ -335,7 +358,7 @@ We will explore a tidal explanation for these features in this work.
 
 \begin{figure}
 \centering
-\includegraphics{figures/scl_umi_fornax_exp_fit.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_fornax_exp_fit.pdf}}
 \caption[Classical dwarf density profiles]{The density profiles of
 Sculptor, Ursa Minor, and Fornax compared to Exp2D and Plummer density
 profiles. Dwarf galaxies are scaled to the same half-light radius and
@@ -350,7 +373,7 @@ tests}\label{additional-density-profile-tests}
 
 \begin{figure}
 \centering
-\includegraphics{figures/scl_density_methods_extra.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_density_methods_extra.pdf}}
 \caption[Density profiles]{Density profiles for various assumptions for
 Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a
 2-component bayesian model assuming circular radii, simple is the series
@@ -374,3 +397,136 @@ and ra < 19
 and -37.7 < dec
 and dec < -29.7
 \end{verbatim}
+
+\section{Radial velocity modeling}\label{radial-velocity-modeling}
+
+For both Sculptor and Ursa Minor, we construct samples of radial
+velocity measurements and cross match each sample to produce estimates
+of the total velocity dispersion and line of sight velocity for each
+galaxy.
+
+\subsection{Methodology}\label{methodology}
+
+Our RV methodology is
+
+\begin{itemize}
+\tightlist
+\item
+  Cross match all catalogues to J+24 Gaia members. If Gaia ID's are
+  included, we use these. Otherwise, we match to the nearest star within
+  2 arcseconds.
+\item
+  We combine the mean RV measurement from each study using the
+  inverse-variance weighted mean and standard uncertainty.
+\end{itemize}
+
+\[
+v_i = \frac{1}{\sum w}\sum_j w\ v_{i, j} \\
+\delta v_i = \sqrt{\frac{1}{\sum w^2}}
+\]
+
+where \(w_i = 1/s_i^2\), and we estimate the inter-study standard
+deviation \[
+s_{v}^2 = \frac{1}{\sum w} \sum w (v_{i, j} - v_i)^2
+\] Note that we do not include the standard deviation if a source does
+measure the velocity multiple times.
+
+If the total standard deviation is greater than five times the velocity
+standard uncertainty (reduced), then we remove the star since either the
+star is a binary or contains erroneous measurements or other
+uncertainties. Note that since stars typically only have very few
+measurements, these choices are highly approximate and likely limited.
+
+The combined RV likelihood is then \[
+{\cal L} = {\cal L}_{\rm space} {\cal L}_{\rm CMD} {\cal L}_{\rm PM} {\cal L}_{\rm RV}
+\] where \[
+{\cal L}_{\rm RV} = N(\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2)
+\] where \(\mu_v\) and \(\sigma_v\) are the systemic velocity and
+dispersion, and \(\delta v_i\) is the individual measurement
+uncertainty. Typically, the velocity dispersion will dominate the
+uncertainty budget here.
+
+Similar to above, we retain stars with the resulting membership
+probability of greater than 0.2.
+
+Finally, we need to correct the coordinate frames. We need a proper
+motion estimate of each star. Since most stars have Gaia measured proper
+motions, but the uncertainties on each proper motion measurement are
+large, we combine the system and individual star's proper motion by
+weighting the systemic proper motion by the z-score of the consistency
+of the measurement with the systemic proper motion. \[
+\mu_{*}' = \frac{1}{w_\star + w_{\rm sys}}\left(\mu_{\star}w_\star + \mu_{\rm sys} w_{\rm sys}\right)
+\] where we model \[
+{w_{\rm sys}} = P_{\rm sat}(\delta \mu ^2 + \sigma_{v, tan}^2)^{-1}
+\] and the weight of the star is just the inverse variance weight plus
+the gaia systematics.
+
+The corrected radial velocities are then \[
+v_z = v_{\rm los, gsr}\cos\theta  + v_{\rm tan, R} \sin\theta
+\] where
+\(v_{\rm tan, R} = d(\mu_{\alpha*}\cos\theta + \mu_\delta \sin \theta)\)
+is the radial component of the proper motion with respect to the centre
+of the galaxy. Since \(\theta \lesssim 1^\circ\), this correction is
+small (\(\sim 1\)km,s\(^{-1}\)), but can prevent the introduction of a
+spurious gradient on the sky \citep{WMO2008}. The uncertainty is then
+the velocity uncertainty plus the distance uncertainties times the PM
+uncertainty from above. We then use the \(v_z\) values for the following
+modelling, however repeating with plain, solar-frame velocities does not
+substantially affect the results too much .
+
+\subsection{Sculptor}\label{sculptor}
+
+For Sculptor, we combine radial velocity measurements
+
+\begin{itemize}
+\item
+  APOGEE (crossmatched to stars meeting basic quality cuts in field)
+\item
+  \citet{sestito+2024a}
+\item
+  \citet{tolstoy+2024}
+\end{itemize}
+
+We adopt a very loose prior of \[
+\mu_{v} = N(111, 10) \\
+\log\sigma_{v} = N(1, 1)
+\] Our resulting velocity dispersions are \$\$
+
+\$\$ Comparing to past work, note that our values are reasonable.
+
+\subsection{Ursa Minor}\label{ursa-minor}
+
+\begin{itemize}
+\tightlist
+\item
+  APOGEE
+\item
+  \citet{sestito+2024b}
+\item
+  \citet{pace+2022}
+\item
+  \citet{spencer+2018}
+\end{itemize}
+
+\subsection{Discussion and
+limitations}\label{discussion-and-limitations}
+
+Our model here is relatively simple. Some things which we do not account
+for include
+
+\begin{itemize}
+\tightlist
+\item
+  interstudy systematics and biases
+\item
+  Inappropriate uncertainty reporting.
+\item
+  Binarity. Binay stars are expected to induce an average velocity
+  dispersion of xxx on an individual star.
+\item
+  Selection effects. RV studies each have their own targeted program and
+\end{itemize}
+
+We partially address several of these by also performing the analysis on
+large RV samples for each galaxy. This allows for individual comparison
+illustrating the differences in selection effects.

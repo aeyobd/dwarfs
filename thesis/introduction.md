@@ -45,12 +45,27 @@ Theoretical work on Sculptor
 
 - @battaglia+2008
 - @iorio+2019
+- @amorisco+zavala+deboer2014
+- @battaglia+2008
+- @breddels+2013
+- @breddels+helmi2013
+- @richardson+fairbairn2014
+- @SFW2017
+- @innanen+papp1979
 
 Observational work on Scl
 
 - @sestito+2023a
 - @tolstoy+2023, @arroyo-polonio+2023, @arroyo-polonio+2024
-- @eskridge1988
+- @eskridge1988, @eskridge1988a, @eskridge1988b
+- @coleman+dacosta+bland-hawthorn2005
+- @DQ1994
+- @WMO2009
+- @IH1995, @munoz+2018
+- @kirby+2009
+- @martinez-vazquez+2015, @pietrzynski+2008
+
+
 
 | parameter                | value                                                        | Source            |
 | ------------------------ | ------------------------------------------------------------ | ----------------- |
@@ -77,27 +92,44 @@ Can I just cite @arroyo-polonio+2024 for velocity information for Sculptor? They
 
 - @pace+2020
 
+- @bellazzini+2002
+
+- @hargreaves+1994
+
+- @martinez-delgado+2001
+
+- @munoz+2005
+
+- @pace+2020
+
+- @palma+2003
+
+- @spencer+2018
+
+- @vitral+2023
+
 ![Picture of Ursa Minor](figures/umi_image.jpg){#fig:umi_image width=390pt height=390pt}
 
 Figure: Ursa Minor Dwarf. Composite Public data/Giuseppe Donatiello. Updated image in 2022. https://www.flickr.com/photos/133259498@N05/page8
 
 
 
-| parameter                | value                                                        | Source    |
-| ------------------------ | ------------------------------------------------------------ | --------- |
-| $\alpha$                 | $ 227.2420 \pm 0.0045$˚                                      | M+18      |
-| $\delta$                 | $67.2221 \pm 0.00158$˚                                       | M+18      |
-| distance                 | $70.1 \pm 2.9$ kpc                                           |           |
-| $\mu_\alpha \cos \delta$ | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | MV20a     |
-| $\mu_\delta$             | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a     |
-| RV                       | $-245 \pm 1$ km s$^{-1}$                                     | This work |
-| $\sigma_v$               | $9 \pm 0.6$                                                  | This work |
-| $r_h$                    | $18.2 \pm 0.1$ arcmin                                        | M+18      |
-| ell                      | $0.55 \pm 0.01$                                              | M+18      |
-| PA                       | $50 \pm 1^\circ$                                             | M+18      |
-| $M_V$                    | $-9.03 \pm 0.05$                                             | M+18      |
+| parameter                | value                                                        | Source |
+| ------------------------ | ------------------------------------------------------------ | ------ |
+| $\alpha$                 | $ 227.2420 \pm 0.0045$˚                                      | 1      |
+| $\delta$                 | $67.2221 \pm 0.00158$˚                                       | 1      |
+| distance modulus         | $19.23 \pm 0.11$                                             | 2      |
+| distance                 | $70.1 \pm 3.6$ kpc                                           |        |
+| $\mu_\alpha \cos \delta$ | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | 3      |
+| $\mu_\delta$             | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3      |
+| RV                       | $-244.9 \pm 0.3_{\rm stat} \pm 1.7_{\rm sys}$ km s$^{-1}$    | 4      |
+| $\sigma_v$               | $8.3 \pm 0.3_{\rm stat} \pm 0.4_{\rm sys}$                   | 4      |
+| $r_h$                    | $18.2 \pm 0.1$ arcmin                                        | 1      |
+| ell                      | $0.55 \pm 0.01$                                              | 1      |
+| PA                       | $50 \pm 1^\circ$                                             | 1      |
+| $M_V$                    | $-9.03 \pm 0.05$                                             | 1      |
 
-Table: Measured properties of Ursa Minor
+Table: Measured properties of Ursa Minor. References are: (1) @munoz+2018, (2) @garofalo+2025, (3) @MV2020a, (4) average of @pace+2020 and @spencer+2018. 
 
 
 

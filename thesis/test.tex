@@ -4,6 +4,7 @@
 \documentclass[12pt,oneside,letterpaper]{report}
 \usepackage[T1]{fontenc}
 
+\input{formatting}
 \usepackage{newtxtext}
 \usepackage{newtxmath}
 
@@ -45,6 +46,33 @@ Esquimalt) Peoples on whose territory the university stands, and the
 \Lekwnen{} and ${\underaccent{\bar}{\rm W}}$S\'ANE\'C Peoples whose historical relationships with the
 land continue to this day. 
 
+\chapter{Font properties}
+
+textwidth: \the\textwidth
+
+\newlength{\myw}
+\newlength{\myl}
+
+---\rule[2.4pt]{12pt}{0.6pt}
+\settowidth{\myw}{---}\the\myw
+
+En dash
+\settowidth{\myw}{--}\the\myw
+--\rule[2.4pt]{6pt}{0.6pt}
+
+Hyphen
+\settowidth{\myw}{-}\the\myw -
+
+
+{\bf ---}\rule[2.2pt]{12pt}{1.1pt}
+
+\settoheight{\myl}{---}\the\myl
+
+-\rule[2.4pt]{3pt}{0.75pt}
+I\rule{1.2pt}{8pt}
+{\bf I}\rule{2.0pt}{8pt}
+|\rule[-2pt]{0.6pt}{12pt}
+\the\textheight
 
 \begin{equation}
     \iint \frac{\rho}{r^2}\,d{\mathbf r} = \nabla \Phi 
