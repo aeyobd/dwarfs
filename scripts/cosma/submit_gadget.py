@@ -126,7 +126,7 @@ def _set_default_mem(args, params):
     """
     If the args do not specify `mem`, set it to the value in the parameter file.
     """
-    if args.mem is None:
+    if args.mem is None and "MaxMemSize" in params.keys():
         args.mem = params['MaxMemSize'] + 'MB'
 
     return args

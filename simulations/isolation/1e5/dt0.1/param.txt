@@ -1,7 +1,7 @@
 # -----------------------------------IO---------------------------------------
 
 #---Filenames
-InitCondFile                initial
+InitCondFile                ../initial
 OutputDir                   ./out
 SnapshotFileBase            snapshot
 OutputListFilename          outputs.txt
@@ -35,14 +35,14 @@ MaxFilesWithConcurrentIO    1
 #---Timestep accuracy
 ErrTolIntAccuracy           0.01    # MATCH
 CourantFac                  0.1     # ignored; for SPH
-MaxSizeTimestep             0.5     # MATCH
-MinSizeTimestep             0.0 
+MaxSizeTimestep             0.1     # MATCH
+MinSizeTimestep             0.1 
 
 #---Tree algorithm
 TypeOfOpeningCriterion      1       # 0: Barnes-Hut, 1: Relative
 ErrTolTheta                 0.5     # mostly used for Barnes-Hut
 ErrTolThetaMax              1.0     # (used only for relative)
-ErrTolForceAcc              0.001   # (used only for relative)
+ErrTolForceAcc              0.005   # (used only for relative)
 
 #---Domain decomposition: should only affect performance
 TopNodeFactor                       3.0

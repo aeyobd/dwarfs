@@ -13,6 +13,9 @@ begin
 	import LilGuys as lguys
 end
 
+# ╔═╡ 93838644-cad6-4df3-b554-208b7afeb3b8
+using PyFITS
+
 # ╔═╡ 72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 using DataFrames
 
@@ -33,13 +36,13 @@ import StatsBase: quantile, mean, std, median, sem
 # ╔═╡ c3298b45-7c5d-4937-8e4c-c87de36a1354
 import DensityEstimators: histogram, bins_equal_number
 
+# ╔═╡ b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
+CairoMakie.activate!(type=:png)
+
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
 # Loading data tables
 """
-
-# ╔═╡ 93838644-cad6-4df3-b554-208b7afeb3b8
-import PythonCall
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 data_dir = "processed"
@@ -55,7 +58,7 @@ obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/obs
 
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
 begin
-	rv_meas = lguys.read_fits(joinpath(data_dir, "sculptor_all_rv.fits"))
+	rv_meas = read_fits(joinpath(data_dir, "sculptor_all_rv.fits"))
 
 	rv_meas[!, :xi_p], rv_meas[!, :eta_p] = lguys.to_orbit_coords(rv_meas.ra, rv_meas.dec, obs_properties["ra"], obs_properties["dec"], θ_orbit)
 
@@ -79,31 +82,22 @@ end
 # ╔═╡ 4c1a5aac-4bad-4eba-aa61-ccd317113633
 fig_dir = "./figures/"
 
+# ╔═╡ c28071fe-6077-43ad-b930-604483d5eb28
+
+
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
 begin 
-	memb_filt = rv_meas.LLR_nospace .> 0.0 # ignore spatial 
+	memb_filt = rv_meas.PSAT_RV .> 0.2# ignore spatial 
+	memb_filt .|= .!ismissing(rv_meas.RV_gmos)
 	memb_filt .&= 150 .> rv_meas.RV .> 60
 
-	quality_score = rv_meas.RV_sigma ./ rv_meas.RV_err
-	quality_score[isnan.(rv_meas.RV_sigma) .|| (rv_meas.RV_sigma .== 0)] .= 0
+	memb_filt .&= rv_meas.F_RV
 
-	memb_filt .&= quality_score .< 5
+	memb_filt
 end
 
-# ╔═╡ c42195da-406a-43f3-a2ad-8c11adabce25
-mean(quality_score .> 5)
-
-# ╔═╡ 74b10a3e-1342-454f-8eed-77b371f81edf
-lines(histogram(filter(isfinite, quality_score), normalization=:none))
-
-# ╔═╡ d8800a31-1ed3-422f-ac51-90f18cf61c29
-sum(quality_score .< Inf)
-
-# ╔═╡ 015f2345-74d4-4296-b0dc-35d6e13ad8cc
-sum(quality_score .< 5)
-
 # ╔═╡ 59395e95-e04b-4782-b7d6-ef1945249b3f
-rv_meas[isfinite.(rv_meas.RV_gmos), :].LLR_nospace
+rv_meas[.!ismissing.(rv_meas.RV_gmos), :].LLR_nospace
 
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
@@ -218,9 +212,6 @@ samples = DataFrame(sample(normal_dist(memb_stars.RV, memb_stars.RV_err), NUTS(0
 # ╔═╡ 149b31b4-c451-42ff-88ec-6a01b4695e55
 scatter(memb_stars.radial_velocity_gsr, memb_stars.RV .- memb_stars.radial_velocity_gsr, color=memb_stars.xi_p)
 
-# ╔═╡ b18e4622-41e0-4700-9e4b-3dbebeefea53
-summary(samples)
-
 # ╔═╡ bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 pairplot(samples[:, [:μ, :σ]])
 
@@ -249,7 +240,7 @@ begin
 end
 
 # ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
-lguys.write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), df_out, overwrite=true)
+write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), df_out, overwrite=true)
 
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
@@ -285,6 +276,12 @@ pairplot(samples_gsr[:, [:μ, :σ]])
 
 # ╔═╡ d321f8ac-1044-45ec-8e1c-a2d8395b6917
 icrs = lguys.ICRS(ra=obs_properties["ra"], dec=obs_properties["dec"], pmdec=obs_properties["pmdec"], pmra=obs_properties["pmra"], distance=obs_properties["distance"], radial_velocity=obs_properties["radial_velocity"])
+
+# ╔═╡ 1bc7adb7-fe85-4878-9527-c5d15dc761b1
+Δv = lguys.transform(lguys.GSR, lguys.ICRS(ra=obs_properties["ra"], dec=obs_properties["dec"], radial_velocity=0), ).radial_velocity
+
+# ╔═╡ 212cee31-a04d-47c1-b56e-4a7b06322b99
+75.81 - Δv
 
 # ╔═╡ 931ed52e-5e7a-4692-b568-ae26ea44b638
 lguys.transform(lguys.GSR, icrs)
@@ -345,6 +342,15 @@ scatter(df_gradient.A, df_gradient.B, alpha=0.1, markersize=1,
 			  ylabel = "B",
 			 )
 	   )
+
+# ╔═╡ 2a422e88-fc0d-4a89-a841-42f3c5c8dace
+import KernelDensity
+
+# ╔═╡ f523cf48-82bf-4b20-9d7c-215bbe10a193
+kde = KernelDensity.kde((df_gradient.A, df_gradient.B))
+
+# ╔═╡ 2b88915c-7222-44be-a483-b967ea131b80
+log10(pdf(kde, 0, 0) ./ lguys.gaussian(0, 0., 0.1)^2)
 
 # ╔═╡ b827e765-646c-4928-9f66-c64e7a20539f
 sum(df_gradient.A .> 0)
@@ -467,10 +473,10 @@ md"""
 """
 
 # ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
-df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
+df_xi_p = calc_binned_mu_sigma(memb_stars.xi, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi, n=10), μ_min=50, μ_max=90)
 
 # ╔═╡ 090acae4-1209-49e6-882c-20ac2c972dd5
-df_eta_p = calc_binned_mu_sigma(memb_stars.eta_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.eta_p, n=10), μ_min=50, μ_max=90)
+df_eta_p = calc_binned_mu_sigma(memb_stars.eta, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.eta, n=10), μ_min=50, μ_max=90)
 
 # ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
 let
@@ -479,7 +485,7 @@ let
 		ylabel = L"RV / km s$^{-1}$"
 	)
 
-	scatter!(memb_stars.xi_p, memb_stars.radial_velocity_gsr, color=COLORS[3], alpha=0.1)
+	scatter!(memb_stars.xi, memb_stars.radial_velocity_gsr, color=COLORS[3], alpha=0.1)
 
 	scatter_range!(df_xi_p)
 
@@ -489,11 +495,11 @@ end
 # ╔═╡ 3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
 let
 	fig, ax = FigAxis(
-		xlabel = L"$\xi'$ / arcmin",
+		xlabel = L"$\xi$ / arcmin",
 		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
 	)
 
-	errorscatter!(60df_xi_p.x, df_xi_p.μ, yerror=df_xi_p.μ_err, color=:black)
+	errorscatter!(df_xi_p.x, df_xi_p.μ, yerror=df_xi_p.μ_err, color=:black)
 
 	fig
 end
@@ -821,24 +827,22 @@ end
 # ╔═╡ Cell order:
 # ╠═6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
+# ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═9070c811-550c-4c49-9c58-0943b0f808b2
 # ╠═e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 # ╠═c3298b45-7c5d-4937-8e4c-c87de36a1354
+# ╠═b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
-# ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╠═4c1a5aac-4bad-4eba-aa61-ccd317113633
+# ╠═c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
-# ╠═c42195da-406a-43f3-a2ad-8c11adabce25
-# ╠═74b10a3e-1342-454f-8eed-77b371f81edf
-# ╠═d8800a31-1ed3-422f-ac51-90f18cf61c29
-# ╠═015f2345-74d4-4296-b0dc-35d6e13ad8cc
 # ╠═59395e95-e04b-4782-b7d6-ef1945249b3f
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
@@ -856,7 +860,6 @@ end
 # ╠═9380d9d1-58b2-432d-8528-d247cf5724e9
 # ╠═318d29b9-4c84-4d38-af6d-048518952970
 # ╠═149b31b4-c451-42ff-88ec-6a01b4695e55
-# ╠═b18e4622-41e0-4700-9e4b-3dbebeefea53
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 # ╠═e93c66f7-394a-46bf-96c9-475494979548
 # ╠═a162219f-df5a-41d8-bf54-927a355f6431
@@ -869,6 +872,8 @@ end
 # ╠═9ffcc0b0-11a1-4962-b64e-59a731f22bd8
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 # ╠═d321f8ac-1044-45ec-8e1c-a2d8395b6917
+# ╠═1bc7adb7-fe85-4878-9527-c5d15dc761b1
+# ╠═212cee31-a04d-47c1-b56e-4a7b06322b99
 # ╠═931ed52e-5e7a-4692-b568-ae26ea44b638
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
 # ╠═062994bc-fb0c-4f08-b7f7-7cc6714bad1e
@@ -878,6 +883,9 @@ end
 # ╠═d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
 # ╠═184b4a5d-cbab-44b2-9620-bf928ad81d0e
 # ╠═0ca7dc1b-3b41-4089-9c89-20c6e48213ea
+# ╠═2a422e88-fc0d-4a89-a841-42f3c5c8dace
+# ╠═f523cf48-82bf-4b20-9d7c-215bbe10a193
+# ╠═2b88915c-7222-44be-a483-b967ea131b80
 # ╠═b827e765-646c-4928-9f66-c64e7a20539f
 # ╠═6371d804-cc73-4ce1-9b36-79fa61780d75
 # ╠═70a22ef4-2eb1-4094-94e3-5a13fb51b9e6

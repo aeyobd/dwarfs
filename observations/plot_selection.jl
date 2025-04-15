@@ -230,7 +230,7 @@ function compare_samples(datasets, scatter_kwargs)
 	)
 
 	for (label, df) in datasets
-		scatter!(df.bp_rp, df.phot_g_mean_mag; scatter_kwargs[label]...)
+		scatter!(df.bp_rp, df.G; scatter_kwargs[label]...)
 	end
 
 	# proper motions
@@ -394,7 +394,7 @@ let
 	contour!(x_kde, y_kde, asinh.(Σ_kde ./ density_scale), levels=contour_levels )
 
 
-	filt = members.r_ell .> 0
+	filt = members.R_ell .> 0
 	scatter!(ax, 60members.xi[filt], 60members.eta[filt], markersize=3, color=Arya.COLORS[3])
 
 	# Colorbar(fig[1, 2], p, ticks=Makie.automatic, minorticks=Makie.automatic,
@@ -445,7 +445,7 @@ let
 		xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}",
 		aspect=1, limits=(-dθ, dθ, -dθ, dθ), xgridvisible=false, ygridvisible=false)
 	
-	h = scatter!(60*all_stars.xi, 60*all_stars.eta, color=all_stars.phot_g_mean_mag, 
+	h = scatter!(60*all_stars.xi, 60*all_stars.eta, color=all_stars.G, 
 		colormap=:greys, markersize=1)
 
 	Colorbar(fig[1,2], h, label="G mag")
@@ -466,7 +466,7 @@ let
 	title = "members")
 
 	
-	h = scatter!(members.bp_rp, members.phot_g_mean_mag, color=log10.(members.r_ell), 
+	h = scatter!(members.bp_rp, members.G, color=log10.(members.R_ell), 
 	)
 
 	Colorbar(f[1, 2], h, label="log r ell")

@@ -149,7 +149,7 @@ CairoMakie.activate!(type=:png)
 profiles_softening = [
 
 	"s0.14" => load_profile("1e6/s0.14"),
-    "s0.044" => load_profile("1e6/fiducial")[1:6],
+    "s0.044" => load_profile("1e6/fiducial"),
     "s0.014" => load_profile("1e6/s0.014"),
  #    "1e7" => load_profile("1e7/fiducial")
     ];
@@ -160,28 +160,23 @@ profiles_softening = [
 # ╔═╡ c25d0e36-7d7c-438e-ad45-61abd3278a75
 @savefig "iso_converg_softening" compare_vcirc(profiles_softening)
 
-# ╔═╡ 641ee083-0640-42e6-9822-a1ff1d5aecac
-# profiles_accuracy = [
-
-# 	"s0.14" => load_profile("1e6/s0.14"),
-#     "s0.044" => load_profile("1e6/fiducial")[1:6],
-#     "s0.014" => load_profile("1e6/s0.014"),
-#  #    "1e7" => load_profile("1e7/fiducial")
-#     ];
-
 # ╔═╡ 1e109d8c-d7e4-4f46-9e39-3adfc881f563
 profiles_methods = [
-    "fiducial" => load_profile("1e6/fiducial")[1:13],
- 	"gadget2" => load_profile("1e6/gadget2"),
-#     "fixed timestep" => load_profile("1e6/s0.014"),
-#  #    "high accuracy" => load_profile("1e7/fiducial")
+    "fiducial" => load_profile("1e5/fiducial"),
+ 	"gadget2" => load_profile("1e5/gadget2"),
+    "dt0.1" => load_profile("1e5/dt_0.1"),
+    "high accuracy" => load_profile("1e5/facc_0.001"),
+    "geometric" => load_profile("1e5/geometric_opening"),
 ];
 
 # ╔═╡ 886b0f81-dca7-47e2-847b-bcd3450d4d07
 [prof[end].time for (k, prof) in profiles_methods]
 
 # ╔═╡ 46d7290c-a546-4910-90b3-a6184760a29d
-@savefig "iso_converg_methods" compare_vcirc(profiles_methods)
+@savefig "iso_converg_methods" compare_vcirc(profiles_methods, errskip=10)
+
+# ╔═╡ 42696671-2828-4d38-a3dd-2a140a271d58
+1 / sqrt(1330) 
 
 # ╔═╡ 3c0bb9b7-d1b5-4a67-a9ad-8a89c615110f
 md"""
@@ -260,10 +255,10 @@ t_circ(0.01)
 # ╠═0cba9678-4469-4a14-93cb-417c01beb18d
 # ╠═49c4798b-59e3-4908-90f8-e0a6801a64fd
 # ╠═c25d0e36-7d7c-438e-ad45-61abd3278a75
-# ╠═641ee083-0640-42e6-9822-a1ff1d5aecac
 # ╠═1e109d8c-d7e4-4f46-9e39-3adfc881f563
 # ╠═886b0f81-dca7-47e2-847b-bcd3450d4d07
 # ╠═46d7290c-a546-4910-90b3-a6184760a29d
+# ╠═42696671-2828-4d38-a3dd-2a140a271d58
 # ╟─3c0bb9b7-d1b5-4a67-a9ad-8a89c615110f
 # ╠═7f0a1887-bf40-4fe6-930e-cee87bf4d32a
 # ╠═7341e90b-355d-449b-a913-c2bae8ec9249

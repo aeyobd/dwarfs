@@ -36,7 +36,7 @@ This is likely better done with a bayesian analysis
 """
 
 # ╔═╡ cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
-@bind galaxyname confirm(TextField(default="sculptor"))
+@bind galaxyname confirm(TextField(default="galaxy"))
 
 # ╔═╡ 898d2c8b-b761-4a69-b561-658a644f44df
 begin
@@ -46,7 +46,7 @@ begin
 end
 
 # ╔═╡ 7557d9c9-891a-4bce-88d6-f04e06e81738
-@bind profilename confirm(TextField(default="best_eqw_profile.toml"))
+@bind profilename confirm(TextField(default="best_profile.toml"))
 
 # ╔═╡ fe484bae-bd19-41c0-9d9d-7a6446b99039
 @bind n_bins_bg confirm(NumberField(1:1:100))

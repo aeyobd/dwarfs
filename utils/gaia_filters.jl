@@ -1,11 +1,11 @@
 import TOML
 using Arya
 using Makie
-import PythonCall # enable fits
 import LilGuys as lguys
 import Polyhedra
 using DataFrames: DataFrame, names, rename!
 using LinearAlgebra: norm, dot
+using PyFITS
 
 # types used in this code.
 OptF = Union{Float64, Nothing}
@@ -139,7 +139,7 @@ If these columns already exist, they are renamed to `xi_original`, `eta_original
 If θ is specified, than the orbital coordinate frame is also calculated as xi_p, eta_p.
 """
 function read_gaia_stars(params; θ=nothing)
-    df = lguys.read_fits(params.filename)
+    df = read_fits(params.filename)
 
     for col in ["R_ell", "r_ell", "xi", "eta"]
         if col ∈ names(df)

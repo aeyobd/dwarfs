@@ -39,7 +39,7 @@ function main()
 
     LLR_min = pop!(params, "LLR_min", 0)
 
-    props = TOML.parsefile(dirname(params["filename"]) * "/../observed_properties.toml")
+    props = TOML.parsefile(joinpath(dirname(params["filename"]), "../observed_properties.toml"))
 
     params = LilGuys.dict_to_tuple(params)
     filt_params = GaiaFilterParams(props; params...)
