@@ -13,12 +13,12 @@ pmra_ref = "MV2020a"
 pmdec = -0.160 
 pmdec_err = 0.017 #0.002 + gaia sys
 pmdec_ref = "MV2020a"
-radial_velocity = 111.4 # this work
+radial_velocity = 111.2 # this work
 radial_velocity_err = 0.2
 radial_velocity_ref = "this"
 
 # this work
-sigma_v = 9.61
+sigma_v = 9.69
 sigma_v_err = 0.16
 sigma_v_ref = "this"
 

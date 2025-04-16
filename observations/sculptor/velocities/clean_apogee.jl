@@ -58,18 +58,18 @@ md"""
 
 # ╔═╡ 9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
 module RVUtils
-	include("rv_utils.jl")
+	include("../../rv_utils.jl")
 	not = !
 end
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-data_dir = "data/"
+data_dir = "../data/"
 
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
-obs_properties = TOML.parsefile("observed_properties.toml")
+obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("processed/best_sample.fits")
+j24 = read_fits("..//processed/best_sample.fits")
 
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
@@ -85,7 +85,7 @@ APOGEE DR 17 sample from federico's paper is apogee_raw_2. I have also xmatched 
 apogee_raw_2 = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
 
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
-apogee_raw = read_fits("$data_dir/apogee_xmatch.fits")
+apogee_raw = read_fits("processed/apogee_xmatch.fits")
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 begin 
@@ -201,7 +201,7 @@ chain = sample(model, NUTS(), MCMCThreads(), 1000, 16)
 pairplot(chain)
 
 # ╔═╡ 54c4c8b3-f9e3-4b85-afd6-5a5646f5eb79
-df_summary = Turing.summarize(chain)
+df_summary = RVUtils.summarize(chain)
 
 # ╔═╡ ba337b2c-9a0c-40b3-867f-c9ebf683e1e3
 apogee.RV

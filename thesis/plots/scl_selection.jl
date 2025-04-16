@@ -8,10 +8,11 @@ using InteractiveUtils
 begin 
 	import Pkg; Pkg.activate()
 
-	import PythonCall
+
 	using DataFrames 
 	using CSV
 	using CairoMakie
+	using PyFITS
 end
 
 # ╔═╡ 2d5297cd-6a01-4b26-ac77-995b878d765d
@@ -87,13 +88,13 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/processed/sculptor_memb_rv.fits")
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/processed/sculptor_memb_rv.fits")
 
 # ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
-LilGuys.mean(isfinite.(rv_members.RV_t23))
+mean(isfinite.(rv_members.RV_t23))
 
 # ╔═╡ 90ec91b3-02a8-41d7-a5a1-76cf6e84fd00
-548.5 / 72.27
+
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -131,9 +132,6 @@ member_markersize = 3
 # ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
 bg_markersize = 2
 
-# ╔═╡ 8a4f4283-5699-44ca-956a-869a41177f05
-Arya.update_fontsize!(12)
-
 # ╔═╡ 77b7678f-158f-46cb-82b1-2e719ec6895a
 function compare_samples(datasets, scatter_kwargs) 
 	fig = Figure(
@@ -147,7 +145,8 @@ function compare_samples(datasets, scatter_kwargs)
 		ylabel=plot_labels[:eta_am], 
 		#aspect=1, 
 		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false
+		xgridvisible=false, ygridvisible=false,
+		xreversed = true
 	)
 
 
@@ -156,7 +155,7 @@ function compare_samples(datasets, scatter_kwargs)
 	end
 
 	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
-	text!(4observed_properties["r_h"], 0, text=L"3r_h", color=:black)
+	text!(-4observed_properties["r_h"], 0, text=L"3R_h", color=:black)
 
 	
 	axislegend(position=:lt)
@@ -201,19 +200,25 @@ function compare_samples(datasets, scatter_kwargs)
 	fig
 end
 
-# ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
+# ╔═╡ c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
+R_h = observed_properties["r_h"]
 
+# ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
+rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
 
 # ╔═╡ 2d474904-ec96-41e7-bd17-8969ea5e3c40
 let
 	fig = Figure()
-	ax = Axis(fig[1,1])
+	ax = Axis(fig[1,1],
+		xlabel = "log R ell",
+		ylabel = "[Fe/H]"
+			 )
 
 	for (i, col) in enumerate([ :fe_h_t23, :fe_h_apogee, :fe_h_gmos,])
 		errcol = "fe_h_err_" * split(string(col), "_")[end]
-		filt = map(isfinite, rv_members[!, col])
+		filt = .!ismissing.(rv_members[!, col])
 
-		errorscatter!(log10.(rv_members.R_ell[filt]), rv_members[filt, col], yerror=rv_members[filt, errcol], color=COLORS[i])
+		errorscatter!(disallowmissing(log10.(rv_members.R_ell[filt])), disallowmissing(rv_members[filt, col]), yerror=disallowmissing(rv_members[filt, errcol]), color=COLORS[i])
 
 	end
 	fig
@@ -226,6 +231,7 @@ end
 		:members_nospace => members_nospace,
 		:members => members,
 		:rv => rv_members,
+		:rv_distant => rv_distant,
 	),
 	Dict(
 		:best => (;	alpha=0.1, markersize=1, color=:black, 
@@ -252,52 +258,18 @@ end
 			color = COLORS[4],
 			#strokewidth=0
 		),
-	)
-)
-
-# ╔═╡ bbe2f4a2-69cc-4d88-b717-f5bbc4cd0465
-@savefig "scl_psat_selection" compare_samples(
-		(
-		:best => best_stars,
-		:members => members,
-		:members_strict => best_stars[best_stars.PSAT .> 0.5, :],
-		:members_strictest => best_stars[best_stars.PSAT .> 0.99, :],
-	),
-	Dict(
-		:best => (;	alpha=0.1, markersize=1, color=:black, 
-			label="all" => (alpha=1, markersize=2),
-			rasterize=10,
-		),
-		:members => (;
-			markersize=1,
-			label = "probable members" =>(alpha=1, markersize=1.5*2),
-			#color=:transparent,
-			#strokewidth=0.3,
-			color = COLORS[1],
-			alpha=1,
-		),
-		:members_strict => (;
-			markersize=1,
-			#marker=:xcross,
-			label = "strict members" =>(alpha=1, markersize=2*2),
-			color = COLORS[2],
-			#strokewidth=0
-		),
-		:members_strictest => (;
-			markersize=1,
-			#marker=:xcross,
-			label = "strictest members" =>(alpha=1, markersize=2*2),
+		:rv_distant => (;
+			markersize=4,
+			marker=:star5,
 			color = COLORS[4],
-			#strokewidth=0
+			strokewidth=0.4,
+			strokecolor=:black
 		),
 	)
 )
-
-# ╔═╡ 5feb4f16-3128-4ad4-a2b2-c07b4286d5d1
-hist(best_stars.PSAT; axis=(yscale=log10, xlabel="PSAT", ylabel="count", yticks=Makie.automatic), bins=40)
 
 # ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
-rv_members[isfinite.(rv_members.RV_gmos), [:xi, :eta]]
+rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
 
 # ╔═╡ 9a62b3e5-96f1-438b-8fdf-f8427efd145b
 sum(best_stars.PSAT .> 0.95)
@@ -313,10 +285,10 @@ sum(best_stars.PSAT .< 0.01)
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
-# ╠═69c98029-165c-407b-9a63-a27e06e30e45
-# ╠═a4848423-9be3-48d7-98c2-8d1096eb2560
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
+# ╠═69c98029-165c-407b-9a63-a27e06e30e45
+# ╠═a4848423-9be3-48d7-98c2-8d1096eb2560
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 # ╠═cf7aeb0a-d453-462a-b43d-a832567440fd
 # ╠═d3bd7158-ea70-47a0-9800-9bfc08f3557c
@@ -340,13 +312,11 @@ sum(best_stars.PSAT .< 0.01)
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
 # ╠═12aa5708-dfee-4b48-8835-69055ad82680
 # ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
-# ╠═8a4f4283-5699-44ca-956a-869a41177f05
 # ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
+# ╠═c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
 # ╠═430fae9d-c708-4447-80ce-aabf19b161d2
 # ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
-# ╠═bbe2f4a2-69cc-4d88-b717-f5bbc4cd0465
-# ╠═5feb4f16-3128-4ad4-a2b2-c07b4286d5d1
 # ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
 # ╠═9a62b3e5-96f1-438b-8fdf-f8427efd145b
 # ╠═34758293-664e-4126-a172-32456e9c9d1c

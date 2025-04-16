@@ -58,15 +58,14 @@ md"""
 
 # ╔═╡ 9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
 module RVUtils
-	include("rv_utils.jl")
-	not = !
+	include("../../rv_utils.jl")
 end
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-data_dir = "data/"
+data_dir = "../data/"
 
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
-obs_properties = TOML.parsefile("observed_properties.toml")
+obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
@@ -141,7 +140,7 @@ chain = sample(model, NUTS(), MCMCThreads(), 1000, 16)
 pairplot(chain)
 
 # ╔═╡ 54c4c8b3-f9e3-4b85-afd6-5a5646f5eb79
-df_summary = Turing.summarize(chain)
+df_summary = RVUtils.summarize(chain)
 
 # ╔═╡ 0ae09680-cc34-492d-85bb-dec3ced936cf
 samples = DataFrame(chain)
@@ -227,7 +226,7 @@ chain_dart = sample(model_dart, NUTS(), MCMCThreads(), 1000, 16)
 pairplot(chain_dart)
 
 # ╔═╡ 3524c534-7d9d-41e2-8802-0526878ad498
-df_summary_dart = Turing.summarize(chain_dart)
+df_summary_dart = RVUtils.summarize(chain_dart)
 
 # ╔═╡ 155ac7dc-7ec6-43a1-bea4-3c079ab0f19c
 samples_dart = DataFrame(chain_dart)
@@ -237,90 +236,6 @@ RVUtils.plot_samples(dart, samples_dart, bins=30)
 
 # ╔═╡ db4256f6-23df-49e5-8a3b-d81c03257b5a
 CSV.write("processed/rv_dart.csv", df_summary_dart)
-
-# ╔═╡ e5e7a9ae-bec0-462a-97f9-262902fd41f5
-md"""
-# Gradient
-"""
-
-# ╔═╡ 05701206-01cc-4664-97ce-bc61000eeae2
-"""
-Fits a normal (gaussian) distribution to 3d data with errors (to include spatial gradient)
-"""
-@model function normal_gradient(x, xerr, ξ, η; μ_min=90, μ_max=120)
-	μ ~ Uniform(μ_min, μ_max)
-	A ~ Normal(0, 0.1)
-	B ~ Normal(0, 0.1)
-	m = @. μ + A*ξ + B*η
-	σ ~ LogNormal(2.5, 1) # approx 1 - 100 km / s, very broad but should cover all
-	s = @. sqrt(σ^2 + xerr^2)
-
-	x ~ MvNormal(m, s)
-end
-
-# ╔═╡ cce6035b-6d83-4c6c-b81d-22fb83d16844
-
-
-# ╔═╡ 1bdd359f-c111-43a8-9997-8c005e076588
-samples_gradient = sample(normal_gradient(tolstoy23.RV, tolstoy23.RV_err, tolstoy23.xi, tolstoy23.eta, μ_min=30, μ_max=100), 
-						  NUTS(0.65), MCMCThreads(), 1000, 16)
-
-# ╔═╡ 589ac5e3-c5a1-4283-98e6-306647876051
-pairplot(samples_gradient)
-
-# ╔═╡ a08071ac-efaf-47b5-8688-bb3f30431f41
-sqrt((0.073/0.017)^2 + (0.043 / 0.026)^2)
-
-# ╔═╡ 47381bef-2d12-4813-be4a-cadc72f564b7
-df_gradient = DataFrame(samples_gradient)
-
-# ╔═╡ e32c52d1-9b45-4038-a3d7-94f4288aaacc
-scatter(df_gradient.A, df_gradient.B, alpha=0.1, markersize=1, 
-		axis=(;
-			  limits=(-0.2, 0.2, -0.2, 0.2), 
-			  aspect=DataAspect(),
-			  xlabel = "A",
-			  ylabel = "B",
-			 )
-	   )
-
-# ╔═╡ aa868d3b-286c-45fc-b2d3-8525ba2fab58
-import KernelDensity
-
-# ╔═╡ 8b86d694-4acd-4a74-b235-c25a8c8679f9
-kde = KernelDensity.kde((df_gradient.A, df_gradient.B))
-
-# ╔═╡ 062528d2-12c3-4408-bd3a-77806b50730c
-kde(0,0)
-
-# ╔═╡ 37636050-1247-4ceb-b75c-2d3aeb87b364
-sum(df_gradient.A .> 0)
-
-# ╔═╡ b6933c35-8cb4-4171-9c28-315e3f787264
-median(atand.(df_gradient.B ./ df_gradient.A))
-
-# ╔═╡ a55a40a9-86b8-4af9-b259-309cd92600fa
-median(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2)) * 60
-
-# ╔═╡ 7fd48a81-159c-44ec-b3e4-5752eb709c0a
-quantile(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2), [0.16, 0.5, 0.84]) * 60
-
-# ╔═╡ 8964662b-6655-4281-b8e1-426293266382
-quantile(atand.(df_gradient.B ./ df_gradient.A), [0.16, 0.5, 0.84])
-
-# ╔═╡ d32f32a1-8b4f-4267-9176-82d30d623bf7
-let
-	fig, ax = FigAxis(
-		xlabel=L"radial velocity / km s$^{-1}$",
-		ylabel="density"
-	)
-	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
-	
-	plot_samples!(DataFrame(samples_gradient), LinRange(40, 110, 100), thin=15)
-	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
-
-	fig
-end
 
 # ╔═╡ Cell order:
 # ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -364,20 +279,3 @@ end
 # ╠═155ac7dc-7ec6-43a1-bea4-3c079ab0f19c
 # ╠═e9e30f25-76aa-4bfc-8f30-edad90efd47c
 # ╠═db4256f6-23df-49e5-8a3b-d81c03257b5a
-# ╠═e5e7a9ae-bec0-462a-97f9-262902fd41f5
-# ╠═05701206-01cc-4664-97ce-bc61000eeae2
-# ╠═cce6035b-6d83-4c6c-b81d-22fb83d16844
-# ╠═1bdd359f-c111-43a8-9997-8c005e076588
-# ╠═589ac5e3-c5a1-4283-98e6-306647876051
-# ╠═a08071ac-efaf-47b5-8688-bb3f30431f41
-# ╠═47381bef-2d12-4813-be4a-cadc72f564b7
-# ╠═e32c52d1-9b45-4038-a3d7-94f4288aaacc
-# ╠═aa868d3b-286c-45fc-b2d3-8525ba2fab58
-# ╠═8b86d694-4acd-4a74-b235-c25a8c8679f9
-# ╠═062528d2-12c3-4408-bd3a-77806b50730c
-# ╠═37636050-1247-4ceb-b75c-2d3aeb87b364
-# ╠═b6933c35-8cb4-4171-9c28-315e3f787264
-# ╠═a55a40a9-86b8-4af9-b259-309cd92600fa
-# ╠═7fd48a81-159c-44ec-b3e4-5752eb709c0a
-# ╠═8964662b-6655-4281-b8e1-426293266382
-# ╠═d32f32a1-8b4f-4267-9176-82d30d623bf7

@@ -41,10 +41,10 @@ md"""
 """
 
 # ╔═╡ f26e6eb1-640b-40fa-8cbc-e87092f132f7
-j24 = read_fits("data/jensen+24_wide.fits")
+j24 = read_fits("../data/jensen+24_wide.fits")
 
 # ╔═╡ 5a9c76ed-eccf-42d7-96f1-814471f66d89
- apogee_f = read_fits("../all/data/allStarLite-dr17-synspec_rev1.fits")
+ apogee_f = read_fits("../../all/data/allStarLite-dr17-synspec_rev1.fits")
 
 # ╔═╡ 0587bd4e-459e-43f6-b0b3-ef39c393d55b
 md"""
@@ -69,7 +69,7 @@ joined = innerjoin(j24, apogee, on=:source_id)
 good = joined[.!ismissing.(joined.RV), :]
 
 # ╔═╡ ff98fe21-fc5a-4bb8-bb0e-3cd2f4725fa3
-write_fits( "data/apogee_xmatch.fits", good, overwrite=true)
+write_fits( "processed/apogee_xmatch.fits", good, overwrite=true)
 
 # ╔═╡ 62c90fb6-1310-47d7-a0ca-b8505f9ad129
 md"""

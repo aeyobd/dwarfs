@@ -35,10 +35,10 @@ import TOML
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ b11f3588-9904-46ef-8f35-a7c1d623e020
-log_r_ell_label = L"\log\,R\,/\,R_h"
+log_r_ell_label = L"$\log\,R$\,/\,arcmin"
 
 # ╔═╡ d42a0cd3-cc8e-4a24-8887-7100f3927961
-log_Σ_label = L"$\log\,\Sigma$\,/\,stars\ ${R_h}^{-2}$"
+log_Σ_label = L"$\log\,\Sigma$\,/\,stars\ arcmin$^{-2}$"
 
 # ╔═╡ 389fefd6-60fd-4dd8-ba77-29e87b4ed846
 obs_props_scl = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
@@ -64,9 +64,7 @@ end
 function load_profile(galaxyname, algname="jax")
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
 		"density_profiles/$(algname)_profile.toml")
-	R_h = get_R_h(galaxyname)
     prof = LilGuys.StellarDensityProfile(filename)
-	prof = LilGuys.scale(prof, 1/ R_h, 1.0)
 
 	prof
 end
@@ -92,7 +90,7 @@ function get_R_break(galaxyname, obs_props)
 	r_b_kpc = LilGuys.break_radius(sigma_v, dt)
 	R_b_arcmin = LilGuys.kpc2arcmin(r_b_kpc, dist)
 
-	return R_b_arcmin / get_R_h(galaxyname)
+	return R_b_arcmin
 end
 
 # ╔═╡ 78159e3a-e11b-4118-8024-8dc594e8f2e3
@@ -107,7 +105,7 @@ ana = LilGuys.Sersic(n=1)
 # ╔═╡ 30a60b7d-630a-4fa3-ac57-e873655ad754
 function compare_densities(profiles; 
 		R_b_R_h=nothing, styles=nothing, reference=collect(keys(profiles))[begin],
-		prof_ana = nothing, y_R_b=nothing
+		prof_ana = nothing, y_R_b=nothing, R_h=nothing,
 	)
 	
 	fig = Figure()
@@ -126,7 +124,8 @@ function compare_densities(profiles;
 		y .+= log_Sigma_ref(0)
 		lines!(x, y, label="Exp2D", color=:black)
 	end
-	
+
+	y_l = Inf
 	for (name, prof) in profiles
 
 		if styles !== nothing
@@ -134,22 +133,41 @@ function compare_densities(profiles;
 		else
 			kwargs = (;)
 		end
-		
+
+		filt = lower_error.(prof.log_Sigma) .< 1
+		ys = prof.log_Sigma[filt]
+		y_l = min(y_l, minimum(middle.(ys) .- lower_error.(ys)))
 		errorscatter!(prof.log_R, prof.log_Sigma; 
 			yerror=LilGuys.error_interval.(prof.log_Sigma), 
 			label=name, kwargs...)
 	end
 
-	
+
+	autolimits!(ax)
+	dy = 2
+	y_low = y_l
+
+
+	if R_h !== nothing
+		x = log10(R_h)
+		y = y_low + 0.15*dy
+		
+		#arrows!([x], [y], [0], [-0.1*dy], arrowsize=6)
+
+		vlines!(x, color=:black, linestyle=:dot)
+		text!([x], [y], text=L"R_h")
+	end
+
 	if R_b_R_h !== nothing
 		x = log10(R_b_R_h)
 		if y_R_b === nothing
-			y_R_b = log_Sigma_ref(x)
+			y_R_b = y_low
 		end
+		y_R_b += 0.15 * dy
 		
-		arrows!([x], [y_R_b+1], [0], [-0.5], arrowsize=6)
+		arrows!([x], [y_R_b], [0], [-0.1*dy], arrowsize=6)
 		
-		text!([x], [y_R_b+1], text=L"R_b")
+		text!([x], [y_R_b], text=L"R_b")
 	end
 
 	
@@ -180,6 +198,11 @@ function compare_densities(profiles;
 			kwargs = (;)
 		end
 		errorscatter!(x, y, yerror=ye; kwargs...)
+	end
+
+	if R_h !== nothing
+
+		vlines!(log10(R_h), color=:black, linestyle=:dot)
 	end
 
 	linkxaxes!(ax, ax2)
@@ -213,7 +236,7 @@ begin
 end
 
 # ╔═╡ d6509ab8-9923-443b-8b96-50e4f59498ab
-@savefig "scl_density_methods_extra" compare_densities(profiles)
+@savefig "scl_density_methods_extra" compare_densities(profiles, R_h=get_R_h("sculptor"))
 
 # ╔═╡ c9e23e51-c2de-427f-8429-d620796e1baa
 load_profile("sculptor", "best_eqw_sub") #|> LilGuys.filter_empty_bins
@@ -275,7 +298,7 @@ get_R_h("fornax")
 
 
 # ╔═╡ dbeae6d9-1dd7-403b-80ac-82b20d047c3b
-@savefig "scl_density_methods" compare_densities(profiles_scl, styles=plot_kwargs, R_b_R_h=R_b_scl, reference="probable members", y_R_b=-1.7)
+@savefig "scl_density_methods" compare_densities(profiles_scl, styles=plot_kwargs, R_b_R_h=R_b_scl, reference="probable members", R_h=get_R_h("sculptor"))
 
 # ╔═╡ c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 begin 
@@ -296,7 +319,7 @@ end
 # ╔═╡ 18b9cf25-527e-4bac-91ca-5d1fa69293c8
 @savefig "umi_density_methods" compare_densities(profiles_umi, 
 	styles=plot_kwargs, R_b_R_h=R_b_fornax, reference="probable members",
-	
+	R_h=get_R_h("ursa_minor")
 )
 
 # ╔═╡ 7c64d26a-bddd-4159-98d2-3a0f8d2125f5
@@ -316,7 +339,9 @@ begin
 end
 
 # ╔═╡ 188ce016-6011-45c3-9823-eafdc94f9617
-@savefig "fornax_density_methods" compare_densities(profiles_fornax, styles=plot_kwargs, R_b_R_h=R_b_fornax, reference="probable members")
+@savefig "fornax_density_methods" compare_densities(profiles_fornax, styles=plot_kwargs, R_b_R_h=R_b_fornax, reference="probable members",
+												   	R_h=get_R_h("fornax")
+)
 
 # ╔═╡ 8a2b9a99-7b11-4910-a097-420f765396e5
 get_R_break

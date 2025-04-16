@@ -6,6 +6,12 @@ using CairoMakie
 using Arya
 import Distributions: pdf, Normal
 
+using Measurements: ±
+import Measurements
+
+@doc raw"add a and b in quadrature: $sqrt(a^2 + b^2)$"
+⊕(a, b) = sqrt(a^2 + b^2)
+
 
 """
     xmatch(df1, df2, max_sep=2)
@@ -158,16 +164,16 @@ Return
 - vy: velocity in direction of DEC at centre
 - vz: velocity in direction of dwarf's centre
 """
-function to_orthoganal_velocities(gsr::Vector{<lguys.GSR}, gsr0::lguys.GSR)
+function rv_correction(ra, dec, ra0, dec0, pmra, pmdec, distance)
+    vra = lguys.pm2kms(pmra, distance)
+    vdec = lguys.pm2kms(pmdec, distance)
 
-    vra = [lguys.pm2kms(o.pmra, gsr0.distance) for o in gsr]
-    vdec = [lguys.pm2kms(o.pmdec, gsr0.distance) for o in gsr]
+    ϕ_pm = lguys.angular_distance.(ra, dec, ra0, dec0)
 
-    ϕ_pm = lguys.angular_distance.(rv_meas.ra, rv_meas.dec, ra0, dec0)
+    xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 
-    xi, eta = lguys.to_tangent([g.ra for g in gsr], [g.dec for g in gsr], gsr0.ra, gsr0.dec)
-
-    θ_pm = @. atand(rv_meas.xi, rv_meas.eta)
+    θ_pm = @. atand(xi, eta)
+    rv = 0 # want correction to vz
 
     sθ = @. sind(θ_pm)
     cθ = @. cosd(θ_pm)
@@ -175,7 +181,8 @@ function to_orthoganal_velocities(gsr::Vector{<lguys.GSR}, gsr0::lguys.GSR)
     cϕ = @. cosd(ϕ_pm)
 
     vR = @. vra * sθ + vdec * cθ
-    vθ = @. vra * cθ + vdec * sθ
+    vθ = @. vra * cθ - vdec * sθ
+    rv = 0 # just want shift to vz
 
     vx = @. vθ*cθ + vR*sθ*cϕ + rv*sθ*sϕ
     vy = @. -vθ*sθ + vR*cθ*cϕ + rv*cθ*sϕ
@@ -185,7 +192,7 @@ function to_orthoganal_velocities(gsr::Vector{<lguys.GSR}, gsr0::lguys.GSR)
     vtot2 = @. sqrt(rv^2 + vra^2 + vdec^2)
     @assert all(isapprox.(vtot1, vtot2)) # make sure length is preserved
 
-    return vx, vy, vz
+    return vz
 end
 
 
@@ -238,4 +245,39 @@ function PSAT_RV(rv_meas::DataFrame, f_sat)
     L_BKD = @. rv_meas.L_CMD_BKD * rv_meas.L_PM_BKD * rv_meas.L_S_BKD * rv_meas.L_RV_BKD
 
     return @. f_sat * L_SAT / (f_sat * L_SAT + (1-f_sat) * L_BKD)
+end
+
+
+
+"""
+    new_pm(rv_meas, obs_props)
+
+Use the observed properties to provide a PM prior for members,
+wei
+"""
+function new_pm(rv_meas, obs_props)
+    σ_pm = LilGuys.kms2pm(obs_props["sigma_v"], obs_props["distance"])
+    σ_ra = obs_props["pmra_err"] ⊕ σ_pm
+    σ_dec = obs_props["pmdec_err"] ⊕ σ_pm
+
+    pmra = map(eachrow(rv_meas)) do row
+        xs = [row.pmra, obs_props["pmra"]]
+        ws = [1/row.pmra_err^2, 1/σ_ra^2 * row.PSAT_RV]
+
+        m = lguys.mean(xs, we)
+        err = 1/sqrt(sum(ws))
+        return m ± err
+    end
+
+    # ╔═╡ ad7ae1a8-c5a4-4d79-bd86-35431fa71856
+    pmdec = map(eachrow(rv_meas)) do row
+        xs = [row.pmdec, obs_props["pmdec"]]
+        ws = [1/row.pmdec_err^2, 1/σ_dec^2 * row.PSAT_RV]
+
+        m = lguys.mean(xs, we)
+        err = 1/sqrt(sum(ws))
+        return m ± err
+    end
+
+    return pmra, pmdec
 end

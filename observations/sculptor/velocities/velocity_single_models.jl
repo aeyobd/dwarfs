@@ -25,6 +25,19 @@ using Turing
 # ╔═╡ e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 using PairPlots
 
+# ╔═╡ 35c87efe-6899-444d-952f-94e5e5342846
+using Measurements
+
+# ╔═╡ c05a4e8e-c6d2-43e6-9b87-679f4ecee84c
+study = "apogee"
+
+# ╔═╡ b3ad64bc-7dbb-4c27-a91d-a9f2342f98da
+begin 
+	FIGDIR = "./figures/"
+	FIGSUFFIX = ".$study"
+	using LilGuys
+end
+
 # ╔═╡ 6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 md"""
 This notebook takes the dataset created from velocity_xmatch.jl and analyzes it using MCMC to estimate the velocity dispersion and search for any possible velocity gradients.
@@ -33,11 +46,28 @@ This notebook takes the dataset created from velocity_xmatch.jl and analyzes it 
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, sem
 
+# ╔═╡ d2888213-61e3-4a6f-872b-48a075640ef5
+import TOML
+
 # ╔═╡ c3298b45-7c5d-4937-8e4c-c87de36a1354
 import DensityEstimators: histogram, bins_equal_number
 
+# ╔═╡ 9039df68-748a-41be-9a32-e2bf45bee85a
+module RVUtils
+	include("../../rv_utils.jl")
+end
+
+# ╔═╡ 4c1a5aac-4bad-4eba-aa61-ccd317113633
+
+
+# ╔═╡ b4b66c36-029d-4014-ae56-e4ee33a730cd
+
+
 # ╔═╡ b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
 CairoMakie.activate!(type=:png)
+
+# ╔═╡ d476513e-6211-44a4-ade5-0ab184a9829d
+j24 = read_fits("../processed/best_sample.fits")
 
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
@@ -47,26 +77,42 @@ md"""
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 data_dir = "processed"
 
-# ╔═╡ 9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
-θ_orbit = -40.095
+# ╔═╡ 03636f8d-0fc9-4f20-8a84-b92f9bd27ffb
+f_sat = mean(j24.PSAT)
 
-# ╔═╡ d2888213-61e3-4a6f-872b-48a075640ef5
-import TOML
+# ╔═╡ 5fd838b6-e7b1-4449-8f7a-b26a77042f0f
+⊕ = RVUtils.:⊕
 
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
-obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
+obs_properties = TOML.parsefile("../observed_properties.toml")
+
+# ╔═╡ 8863e6f7-6aaa-4370-919f-fe6afd3847bf
+θ_orbit = obs_properties["theta_pm_gsr"]
+
+# ╔═╡ e391b59d-b8d9-4726-8e4d-8476f6d62800
+rv0 = obs_properties["radial_velocity"] .- RVUtils.rv_gsr_shift(obs_properties["ra"], obs_properties["dec"])
+
+# ╔═╡ cd71ec9b-4b8c-47ca-a0c8-3c6cbc257927
+σv = obs_properties["sigma_v"]
 
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
-begin
-	rv_meas = read_fits(joinpath(data_dir, "sculptor_all_rv.fits"))
+begin 
+	rv_meas = read_fits("processed/rv_combined.fits")
+
+	filter!(x->!ismissing(x["RV_$study"]), rv_meas)
+
 
 	rv_meas[!, :xi_p], rv_meas[!, :eta_p] = lguys.to_orbit_coords(rv_meas.ra, rv_meas.dec, obs_properties["ra"], obs_properties["dec"], θ_orbit)
 
+	
+	rv_meas[:, :RV] = rv_meas[!, "RV_$study"]
+	rv_meas[:, :RV_err] .= rv_meas[!, "RV_err_$study"]
 
 	obs = [lguys.ICRS(ra=r.ra, dec=r.dec, 
 		distance=obs_properties["distance"], 
 						pmra=r.pmra, pmdec=r.pmdec, radial_velocity=r.RV)
-	for r in eachrow(rv_meas)]
+		for r in eachrow(rv_meas)
+	]
 		
 	obs_gsr = lguys.to_frame(lguys.transform.(lguys.GSR, obs))
 
@@ -75,12 +121,21 @@ begin
 	rv_meas[!, :pmdec_gsr] = obs_gsr.pmdec
 	rv_meas[!, :radial_velocity_gsr] = obs_gsr.radial_velocity
 
+	Δ_gsr = RVUtils.rv_gsr_shift.(rv_meas.ra, rv_meas.dec)
+	
+	rv_meas[:, :vz] .= rv_meas.radial_velocity_gsr .+ rv_meas.delta_rv
+
+	rv_meas[:, :vz_err] .= rv_meas.RV_err .⊕ rv_meas.delta_rv_err
+	
+	rv_meas[:, :RV_sigma] .= rv_meas[!, "RV_sigma_$study"]
+	rv_meas[:, :RV_count] .= rv_meas[!, "RV_count_$study"]
+
+	rv_meas[:, :L_RV_SAT] = RVUtils.L_RV_SAT.(rv_meas.vz, rv_meas.RV_err, rv0, σv)
+	rv_meas[:, :L_RV_BKD] = RVUtils.L_RV_BKD.(rv_meas.vz, rv_meas.ra, rv_meas.dec)
+
+	rv_meas[:, :PSAT_RV] = RVUtils.PSAT_RV(rv_meas, f_sat)
 	rv_meas
-
 end
-
-# ╔═╡ 4c1a5aac-4bad-4eba-aa61-ccd317113633
-fig_dir = "./figures/"
 
 # ╔═╡ c28071fe-6077-43ad-b930-604483d5eb28
 
@@ -88,16 +143,13 @@ fig_dir = "./figures/"
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
 begin 
 	memb_filt = rv_meas.PSAT_RV .> 0.2# ignore spatial 
-	memb_filt .|= .!ismissing(rv_meas.RV_gmos)
-	memb_filt .&= 150 .> rv_meas.RV .> 60
-
 	memb_filt .&= rv_meas.F_RV
 
 	memb_filt
 end
 
 # ╔═╡ 59395e95-e04b-4782-b7d6-ef1945249b3f
-rv_meas[.!ismissing.(rv_meas.RV_gmos), :].LLR_nospace
+
 
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
@@ -106,7 +158,7 @@ memb_stars = rv_meas[memb_filt, :]
 hist(memb_stars.RV)
 
 # ╔═╡ f9d4eade-c648-4f20-8403-07be993fb8c1
-sum(isfinite.(memb_stars.RV_gmos))
+
 
 # ╔═╡ a1938588-ca40-4844-ab82-88c4254c435b
 length(memb_stars.RV)
@@ -172,7 +224,7 @@ md"""
 
 # ╔═╡ 9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
 function fit_rv_sigma(rv, rv_err; μ_min=90, μ_max=120, N=3_000, p=0.16, burn=0.2)
-	samples = DataFrame(sample(normal_dist(rv, rv_err, μ_min=μ_min, μ_max=μ_max), NUTS(0.65), N))
+	samples = DataFrame(sample(normal_dist(rv, rv_err, μ_min=μ_min, μ_max=μ_max), NUTS(0.65), MCMCThreads(), N, 16))
 	burn = round(Int, burn * N)
 	samples=samples[burn:end, :]
 
@@ -207,10 +259,10 @@ function plot_sample_normal_fit(sample, props; kwargs...)
 end
 
 # ╔═╡ 318d29b9-4c84-4d38-af6d-048518952970
-samples = DataFrame(sample(normal_dist(memb_stars.RV, memb_stars.RV_err), NUTS(0.65), 10000))
+samples = DataFrame(sample(normal_dist(memb_stars.RV, memb_stars.RV_err), NUTS(0.65), MCMCThreads(), 10000, 16))
 
 # ╔═╡ 149b31b4-c451-42ff-88ec-6a01b4695e55
-scatter(memb_stars.radial_velocity_gsr, memb_stars.RV .- memb_stars.radial_velocity_gsr, color=memb_stars.xi_p)
+scatter(memb_stars.RV, memb_stars.vz .- memb_stars.radial_velocity_gsr, color=memb_stars.xi)
 
 # ╔═╡ bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 pairplot(samples[:, [:μ, :σ]])
@@ -239,9 +291,6 @@ begin
 	df_out
 end
 
-# ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
-write_fits(joinpath(data_dir, "sculptor_memb_rv.fits"), df_out, overwrite=true)
-
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
 	fig, ax = FigAxis(
@@ -266,16 +315,22 @@ sem(memb_stars.RV)
 std(memb_stars.RV)
 
 # ╔═╡ 49e7d483-1dd1-4406-9bce-58d6e4412e7b
-mean(memb_stars.radial_velocity_gsr)
+mean(memb_stars.RV)
 
 # ╔═╡ 9ffcc0b0-11a1-4962-b64e-59a731f22bd8
-samples_gsr = DataFrame(sample(normal_dist(memb_stars.vz, memb_stars.vz_err, μ_min=30, μ_max=100), NUTS(0.65), 10000))
+samples_gsr = DataFrame(sample(normal_dist(memb_stars.vz, memb_stars.RV_err .⊕ memb_stars.delta_rv_err, μ_min=30, μ_max=100), NUTS(0.65), MCMCThreads(), 10000, 16))
 
 # ╔═╡ 3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 pairplot(samples_gsr[:, [:μ, :σ]])
 
+# ╔═╡ 0eafe553-4434-4b2b-9646-912ac99beccf
+
+
 # ╔═╡ d321f8ac-1044-45ec-8e1c-a2d8395b6917
+# ╠═╡ disabled = true
+#=╠═╡
 icrs = lguys.ICRS(ra=obs_properties["ra"], dec=obs_properties["dec"], pmdec=obs_properties["pmdec"], pmra=obs_properties["pmra"], distance=obs_properties["distance"], radial_velocity=obs_properties["radial_velocity"])
+  ╠═╡ =#
 
 # ╔═╡ 1bc7adb7-fe85-4878-9527-c5d15dc761b1
 Δv = lguys.transform(lguys.GSR, lguys.ICRS(ra=obs_properties["ra"], dec=obs_properties["dec"], radial_velocity=0), ).radial_velocity
@@ -284,7 +339,9 @@ icrs = lguys.ICRS(ra=obs_properties["ra"], dec=obs_properties["dec"], pmdec=obs_
 75.81 - Δv
 
 # ╔═╡ 931ed52e-5e7a-4692-b568-ae26ea44b638
+#=╠═╡
 lguys.transform(lguys.GSR, icrs)
+  ╠═╡ =#
 
 # ╔═╡ 7514e306-ddc1-44a3-9242-5b12cf2a1536
 let
@@ -292,7 +349,7 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
+	h = histogram(Float64.(memb_stars.vz), 30, normalization=:pdf)
 	
 	plot_samples!(samples_gsr, LinRange(40, 110, 100), thin=15)
 	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
@@ -321,11 +378,11 @@ Fits a normal (gaussian) distribution to 3d data with errors (to include spatial
 end
 
 # ╔═╡ cb440be7-1f0e-4a20-b15a-82b1820d1ced
-samples_gradient = sample(normal_gradient(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta, μ_min=30, μ_max=100), 
-						  NUTS(0.65), MCMCThreads(), 1000, 16)
+samples_gradient = sample(normal_gradient(memb_stars.vz, memb_stars.RV_err, memb_stars.xi, memb_stars.eta, μ_min=30, μ_max=100), 
+						  NUTS(0.65), MCMCThreads(), 2000, 16)
 
 # ╔═╡ e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
-pairplot(samples_gradient)
+@savefig "gradient_corner" pairplot(samples_gradient)
 
 # ╔═╡ d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
 sqrt((0.073/0.017)^2 + (0.043 / 0.026)^2)
@@ -350,7 +407,13 @@ import KernelDensity
 kde = KernelDensity.kde((df_gradient.A, df_gradient.B))
 
 # ╔═╡ 2b88915c-7222-44be-a483-b967ea131b80
-log10(pdf(kde, 0, 0) ./ lguys.gaussian(0, 0., 0.1)^2)
+log10(pdf(kde, 0, 0) ./ pdf(MvNormal([0,0], 0.1), [0,0]))
+
+# ╔═╡ 333d9066-3943-4a7c-9a49-efb8af24ee0f
+pdf(MvNormal([0,0], [0.1, 0.1]), [0,0])
+
+# ╔═╡ b41d9be3-5da3-4a64-82c8-60b536c2f166
+ lguys.gaussian(0, 0., 0.1)^2
 
 # ╔═╡ b827e765-646c-4928-9f66-c64e7a20539f
 sum(df_gradient.A .> 0)
@@ -373,7 +436,7 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 30, normalization=:pdf)
+	h = histogram(Float64.(memb_stars.vz), 30, normalization=:pdf)
 	
 	plot_samples!(DataFrame(samples_gradient), LinRange(40, 110, 100), thin=15)
 	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
@@ -426,10 +489,10 @@ end
 bins = bins_equal_number(memb_stars.R_ell, n=10)
 
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
-df_r_ell = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.RV, memb_stars.RV_err, bins)
+df_r_ell = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.RV, memb_stars.RV_err, bins, μ_min=40)
 
 # ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
-df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.vz_err, bins, μ_min=40)
+df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.RV_err, bins, μ_min=40)
 
 # ╔═╡ 38da4da1-74f5-4661-89f2-4b25562a1faf
 function scatter_range!(df_r_ell)
@@ -473,12 +536,13 @@ md"""
 """
 
 # ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
-df_xi_p = calc_binned_mu_sigma(memb_stars.xi, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi, n=10), μ_min=50, μ_max=90)
+df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi_p, n=10), μ_min=50, μ_max=90)
 
 # ╔═╡ 090acae4-1209-49e6-882c-20ac2c972dd5
-df_eta_p = calc_binned_mu_sigma(memb_stars.eta, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.eta, n=10), μ_min=50, μ_max=90)
+df_eta_p = calc_binned_mu_sigma(memb_stars.eta_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.eta_p, n=10), μ_min=50, μ_max=90)
 
 # ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
+#=╠═╡
 let
 	fig, ax = FigAxis(
 		xlabel = L"$\xi'$ / degrees",
@@ -491,6 +555,7 @@ let
 
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ 3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
 let
@@ -534,19 +599,6 @@ bin_errs = diff(bins) / 2
 # ╔═╡ 0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
 σ_m = median(samples.σ)
 
-# ╔═╡ 614f3f09-1880-491d-b41e-4e229330d66f
-let
-	fig, ax = FigAxis(
-		xlabel = "R / arcmin",
-		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
-	)
-
-	errorscatter!(df_r_ell.x, df_r_ell.σ, yerror=df_r_ell.σ_err, color=:black)
-	hlines!(σ_m)
-
-	fig
-end
-
 # ╔═╡ f82d2ff7-7a7f-4520-811e-126f3f4f5349
 let
 	fig, ax = FigAxis(
@@ -571,19 +623,6 @@ md"""
 # Misc plots
 """
 
-# ╔═╡ 3a69f395-3c2d-4357-89af-5963d5fa79b8
-let
-	fig, ax = FigAxis(
-		xlabel=L"$\log r_\textrm{ell}$ / arcmin",
-		ylabel = L"RV / km s$^{-1}$"
-	)
-	
-	scatter!(log10.(memb_stars.R_ell), memb_stars.RV)
-
-
-	fig
-end
-
 # ╔═╡ 9b4a0a1f-4b0c-4c90-b871-2bd244f0a908
 not = !
 
@@ -602,78 +641,10 @@ let
 	p = scatter!(memb_stars.xi, memb_stars.eta, color=memb_stars.radial_velocity_gsr,
 		colorrange=(rv_mean_gsr - dr, rv_mean_gsr + dr),
 		colormap=:bluesreds,
-		markersize = 600 ./ memb_stars.RV
+		markersize = 1 ./ memb_stars.RV_err
 	)
 
 	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ f72b9d3c-b165-4a2b-b008-d77ffd7d59d1
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-	p = scatter!(memb_stars.xi, memb_stars.eta, color=memb_stars.eta_p,
-		colormap=:bluesreds,
-		markersize = 600 ./ memb_stars.RV
-	)
-
-	Colorbar(fig[1, 2], p, label=L"\eta'")
-	fig
-end
-
-# ╔═╡ 687b79fb-b0ce-4a93-8c0e-83b77aec081e
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi' / \textrm{degree}",
-		ylabel = L"RV",
-		#aspect=DataAspect(),
-		xgridvisible=false,
-		ygridvisible=false
-	)
-
-	p = scatter!(memb_stars.xi_p, memb_stars.RV,
-		alpha=0.1
-	)
-
-	#Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ 9c66756b-af33-48fb-9947-201d53cdeba3
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi' / \textrm{degree}",
-		ylabel = L"absolute radial velocity / km s$^{-1}$",
-		#aspect=DataAspect(),
-		xgridvisible=false,
-		ygridvisible=false
-	)
-
-	p = scatter!(memb_stars.xi_p,  memb_stars.radial_velocity_gsr,
-		alpha=0.1
-	)
-
-	#Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ e834933b-ef6c-4347-a24d-787ee65bc9b5
-let
-	fig, ax = FigAxis(
-		xlabel = L"\eta' / \textrm{degree}",
-		ylabel = L"RV",
-		#aspect=DataAspect()
-	)
-
-	p = scatter!(memb_stars.eta_p, memb_stars.RV
-	)
-
-	#Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
 	fig
 end
 
@@ -687,96 +658,10 @@ tangent_bins = LinRange(-r_max_tangent, r_max_tangent, 20)
 outside_bins = abs.(memb_stars.xi) .> r_max_tangent .|| abs.(memb_stars.eta) .> r_max_tangent
 
 # ╔═╡ 8bee2f6a-c65d-4f89-8a4e-5f5789a7b03d
-rv_mean = 111.0
-
-# ╔═╡ 6b59d6e9-833b-4582-b5fb-f0a1f69a16c1
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-
-	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins)
-
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=Reverse(:greys)
-		)
-
-	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
-		color=:grey
-	)
-	Colorbar(fig[1, 2], p, label="density",
-)
-	fig
-end
-
-# ╔═╡ 89bf44ef-1ff5-443e-b8be-a3d1571b72e3
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-	w = 1 ./ memb_stars.RV_err
-
-	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights= w .* memb_stars.RV)
-	k2 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights=w)
-
-	k1.values ./= k2.values
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20)
-		)
-
-	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
-		color = memb_stars.RV[outside_bins],
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20)
-	)
-	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s",
-)
-	fig
-end
+rv_mean = rv_mean_gsr
 
 # ╔═╡ 53da82d5-2e69-4f88-8043-6694d57cdd91
 import StatsBase: weights
-
-# ╔═╡ 106482c9-a9f9-4b6e-95a9-614ab7991e23
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-
-	w = 1 ./ memb_stars.vz_err .^ 2
-	rv_mean = mean(memb_stars.vz, weights(w))
-
-	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights= w .* memb_stars.vz)
-	k2 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights=w)
-
-	k1.values ./= k2.values
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20)
-		)
-
-	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
-		color = memb_stars.vz[outside_bins],
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20)
-	)
-	Colorbar(fig[1, 2], p, label=L"$v_{z}$ / km/s",
-)
-	fig
-end
 
 # ╔═╡ b5533db0-a734-4d37-9d75-24471634f855
 memb_stars
@@ -790,7 +675,7 @@ let
 		xreversed=true,
 	)
 
-	w = 1 ./ memb_stars.vz_err
+	w = 1 ./ memb_stars.vz_err .^2
 
 	bins = (33, 25)
 	k1 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights= w .* memb_stars.vz)
@@ -802,45 +687,41 @@ let
 		colormap=:bluesreds,
 		colorrange=(50, 100)
 		)
-	Colorbar(fig[1, 2], p, label="GSR radial velocity / km/s",
+	Colorbar(fig[1, 2], p, label=L"$v_z$ / km/s",
 )
 
+		@savefig "vlos_xi_eta_hist"
+
 	fig
 end
-
-# ╔═╡ 7178e5b9-cc42-4933-970a-4707ba69dbe9
-let
-	fig, ax = FigAxis()
-
-	p = arrows!(memb_stars.ra, memb_stars.dec, memb_stars.pmra_gsr, memb_stars.pmdec_gsr, 				
-		color=memb_stars.radial_velocity_gsr,
-		colorrange=(50, 90),
-		colormap=:bluesreds,
-		lengthscale=0.1
-	)
-
-	#Colorbar(fig[1, 2], p)
-	fig
-end
-
 
 # ╔═╡ Cell order:
-# ╠═6bec7416-40c8-4e2b-9d3d-14aa19e5642d
+# ╠═c05a4e8e-c6d2-43e6-9b87-679f4ecee84c
+# ╟─6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═9070c811-550c-4c49-9c58-0943b0f808b2
 # ╠═e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
+# ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═c3298b45-7c5d-4937-8e4c-c87de36a1354
+# ╠═9039df68-748a-41be-9a32-e2bf45bee85a
+# ╠═b3ad64bc-7dbb-4c27-a91d-a9f2342f98da
+# ╠═4c1a5aac-4bad-4eba-aa61-ccd317113633
+# ╠═b4b66c36-029d-4014-ae56-e4ee33a730cd
 # ╠═b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
+# ╠═d476513e-6211-44a4-ade5-0ab184a9829d
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
+# ╠═8863e6f7-6aaa-4370-919f-fe6afd3847bf
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
-# ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
-# ╠═d2888213-61e3-4a6f-872b-48a075640ef5
+# ╠═e391b59d-b8d9-4726-8e4d-8476f6d62800
+# ╠═cd71ec9b-4b8c-47ca-a0c8-3c6cbc257927
+# ╠═03636f8d-0fc9-4f20-8a84-b92f9bd27ffb
+# ╠═35c87efe-6899-444d-952f-94e5e5342846
+# ╠═5fd838b6-e7b1-4449-8f7a-b26a77042f0f
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
-# ╠═4c1a5aac-4bad-4eba-aa61-ccd317113633
 # ╠═c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═59395e95-e04b-4782-b7d6-ef1945249b3f
@@ -862,7 +743,6 @@ end
 # ╠═149b31b4-c451-42ff-88ec-6a01b4695e55
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 # ╠═e93c66f7-394a-46bf-96c9-475494979548
-# ╠═a162219f-df5a-41d8-bf54-927a355f6431
 # ╠═21a71cf7-efba-4b48-b280-92d6f1ea5d6d
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f
 # ╠═61e15c47-c454-48db-95f9-02abe052676e
@@ -871,6 +751,7 @@ end
 # ╠═49e7d483-1dd1-4406-9bce-58d6e4412e7b
 # ╠═9ffcc0b0-11a1-4962-b64e-59a731f22bd8
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
+# ╠═0eafe553-4434-4b2b-9646-912ac99beccf
 # ╠═d321f8ac-1044-45ec-8e1c-a2d8395b6917
 # ╠═1bc7adb7-fe85-4878-9527-c5d15dc761b1
 # ╠═212cee31-a04d-47c1-b56e-4a7b06322b99
@@ -886,6 +767,8 @@ end
 # ╠═2a422e88-fc0d-4a89-a841-42f3c5c8dace
 # ╠═f523cf48-82bf-4b20-9d7c-215bbe10a193
 # ╠═2b88915c-7222-44be-a483-b967ea131b80
+# ╠═333d9066-3943-4a7c-9a49-efb8af24ee0f
+# ╠═b41d9be3-5da3-4a64-82c8-60b536c2f166
 # ╠═b827e765-646c-4928-9f66-c64e7a20539f
 # ╠═6371d804-cc73-4ce1-9b36-79fa61780d75
 # ╠═70a22ef4-2eb1-4094-94e3-5a13fb51b9e6
@@ -900,7 +783,6 @@ end
 # ╠═38da4da1-74f5-4661-89f2-4b25562a1faf
 # ╠═86776e68-d47f-43ed-b37f-432c864050bb
 # ╠═e05ec20a-3165-4360-866e-3e8cae8665e5
-# ╠═614f3f09-1880-491d-b41e-4e229330d66f
 # ╠═f82d2ff7-7a7f-4520-811e-126f3f4f5349
 # ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
 # ╠═2f5db664-fc99-41ac-a726-f21dd5d88ad4
@@ -914,22 +796,13 @@ end
 # ╠═319bd778-7e17-4bd7-856f-d6785b287219
 # ╠═24ae8277-9644-40e5-b2ab-f4fc9584823c
 # ╟─82a0e58a-30a4-4e42-b9c1-cb184eb551aa
-# ╠═3a69f395-3c2d-4357-89af-5963d5fa79b8
 # ╠═9b4a0a1f-4b0c-4c90-b871-2bd244f0a908
 # ╠═f2313731-5b83-42d6-b624-c618bfb0bb5c
 # ╠═d688d2e5-faca-4b14-801a-d58b08fd6654
-# ╠═f72b9d3c-b165-4a2b-b008-d77ffd7d59d1
-# ╠═687b79fb-b0ce-4a93-8c0e-83b77aec081e
-# ╠═9c66756b-af33-48fb-9947-201d53cdeba3
-# ╠═e834933b-ef6c-4347-a24d-787ee65bc9b5
 # ╠═eb16cb5b-562f-4ef5-8a3b-247664d47f52
 # ╠═36c37e0b-924d-4a7f-b3ab-81e79e27a059
 # ╠═8f555e41-58d4-4e16-8f4a-1c0f58589b08
 # ╠═8bee2f6a-c65d-4f89-8a4e-5f5789a7b03d
-# ╠═6b59d6e9-833b-4582-b5fb-f0a1f69a16c1
-# ╠═89bf44ef-1ff5-443e-b8be-a3d1571b72e3
 # ╠═53da82d5-2e69-4f88-8043-6694d57cdd91
-# ╠═106482c9-a9f9-4b6e-95a9-614ab7991e23
 # ╠═b5533db0-a734-4d37-9d75-24471634f855
 # ╠═4eea0a17-257e-4d0e-88df-9ff4858771b1
-# ╠═7178e5b9-cc42-4933-970a-4707ba69dbe9

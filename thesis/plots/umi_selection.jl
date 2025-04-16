@@ -8,7 +8,7 @@ using InteractiveUtils
 begin 
 	import Pkg; Pkg.activate()
 
-	import PythonCall
+	using PyFITS
 	using DataFrames 
 	using CSV
 	using CairoMakie
@@ -38,7 +38,7 @@ include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 
 # ╔═╡ 47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 md"""
-# Jensen et al. 2024 sammple
+# Jensen et al. 2024 sample
 
 Some plots to understand the (unmodified) J+24 data sample.
 The goals here are to investigate the main density profile, likelihoods, and what the cuts appear as in CMD space. 
@@ -87,7 +87,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/rv_members.fits")
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/rv_members.fits")
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -125,9 +125,6 @@ member_markersize = 3
 # ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
 bg_markersize = 2
 
-# ╔═╡ 8a4f4283-5699-44ca-956a-869a41177f05
-Arya.update_fontsize!(12)
-
 # ╔═╡ 77b7678f-158f-46cb-82b1-2e719ec6895a
 function compare_samples(datasets, scatter_kwargs) 
 	fig = Figure(
@@ -141,7 +138,8 @@ function compare_samples(datasets, scatter_kwargs)
 		ylabel=plot_labels[:eta_am], 
 		#aspect=1, 
 		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false
+		xgridvisible=false, ygridvisible=false,
+		xreversed = true,
 	)
 
 
@@ -149,10 +147,10 @@ function compare_samples(datasets, scatter_kwargs)
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
 	end
 	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
-	text!(4observed_properties["r_h"], 0, text=L"3r_h", color=:black)
+	text!(-4observed_properties["r_h"], 0, text=L"3R_h", color=:black)
 
 	
-	axislegend(position=:lt)
+	axislegend(position=:rt)
 
 
 	grid_low = fig[2, 1] = GridLayout()
@@ -194,6 +192,18 @@ function compare_samples(datasets, scatter_kwargs)
 	fig
 end
 
+# ╔═╡ e7fd8470-9225-4dfc-b4ff-08a8e40069fa
+R_h = observed_properties["r_h"]
+
+# ╔═╡ 96360af3-e877-4c83-88ef-464ea9eb7b14
+rv_distant = rv_members[rv_members.R_ell .> 3R_h, :]
+
+# ╔═╡ 9eaaf2be-936b-4d26-9e2e-c04f551c515c
+rv_distant[:, [:xi, :eta, :R_ell]]
+
+# ╔═╡ ec974caa-59e6-4555-b9b4-48f33d31d00b
+rv_distant.R_ell ./ R_h
+
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
 @savefig "umi_selection" compare_samples(
 		(
@@ -201,6 +211,7 @@ end
 		:members_nospace => members_nospace,
 		:members => members,
 		:rv => rv_members,
+		:rv_dist => rv_distant,
 	),
 	Dict(
 		:best => (;	alpha=0.1, markersize=1, color=:black, 
@@ -227,11 +238,18 @@ end
 			color = COLORS[4],
 			strokewidth=0
 		),
+		:rv_dist => (;
+			markersize=4,
+			marker=:star5,
+			color = COLORS[4],
+			strokewidth=0.4,
+			strokecolor=:black
+		),
 	)
 )
 
 # ╔═╡ Cell order:
-# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
@@ -260,6 +278,9 @@ end
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
 # ╠═12aa5708-dfee-4b48-8835-69055ad82680
 # ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
-# ╠═8a4f4283-5699-44ca-956a-869a41177f05
 # ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
+# ╠═e7fd8470-9225-4dfc-b4ff-08a8e40069fa
+# ╠═96360af3-e877-4c83-88ef-464ea9eb7b14
+# ╠═9eaaf2be-936b-4d26-9e2e-c04f551c515c
+# ╠═ec974caa-59e6-4555-b9b4-48f33d31d00b
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8

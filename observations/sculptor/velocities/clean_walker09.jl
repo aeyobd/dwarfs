@@ -64,7 +64,7 @@ import TOML
 
 # ╔═╡ 9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
 module RVUtils
-	include("rv_utils.jl")
+	include("../../rv_utils.jl")
 	not = !
 end
 
@@ -74,13 +74,13 @@ md"""
 """
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-data_dir = "data/"
+data_dir = "../data/"
 
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
-obs_properties = TOML.parsefile("observed_properties.toml")
+obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("data/jensen+24_wide.fits")
+j24 = read_fits("../data/jensen+24_wide.fits")
 
 # ╔═╡ ea398623-ebc2-420a-8377-65bef43c0154
 begin 
@@ -267,7 +267,7 @@ chain = sample(model, NUTS(), MCMCThreads(), 1000, 16)
 pairplot(chain)
 
 # ╔═╡ 54c4c8b3-f9e3-4b85-afd6-5a5646f5eb79
-df_summary = Turing.summarize(chain)
+df_summary = RVUtils.summarize(chain)
 
 # ╔═╡ 60f45b81-8beb-4eb0-8f55-db04c5368eee
 CSV.write("processed/rv_walker+09.csv", df_summary)
