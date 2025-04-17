@@ -38,6 +38,7 @@ AND pmdec IS NOT NULL
 - `jensen+24_1_comp_circ.fits`
 - `jensen+24_2_comp_circ.fits`
 - `jensen+24_2_comp_ell.fits`
+- `jensen+24_wide.fits` ( 2 component elliptical)
 
 These files are based on GaiaDR3, but applying J+24 membership selection to the stars. Ask J+24 for data access.
 

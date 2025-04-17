@@ -3,8 +3,11 @@
 Many different data sources, here is a short description of what we will need.
 
 ## Radial velocity data
-Documented in more depth in the `rv_xmatch.jl` notebook.
+### Spencer+2018
+Data from Vizier : . J/AJ/156/257/table2	
 
+### Pace+2020
+Data from Vizier: 
 
 ## Unions
 

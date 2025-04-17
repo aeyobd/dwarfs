@@ -82,42 +82,36 @@ we reproduce the mean, but slightly lower velocity dispersion, maybe due to diff
 apogee_all = read_fits("processed/rv_apogee.fits")
 
 # ╔═╡ 9ed91d41-e650-4d3c-9e74-100ff3d57d82
-walker09_all = let
-	df = read_fits("processed/rv_walker+09.fits")
+pace20_all = let
+	df = read_fits("processed/rv_pace+20.fits")
 
 	df = df[.!ismissing.(df.source_id), :]
 end
 
-# ╔═╡ 15f2a8e2-90df-48a9-a7bf-e86955f566ce
-tolstoy23_all = read_fits("processed/rv_tolstoy+23.fits")
+# ╔═╡ ed332de8-9524-43b6-8863-9742aa9be293
+unique(pace20_all.source_id)
 
-# ╔═╡ 8e0095e7-2198-439d-bd19-976bdb1d3766
-gmos_raw = CSV.read("$data_dir/sestito+23_gmos.csv", DataFrame)
+# ╔═╡ 5bcb34d8-e9a7-474c-9726-ca8b5f8f1310
+spencer18_all_missing = read_fits("processed/rv_spencer+18.fits")
+
+# ╔═╡ 15f2a8e2-90df-48a9-a7bf-e86955f566ce
+spencer18_all = filter(x->.!ismissing(x.source_id),spencer18_all_missing)
+
+# ╔═╡ cd229322-5222-4b9c-8ab0-23b3cf1fa56c
+readdir("processed")
 
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
-begin
-	gmos = copy(gmos_raw) 
-	rename!(gmos,
-		"RA"=>"ra",
-		"Dec"=>"dec",
-		"met_mean" => "fe_h",
-		"met_err" => "fe_h_err"
-	)
+graces = let 
+	graces = CSV.read("$data_dir/sestito+23_graces.csv", DataFrame)
 
-	let
-		gmos_rv_sys_err = 13.3
-		gmos.RV_err .= @. sqrt(gmos.RV_err^2 + gmos_rv_sys_err^2)
-	
-		filt, idx = RVUtils.xmatch(gmos, j24)
-		println(filt)
-		gmos[!, :source_id] = j24.source_id[idx]
 
-	end
+	filt, idx = RVUtils.xmatch(graces, j24)
+	println(filt)
+	graces[!, :source_id] = j24.source_id[idx]
 
-	gmos[!, :RV_count] .= 1
-	gmos[!, :RV_sigma] .= 0.
-	
-	gmos
+	graces[!, :RV_sigma] .= NaN
+	graces[!, :RV_count] .= 1
+	graces
 end
 
 # ╔═╡ bbf49122-11b1-4272-a660-0437c6aa2b3f
@@ -130,26 +124,8 @@ function add_xmatch!(df, new, suffix)
 	leftjoin!(df, rename(n->"$(n)_$suffix", new), on="source_id"=>"source_id_$suffix")
 end
 
-# ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
-all_stars = let
-
-	all_stars = copy(j24)
-	add_xmatch!(all_stars, apogee_all, "apogee")
-	add_xmatch!(all_stars, walker09_all, "w09")
-	add_xmatch!(all_stars, tolstoy23_all, "t23")
-	add_xmatch!(all_stars, gmos, "gmos")
-
-
-	rename!(all_stars,
-		:dr2_radial_velocity => "RV_gaia",
-		:dr2_radial_velocity_error => "RV_err_gaia",
-	)
-	all_stars
-
-end
-
-# ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
-all_stars.RV_gmos[.!ismissing.(all_stars.RV_gmos)]
+# ╔═╡ 77ccf2bc-692c-42a9-a4fb-0efb7612294f
+length(unique(pace20_all.source_id)), length(pace20_all.source_id)
 
 # ╔═╡ ff644334-bf90-49e4-a3da-fc4ecc840929
 length(unique(apogee_all.source_id))
@@ -159,30 +135,83 @@ md"""
 double check we have all stars
 """
 
-# ╔═╡ bd51fe42-7e39-4cd8-8065-58ab9814f966
- sum(.!ismissing.(all_stars.RV_apogee)), length(apogee_all.RV)
-
 # ╔═╡ 0c6c6d84-fb14-4eaf-858e-22fb90ab4d8d
-@assert length(unique(walker09_all.source_id)) == length(walker09_all.source_id)
-
-# ╔═╡ ab49efb3-2ab7-47d0-a3a5-a342c789aa9b
-length(walker09_all.source_id),  sum(.!ismissing.(all_stars.RV_w09))
-
-# ╔═╡ de762a39-b430-4452-ba87-8b8cf1ad9852
-length(tolstoy23_all.RV), sum(.!ismissing.(all_stars.RV_t23))
+@assert length(unique(spencer18_all.source_id)) == length(spencer18_all.source_id)
 
 # ╔═╡ 04ff1abd-c584-41de-8c83-7503482c3731
 md"""
 Gaia stars are too bright to be members :(
 """
 
-# ╔═╡ 0f50ae12-e207-4748-9c45-780c9215be73
-sum(skipmissing(.!ismissing.(all_stars.RV_err_gaia) .* (all_stars.PSAT .> 001)))
-
 # ╔═╡ 89552b84-d12e-4d88-a58e-8b89ad4b2569
 md"""
 # Validation for xmatch
 """
+
+# ╔═╡ f7ec8bba-9f45-435b-b67c-33182e992dfd
+md"""
+# Cross study RV
+"""
+
+# ╔═╡ 93d185f2-1eaa-4d35-87dd-b84f385483de
+function filt_missing(col, verbose=false; low=-Inf, high=Inf)
+	filt =  @. !ismissing(col) & !isnan(col)
+	filt1 = high .> col .> low
+	if verbose
+		println("excluding ", sum(.!(filt1)[filt]), " outliers")
+	end
+	return filt .& filt1
+end
+
+# ╔═╡ 9e21f642-5315-4e33-a706-ac6cb84ad706
+μ0 = obs_properties["radial_velocity"]
+
+# ╔═╡ 47fcf9a4-742d-47b9-96fc-480a4a6b22a0
+σ0 = obs_properties["sigma_v"]
+
+# ╔═╡ 395118d9-f171-43e8-a1da-ed9aa72efbad
+v_shift_p20 = -0.9
+
+# ╔═╡ d06637b0-4167-40ff-8012-db7e66fe3394
+v_shift_s18 = 1.0
+
+# ╔═╡ 070de76a-e917-48ab-8efe-52f665ceca2f
+v_shift_apogee = -0.2
+
+# ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
+all_stars = let
+
+	all_stars = copy(j24)
+	add_xmatch!(all_stars, apogee_all, "apogee")
+	add_xmatch!(all_stars, spencer18_all, "s18")
+	add_xmatch!(all_stars, pace20_all, "p20")
+	add_xmatch!(all_stars, graces, "graces")
+
+	all_stars.RV_apogee .+= v_shift_apogee
+	all_stars.RV_s18 .+= v_shift_s18
+	all_stars.RV_p20 .+= v_shift_p20
+	rename!(all_stars,
+		:dr2_radial_velocity => "RV_gaia",
+		:dr2_radial_velocity_error => "RV_err_gaia",
+	)
+	all_stars
+
+end
+
+# ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
+all_stars[.!ismissing.(all_stars.RV_graces), [:ra, :dec, :source_id, :pmra, :pmdec, :PSAT]]
+
+# ╔═╡ bd51fe42-7e39-4cd8-8065-58ab9814f966
+ sum(.!ismissing.(all_stars.RV_apogee)), length(apogee_all.RV)
+
+# ╔═╡ ab49efb3-2ab7-47d0-a3a5-a342c789aa9b
+length(spencer18_all.source_id),  sum(.!ismissing.(all_stars.RV_s18))
+
+# ╔═╡ de762a39-b430-4452-ba87-8b8cf1ad9852
+length(pace20_all.RV), sum(.!ismissing.(all_stars.RV_p20))
+
+# ╔═╡ 0f50ae12-e207-4748-9c45-780c9215be73
+sum(skipmissing(.!ismissing.(all_stars.RV_err_gaia) .* (all_stars.PSAT .> 001)))
 
 # ╔═╡ e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 function plot_xmatch_radec(suffix)
@@ -211,81 +240,16 @@ end
 plot_xmatch_radec("apogee")
 
 # ╔═╡ 4b305b83-1a3b-48a6-b19f-6f3ebed0768f
-plot_xmatch_radec("t23")
+plot_xmatch_radec("p20")
 
 # ╔═╡ c218cfa8-2f55-4957-bcdd-8b3970fe639a
-plot_xmatch_radec("w09")
+plot_xmatch_radec("s18")
 
 # ╔═╡ f7213298-3dcb-49ac-a9f0-a129a03423aa
-plot_xmatch_radec("gmos")
-
-# ╔═╡ f7ec8bba-9f45-435b-b67c-33182e992dfd
-md"""
-# Cross study RV
-"""
-
-# ╔═╡ 93d185f2-1eaa-4d35-87dd-b84f385483de
-function filt_missing(col, verbose=false; low=-Inf, high=Inf)
-	filt =  @. !ismissing(col) & !isnan(col)
-	filt1 = high .> col .> low
-	if verbose
-		println("excluding ", sum(.!(filt1)[filt]), " outliers")
-	end
-	return filt .& filt1
-end
-
-# ╔═╡ 9213cc36-74d1-452f-bd9a-eb5c5cab1f87
-function compare_rv(study1, study2)
-	rv1  = all_stars[:, "RV_$study1"]
-	rv1_err  = all_stars[:, "RV_err_$study1"]
-	
-	rv2  = all_stars[:, "RV_$study2"]
-	rv2_err  = all_stars[:, "RV_err_$study2"]
-
-	filt = filt_missing(rv1, true; low=75, high=150) .& filt_missing(rv2, true;  low=75, high=150)
-
-	println("matched ", sum(filt), " stars")
-
-
-	if sum(filt) == 0
-		println("nothing to plot")
-		return
-	end
-	
-	println("plotting ", sum(filt), " stars")
-
-
-	fig, ax = FigAxis(
-		xlabel = "RV $study1",
-		ylabel = "RV $study2",
-		aspect=DataAspect()
-	)
-
-	errorscatter!(rv1[filt], rv2[filt], xerror=rv1_err[filt], yerror=rv2_err[filt])
-
-	w = @. 1/(rv1_err[filt]^2 + rv2_err[filt]^2)
-	μ = LilGuys.mean(rv1[filt] .- rv2[filt], w)
-	δμ = sqrt(1/sum(w))
-	sigma = LilGuys.std(rv1[filt] .- rv2[filt] .- μ, w)
-
-	text!(0.1, 0.8, space=:relative, text="μ = $(μ ± δμ)\nσ = $(round(sigma, digits=2))", fontsize=10)
-
-	
-	lines!([75, 150], [75, 150], color=:black)
-	return fig
-end
-
-# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
-@savefig "t23_w09_xmatch" compare_rv("t23", "w09")
+plot_xmatch_radec("graces")
 
 # ╔═╡ 609f55cd-aa49-4a5e-b871-413ec7ef0990
 import StatsBase as sb
-
-# ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
-@savefig "t23_apogee_xmatch" compare_rv("t23", "apogee")
-
-# ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
-@savefig "apogee_w09_xmatch" compare_rv("apogee", "w09")
 
 # ╔═╡ a488eeb2-bf24-408e-a2ba-7df1b305a2b8
 md"""
@@ -293,7 +257,7 @@ md"""
 """
 
 # ╔═╡ d3333b48-aa4e-42c1-9e0a-bbff98e3647d
-all_studies = ["gmos", "apogee", "w09", "t23"]
+all_studies = ["graces", "apogee", "p20", "s18"]
 
 # ╔═╡ 8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
 function safe_weighted_mean(values, errors, sigmas, counts)
@@ -379,19 +343,19 @@ begin
 end
 
 # ╔═╡ 0cf94e27-b200-4516-9495-dcac7f10d9a0
-sum(.!ismissing.(rv_meas.RV_apogee) .& ismissing.(rv_meas.RV_t23) .& ismissing.(rv_meas.RV_w09)) # most apogee stars are covered by other surveys.
+sum(.!ismissing.(rv_meas.RV_apogee) .& ismissing.(rv_meas.RV_s18) .& ismissing.(rv_meas.RV_p20)) # most apogee stars are covered by other surveys.
 
 # ╔═╡ 222bb254-8b65-44d3-b3d2-b08fbcbe9950
 all_studies
 
 # ╔═╡ e3f05ee2-cc5f-437e-801d-3c7d842af709
-all_stars[:, "RV_w09"]
+all_stars[:, "RV_s18"]
 
 # ╔═╡ a13a33f1-65c4-4217-8636-639b1e14d109
-sum(filt_missing(all_stars[:, "RV_err_w09"]))
+sum(filt_missing(all_stars[:, "RV_err_p20"]))
 
 # ╔═╡ ee3c22db-6b6b-4c30-8d1f-86b103c018fc
-sum(filt_missing(walker09_all.RV_err))
+sum(filt_missing(spencer18_all.RV_err))
 
 # ╔═╡ 6bc02c4f-31a2-4e4e-8612-e66f8cc9c93e
 rvs
@@ -424,7 +388,7 @@ N_studies = sum.(.!ismissing.(eachrow(rvs)))[filt_is_meas]
 sum(filt_is_meas)
 
 # ╔═╡ d11edca7-b9ae-4269-9e1b-661d59bd965e
-all_stars[.!ismissing.(all_stars.RV_gmos), :].source_id
+all_stars[.!ismissing.(all_stars.RV_graces), :].source_id
 
 # ╔═╡ 22564a47-9b03-4778-b30c-d092581ec107
 md"""
@@ -466,7 +430,7 @@ function filter_qual_study(rv_meas, study)
 end
 
 # ╔═╡ dcec54f8-27b4-405e-a386-6e07470dc073
-F_qual_study = filter_qual_study(rv_meas, "w09") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "t23")
+F_qual_study = filter_qual_study(rv_meas, "s18") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "p20")
 
 # ╔═╡ 73a41773-39bc-4bd5-9d99-39804000631a
 F_qual = F_qual_study .& F_qual_inter
@@ -504,7 +468,7 @@ md"""
 σ_pm = lguys.kms2pm(obs_properties["sigma_v"], obs_properties["distance"])
 
 # ╔═╡ 21daa18e-88c3-43ee-8dfa-ea8d116e5ff4
-sum(.!ismissing.(rv_meas.RV_gmos))
+sum(.!ismissing.(rv_meas.RV_graces))
 
 # ╔═╡ 7567ad1b-3f31-49cc-8efa-ad5d9e0c3bf2
 icrs1 = RVUtils.icrs(obs_properties)
@@ -514,8 +478,14 @@ md"""
 The velocity correction is magnitude 3 kms with uncertainty < 5x measurement uncertainties 
 """
 
-# ╔═╡ 520f0ae4-eae4-4ab1-86e6-5758a2d7ebad
+# ╔═╡ 7d27beff-5403-42fa-907e-e776008c01b3
+[collect(names(j24)); "RV"; "RV_err"]
 
+# ╔═╡ a23adf32-8854-422a-8b7b-2b625132b9f2
+import Dates
+
+# ╔═╡ 30e744cf-310b-4dc2-a06b-8cd1dbee1dc6
+eltype.(eachcol(rv_meas))
 
 # ╔═╡ 3655b6a0-ac9a-4a49-86fd-6a6484409819
 md"""
@@ -523,14 +493,14 @@ md"""
 """
 
 # ╔═╡ 7f13339e-6a0c-4944-8a36-5ab136fd8415
-function compare_rv_mean(study1, rv_meas=rv_meas)
+function compare_rv_mean(study1, rv_meas=rv_meas; low=μ0-3σ0, high=μ0+3σ0)
 	rv1  = rv_meas[:, "RV_$study1"]
 	rv1_err  = rv_meas[:, "RV_err_$study1"]
 	
 	rv2  = rv_meas[:, "RV"]
 	rv2_err  = rv_meas[:, "RV_err"]
 
-	filt = filt_missing(rv1, true; low=75, high=150) .& filt_missing(rv2, true;  low=75, high=150)
+	filt = filt_missing(rv1, true; low=low, high=high) .& filt_missing(rv2, true;  low=low, high=high)
 
 	println("matched ", sum(filt), " stars")
 
@@ -566,10 +536,7 @@ function compare_rv_mean(study1, rv_meas=rv_meas)
 end
 
 # ╔═╡ f4f9dd06-1a1a-458b-be75-05d52623580c
-compare_rv_mean("gmos", )
-
-# ╔═╡ 74152829-27ef-4d8d-8b32-ed30a18f30e4
-rv_meas.RV_gmos[.!ismissing.(rv_meas.RV_gmos)]
+compare_rv_mean("graces", )
 
 # ╔═╡ 5688e9c9-515c-4973-820f-1215031253f2
 import StatsBase: var
@@ -620,16 +587,32 @@ gsr0.pmdec
 # ╔═╡ 2ecbc309-2b17-4e75-a09b-6483b8b0a711
 hist(Measurements.uncertainty.(Δrv) ./ rv_meas.RV_err )
 
+# ╔═╡ fd8a7210-ad46-400d-8ef1-d46c75b210c3
+df_out = let
+	df = copy(rv_meas)
+
+	df[!, :F_RV] = F_qual
+	df[!, :delta_rv] = Measurements.value.(Δrv)
+	df[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
+
+	df
+end
+
+# ╔═╡ 57568618-1323-46bc-a8ef-53eb95fc2929
+col_filt2 = eltype.(eachcol(df_out)) .∉ Ref(
+	[Union{Missing, Dates.Time}, 
+	 Missing,
+	Union{Missing, String7},
+	Union{Missing, String15}])
+
 # ╔═╡ 615f05fb-4907-40bc-9251-3065f565929b
 let
 	filename = "processed/rv_combined.fits"
 	if isfile(filename)
 		rm(filename); 
 	end
-	rv_meas[!, :F_RV] = F_qual
-	rv_meas[!, :delta_rv] = Measurements.value.(Δrv)
-	rv_meas[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
-	write_fits(filename, rv_meas)
+	
+	write_fits(filename, df_out[:, col_filt2])
 	@info "wrote data"
 end
 
@@ -651,19 +634,69 @@ end
 filt_rv = is_rv_member.(rv_meas.RV, rv_meas.RV_err) 
 
 # ╔═╡ 3920e27f-48fd-41a5-bf53-1f80edf3d56d
-memb_stars = rv_meas[rv_meas.PSAT .> 0.2 .&& F_qual .&& filt_rv .|| .!ismissing.(rv_meas.RV_gmos), :]
+memb_stars = rv_meas[rv_meas.PSAT .> 0.2 .&& F_qual .&& filt_rv , :]
+
+# ╔═╡ 9213cc36-74d1-452f-bd9a-eb5c5cab1f87
+function compare_rv(study1, study2)
+	rv1  = memb_stars[:, "RV_$study1"]
+	rv1_err  = memb_stars[:, "RV_err_$study1"]
+	
+	rv2  = memb_stars[:, "RV_$study2"]
+	rv2_err  = memb_stars[:, "RV_err_$study2"]
+
+	filt = filt_missing(rv1, true; low=μ0-3σ0, high=μ0+3σ0) .& filt_missing(rv2, true;  low=μ0-3σ0, high=μ0+3σ0)
+
+	println("matched ", sum(filt), " stars")
+
+
+	if sum(filt) == 0
+		@error ("nothing to plot")
+		return 
+	end
+	
+	println("plotting ", sum(filt), " stars")
+
+
+	fig, ax = FigAxis(
+		xlabel = "RV $study1",
+		ylabel = "RV $study2",
+		aspect=DataAspect()
+	)
+
+	errorscatter!(rv1[filt], rv2[filt], xerror=rv1_err[filt], yerror=rv2_err[filt])
+
+	w = @. 1/(rv1_err[filt]^2 + rv2_err[filt]^2)
+	μ = LilGuys.mean(rv1[filt] .- rv2[filt], w)
+	δμ = sqrt(1/sum(w))
+	sigma = LilGuys.std(rv1[filt] .- rv2[filt] .- μ, w)
+
+	text!(0.1, 0.8, space=:relative, text="μ = $(μ ± δμ)\nσ = $(round(sigma, digits=2))", fontsize=10)
+
+	
+	lines!([μ0-3σ0, μ0+3σ0], [μ0-3σ0, μ0+3σ0], color=:black)
+	return fig
+end
+
+# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
+@savefig "p20_s18_xmatch" compare_rv("p20", "s18")
+
+# ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
+@savefig "s18_apogee" compare_rv("s18", "apogee")
+
+# ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
+@savefig "apogee_w09_xmatch" compare_rv("apogee", "p20")
 
 # ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
 compare_rv_mean("apogee", memb_stars)
 
 # ╔═╡ aaaf5ba2-c9ed-41ec-a22a-d78ed96fd84e
-compare_rv_mean("w09", memb_stars)
+compare_rv_mean("p20", memb_stars)
 
 # ╔═╡ 78e7aff0-3658-4d64-b117-58189a85307a
-compare_rv_mean("t23", memb_stars)
+compare_rv_mean("s18", memb_stars)
 
 # ╔═╡ 92bfc52c-05f5-45e3-ae26-90c579ecfe2c
-hist(filter((!) ∘ ismissing, memb_stars.RV_err_t23 ./ memb_stars.RV_err))
+hist(filter((!) ∘ ismissing, memb_stars.RV_err_p20 ./ memb_stars.RV_err))
 
 # ╔═╡ 764b5306-20f9-4810-8188-1bdf9482260f
 let
@@ -745,7 +778,10 @@ md"""
 """
 
 # ╔═╡ 30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
-sum(.!ismissing.(memb_stars.RV_gmos))
+sum(.!ismissing.(memb_stars.RV_graces))
+
+# ╔═╡ d0608300-496d-432a-9016-05e9f75df0a4
+unique(memb_stars.RV_err_graces)
 
 # ╔═╡ 33f54afc-cdb9-4eb8-887f-5a43281b837c
 let
@@ -760,9 +796,9 @@ let
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
 	scatter!(memb_stars.R_ell, memb_stars.RV_apogee, label="APOGEE", markersize=3)
-	scatter!(memb_stars.R_ell, memb_stars.RV_gmos, label="Sestito+23", markersize=5)
-	scatter!(memb_stars.R_ell, memb_stars.RV_w09, label="Walker+09", markersize=3)
-	scatter!(memb_stars.R_ell, memb_stars.RV_t23, label="Tolstoy+23", markersize=3)
+	scatter!(memb_stars.R_ell, memb_stars.RV_graces, label="Sestito+23", markersize=5)
+	scatter!(memb_stars.R_ell, memb_stars.RV_p20, label="pace+20", markersize=3)
+	scatter!(memb_stars.R_ell, memb_stars.RV_s18, label="spencer+18", markersize=3)
 
 	Legend(fig[1,2], ax)
 	#axislegend(ax, position=:rb)
@@ -774,20 +810,17 @@ let
 	fig
 end
 
-# ╔═╡ dcb1bcf1-41e3-4389-b879-be6a53b5e670
-mean(.!ismissing.(memb_stars.RV_gmos))
-
 # ╔═╡ a70a2546-3aaa-4d78-a060-2a9a39940dc8
 mean(.!ismissing.(memb_stars.RV_apogee))
 
 # ╔═╡ 382e7503-0e31-49d5-b593-a6a1a0f9c5e0
-mean(.!ismissing.(memb_stars.RV_t23))
+mean(.!ismissing.(memb_stars.RV_p20))
 
 # ╔═╡ 0b7107f8-38d2-4b0c-aad1-e07d3927cf87
-mean(.!ismissing.(memb_stars.RV_w09))
+mean(.!ismissing.(memb_stars.RV_s18))
 
 # ╔═╡ e32f0d5a-9a6a-407c-a466-586c5d63fda8
-mean(ismissing.(memb_stars.RV_t23) .& .!ismissing.(memb_stars.RV_w09))
+mean(ismissing.(memb_stars.RV_s18) .& .!ismissing.(memb_stars.RV_p20))
 
 # ╔═╡ 500815e1-f9e1-4401-ba2d-72f326cfa783
 let
@@ -803,9 +836,9 @@ let
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
 	scatter!(rv_meas.R_ell, rv_meas.RV_apogee, label="APOGEE", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_gmos, label="GMOS", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_w09, label="Walker+09", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_t23, label="tolstoy + 23", markersize=3)
+	scatter!(rv_meas.R_ell, rv_meas.RV_graces, label="sestito + 23", markersize=3)
+	scatter!(rv_meas.R_ell, rv_meas.RV_s18, label="spencer + 18", markersize=3)
+	scatter!(rv_meas.R_ell, rv_meas.RV_p20, label="pace + 20", markersize=3)
 
 	Legend(fig[1,2], ax)
 
@@ -818,7 +851,7 @@ end
 sum(sum(eachcol(ismissing.(rv_meas))))
 
 # ╔═╡ 1deb1520-194a-40b5-8968-bf73b756ba3d
-rv_meas[ .! ismissing.(rv_meas.RV_gmos), :PSAT]
+rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -839,11 +872,14 @@ rv_meas[ .! ismissing.(rv_meas.RV_gmos), :PSAT]
 # ╟─6964faa7-17d2-412c-b4a2-5f981f8c4b54
 # ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 # ╠═9ed91d41-e650-4d3c-9e74-100ff3d57d82
+# ╠═ed332de8-9524-43b6-8863-9742aa9be293
+# ╠═5bcb34d8-e9a7-474c-9726-ca8b5f8f1310
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
-# ╠═8e0095e7-2198-439d-bd19-976bdb1d3766
+# ╠═cd229322-5222-4b9c-8ab0-23b3cf1fa56c
 # ╠═b7345279-4f80-47ad-a726-537571849eae
 # ╟─bbf49122-11b1-4272-a660-0437c6aa2b3f
 # ╠═fe6fa910-f41e-4657-836b-7eda2f0cddb2
+# ╠═77ccf2bc-692c-42a9-a4fb-0efb7612294f
 # ╠═e472cbb6-258e-4303-85e2-56f26358c97b
 # ╠═0d2dbc73-1ded-46e3-b142-9bc7b777728d
 # ╠═ff644334-bf90-49e4-a3da-fc4ecc840929
@@ -862,7 +898,12 @@ rv_meas[ .! ismissing.(rv_meas.RV_gmos), :PSAT]
 # ╠═f7213298-3dcb-49ac-a9f0-a129a03423aa
 # ╟─f7ec8bba-9f45-435b-b67c-33182e992dfd
 # ╠═93d185f2-1eaa-4d35-87dd-b84f385483de
+# ╠═9e21f642-5315-4e33-a706-ac6cb84ad706
+# ╠═47fcf9a4-742d-47b9-96fc-480a4a6b22a0
 # ╠═9213cc36-74d1-452f-bd9a-eb5c5cab1f87
+# ╠═395118d9-f171-43e8-a1da-ed9aa72efbad
+# ╠═d06637b0-4167-40ff-8012-db7e66fe3394
+# ╠═070de76a-e917-48ab-8efe-52f665ceca2f
 # ╠═f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
 # ╠═609f55cd-aa49-4a5e-b871-413ec7ef0990
 # ╠═f61debe4-8b23-4415-b77c-43c4465ccfcb
@@ -922,8 +963,12 @@ rv_meas[ .! ismissing.(rv_meas.RV_gmos), :PSAT]
 # ╠═2a07cc9f-e5a8-4baf-af1c-e69f1def7bc0
 # ╠═18adfc17-ee1f-4cfb-b194-cd8494850200
 # ╠═2ecbc309-2b17-4e75-a09b-6483b8b0a711
-# ╠═520f0ae4-eae4-4ab1-86e6-5758a2d7ebad
+# ╠═fd8a7210-ad46-400d-8ef1-d46c75b210c3
 # ╠═615f05fb-4907-40bc-9251-3065f565929b
+# ╠═7d27beff-5403-42fa-907e-e776008c01b3
+# ╠═a23adf32-8854-422a-8b7b-2b625132b9f2
+# ╠═57568618-1323-46bc-a8ef-53eb95fc2929
+# ╠═30e744cf-310b-4dc2-a06b-8cd1dbee1dc6
 # ╟─3655b6a0-ac9a-4a49-86fd-6a6484409819
 # ╠═7f13339e-6a0c-4944-8a36-5ab136fd8415
 # ╠═3920e27f-48fd-41a5-bf53-1f80edf3d56d
@@ -932,7 +977,6 @@ rv_meas[ .! ismissing.(rv_meas.RV_gmos), :PSAT]
 # ╠═78e7aff0-3658-4d64-b117-58189a85307a
 # ╠═92bfc52c-05f5-45e3-ae26-90c579ecfe2c
 # ╠═f4f9dd06-1a1a-458b-be75-05d52623580c
-# ╠═74152829-27ef-4d8d-8b32-ed30a18f30e4
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f
 # ╠═5688e9c9-515c-4973-820f-1215031253f2
 # ╟─ce3067d3-55e6-43a1-9b7b-4cf53c09ee88
@@ -950,8 +994,8 @@ rv_meas[ .! ismissing.(rv_meas.RV_gmos), :PSAT]
 # ╠═678a13d6-c892-43fe-a806-f3534661f785
 # ╟─7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 # ╠═30e3dc5b-3ce6-4dd7-9c2a-c82774909a8c
+# ╠═d0608300-496d-432a-9016-05e9f75df0a4
 # ╠═33f54afc-cdb9-4eb8-887f-5a43281b837c
-# ╠═dcb1bcf1-41e3-4389-b879-be6a53b5e670
 # ╠═a70a2546-3aaa-4d78-a060-2a9a39940dc8
 # ╠═382e7503-0e31-49d5-b593-a6a1a0f9c5e0
 # ╠═0b7107f8-38d2-4b0c-aad1-e07d3927cf87

@@ -2,29 +2,35 @@ ra = 15.0183
 ra_err = 0.0012
 ra_ref = "munoz+2018"
 dec = -33.7186
-dec_err = 0.00072
+dec_err = 0.0007
 dec_ref = "munoz+2018"
+
 distance = 83.2 
 distance_err = 2
+distance_modulus = 19.60
+distance_modulus_err = 0.05
 distance_ref = "tran+22"
+
 pmra = 0.099 
-pmra_err = 0.017 #0.002 + gaia sys
+pmra_err = 0.017
 pmra_ref = "MV2020a"
 pmdec = -0.160 
-pmdec_err = 0.017 #0.002 + gaia sys
+pmdec_err = 0.017 
 pmdec_ref = "MV2020a"
-radial_velocity = 111.2 # this work
+pmra_note = "0.002 uncertainty but adds gaia systematics"
+
+radial_velocity = 111.2
 radial_velocity_err = 0.2
 radial_velocity_ref = "this"
 
-# this work
-sigma_v = 9.69
+sigma_v = 9.67
 sigma_v_err = 0.16
 sigma_v_ref = "this"
 
 ellipticity = 0.36
 ellipticity_err = 0.01
 ellipticity_ref = "munoz+2018"
+
 position_angle = 92.0
 position_angle_err = 1
 position_angle_ref = "munoz+2018"
@@ -33,9 +39,12 @@ position_angle_ref = "munoz+2018"
 r_h = 12.33
 r_h_err = 0.05
 r_h_ref = "MV2020"
+r_h_note = "also measured in munoz+2018"
 
 Mv = -10.82
 Mv_err = 0.14
+Mv_ref = "munoz+2018"
+
 M_L_s = 1.4 
 M_L_s_err = 0.3
 theta_pm_gsr = -39.64 # atand(pmra_gsr, pmdec_gsr)

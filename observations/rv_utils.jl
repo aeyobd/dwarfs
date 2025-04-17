@@ -33,13 +33,13 @@ end
 
 
 """
-    model_vel_1c(x, xerr; μ_min, μ_max)
+    model_vel_1c(x, xerr)
 
 Fits a 1c model to a set of velocities and uncertainties
 """
-@model function model_vel_1c(x, xerr; μ_min=90, μ_max=120)
-	μ ~ Uniform(μ_min, μ_max)
-	σ ~ LogNormal(2.5, 1) # approx 1 - 100 km / s, very broad but should cover all
+@model function model_vel_1c(x, xerr; μ_s_prior=100, μ_0_prior=0)
+    μ ~ Normal(μ_0_prior, μ_s_prior)
+    σ ~ Uniform(0, 20)
 	s = @. sqrt(σ^2 + xerr^2)
 
 	x ~ MvNormal(fill(μ, length(x)), s)
@@ -117,24 +117,30 @@ Summarizes the MCMC chain.
 Differing from turing in that we add the mean
 and p-value quantile interval
 """
-function summarize(chain; p=0.16)
-    df = Turing.summarize(chain)
+function summarize(chain; p=0.16, pp=0.025)
+    df = Turing.summarize(chain) |> DataFrame
     Nvar = size(df, 1)
     lows = zeros(Nvar)
+    lowlows = zeros(Nvar)
     mids = zeros(Nvar)
     highs = zeros(Nvar)
+    highhighs = zeros(Nvar)
 
     for i in 1:Nvar
-        x = chain[:, i, :].values
-        low, mid, high = quantile(vec(x), [p, 0.5, 1-p])
+        x = chain[:, i, :].data
+        llow, low, mid, high, hhigh = quantile(vec(x), [pp, p, 0.5, 1-p, 1-pp])
         lows[i] = low
         mids[i] = mid
         highs[i] = high
+        lowlows[i] = llow
+        highhighs[i] = hhigh
     end
 
-    df[!, median] = mids
-    df[!, error_lower] = mids .- lows
-    df[!, error_upper] = highs .- mids
+    df[!, :median] = mids
+    df[!, :error_lower] = mids .- lows
+    df[!, :error_upper] = highs .- mids
+    df[!, :error_lower_2] = mids .- lowlows
+    df[!, :error_upper_2] = highhighs .- mids
 
     return df
 end
@@ -154,15 +160,11 @@ function filt_missing(col; low=-Inf, high=Inf)
 end
 
 
-"""
-    to_orthoganal_velocities(gsr, gsr0)
+@doc raw"""
+    rv_correction(ra, dec, ra0, dec0, pmra, pmdec, distance)
 
-Convert a list of GSR velocities to be in the orthoganal cartesian frame relative
-to gsr0. 
-Return
-- vx: velocity in direction of Ra at centre
-- vy: velocity in direction of DEC at centre
-- vz: velocity in direction of dwarf's centre
+Compute the correction to add to GSR radial velocities to calculate
+$v_z$, the velocity in the direction parallel to the RV of the centre.
 """
 function rv_correction(ra, dec, ra0, dec0, pmra, pmdec, distance)
     vra = lguys.pm2kms(pmra, distance)
@@ -225,12 +227,11 @@ end
 
 Compute the likelihood of the velocity assuming 
 a halo velocity dispersion of 100 km/s and mean velocity
-stationary.
+stationary given the gsr radial velocity.
 """
 function L_RV_BKD(rv::Real, ra0::Real, dec0::Real)
-    μ = rv_gsr_shift(ra0, dec0)
     σ = 100
-    return pdf(Normal(μ, σ), rv)
+    return pdf(Normal(0, σ), rv)
 end
 
 
@@ -280,4 +281,24 @@ function new_pm(rv_meas, obs_props)
     end
 
     return pmra, pmdec
+end
+
+
+
+function get_error(df, key)
+    if key*"_em" ∈ keys(df)
+        return max(df[key*"_em", key*"_ep"])
+    elseif key*"_err" ∈ keys(df)
+        return df[key * "_err"]
+    else
+        @error "error for $key not found in dict"
+    end
+end
+
+
+function icrs(df::AbstractDict)
+    kwargs = Dict(
+              Symbol(key) =>  df[key]  ± get_error(df, key) for key in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"]
+             )
+    return lguys.ICRS(;kwargs...)
 end

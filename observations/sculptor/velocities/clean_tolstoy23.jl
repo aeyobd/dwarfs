@@ -51,11 +51,6 @@ import DensityEstimators: histogram, calc_limits, make_bins
 # ╔═╡ 36634dea-21bc-4823-8a15-7bce20b6fc17
 import TOML
 
-# ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
-md"""
-# Loading data tables
-"""
-
 # ╔═╡ 9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
 module RVUtils
 	include("../../rv_utils.jl")
@@ -64,14 +59,14 @@ end
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 data_dir = "../data/"
 
-# ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
-obs_properties = TOML.parsefile("../observed_properties.toml")
-
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
 ## Data loading
 No need to filter further...
 """
+
+# ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
+obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 
@@ -80,7 +75,7 @@ begin
 
 	rename!(tolstoy23_all, 
 		:Vlos => :RV,
-		:e_Vlos => :RV_err,
+		:e_Vlos => :RV_err_orig,
 		:s_Vlos => :RV_sigma,
 		:Nspec => :RV_count,
 		:RAJ2000 => :ra,
@@ -90,7 +85,7 @@ begin
 		:e__Fe_H_ => :fe_h_err,
 	)
 
-	tolstoy23_all.RV_err = @. max((1.448 - 0.021*tolstoy23_all.S_N)*tolstoy23_all.RV_err, 0.65) # correction from arroyo-polonio 2024
+	tolstoy23_all[:, :RV_err] = @. max((1.448 - 0.021*tolstoy23_all.S_N)*tolstoy23_all.RV_err_orig, 0.65) # correction from arroyo-polonio 2024
 	
 	tolstoy23_all = tolstoy23_all
 end
@@ -108,6 +103,12 @@ tolstoy23 = tolstoy23_all[filt_tolstoy, :]
 md"""
 # Plots
 """
+
+# ╔═╡ 76dc33cd-110a-42e6-bd72-65ba6b7bf85a
+scatter(tolstoy23.S_N, tolstoy23.RV_err .- tolstoy23.RV_err_orig)
+
+# ╔═╡ c8e08e37-60d8-4f14-adea-f6f93017cbb9
+scatter(tolstoy23.S_N, tolstoy23.RV_err_orig)
 
 # ╔═╡ 5f71b8e9-5540-4431-8028-4ce14c8d7856
 let 
@@ -249,16 +250,17 @@ CSV.write("processed/rv_dart.csv", df_summary_dart)
 # ╠═7ed5bcf5-dfc3-4e79-a608-d503124a1e96
 # ╠═36634dea-21bc-4823-8a15-7bce20b6fc17
 # ╠═e67ec69b-cfd1-4da7-8f0a-3c1a30f6f48c
-# ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-# ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
+# ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
 # ╟─4290a51e-961b-4b38-b954-1a65e946080c
+# ╠═76dc33cd-110a-42e6-bd72-65ba6b7bf85a
+# ╠═c8e08e37-60d8-4f14-adea-f6f93017cbb9
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe

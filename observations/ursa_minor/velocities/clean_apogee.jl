@@ -69,7 +69,7 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("..//processed/best_sample.fits")
+j24 = read_fits("../data/jensen+24_2c.fits")
 
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
@@ -80,9 +80,6 @@ md"""
 md"""
 APOGEE DR 17 sample from federico's paper is apogee_raw_2. I have also xmatched the field against apogee which I use for self-consistency.
 """
-
-# ╔═╡ 0e14808d-df92-419b-b272-f3a08f4b86b1
-apogee_raw_2 = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
 
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_raw = read_fits("processed/apogee_xmatch.fits")
@@ -122,11 +119,8 @@ md"""
 # Plots and analysis
 """
 
-# ╔═╡ bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
-filt_apogee = RVUtils.sigma_clip(apogee_all.RV, 3)
-
 # ╔═╡ 4d63430e-f59c-4c68-97e1-7eaa5679e55f
-apogee = apogee_all[filt_apogee, :]
+apogee = apogee_all[-300 .< apogee_all.RV .< -230, :]
 
 # ╔═╡ 5f71b8e9-5540-4431-8028-4ce14c8d7856
 let 
@@ -147,6 +141,9 @@ let
 	fig
 end
 
+# ╔═╡ bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
+filt_apogee = RVUtils.sigma_clip(apogee_all.RV, 3)
+
 # ╔═╡ 1bc2541c-69ac-40aa-94f5-743707ca5a66
 hist(apogee.RV)
 
@@ -161,44 +158,6 @@ hist(apogee.RV_sigma)
 
 # ╔═╡ fba487be-22a5-43b3-9ac5-8505462b7d56
 hist(apogee.RV_sigma ./ (apogee.RV_err .* sqrt.(apogee.RV_count) ))
-
-# ╔═╡ 27063de7-01d4-48a8-a06f-cc24aec662d2
-md"""
-### Check apogee-dart xmatch against fed
-"""
-
-# ╔═╡ 48c62811-136f-4962-a42c-b1dd1fc74f8c
-begin 
-	apogee_notdart = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch_notDART.csv", DataFrame)
-
-	rename!(apogee_notdart, 
-		"Elliptical half-light radii"=>"r_h",
-		"VHELIO_AVG"=>"RV",
-		"VERR"=>"RV_err",
-		"GAIAEDR3_PMRA"=>"pmra",
-		"GAIAEDR3_PMDEC"=>"pmdec",
-		"RA (deg)"=>"ra",
-		"Dec (deg)"=>"dec",
-		"GAIAEDR3_SOURCE_ID" => "source_id"
-	)
-
-	_apogee_filt = not.(ismissing.(apogee_notdart.RV))
-
-	apogee_notdart = DataFrame(apogee_notdart[_apogee_filt, :])
-
-	nothing
-end
-
-# ╔═╡ 6009cc0e-6936-4589-85aa-dd2864948b7c
-let
-	fig = Figure()
-    ax = Axis(fig[1,1])
-
-	scatter!(apogee.ra, apogee.dec, markersize=5)
-	scatter!(apogee_raw_2[:, "RA (deg)"], apogee_raw_2[:, "Dec (deg)"], markersize=3)
-
-	fig
-end
 
 # ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
 model = RVUtils.model_vel_1c(apogee.RV, apogee.RV_err)
@@ -248,7 +207,6 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╟─45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
-# ╠═0e14808d-df92-419b-b272-f3a08f4b86b1
 # ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 # ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
 # ╠═f71152ad-d576-4205-bece-92c85783c089
@@ -261,9 +219,6 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═5dafeaad-df9e-4558-99a7-721bdb91d28d
 # ╠═949bdb6a-4554-4659-b0d3-7e669f470c10
 # ╠═fba487be-22a5-43b3-9ac5-8505462b7d56
-# ╟─27063de7-01d4-48a8-a06f-cc24aec662d2
-# ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
-# ╠═6009cc0e-6936-4589-85aa-dd2864948b7c
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
 # ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9
