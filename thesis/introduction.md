@@ -15,7 +15,7 @@ The classical dwarfs are some of the earliest discovered systems, begining with 
 
 ![Cosmological Power Spectrum](figures/power_spectrum.png){#fig:cosmological_power_spectrum width=100% }
 
-Figure: figure 1 from @bechtol+2022. 
+Figure: The matter power spectrum under different assumptions for dark matter. Dwarf galaxies occupy the middle and low end of the blue region (10^10 - 10^8 solar masses), enabling a unique window into properties of dark matter on small scales. The smaller scales we can understand dark matter, the better we are able to test different models of dark matter. figure 1 from @bechtol+2022. 
 
 
 
@@ -25,7 +25,7 @@ Figure: Density profiles of comological simulated halos, matching approximantly 
 
 ![Picture of Sculptor](figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}
 
-Figure: Sculptor image from DES DR 2 via HiPS2FITS.
+Figure: Sculptor image from DES DR 2 via HiPS2FITS. 
 
 
 
@@ -67,24 +67,23 @@ Observational work on Scl
 
 
 
-| parameter                | value                                                        | Source            |
-| ------------------------ | ------------------------------------------------------------ | ----------------- |
-| $\alpha$                 | $15.0183 \pm 0.0012$˚                                        | M+18              |
-| $\delta$                 | $-33.7186 \pm 0.00072$˚                                      | M+18              |
-| distance                 | $83.2 \pm 2$ kpc                                             | Tran+22           |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | MV20a             |
-| $\mu_\delta$             | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a             |
-| RV                       | $111.2 \pm 0.2$                                              | arroyo-polonio+24 |
-| $\sigma_v$               | $9.7\pm0.2$                                                  | arroyo-polonio+24 |
-| $R_h$                    | $12.33 \pm 0.05$ arcmin                                      | MV20*             |
-| $R_{h,inner}$            | $8.69 \pm 0.2$ arcmin                                        | this work?        |
-| ell                      | $0.36 \pm 0.01$                                              | M+18              |
-| PA                       | $92\pm1$                                                     | M+18              |
-| $M_V$                    | $-10.82\pm0.14$                                              | M+18              |
+| parameter        | value                                                        | Source     |
+| ---------------- | ------------------------------------------------------------ | ---------- |
+| $\alpha$         | $15.0183 \pm 0.0012^\circ$                                   | 1          |
+| $\delta$         | $-33.7186 \pm 0.0007^\circ$                                  | 1          |
+| distance modulus | $19.60 \pm 0.05$ (RRL)                                       | 2          |
+| distance         | $83.2 \pm 2$ kpc                                             | 2          |
+| $\mu_{\alpha*}$  | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | 3          |
+| $\mu_\delta$     | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3          |
+| radial velocity  | $111.2 \pm 0.2\ {\rm km\,s^{-1}}$                            | this work  |
+| $\sigma_v$       | $9.67\pm0.16\ {\rm km\,s^{-1}}$                              | this work  |
+| $R_h$            | $12.33 \pm 0.05$ arcmin                                      | 4          |
+| $R_{h,inner}$    | $8.69 \pm 0.2$ arcmin                                        | this work? |
+| ellipticity      | $0.36 \pm 0.01$                                              | 1          |
+| position angle   | $92\pm1^\circ$                                               | 1          |
+| $M_V$            | $-10.82\pm0.14$                                              | 1          |
 
-Table: Measured properties of Sculptor
-
-Can I just cite @arroyo-polonio+2024 for velocity information for Sculptor? They correct for binary and do a more detailed discussion of rotation. 
+Table: Observed properties of Sculptor. References are: 1. @munoz+2018, 2. @tran+2022, 3. @MV2020b, 4 @MV2020a.
 
 ## Ursa Minor
 
@@ -110,26 +109,26 @@ Can I just cite @arroyo-polonio+2024 for velocity information for Sculptor? They
 
 ![Picture of Ursa Minor](figures/umi_image.jpg){#fig:umi_image width=390pt height=390pt}
 
-Figure: Ursa Minor Dwarf. Composite Public data/Giuseppe Donatiello. Updated image in 2022. https://www.flickr.com/photos/133259498@N05/page8
+Figure: Ursa Minor Dwarf. UMi appears as a diagonal/elliptical haze of stars from the top left to the bottom right.  Even as as classical dwarf, Ursa minor is fairly diffuse and does not stand obviously out from the background. Composite Public data/Giuseppe Donatiello. Updated image in 2022. https://www.flickr.com/photos/133259498@N05/page8
 
 
 
-| parameter                | value                                                        | Source |
-| ------------------------ | ------------------------------------------------------------ | ------ |
-| $\alpha$                 | $ 227.2420 \pm 0.0045$˚                                      | 1      |
-| $\delta$                 | $67.2221 \pm 0.00158$˚                                       | 1      |
-| distance modulus         | $19.23 \pm 0.11$                                             | 2      |
-| distance                 | $70.1 \pm 3.6$ kpc                                           |        |
-| $\mu_\alpha \cos \delta$ | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | 3      |
-| $\mu_\delta$             | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3      |
-| RV                       | $-244.9 \pm 0.3_{\rm stat} \pm 1.7_{\rm sys}$ km s$^{-1}$    | 4      |
-| $\sigma_v$               | $8.3 \pm 0.3_{\rm stat} \pm 0.4_{\rm sys}$                   | 4      |
-| $r_h$                    | $18.2 \pm 0.1$ arcmin                                        | 1      |
-| ell                      | $0.55 \pm 0.01$                                              | 1      |
-| PA                       | $50 \pm 1^\circ$                                             | 1      |
-| $M_V$                    | $-9.03 \pm 0.05$                                             | 1      |
+| parameter        | value                                                        | Source    |
+| ---------------- | ------------------------------------------------------------ | --------- |
+| $\alpha$         | $ 227.2420 \pm 0.0045$˚                                      | 1         |
+| $\delta$         | $67.2221 \pm 0.0016$˚                                        | 1         |
+| distance modulus | $19.23 \pm 0.11$ (RRL)                                       | 2         |
+| distance         | $70.1 \pm 3.6$ kpc                                           | -         |
+| $\mu_\alpha*$    | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | 3         |
+| $\mu_\delta$     | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3         |
+| radial velocity  | $-245.8 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$      | this work |
+| $\sigma_v$       | $8.8 \pm 0.2$                                                | this work |
+| $r_h$            | $18.2 \pm 0.1$ arcmin                                        | 1         |
+| ellipticity      | $0.55 \pm 0.01$                                              | 1         |
+| position angle   | $50 \pm 1^\circ$                                             | 1         |
+| $M_V$            | $-9.03 \pm 0.05$                                             | 1         |
 
-Table: Measured properties of Ursa Minor. References are: (1) @munoz+2018, (2) @garofalo+2025, (3) @MV2020a, (4) average of @pace+2020 and @spencer+2018. 
+Table: Observed properties of Ursa Minor. References are: (1) @munoz+2018, (2) @garofalo+2025, (3) @MV2020a, (4) average of @pace+2020 and @spencer+2018. 
 
 
 
@@ -191,7 +190,7 @@ In this section, we will cover
 
 ![Break radius validation](/Users/daniel/thesis/figures/idealized_break_radius.png){#fig:idealized_break_radius}
 
-Figure: The break radius of the simulations is set by 
+Figure: The break radius of the simulations is set by the time since pericentre. 
 
 
 
@@ -280,3 +279,6 @@ $$
 
 where $\alpha\approx2.16258$, and $v_{\rm circ}^{\rm max}$ can be found from either of the equations above.
 
+# What is up with probabilities
+
+![image-20250416112038183](/Users/daniel/Library/Application Support/typora-user-images/image-20250416112038183.png){#fig:test width=100%}

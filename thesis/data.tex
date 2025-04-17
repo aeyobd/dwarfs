@@ -1,9 +1,9 @@
 \section{Gaia Membership Selection}\label{gaia-membership-selection}
 
 Gaia provides unprecedented accuracy in proper motions and magnitudes.
-As such, Gaia data is uniquely excellent to produce low-contamination
-samples of likely member stars belonging to satellites. Here, we breifly
-describe J+24's membership estimation and discuss how this informs our
+Gaia data is uniquely excellent to produce low-contamination samples of
+likely member stars belonging to satellites. Here, we breifly describe
+J+24's membership estimation and discuss how this informs our
 observational knoledge of each galaxies density profile. In general,
 J+24 use a Bayesian framework incorporating proper motion (PM),
 colour-magnitude diagram (CMD), and spatial information to determine the
@@ -366,6 +366,198 @@ density at half-light radius (fit from the inner 3 scale radii
 exponential recursively. )}\label{fig:classical_dwarfs_densities}
 \end{figure}
 
+\section{Radial velocity modeling}\label{radial-velocity-modeling}
+
+For both Sculptor and Ursa Minor, we construct samples of radial
+velocity measurements and cross match each sample to produce estimates
+of the total velocity dispersion and line of sight velocity for each
+galaxy.
+
+\subsection{Methodology}\label{methodology}
+
+First, we crossmatch all catalogues to J+24 Gaia stars. If a study did
+not report GaiaDR3 source ID's, we match to the nearest star within 2
+arcseconds. We exclude stars not matched to Gaia for simplicity.
+
+We combine the mean RV measurement from each study using the
+inverse-variance weighted mean and standard uncertainty. \[
+\bar v = \frac{1}{\sum w_i}\sum_i w_i\ v_{i} \\
+\delta v = \sqrt{\frac{1}{\sum_i w_{i}^2}}
+\] where \(w_i = 1/s_i^2\), and we estimate the inter-study standard
+deviation \[
+s^2 = \frac{1}{\sum w_i} \sum_i w_i (v_{i} - \bar v)^2
+\] We remove stars with significant velocity dispersions as measured
+between or within a study: \[
+s < 5\,\delta v\,\sqrt{n}
+\] where \(s, \delta v, n\) are the standard deviation, standard, error,
+and number of measurements for both a study (with multiple epochs) and
+inter-study comparisons.
+
+The combined RV likelihood is then \[
+{\cal L} = {\cal L}_{\rm space} {\cal L}_{\rm CMD} {\cal L}_{\rm PM} {\cal L}_{\rm RV}
+\] where \[
+{\cal L}_{\rm RV, sat} = N(\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2) \\
+{\cal L}_{\rm RV, bg} = N(0, \sigma_{\rm halo}^2)
+\] where \(\mu_v\) and \(\sigma_v\) are the systemic velocity and
+dispersion, and \(\delta v_i\) is the individual measurement
+uncertainty. Typically, the velocity dispersion will dominate the
+uncertainty budget here. We assume a halo/background velocity dispersion
+of a constant \$\sigma\_\{\rm halo\} = 100 \$ km/s
+\citep[e.g.][]{brown+2010}.
+
+Similar to above, we retain stars with the resulting membership
+probability of greater than 0.2.
+
+Finally, we need to correct the coordinate frames for the solar motion
+and on-sky size of the galaxy. The first step is to subtract out the
+solar motion from each radial velocity, corresponding to a typical
+gradient of \textasciitilde3 km/s across the field. The next step is to
+account for the slight differences in the direction of each radial
+velocity. Define the \(\hat z\) direction to point parallel to the
+direction from the sun to the centre of the dwarf galaxy. Then if
+\(\phi\) is the angular distance between the centre of the galaxy and
+the individual star, the corrected radial velocity is then \[
+v_z = v_{\rm los, gsr}\cos\phi  - v_{\alpha}\cos\theta \sin\phi - v_\delta \sin\theta\sin\phi
+\] where
+\(v_{\rm tan, R} = d(\mu_{\alpha*}\cos\theta + \mu_\delta \sin \theta)\)
+is the radial component of the proper motion with respect to the centre
+of the galaxy.This correction is of the order \(v_{\rm tan}\theta\) so
+induces a gradient of about \(1 km/s/degree\) for sculptor
+\citep[see][]{WMO2008}. The uncertainty is then the velocity uncertainty
+plus the distance uncertainties times the PM uncertainty from above. We
+then use the \(v_z\) values for the following modelling, however
+repeating with plain, solar-frame velocities does not substantially
+affect the results too much .
+
+For the priors on the satellite velocity dispersion and systematic
+velocity, we use \[
+\mu_{v} = N(0, \sigma_{\rm halo}^2) \\
+\sigma_{v} = U(0, 20\,{\rm km\,s^{-1}})
+\] where \(\sigma_{\rm halo} = 100\,{\rm km\,s^{-1}}\) is the velocity
+dispersion of the MW halo adopted above, a reasonable assumption for
+dwarfs in orbit around the MW.
+
+\subsection{Sculptor}\label{sculptor}
+
+\begin{table*}[t]
+\centering
+\caption{Summary of velocity measurements and derived properties.}
+\label{tbl:Summary-of-velocity-measurements-and-derived-properties}
+\begin{tabular}{llllllll}
+\toprule
+ & Study & Instrument & Memb & Rep. & N$\sigma > s$ & $\bar v$ & $\sigma_v$\\
+\midrule
+Scl &  &  &  &  &  &  & \\
+ & tolstoy+23 & VLT/FLAMES & 200 (1604) & 500 &  &  & 9.6\\
+ & sestito+23a & GMOS & 2000 &  &  &  & -\\
+ & walker+09 & MMFS & 2000 &  &  &  & 9.5\\
+ & APOGEE & APOGEE & 200 & 200 &  & 8 & 9\\
+UMi &  &  &  &  &  &  & \\
+ & sestito+23b & GRACES & 6 &  &  &  & \\
+ & pace+20 & Keck/DEIMOS &  &  &  & -245 & 8.6\\
+ & spencer+18 & MMT/Hectoshell &  &  &  & -247 & \\
+ & APOGEE & APOGEE & 100 & 100 &  &  & \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+For Sculptor, we combine radial velocity measurements from APOGEE,
+\citet{sestito+2023a}, \citet{tolstoy+2023}, and \citet{WMO2009}.
+\citet{tolstoy+2023} and \citet{WMO2009} provide the bulk of the
+measurements. We find that there is no significant velocity shift in
+crossmatched stars between catalogues. After crossmatching to Gaia and
+excluding significant inter-study dispersions, we have a sample of XXXX
+members.
+
+We derive a systemic velocity of \(111.2\pm0.2\) km/s with velocity
+dispersion \(9.67\pm0.16\) km/s. Our values are very consistent with
+previous work \citep[e.g.][\citet{arroyo-polonio+2024},
+\citet{tolstoy+2023}]{WMO2009}.
+
+Finally, we attempt to fit a linear velocity gradient to Scl by adding
+parameters for the gradient in \(\xi\) ande \(\eta\). We derive a
+gradient of xxx and xxx (see Figure\textasciitilde FIG.), noting that
+this direction is different and higher in magnitude than the proper
+motion of Scl. Comparing the density difference, we find a bayes factor
+of -15. Compared to past work, \citet{battaglia+2008},
+\citet{arroyo-polonio+2021}.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_vlos_xi_eta.pdf}}
+\caption[Scl velocity sample]{A plot of the corrected los velocities for
+Scl binned in tangent plane coordinates. We detect a slight rotational
+gradient towards the bottom right. \textbf{TODO} add a histogram of
+velocities here too with fits, maybe with respect to distance.}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_vel_gradient.pdf}}
+\caption[Scl velocity gradient]{A velocity gradient in Sculptor! The
+arrow marks the gradient induced by Scl's proper motion on the sky.
+\textbf{TODO}: plot of velocity of Scl in direction of gradient.}
+\end{figure}
+
+\emph{Is it interesting that the velocity dispersion of Scl seems to
+increase significantly with Rell?}
+
+\subsection{Ursa Minor}\label{ursa-minor}
+
+For UMi, we collect radial velocities from, APOGEE,
+\citet{sestito+2024b}, \citet{pace+2020}, and \citet{spencer+2018}.
+
+We shifted the velocities of \citet{spencer+2018} (\(-0.9\) km/s) and
+\citet{pace+2020} (\(+1.0\) km/s) to reach the same scale based on a
+crossmatch of about 200 common stars. Since the mean difference in
+velocities in this crossmatch is of order 1.9 km/s, we adopt this as the
+systematic LOS velocity error.
+
+UMi interestingly has a more structured observational pattern, but does
+not appear to have any significant velocity substructure.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_vlos_xi_eta.pdf}}
+\caption[UMi velocity sample]{A plot of the corrected los velocities for
+UMi binned in tangent plane coordinates. There is no clear rotation or
+velocity gradient here. Interestingly, many velocity members are as far
+as 100 arcmin away.}
+\end{figure}
+
+\subsection{Discussion and
+limitations}\label{discussion-and-limitations}
+
+Our model here is relatively simple. Some things which we note as
+systematics and are challenging to account fully for are
+
+\begin{itemize}
+\tightlist
+\item
+  Inter-study systematics and biases. While basic crossmatches and a
+  simple velocity shift, combining data from multiple instruments is
+  challenging.
+\item
+  Inappropriate uncertainty reporting. Inspection of the variances
+  compared to the standard deviations within a study seems to imply that
+  errors are accurately reported. APOGEE notes that their RV
+  uncertainties are known to be underestimates.
+\item
+  Binarity. While not too large of a change for classical dwarfs, this
+  could inflate velocity dispersions of about 9 km/s by about 1 km/s
+  \citet{spencer+2017}. Thus, our measurement is likely slightly
+  inflated given the high binarity fractions measured in classical
+  dwarfs \citep[\citet{spencer+2018}]{arroyo-polonio+2023}.
+\item
+  Selection effects. RV studies each have their own selection effects. I
+  do not know how to correct for this.
+\end{itemize}
+
+Because the derived parameters are similar for the two different larger
+surveys we consider for UMi and Scl, we note that many of these effects
+are likely not too significant (with the exception of the systemic
+motion of UMi.)
+
 \section{Appendix / Extra Notes}\label{appendix-extra-notes}
 
 \subsection{Additional density profile
@@ -397,136 +589,3 @@ and ra < 19
 and -37.7 < dec
 and dec < -29.7
 \end{verbatim}
-
-\section{Radial velocity modeling}\label{radial-velocity-modeling}
-
-For both Sculptor and Ursa Minor, we construct samples of radial
-velocity measurements and cross match each sample to produce estimates
-of the total velocity dispersion and line of sight velocity for each
-galaxy.
-
-\subsection{Methodology}\label{methodology}
-
-Our RV methodology is
-
-\begin{itemize}
-\tightlist
-\item
-  Cross match all catalogues to J+24 Gaia members. If Gaia ID's are
-  included, we use these. Otherwise, we match to the nearest star within
-  2 arcseconds.
-\item
-  We combine the mean RV measurement from each study using the
-  inverse-variance weighted mean and standard uncertainty.
-\end{itemize}
-
-\[
-v_i = \frac{1}{\sum w}\sum_j w\ v_{i, j} \\
-\delta v_i = \sqrt{\frac{1}{\sum w^2}}
-\]
-
-where \(w_i = 1/s_i^2\), and we estimate the inter-study standard
-deviation \[
-s_{v}^2 = \frac{1}{\sum w} \sum w (v_{i, j} - v_i)^2
-\] Note that we do not include the standard deviation if a source does
-measure the velocity multiple times.
-
-If the total standard deviation is greater than five times the velocity
-standard uncertainty (reduced), then we remove the star since either the
-star is a binary or contains erroneous measurements or other
-uncertainties. Note that since stars typically only have very few
-measurements, these choices are highly approximate and likely limited.
-
-The combined RV likelihood is then \[
-{\cal L} = {\cal L}_{\rm space} {\cal L}_{\rm CMD} {\cal L}_{\rm PM} {\cal L}_{\rm RV}
-\] where \[
-{\cal L}_{\rm RV} = N(\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2)
-\] where \(\mu_v\) and \(\sigma_v\) are the systemic velocity and
-dispersion, and \(\delta v_i\) is the individual measurement
-uncertainty. Typically, the velocity dispersion will dominate the
-uncertainty budget here.
-
-Similar to above, we retain stars with the resulting membership
-probability of greater than 0.2.
-
-Finally, we need to correct the coordinate frames. We need a proper
-motion estimate of each star. Since most stars have Gaia measured proper
-motions, but the uncertainties on each proper motion measurement are
-large, we combine the system and individual star's proper motion by
-weighting the systemic proper motion by the z-score of the consistency
-of the measurement with the systemic proper motion. \[
-\mu_{*}' = \frac{1}{w_\star + w_{\rm sys}}\left(\mu_{\star}w_\star + \mu_{\rm sys} w_{\rm sys}\right)
-\] where we model \[
-{w_{\rm sys}} = P_{\rm sat}(\delta \mu ^2 + \sigma_{v, tan}^2)^{-1}
-\] and the weight of the star is just the inverse variance weight plus
-the gaia systematics.
-
-The corrected radial velocities are then \[
-v_z = v_{\rm los, gsr}\cos\theta  + v_{\rm tan, R} \sin\theta
-\] where
-\(v_{\rm tan, R} = d(\mu_{\alpha*}\cos\theta + \mu_\delta \sin \theta)\)
-is the radial component of the proper motion with respect to the centre
-of the galaxy. Since \(\theta \lesssim 1^\circ\), this correction is
-small (\(\sim 1\)km,s\(^{-1}\)), but can prevent the introduction of a
-spurious gradient on the sky \citep{WMO2008}. The uncertainty is then
-the velocity uncertainty plus the distance uncertainties times the PM
-uncertainty from above. We then use the \(v_z\) values for the following
-modelling, however repeating with plain, solar-frame velocities does not
-substantially affect the results too much .
-
-\subsection{Sculptor}\label{sculptor}
-
-For Sculptor, we combine radial velocity measurements
-
-\begin{itemize}
-\item
-  APOGEE (crossmatched to stars meeting basic quality cuts in field)
-\item
-  \citet{sestito+2024a}
-\item
-  \citet{tolstoy+2024}
-\end{itemize}
-
-We adopt a very loose prior of \[
-\mu_{v} = N(111, 10) \\
-\log\sigma_{v} = N(1, 1)
-\] Our resulting velocity dispersions are \$\$
-
-\$\$ Comparing to past work, note that our values are reasonable.
-
-\subsection{Ursa Minor}\label{ursa-minor}
-
-\begin{itemize}
-\tightlist
-\item
-  APOGEE
-\item
-  \citet{sestito+2024b}
-\item
-  \citet{pace+2022}
-\item
-  \citet{spencer+2018}
-\end{itemize}
-
-\subsection{Discussion and
-limitations}\label{discussion-and-limitations}
-
-Our model here is relatively simple. Some things which we do not account
-for include
-
-\begin{itemize}
-\tightlist
-\item
-  interstudy systematics and biases
-\item
-  Inappropriate uncertainty reporting.
-\item
-  Binarity. Binay stars are expected to induce an average velocity
-  dispersion of xxx on an individual star.
-\item
-  Selection effects. RV studies each have their own targeted program and
-\end{itemize}
-
-We partially address several of these by also performing the analysis on
-large RV samples for each galaxy. This allows for individual comparison
-illustrating the differences in selection effects.
