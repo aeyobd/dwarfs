@@ -152,8 +152,80 @@ end
 # ╔═╡ 0ec29d83-a15e-4609-bfab-ba7366f034d2
 sum(1 .- j24.F_BEST[j24_idx[j24_filt]])
 
+# ╔═╡ a542dd17-0d01-4de9-83ee-1b3de933e781
+F_match = j24_filt .& (j24.F_BEST[j24_idx] .== 1)
+
+# ╔═╡ 87a55d42-3000-4acf-a5de-087be9034da4
+F_scatter = walker09_all.RV_sigma .< 3walker09_all.RV_err .* sqrt.(walker09_all.RV_count)
+
+# ╔═╡ 0b9d4a5a-e448-4b73-86f1-4c73a02f8135
+df_out = let
+	df = copy(walker09_all)
+	df[!, :F_scatter] = F_scatter
+	df[!, :F_match] = F_match
+	df
+end
+
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
-write_fits("processed/rv_walker+09.fits", walker09_all, overwrite=true)
+write_fits("processed/rv_walker+09.fits", df_out, overwrite=true)
+
+# ╔═╡ 2c45110e-d323-4ef3-94c1-3e9922caa3c2
+md"""
+# Numbers
+"""
+
+# ╔═╡ b1120dfd-83f5-4b5a-a6b0-0fbd501fbbdb
+sum(F_match)
+
+# ╔═╡ fba308a6-b709-4037-963d-be75edd22c8b
+sum(F_scatter)
+
+# ╔═╡ 04cc2fc7-1550-4a36-9632-c7a14fd412d9
+sum(F_scatter .& F_match)
+
+# ╔═╡ d79ae7a9-7811-402d-a0c1-bce66ddf860a
+sum(walker09_single.Galaxy .== "Scl")
+
+# ╔═╡ a1601fa4-4851-41d0-87bd-6809c89a8faa
+sum(walker09_all.RV_count)
+
+# ╔═╡ a4d01dff-e5fe-49e2-90bb-f4929ede1fbd
+sum(walker09_averaged.Galaxy .== "Scl"), length(walker09_all.Galaxy)
+
+# ╔═╡ 66c42d45-0ac3-4613-a60c-99d3038d95d2
+md"""
+# Uncertainties
+"""
+
+# ╔═╡ 8a0f11fd-86f9-4bab-9f5b-e5a8309d26d2
+v_mean = leftjoin(walker09_single, walker09_averaged, on="Target", makeunique=true).__HV_
+
+# ╔═╡ 5d447127-483f-4d2a-a0b2-8211aff7867e
+v_mean_err = leftjoin(walker09_single, walker09_averaged, on="Target", makeunique=true).e_HV
+
+# ╔═╡ 23e44664-0fa4-45ae-9e31-f1b92b13b4af
+num_obs = [sum(walker09_single.Target .== tar) for tar in walker09_single.Target]
+
+# ╔═╡ 393574f2-3c81-4815-80cd-b02de200d48f
+filt_chi2 = num_obs .> 2
+
+# ╔═╡ 79d7ebd9-2bbf-4d7a-a9db-c572372d53e8
+⊕ = RVUtils.:⊕
+
+# ╔═╡ 78731218-3130-4445-b238-73d12f949fb2
+Δv = @. (v_mean .- walker09_single.HV) / ( walker09_single.e_HV)
+
+# ╔═╡ e21b95df-92d1-4b25-b249-b06098f9375d
+chi2 = Δv .^ 2
+
+# ╔═╡ 77791e93-693e-46e2-a249-b8d201151aaf
+hist((Δv[filt_chi2]), bins=30)
+
+# ╔═╡ eb50e25e-c0a1-4c3c-af90-a89ffb2cff8b
+p_chi2 = @. 1 - cdf(Chisq(num_obs[filt_chi2] .- 1), chi2[filt_chi2])
+
+# ╔═╡ c9578ca4-dfd0-4ba8-b295-c3f25c41f22b
+hist(p_chi2)
 
 # ╔═╡ eea47692-d928-4b83-a8c9-acc69404f2b4
 md"""
@@ -323,7 +395,28 @@ hist(walker09.RV)
 # ╠═0e14808d-df92-419b-b272-f3a08f4b86b1
 # ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 # ╠═0ec29d83-a15e-4609-bfab-ba7366f034d2
+# ╠═a542dd17-0d01-4de9-83ee-1b3de933e781
+# ╠═87a55d42-3000-4acf-a5de-087be9034da4
+# ╠═0b9d4a5a-e448-4b73-86f1-4c73a02f8135
 # ╠═f71152ad-d576-4205-bece-92c85783c089
+# ╟─2c45110e-d323-4ef3-94c1-3e9922caa3c2
+# ╠═b1120dfd-83f5-4b5a-a6b0-0fbd501fbbdb
+# ╠═fba308a6-b709-4037-963d-be75edd22c8b
+# ╠═04cc2fc7-1550-4a36-9632-c7a14fd412d9
+# ╠═d79ae7a9-7811-402d-a0c1-bce66ddf860a
+# ╠═a1601fa4-4851-41d0-87bd-6809c89a8faa
+# ╠═a4d01dff-e5fe-49e2-90bb-f4929ede1fbd
+# ╠═66c42d45-0ac3-4613-a60c-99d3038d95d2
+# ╠═8a0f11fd-86f9-4bab-9f5b-e5a8309d26d2
+# ╠═5d447127-483f-4d2a-a0b2-8211aff7867e
+# ╠═393574f2-3c81-4815-80cd-b02de200d48f
+# ╠═23e44664-0fa4-45ae-9e31-f1b92b13b4af
+# ╠═79d7ebd9-2bbf-4d7a-a9db-c572372d53e8
+# ╠═78731218-3130-4445-b238-73d12f949fb2
+# ╠═e21b95df-92d1-4b25-b249-b06098f9375d
+# ╠═77791e93-693e-46e2-a249-b8d201151aaf
+# ╠═eb50e25e-c0a1-4c3c-af90-a89ffb2cff8b
+# ╠═c9578ca4-dfd0-4ba8-b295-c3f25c41f22b
 # ╠═eea47692-d928-4b83-a8c9-acc69404f2b4
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
@@ -341,7 +434,7 @@ hist(walker09.RV)
 # ╠═8faa8822-26a0-4425-95a3-4c99d535adb4
 # ╠═d7f13c9e-67d7-412d-ae4b-d9064507a295
 # ╠═d0813914-d8ee-4173-bb40-2e1c0e6fe6c4
-# ╠═0b02c16f-6478-457e-8947-a43058308a49
+# ╟─0b02c16f-6478-457e-8947-a43058308a49
 # ╠═0df5f178-d644-4f5d-8e9d-05db24e9d535
 # ╠═4dd94c3f-1eba-42ee-afdc-1d4f0a594584
 # ╠═cd768c3d-7927-4b1c-9f67-90a2f1fc9ae5

@@ -160,7 +160,7 @@ let
 	
 	p = scatter!(rv_meas.xi, rv_meas.eta, color=rv_meas.delta_rv,
 			colormap=:bluesreds, 
-		colorrange=(-2, 2)
+		colorrange=(-4, 4)
 	  )
 
 	arrows!([0], [0], [20gsr0.pmra], [20gsr0.pmdec])
@@ -188,7 +188,7 @@ let
 
 	arrows!([0], [0], [-20pm_gsr_induced.pmra], [-20pm_gsr_induced.pmdec])
 	
-	Colorbar(fig[1,2], p, label="projection correction (km/s)")
+	Colorbar(fig[1,2], p, label="gsr correction (km/s)")
 
 	fig
 end
@@ -338,6 +338,12 @@ let
 	fig
 end
 
+# ╔═╡ 4599e728-52f1-41a4-b4d5-c0fa908d465e
+Δrv_tot = Measurements.value.(Δrv_gsr) .- (Δvs_gsr .- Δv)
+
+# ╔═╡ d7c3fea5-4504-4320-8dd4-d9bedf300fde
+scatter(vec(pm_axis) / 60, Measurements.value.(Δrv_solar .- Δrv_tot), alpha=0.1, markersize=1)
+
 # ╔═╡ 6a4018e6-1c62-4281-ac67-5ddb4e61a4d5
 let
 	fig = Figure()
@@ -442,5 +448,7 @@ end
 # ╠═3129a943-0a91-4bb0-8f19-9f964544ae23
 # ╠═26870502-1c37-4f18-b990-5acee5cbd646
 # ╠═dd5b64cf-0720-45ba-b241-adb1baa19324
+# ╠═4599e728-52f1-41a4-b4d5-c0fa908d465e
+# ╠═d7c3fea5-4504-4320-8dd4-d9bedf300fde
 # ╠═6a4018e6-1c62-4281-ac67-5ddb4e61a4d5
 # ╠═ebe93c7c-1a3e-46df-ba41-9786ae2d7535

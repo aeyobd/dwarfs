@@ -62,7 +62,6 @@ data_dir = "../data/"
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
 ## Data loading
-No need to filter further...
 """
 
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
@@ -129,32 +128,90 @@ filt_xmatch, idx_xmatch = RVUtils.xmatch(pace20_all, j24, 1)
 # ╔═╡ 686ede3b-fb97-434a-abe1-337759e45ff9
 sum(.!filt_xmatch)
 
+# ╔═╡ 032a02f9-1697-4f85-897c-a0f623a78da6
+begin
+	source_id = allowmissing(j24.source_id[idx_xmatch])
+	source_id[.!filt_xmatch] .= missing
+end
+
 # ╔═╡ dce22a0d-a7dc-4642-abdc-68f83b714e94
 pace20_all[.!filt_xmatch, :]
+
+# ╔═╡ ea6f5354-9e98-4b2b-ad26-4da839607fb6
+function get_f_best(source_id)
+	if ismissing(source_id)
+		return missing
+	end
+	if source_id ∉ j24.source_id
+		return missing
+	end
+	return j24.F_BEST[j24.source_id .== source_id] |> only
+end
+
+# ╔═╡ 3f6c0ba3-5f91-4c42-ba9a-833a8c3fa1d8
+F_match = get_f_best.(source_id) .=== 1.0
+
+# ╔═╡ cebb491c-88a2-47ae-b851-4a079b5066b7
+F_scatter = (pace20_all.RV_count .< 2) .|| (pace20_all.RV_sigma .< 3*pace20_all.RV_err .* sqrt.(pace20_all.RV_count))
 
 # ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
 df_out = let
 	df = copy(pace20_all)
-	source_id = allowmissing(j24.source_id[idx_xmatch])
-	source_id[.!filt_xmatch] .= missing
 
-	df[!, :source_id] .= source_id
+	df[!, :F_match] = F_match
+	df[!, :F_scatter] = F_scatter
+	df[!, :source_id] = source_id
 	df
 end
 
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
 write_fits("processed/rv_pace+20.fits", df_out, overwrite=true)
 
-# ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
-filt_memb = RVUtils.sigma_clip(pace20_all.RV, 3) .& (pace20_all.PdSph .> 0.5) .& .!ismissing.(pace20_all.PdSph)
+# ╔═╡ 93d77566-540e-478f-88e1-76814f193175
+md"""
+# Numbers
+"""
 
-# ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
-pace20_members = pace20_all[filt_memb, :]
+# ╔═╡ 02b17a2e-3bf9-4471-810c-78afa4a8403a
+sum(pace20_all.RV_count), length(pace20_raw.RV)
+
+# ╔═╡ 410b4a5c-0d64-4579-9a5e-312a6819be76
+length(pace20_all.RV)
+
+# ╔═╡ 5aef38da-cfea-4291-a021-34700ac874a7
+sum(F_scatter)
+
+# ╔═╡ 7ba28d8a-208e-473c-931b-a6ed33227db1
+sum(.!ismissing.(F_match))
+
+# ╔═╡ 11c198c8-1bcb-4112-b6ee-abc3b4cb4316
+sum(skipmissing(F_match))
+
+# ╔═╡ e6c02439-9043-452e-a4d5-306871b361ed
+sum(skipmissing(F_scatter .& F_match))
+
+# ╔═╡ c630d985-ee8a-4d75-8ebc-9e705712474a
+matched = j24[idx_xmatch, :]
+
+# ╔═╡ 8548b355-38f5-474c-b1e5-4b4fbfab4634
+mean(matched[matched.F_BEST .== 0.0, :F_CPAR])
+
+# ╔═╡ 55445dd0-6319-4307-8b8b-b76e9ae3b381
+mean(matched[matched.F_BEST .== 0.0, :F_INGRID])
+
+# ╔═╡ ee6a2453-33cb-47db-afcb-64db4e3ca0d8
+mean(matched[matched.F_BEST .== 0.0, :F_ASTROMETRIC])
 
 # ╔═╡ 4290a51e-961b-4b38-b954-1a65e946080c
 md"""
 # Plots
 """
+
+# ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
+filt_memb = RVUtils.sigma_clip(pace20_all.RV, 3) .& (pace20_all.PdSph .> 0.5) .& .!ismissing.(pace20_all.PdSph)
+
+# ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
+pace20_members = pace20_all[filt_memb, :]
 
 # ╔═╡ 5f71b8e9-5540-4431-8028-4ce14c8d7856
 let 
@@ -242,17 +299,23 @@ let
 	fig
 end
 
-# ╔═╡ cb601eee-fe86-4c85-987b-545bd4a010b4
-# ╠═╡ disabled = true
-#=╠═╡
-p_chi2 = pdf(Normal(), filter(isfinite, pace20_all.RV_sigma ./ pace20_all.RV_err))
-  ╠═╡ =#
-
 # ╔═╡ 9acb9827-3ee1-4e8a-bad9-f4207790fbb9
 p_chi2 = 1 .- cdf.(Chisq.(max.(1., pace20_all.RV_count .- 1)), pace20_all.RV_sigma .^ 2 ./ pace20_all.RV_err .^2)
 
 # ╔═╡ 55954f5d-0f0b-4106-bc0a-57c1cd280cdb
 hist(filter(isfinite, p_chi2[pace20_all.RV_count .> 1]))
+
+# ╔═╡ 2c303dcd-ef0b-49fd-8b47-380675063070
+scatter(1 ./ pace20_all.RV_err, filt_xmatch .+ rand(length(filt_xmatch)), alpha=0.1)
+
+# ╔═╡ 137cd49d-42cc-402d-a8bf-6883a9a071a4
+let 
+	fig, ax, p = hist(log10.(pace20_all.RV_err[filt_xmatch]))
+
+	stephist!(log10.(pace20_all.RV_err[.!filt_xmatch]), color=COLORS[2])
+
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -275,12 +338,27 @@ hist(filter(isfinite, p_chi2[pace20_all.RV_count .> 1]))
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═d321c481-0ceb-4e3b-b5fc-12af735155e3
 # ╠═686ede3b-fb97-434a-abe1-337759e45ff9
+# ╠═032a02f9-1697-4f85-897c-a0f623a78da6
 # ╠═dce22a0d-a7dc-4642-abdc-68f83b714e94
+# ╠═ea6f5354-9e98-4b2b-ad26-4da839607fb6
+# ╠═3f6c0ba3-5f91-4c42-ba9a-833a8c3fa1d8
+# ╠═cebb491c-88a2-47ae-b851-4a079b5066b7
 # ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
-# ╠═344f3c29-0873-4180-9025-51aeaeb2c681
-# ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
+# ╟─93d77566-540e-478f-88e1-76814f193175
+# ╠═02b17a2e-3bf9-4471-810c-78afa4a8403a
+# ╠═410b4a5c-0d64-4579-9a5e-312a6819be76
+# ╠═5aef38da-cfea-4291-a021-34700ac874a7
+# ╠═7ba28d8a-208e-473c-931b-a6ed33227db1
+# ╠═11c198c8-1bcb-4112-b6ee-abc3b4cb4316
+# ╠═e6c02439-9043-452e-a4d5-306871b361ed
+# ╠═c630d985-ee8a-4d75-8ebc-9e705712474a
+# ╠═8548b355-38f5-474c-b1e5-4b4fbfab4634
+# ╠═55445dd0-6319-4307-8b8b-b76e9ae3b381
+# ╠═ee6a2453-33cb-47db-afcb-64db4e3ca0d8
 # ╟─4290a51e-961b-4b38-b954-1a65e946080c
+# ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
+# ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
@@ -297,6 +375,7 @@ hist(filter(isfinite, p_chi2[pace20_all.RV_count .> 1]))
 # ╠═cb1b4342-2487-46fa-99ed-4cac8b74ee40
 # ╠═a11d26b6-8416-4983-afc0-629433a45cbc
 # ╠═88de547a-ec5d-446f-b092-0fa591d2709c
-# ╠═cb601eee-fe86-4c85-987b-545bd4a010b4
 # ╠═9acb9827-3ee1-4e8a-bad9-f4207790fbb9
 # ╠═55954f5d-0f0b-4106-bc0a-57c1cd280cdb
+# ╠═2c303dcd-ef0b-49fd-8b47-380675063070
+# ╠═137cd49d-42cc-402d-a8bf-6883a9a071a4

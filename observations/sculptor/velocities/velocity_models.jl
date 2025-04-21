@@ -132,6 +132,9 @@ end
 # ╔═╡ c3172fe0-d44a-4058-8018-52f3fdb703d4
 sum(.!ismissing.(rv_meas.RV_gmos))
 
+# ╔═╡ 85692f19-055d-4f02-a625-c8961398c081
+sum(rv_meas.F_RV)
+
 # ╔═╡ 59395e95-e04b-4782-b7d6-ef1945249b3f
 rv_meas[.!ismissing.(rv_meas.RV_gmos), :].LLR_nospace
 
@@ -321,29 +324,48 @@ samples_gradient = sample(normal_gradient(memb_stars.vz, memb_stars.RV_err, memb
 @savefig "gradient_corner" pairplot(samples_gradient)
 
 # ╔═╡ d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
-sqrt((0.073/0.017)^2 + (0.043 / 0.026)^2)
+
 
 # ╔═╡ 184b4a5d-cbab-44b2-9620-bf928ad81d0e
 df_gradient = DataFrame(samples_gradient)
 
+# ╔═╡ e231e3c8-4dab-48b6-9ce6-f814878576ad
+θ_grad = @. atand(df_gradient.A, df_gradient.B) 
+
+# ╔═╡ 9206bb2a-6d0b-47c6-9dbd-cf2b0f3c8495
+r_grad = @. df_gradient.A ⊕ df_gradient.B
+
+# ╔═╡ 26a171af-d941-4766-bbaf-0d7f58736fea
+hist(r_grad)
+
+# ╔═╡ db9fd064-63f1-4076-81cc-71ad404039e7
+hist(θ_grad)
+
+# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
+θ_m = median(θ_grad)
+
+# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
+xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m)
+
+
+# ╔═╡ c90bea9f-0efd-482e-88d8-114d68aed880
+ @. atand(-1, -1)
+
 # ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
 icrs0 = lguys.ICRS(obs_properties)
 
-# ╔═╡ 4a473039-79f0-4d77-aa0c-681e2fba4f4c
-gsr0 = lguys.transform(lguys.GSR, icrs0)
-
-# ╔═╡ ed35eb68-74f7-4009-9b68-dfca2ea547af
-pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
+# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
+vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 
 # ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 @savefig "v_gradient_derived" let
 	fig = Figure()
 
 	ax=Axis(fig[1,1];
-		  limits=(-12, 12, -12, 12), 
+		  limits=(-10, 10, -10, 10), 
 		  aspect=DataAspect(),
-		  xlabel = L"$\partial \,v_z / \partial \xi$ / km\,s$^{-1}$\,degree$^{-1}$",
-		  ylabel = L"$\partial \,v_z / \partial \eta$ / km\,s$^{-1}$\,degree$^{-1}$",
+		  xlabel = L"$\partial \,v_z / \partial\, \xi$ / km\,s$^{-1}$\,degree$^{-1}$",
+		  ylabel = L"$\partial \,v_z / \partial\, \eta$ / km\,s$^{-1}$\,degree$^{-1}$",
 		xreversed=true
 		 )
 	
@@ -352,11 +374,19 @@ pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.de
 	   )
 
 	scatter!(0, 0, color=:black)
-	arrows!([0], [0], [5gsr0.pmra], [5gsr0.pmdec])
-	arrows!([0], [0], [-5pm_gsr_induced.pmra], [-5pm_gsr_induced.pmdec])
+	arrows!([0], [0], [vec_pm[1]], [vec_pm[2]])
 
 	fig
 end
+
+# ╔═╡ af0d2050-b42e-4a7f-aabb-5b08d23381e9
+lguys.transform(ICRS, lguys.GSR(ra=icrs0.ra + 2/vec_pm[1] *cos(icrs0.dec), dec=icrs0.dec + 2/vec_pm[2], distance=icrs0.distance, radial_velocity=0)).radial_velocity  .- Δv_gsr
+
+# ╔═╡ 4a473039-79f0-4d77-aa0c-681e2fba4f4c
+gsr0 = lguys.transform(lguys.GSR, icrs0)
+
+# ╔═╡ ed35eb68-74f7-4009-9b68-dfca2ea547af
+pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
 
 # ╔═╡ 2a422e88-fc0d-4a89-a841-42f3c5c8dace
 import KernelDensity
@@ -441,7 +471,7 @@ end
 bins = bins_equal_number(memb_stars.R_ell, n=10)
 
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
-df_r_ell = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.RV, memb_stars.RV_err, bins)
+
 
 # ╔═╡ 0a79149b-a2bc-4c8a-a167-f1744c94df8a
 
@@ -491,10 +521,10 @@ md"""
 """
 
 # ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
-df_xi_p = calc_binned_mu_sigma(memb_stars.xi_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.xi, n=10))
+df_xi_p = calc_binned_mu_sigma(xi_rot, memb_stars.vz, memb_stars.vz_err, bins_equal_number(xi_rot, n=10))
 
 # ╔═╡ 090acae4-1209-49e6-882c-20ac2c972dd5
-df_eta_p = calc_binned_mu_sigma(memb_stars.eta_p, memb_stars.vz, memb_stars.vz_err, bins_equal_number(memb_stars.eta, n=10))
+df_eta_p = calc_binned_mu_sigma(eta_rot, memb_stars.vz, memb_stars.vz_err, bins_equal_number(eta_rot, n=10))
 
 # ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
 let
@@ -511,16 +541,26 @@ let
 end
 
 # ╔═╡ 3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
-let
+@savefig "vel_gradient_binned" let
 	fig, ax = FigAxis(
 		xlabel = L"$\xi$ / arcmin",
-		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
+		ylabel = L"$\mu_{v,z}$ / km s$^{-1}$"
 	)
 
 	errorscatter!(df_xi_p.x, df_xi_p.μ, yerror=df_xi_p.μ_err, color=:black)
 
+	for i in 1:40:size(df_gradient, 1)
+		M = df_gradient.B[i] .* sind(θ_m) .+ df_gradient.A[i] .* cosd(θ_m)
+		x=LinRange(-20, 20, 100)
+		y = M*x  .+ df_gradient.μ[i]
+		lines!(x, y, alpha=0.03, color=COLORS[1])
+	end
+			
 	fig
 end
+
+# ╔═╡ bf8a9940-1c8b-4fdd-a231-1861721ea8e9
+sind(θ_m), cosd(θ_m)
 
 # ╔═╡ 14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
 let
@@ -543,9 +583,14 @@ let
 
 	errorscatter!(df_xi_p.x, df_xi_p.σ, yerror=df_xi_p.σ_err, color=:black)
 
+
+		
 	@savefig "sigma_v_vs_eta_p"
 	fig
 end
+
+# ╔═╡ dbea26bd-539f-4eda-a4de-ed00efdc93a9
+df_gradient
 
 # ╔═╡ 1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 bin_errs = diff(bins) / 2
@@ -841,9 +886,10 @@ end
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
-# ╠═c28071fe-6077-43ad-b930-604483d5eb28
+# ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═c3172fe0-d44a-4058-8018-52f3fdb703d4
+# ╠═85692f19-055d-4f02-a625-c8961398c081
 # ╠═59395e95-e04b-4782-b7d6-ef1945249b3f
 # ╠═31a6c2e4-538c-4adc-bbda-5043680b17f7
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
@@ -881,7 +927,16 @@ end
 # ╠═e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
 # ╠═d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
 # ╠═184b4a5d-cbab-44b2-9620-bf928ad81d0e
+# ╠═c48bb30d-1186-4940-b061-91f53e8335e1
+# ╠═af0d2050-b42e-4a7f-aabb-5b08d23381e9
 # ╠═0ca7dc1b-3b41-4089-9c89-20c6e48213ea
+# ╠═e231e3c8-4dab-48b6-9ce6-f814878576ad
+# ╠═9206bb2a-6d0b-47c6-9dbd-cf2b0f3c8495
+# ╠═26a171af-d941-4766-bbaf-0d7f58736fea
+# ╠═db9fd064-63f1-4076-81cc-71ad404039e7
+# ╠═7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
+# ╠═3195286d-d85f-43a3-aa25-dae2134f570b
+# ╠═c90bea9f-0efd-482e-88d8-114d68aed880
 # ╠═4a473039-79f0-4d77-aa0c-681e2fba4f4c
 # ╠═88f2918e-e126-420a-96a2-5746a8010f73
 # ╠═ed35eb68-74f7-4009-9b68-dfca2ea547af
@@ -909,8 +964,10 @@ end
 # ╠═090acae4-1209-49e6-882c-20ac2c972dd5
 # ╠═fd0a74a1-6513-4612-8181-745d5b7c3f4c
 # ╠═3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
+# ╠═bf8a9940-1c8b-4fdd-a231-1861721ea8e9
 # ╠═14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
 # ╠═d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
+# ╠═dbea26bd-539f-4eda-a4de-ed00efdc93a9
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
 # ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
 # ╠═319bd778-7e17-4bd7-856f-d6785b287219

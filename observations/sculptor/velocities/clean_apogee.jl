@@ -42,25 +42,25 @@ import StatsBase: quantile, mean, std, median, kurtosis, sem
 # ╔═╡ 257caa92-ccce-44ff-88ee-6a9c550ae5d9
 CairoMakie.activate!(type=:png)
 
-# ╔═╡ dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
-not = !
-
 # ╔═╡ ef1bb6f5-00b8-405b-8702-244eca618644
 import DensityEstimators: histogram, calc_limits, make_bins
 
 # ╔═╡ 36634dea-21bc-4823-8a15-7bce20b6fc17
 import TOML
 
-# ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
-md"""
-# Loading data tables
-"""
-
 # ╔═╡ 9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
 module RVUtils
 	include("../../rv_utils.jl")
 	not = !
 end
+
+# ╔═╡ dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
+not = !
+
+# ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
+md"""
+# Loading data tables
+"""
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 data_dir = "../data/"
@@ -69,7 +69,10 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("..//processed/best_sample.fits")
+j24 = read_fits("..//data/jensen+24_wide.fits")
+
+# ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
+apogee_raw = read_fits("processed/apogee_xmatch.fits")
 
 # ╔═╡ c470c2b9-093d-42ab-b96d-9dac231ccabc
 md"""
@@ -80,12 +83,6 @@ md"""
 md"""
 APOGEE DR 17 sample from federico's paper is apogee_raw_2. I have also xmatched the field against apogee which I use for self-consistency.
 """
-
-# ╔═╡ 0e14808d-df92-419b-b272-f3a08f4b86b1
-apogee_raw_2 = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
-
-# ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
-apogee_raw = read_fits("processed/apogee_xmatch.fits")
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 begin 
@@ -111,19 +108,74 @@ end
 # ╔═╡ 961e230d-e549-49b5-a98c-aaa330fa42da
 @assert 0 == sum(apogee_all.RV_FLAG .> 0) # no need to include more flags
 
-# ╔═╡ bb57569e-0a4c-455e-b3c6-7bd2897bb843
-sum(apogee_raw.RV_FLAG .> 0)
+# ╔═╡ d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
+F_scatter = apogee_all.RV_sigma .< 3*apogee_all.RV_err
+
+# ╔═╡ 7af6703b-7d03-444b-8298-3f154029cdfb
+
+
+# ╔═╡ 67774169-2271-4f21-8487-333834953fd6
+sum(F_scatter)
+
+# ╔═╡ baa419cb-6d24-4291-9dca-4d03f9da192b
+function get_f_best(source_id)
+	if source_id ∉ j24.source_id
+		return missing
+	end
+	return j24.F_BEST[j24.source_id .== source_id] |> only
+end
+
+# ╔═╡ aa66b278-c408-49f4-b7e5-232341d98c3e
+F_best = get_f_best.(apogee_all.source_id)
+
+# ╔═╡ 79834054-efb7-4201-af5f-2e5c12647655
+j24[5003142467501861888 .== j24.source_id, :F_BEST]
+
+# ╔═╡ 16559e75-f1b7-4078-a176-cb44e30942dd
+F_match = .!ismissing.(apogee_all.source_id) .& (F_best .== 1.0)
+
+# ╔═╡ f1742d6c-effc-465e-bbea-5c89ac575241
+sum(F_match)
+
+# ╔═╡ 013dcaf5-36f0-4bf1-bbd0-5facc465e30e
+sum(F_scatter .& F_match)
+
+# ╔═╡ 9c2f80c3-83ff-465b-9f1d-577661f1aa2f
+sum(apogee_all.RV_count)
+
+# ╔═╡ 14094089-b9cd-464c-82aa-a41be8fc1bbf
+df_out = let
+	df = copy(apogee_all)
+	df[!, :F_scatter] = F_scatter
+	df[!, :F_match] = F_match
+	df
+end
+
+# ╔═╡ 5e4b0dc9-63eb-4cb1-8db4-798e10c24f78
+leftjoin(apogee_all, j24, on=:source_id, makeunique=true).source_id .== df_out.source_id
+
+# ╔═╡ f9299a56-8cc6-434b-aa60-781712f54f7a
+df_out[5003142467501861888 .== df_out.source_id, :F_match]
+
+# ╔═╡ 2b36f7bc-fcb5-4b7a-ad8a-0fa48883f7ad
+F_best[5003142467501861888 .== df_out.source_id]
 
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
-write_fits("processed/rv_apogee.fits", apogee_all, overwrite=true)
+write_fits("processed/rv_apogee.fits", df_out, overwrite=true)
 
 # ╔═╡ 59a20996-7b90-4afd-818a-fffd8029350f
 md"""
 # Plots and analysis
 """
 
+# ╔═╡ bb57569e-0a4c-455e-b3c6-7bd2897bb843
+sum(apogee_raw.RV_FLAG .> 0)
+
+# ╔═╡ 0e14808d-df92-419b-b272-f3a08f4b86b1
+apogee_raw_2 = CSV.read("$data_dir/sculptor_apogeeDR17_xmatch.csv", DataFrame)
+
 # ╔═╡ bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
-filt_apogee = RVUtils.sigma_clip(apogee_all.RV, 3)
+filt_apogee = RVUtils.sigma_clip(apogee_all.RV, 3) .& F_scatter .& F_match
 
 # ╔═╡ 4d63430e-f59c-4c68-97e1-7eaa5679e55f
 apogee = apogee_all[filt_apogee, :]
@@ -156,11 +208,20 @@ hist(filter(isfinite, apogee.fe_h))
 # ╔═╡ 5dafeaad-df9e-4558-99a7-721bdb91d28d
 hist(apogee.RV_err)
 
+# ╔═╡ 68960b6f-081b-46c1-8e27-8fda8a0521ee
+hist(apogee.RV_err .* sqrt.(apogee.RV_count))
+
 # ╔═╡ 949bdb6a-4554-4659-b0d3-7e669f470c10
 hist(apogee.RV_sigma)
 
 # ╔═╡ fba487be-22a5-43b3-9ac5-8505462b7d56
-hist(apogee.RV_sigma ./ (apogee.RV_err .* sqrt.(apogee.RV_count) ))
+hist(apogee_all.RV_sigma ./ (apogee_all.RV_err ))
+
+# ╔═╡ 4f230076-cad7-425a-8156-ca47e7f6c911
+hist(apogee.RV_sigma ./ (apogee.RV_err ))
+
+# ╔═╡ 8bd988f3-884f-430b-b30c-3efc2ecbdd9c
+hist(apogee.SNR)
 
 # ╔═╡ 27063de7-01d4-48a8-a06f-cc24aec662d2
 md"""
@@ -228,39 +289,56 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 
 
 # ╔═╡ Cell order:
-# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
-# ╠═05c93bf4-0f94-44cc-9aab-7c6193831806
+# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
+# ╠═05c93bf4-0f94-44cc-9aab-7c6193831806
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═2f5ca80c-d98d-45cc-a661-834002b620f6
 # ╠═257caa92-ccce-44ff-88ee-6a9c550ae5d9
-# ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 # ╠═ef1bb6f5-00b8-405b-8702-244eca618644
 # ╠═7ed5bcf5-dfc3-4e79-a608-d503124a1e96
 # ╠═36634dea-21bc-4823-8a15-7bce20b6fc17
 # ╠═e67ec69b-cfd1-4da7-8f0a-3c1a30f6f48c
-# ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
+# ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
+# ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
+# ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╟─45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
-# ╠═0e14808d-df92-419b-b272-f3a08f4b86b1
-# ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
-# ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
+# ╠═d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
+# ╠═7af6703b-7d03-444b-8298-3f154029cdfb
+# ╠═67774169-2271-4f21-8487-333834953fd6
+# ╠═baa419cb-6d24-4291-9dca-4d03f9da192b
+# ╠═aa66b278-c408-49f4-b7e5-232341d98c3e
+# ╠═5e4b0dc9-63eb-4cb1-8db4-798e10c24f78
+# ╠═79834054-efb7-4201-af5f-2e5c12647655
+# ╠═f9299a56-8cc6-434b-aa60-781712f54f7a
+# ╠═2b36f7bc-fcb5-4b7a-ad8a-0fa48883f7ad
+# ╠═16559e75-f1b7-4078-a176-cb44e30942dd
+# ╠═f1742d6c-effc-465e-bbea-5c89ac575241
+# ╠═013dcaf5-36f0-4bf1-bbd0-5facc465e30e
+# ╠═9c2f80c3-83ff-465b-9f1d-577661f1aa2f
+# ╠═14094089-b9cd-464c-82aa-a41be8fc1bbf
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─59a20996-7b90-4afd-818a-fffd8029350f
+# ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
+# ╠═0e14808d-df92-419b-b272-f3a08f4b86b1
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═4d63430e-f59c-4c68-97e1-7eaa5679e55f
 # ╠═bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
 # ╠═1bc2541c-69ac-40aa-94f5-743707ca5a66
 # ╠═63792b12-dde2-4361-88b2-1f5a789631ff
 # ╠═5dafeaad-df9e-4558-99a7-721bdb91d28d
+# ╠═68960b6f-081b-46c1-8e27-8fda8a0521ee
 # ╠═949bdb6a-4554-4659-b0d3-7e669f470c10
 # ╠═fba487be-22a5-43b3-9ac5-8505462b7d56
+# ╠═4f230076-cad7-425a-8156-ca47e7f6c911
+# ╠═8bd988f3-884f-430b-b30c-3efc2ecbdd9c
 # ╟─27063de7-01d4-48a8-a06f-cc24aec662d2
 # ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
 # ╠═6009cc0e-6936-4589-85aa-dd2864948b7c

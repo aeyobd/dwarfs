@@ -89,17 +89,13 @@ rv0 = obs_properties["radial_velocity"] .- RVUtils.rv_gsr_shift(obs_properties["
 # ╔═╡ 03636f8d-0fc9-4f20-8a84-b92f9bd27ffb
 f_sat = mean(j24.PSAT)
 
+# ╔═╡ 5b752b84-39a7-483d-96dd-a9107e330308
+rv_meas_all = read_fits("processed/rv_combined.fits")
+
+
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
-begin 
-	rv_meas = read_fits("processed/rv_combined.fits")
-
-	filter!(x->!ismissing(x["RV_$study"]), rv_meas)
-
-
-	rv_meas[!, :xi_p], rv_meas[!, :eta_p] = lguys.to_orbit_coords(rv_meas.ra, rv_meas.dec, obs_properties["ra"], obs_properties["dec"], θ_orbit)
-
-	rv_meas[!, :xi_p] .*= 60
-	rv_meas[!, :eta_p] .*= 60
+rv_meas = let 
+	rv_meas = filter(x->!ismissing(x["RV_$study"]), rv_meas_all)
 
 	
 	rv_meas[:, :RV] = rv_meas[!, "RV_$study"]
@@ -126,6 +122,8 @@ begin
 	
 	rv_meas[:, :RV_sigma] .= rv_meas[!, "RV_sigma_$study"]
 	rv_meas[:, :RV_count] .= rv_meas[!, "RV_count_$study"]
+	rv_meas[:, :F_RV] .= rv_meas[:, "F_scatter_$study"]
+	rv_meas[:, :F_match] .= rv_meas[:, "F_match_$study"]
 
 	rv_meas[:, :L_RV_SAT] = RVUtils.L_RV_SAT.(rv_meas.vz, rv_meas.RV_err, rv0, σv)
 	rv_meas[:, :L_RV_BKD] = RVUtils.L_RV_BKD.(rv_meas.vz, rv_meas.ra, rv_meas.dec)
@@ -133,6 +131,23 @@ begin
 	rv_meas[:, :PSAT_RV] = RVUtils.PSAT_RV(rv_meas, f_sat)
 	rv_meas
 end
+
+# ╔═╡ 811088e4-1ae4-467d-907d-242db314e08c
+md"""
+## counts
+"""
+
+# ╔═╡ 196845bf-5959-4223-9e39-75afa8cb5f0b
+sum(rv_meas.RV_count)
+
+# ╔═╡ e93d0bc6-ba43-465b-bec2-e1b1b1e24d10
+sum(rv_meas.F_RV)
+
+# ╔═╡ 1166808e-972f-4867-8a96-f84315aba7f6
+sum(rv_meas.F_match)
+
+# ╔═╡ c0fb98ca-bf95-451f-bb96-29a5c0b30730
+sum(rv_meas.F_match .& rv_meas.F_RV)
 
 # ╔═╡ c28071fe-6077-43ad-b930-604483d5eb28
 md"""
@@ -143,9 +158,13 @@ md"""
 begin 
 	memb_filt = rv_meas.PSAT_RV .> 0.2# ignore spatial 
 	memb_filt .&= rv_meas.F_RV
+	memb_filt .&= rv_meas.F_match
 
 	memb_filt
 end
+
+# ╔═╡ 616f378a-3063-41fc-8fdd-513c0bae9803
+sum(memb_filt)
 
 # ╔═╡ 59395e95-e04b-4782-b7d6-ef1945249b3f
 
@@ -313,9 +332,6 @@ samples_gsr = DataFrame(sample(RVUtils.model_vel_1c(memb_stars.vz, memb_stars.vz
 # ╔═╡ 3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 pairplot(samples_gsr[:, [:μ, :σ]])
 
-# ╔═╡ 0eafe553-4434-4b2b-9646-912ac99beccf
-
-
 # ╔═╡ d321f8ac-1044-45ec-8e1c-a2d8395b6917
 # ╠═╡ disabled = true
 #=╠═╡
@@ -327,6 +343,9 @@ icrs = lguys.ICRS(ra=obs_properties["ra"], dec=obs_properties["dec"], pmdec=obs_
 
 # ╔═╡ 212cee31-a04d-47c1-b56e-4a7b06322b99
 median(samples_gsr.μ) + Δv
+
+# ╔═╡ 0eafe553-4434-4b2b-9646-912ac99beccf
+median(samples_gsr.μ .+ Δv)
 
 # ╔═╡ 931ed52e-5e7a-4692-b568-ae26ea44b638
 #=╠═╡
@@ -383,11 +402,8 @@ df_gradient = DataFrame(samples_gradient)
 # ╔═╡ f506e011-6b13-4529-b6d2-305e1b00205d
 icrs0 = lguys.ICRS(obs_properties)
 
-# ╔═╡ d6a6ee30-ae1f-461c-a67b-c4b599246120
-gsr0 = lguys.transform(lguys.GSR, icrs0)
-
-# ╔═╡ ceb1d7cb-2430-415d-98ea-a0b5ef1a4a42
-pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
+# ╔═╡ 2e904b39-5b9b-4b9f-9497-7aabd648f7b2
+vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 
 # ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 @savefig "v_gradient_derived" let
@@ -396,8 +412,8 @@ pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.de
 	ax=Axis(fig[1,1];
 		  limits=(-12, 12, -12, 12), 
 		  aspect=DataAspect(),
-		  xlabel = L"$\partial \,v_z / \partial \xi$ / km\,s$^{-1}$\,degree$^{-1}$",
-		  ylabel = L"$\partial \,v_z / \partial \eta$ / km\,s$^{-1}$\,degree$^{-1}$",
+		  xlabel = L"$\partial \,v_z / \partial\,\xi$ / km\,s$^{-1}$\,degree$^{-1}$",
+		  ylabel = L"$\partial \,v_z / \partial\,\eta$ / km\,s$^{-1}$\,degree$^{-1}$",
 		xreversed=true
 		 )
 	
@@ -406,11 +422,16 @@ pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.de
 	   )
 
 	scatter!(0, 0, color=:black)
-	arrows!([0], [0], [5gsr0.pmra], [5gsr0.pmdec])
-	arrows!([0], [0], [-5pm_gsr_induced.pmra], [-5pm_gsr_induced.pmdec])
+	arrows!([0], [0], [vec_pm[1]], [vec_pm[2]])
 
 	fig
 end
+
+# ╔═╡ d6a6ee30-ae1f-461c-a67b-c4b599246120
+gsr0 = lguys.transform(lguys.GSR, icrs0)
+
+# ╔═╡ ceb1d7cb-2430-415d-98ea-a0b5ef1a4a42
+pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
 
 # ╔═╡ 0bab042f-ecc5-46be-8a68-d510e650862c
 # ╠═╡ disabled = true
@@ -507,7 +528,7 @@ end
 bins = bins_equal_number(memb_stars.R_ell, n=10)
 
 # ╔═╡ c50f68d7-74c3-4c36-90c5-a5262982ed9f
-df_r_ell = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.RV, memb_stars.RV_err, bins, μ_0_prior=Δv)
+
 
 # ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.RV_err, bins)
@@ -518,20 +539,6 @@ function scatter_range!(df_r_ell)
 	
 	errorbars!(df_r_ell.x, df_r_ell.μ .+ df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x,  direction = :x, color=:black)
 	errorbars!(df_r_ell.x, df_r_ell.μ .- df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x, direction = :x, color=:black)
-end
-
-# ╔═╡ 86776e68-d47f-43ed-b37f-432c864050bb
-let
-	fig, ax = FigAxis(
-		xlabel = "R / arcmin",
-		ylabel = L"RV / km s$^{-1}$"
-	)
-
-	scatter!(memb_stars.R_ell, memb_stars.RV, color=COLORS[3], alpha=0.1)
-
-	scatter_range!(df_r_ell)
-
-	fig
 end
 
 # ╔═╡ e05ec20a-3165-4360-866e-3e8cae8665e5
@@ -566,7 +573,7 @@ let
 		ylabel = L"RV / km s$^{-1}$"
 	)
 
-	scatter!(memb_stars.xi, memb_stars.radial_velocity_gsr, color=COLORS[3], alpha=0.1)
+	scatter!(xi_p, memb_stars.radial_velocity_gsr, color=COLORS[3], alpha=0.1)
 
 	scatter_range!(df_xi_p)
 
@@ -735,7 +742,14 @@ end
 # ╠═e391b59d-b8d9-4726-8e4d-8476f6d62800
 # ╠═cd71ec9b-4b8c-47ca-a0c8-3c6cbc257927
 # ╠═03636f8d-0fc9-4f20-8a84-b92f9bd27ffb
+# ╠═5b752b84-39a7-483d-96dd-a9107e330308
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
+# ╠═811088e4-1ae4-467d-907d-242db314e08c
+# ╠═196845bf-5959-4223-9e39-75afa8cb5f0b
+# ╠═e93d0bc6-ba43-465b-bec2-e1b1b1e24d10
+# ╠═1166808e-972f-4867-8a96-f84315aba7f6
+# ╠═c0fb98ca-bf95-451f-bb96-29a5c0b30730
+# ╠═616f378a-3063-41fc-8fdd-513c0bae9803
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═59395e95-e04b-4782-b7d6-ef1945249b3f
@@ -777,6 +791,7 @@ end
 # ╠═e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
 # ╠═d2143947-1cd2-4ec6-b88e-ef6e0caa2c78
 # ╠═184b4a5d-cbab-44b2-9620-bf928ad81d0e
+# ╠═2e904b39-5b9b-4b9f-9497-7aabd648f7b2
 # ╠═0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 # ╠═f506e011-6b13-4529-b6d2-305e1b00205d
 # ╠═d6a6ee30-ae1f-461c-a67b-c4b599246120
@@ -799,7 +814,6 @@ end
 # ╠═c50f68d7-74c3-4c36-90c5-a5262982ed9f
 # ╠═f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 # ╠═38da4da1-74f5-4661-89f2-4b25562a1faf
-# ╠═86776e68-d47f-43ed-b37f-432c864050bb
 # ╠═e05ec20a-3165-4360-866e-3e8cae8665e5
 # ╠═f82d2ff7-7a7f-4520-811e-126f3f4f5349
 # ╟─31aa8fc5-1415-4c44-9b92-a7d097181639

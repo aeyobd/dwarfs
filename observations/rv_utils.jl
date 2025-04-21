@@ -151,10 +151,12 @@ end
 
 Remove missing values from the array and exclude values outside of low and high.
 """
-function filt_missing(col; low=-Inf, high=Inf)
+function filt_missing(col; low=-Inf, high=Inf, verbose=true)
 	filt =  @. !ismissing(col) && !isnan(col)
 	filt1 = high .> col .> low
-    @info "excluding $(sum(.!(filt1)[filt])) outliers"
+    if verbose
+        @info "excluding $(sum(.!(filt1)[filt])) outliers"
+    end
 
 	return filt .& filt1
 end
@@ -198,17 +200,18 @@ function rv_correction(ra, dec, ra0, dec0, pmra, pmdec, distance)
 end
 
 
+@doc raw"""
+    rv_correction(ra, dec, coord)
+
+Compute the correction to add to GSR velocities (if coord is GSR)
+or ICRS velocities (if coord is ICRS) to move to satellite $v_z$ frame.
 """
-    L_RV_SAT(RV, RV_err, μ, σ)
-
-Compute the likelihood of a star belonging to the satellite 
-based on its radial velocity, assuming a normal distribution.
-""" 
-function L_RV_SAT(RV::Real, RV_err::Real, μ_v::Real, σ_v::Real)
-    σ = sqrt(σ_v^2 + RV_err^2)
-    return pdf(Normal(μ_v, σ), RV)
+function rv_correction(ra, dec, coord::lguys.AbstractSkyCoord)
+    ra0 = Measurements.value(coord.ra)
+    dec0 = Measurements.value(coord.dec)
+    return rv_correction(ra, dec, ra0, dec0, 
+                         coord.pmra, coord.pmdec, coord.distance)
 end
-
 
 
 """
@@ -223,14 +226,25 @@ end
 
 
 """
+    L_RV_SAT(RV, RV_err, μ, σ)
+
+Compute the likelihood of a star belonging to the satellite 
+based on its radial velocity, assuming a normal distribution.
+""" 
+function L_RV_SAT(RV::Real, RV_err::Real, μ_v::Real, σ_v::Real)
+    σ = sqrt(σ_v^2 + RV_err^2)
+    return pdf(Normal(μ_v, σ), RV)
+end
+
+
+"""
     L_RV_BKD(rv::Real, ra0, dec0)
 
 Compute the likelihood of the velocity assuming 
 a halo velocity dispersion of 100 km/s and mean velocity
 stationary given the gsr radial velocity.
 """
-function L_RV_BKD(rv::Real, ra0::Real, dec0::Real)
-    σ = 100
+function L_RV_BKD(rv::Real; σ=100)
     return pdf(Normal(0, σ), rv)
 end
 
@@ -248,6 +262,20 @@ function PSAT_RV(rv_meas::DataFrame, f_sat)
     return @. f_sat * L_SAT / (f_sat * L_SAT + (1-f_sat) * L_BKD)
 end
 
+
+"""
+    add_PSAT_RV!(df; sigma_v, radial_velocity_gsr, f_sat, σ_halo=100)
+
+Add PSAT column including radial velocity information and likelihoods
+`L_RV_SAT` and `L_RV_BKD`
+"""
+function add_PSAT_RV!(df::DataFrame; sigma_v::Real, radial_velocity_gsr::Real, f_sat::Real, σ_halo=100)
+    df[!, :L_RV_SAT] = L_RV_SAT(df.v_z, df.v_z_err, radial_velocity_gsr, sigma_v)
+    df[!, :L_RV_BKD] = L_RV_BKD(df.v_z, σ=σ_halo)
+    df[!, :PSAT_RV] = PSAT_RV(df, f_sat)
+
+    df
+end
 
 
 """
@@ -296,9 +324,75 @@ function get_error(df, key)
 end
 
 
-function icrs(df::AbstractDict)
+function icrs(df::AbstractDict; add_sigma_pm_int=true)
+    σ_pm = lguys.kms2pm(df["sigma_v"], df["distance"])
+    @info "σ_pm = $σ_pm"
+
     kwargs = Dict(
               Symbol(key) =>  df[key]  ± get_error(df, key) for key in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"]
              )
+
+    if add_sigma_pm_int
+        for k in ["pmra", "pmdec"]
+            kwargs[Symbol(k)] = df[k] ± (get_error(df, k) ⊕ σ_pm)
+        end
+    end
+
     return lguys.ICRS(;kwargs...)
+end
+
+
+
+function add_rv_means!(all_stars, all_studies)
+
+	for col in [:RV, :RV_err, :RV_sigma]
+		all_stars[!, col] .= 0.
+		allowmissing!(all_stars, col)
+	end
+	
+	all_stars[!, :RV_count] .= 0
+	all_stars[!, :RV_nstudy] .= 0
+	
+	for (i, row) in enumerate(eachrow(all_stars))
+		xs = [row["RV_$study"] for study in all_studies]
+		xs_err = [row["RV_err_$study"] for study in all_studies]
+		xs_sigma = [row["RV_sigma_$study"] for study in all_studies]
+		xs_count = [row["RV_count_$study"] for study in all_studies]
+
+		m, m_err, m_sigma, m_count = safe_weighted_mean(xs, xs_err, xs_sigma, xs_count)
+		n_study = sum(.!ismissing.(xs))
+
+
+		all_stars[i, :RV] = m
+		all_stars[i, :RV_err] = m_err
+		all_stars[i, :RV_sigma] = m_sigma
+		all_stars[i, :RV_count] = m_count
+		all_stars[i, :RV_nstudy] = n_study
+	end
+
+
+	all_stars
+end
+
+function sem_inv_var_weights(weights)
+    return 1 / sqrt(sum(weights))
+end
+
+function safe_weighted_mean(values, errors, sigmas, counts)
+	filt = filt_missing(values, verbose=false)
+	filt .&= filt_missing(errors, verbose=false)
+	if sum(filt) == 0
+		return missing, missing, missing, 0
+	end
+
+	w = disallowmissing(1 ./ errors[filt] .^ 2)
+	x = disallowmissing(values[filt])
+	n = disallowmissing(counts[filt])
+
+	x_mean = lguys.mean(x, w)
+    std_err = sem_inv_var_weights(w)
+	sigma = lguys.std(x, w)
+	counts_tot = sum(n)
+	
+	return x_mean, std_err, sigma, counts_tot 
 end

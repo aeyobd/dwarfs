@@ -68,6 +68,9 @@ No need to filter further...
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
+# ╔═╡ c4649b4e-f8b3-4b2c-8595-5dc9a3a302da
+j24 = read_fits("../data/jensen+24_wide.fits")
+
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 
 begin 
@@ -90,19 +93,64 @@ begin
 	tolstoy23_all = tolstoy23_all
 end
 
+# ╔═╡ 6c8d1b6d-9e4c-4f70-aa84-ac5869cb04e3
+function get_f_best(source_id)
+	if source_id ∉ j24.source_id
+		return missing
+	end
+	return j24.F_BEST[j24.source_id .== source_id] |> only
+end
+
+# ╔═╡ 6ce17cfa-66c8-4666-873f-95e68f7c236b
+F_best = get_f_best.(tolstoy23_all.source_id)
+
+# ╔═╡ 449ed8cb-4d6e-44db-b8c3-66aba7a3a29a
+sum(ismissing.(F_best))
+
+# ╔═╡ 10cce492-1457-46ef-a3a5-f034f5d1f147
+F_match = (F_best .== 1.0)
+
+# ╔═╡ 957ae76e-aa8f-4e72-999a-d560b7530183
+F_scatter = tolstoy23_all.RV_sigma .< 3*tolstoy23_all.RV_err .* sqrt.(tolstoy23_all.RV_count)
+
+# ╔═╡ 95a9a1c0-e2ed-40c3-837e-cd148ce6bafa
+df_out = let
+	df = copy(tolstoy23_all)
+	df[!, :F_scatter] = F_scatter
+	df[!, :F_match] = F_match
+	df
+end
+
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
-write_fits("processed/rv_tolstoy+23.fits", tolstoy23_all, overwrite=true)
+write_fits("processed/rv_tolstoy+23.fits", df_out, overwrite=true)
+
+# ╔═╡ 6e60c7bb-717d-49fa-bbe7-a9c7ad66c318
+md"""
+# Numbers
+"""
+
+# ╔═╡ 7dcf1c37-b7c1-4d91-bcd6-6ca6c0af49ae
+sum(F_match)
+
+# ╔═╡ ab5799d7-e67e-4d06-9e33-775f93c4f493
+sum(F_scatter)
+
+# ╔═╡ 93b3e664-608b-4c03-9ebf-0b01a243df83
+sum(F_scatter .& F_match)
+
+# ╔═╡ 859ca55e-ea29-451b-8528-1e4e3eb08c53
+sum(tolstoy23_all.RV_count)
+
+# ╔═╡ 4290a51e-961b-4b38-b954-1a65e946080c
+md"""
+# Plots
+"""
 
 # ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
 filt_tolstoy = RVUtils.sigma_clip(tolstoy23_all.RV, 3) .& (tolstoy23_all.Mem .== "m")
 
 # ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
 tolstoy23 = tolstoy23_all[filt_tolstoy, :]
-
-# ╔═╡ 4290a51e-961b-4b38-b954-1a65e946080c
-md"""
-# Plots
-"""
 
 # ╔═╡ 76dc33cd-110a-42e6-bd72-65ba6b7bf85a
 scatter(tolstoy23.S_N, tolstoy23.RV_err .- tolstoy23.RV_err_orig)
@@ -130,6 +178,21 @@ end
 hist((collect ∘ skipmissing)(tolstoy23_all.fe_h),
 	 axis = (; xlabel = "[Fe/H]")
 	)
+
+# ╔═╡ 2eebfca4-e364-467f-a1b3-c1cfab2822e6
+chi2 = @. tolstoy23_all.RV_sigma^2 ./ tolstoy23_all.RV_err^2 
+
+# ╔═╡ 542551c0-d131-4ef8-aa19-69caf531027f
+filt_chi2 = tolstoy23_all.RV_count .> 1
+
+# ╔═╡ 0743be9f-e215-4f87-b9d1-d453c06349c8
+p_chi2 = @. 1 - cdf(Chisq(tolstoy23_all.RV_count[filt_chi2] - 1), chi2[filt_chi2])
+
+# ╔═╡ 28e07273-2177-408c-aabf-2f9ecf16b155
+hist(p_chi2)
+
+# ╔═╡ 67e33e9f-fab3-4fe3-9418-992b50ef8431
+hist(tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)
 
 # ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
 model = RVUtils.model_vel_1c(tolstoy23.RV, tolstoy23.RV_err)
@@ -254,15 +317,32 @@ CSV.write("processed/rv_dart.csv", df_summary_dart)
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
+# ╠═c4649b4e-f8b3-4b2c-8595-5dc9a3a302da
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
+# ╠═6c8d1b6d-9e4c-4f70-aa84-ac5869cb04e3
+# ╠═6ce17cfa-66c8-4666-873f-95e68f7c236b
+# ╠═449ed8cb-4d6e-44db-b8c3-66aba7a3a29a
+# ╠═10cce492-1457-46ef-a3a5-f034f5d1f147
+# ╠═957ae76e-aa8f-4e72-999a-d560b7530183
+# ╠═95a9a1c0-e2ed-40c3-837e-cd148ce6bafa
 # ╠═f71152ad-d576-4205-bece-92c85783c089
+# ╟─6e60c7bb-717d-49fa-bbe7-a9c7ad66c318
+# ╠═7dcf1c37-b7c1-4d91-bcd6-6ca6c0af49ae
+# ╠═ab5799d7-e67e-4d06-9e33-775f93c4f493
+# ╠═93b3e664-608b-4c03-9ebf-0b01a243df83
+# ╠═859ca55e-ea29-451b-8528-1e4e3eb08c53
+# ╟─4290a51e-961b-4b38-b954-1a65e946080c
 # ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
-# ╟─4290a51e-961b-4b38-b954-1a65e946080c
 # ╠═76dc33cd-110a-42e6-bd72-65ba6b7bf85a
 # ╠═c8e08e37-60d8-4f14-adea-f6f93017cbb9
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
+# ╠═2eebfca4-e364-467f-a1b3-c1cfab2822e6
+# ╠═542551c0-d131-4ef8-aa19-69caf531027f
+# ╠═0743be9f-e215-4f87-b9d1-d453c06349c8
+# ╠═28e07273-2177-408c-aabf-2f9ecf16b155
+# ╠═67e33e9f-fab3-4fe3-9418-992b50ef8431
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
 # ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9

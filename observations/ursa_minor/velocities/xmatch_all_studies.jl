@@ -248,8 +248,17 @@ plot_xmatch_radec("s18")
 # ╔═╡ f7213298-3dcb-49ac-a9f0-a129a03423aa
 plot_xmatch_radec("graces")
 
+# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
+@savefig "p20_s18_xmatch" compare_rv("p20", "s18")
+
 # ╔═╡ 609f55cd-aa49-4a5e-b871-413ec7ef0990
 import StatsBase as sb
+
+# ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
+@savefig "s18_apogee" compare_rv("s18", "apogee")
+
+# ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
+@savefig "apogee_w09_xmatch" compare_rv("apogee", "p20")
 
 # ╔═╡ a488eeb2-bf24-408e-a2ba-7df1b305a2b8
 md"""
@@ -676,15 +685,6 @@ function compare_rv(study1, study2)
 	lines!([μ0-3σ0, μ0+3σ0], [μ0-3σ0, μ0+3σ0], color=:black)
 	return fig
 end
-
-# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
-@savefig "p20_s18_xmatch" compare_rv("p20", "s18")
-
-# ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
-@savefig "s18_apogee" compare_rv("s18", "apogee")
-
-# ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
-@savefig "apogee_w09_xmatch" compare_rv("apogee", "p20")
 
 # ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
 compare_rv_mean("apogee", memb_stars)

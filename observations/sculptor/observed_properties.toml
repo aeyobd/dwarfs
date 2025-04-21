@@ -23,7 +23,7 @@ radial_velocity = 111.2
 radial_velocity_err = 0.2
 radial_velocity_ref = "this"
 
-sigma_v = 9.67
+sigma_v = 9.69
 sigma_v_err = 0.16
 sigma_v_ref = "this"
 
