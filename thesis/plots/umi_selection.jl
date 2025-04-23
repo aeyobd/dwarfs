@@ -87,7 +87,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/rv_members.fits")
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_members_all.fits")
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""

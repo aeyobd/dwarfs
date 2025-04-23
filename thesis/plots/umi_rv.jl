@@ -10,24 +10,31 @@ begin
 
 	FIGDIR = "figures"
 
-	import PythonCall
 	using LilGuys
 	using CairoMakie
 	using Arya
-
 end
 
-# ╔═╡ 4c551542-92dc-4a61-b4aa-e272fd29d565
-stars = LilGuys.read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/processed/rv_members.fits")
+# ╔═╡ 5df6928e-59aa-4f38-ba3a-6428855934ec
+using PyFITS
 
-# ╔═╡ 0eac8d32-eb66-458d-a668-18492e658901
-stars_good = filter(x->isfinite(x.VZ), stars)
+# ╔═╡ 6562dd6e-397b-4632-bc44-f227201d9012
+using KernelDensity
+
+# ╔═╡ 880b78c0-574f-454e-ad81-4525aa8d9713
+include("./paper_style.jl")
+
+# ╔═╡ 2603c7eb-936c-417c-a1ce-df1bf129f888
+include("utils.jl")
 
 # ╔═╡ 88025a55-f541-4aa1-8426-14e83bd790b7
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 63d5e3f6-6cec-4e50-8fa1-8907508aa47f
 import TOML
+
+# ╔═╡ 4c551542-92dc-4a61-b4aa-e272fd29d565
+stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_members_all.fits")
 
 # ╔═╡ b2f9ed4b-52be-4eeb-a419-d6406148e6c3
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", "ursa_minor", "observed_properties.toml"))
@@ -39,55 +46,269 @@ gsr = LilGuys.transform(GSR, ICRS(obs_props))
 v0 = gsr.radial_velocity
 
 # ╔═╡ 87c47d8f-4639-49ca-a4e7-467f583c2e3e
-δv = 5 * obs_props["sigma_v"]
-
-# ╔═╡ 940549d0-666e-4238-bda8-ceb2fece356f
-v0 + δv
+σv =  obs_props["sigma_v"]
 
 # ╔═╡ 0e7ed733-f30b-4e5d-88b3-211b454125b3
-extrema(stars.VZ[isfinite.(stars.VZ)])
+extrema(stars.vz)
 
-# ╔═╡ ef53825e-879f-41e4-891e-11133ffbe80d
-isfinite.(stars.VZ)
+# ╔═╡ 88fbbe64-e5a1-489e-9cf3-8882bc650417
+hist(stars.vz, bins=60)
 
-# ╔═╡ 90e396c1-8bae-475e-8638-3634bc271cdf
-colorrange = (v0 - δv, v0 + δv)
+# ╔═╡ 6343f079-f595-4969-889d-e734c7ad4878
+import StatsBase: weights
 
-# ╔═╡ 8ae4ddda-79eb-43f9-ae68-c6cb691f366f
-@savefig "umi_v_z_obs_scatter" let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = L"$\xi$ / arcmin",
-		ylabel = L"$\eta$ / arcmin",
-		aspect = DataAspect(),
+# ╔═╡ bcff6bcf-f59c-47e9-9dd2-40f4dcaa4d1d
+r_max = 60
+
+# ╔═╡ 1d6d4397-2f2e-43d2-9761-3100b2a31018
+outside_bins = .!( (-r_max .< stars.xi .< r_max) .& (-r_max .< stars.eta .< r_max))
+
+# ╔═╡ 1523b300-076f-48e3-8c65-1a493a17433b
+skipmissing(stars.RV_graces) |> collect
+
+# ╔═╡ 5e44fbcc-aa87-4ccf-a149-8d75575cb50d
+df_gmos = stars[.!ismissing.(stars.RV_graces), :]
+
+# ╔═╡ 762ab1b8-7cbe-4b37-8e81-cb3024bc5f40
+tangent_bins = -r_max:5:r_max
+
+# ╔═╡ 4a17d821-ae04-45e9-ab37-0a4962f4a153
+pm_gradient = LilGuys.pm2kms.([gsr.pmra, gsr.pmdec], gsr.distance) ./ (180/π)
+
+# ╔═╡ 3acdf5f0-02bd-4836-8e93-f8bae1d95243
+scatter(stars.xi, stars.eta, axis=(;
 		xreversed=true,
-		#limits = (-50, 50, -50, 50)
-	)
-			
-	p = voronoiplot!(stars_good.xi, stars_good.eta, color = stars_good.VZ, colormap=:redsblues, markersize=2, strokewidth = 0, colorrange=colorrange, show_generators=false)
-	
-	scatter!(stars_good.xi, stars_good.eta, color = :black, markersize=1, alpha=0.5, strokewidth=0)
+		aspect=DataAspect(),
+		))
 
-	Colorbar(fig[1,2], p, label = L"$v_z$ / km\,s$^{-1}$")
+# ╔═╡ 5fce21b3-a4bb-4e47-a4e8-7a02c7590a9f
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi\ /\ \textrm{arcmin}",
+		ylabel = L"\eta\ /\ \textrm{arcmin}",
+		aspect=DataAspect(),
+		xreversed=true,
+		limits=(-80, 90, -80, 80)
+	)
+
+	n_min = 3
+	memb_stars = stars
+
+
+	dv = memb_stars.vz .- v0
+	x = memb_stars.xi
+	y = memb_stars.eta
+	w = 1 ./ memb_stars.vz_err .^ 2
+
+	colorrange=(-3σv, 3σv)
+
+	k1 = Arya.histogram2d(x, y, tangent_bins, weights= w .* dv)
+	k2 = Arya.histogram2d(x, y, tangent_bins, weights=w)
+	k3 = Arya.histogram2d(x, y, tangent_bins)
+
+	k1.values ./= k2.values
+	k1.values[k3.values .< n_min] .= NaN
+
+
+	scatter!(x, y,
+		color = dv,
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		markersize=5.
+	)
+
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		rasterize=true,
+		)
+
+	arrows!([0], [0], [3pm_gradient[1]], 3pm_gradient[2], linewidth=2, arrowsize=8)
+	# arrows!([0], [0], [5derived_gradient[1]], 5derived_gradient[2])
+	
+	Colorbar(fig[1, 2], p, label=L"$(v_{z} - \bar{v}_z)$ / km/s",)
+
+	ellipse!(1obs_props["r_h"], obs_props["ellipticity"], obs_props["position_angle"], color=:black)
+	text!(-20, -22, text=L"R_h")
+	@savefig "umi_rv_2dhist"
 	fig
 end
 
-# ╔═╡ 64b5fd2b-e87e-4cbe-833d-900f6332a7ee
-LilGuys.pm2kms(0.001, obs_props["distance"])
+# ╔═╡ 0b19e9e2-e7f4-427b-a784-52401f5b94ff
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi\ /\ \textrm{arcmin}",
+		ylabel = L"\eta\ /\ \textrm{arcmin}",
+		aspect=DataAspect(),
+		xreversed=true,
+		limits=(-70, 70, -60, 60)
+	)
+
+	n_min = 3
+	memb_stars = stars
+
+
+	dv = memb_stars.vz .- v0
+	x = memb_stars.xi
+	y = memb_stars.eta
+
+	colorrange=(-3σv, 3σv)
+
+	k1 = Arya.histogram2d(x, y, tangent_bins, weights= dv)
+	k3 = Arya.histogram2d(x, y, tangent_bins)
+
+	k1.values ./= k3.values
+	k1.values[k3.values .< n_min] .= NaN
+
+	scatter!(x, y,
+		color = dv,
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		markersize=3.
+	)
+
+
+	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		rasterize=true,
+		)
+
+	Colorbar(fig[1, 2], p, label=L"$v_{z} - \bar{v}_z$ / km/s",
+)
+	fig
+end
+
+# ╔═╡ 0d32dc0e-ab0e-46d9-9f51-0684c41d97d1
+import DensityEstimators as DE
+
+# ╔═╡ 4a4b77de-f1dd-408f-9707-06f62420db8f
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi\ /\ \textrm{arcmin}",
+		ylabel = L"\eta\ /\ \textrm{arcmin}",
+		aspect=DataAspect(),
+		xreversed=true,
+		limits=(-70, 70, -60, 60)
+	)
+
+	density_min = 3e-5
+	memb_stars = stars
+
+
+	dv = memb_stars.vz .- v0
+	x = memb_stars.xi
+	y = memb_stars.eta
+	w = 1 ./ memb_stars.vz_err .^ 0
+
+	colorrange=(-3σv, 3σv)
+	bandwidth=2
+
+	bins = 100
+	xlims = (-60, 60)
+	ylims = (-60, 60)
+	k1 = DE.kde2d(x, y, bandwidth, weights= w .* dv, bins=bins, limits=(xlims, ylims))
+	k2 = DE.kde2d(x, y,bandwidth,  weights=w, bins=bins, limits=(xlims, ylims))
+	k3 = DE.kde2d(x, y,bandwidth,  bins=bins,limits=(xlims, ylims) )
+
+	density = k1.values  ./ k2.values
+	density[k3.values .< density_min] .= NaN
+
+	@info density
+
+	scatter!(x, y,
+		color = dv,
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		markersize=5.
+	)
+
+
+	p = heatmap!(k1.x, k1.y, density, 
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		rasterize=true,
+		)
+
+	Colorbar(fig[1, 2], p, label=L"$v_{z} - \bar{v}_z$ / km/s",
+)
+	fig
+end
+
+# ╔═╡ 16ea0587-7f70-405c-a556-0f1b2991ba5b
+let
+	fig, ax = FigAxis(
+		xlabel = L"\xi\ /\ \textrm{arcmin}",
+		ylabel = L"\eta\ /\ \textrm{arcmin}",
+		aspect=DataAspect(),
+		xreversed=true,
+		limits=(-70, 70, -60, 60)
+	)
+
+	density_min =0 
+	memb_stars = stars
+
+
+	dv = memb_stars.vz .- v0
+	x = memb_stars.xi
+	y = memb_stars.eta
+	w = 1 ./ memb_stars.vz_err .^ 0
+
+	colorrange=(-3σv, 3σv)
+	bandwidth=DE.bandwidth_knn(x, y; η=3, k=3)
+
+	bins = 100
+	xlims = (-70, 70)
+	ylims = (-60, 60)
+	k1 = DE.kde2d(x, y, bandwidth, weights= w .* dv, bins=bins, limits=(xlims, ylims))
+	k2 = DE.kde2d(x, y,bandwidth,  weights=w, bins=bins, limits=(xlims, ylims))
+	k3 = DE.kde2d(x, y,bandwidth, bins=bins,limits=(xlims, ylims) )
+
+	density = k1.values ./ k2.values 
+	density[k3.values .< density_min] .= NaN
+
+
+	p = heatmap!(k1.x, k1.y, density, 
+		colormap=:bluesreds,
+		colorrange=colorrange,
+		rasterize=true,
+		)
+
+	# scatter!(x, y, color=dv, strokecolor=:grey, strokewidth=0.2, markersize=1,
+	# 		colorrange=colorrange, colormap=:bluesreds
+	# 		)
+
+	Colorbar(fig[1, 2], p, label=L"$v_{z} - \bar{v}_z$ / km/s",
+)
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
-# ╠═4c551542-92dc-4a61-b4aa-e272fd29d565
-# ╠═0eac8d32-eb66-458d-a668-18492e658901
 # ╠═88025a55-f541-4aa1-8426-14e83bd790b7
+# ╠═5df6928e-59aa-4f38-ba3a-6428855934ec
 # ╠═63d5e3f6-6cec-4e50-8fa1-8907508aa47f
+# ╠═880b78c0-574f-454e-ad81-4525aa8d9713
+# ╠═4c551542-92dc-4a61-b4aa-e272fd29d565
 # ╠═b2f9ed4b-52be-4eeb-a419-d6406148e6c3
 # ╠═1f07b964-a443-4f70-abf5-35512f9d6b69
 # ╠═23989a87-6aad-4ca1-bd49-f6f13977234b
 # ╠═87c47d8f-4639-49ca-a4e7-467f583c2e3e
-# ╠═940549d0-666e-4238-bda8-ceb2fece356f
 # ╠═0e7ed733-f30b-4e5d-88b3-211b454125b3
-# ╠═ef53825e-879f-41e4-891e-11133ffbe80d
-# ╠═90e396c1-8bae-475e-8638-3634bc271cdf
-# ╠═8ae4ddda-79eb-43f9-ae68-c6cb691f366f
-# ╠═64b5fd2b-e87e-4cbe-833d-900f6332a7ee
+# ╠═88fbbe64-e5a1-489e-9cf3-8882bc650417
+# ╠═6343f079-f595-4969-889d-e734c7ad4878
+# ╠═bcff6bcf-f59c-47e9-9dd2-40f4dcaa4d1d
+# ╠═1d6d4397-2f2e-43d2-9761-3100b2a31018
+# ╠═1523b300-076f-48e3-8c65-1a493a17433b
+# ╠═5e44fbcc-aa87-4ccf-a149-8d75575cb50d
+# ╠═762ab1b8-7cbe-4b37-8e81-cb3024bc5f40
+# ╠═4a17d821-ae04-45e9-ab37-0a4962f4a153
+# ╠═3acdf5f0-02bd-4836-8e93-f8bae1d95243
+# ╠═2603c7eb-936c-417c-a1ce-df1bf129f888
+# ╠═5fce21b3-a4bb-4e47-a4e8-7a02c7590a9f
+# ╠═0b19e9e2-e7f4-427b-a784-52401f5b94ff
+# ╠═6562dd6e-397b-4632-bc44-f227201d9012
+# ╠═4a4b77de-f1dd-408f-9707-06f62420db8f
+# ╠═16ea0587-7f70-405c-a556-0f1b2991ba5b
+# ╠═0d32dc0e-ab0e-46d9-9f51-0684c41d97d1

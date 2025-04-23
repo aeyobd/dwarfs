@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -162,9 +162,6 @@ md"""
 ## double checks
 """
 
-# ╔═╡ 01b3135f-7a72-4669-b586-4bc5894464ad
-sum(filt_is_meas)
-
 # ╔═╡ d11edca7-b9ae-4269-9e1b-661d59bd965e
 all_stars[.!ismissing.(all_stars.RV_gmos), :].source_id
 
@@ -220,17 +217,11 @@ md"""
 We want to remove stars with statistically large standard deviations. If our interstudy std is > 5 times sqrt(n) times the standard error, we have a problem
 """
 
-# ╔═╡ 9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
-sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma), 
-	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(rv_meas.RV_nstudy)),
-	0.				
-	)
+# ╔═╡ d7a1abbf-21bb-4aee-9f8e-9204b9bd1ead
+p_chi2 = RVUtils.prob_chi2.(rv_meas.RV_sigma, rv_meas.RV_err, rv_meas.RV_nstudy )
 
-# ╔═╡ d665895c-9a97-4c36-9ea9-c6e30d0a17ad
-mean(sigma_sigma .> 5)
-
-# ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
-F_qual_inter = sigma_sigma .< 5
+# ╔═╡ e7c0edd6-770d-40db-8619-b5c471569fb6
+F_scatter = @. isnan(p_chi2) || (p_chi2 > 0.001)
 
 # ╔═╡ c833ebb2-9f5e-4fb4-b812-dbc7fe57d8b5
 function filter_qual_study(rv_meas, study)
@@ -250,27 +241,24 @@ end
 F_qual_study = filter_qual_study(rv_meas, "w09") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "t23")
 
 # ╔═╡ 73a41773-39bc-4bd5-9d99-39804000631a
-F_qual = F_qual_study .& F_qual_inter
+F_qual = F_qual_study .& F_scatter
 
-# ╔═╡ 5c86f548-4838-41e1-b9af-fdd93d900940
-sum(.!F_qual)
-
-# ╔═╡ 870571f3-f201-47fd-a215-995a416bc223
-sum(.!F_qual_study)
+# ╔═╡ 462a80cb-bfef-47db-a812-65b927fd56d0
+md"""
+Below histogram should be uniform except binaries at low end. Appears to be slight overdensity approaching low psat but reasonable for this analysis.
+"""
 
 # ╔═╡ 06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		yscale=log10, yticks=Makie.automatic,
-		xlabel = "log sigma / std",
+		xlabel = "p_chi2",
 		ylabel = "count",
-			  limits=(-3, nothing, nothing, nothing)
 			 )
 
 	
-	hist!(filter(isfinite, log10.(sigma_sigma)), bins=120)
-	vlines!(log10(5), color=COLORS[2])
+	hist!(filter(isfinite, p_chi2), bins=120)
+	vlines!(0.001, color=COLORS[2])
 
 	fig
 
@@ -321,6 +309,37 @@ let
 	write_fits(filename, rv_meas)
 	@info "wrote data"
 end
+
+# ╔═╡ 23d894e1-d976-45d0-bacb-286cc0d6915c
+md"""
+# Counts
+"""
+
+# ╔═╡ ad832280-d456-411d-9199-47a1a2909c79
+sum(rv_meas.RV_count)
+
+# ╔═╡ 2ce6f17b-38f4-4a60-8e11-510650b83f04
+length(rv_meas.RV)
+
+# ╔═╡ 768bb669-2f9a-41f6-97c5-23f0bba9be9c
+sum(rv_meas.F_scatter )
+
+# ╔═╡ 7bd42254-0601-47e0-9243-c3dfb625d549
+md"""
+# Alternative filtering
+"""
+
+# ╔═╡ 9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
+sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma), 
+	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(rv_meas.RV_nstudy)),
+	0.				
+	)
+
+# ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
+F_scatter_old = sigma_sigma .< 5
+
+# ╔═╡ 8d3d1c17-cd9d-4696-8e4f-bf90a6517ea3
+(rv_meas.RV_sigma ./ rv_meas.RV_err)[.!F_scatter] # number of sigma for filtered stars
 
 # ╔═╡ 89552b84-d12e-4d88-a58e-8b89ad4b2569
 md"""
@@ -376,12 +395,6 @@ function filt_missing(col, verbose=false; low=-Inf, high=Inf)
 	end
 	return filt .& filt1
 end
-
-# ╔═╡ a13a33f1-65c4-4217-8636-639b1e14d109
-sum(filt_missing(rv_meas[:, "RV_err_w09"]))
-
-# ╔═╡ ee3c22db-6b6b-4c30-8d1f-86b103c018fc
-sum(filt_missing(walker09_all.RV_err))
 
 # ╔═╡ 609f55cd-aa49-4a5e-b871-413ec7ef0990
 import StatsBase as sb
@@ -712,12 +725,9 @@ end
 # ╠═da2b6b47-47ac-4b00-900a-67642b92b795
 # ╠═73bd1553-e2ae-4bfb-aac1-0880346f5054
 # ╟─76d38672-0a84-449e-bc21-83f3bba01d26
-# ╠═a13a33f1-65c4-4217-8636-639b1e14d109
-# ╠═ee3c22db-6b6b-4c30-8d1f-86b103c018fc
-# ╠═01b3135f-7a72-4669-b586-4bc5894464ad
 # ╠═d11edca7-b9ae-4269-9e1b-661d59bd965e
-# ╟─5da98e0d-8ba5-4ed9-aa83-4755ba43aef7
 # ╠═0d2dbc73-1ded-46e3-b142-9bc7b777728d
+# ╟─5da98e0d-8ba5-4ed9-aa83-4755ba43aef7
 # ╟─8f243944-3d0b-48ce-9f90-8d448c089239
 # ╠═bd51fe42-7e39-4cd8-8065-58ab9814f966
 # ╠═ab49efb3-2ab7-47d0-a3a5-a342c789aa9b
@@ -729,14 +739,12 @@ end
 # ╠═0f50ae12-e207-4748-9c45-780c9215be73
 # ╟─22564a47-9b03-4778-b30c-d092581ec107
 # ╟─4cda9764-f208-4532-b51f-5deb62992467
-# ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
-# ╠═d665895c-9a97-4c36-9ea9-c6e30d0a17ad
-# ╠═15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
+# ╠═d7a1abbf-21bb-4aee-9f8e-9204b9bd1ead
+# ╠═e7c0edd6-770d-40db-8619-b5c471569fb6
 # ╠═73a41773-39bc-4bd5-9d99-39804000631a
 # ╠═dcec54f8-27b4-405e-a386-6e07470dc073
-# ╠═870571f3-f201-47fd-a215-995a416bc223
-# ╠═5c86f548-4838-41e1-b9af-fdd93d900940
 # ╠═c833ebb2-9f5e-4fb4-b812-dbc7fe57d8b5
+# ╟─462a80cb-bfef-47db-a812-65b927fd56d0
 # ╠═06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
 # ╟─db3177e7-7132-4f62-846a-f4416a804009
 # ╠═02c55b13-5681-475b-bead-9e0e0b9e9656
@@ -750,6 +758,14 @@ end
 # ╟─6a406ddc-3fe9-40ff-adcf-9e2e429016a7
 # ╠═2ecbc309-2b17-4e75-a09b-6483b8b0a711
 # ╠═615f05fb-4907-40bc-9251-3065f565929b
+# ╠═23d894e1-d976-45d0-bacb-286cc0d6915c
+# ╠═ad832280-d456-411d-9199-47a1a2909c79
+# ╠═2ce6f17b-38f4-4a60-8e11-510650b83f04
+# ╠═768bb669-2f9a-41f6-97c5-23f0bba9be9c
+# ╟─7bd42254-0601-47e0-9243-c3dfb625d549
+# ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
+# ╠═15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
+# ╠═8d3d1c17-cd9d-4696-8e4f-bf90a6517ea3
 # ╟─89552b84-d12e-4d88-a58e-8b89ad4b2569
 # ╠═e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 # ╠═5b2fceff-9c3e-472d-9310-31e920137e41

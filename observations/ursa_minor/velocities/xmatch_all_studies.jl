@@ -85,7 +85,11 @@ apogee_all = read_fits("processed/rv_apogee.fits")
 pace20_all = let
 	df = read_fits("processed/rv_pace+20.fits")
 
-	df = df[.!ismissing.(df.source_id), :]
+	df = df[df.F_match, :]
+
+	df[:, :RV_sigma] = replace(df[:, :RV_sigma], missing=>NaN)
+	disallowmissing!(df, :RV_sigma)
+	df
 end
 
 # ╔═╡ ed332de8-9524-43b6-8863-9742aa9be293
@@ -95,10 +99,14 @@ unique(pace20_all.source_id)
 spencer18_all_missing = read_fits("processed/rv_spencer+18.fits")
 
 # ╔═╡ 15f2a8e2-90df-48a9-a7bf-e86955f566ce
-spencer18_all = filter(x->.!ismissing(x.source_id),spencer18_all_missing)
+spencer18_all = let
+	df = filter(x->x.F_match,spencer18_all_missing)
 
-# ╔═╡ cd229322-5222-4b9c-8ab0-23b3cf1fa56c
-readdir("processed")
+	df[:, :RV_sigma] = replace(df[:, :RV_sigma], missing=>NaN)
+	disallowmissing!(df, :RV_sigma)
+
+	df
+end
 
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
 graces = let 
@@ -119,28 +127,88 @@ md"""
 # Combined stars
 """
 
+# ╔═╡ 38a57561-0b99-4cec-8e35-11811bef72a0
+all_studies = ["graces", "apogee", "p20", "s18"]
+
 # ╔═╡ fe6fa910-f41e-4657-836b-7eda2f0cddb2
 function add_xmatch!(df, new, suffix)
 	leftjoin!(df, rename(n->"$(n)_$suffix", new), on="source_id"=>"source_id_$suffix")
 end
 
-# ╔═╡ 77ccf2bc-692c-42a9-a4fb-0efb7612294f
-length(unique(pace20_all.source_id)), length(pace20_all.source_id)
-
-# ╔═╡ ff644334-bf90-49e4-a3da-fc4ecc840929
-length(unique(apogee_all.source_id))
+# ╔═╡ 00a539fb-e9e4-4f9a-8983-f35c3b73d761
+md"""
+### double checks
+"""
 
 # ╔═╡ 8f243944-3d0b-48ce-9f90-8d448c089239
 md"""
 double check we have all stars
 """
 
-# ╔═╡ 0c6c6d84-fb14-4eaf-858e-22fb90ab4d8d
-@assert length(unique(spencer18_all.source_id)) == length(spencer18_all.source_id)
-
 # ╔═╡ 04ff1abd-c584-41de-8c83-7503482c3731
 md"""
+- are any gaia RVs included?
 Gaia stars are too bright to be members :(
+"""
+
+# ╔═╡ 22564a47-9b03-4778-b30c-d092581ec107
+md"""
+# Quality flag
+"""
+
+# ╔═╡ 4cda9764-f208-4532-b51f-5deb62992467
+md"""
+We want to remove stars with statistically large standard deviations.  If our interstudy std is > 5 times sqrt(n) times the standard error, we have a problem
+"""
+
+# ╔═╡ 40d26853-0d5e-4d55-9a5e-564da1722f33
+function filter_qual_study(rv_meas, study)
+	map(eachrow(rv_meas)) do row
+		if ismissing(row["RV_sigma_$study"])
+			return true
+		elseif isnan(row["RV_sigma_$study"])
+			return true
+		else
+			return row["F_scatter_$study"] 
+		end
+
+	end
+end
+
+# ╔═╡ db3177e7-7132-4f62-846a-f4416a804009
+md"""
+# write data
+"""
+
+# ╔═╡ 7faa2813-e502-4187-855a-047a2f5dd48d
+σ_pm = lguys.kms2pm(obs_properties["sigma_v"], obs_properties["distance"])
+
+# ╔═╡ 0e098399-85ae-4cdf-9d82-654a9fd1cd35
+icrs0 = RVUtils.icrs(obs_properties)
+
+# ╔═╡ 42fa6c2c-c9cd-4b0d-b1be-701a2db318ee
+gsr0 = lguys.transform(lguys.GSR, icrs0)
+
+# ╔═╡ 4d3cd232-81c0-4c32-bfc9-7ba8098d2e4d
+icrs0.ra, icrs0.dec, icrs0.pmra, icrs0.pmdec, icrs0.distance, icrs0.radial_velocity
+
+# ╔═╡ b48ef722-072d-4c9c-bcd2-6d7c07bd068d
+gsr0.ra, gsr0.dec, gsr0.pmra, gsr0.pmdec, gsr0.distance, gsr0.radial_velocity
+
+# ╔═╡ 24d67978-1013-40ed-b2ff-37eec77c00fc
+md"""
+- We have to remove a few problematic columns
+"""
+
+# ╔═╡ a23adf32-8854-422a-8b7b-2b625132b9f2
+import Dates
+
+# ╔═╡ da2b045f-e767-486c-a999-0838a2dbae87
+
+
+# ╔═╡ c90a03c9-1da2-4bd3-bff8-c620b1bc98a2
+md"""
+# Numbers
 """
 
 # ╔═╡ 89552b84-d12e-4d88-a58e-8b89ad4b2569
@@ -170,13 +238,13 @@ end
 σ0 = obs_properties["sigma_v"]
 
 # ╔═╡ 395118d9-f171-43e8-a1da-ed9aa72efbad
-v_shift_p20 = -0.9
+v_shift_p20 = -1.1
 
 # ╔═╡ d06637b0-4167-40ff-8012-db7e66fe3394
-v_shift_s18 = 1.0
+v_shift_s18 = 1.1
 
 # ╔═╡ 070de76a-e917-48ab-8efe-52f665ceca2f
-v_shift_apogee = -0.2
+v_shift_apogee = 0
 
 # ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
 all_stars = let
@@ -194,24 +262,131 @@ all_stars = let
 		:dr2_radial_velocity => "RV_gaia",
 		:dr2_radial_velocity_error => "RV_err_gaia",
 	)
+
+	RVUtils.add_rv_means!(all_stars, all_studies)
+
 	all_stars
 
 end
+
+# ╔═╡ 50bf826f-c50c-4465-8a85-2dad998d44cb
+filt_is_meas = all_stars.RV_nstudy .> 0
+
+# ╔═╡ 8ca865a2-6521-4e14-ae16-cf5b6a2622ec
+rv_meas = all_stars[filt_is_meas, :]
+
+# ╔═╡ 77ccf2bc-692c-42a9-a4fb-0efb7612294f
+@assert length(pace20_all.source_id) == sum(pace20_all.F_match) == sum(.!ismissing.(rv_meas.RV_p20))
+
+# ╔═╡ 0c6c6d84-fb14-4eaf-858e-22fb90ab4d8d
+@assert length(spencer18_all.source_id) == sum(spencer18_all.F_match) ==  sum(.!ismissing.(rv_meas.RV_s18))
+
+# ╔═╡ f6ebd104-84c7-4f86-ab58-acb65ebc789a
+sum(skipmissing(rv_meas.F_scatter_s18))
+
+# ╔═╡ ea333b79-abb0-4827-991f-e2c370bdb0be
+sum(skipmissing(.!ismissing.(rv_meas.RV_err_gaia) .* (rv_meas.PSAT .> 001)))
+
+# ╔═╡ 9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
+sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma), 
+	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(rv_meas.RV_nstudy)),
+	0.				
+	)
+
+# ╔═╡ d665895c-9a97-4c36-9ea9-c6e30d0a17ad
+mean(sigma_sigma .> 5)
+
+# ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
+F_qual_inter = sigma_sigma .< 5
+
+# ╔═╡ 06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		yscale=log10, yticks=Makie.automatic,
+		xlabel = "log sigma / std",
+		ylabel = "count",
+			  limits=(-3, nothing, nothing, nothing)
+			 )
+
+	
+	hist!(filter(isfinite, log10.(sigma_sigma)), bins=120)
+	vlines!(log10(5), color=COLORS[2])
+
+	fig
+
+end
+
+# ╔═╡ dcec54f8-27b4-405e-a386-6e07470dc073
+F_qual_study = filter_qual_study(rv_meas, "s18") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "p20")
+
+# ╔═╡ 73a41773-39bc-4bd5-9d99-39804000631a
+F_qual = F_qual_study .& F_qual_inter
+
+# ╔═╡ 5c86f548-4838-41e1-b9af-fdd93d900940
+sum(.!F_qual)
+
+# ╔═╡ 870571f3-f201-47fd-a215-995a416bc223
+sum(.!F_qual_study)
+
+# ╔═╡ 21daa18e-88c3-43ee-8dfa-ea8d116e5ff4
+sum(.!ismissing.(rv_meas.RV_graces))
+
+# ╔═╡ 6ea1eff9-14d4-459c-b086-199e0aaf84f0
+Δrv = RVUtils.rv_correction(rv_meas.ra, rv_meas.dec, gsr0)
+
+# ╔═╡ 2ecbc309-2b17-4e75-a09b-6483b8b0a711
+hist(Measurements.uncertainty.(Δrv) ./ rv_meas.RV_err, bins=100)
+
+# ╔═╡ fd8a7210-ad46-400d-8ef1-d46c75b210c3
+df_out = let
+	df = copy(rv_meas)
+
+	df[!, :F_scatter] = F_qual
+	df[!, :delta_rv] = Measurements.value.(Δrv)
+	df[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
+
+	df
+end
+
+# ╔═╡ 57568618-1323-46bc-a8ef-53eb95fc2929
+col_filt2 = eltype.(eachcol(df_out)) .∉ Ref(
+	[Union{Missing, Dates.Time}, 
+	 Missing,
+	Union{Missing, String7},
+	Union{Missing, String15}])
+
+# ╔═╡ 615f05fb-4907-40bc-9251-3065f565929b
+let
+	filename = "processed/rv_combined.fits"
+	
+	write_fits(filename, df_out[:, col_filt2], overwrite=true)
+	@info "wrote data"
+end
+
+# ╔═╡ 4e52deab-26c0-43e1-b2b0-5b7477737801
+names(df_out)[.!col_filt2]
+
+# ╔═╡ 6737a85e-55d5-4f0b-b14e-4866af3bc605
+eltype.(eachcol(df_out[:, .!col_filt2]))
+
+# ╔═╡ e08185ba-dba2-421c-801d-7acb387756ef
+length(df_out.RV)
+
+# ╔═╡ a7fd3ec2-964b-4cbb-a2dd-dee99cf33c03
+median(df_out.RV_err)
+
+# ╔═╡ 53fcc27a-700b-4b67-9ba6-3d4613edfb7b
+sum(df_out.RV_count)
+
+# ╔═╡ 5f3f4b6b-11c3-4c87-96e5-22bf6170f170
+sum(df_out.F_scatter)
 
 # ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
 all_stars[.!ismissing.(all_stars.RV_graces), [:ra, :dec, :source_id, :pmra, :pmdec, :PSAT]]
 
 # ╔═╡ bd51fe42-7e39-4cd8-8065-58ab9814f966
- sum(.!ismissing.(all_stars.RV_apogee)), length(apogee_all.RV)
-
-# ╔═╡ ab49efb3-2ab7-47d0-a3a5-a342c789aa9b
-length(spencer18_all.source_id),  sum(.!ismissing.(all_stars.RV_s18))
-
-# ╔═╡ de762a39-b430-4452-ba87-8b8cf1ad9852
-length(pace20_all.RV), sum(.!ismissing.(all_stars.RV_p20))
-
-# ╔═╡ 0f50ae12-e207-4748-9c45-780c9215be73
-sum(skipmissing(.!ismissing.(all_stars.RV_err_gaia) .* (all_stars.PSAT .> 001)))
+ @assert sum(apogee_all.F_match) == sum(.!ismissing.(all_stars.RV_apogee)) 
 
 # ╔═╡ e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 function plot_xmatch_radec(suffix)
@@ -248,253 +423,11 @@ plot_xmatch_radec("s18")
 # ╔═╡ f7213298-3dcb-49ac-a9f0-a129a03423aa
 plot_xmatch_radec("graces")
 
-# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
-@savefig "p20_s18_xmatch" compare_rv("p20", "s18")
-
 # ╔═╡ 609f55cd-aa49-4a5e-b871-413ec7ef0990
 import StatsBase as sb
 
-# ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
-@savefig "s18_apogee" compare_rv("s18", "apogee")
-
-# ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
-@savefig "apogee_w09_xmatch" compare_rv("apogee", "p20")
-
-# ╔═╡ a488eeb2-bf24-408e-a2ba-7df1b305a2b8
-md"""
-# Combining observations
-"""
-
-# ╔═╡ d3333b48-aa4e-42c1-9e0a-bbff98e3647d
-all_studies = ["graces", "apogee", "p20", "s18"]
-
-# ╔═╡ 8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
-function safe_weighted_mean(values, errors, sigmas, counts)
-	filt = filt_missing(values)
-	filt .&= filt_missing(errors)
-	if sum(filt) == 0
-		return missing
-	end
-
-	w = disallowmissing(1 ./ errors[filt] .^ 2)
-	x = disallowmissing(values[filt])
-	n = disallowmissing(counts[filt])
-
-	x_mean = LilGuys.mean(x, w)
-	std_err = sqrt(1/sum(w))
-	sigma = LilGuys.std(x, w)
-	counts_tot = sum(n)
-	
-	return x_mean, std_err, sigma, counts_tot 
-end
-
-# ╔═╡ aee8f66c-ff93-496e-a21d-48faefd75a43
-function sigma_interstudy(values, errors, sigmas, counts)
-	filt = filt_missing(values)
-	filt .&= filt_missing(errors)
-	if sum(filt) == 0
-		return missing
-	end
-
-	w = disallowmissing(1 ./ errors[filt] .^ 2)
-	x = disallowmissing(values[filt])
-	n = disallowmissing(counts[filt])
-	s = disallowmissing(sigmas[filt])
-
-	m = LilGuys.mean(x, w)
-	ss_individual = @. s^2 * (n-1)
-	ss_individual[isnan.(ss_individual)] .= 0
-	ss_between = sum((x .- m) .^ 2 .* n)
-
-	std_err = sqrt(1/sum(w))
-	
-	counts_tot = sum(n)
-	sigma = sqrt((ss_between + sum(ss_individual) )/ (counts_tot - 1))
-	return sigma 
-end
-
-# ╔═╡ d3ef6a98-8770-4359-9e37-94f08d2d9aa5
-safe_weighted_mean([1.0, 2.0], [0.2, 0.1], [0., 0.,], [1., 1.])
-
-# ╔═╡ 78d39e37-44b5-4171-ab45-0672f607b517
-sqrt(1/(1/0.2^2 + 1/0.1^2))
-
-# ╔═╡ 88ed48b4-baa9-4ac0-86e1-8348edcd59b4
-begin 
-	rvs = [all_stars[:, "RV_$study"] for study in all_studies]
-	rv_errs = [all_stars[:, "RV_err_$study"] for study in all_studies]
-	rv_sigmas = [all_stars[:, "RV_sigma_$study"] for study in all_studies]
-	rv_counts = [all_stars[:, "RV_count_$study"] for study in all_studies]
-
-	rvs = hcat(rvs...)
-	rv_errs = hcat(rv_errs...)
-	rv_counts = hcat(rv_counts...)
-	rv_sigmas = hcat(rv_sigmas...)
-end
-
-# ╔═╡ 877706f1-08a0-496a-890d-622e3a2fd9ec
-RV_a_std = [safe_weighted_mean(rvs[i, :], rv_errs[i, :], rv_sigmas[i, :], rv_counts[i, :]) for i in 1:size(rvs, 1)]
-
-# ╔═╡ 73bd1553-e2ae-4bfb-aac1-0880346f5054
-begin
-	filt_is_meas = .!ismissing.(RV_a_std)
-	rv_meas = copy(all_stars[filt_is_meas, :])
-	RV = first.(RV_a_std[filt_is_meas])
-	RV_err = [x[2] for x in RV_a_std[filt_is_meas]]
-	RV_sigma = [x[3] for x in RV_a_std[filt_is_meas]]
-	RV_count = [x[4] for x in RV_a_std[filt_is_meas]]
-
-	rv_meas[!, :RV] = RV
-	rv_meas[!, :RV_err] = RV_err
-	rv_meas[!, :RV_sigma] = RV_sigma
-	rv_meas[!, :RV_count] = RV_count
-
-end
-
 # ╔═╡ 0cf94e27-b200-4516-9495-dcac7f10d9a0
 sum(.!ismissing.(rv_meas.RV_apogee) .& ismissing.(rv_meas.RV_s18) .& ismissing.(rv_meas.RV_p20)) # most apogee stars are covered by other surveys.
-
-# ╔═╡ 222bb254-8b65-44d3-b3d2-b08fbcbe9950
-all_studies
-
-# ╔═╡ e3f05ee2-cc5f-437e-801d-3c7d842af709
-all_stars[:, "RV_s18"]
-
-# ╔═╡ a13a33f1-65c4-4217-8636-639b1e14d109
-sum(filt_missing(all_stars[:, "RV_err_p20"]))
-
-# ╔═╡ ee3c22db-6b6b-4c30-8d1f-86b103c018fc
-sum(filt_missing(spencer18_all.RV_err))
-
-# ╔═╡ 6bc02c4f-31a2-4e4e-8612-e66f8cc9c93e
-rvs
-
-# ╔═╡ 11fcf4f8-fcd5-4426-a4e9-b046138bde1b
-rv_errs
-
-# ╔═╡ 8c1457d6-32d4-4727-b45e-1a46244708a6
-RV_err
-
-# ╔═╡ 63e28d21-c1ab-413e-ac7e-e6776bcf6ca5
-rvs[filt_is_meas, :]
-
-# ╔═╡ dbb51473-6506-4119-a11d-50df2ceb6dcf
-rv_errs[filt_is_meas, :]
-
-# ╔═╡ d913bf9b-c03b-4bce-a39d-7d23eca9b355
-rv_sigmas[filt_is_meas, :]
-
-# ╔═╡ e0905cda-92ab-4073-9632-ce6857ecb999
-size(rv_sigmas)
-
-# ╔═╡ 24b2455e-1c9a-4b9a-9d88-19b98d4b2165
-RV_sigma
-
-# ╔═╡ 70e75283-b6f2-4c37-95ea-1c0b2e3f2110
-N_studies = sum.(.!ismissing.(eachrow(rvs)))[filt_is_meas]
-
-# ╔═╡ 01b3135f-7a72-4669-b586-4bc5894464ad
-sum(filt_is_meas)
-
-# ╔═╡ d11edca7-b9ae-4269-9e1b-661d59bd965e
-all_stars[.!ismissing.(all_stars.RV_graces), :].source_id
-
-# ╔═╡ 22564a47-9b03-4778-b30c-d092581ec107
-md"""
-# Quality flag
-"""
-
-# ╔═╡ 4cda9764-f208-4532-b51f-5deb62992467
-md"""
-We want to remove stars with statistically large standard deviations. So if the standard deviation of a given study is larger than 5 times the statistical uncertainty, or our interstudy std is > 5 times sqrt(n) times the standard error, we have a problem
-"""
-
-# ╔═╡ 9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
-sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma), 
-	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(N_studies)),
-	0.				
-	)
-
-# ╔═╡ c099b81d-f987-47f7-85db-bdf883ac62f0
-rv_meas.RV_sigma
-
-# ╔═╡ d665895c-9a97-4c36-9ea9-c6e30d0a17ad
-mean(sigma_sigma .> 5)
-
-# ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
-F_qual_inter = sigma_sigma .< 5
-
-# ╔═╡ c833ebb2-9f5e-4fb4-b812-dbc7fe57d8b5
-function filter_qual_study(rv_meas, study)
-	map(eachrow(rv_meas)) do row
-		if ismissing(row["RV_sigma_$study"])
-			return true
-		elseif isnan(row["RV_sigma_$study"])
-			return true
-		else
-			row["RV_sigma_$study"] .< 5 * row["RV_err_$study"] * sqrt(row["RV_count_$study"])
-		end
-
-	end
-end
-
-# ╔═╡ dcec54f8-27b4-405e-a386-6e07470dc073
-F_qual_study = filter_qual_study(rv_meas, "s18") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "p20")
-
-# ╔═╡ 73a41773-39bc-4bd5-9d99-39804000631a
-F_qual = F_qual_study .& F_qual_inter
-
-# ╔═╡ 5c86f548-4838-41e1-b9af-fdd93d900940
-sum(.!F_qual)
-
-# ╔═╡ 870571f3-f201-47fd-a215-995a416bc223
-sum(.!F_qual_study)
-
-# ╔═╡ 06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		yscale=log10, yticks=Makie.automatic,
-		xlabel = "log sigma / std",
-		ylabel = "count",
-			  limits=(-3, nothing, nothing, nothing)
-			 )
-
-	
-	hist!(filter(isfinite, log10.(sigma_sigma)), bins=120)
-	vlines!(log10(5), color=COLORS[2])
-
-	fig
-
-end
-
-# ╔═╡ db3177e7-7132-4f62-846a-f4416a804009
-md"""
-# write data
-"""
-
-# ╔═╡ 7faa2813-e502-4187-855a-047a2f5dd48d
-σ_pm = lguys.kms2pm(obs_properties["sigma_v"], obs_properties["distance"])
-
-# ╔═╡ 21daa18e-88c3-43ee-8dfa-ea8d116e5ff4
-sum(.!ismissing.(rv_meas.RV_graces))
-
-# ╔═╡ 7567ad1b-3f31-49cc-8efa-ad5d9e0c3bf2
-icrs1 = RVUtils.icrs(obs_properties)
-
-# ╔═╡ 6a406ddc-3fe9-40ff-adcf-9e2e429016a7
-md"""
-The velocity correction is magnitude 3 kms with uncertainty < 5x measurement uncertainties 
-"""
-
-# ╔═╡ 7d27beff-5403-42fa-907e-e776008c01b3
-[collect(names(j24)); "RV"; "RV_err"]
-
-# ╔═╡ a23adf32-8854-422a-8b7b-2b625132b9f2
-import Dates
-
-# ╔═╡ 30e744cf-310b-4dc2-a06b-8cd1dbee1dc6
-eltype.(eachcol(rv_meas))
 
 # ╔═╡ 3655b6a0-ac9a-4a49-86fd-6a6484409819
 md"""
@@ -564,76 +497,6 @@ rv_mean = obs_properties["radial_velocity"]; sigma_los = obs_properties["sigma_v
 # ╔═╡ a6bc7223-3267-4760-9b6a-d886ac6f4544
 obs_properties["pmra_err"] ⊕ σ_pm
 
-# ╔═╡ 0e098399-85ae-4cdf-9d82-654a9fd1cd35
-icrs0 = lguys.ICRS(
-	ra=obs_properties["ra"],
-	dec=obs_properties["dec"],
-	distance = obs_properties["distance"] ± obs_properties["distance_err"],
-	pmra = obs_properties["pmra"] ± (obs_properties["pmra_err"] ⊕ σ_pm),
-	pmdec = obs_properties["pmdec"] ± (obs_properties["pmdec_err"] ⊕ σ_pm),
-	radial_velocity = obs_properties["radial_velocity"] ± obs_properties["sigma_v"]
-			   )
-
-# ╔═╡ 2771f91a-a132-4fb1-ac93-36525690a3eb
-icrs1.radial_velocity, icrs0.radial_velocity
-
-# ╔═╡ 42fa6c2c-c9cd-4b0d-b1be-701a2db318ee
-gsr0 = lguys.transform(lguys.GSR, icrs0)
-
-# ╔═╡ d7c091aa-a0d5-4c78-bd50-5e3c521fa1ed
-sind(1) * lguys.pm2kms(gsr0.pmdec, gsr0.distance)
-
-# ╔═╡ 2b6a78d1-e69e-4661-85de-1f73c2ab1dcb
-gsr0.pmdec
-
-# ╔═╡ 2a07cc9f-e5a8-4baf-af1c-e69f1def7bc0
-gsr0.pmdec
-
-# ╔═╡ 6ea1eff9-14d4-459c-b086-199e0aaf84f0
-Δrv = RVUtils.rv_correction(rv_meas.ra, rv_meas.dec, Measurements.value(icrs0.ra), Measurements.value(icrs0.dec), 
-						   gsr0.pmra, gsr0.pmdec, gsr0.distance)
-
-# ╔═╡ 2ecbc309-2b17-4e75-a09b-6483b8b0a711
-hist(Measurements.uncertainty.(Δrv) ./ rv_meas.RV_err )
-
-# ╔═╡ fd8a7210-ad46-400d-8ef1-d46c75b210c3
-df_out = let
-	df = copy(rv_meas)
-
-	df[!, :F_RV] = F_qual
-	df[!, :delta_rv] = Measurements.value.(Δrv)
-	df[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
-
-	df
-end
-
-# ╔═╡ 57568618-1323-46bc-a8ef-53eb95fc2929
-col_filt2 = eltype.(eachcol(df_out)) .∉ Ref(
-	[Union{Missing, Dates.Time}, 
-	 Missing,
-	Union{Missing, String7},
-	Union{Missing, String15}])
-
-# ╔═╡ 615f05fb-4907-40bc-9251-3065f565929b
-let
-	filename = "processed/rv_combined.fits"
-	if isfile(filename)
-		rm(filename); 
-	end
-	
-	write_fits(filename, df_out[:, col_filt2])
-	@info "wrote data"
-end
-
-# ╔═╡ 4d3cd232-81c0-4c32-bfc9-7ba8098d2e4d
-icrs0.ra, icrs0.dec, icrs0.pmra, icrs0.pmdec
-
-# ╔═╡ 18adfc17-ee1f-4cfb-b194-cd8494850200
-δ_gsr_0 = gsr0.radial_velocity .- icrs0.radial_velocity
-
-# ╔═╡ ca3f437e-6c55-462f-b85d-68b19a241e8a
-sort(rv_meas.xi .⊕ rv_meas.eta) ./ 60
-
 # ╔═╡ 03462abb-32d6-433c-a9c4-65ef2dd58965
 function is_rv_member(rv, err)
 	return abs(rv - rv_mean) / (err ⊕ sigma_los) < 3
@@ -675,9 +538,9 @@ function compare_rv(study1, study2)
 	errorscatter!(rv1[filt], rv2[filt], xerror=rv1_err[filt], yerror=rv2_err[filt])
 
 	w = @. 1/(rv1_err[filt]^2 + rv2_err[filt]^2)
-	μ = LilGuys.mean(rv1[filt] .- rv2[filt], w)
+	μ = sb.median(rv1[filt] .- rv2[filt])
 	δμ = sqrt(1/sum(w))
-	sigma = LilGuys.std(rv1[filt] .- rv2[filt] .- μ, w)
+	sigma = sb.mad(rv1[filt] .- rv2[filt] .- μ)
 
 	text!(0.1, 0.8, space=:relative, text="μ = $(μ ± δμ)\nσ = $(round(sigma, digits=2))", fontsize=10)
 
@@ -685,6 +548,15 @@ function compare_rv(study1, study2)
 	lines!([μ0-3σ0, μ0+3σ0], [μ0-3σ0, μ0+3σ0], color=:black)
 	return fig
 end
+
+# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
+@savefig "p20_s18_xmatch" compare_rv("p20", "s18")
+
+# ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
+@savefig "s18_apogee" compare_rv("s18", "apogee")
+
+# ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
+@savefig "apogee_w09_xmatch" compare_rv("apogee", "p20")
 
 # ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
 compare_rv_mean("apogee", memb_stars)
@@ -866,7 +738,7 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═9a59505b-039b-41e1-8907-a8107ce68177
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-# ╠═300aa043-3750-4d01-ae48-1bf765cd92b1
+# ╟─300aa043-3750-4d01-ae48-1bf765cd92b1
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╟─6964faa7-17d2-412c-b4a2-5f981f8c4b54
@@ -875,21 +747,57 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═ed332de8-9524-43b6-8863-9742aa9be293
 # ╠═5bcb34d8-e9a7-474c-9726-ca8b5f8f1310
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
-# ╠═cd229322-5222-4b9c-8ab0-23b3cf1fa56c
 # ╠═b7345279-4f80-47ad-a726-537571849eae
 # ╟─bbf49122-11b1-4272-a660-0437c6aa2b3f
-# ╠═fe6fa910-f41e-4657-836b-7eda2f0cddb2
-# ╠═77ccf2bc-692c-42a9-a4fb-0efb7612294f
+# ╠═38a57561-0b99-4cec-8e35-11811bef72a0
 # ╠═e472cbb6-258e-4303-85e2-56f26358c97b
+# ╠═fe6fa910-f41e-4657-836b-7eda2f0cddb2
+# ╠═50bf826f-c50c-4465-8a85-2dad998d44cb
+# ╠═8ca865a2-6521-4e14-ae16-cf5b6a2622ec
+# ╟─00a539fb-e9e4-4f9a-8983-f35c3b73d761
+# ╟─8f243944-3d0b-48ce-9f90-8d448c089239
 # ╠═0d2dbc73-1ded-46e3-b142-9bc7b777728d
-# ╠═ff644334-bf90-49e4-a3da-fc4ecc840929
-# ╠═8f243944-3d0b-48ce-9f90-8d448c089239
 # ╠═bd51fe42-7e39-4cd8-8065-58ab9814f966
+# ╠═77ccf2bc-692c-42a9-a4fb-0efb7612294f
 # ╠═0c6c6d84-fb14-4eaf-858e-22fb90ab4d8d
-# ╠═ab49efb3-2ab7-47d0-a3a5-a342c789aa9b
-# ╠═de762a39-b430-4452-ba87-8b8cf1ad9852
-# ╠═04ff1abd-c584-41de-8c83-7503482c3731
-# ╠═0f50ae12-e207-4748-9c45-780c9215be73
+# ╠═f6ebd104-84c7-4f86-ab58-acb65ebc789a
+# ╟─04ff1abd-c584-41de-8c83-7503482c3731
+# ╠═ea333b79-abb0-4827-991f-e2c370bdb0be
+# ╟─22564a47-9b03-4778-b30c-d092581ec107
+# ╟─4cda9764-f208-4532-b51f-5deb62992467
+# ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
+# ╠═d665895c-9a97-4c36-9ea9-c6e30d0a17ad
+# ╠═15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
+# ╠═73a41773-39bc-4bd5-9d99-39804000631a
+# ╠═dcec54f8-27b4-405e-a386-6e07470dc073
+# ╠═870571f3-f201-47fd-a215-995a416bc223
+# ╠═5c86f548-4838-41e1-b9af-fdd93d900940
+# ╠═40d26853-0d5e-4d55-9a5e-564da1722f33
+# ╠═06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
+# ╟─db3177e7-7132-4f62-846a-f4416a804009
+# ╠═7faa2813-e502-4187-855a-047a2f5dd48d
+# ╠═a6bc7223-3267-4760-9b6a-d886ac6f4544
+# ╠═02c55b13-5681-475b-bead-9e0e0b9e9656
+# ╠═21daa18e-88c3-43ee-8dfa-ea8d116e5ff4
+# ╠═0e098399-85ae-4cdf-9d82-654a9fd1cd35
+# ╠═42fa6c2c-c9cd-4b0d-b1be-701a2db318ee
+# ╠═6ea1eff9-14d4-459c-b086-199e0aaf84f0
+# ╠═4d3cd232-81c0-4c32-bfc9-7ba8098d2e4d
+# ╠═b48ef722-072d-4c9c-bcd2-6d7c07bd068d
+# ╠═2ecbc309-2b17-4e75-a09b-6483b8b0a711
+# ╠═fd8a7210-ad46-400d-8ef1-d46c75b210c3
+# ╠═615f05fb-4907-40bc-9251-3065f565929b
+# ╠═24d67978-1013-40ed-b2ff-37eec77c00fc
+# ╠═a23adf32-8854-422a-8b7b-2b625132b9f2
+# ╠═da2b045f-e767-486c-a999-0838a2dbae87
+# ╠═57568618-1323-46bc-a8ef-53eb95fc2929
+# ╠═4e52deab-26c0-43e1-b2b0-5b7477737801
+# ╠═6737a85e-55d5-4f0b-b14e-4866af3bc605
+# ╠═c90a03c9-1da2-4bd3-bff8-c620b1bc98a2
+# ╠═e08185ba-dba2-421c-801d-7acb387756ef
+# ╠═a7fd3ec2-964b-4cbb-a2dd-dee99cf33c03
+# ╠═53fcc27a-700b-4b67-9ba6-3d4613edfb7b
+# ╠═5f3f4b6b-11c3-4c87-96e5-22bf6170f170
 # ╟─89552b84-d12e-4d88-a58e-8b89ad4b2569
 # ╠═e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 # ╠═5b2fceff-9c3e-472d-9310-31e920137e41
@@ -909,66 +817,6 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═f61debe4-8b23-4415-b77c-43c4465ccfcb
 # ╠═0cf94e27-b200-4516-9495-dcac7f10d9a0
 # ╠═102c73ef-2c95-4784-80df-ed0312511c00
-# ╟─a488eeb2-bf24-408e-a2ba-7df1b305a2b8
-# ╠═d3333b48-aa4e-42c1-9e0a-bbff98e3647d
-# ╠═8bc140fa-6f4e-4ec5-bc95-989fc0ea48d1
-# ╠═aee8f66c-ff93-496e-a21d-48faefd75a43
-# ╠═d3ef6a98-8770-4359-9e37-94f08d2d9aa5
-# ╠═78d39e37-44b5-4171-ab45-0672f607b517
-# ╠═88ed48b4-baa9-4ac0-86e1-8348edcd59b4
-# ╠═877706f1-08a0-496a-890d-622e3a2fd9ec
-# ╠═73bd1553-e2ae-4bfb-aac1-0880346f5054
-# ╠═222bb254-8b65-44d3-b3d2-b08fbcbe9950
-# ╠═e3f05ee2-cc5f-437e-801d-3c7d842af709
-# ╠═a13a33f1-65c4-4217-8636-639b1e14d109
-# ╠═ee3c22db-6b6b-4c30-8d1f-86b103c018fc
-# ╠═6bc02c4f-31a2-4e4e-8612-e66f8cc9c93e
-# ╠═11fcf4f8-fcd5-4426-a4e9-b046138bde1b
-# ╠═8c1457d6-32d4-4727-b45e-1a46244708a6
-# ╠═63e28d21-c1ab-413e-ac7e-e6776bcf6ca5
-# ╠═dbb51473-6506-4119-a11d-50df2ceb6dcf
-# ╠═d913bf9b-c03b-4bce-a39d-7d23eca9b355
-# ╠═e0905cda-92ab-4073-9632-ce6857ecb999
-# ╠═24b2455e-1c9a-4b9a-9d88-19b98d4b2165
-# ╠═70e75283-b6f2-4c37-95ea-1c0b2e3f2110
-# ╠═01b3135f-7a72-4669-b586-4bc5894464ad
-# ╠═d11edca7-b9ae-4269-9e1b-661d59bd965e
-# ╠═22564a47-9b03-4778-b30c-d092581ec107
-# ╟─4cda9764-f208-4532-b51f-5deb62992467
-# ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
-# ╠═c099b81d-f987-47f7-85db-bdf883ac62f0
-# ╠═d665895c-9a97-4c36-9ea9-c6e30d0a17ad
-# ╠═15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
-# ╠═73a41773-39bc-4bd5-9d99-39804000631a
-# ╠═dcec54f8-27b4-405e-a386-6e07470dc073
-# ╠═870571f3-f201-47fd-a215-995a416bc223
-# ╠═5c86f548-4838-41e1-b9af-fdd93d900940
-# ╠═c833ebb2-9f5e-4fb4-b812-dbc7fe57d8b5
-# ╠═06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
-# ╟─db3177e7-7132-4f62-846a-f4416a804009
-# ╠═7faa2813-e502-4187-855a-047a2f5dd48d
-# ╠═a6bc7223-3267-4760-9b6a-d886ac6f4544
-# ╠═02c55b13-5681-475b-bead-9e0e0b9e9656
-# ╠═21daa18e-88c3-43ee-8dfa-ea8d116e5ff4
-# ╠═0e098399-85ae-4cdf-9d82-654a9fd1cd35
-# ╠═7567ad1b-3f31-49cc-8efa-ad5d9e0c3bf2
-# ╠═2771f91a-a132-4fb1-ac93-36525690a3eb
-# ╠═42fa6c2c-c9cd-4b0d-b1be-701a2db318ee
-# ╠═6ea1eff9-14d4-459c-b086-199e0aaf84f0
-# ╠═d7c091aa-a0d5-4c78-bd50-5e3c521fa1ed
-# ╠═4d3cd232-81c0-4c32-bfc9-7ba8098d2e4d
-# ╠═2b6a78d1-e69e-4661-85de-1f73c2ab1dcb
-# ╠═6a406ddc-3fe9-40ff-adcf-9e2e429016a7
-# ╠═ca3f437e-6c55-462f-b85d-68b19a241e8a
-# ╠═2a07cc9f-e5a8-4baf-af1c-e69f1def7bc0
-# ╠═18adfc17-ee1f-4cfb-b194-cd8494850200
-# ╠═2ecbc309-2b17-4e75-a09b-6483b8b0a711
-# ╠═fd8a7210-ad46-400d-8ef1-d46c75b210c3
-# ╠═615f05fb-4907-40bc-9251-3065f565929b
-# ╠═7d27beff-5403-42fa-907e-e776008c01b3
-# ╠═a23adf32-8854-422a-8b7b-2b625132b9f2
-# ╠═57568618-1323-46bc-a8ef-53eb95fc2929
-# ╠═30e744cf-310b-4dc2-a06b-8cd1dbee1dc6
 # ╟─3655b6a0-ac9a-4a49-86fd-6a6484409819
 # ╠═7f13339e-6a0c-4944-8a36-5ab136fd8415
 # ╠═3920e27f-48fd-41a5-bf53-1f80edf3d56d

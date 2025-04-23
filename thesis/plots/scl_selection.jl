@@ -88,7 +88,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/processed/sculptor_memb_rv.fits")
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")
 
 # ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
 mean(isfinite.(rv_members.RV_t23))
@@ -272,13 +272,13 @@ end
 rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
 
 # ╔═╡ 9a62b3e5-96f1-438b-8fdf-f8427efd145b
-sum(best_stars.PSAT .> 0.95)
+
 
 # ╔═╡ 34758293-664e-4126-a172-32456e9c9d1c
-sum(0.05 .< best_stars.PSAT .< 0.95)
+
 
 # ╔═╡ d5a037a8-e024-4d44-93bb-1cb7265ea2b1
-sum(best_stars.PSAT .< 0.01)
+
 
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f

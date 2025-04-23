@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -9,7 +9,6 @@ begin
 	import Pkg; Pkg.activate()
 	
 	using CSV, DataFrames
-	using PythonCall
 	using Arya
 	using CairoMakie
 
@@ -34,6 +33,23 @@ md"""
 
 This notebook analyzes the RV stars in APOGEE and creates a sample sutable to be combined with others for velocity analysis.
 
+"""
+
+# ╔═╡ d3c0f2b5-7812-4187-b2e1-b0f37114bd40
+md"""
+Creates:
+- `processed/rv_apogee.fits`
+- ---`.csv`
+Depends on:
+- `processed/rv_apogee_xmatch.fits` (`apogee_xmatch.jl`)
+"""
+
+# ╔═╡ 7f3677f2-36e7-470e-92eb-5a33a02e53f6
+md"""
+xmatch by source_id
+note that we use 
+- `apogee_all.RV_sigma .< 3*apogee_all.RV_err`
+(more restrictive...).
 """
 
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -111,12 +127,6 @@ end
 # ╔═╡ d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
 F_scatter = apogee_all.RV_sigma .< 3*apogee_all.RV_err
 
-# ╔═╡ 7af6703b-7d03-444b-8298-3f154029cdfb
-
-
-# ╔═╡ 67774169-2271-4f21-8487-333834953fd6
-sum(F_scatter)
-
 # ╔═╡ baa419cb-6d24-4291-9dca-4d03f9da192b
 function get_f_best(source_id)
 	if source_id ∉ j24.source_id
@@ -128,20 +138,8 @@ end
 # ╔═╡ aa66b278-c408-49f4-b7e5-232341d98c3e
 F_best = get_f_best.(apogee_all.source_id)
 
-# ╔═╡ 79834054-efb7-4201-af5f-2e5c12647655
-j24[5003142467501861888 .== j24.source_id, :F_BEST]
-
 # ╔═╡ 16559e75-f1b7-4078-a176-cb44e30942dd
 F_match = .!ismissing.(apogee_all.source_id) .& (F_best .== 1.0)
-
-# ╔═╡ f1742d6c-effc-465e-bbea-5c89ac575241
-sum(F_match)
-
-# ╔═╡ 013dcaf5-36f0-4bf1-bbd0-5facc465e30e
-sum(F_scatter .& F_match)
-
-# ╔═╡ 9c2f80c3-83ff-465b-9f1d-577661f1aa2f
-sum(apogee_all.RV_count)
 
 # ╔═╡ 14094089-b9cd-464c-82aa-a41be8fc1bbf
 df_out = let
@@ -151,17 +149,22 @@ df_out = let
 	df
 end
 
-# ╔═╡ 5e4b0dc9-63eb-4cb1-8db4-798e10c24f78
-leftjoin(apogee_all, j24, on=:source_id, makeunique=true).source_id .== df_out.source_id
-
-# ╔═╡ f9299a56-8cc6-434b-aa60-781712f54f7a
-df_out[5003142467501861888 .== df_out.source_id, :F_match]
-
-# ╔═╡ 2b36f7bc-fcb5-4b7a-ad8a-0fa48883f7ad
-F_best[5003142467501861888 .== df_out.source_id]
-
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
 write_fits("processed/rv_apogee.fits", df_out, overwrite=true)
+
+# ╔═╡ bb5aefb9-7db5-4ae2-8f32-ef2a442e5c77
+md"""
+# Numbers
+"""
+
+# ╔═╡ f1742d6c-effc-465e-bbea-5c89ac575241
+sum(F_match)
+
+# ╔═╡ 013dcaf5-36f0-4bf1-bbd0-5facc465e30e
+sum(F_scatter .& F_match)
+
+# ╔═╡ 9c2f80c3-83ff-465b-9f1d-577661f1aa2f
+sum(apogee_all.RV_count)
 
 # ╔═╡ 59a20996-7b90-4afd-818a-fffd8029350f
 md"""
@@ -222,6 +225,18 @@ hist(apogee.RV_sigma ./ (apogee.RV_err ))
 
 # ╔═╡ 8bd988f3-884f-430b-b30c-3efc2ecbdd9c
 hist(apogee.SNR)
+
+# ╔═╡ 9c7aff9c-80d3-463d-9d38-585daf1feba6
+p_chi2 = RVUtils.prob_chi2(apogee_all)
+
+# ╔═╡ 27603f1a-cce9-44c9-99e9-903cf375ee98
+hist(filter(isfinite, p_chi2))
+
+# ╔═╡ 2a514055-3f00-4dbc-86d4-882a0d0df77b
+sum(p_chi2 .< 0.001)
+
+# ╔═╡ 68cc4da9-b30c-4e51-9f96-b641dd89a7cf
+sum(.!F_scatter)
 
 # ╔═╡ 27063de7-01d4-48a8-a06f-cc24aec662d2
 md"""
@@ -290,6 +305,8 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─d3c0f2b5-7812-4187-b2e1-b0f37114bd40
+# ╟─7f3677f2-36e7-470e-92eb-5a33a02e53f6
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═05c93bf4-0f94-44cc-9aab-7c6193831806
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -311,20 +328,15 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
 # ╠═d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
-# ╠═7af6703b-7d03-444b-8298-3f154029cdfb
-# ╠═67774169-2271-4f21-8487-333834953fd6
 # ╠═baa419cb-6d24-4291-9dca-4d03f9da192b
 # ╠═aa66b278-c408-49f4-b7e5-232341d98c3e
-# ╠═5e4b0dc9-63eb-4cb1-8db4-798e10c24f78
-# ╠═79834054-efb7-4201-af5f-2e5c12647655
-# ╠═f9299a56-8cc6-434b-aa60-781712f54f7a
-# ╠═2b36f7bc-fcb5-4b7a-ad8a-0fa48883f7ad
 # ╠═16559e75-f1b7-4078-a176-cb44e30942dd
+# ╠═14094089-b9cd-464c-82aa-a41be8fc1bbf
+# ╠═f71152ad-d576-4205-bece-92c85783c089
+# ╠═bb5aefb9-7db5-4ae2-8f32-ef2a442e5c77
 # ╠═f1742d6c-effc-465e-bbea-5c89ac575241
 # ╠═013dcaf5-36f0-4bf1-bbd0-5facc465e30e
 # ╠═9c2f80c3-83ff-465b-9f1d-577661f1aa2f
-# ╠═14094089-b9cd-464c-82aa-a41be8fc1bbf
-# ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─59a20996-7b90-4afd-818a-fffd8029350f
 # ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
 # ╠═0e14808d-df92-419b-b272-f3a08f4b86b1
@@ -339,6 +351,10 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═fba487be-22a5-43b3-9ac5-8505462b7d56
 # ╠═4f230076-cad7-425a-8156-ca47e7f6c911
 # ╠═8bd988f3-884f-430b-b30c-3efc2ecbdd9c
+# ╠═9c7aff9c-80d3-463d-9d38-585daf1feba6
+# ╠═27603f1a-cce9-44c9-99e9-903cf375ee98
+# ╠═2a514055-3f00-4dbc-86d4-882a0d0df77b
+# ╠═68cc4da9-b30c-4e51-9f96-b641dd89a7cf
 # ╟─27063de7-01d4-48a8-a06f-cc24aec662d2
 # ╠═48c62811-136f-4962-a42c-b1dd1fc74f8c
 # ╠═6009cc0e-6936-4589-85aa-dd2864948b7c

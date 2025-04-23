@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -30,6 +30,18 @@ md"""
 This notebook loads in the complete APOGEE radial velocity data and crossmatches with the J+24.
 
 With this catalogue, detailed radial velocity analysis can then be calculated.
+"""
+
+# ╔═╡ 72fe0dab-a127-4dd1-9bb5-d3868edccf59
+md"""
+Creates:
+- `processed/apogee_xmatch.fits`
+- `processed/apogee_allvisit_xmatch.fits`
+
+Depends on:
+- `../../all/data/allVisit-dr17-synspec_rev1.fits`
+- `../../all/data/allStarLite-dr17-synspec_rev1.fits`
+- `../data/jensen+24_wide.fits`
 """
 
 # ╔═╡ 0efc36d3-7958-4873-a15a-244778e94c61
@@ -184,6 +196,7 @@ hist(filter(x -> !ismissing(x) && x<30, apogee.K))
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─72fe0dab-a127-4dd1-9bb5-d3868edccf59
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═399bc588-515c-4a5f-88c4-cae5272d20a2
 # ╠═08fc8a65-fa92-4739-879e-a32d0228d181
@@ -223,7 +236,7 @@ hist(filter(x -> !ismissing(x) && x<30, apogee.K))
 # ╠═524b33c4-f435-45fd-90e5-9277333268a1
 # ╠═871afe21-b267-40fd-98d5-3ca8abc2bea2
 # ╠═1f79d6e7-0575-45e9-93c0-9e0fbb2034ee
-# ╠═62c90fb6-1310-47d7-a0ca-b8505f9ad129
+# ╟─62c90fb6-1310-47d7-a0ca-b8505f9ad129
 # ╠═fdb6e310-070c-41e7-b81d-b239e85c961c
 # ╠═209031d1-9305-40a2-817a-8eb5a904af76
 # ╠═5488c919-4a20-4918-af26-647e0f1ca716

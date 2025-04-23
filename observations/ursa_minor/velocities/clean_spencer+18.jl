@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -114,6 +114,12 @@ spencer18_all = let
 	df
 end
 
+# ╔═╡ 2a6e8cda-a3cf-4824-9584-fa3d3c1da53a
+sum(spencer18_all.RV_sigma .=== missing)
+
+# ╔═╡ 103ad378-1ea1-4a2c-86b2-09c78293d06b
+sum(spencer18_all.RV_ .=== missing)
+
 # ╔═╡ 2c4eabb0-3af9-4b6f-b15d-9ed3b4290040
 xmatch_max = 2.0
 
@@ -126,20 +132,8 @@ begin
 	source_id[.!filt_xmatch] .= missing
 end
 
-# ╔═╡ 412148d2-3b14-400a-b93b-f4aa18965d8d
-F_match = get_f_best.(source_id) .=== 1.0
-
 # ╔═╡ 5774a0ef-8abf-4b6d-9b34-f80c29b4aab4
 F_scatter = (spencer18_all.RV_count .< 2) .|| (spencer18_all.RV_sigma .< 3*spencer18_all.RV_err .* sqrt.(spencer18_all.RV_count))
-
-# ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
-df_out = let
-	df = copy(spencer18_all)
-	df[!, :source_id] .= source_id
-	df[!, :F_match] = F_match
-	df[!, :F_scatter] = F_scatter
-	df
-end
 
 # ╔═╡ 25e927e1-773d-4d41-894b-1f4512f01233
 function get_f_best(source_id)
@@ -150,6 +144,18 @@ function get_f_best(source_id)
 		return missing
 	end
 	return j24.F_BEST[j24.source_id .== source_id] |> only
+end
+
+# ╔═╡ 412148d2-3b14-400a-b93b-f4aa18965d8d
+F_match = get_f_best.(source_id) .=== 1.0
+
+# ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
+df_out = let
+	df = copy(spencer18_all)
+	df[!, :source_id] .= source_id
+	df[!, :F_match] = F_match
+	df[!, :F_scatter] = F_scatter
+	df
 end
 
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
@@ -393,6 +399,8 @@ model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_c
 # ╠═4e39ac0f-60d0-4091-a5e8-8aa3977e9f39
 # ╠═0137b308-f0c6-4e73-afa6-346797b6f304
 # ╠═153b1c3f-88a0-4b31-a2d7-65c084ca3a43
+# ╠═2a6e8cda-a3cf-4824-9584-fa3d3c1da53a
+# ╠═103ad378-1ea1-4a2c-86b2-09c78293d06b
 # ╠═2c4eabb0-3af9-4b6f-b15d-9ed3b4290040
 # ╠═d321c481-0ceb-4e3b-b5fc-12af735155e3
 # ╠═96e1413d-e4fd-48af-8cde-73a5fcb4976a

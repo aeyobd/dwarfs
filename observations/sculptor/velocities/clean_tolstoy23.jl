@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -34,6 +34,21 @@ md"""
 
 This notebook analyzes the RV stars in tolstoy+23 and creates a sample sutable to be combined with others for velocity analysis.
 
+"""
+
+# ╔═╡ 0a69527d-ea05-4ab9-b46e-ef8b5eae7725
+md"""
+Creates:
+- `processed/rv_tolstoy+23.fits`
+- `processed/rv_dart.csv`
+- `processed/rv_tolstoy+23.csv` (MCMC property summary)
+Depends on:
+- `../observed_properties.toml`
+- `../data/jensen+24_wide.fits`
+- `../data/tolstoy+23.fits`
+- `../Sculptor_DARTS_BEST_psat40.csv`
+
+Xmatch by sourceid, simple fscatter and no other cuts
 """
 
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -110,8 +125,17 @@ sum(ismissing.(F_best))
 # ╔═╡ 10cce492-1457-46ef-a3a5-f034f5d1f147
 F_match = (F_best .== 1.0)
 
+# ╔═╡ 744832f2-3a89-4df8-b1f5-7a088ee84139
+p_chi2 = RVUtils.prob_chi2(tolstoy23_all)
+
 # ╔═╡ 957ae76e-aa8f-4e72-999a-d560b7530183
-F_scatter = tolstoy23_all.RV_sigma .< 3*tolstoy23_all.RV_err .* sqrt.(tolstoy23_all.RV_count)
+F_scatter_old = tolstoy23_all.RV_sigma .< 3*tolstoy23_all.RV_err .* sqrt.(tolstoy23_all.RV_count)
+
+# ╔═╡ 986a8caf-fc50-4d75-919a-51d03ce98c4f
+F_scatter = @. isnan(p_chi2) || (p_chi2 > 0.001)
+
+# ╔═╡ 0596b1ee-059f-4570-8a22-869d5b65074a
+hist(p_chi2[.!F_scatter])
 
 # ╔═╡ 95a9a1c0-e2ed-40c3-837e-cd148ce6bafa
 df_out = let
@@ -128,6 +152,18 @@ write_fits("processed/rv_tolstoy+23.fits", df_out, overwrite=true)
 md"""
 # Numbers
 """
+
+# ╔═╡ 875b963d-3a9b-4da4-9ca9-c370db1f6969
+ccdf(Normal(), 3)
+
+# ╔═╡ 10177a44-8cdc-4151-a0d1-cf9b70791751
+sum(F_scatter_old .!= F_scatter)
+
+# ╔═╡ b8cb8b9e-d944-43d0-ba45-3cd9d759db28
+sum(.!F_scatter_old)
+
+# ╔═╡ 6834fa86-4bda-4d14-a57d-dad882f417f5
+sum(.!F_scatter)
 
 # ╔═╡ 7dcf1c37-b7c1-4d91-bcd6-6ca6c0af49ae
 sum(F_match)
@@ -146,17 +182,63 @@ md"""
 # Plots
 """
 
+# ╔═╡ 0664487f-2eda-471f-b562-7fb1b89a5ee5
+md"""
+## Uncertainties
+"""
+
+# ╔═╡ 91208c77-3664-48fd-a659-1151a4dc0bf4
+(tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)[.!F_scatter] # number of sigma for filtered stars
+
+# ╔═╡ 28e07273-2177-408c-aabf-2f9ecf16b155
+hist(filter(isfinite, p_chi2))
+
+# ╔═╡ 67e33e9f-fab3-4fe3-9418-992b50ef8431
+hist(tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)
+
+# ╔═╡ de4788f4-d446-4e04-8d43-6a8308f62a97
+md"""
+## Membership
+"""
+
 # ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
 filt_tolstoy = RVUtils.sigma_clip(tolstoy23_all.RV, 3) .& (tolstoy23_all.Mem .== "m")
 
 # ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
 tolstoy23 = tolstoy23_all[filt_tolstoy, :]
 
+# ╔═╡ 2eebfca4-e364-467f-a1b3-c1cfab2822e6
+chi2 = @. tolstoy23_all.RV_sigma^2 ./ tolstoy23_all.RV_err^2 
+
+# ╔═╡ 542551c0-d131-4ef8-aa19-69caf531027f
+filt_chi2 = tolstoy23_all.RV_count .> 1
+
+# ╔═╡ de3024be-289f-4164-88f2-f0308c3678f8
+import Distributions
+
+# ╔═╡ f6659ee7-a958-47dd-a646-47905cd42bf5
+[quantile(Chisq(i - 1), 0.999) / i for i in [2,3,4,5, 10, 100, 1000]]
+
+# ╔═╡ 617dbe47-d5a1-469f-86bf-326afd1381ff
+md"""
+If errors are representative, then the below plot should be uniform with only an excess at zero.
+"""
+
+# ╔═╡ 4b0f7610-6c7f-4b9f-a0d1-234893d8cb94
+md"""
+## Uncertanty shifts
+"""
+
 # ╔═╡ 76dc33cd-110a-42e6-bd72-65ba6b7bf85a
 scatter(tolstoy23.S_N, tolstoy23.RV_err .- tolstoy23.RV_err_orig)
 
 # ╔═╡ c8e08e37-60d8-4f14-adea-f6f93017cbb9
 scatter(tolstoy23.S_N, tolstoy23.RV_err_orig)
+
+# ╔═╡ 42e8dad4-36f3-4e4d-a472-9b486bbbb798
+md"""
+## Sample
+"""
 
 # ╔═╡ 5f71b8e9-5540-4431-8028-4ce14c8d7856
 let 
@@ -179,20 +261,10 @@ hist((collect ∘ skipmissing)(tolstoy23_all.fe_h),
 	 axis = (; xlabel = "[Fe/H]")
 	)
 
-# ╔═╡ 2eebfca4-e364-467f-a1b3-c1cfab2822e6
-chi2 = @. tolstoy23_all.RV_sigma^2 ./ tolstoy23_all.RV_err^2 
-
-# ╔═╡ 542551c0-d131-4ef8-aa19-69caf531027f
-filt_chi2 = tolstoy23_all.RV_count .> 1
-
-# ╔═╡ 0743be9f-e215-4f87-b9d1-d453c06349c8
-p_chi2 = @. 1 - cdf(Chisq(tolstoy23_all.RV_count[filt_chi2] - 1), chi2[filt_chi2])
-
-# ╔═╡ 28e07273-2177-408c-aabf-2f9ecf16b155
-hist(p_chi2)
-
-# ╔═╡ 67e33e9f-fab3-4fe3-9418-992b50ef8431
-hist(tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)
+# ╔═╡ 4ec88694-6543-495a-88d0-6b3a539ba45b
+md"""
+## Modeling
+"""
 
 # ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
 model = RVUtils.model_vel_1c(tolstoy23.RV, tolstoy23.RV_err)
@@ -302,7 +374,8 @@ RVUtils.plot_samples(dart, samples_dart, bins=30)
 CSV.write("processed/rv_dart.csv", df_summary_dart)
 
 # ╔═╡ Cell order:
-# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─0a69527d-ea05-4ab9-b46e-ef8b5eae7725
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═2f5ca80c-d98d-45cc-a661-834002b620f6
@@ -323,26 +396,41 @@ CSV.write("processed/rv_dart.csv", df_summary_dart)
 # ╠═6ce17cfa-66c8-4666-873f-95e68f7c236b
 # ╠═449ed8cb-4d6e-44db-b8c3-66aba7a3a29a
 # ╠═10cce492-1457-46ef-a3a5-f034f5d1f147
+# ╠═744832f2-3a89-4df8-b1f5-7a088ee84139
+# ╠═0596b1ee-059f-4570-8a22-869d5b65074a
 # ╠═957ae76e-aa8f-4e72-999a-d560b7530183
+# ╠═986a8caf-fc50-4d75-919a-51d03ce98c4f
 # ╠═95a9a1c0-e2ed-40c3-837e-cd148ce6bafa
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─6e60c7bb-717d-49fa-bbe7-a9c7ad66c318
+# ╠═875b963d-3a9b-4da4-9ca9-c370db1f6969
+# ╠═10177a44-8cdc-4151-a0d1-cf9b70791751
+# ╠═b8cb8b9e-d944-43d0-ba45-3cd9d759db28
+# ╠═6834fa86-4bda-4d14-a57d-dad882f417f5
 # ╠═7dcf1c37-b7c1-4d91-bcd6-6ca6c0af49ae
 # ╠═ab5799d7-e67e-4d06-9e33-775f93c4f493
 # ╠═93b3e664-608b-4c03-9ebf-0b01a243df83
 # ╠═859ca55e-ea29-451b-8528-1e4e3eb08c53
 # ╟─4290a51e-961b-4b38-b954-1a65e946080c
-# ╠═344f3c29-0873-4180-9025-51aeaeb2c681
-# ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
-# ╠═76dc33cd-110a-42e6-bd72-65ba6b7bf85a
-# ╠═c8e08e37-60d8-4f14-adea-f6f93017cbb9
-# ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
-# ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
+# ╟─0664487f-2eda-471f-b562-7fb1b89a5ee5
+# ╠═91208c77-3664-48fd-a659-1151a4dc0bf4
 # ╠═2eebfca4-e364-467f-a1b3-c1cfab2822e6
 # ╠═542551c0-d131-4ef8-aa19-69caf531027f
-# ╠═0743be9f-e215-4f87-b9d1-d453c06349c8
+# ╠═de3024be-289f-4164-88f2-f0308c3678f8
+# ╠═f6659ee7-a958-47dd-a646-47905cd42bf5
+# ╠═617dbe47-d5a1-469f-86bf-326afd1381ff
 # ╠═28e07273-2177-408c-aabf-2f9ecf16b155
 # ╠═67e33e9f-fab3-4fe3-9418-992b50ef8431
+# ╟─de4788f4-d446-4e04-8d43-6a8308f62a97
+# ╠═344f3c29-0873-4180-9025-51aeaeb2c681
+# ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
+# ╟─4b0f7610-6c7f-4b9f-a0d1-234893d8cb94
+# ╠═76dc33cd-110a-42e6-bd72-65ba6b7bf85a
+# ╠═c8e08e37-60d8-4f14-adea-f6f93017cbb9
+# ╠═42e8dad4-36f3-4e4d-a472-9b486bbbb798
+# ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
+# ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
+# ╟─4ec88694-6543-495a-88d0-6b3a539ba45b
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
 # ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9

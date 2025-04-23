@@ -81,6 +81,14 @@ md"""
 APOGEE DR 17 sample from federico's paper is apogee_raw_2. I have also xmatched the field against apogee which I use for self-consistency.
 """
 
+# ╔═╡ 4e275dd0-0401-4e7c-856b-5703b4b93331
+function get_f_best(source_id)
+	if source_id ∉ j24.source_id
+		return missing
+	end
+	return j24.F_BEST[j24.source_id .== source_id] |> only
+end
+
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_raw = read_fits("processed/apogee_xmatch.fits")
 
@@ -108,11 +116,48 @@ end
 # ╔═╡ 961e230d-e549-49b5-a98c-aaa330fa42da
 @assert 0 == sum(apogee_all.RV_FLAG .> 0) # no need to include more flags
 
+# ╔═╡ 9d63053f-fe2a-4667-b813-943d366a366c
+F_best = get_f_best.(apogee_all.source_id)
+
+# ╔═╡ 1a698e39-2d12-449c-82ad-601dc4cd5099
+F_match = .!ismissing.(apogee_all.source_id) .& (F_best .== 1.0)
+
+# ╔═╡ 7f13344f-96c8-4dbb-833f-241ea1788506
+F_scatter = apogee_all.RV_sigma .< 3*apogee_all.RV_err
+
 # ╔═╡ bb57569e-0a4c-455e-b3c6-7bd2897bb843
 sum(apogee_raw.RV_FLAG .> 0)
 
+# ╔═╡ 0d9aaa39-1fa9-4514-ad72-8f4f7558b748
+df_out = let
+	df = copy(apogee_all)
+	df[!, :F_scatter] = F_scatter
+	df[!, :F_match] = F_match
+	df
+end
+
 # ╔═╡ f71152ad-d576-4205-bece-92c85783c089
-write_fits("processed/rv_apogee.fits", apogee_all, overwrite=true)
+write_fits("processed/rv_apogee.fits", df_out, overwrite=true)
+
+# ╔═╡ 9abfa20b-dec8-4ac2-a3ab-d82e90d6f29b
+md"""
+# Numbers
+"""
+
+# ╔═╡ 8b644972-5504-45a3-8cff-5706f4a78f74
+length(apogee_all.RV)
+
+# ╔═╡ 9f26eb5b-78b2-4e36-a4c7-fc84f3519069
+sum(F_match)
+
+# ╔═╡ d537553a-01ae-44ff-8d5f-f25a6044483d
+sum(F_scatter)
+
+# ╔═╡ 226c1aa1-c689-407c-a6f5-870b138d07d6
+sum(F_scatter .& F_match)
+
+# ╔═╡ bca718a4-84a2-45bc-a4de-c6d414534084
+sum(df_out.RV_count)
 
 # ╔═╡ 59a20996-7b90-4afd-818a-fffd8029350f
 md"""
@@ -187,7 +232,7 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 
 
 # ╔═╡ Cell order:
-# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═05c93bf4-0f94-44cc-9aab-7c6193831806
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -207,9 +252,20 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╟─45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
+# ╠═9d63053f-fe2a-4667-b813-943d366a366c
+# ╠═1a698e39-2d12-449c-82ad-601dc4cd5099
+# ╠═4e275dd0-0401-4e7c-856b-5703b4b93331
 # ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
+# ╠═7f13344f-96c8-4dbb-833f-241ea1788506
 # ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
+# ╠═0d9aaa39-1fa9-4514-ad72-8f4f7558b748
 # ╠═f71152ad-d576-4205-bece-92c85783c089
+# ╟─9abfa20b-dec8-4ac2-a3ab-d82e90d6f29b
+# ╠═8b644972-5504-45a3-8cff-5706f4a78f74
+# ╠═9f26eb5b-78b2-4e36-a4c7-fc84f3519069
+# ╠═d537553a-01ae-44ff-8d5f-f25a6044483d
+# ╠═226c1aa1-c689-407c-a6f5-870b138d07d6
+# ╠═bca718a4-84a2-45bc-a4de-c6d414534084
 # ╟─59a20996-7b90-4afd-818a-fffd8029350f
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═4d63430e-f59c-4c68-97e1-7eaa5679e55f

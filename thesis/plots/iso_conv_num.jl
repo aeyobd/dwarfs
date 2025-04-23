@@ -55,18 +55,18 @@ function compare_vcirc(profiles; errskip=1, xlims = (-2, 3), vlims=(0.3, 1.6), m
     for i in eachindex(profiles)
         label, profs = profiles[i]
         profile = profs[1]
-        lines!(log10.(profile.r_circ), log10.(profile.v_circ * V2KMS),
+        lines!(log10.(profile.radii), log10.(profile.v_circ * V2KMS),
             linestyle=:dot,
             color=COLORS[i]
         )
         
         profile = profs[end]
-        lines!(log10.(profile.r_circ), log10.(profile.v_circ* V2KMS), 
+        lines!(log10.(profile.radii), log10.(profile.v_circ* V2KMS), 
             color=COLORS[i],
             label=label
         )
 
-        println(label, " number per bin: ", LilGuys.mean(diff(profile.n_circ)))
+        println(label, " number per bin: ", LilGuys.mean(diff(profile.counts)))
 
 
 		if label ∈ keys(marks)
@@ -76,7 +76,7 @@ function compare_vcirc(profiles; errskip=1, xlims = (-2, 3), vlims=(0.3, 1.6), m
 			x = log10(marks[label])
 			y = log10.(LilGuys.v_circ(halo, marks[label]) * V2KMS)
 			@info "x, y = $x, $y"
-			arrows!([x], [y] .+ 1.5*dy, [0], [-dy], arrowsize=5, color=COLORS[i])
+			arrows!([x], [y] .+ 1.5*dy, [0], [-dy],  color=COLORS[i])
 		end
     end
 
@@ -84,7 +84,7 @@ function compare_vcirc(profiles; errskip=1, xlims = (-2, 3), vlims=(0.3, 1.6), m
     y = LilGuys.v_circ.(halo, 10 .^ x) 
     lines!(x, log10.(y * V2KMS), linestyle=:dash, color=:black, label="NFW")
 
-    axislegend(position=:rb)
+    axislegend(position=:rb, patchsize=[24, 6])
 
     # residual
 
@@ -98,7 +98,7 @@ function compare_vcirc(profiles; errskip=1, xlims = (-2, 3), vlims=(0.3, 1.6), m
         label, profs = profiles[i]
         profile = profs[end]
 
-        x = log10.(profile.r_circ)
+        x = log10.(profile.radii)
         
         y_exp = LilGuys.v_circ.(halo, 10 .^ x)
         dy = profile.v_circ .- y_exp
@@ -125,18 +125,18 @@ load_profile("1e5/fiducial")
 
 # ╔═╡ a4b6b203-a42a-48dd-8944-ea150eee376b
 profiles = [
-    "1e4" => load_profile("1e4/fiducial"),
-    "1e5" => load_profile("1e5/fiducial"),
-    "1e6" => load_profile("1e6/fiducial"),
-    "1e7" => load_profile("1e7/fiducial")
+    "10⁴" => load_profile("1e4/fiducial"),
+    "10⁵" => load_profile("1e5/fiducial"),
+     "10⁶" => load_profile("1e6/fiducial"),
+    "10⁷" => load_profile("1e7/fiducial")
     ];
 
 # ╔═╡ 9c3c8684-de16-4601-a6e0-7bcb9c7a1f84
 softening = Dict(
-	"1e4" => 0.44,
-	"1e5" => 0.14,
-	"1e6" => 0.044,
-	"1e7" => 0.014,
+	"10⁴" => 0.44,
+	"10⁵" => 0.14,
+	"10⁶" => 0.044,
+	"10⁷" => 0.014,
 )
 
 # ╔═╡ 69516e98-4e15-44a8-b0d4-dc8d8bacd7e8

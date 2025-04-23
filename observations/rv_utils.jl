@@ -4,10 +4,13 @@ import LilGuys as lguys
 using Turing
 using CairoMakie
 using Arya
-import Distributions: pdf, Normal
+import Distributions: pdf, Normal, ccdf, Chisq
 
+import KernelDensity
 using Measurements: ±
 import Measurements
+
+P_CHI2_MIN = 0.001
 
 @doc raw"add a and b in quadrature: $sqrt(a^2 + b^2)$"
 ⊕(a, b) = sqrt(a^2 + b^2)
@@ -31,19 +34,6 @@ function xmatch(df1::DataFrame, df2::DataFrame, max_sep=2)
 end
 
 
-
-"""
-    model_vel_1c(x, xerr)
-
-Fits a 1c model to a set of velocities and uncertainties
-"""
-@model function model_vel_1c(x, xerr; μ_s_prior=100, μ_0_prior=0)
-    μ ~ Normal(μ_0_prior, μ_s_prior)
-    σ ~ Uniform(0, 20)
-	s = @. sqrt(σ^2 + xerr^2)
-
-	x ~ MvNormal(fill(μ, length(x)), s)
-end
 
 
 """
@@ -71,11 +61,10 @@ end
 
 
 """
-    plot_samples!(samples, x; thin, color, alpha kwargs...)
+    plot_samples!(samples, x; thin=10, color=:black, alpha, kwargs...)
 
 Plot the MCMC samples (dataframe with μ and σ)  as gaussians
-across a range x.
-
+across a range x. alpha defaults to 1/∛N
 """
 function plot_samples!(samples, x;
 		thin=10, color=:black, alpha=nothing, kwargs...)
@@ -176,7 +165,7 @@ function rv_correction(ra, dec, ra0, dec0, pmra, pmdec, distance)
 
     xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
 
-    θ_pm = @. atand(xi, eta)
+    θ_pm = @. atand(xi, eta) # PA relative to centre
     rv = 0 # want correction to vz
 
     sθ = @. sind(θ_pm)
@@ -270,8 +259,8 @@ Add PSAT column including radial velocity information and likelihoods
 `L_RV_SAT` and `L_RV_BKD`
 """
 function add_PSAT_RV!(df::DataFrame; sigma_v::Real, radial_velocity_gsr::Real, f_sat::Real, σ_halo=100)
-    df[!, :L_RV_SAT] = L_RV_SAT(df.v_z, df.v_z_err, radial_velocity_gsr, sigma_v)
-    df[!, :L_RV_BKD] = L_RV_BKD(df.v_z, σ=σ_halo)
+    df[!, :L_RV_SAT] = L_RV_SAT.(df.vz, df.vz_err, radial_velocity_gsr, sigma_v)
+    df[!, :L_RV_BKD] = L_RV_BKD.(df.vz, σ=σ_halo)
     df[!, :PSAT_RV] = PSAT_RV(df, f_sat)
 
     df
@@ -279,12 +268,34 @@ end
 
 
 """
-    new_pm(rv_meas, obs_props)
+    add_gsr!(df::DataFrame; distance, pmra, pmdec)
 
-Use the observed properties to provide a PM prior for members,
-wei
+Add the GSR corrected proper motions and radial velocities to the dataframe.
+Requires columns `ra`, `dec`, `RV`.
 """
-function new_pm(rv_meas, obs_props)
+function add_gsr!(df::DataFrame; distance, pmra, pmdec)
+    obs = [lguys.ICRS(ra=row.ra, dec=row.dec, distance=distance,
+                      pmra=row.pmra, pmdec=row.pmdec, radial_velocity=row.RV)
+           for row in eachrow(df)
+          ]
+
+    obs_gsr = lguys.to_frame(lguys.transform.(lguys.GSR, obs))
+
+
+    df[!, :pmra_gsr] = obs_gsr.pmra
+    df[!, :pmdec_gsr] = obs_gsr.pmdec
+    df[!, :radial_velocity_gsr] = obs_gsr.radial_velocity
+
+    df
+end
+
+
+"""
+    _new_pm(rv_meas, obs_props)
+
+Use the observed properties to provide a PM prior for members. Not used currently
+"""
+function _new_pm(rv_meas, obs_props)
     σ_pm = LilGuys.kms2pm(obs_props["sigma_v"], obs_props["distance"])
     σ_ra = obs_props["pmra_err"] ⊕ σ_pm
     σ_dec = obs_props["pmdec_err"] ⊕ σ_pm
@@ -312,7 +323,11 @@ function new_pm(rv_meas, obs_props)
 end
 
 
+"""
+    get_error(df, key)
 
+Retrieve the uncertainty of the key in the given dict (either max of key_em and key_ep or key_err). 
+"""
 function get_error(df, key)
     if key*"_em" ∈ keys(df)
         return max(df[key*"_em", key*"_ep"])
@@ -324,6 +339,16 @@ function get_error(df, key)
 end
 
 
+"""
+    icrs(df::AbstractDict; add_sigma_pm_int)
+
+Given the dictionary of observed properties, 
+returns the ICRS coordinate with reported uncertanties, 
+adding the velocity dispersion to the PM uncertainty. 
+
+This formulation is most helpful for this analysis where we 
+assume a constant PM for the satellite
+"""
 function icrs(df::AbstractDict; add_sigma_pm_int=true)
     σ_pm = lguys.kms2pm(df["sigma_v"], df["distance"])
     @info "σ_pm = $σ_pm"
@@ -342,7 +367,12 @@ function icrs(df::AbstractDict; add_sigma_pm_int=true)
 end
 
 
+"""
+    add_rv_means!(all_stars, all_studies)
 
+Add the RV means, errors, std, and counts by averaging
+over the columns RV_study, RV_err_study, RV_sigma_study, and RV_count_study.
+"""
 function add_rv_means!(all_stars, all_studies)
 
 	for col in [:RV, :RV_err, :RV_sigma]
@@ -370,14 +400,35 @@ function add_rv_means!(all_stars, all_studies)
 		all_stars[i, :RV_nstudy] = n_study
 	end
 
-
 	all_stars
 end
 
+
+@doc raw"""
+    sem_inv_var_weights(weights)
+
+Standard error of mean given inverse variance weights.
+
+For observations $x_i$, the uncertanty on the mean
+$\bar x$ is 
+``
+    \delta \bar x = \sqrt{\frac{1}{\sum_i w_i}}
+``
+given that $w_i = 1/\delta x_i^2$.
+"""
 function sem_inv_var_weights(weights)
     return 1 / sqrt(sum(weights))
 end
 
+
+"""
+    save_weighted_mean(values, errors, sigmas, counts)
+
+Compute the weighted mean, stderr, stdev, and counts 
+given vectors of measurements with provided values, 
+stderrors, sigmas (not used), and counts per measurement.
+Skip over missing values, returning missings if no nonmissings.
+"""
 function safe_weighted_mean(values, errors, sigmas, counts)
 	filt = filt_missing(values, verbose=false)
 	filt .&= filt_missing(errors, verbose=false)
@@ -396,3 +447,158 @@ function safe_weighted_mean(values, errors, sigmas, counts)
 	
 	return x_mean, std_err, sigma, counts_tot 
 end
+
+
+@doc raw"""
+    model_vel_1c(x, xerr; <keyword arguments>)
+
+Fits a 1c model to a set of velocities and uncertainties
+
+# Arguments
+- `μ_0_prior=0` prior mean on $\mu$
+- `μ_s_prior=0` prior std on $\mu$
+- `σ_max` maximum value of $\sigma$ (uniform prior)
+"""
+@model function model_vel_1c(x, xerr; μ_0_prior=0, μ_s_prior=100, σ_max=20)
+    μ ~ Normal(μ_0_prior, μ_s_prior)
+    σ ~ Uniform(0, σ_max)
+	s = @. sqrt(σ^2 + xerr^2)
+
+    m = fill(μ, length(x))
+	x ~ MvNormal(m, s)
+end
+
+
+
+@doc raw"""
+    model_vel_sigma_R(vz, vz_err, R_ell; <kwargs>)
+
+Fits a 1c model to a set of velocities and uncertainties
+
+# Args
+- `μ_0_prior=0` prior mean on $\mu$
+- `μ_s_prior=100` prior std on $\mu$
+- `σ_max` maximum value of $\sigma$ (uniform prior)
+- `R0` radius where $\sigma$ is not affected by `dlσ_dlR`.
+"""
+@model function model_vel_sigma_R(vz, vz_err, R_ell; μ_0_prior=0, μ_s_prior=100, σ_max=20, R0=10)
+    log_R_ell = log10.(R_ell ./ R0)
+    μ ~ Normal(μ_0_prior, μ_s_prior)
+    σ ~ Uniform(0, σ_max)
+    dlσ_dlR ~ Normal(0, 0.3)
+
+    s_int = σ .* 10 .^ (dlσ_dlR * log_R_ell)
+	s = @. sqrt(s_int^2 + vz_err^2)
+
+    m = fill(μ, length(vz))
+	vz ~ MvNormal(m, s)
+end
+
+
+
+@doc raw"""
+    model_vel_gradient(vz, vz_err, ξ, η; <keyword arguments>)
+Fits a normal (gaussian) distribution to 3d data with errors (to include spatial gradient)
+
+# Arguments
+- `μ_0_prior=0` prior mean on $\mu$
+- `μ_s_prior=0` prior std on $\mu$
+- `σ_max` maximum value of $\sigma$ (uniform prior)
+- `rv_grad_s=0.1` Prior std on gradient in xi and eta (in units of km/s/arcmin).
+"""
+@model function model_vel_gradient(x, xerr, ξ, η; μ_0_prior=0, μ_s_prior=100, σ_max=20, rv_grad_s=0.1)
+    μ ~ Normal(μ_0_prior, μ_s_prior)
+    σ ~ Uniform(0, σ_max)
+
+    A ~ Normal(0, rv_grad_s)
+    B ~ Normal(0, rv_grad_s)
+
+	m = @. μ + A*ξ + B*η
+	s = @. sqrt(σ^2 + xerr^2)
+
+	x ~ MvNormal(m, s)
+end
+
+
+"""
+    bayes_evidence(model, df_samples, arg)
+    bayes_evidence(model, df_samples, args)
+
+Compute the bayes evidence of a nested model given the Turing model 
+and the samples. May give a single argument or a list of more than 
+1 argument. Assumes that the base model is recovered when the parameters
+are zeroed.
+"""
+function bayes_evidence(model, df_samples, arg::String)
+	kde = KernelDensity.kde(df_samples[!, arg])
+    Nsamples = size(df_samples, 1)
+	df_prior = sample(model, Prior(), Nsamples) |> DataFrame
+	kde_prior = KernelDensity.kde(df_prior[!, arg])
+
+	return log(pdf(kde, 0.) / pdf(kde_prior, 0.))
+end
+
+
+
+function bayes_evidence(model, df_samples, args::AbstractVector{String})
+	xs = tuple([df_samples[!, arg] for arg in args]...)
+	kde = KernelDensity.kde(xs)
+
+    Nsamples = size(df_samples, 1)
+	df_prior = sample(model, Prior(), Nsamples) |> DataFrame
+	
+	xs = tuple([df_prior[!, arg] for arg in args]...)
+	kde_prior = KernelDensity.kde(xs)
+
+	x0 = zeros(length(args))
+	return log(pdf(kde, x0...) / pdf(kde_prior, x0...))
+end
+
+
+"""
+    prob_chi2(df_rv_meas)
+
+Returns the p-values of the significance of the chi2 values for
+each row in the DF, 
+assuming
+- `RV_err` weighted SEM on RV uncertainty
+- `RV_sigma` weighted standard deviation of measurements
+- `RV_count` number of observations.
+
+In detail, this is a chi2 test where,
+```
+
+```
+"""
+function prob_chi2(df_rv_meas)
+    return map(eachrow(df_rv_meas)) do row
+        prob_chi2(row.RV_sigma, row.RV_err, row.RV_count)
+    end
+end
+
+
+"""
+    prob_chi2(sigma, sem, count)
+
+Returns the p-values of the significance of the chi2 values for
+each row in the DF, 
+assuming
+- `RV_err` weighted SEM on RV uncertainty
+- `RV_sigma` weighted standard deviation of measurements
+- `RV_count` number of observations.
+
+In detail, this is a chi2 test where,
+```
+
+```
+"""
+function prob_chi2(sigma, sem, count)
+    if count < 2
+        return NaN
+    end
+
+    chi2 = sigma^2 / sem^2
+    ν = count - 1
+    ccdf(Chisq(ν), chi2)
+end
+
