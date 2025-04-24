@@ -63,13 +63,13 @@ These stars are distributed similar to the fiducial (probable members) sample bu
 
 ![Sculptor selection criteria](figures/scl_selection.png){#fig:sculptor_selection}
 
-Figure: The selection criteria for Scl members. Probable members (2-component) are orange, and all field stars (satisfying quality criteria) are in light grey. **Top:** Tangent plane. **Bottom left:** Colour magnitude diagram. **Bottom right:** Proper motion. 
+Figure: The selection criteria for Scl members. Probable members (2-component) are orange, and all field stars (satisfying quality criteria) are in light grey. **Top:** Tangent plane. We outline in star symbols the two stars from @sestito+2023a. **Bottom left:** Colour magnitude diagram. **Bottom right:** Proper motion. 
 
 
 
 ![Ursa Minor Selection](figures/umi_selection.png){#fig:umi_selection}
 
-Figure: Similar to @fig:sculptor_selection except for Ursa Minor. UMi features a very extended density profile with some stars ~ 6$R_h$ including a RV member. UMi is also highly elliptical compared to other classical dwarfs. 
+Figure: Similar to @fig:sculptor_selection except for Ursa Minor. We outline RV members outside of $3R_h$ in black stars (from @sestito+2023b and @pace+2020 and @spencer+2018).
 
 
 
@@ -117,18 +117,21 @@ First, we crossmatch all catalogues to J+24 Gaia stars. If a study did not repor
 
 We combine the mean RV measurement from each study using the inverse-variance weighted mean and standard uncertainty. 
 $$
-\bar v = \frac{1}{\sum w_i}\sum_i w_i\ v_{i} \\
+\bar v = \frac{1}{\sum w_i}\sum_i w_i\ v_{i} 
+$$
+$$
 \delta v = \sqrt{\frac{1}{\sum_i w_{i}^2}}
 $$
+
 where $w_i = 1/s_i^2$, and we estimate the inter-study standard deviation
 $$
 s^2 = \frac{1}{\sum w_i} \sum_i w_i (v_{i} - \bar v)^2
 $$
 We remove stars with significant velocity dispersions as measured between or within a study:
 $$
-s < 5\,\delta v\,\sqrt{n}
+P\left(\chi2(N-1) < \frac{s^2}{\delta v^2}\right) > 0.001
 $$
-where $s, \delta v, n$ are the standard deviation, standard, error, and number of measurements for both a study (with multiple epochs) and inter-study comparisons. 
+where $s, \delta v, N$ are the weighted standard deviation, weighted standard error, and number of observations. We apply this cut to both within a study and between studies, which typically removes stars with reduced $\chi^2 \gtrsim 2$. 
 
 The combined RV likelihood is then
 $$
@@ -136,10 +139,13 @@ $$
 $$
 where
 $$
-{\cal L}_{\rm RV, sat} = N(\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2) \\
+{\cal L}_{\rm RV, sat} = N(\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2)
+$$
+$$
 {\cal L}_{\rm RV, bg} = N(0, \sigma_{\rm halo}^2)
 $$
-where $\mu_v$ and $\sigma_v$ are the systemic velocity and dispersion of the satellite, and $\delta v_i$ is the individual measurement uncertainty. Typically, the velocity dispersion will dominate the uncertainty budget here. We assume a halo/background velocity dispersion of a constant $\sigma_{\rm halo} = 100 $ km/s [e.g. @brown+2010].
+
+where $\mu_v$ and $\sigma_v$ are the systemic velocity and dispersion of the satellite, and $\delta v_i$ is the individual measurement uncertainty. Typically, the velocity dispersion will dominate the uncertainty budget here. We assume a halo/background velocity dispersion of a constant $\sigma_{\rm halo} = 100$  km/s [e.g. @brown+2010].
 
 Similar to above, we retain stars with the resulting membership probability of greater than 0.2.
 
@@ -156,62 +162,49 @@ $$
 $$
 where $\sigma_{\rm halo} = 100\,{\rm km\,s^{-1}}$ is the velocity dispersion of the MW halo adopted above, a reasonable assumption for dwarfs in orbit around the MW. 
 
-## 
-
-|      | Study       | Instrument     | Memb       | Rep. | N$\sigma > s$ | $\bar v$ | $\sigma_v$ |
-| ---- | ----------- | -------------- | ---------- | ---- | ------------- | -------- | ---------- |
-| Scl  |             |                |            |      |               |          |            |
-|      | tolstoy+23  | VLT/FLAMES     | 200 (1604) | 500  |               |          | 9.6        |
-|      | sestito+23a | GMOS           | 2000       |      |               |          | -          |
-|      | walker+09   | MMFS           | 2000       |      |               |          | 9.5        |
-|      | APOGEE      | APOGEE         | 200        | 200  |               | 8        | 9          |
-| UMi  |             |                |            |      |               |          |            |
-|      | sestito+23b | GRACES         | 6          |      |               |          |            |
-|      | pace+20     | Keck/DEIMOS    |            |      |               | -245     | 8.6        |
-|      | spencer+18  | MMT/Hectoshell |            |      |               | -247     |            |
-|      | APOGEE      | APOGEE         | 100        | 100  |               |          |            |
-
-Table: Summary of velocity measurements and derived properties. 
-
 ## Sculptor
 
 
 
-![Scl velocity sample](figures/scl_vlos_xi_eta.pdf)
+**Figure:** Velocity histogram of Scl and UMi.
 
-Figure: A plot of the corrected los velocities for Scl binned in tangent plane coordinates. We detect a slight rotational gradient towards the bottom right. **TODO** add a histogram of velocities here too with fits, maybe with respect to distance.
 
-![Scl velocity gradient](figures/scl_vel_gradient.pdf) 
 
-Figure: A velocity gradient in Sculptor! The arrow marks the gradient induced by Scl's proper motion on the sky. **TODO**: plot of velocity of Scl in direction of gradient. 
+![Scl velocity sample](figures/scl_rv_2dhist.pdf)
+
+Figure: A plot of the corrected los velocities for Scl binned in tangent plane coordinates. We detect a slight rotational gradient towards the bottom right. **TODO**: scatter plot and gradient here
+
+
+
+![Scl velocity gradient](figures/scl_vel_gradient_binned.pdf) 
+
+Figure: A velocity gradient in Sculptor! The arrow marks the gradient induced by Scl's proper motion on the sky. **Todo: add running median and scatter points...**
 
 
 
 For Sculptor, we combine radial velocity measurements from APOGEE, @sestito+2023a, @tolstoy+2023, and @WMO2009. @tolstoy+2023 and @WMO2009 provide the bulk of the measurements. We find that there is no significant velocity shift in crossmatched stars between catalogues. After crossmatching to Gaia and excluding significant inter-study dispersions, we have a sample of XXXX members.
 
-We derive a systemic velocity of $111.2\pm0.2$ km/s with velocity dispersion $9.67\pm0.16$ km/s. Our values are very consistent with previous work [e.g. @WMO2009, @arroyo-polonio+2024, @tolstoy+2023].
-
-Finally, we attempt to fit a linear velocity gradient to Scl by adding parameters for the gradient in $\xi$ ande $\eta$. We derive a gradient of xxx and xxx (see Figure~FIG.), noting that this direction is different and higher in magnitude than the proper motion of Scl. Comparing the density difference, we find a bayes factor of -15. Compared to past work, @battaglia+2008, @arroyo-polonio+2021. 
+We additionally add a velocity gradient for Sculptor (adding parameters A, B $\sim N(0, 6)$km/s/deg). We derive a systemic velocity of $111.2\pm0.2$ km/s with velocity dispersion $9.67\pm0.16$ km/s. Our values are very consistent with previous work [e.g. @WMO2009, @arroyo-polonio+2024, @tolstoy+2023]. See Appendix for a more detailed comparison and inter-study tests.
 
 
 
-*Is it interesting that the velocity dispersion of Scl seems to increase significantly with Rell?* 
+We detect a gradient of $4.8\pm1.3$ km/s/deg  at a position angle of $-147_{-12}^{+15}$ degrees. 
 
-
+Compared to past work, @battaglia+2008, @arroyo-polonio+2021. 
 
 ## Ursa Minor
 
-![UMi velocity sample](figures/umi_vlos_xi_eta.pdf)
+![UMi velocity sample](figures/umi_rv_hist.pdf)
 
-Figure: A plot of the corrected los velocities for UMi binned in tangent plane coordinates. There is no clear rotation or velocity gradient here. Interestingly, many velocity members are as far as 100 arcmin away.
+Figure: UMi velocities. More or less gaussian.
 
 For UMi, we collect radial velocities from, APOGEE, @sestito+2023b, @pace+2020, and @spencer+2018.
 
-We shifted the velocities of @spencer+2018 ($-0.9$ km/s) and @pace+2020 ($+1.0$ km/s) to reach the same scale based on a crossmatch of about 200 common stars. Since the mean difference in velocities in this crossmatch is of order 1.9 km/s, we adopt this as the systematic LOS velocity error.
-
-UMi interestingly has a more structured observational pattern, but does not appear to have any significant velocity substructure. 
+We shifted the velocities of @spencer+2018 ($-1.1$ km/s) and @pace+2020 ($+1.1$ km/s) to reach the same scale. We found 183 crossmatched common stars (passing 3$\sigma$ RV cut, velocity dispersion cut, and PSAT J+24 > 0.2 w/o velocities). Since the median difference in velocities in this crossmatch is about 2.2 km/s, we adopt 1 km/s as the approximate systematic error here. 
 
 
+
+We detect a mean $-245.9\pm0.3$  and velocity dispersion of $8.76\pm0.24$.
 
 ## Discussion and limitations
 
@@ -238,30 +231,7 @@ In summary, we have used J+24 data to derive the density profiles for Fornax, Sc
 
 Figure: The density profiles of Sculptor, Ursa Minor, and Fornax compared to Exp2D and Plummer density profiles. Dwarf galaxies are scaled to the same half-light radius and density at half-light radius (fit from the inner 3 scale radii exponential recursively. )
 
-# Appendix / Extra Notes
-
-## Additional density profile tests
 
 
-
-![Density profiles](figures/scl_density_methods_extra.png){#fig:sculptor_observed_profiles}
-
-Figure: Density profiles for various assumptions for Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a 2-component bayesian model assuming circular radii, simple is the series of simple cuts described in Appendix ?, bright is the sample of the brightest half of stars (scaled by 2), DELVE is a sample of  RGB  stars (background subtracted and rescaled to match).
-
-Note that a full rigorous statistical analysis would require a simulation study of injecting dwarfs into Gaia and assessing the reliability of various methods of membership and density profiles. This is beyond the scope of this thesis. 
-
-
-
-```
-SELECT TOP 1000
-       *
-FROM delve_dr2.objects
-WHERE 11 < ra
-and ra < 19
-and -37.7 < dec
-and dec < -29.7
-
-```
-
-
+## 
 

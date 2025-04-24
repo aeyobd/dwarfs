@@ -121,7 +121,7 @@ Figure: Ursa Minor Dwarf. UMi appears as a diagonal/elliptical haze of stars fro
 | distance         | $70.1 \pm 3.6$ kpc                                           | -         |
 | $\mu_\alpha*$    | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | 3         |
 | $\mu_\delta$     | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3         |
-| radial velocity  | $-245.8 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$      | this work |
+| radial velocity  | $-245.9 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$      | this work |
 | $\sigma_v$       | $8.8 \pm 0.2$                                                | this work |
 | $r_h$            | $18.2 \pm 0.1$ arcmin                                        | 1         |
 | ellipticity      | $0.55 \pm 0.01$                                              | 1         |
@@ -278,7 +278,3 @@ r_{\rm circ}^{\rm max} = \alpha\ r_s
 $$
 
 where $\alpha\approx2.16258$, and $v_{\rm circ}^{\rm max}$ can be found from either of the equations above.
-
-# What is up with probabilities
-
-![image-20250416112038183](/Users/daniel/Library/Application Support/typora-user-images/image-20250416112038183.png){#fig:test width=100%}
