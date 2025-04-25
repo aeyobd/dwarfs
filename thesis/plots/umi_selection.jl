@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -248,6 +248,38 @@ rv_distant.R_ell ./ R_h
 	)
 )
 
+# ╔═╡ 90436a7d-e357-4365-922a-42f61e3dfb22
+md"""
+# Extra
+"""
+
+# ╔═╡ 5d0a5768-85ba-4913-9108-9302cc63cf4b
+rv_all = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined.fits")
+
+# ╔═╡ a776c46b-4a7e-4857-aac2-4120c6d1d4d2
+id_nonmemb = setdiff(rv_all.source_id, rv_members.source_id)
+
+# ╔═╡ 55ab1364-bcf5-4c29-8081-cc3808b4e53c
+rv_nonmemb = rv_all[rv_all.source_id .∈ [id_nonmemb], :]
+
+# ╔═╡ 0f5143a6-f892-4a3e-967d-5e6b04cb12f0
+compare_samples(
+		(
+			:memb => rv_members,
+
+			:nonmemb => rv_nonmemb,	
+		),
+	Dict(
+		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
+			label="all" => (alpha=1, markersize=2),
+		),
+		:memb => (;	alpha=1, markersize=2, color=:black, 
+			label="memb" => (alpha=1, markersize=2),
+		),
+
+	)
+)
+
 # ╔═╡ Cell order:
 # ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
@@ -284,3 +316,8 @@ rv_distant.R_ell ./ R_h
 # ╠═9eaaf2be-936b-4d26-9e2e-c04f551c515c
 # ╠═ec974caa-59e6-4555-b9b4-48f33d31d00b
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
+# ╠═90436a7d-e357-4365-922a-42f61e3dfb22
+# ╠═5d0a5768-85ba-4913-9108-9302cc63cf4b
+# ╠═a776c46b-4a7e-4857-aac2-4120c6d1d4d2
+# ╠═55ab1364-bcf5-4c29-8081-cc3808b4e53c
+# ╠═0f5143a6-f892-4a3e-967d-5e6b04cb12f0

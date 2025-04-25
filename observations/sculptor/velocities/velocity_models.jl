@@ -116,7 +116,6 @@ md"""
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
 begin 
 	memb_filt = rv_meas.PSAT_RV .> 0.2# ignore spatial 
-	memb_filt .|= .!ismissing.(rv_meas.RV_gmos)
 
 	memb_filt .&= rv_meas.F_scatter
 
@@ -151,6 +150,9 @@ extrema(memb_stars.RV)
 
 # ╔═╡ a1938588-ca40-4844-ab82-88c4254c435b
 length(memb_stars.RV)
+
+# ╔═╡ 45d748e7-42a0-471e-b290-e3469c0aa283
+memb_stars[.!ismissing.(memb_stars.RV_gmos), [:source_id, :ra, :dec, :PSAT]]
 
 # ╔═╡ 6734991c-16c0-4424-a2bb-84bfa811121f
 md"""
@@ -292,7 +294,7 @@ df_Rell = DataFrame(samples_Rell)
 median(df_Rell.μ) + Δv_gsr
 
 # ╔═╡ 4f00f714-6b16-41c7-a3c8-f2743d6023bf
-samples_prior_Rell = sample(model_Rell, Prior(), 10000)
+
 
 # ╔═╡ 137bbc9c-1e02-4f78-acd1-0e30cf982615
 bf_sigma_Rell = RVUtils.bayes_evidence(model_Rell, df_Rell, "dlσ_dlR")
@@ -364,8 +366,32 @@ median(df_gradient.μ) + Δv_gsr
 # ╔═╡ ad607c95-0aea-4d84-8f18-e5b929b9bfca
 bf_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
 
+# ╔═╡ 65f7b7e0-2439-477e-8036-a28a6903955f
+θs = mod1.(df_gradient.Θ_grad, 360.) .- 360
+
+# ╔═╡ 96b41e0b-b9f3-41ba-bc56-f3febd8833d3
+quantile(θs, [0.16, 0.5, 0.84]) .- median(θs)
+
 # ╔═╡ 4d7e7b96-74a0-4066-88cf-739c043c7f47
 summary_gradient = RVUtils.summarize(samples_gradient)
+
+# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
+md"""
+code below validates induced PM gradient (should be approx 2).
+"""
+
+# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
+θ_m = median(df_gradient.Θ_grad)
+
+# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
+xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m)
+
+
+# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
+icrs0 = lguys.ICRS(obs_properties)
+
+# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
+vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 
 # ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 @savefig "v_gradient_derived" let
@@ -388,27 +414,6 @@ summary_gradient = RVUtils.summarize(samples_gradient)
 
 	fig
 end
-
-# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
-md"""
-code below validates induced PM gradient (should be approx 2).
-"""
-
-# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
-θ_m = median(df_gradient.Θ_grad)
-
-# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
-xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m)
-
-
-# ╔═╡ c90bea9f-0efd-482e-88d8-114d68aed880
- @. atand(-1, -1)
-
-# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
-icrs0 = lguys.ICRS(obs_properties)
-
-# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
-vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 
 # ╔═╡ af0d2050-b42e-4a7f-aabb-5b08d23381e9
 lguys.transform(ICRS, lguys.GSR(ra=icrs0.ra + 2/vec_pm[1] *cos(icrs0.dec), dec=icrs0.dec + 2/vec_pm[2], distance=icrs0.distance, radial_velocity=0)).radial_velocity  .- Δv_gsr
@@ -970,6 +975,7 @@ end
 # ╠═064dff05-192d-41bb-993f-5fb5abc36ecd
 # ╠═31a6c2e4-538c-4adc-bbda-5043680b17f7
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
+# ╠═45d748e7-42a0-471e-b290-e3469c0aa283
 # ╟─6734991c-16c0-4424-a2bb-84bfa811121f
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
 # ╠═5cf336f6-e3eb-4668-b074-18b396f027be
@@ -1013,15 +1019,16 @@ end
 # ╠═e79d9d82-84cd-4bc5-9ea8-be6b07cacf6d
 # ╠═f2aa15e2-824b-4f0e-8ad0-42611abe06da
 # ╠═ad607c95-0aea-4d84-8f18-e5b929b9bfca
-# ╠═4d7e7b96-74a0-4066-88cf-739c043c7f47
+# ╠═65f7b7e0-2439-477e-8036-a28a6903955f
+# ╠═96b41e0b-b9f3-41ba-bc56-f3febd8833d3
 # ╠═2b88915c-7222-44be-a483-b967ea131b80
+# ╠═4d7e7b96-74a0-4066-88cf-739c043c7f47
 # ╠═0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 # ╠═c48bb30d-1186-4940-b061-91f53e8335e1
 # ╟─8555e608-53c1-40d3-b21e-413af8953c30
 # ╠═af0d2050-b42e-4a7f-aabb-5b08d23381e9
 # ╠═7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
 # ╠═3195286d-d85f-43a3-aa25-dae2134f570b
-# ╠═c90bea9f-0efd-482e-88d8-114d68aed880
 # ╠═4a473039-79f0-4d77-aa0c-681e2fba4f4c
 # ╠═88f2918e-e126-420a-96a2-5746a8010f73
 # ╠═ed35eb68-74f7-4009-9b68-dfca2ea547af

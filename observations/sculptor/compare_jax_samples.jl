@@ -209,6 +209,31 @@ filt_ell = scl_wide_match.PSAT .> 0.5
 # ╔═╡ d9810ca5-6d13-4bad-aa23-aeddd1e02a6b
 sum(filt_wide .!== filt_ell)
 
+# ╔═╡ 865a85c8-cb48-4fd9-a835-0ddb4c47fc6c
+scatter(scl_wide_match.L_PM_BKD, log10.(scl_wide_match.L_PM_BKD_1 ./ scl_wide_match.L_PM_BKD),alpha=0.1, markersize=1)
+
+# ╔═╡ dffbbb69-43d2-4e6f-b7c9-e8c59b521b08
+scatter(scl_wide_match.L_PM_SAT, scl_wide_match.L_PM_SAT_1 ./ scl_wide_match.L_PM_SAT)
+
+# ╔═╡ ae22d0fc-eb19-4ccb-9389-d30cdd131c37
+scatter(log10.(scl_wide_match.L_CMD_BKD), log10.(scl_wide_match.L_CMD_BKD_1),
+	   axis=(; limits=(-10, 0, -10, 0)),alpha=0.1, markersize=1)
+
+# ╔═╡ f590c80e-18b3-48e6-8183-2064f03358d3
+log10.(scl_wide_match.L_CMD_BKD)
+
+# ╔═╡ 27bd2998-49bc-4461-a4ff-481497792df4
+scatter(log10.(scl_wide_match.L_CMD_SAT), log10.(scl_wide_match.L_CMD_SAT_1 ./ scl_wide_match.L_CMD_SAT),
+	   axis=(; limits=(-10, 0, -1, 2)),
+		markersize=1, alpha=0.1
+)
+
+# ╔═╡ 15e8ba81-8e8d-4523-9ca5-0a210712587d
+sum(scl_wide_match.F_BEST .!= scl_wide_match.F_BEST)
+
+# ╔═╡ d60fa56a-46a2-4dd0-a7eb-2e8a57290c09
+sum(ismissing.(scl_wide_match.ra_1))
+
 # ╔═╡ f66e116c-ad7a-4804-a3e9-099b7743fafa
 md"""
 # Double checking calculated properties
@@ -268,12 +293,12 @@ scatter(xi, df.xi .- xi;
 )
 
 # ╔═╡ 6a58d6b1-5320-4515-8dad-18481cdca74f
-scatter(eta, df.eta .- eta,
+scatter(xi, df.eta .- eta,
 	axis=(; xlabel="eta (degrees)", ylabel="eta jax - xi me")
 )
 
 # ╔═╡ 52bd977c-cec6-4483-bd0c-470a3a8f071f
-r_ell = LilGuys.calc_r_ell(xi, eta, ell, PA) *60
+r_ell = LilGuys.calc_R_ell(xi, eta, ell, PA) *60
 
 # ╔═╡ f5547f0a-b4ad-4d98-97a6-953a7be11950
 scatter(r_ell, df.r_ell .- r_ell / 12.33 / sqrt(1-ell);
@@ -871,75 +896,17 @@ df.source_id
 # ╔═╡ 83462485-795b-4efe-b3d8-3e882f9077b6
 scl_gaia.source_id
 
-# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
-@assert all(scl_1comp.source_id .== df.source_id)
-
-# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
-@assert all(scl_circ.source_id .== df.source_id)
-
-# ╔═╡ a9ebb6fa-569c-4418-b92e-101fec1e0730
-import DataFrames: disallowmissing!
-
-# ╔═╡ 0a48ae68-348b-4494-9c81-d11c9bbe87a0
-begin 
-	df_out = leftjoin(df,  scl_gaia[:, extra_cols], on=:source_id, order=:left)
-
-	disallowmissing!(df_out)
-	
-	df_out[!, :L_S_SAT_1C] .= scl_1comp.L_S_SAT
-	df_out[!, :PSAT_S_1C] .= scl_1comp.PSAT_S
-	df_out[!, :PSAT_1C] .= scl_1comp.PSAT
-
-	df_out[!, :L_S_SAT_CIRC] .= scl_circ.L_S_SAT
-	df_out[!, :PSAT_S_CIRC] .= scl_circ.PSAT_S
-	df_out[!, :PSAT_CIRC] .= scl_circ.PSAT
-
-	rename!(df_out, :PSAT => :PSAT_ELL, 
-		:L_S_SAT => :L_S_SAT_ELL,
-		:PSAT_S => :PSAT_S_ELL,
-	)
-
-	df_out[!, :PSAT] = max.(df_out.PSAT_CIRC, df_out.PSAT_1C, df_out.PSAT_ELL)
-
-end
-
 # ╔═╡ 67a1bf24-9ed1-4a0f-907d-4300a81028f9
 df_out
 
 # ╔═╡ d1cea355-9dea-4531-b69a-40423d84013a
 setdiff(names(scl_gaia), names(df_out))
 
-# ╔═╡ dd1bbf56-4d9a-445c-9722-5541b63d227d
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1],
-		xlabel = "Psat 2c circ",
-		ylabel = "Psat 1c ell",
-	)
-	
-	scatter!(df_out.PSAT_CIRC, df_out.PSAT_1C)
-	fig
-end
+# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
+@assert all(scl_1comp.source_id .== df.source_id)
 
-# ╔═╡ d39d9fba-288f-48fc-8db5-eb10854cb4a7
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1],
-		xlabel = "Psat 2c circ",
-		ylabel = "Psat 2c ell",
-	)
-	
-	
-	scatter!(df_out.PSAT_CIRC, df_out.PSAT_ELL)
-
-	fig
-end
-
-# ╔═╡ 6f3096a4-812c-47c1-94be-2d3715282bd4
-disallowmissing!(df_out)
-
-# ╔═╡ 9b57518d-98b0-4cb6-a290-9b9ea22cefac
-LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, overwrite=true)
+# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
+@assert all(scl_circ.source_id .== df.source_id)
 
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
@@ -964,7 +931,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═035a4b04-729a-413d-b1e4-d7fc0ecbfad9
 # ╠═8a8aadb5-b84f-4ed0-8942-2c407ccc2517
 # ╠═9ec35690-9048-4f7f-954f-33a474d33bf3
-# ╠═235e625f-0cec-440a-bb07-be3e11cbe851
+# ╟─235e625f-0cec-440a-bb07-be3e11cbe851
 # ╠═dc508d1f-1876-4e85-96fd-7f4e224d7945
 # ╠═729108a6-2f3c-4a74-992f-7ae50edd9947
 # ╠═dc4e77af-d1bd-4b40-8645-7fc4d8dc2752
@@ -976,6 +943,13 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═5f271559-a84e-4ad1-b9ca-db99ec0fb399
 # ╠═44714fd2-37cf-49f1-8388-86d169441288
 # ╠═d9810ca5-6d13-4bad-aa23-aeddd1e02a6b
+# ╠═865a85c8-cb48-4fd9-a835-0ddb4c47fc6c
+# ╠═dffbbb69-43d2-4e6f-b7c9-e8c59b521b08
+# ╠═ae22d0fc-eb19-4ccb-9389-d30cdd131c37
+# ╠═f590c80e-18b3-48e6-8183-2064f03358d3
+# ╠═27bd2998-49bc-4461-a4ff-481497792df4
+# ╠═15e8ba81-8e8d-4523-9ca5-0a210712587d
+# ╠═d60fa56a-46a2-4dd0-a7eb-2e8a57290c09
 # ╟─f66e116c-ad7a-4804-a3e9-099b7743fafa
 # ╠═8ac66e16-932c-466f-bb56-0befe5681c04
 # ╠═e8dc3faf-e3e4-44e6-988d-bbfdc9098d07
@@ -1077,13 +1051,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═6e3b43a1-4d90-46d7-9cad-7f258930c019
 # ╠═c378e6e7-a599-4dda-893d-1bc739cc7b3d
 # ╠═83462485-795b-4efe-b3d8-3e882f9077b6
-# ╠═0a48ae68-348b-4494-9c81-d11c9bbe87a0
 # ╠═67a1bf24-9ed1-4a0f-907d-4300a81028f9
 # ╠═d1cea355-9dea-4531-b69a-40423d84013a
-# ╠═dd1bbf56-4d9a-445c-9722-5541b63d227d
-# ╠═d39d9fba-288f-48fc-8db5-eb10854cb4a7
 # ╠═b546c73a-823b-4f19-a9a3-d01946c4982f
 # ╠═ff29e7c1-5aa4-4295-b114-e38fc3a208c7
-# ╠═a9ebb6fa-569c-4418-b92e-101fec1e0730
-# ╠═6f3096a4-812c-47c1-94be-2d3715282bd4
-# ╠═9b57518d-98b0-4cb6-a290-9b9ea22cefac

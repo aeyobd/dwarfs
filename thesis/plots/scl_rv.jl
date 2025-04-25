@@ -27,11 +27,11 @@ include("./paper_style.jl")
 # ╔═╡ c6631ad6-cc41-4a67-82c9-9d2b20115c9c
 include("utils.jl")
 
-# ╔═╡ 88025a55-f541-4aa1-8426-14e83bd790b7
-CairoMakie.activate!(type=:png)
-
 # ╔═╡ 63d5e3f6-6cec-4e50-8fa1-8907508aa47f
 import TOML
+
+# ╔═╡ 88025a55-f541-4aa1-8426-14e83bd790b7
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 4c551542-92dc-4a61-b4aa-e272fd29d565
 stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")

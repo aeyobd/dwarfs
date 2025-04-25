@@ -66,7 +66,7 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("../processed/best_sample.fits")
+j24 = read_fits("../processed/best_fullfield_sample.fits")
 
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_all = read_fits("processed/rv_apogee.fits")
@@ -92,6 +92,9 @@ md"""
 # ╔═╡ 8e0095e7-2198-439d-bd19-976bdb1d3766
 gmos_raw = CSV.read("$data_dir/sestito+23_gmos.csv", DataFrame)
 
+# ╔═╡ a076af44-586c-4f4c-9eee-4ec4e775bd17
+RVUtils.xmatch(gmos_raw |> x-> rename(x, "RA"=>"ra", "Dec"=>"dec"), j24, 1)
+
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
 gmos = let
 	gmos = copy(gmos_raw) 
@@ -105,7 +108,7 @@ gmos = let
 	gmos_rv_sys_err = 13.3
 	gmos.RV_err .= @. sqrt(gmos.RV_err^2 + gmos_rv_sys_err^2)
 
-	filt, idx = RVUtils.xmatch(gmos, j24)
+	filt, idx = RVUtils.xmatch(gmos, j24, 1)
 	@assert all(filt) "not all stars xmatched correctly"
 	gmos[!, :source_id] = j24.source_id[idx]
 	
@@ -165,13 +168,13 @@ md"""
 # ╔═╡ d11edca7-b9ae-4269-9e1b-661d59bd965e
 all_stars[.!ismissing.(all_stars.RV_gmos), :].source_id
 
+# ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
+rv_meas.RV_gmos[.!ismissing.(rv_meas.RV_gmos)]
+
 # ╔═╡ 5da98e0d-8ba5-4ed9-aa83-4755ba43aef7
 md"""
 - Here, we just want to check that sestito+23's stars are kept
 """
-
-# ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
-rv_meas.RV_gmos[.!ismissing.(rv_meas.RV_gmos)]
 
 # ╔═╡ 8f243944-3d0b-48ce-9f90-8d448c089239
 md"""
@@ -323,6 +326,9 @@ length(rv_meas.RV)
 
 # ╔═╡ 768bb669-2f9a-41f6-97c5-23f0bba9be9c
 sum(rv_meas.F_scatter )
+
+# ╔═╡ 8162e31f-9b76-4348-8ae4-d1e66d6ac429
+median(rv_meas.RV_err)
 
 # ╔═╡ 7bd42254-0601-47e0-9243-c3dfb625d549
 md"""
@@ -716,6 +722,7 @@ end
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
 # ╟─09b3aaf8-d189-4f84-8705-d2b25bffcc94
 # ╠═8e0095e7-2198-439d-bd19-976bdb1d3766
+# ╠═a076af44-586c-4f4c-9eee-4ec4e775bd17
 # ╠═b7345279-4f80-47ad-a726-537571849eae
 # ╟─bbf49122-11b1-4272-a660-0437c6aa2b3f
 # ╠═d3333b48-aa4e-42c1-9e0a-bbff98e3647d
@@ -762,6 +769,7 @@ end
 # ╠═ad832280-d456-411d-9199-47a1a2909c79
 # ╠═2ce6f17b-38f4-4a60-8e11-510650b83f04
 # ╠═768bb669-2f9a-41f6-97c5-23f0bba9be9c
+# ╠═8162e31f-9b76-4348-8ae4-d1e66d6ac429
 # ╟─7bd42254-0601-47e0-9243-c3dfb625d549
 # ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
 # ╠═15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e

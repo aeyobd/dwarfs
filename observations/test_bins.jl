@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -57,7 +57,7 @@ import DensityEstimators as DE
 datafile = let
 	dir = joinpath(galaxy, "data")
 
-	filenames = ["jensen+24_1c.fits", "jensen+24_2c.fits", "jensen+24_wide.fits", "j24_1c.fits", "j24_2c.fits"]
+	filenames = ["jensen+24_1c.fits", "jensen+24_2c.fits", "j24_1c.fits", "j24_2c.fits"]
 	filename = ""
 	for file in filenames
 		if isfile(joinpath(dir, file))

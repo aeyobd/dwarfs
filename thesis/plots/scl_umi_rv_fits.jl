@@ -57,38 +57,58 @@ v0 = median(samples.μ)
 # ╔═╡ 06746433-dea4-485a-b5cd-e0ef2055c314
 σ = median(samples.σ)
 
+# ╔═╡ 43829ff1-e0be-476f-8ce8-2eff6eaf51b4
+v0-3σ,v0+3σ
+
+# ╔═╡ 63a2a5f3-133b-4bde-b6ea-7c3e76be761b
+(extrema(stars.vz[stars.vz_err .< 2]) .- v0) ./ σ
+
+# ╔═╡ 0ff4cce0-601b-4532-8c75-1e8961631fa1
+v0_umi = median(samples_umi.μ)
+
+# ╔═╡ f7999d84-cfe7-4803-b135-c6c7c7050066
+σ_umi = median(samples_umi.σ)
+
+# ╔═╡ cb1ff71e-48df-41b3-9da1-8b29c9118e05
+(extrema(stars_umi.vz[stars_umi.vz_err .< 2])  .- v0_umi )./ σ_umi
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "scl_umi_rv_fits" let
 	fig = Figure()
-
-	ax = Axis(fig[1,1], 
-		xlabel = L"$v_z$ / km\,s$^{-1}$",
-		ylabel = "density"
-	)
-
 	v0 = median(samples.μ)
 	σ = median(samples.σ)
+	ax = Axis(fig[1,1], 
+		xlabel = L"$v_z$ / km\,s$^{-1}$",
+		ylabel = "density",
+			  limits=(v0-4σ, v0+4σ, 0, nothing)
+	)
 
-	bins = LinRange(v0-5σ, v0+5σ, 40)
+
+
+	bins = LinRange(v0-4σ, v0+4σ, 40)
 	_, values, errs = LilGuys.histogram(stars.vz, bins, normalization=:pdf)
 
-	RVUtils.plot_samples!(samples, LinRange(v0-5σ, v0+5σ, 100), thin=100, )
+	RVUtils.plot_samples!(samples, LinRange(v0-4σ, v0+4σ, 100), thin=800, )
 	errorscatter!(midpoints(bins), values, yerror=errs, color=COLORS[2], size=5, linewidth=2)
 
 	text!(0.1, 0.8, text="Sculptor", space=:relative)
 
+
+
+	v0 = median(samples_umi.μ)
+	σ = median(samples_umi.σ)
 	ax = Axis(fig[2,1], 
 		xlabel = L"$v_z$ / km\,s$^{-1}$",
-		ylabel = "density"
+		ylabel = "density",
+		limits=(v0-4σ, v0+4σ, 0, nothing)
+
 	)
 
 
-	v0 = -70 #TODO, fix
-	σ = 9
 	bins = LinRange(v0-5σ, v0+5σ, 40)
 	_, values, errs = LilGuys.histogram(stars_umi.vz, bins, normalization=:pdf)
 
-	# RVUtils.plot_samples!(samples_umi, LinRange(v0-5σ, v0+5σ, 100), thin=100, )
+	RVUtils.plot_samples!(samples_umi, LinRange(v0-4σ, v0+4σ, 100), thin=800, )
 	errorscatter!(midpoints(bins), values, yerror=errs, color=COLORS[2], size=5, linewidth=2)
 
 	text!(0.1, 0.8, text="Ursa Minor", space=:relative)
@@ -112,4 +132,9 @@ end
 # ╠═21bdc277-d3b0-48c6-984b-538bda4348a4
 # ╠═0a22b941-0651-405e-9624-e9c344b7d93c
 # ╠═06746433-dea4-485a-b5cd-e0ef2055c314
+# ╠═43829ff1-e0be-476f-8ce8-2eff6eaf51b4
+# ╠═63a2a5f3-133b-4bde-b6ea-7c3e76be761b
+# ╠═0ff4cce0-601b-4532-8c75-1e8961631fa1
+# ╠═f7999d84-cfe7-4803-b135-c6c7c7050066
+# ╠═cb1ff71e-48df-41b3-9da1-8b29c9118e05
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

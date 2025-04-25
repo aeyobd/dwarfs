@@ -36,6 +36,9 @@ md"""
 This notebook takes the dataset created from velocity_xmatch.jl and analyzes it using MCMC to estimate the velocity dispersion and search for any possible velocity gradients.
 """
 
+# ╔═╡ 964ab896-5d9d-42ed-82c6-d7790ce9c871
+import CSV
+
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, sem
 
@@ -293,6 +296,9 @@ let
 	fig
 end
 
+# ╔═╡ 65fa819a-f73f-4954-b089-a569e7c9b113
+CSV.write("processed/mcmc_samples_vz.csv", df_gsr)
+
 # ╔═╡ 97dea677-17bb-434f-8174-c7b1fc09b329
 md"""
 # Sigma with Rell
@@ -341,9 +347,6 @@ samples_gradient = sample(model_gradient, NUTS(0.65), MCMCThreads(), 1000, 16)
 # ╔═╡ e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
 @savefig "gradient_corner" pairplot(samples_gradient)
 
-# ╔═╡ 0a4a2fcd-e0aa-4ab3-b07e-5f57734b2c6b
-@savefig "gradient_cyl_corner" pairplot(df_gradient[:, [:μ, :σ, :r_grad, :Θ_grad]])
-
 # ╔═╡ 184b4a5d-cbab-44b2-9620-bf928ad81d0e
 df_gradient = let
 	df = DataFrame(samples_gradient)
@@ -355,8 +358,20 @@ df_gradient = let
 	df
 end
 
+# ╔═╡ 0a4a2fcd-e0aa-4ab3-b07e-5f57734b2c6b
+@savefig "gradient_cyl_corner" pairplot(df_gradient[:, [:μ, :σ, :r_grad, :Θ_grad]])
+
 # ╔═╡ 99362018-8762-40df-b77d-f768286041a6
 BF_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
+
+# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
+icrs0 = lguys.ICRS(obs_properties)
+
+# ╔═╡ 4a473039-79f0-4d77-aa0c-681e2fba4f4c
+gsr0 = lguys.transform(lguys.GSR, icrs0)
+
+# ╔═╡ ed35eb68-74f7-4009-9b68-dfca2ea547af
+pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
 
 # ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 @savefig "v_gradient_derived" let
@@ -380,15 +395,6 @@ BF_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
 
 	fig
 end
-
-# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
-icrs0 = lguys.ICRS(obs_properties)
-
-# ╔═╡ 4a473039-79f0-4d77-aa0c-681e2fba4f4c
-gsr0 = lguys.transform(lguys.GSR, icrs0)
-
-# ╔═╡ ed35eb68-74f7-4009-9b68-dfca2ea547af
-pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
 
 # ╔═╡ 2a422e88-fc0d-4a89-a841-42f3c5c8dace
 import KernelDensity
@@ -449,6 +455,9 @@ let
 
 	fig
 end
+
+# ╔═╡ 128c8ab8-6033-40fe-8b68-c633816df9a2
+CSV.write("processed/mcmc_samples_gradient.csv", df_gradient)
 
 # ╔═╡ 7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 md"""
@@ -740,6 +749,7 @@ end
 # ╔═╡ Cell order:
 # ╟─6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
+# ╠═964ab896-5d9d-42ed-82c6-d7790ce9c871
 # ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -799,7 +809,8 @@ end
 # ╠═1bc7adb7-fe85-4878-9527-c5d15dc761b1
 # ╠═931ed52e-5e7a-4692-b568-ae26ea44b638
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
-# ╠═97dea677-17bb-434f-8174-c7b1fc09b329
+# ╠═65fa819a-f73f-4954-b089-a569e7c9b113
+# ╟─97dea677-17bb-434f-8174-c7b1fc09b329
 # ╠═f08b0fc3-12c2-4d85-83f3-3fcd9af6641b
 # ╠═b1cd8c53-9b3f-4f07-907d-7f8dd7207902
 # ╠═a28ee611-3971-4641-b9ec-f338ea3b76ef
@@ -831,6 +842,7 @@ end
 # ╠═183f572a-bc0f-435b-a656-2ee2a3057559
 # ╠═d3fb7136-7600-4782-ba97-f2f785fb3c0a
 # ╠═3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
+# ╠═128c8ab8-6033-40fe-8b68-c633816df9a2
 # ╠═7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7

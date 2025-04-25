@@ -67,7 +67,7 @@ obs_dir = ENV["DWARFS_ROOT"] * "/observations/"
 observed_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/" * galaxyname * "/observed_properties.toml")
 
 # ╔═╡ 26cf1867-02be-4d36-8c35-6c58a1feca27
-datafile = obs_dir * "/$galaxyname/data/jensen+24_wide.fits"
+datafile = obs_dir * "/$galaxyname/data/jensen+24_2c.fits"
 
 # ╔═╡ 90cec348-1947-4091-a5dd-ae67cf80fddb
 filt_params = GaiaFilterParams(observed_properties, filename=datafile)
@@ -203,24 +203,6 @@ R_h = observed_properties["r_h"]
 # ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
 rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
 
-# ╔═╡ 2d474904-ec96-41e7-bd17-8969ea5e3c40
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = "log R ell",
-		ylabel = "[Fe/H]"
-			 )
-
-	for (i, col) in enumerate([ :fe_h_t23, :fe_h_apogee, :fe_h_gmos,])
-		errcol = "fe_h_err_" * split(string(col), "_")[end]
-		filt = .!ismissing.(rv_members[!, col])
-
-		errorscatter!(disallowmissing(log10.(rv_members.R_ell[filt])), disallowmissing(rv_members[filt, col]), yerror=disallowmissing(rv_members[filt, errcol]), color=COLORS[i])
-
-	end
-	fig
-end
-
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
 @savefig "scl_selection" compare_samples(
 		(
@@ -231,7 +213,7 @@ end
 		:rv_distant => rv_distant,
 	),
 	Dict(
-		:best => (;	alpha=0.1, markersize=1, color=:black, 
+		:best => (;	alpha=0.3, markersize=1, color=:black, 
 			label="all" => (alpha=1, markersize=2),
 			rasterize=10,
 		),
@@ -265,8 +247,58 @@ end
 	)
 )
 
+# ╔═╡ 9c66468e-c357-4268-875b-ec83510fd982
+md"""
+# Extra
+"""
+
 # ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
 rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
+
+# ╔═╡ 51c1f61c-b2b1-4d51-bd02-51806217278a
+rv_all = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined.fits")
+
+# ╔═╡ 065741fb-dd59-406c-b4f6-ac6413a652a7
+id_nonmemb = setdiff(rv_all.source_id, rv_members.source_id)
+
+# ╔═╡ 885f8487-8f3c-4db8-ab05-ddacf1581491
+rv_nonmemb = rv_all[rv_all.source_id .∈ [id_nonmemb], :]
+
+# ╔═╡ 0cf37365-a1bc-4c25-8c03-3054551a6b67
+compare_samples(
+		(
+			:memb => rv_members,
+
+			:nonmemb => rv_nonmemb,	
+		),
+	Dict(
+		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
+			label="all" => (alpha=1, markersize=2),
+		),
+		:memb => (;	alpha=1, markersize=2, color=:black, 
+			label="memb" => (alpha=1, markersize=2),
+		),
+
+	)
+)
+
+# ╔═╡ 2d474904-ec96-41e7-bd17-8969ea5e3c40
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = "log R ell",
+		ylabel = "[Fe/H]"
+			 )
+
+	for (i, col) in enumerate([ :fe_h_t23, :fe_h_apogee, :fe_h_gmos,])
+		errcol = "fe_h_err_" * split(string(col), "_")[end]
+		filt = .!ismissing.(rv_members[!, col])
+
+		errorscatter!(disallowmissing(log10.(rv_members.R_ell[filt])), disallowmissing(rv_members[filt, col]), yerror=disallowmissing(rv_members[filt, errcol]), color=COLORS[i])
+
+	end
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
@@ -302,6 +334,11 @@ rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
 # ╠═c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
 # ╠═430fae9d-c708-4447-80ce-aabf19b161d2
-# ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
+# ╟─9c66468e-c357-4268-875b-ec83510fd982
 # ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
+# ╠═51c1f61c-b2b1-4d51-bd02-51806217278a
+# ╠═065741fb-dd59-406c-b4f6-ac6413a652a7
+# ╠═885f8487-8f3c-4db8-ab05-ddacf1581491
+# ╠═0cf37365-a1bc-4c25-8c03-3054551a6b67
+# ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40

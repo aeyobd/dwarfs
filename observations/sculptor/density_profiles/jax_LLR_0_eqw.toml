@@ -1,4 +1,4 @@
 inherits = "bins_eqw.toml"
 
-filename = "../data/jensen+24_wide.fits"
+filename = "../data/jensen+24_2c.fits"
 LLR_min = 0

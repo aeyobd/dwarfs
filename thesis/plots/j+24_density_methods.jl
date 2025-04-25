@@ -96,9 +96,6 @@ end
 # ╔═╡ 78159e3a-e11b-4118-8024-8dc594e8f2e3
 obs_props_scl
 
-# ╔═╡ 4be65b34-fbb9-46fe-9c8c-462abb5d0571
-typeof((;))
-
 # ╔═╡ abdaea6d-504f-4708-8185-c63dcf90bad9
 ana = LilGuys.Sersic(n=1)
 
@@ -367,7 +364,6 @@ get_R_break
 # ╠═ffaddffc-bbd0-4a08-9422-71bf872eb750
 # ╠═50c692f7-93df-4edc-af0b-bb901a1bc907
 # ╠═78159e3a-e11b-4118-8024-8dc594e8f2e3
-# ╠═4be65b34-fbb9-46fe-9c8c-462abb5d0571
 # ╠═abdaea6d-504f-4708-8185-c63dcf90bad9
 # ╠═30a60b7d-630a-4fa3-ac57-e873655ad754
 # ╠═5917e45e-50bb-441f-9d12-6901025a81f3

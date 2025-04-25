@@ -1,4 +1,4 @@
-filename = "../data/jensen+24_wide.fits"
+filename = "../data/jensen+24_2c.fits"
 PSAT_min = 0.2
 
 [profile_kwargs]
