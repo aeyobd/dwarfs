@@ -17,27 +17,29 @@ region centred on the dwarf. J+24 only consider stars with:
 \begin{itemize}
 \tightlist
 \item
-  Solved parallax, proper motions, colour, and magnitudes.
+  Solved astrometry, magnitude, and colour.
 \item
   High quality astrometry (\texttt{ruwe\ \textless{}=\ 1.3}).
 \item
-  3\(\sigma\) consistency of measured parallax with dwarf distance +
-  uncertainty (typically near zero; with \citet{lindegren+2018}
-  zero-point correction).
+  3\(\sigma\) consistency of measured parallax with dwarf distance
+  (typically near zero; with \citet{lindegren+2021} zero-point
+  correction).
 \item
   Absolute RA and Dec proper motions less than
   10\(\,{\rm mas\ yr^{-1}}\) (corresponding to tangental velocities of
   \(\gtrsim 500\) km/s at distances larger than 10 kpc.).
 \item
-  No colour excess (\citet{lindegren+2018} equation C.2).
+  small colour excess factor \(|C*| \leq 3\sigma_{C*}(G)\)
+  (\citet{riello+2021}).
 \item
-  22 \textgreater{} G \textgreater{} 5\(\sigma\) brighter than TRGB (in
-  practice astrometry ruwe =\textgreater{} 21 \textgreater{} G).
+  22 \textgreater{} G \textgreater{} 5\(\sigma\) brighter than TRGB
+  (dereddened). In practice astrometry cuts limit 21 \textgreater{} G.
 \item
-  Between -0.5 and 2.5 in Bp - Rp.
+  Between -0.5 and 2.5 in Bp - Rp (dereddened).
 \end{itemize}
 
-Photometry is dereddened using \citet{schlegel+1988} extinction maps.
+Photometry is dereddened using \citet{schlegel+finkbeiner+davis1998}
+extinction maps.
 
 J+24 calculate the probability that any star belongs to either the
 satellite or the MW background with \[
@@ -347,11 +349,11 @@ v_z = v_{\rm los, gsr}\cos\phi  - v_{\alpha}\cos\theta \sin\phi - v_\delta \sin\
 is the radial component of the proper motion with respect to the centre
 of the galaxy.This correction is of the order \(v_{\rm tan}\theta\) so
 induces a gradient of about \(1 km/s/degree\) for sculptor
-\citep[see][]{WMO2008}. The uncertainty is then the velocity uncertainty
-plus the distance uncertainties times the PM uncertainty from above. We
-then use the \(v_z\) values for the following modelling, however
-repeating with uncorrected, heliocentric velocities does not
-significantly affect the results .
+\citep[see][]{walker+mateo+olszewski2008}. The uncertainty is then the
+velocity uncertainty plus the distance uncertainties times the PM
+uncertainty from above. We then use the \(v_z\) values for the following
+modelling, however repeating with uncorrected, heliocentric velocities
+does not significantly affect the results .
 
 For the priors on the satellite velocity dispersion and systematic
 velocity, we use \[
@@ -361,46 +363,36 @@ velocity, we use \[
 dispersion of the MW halo adopted above, a reasonable assumption for
 dwarfs in orbit around the MW.
 
-\subsection{}\label{section}
-
-\begin{table*}[t]
-\centering
-\caption{Summary of velocity measurements and derived properties. sestito+2023a number of members depends on spatial model used.}
-\label{tbl:Summary-of-velocity-measurements-and-derived-properties-sestito+2023a-number-of-members-depends-on-spatial-model-used}
-\begin{tabular}{llllllll}
-\toprule
- & Study & Instrument & Nspec & Nstar & Ngood & Nmemb & $\delta v_{\rm med}$\\
-\midrule
-Scl & combined &  & 8945 & 2280 & 2034 & 1920 & 0.9\\
- & tolstoy+23 & FLAMES & 3311 & 1701 & 1522 & 1481 & 0.65\\
- & sestito+23a & GMOS & 2 & 2 & 2 & 2 & 13\\
- & walker+09 & MMFS & 1818 & 1522 & 1417 & 1330 & 1.8\\
- & APOGEE & APOGEE & 5082 & 253 & 102 & 98 & 0.6\\
-UMi & combined &  & 4714 & 1225 & 1148 & 831 & 2.3\\
- & sestito+23b & GRACES & 5 & 5 & 5 & 5 & 1.8\\
- & pace+20 & DEIMOS & 1716 & 1538 & 829 & 682 & 2.5\\
- & spencer+18 & Hectoshell & 1407 & 970 & 596 & 406 & 0.9\\
- & APOGEE & APOGEE & 9500 & 279 & 37 & 32 & 0.9\\
-\bottomrule
-\end{tabular}
-\end{table*}
-
 \subsection{Sculptor}\label{sculptor}
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_rv_2dhist.pdf}}
-\caption[Scl velocity sample]{A plot of the corrected los velocities for
-Scl binned in tangent plane coordinates. We detect a slight rotational
-gradient towards the bottom right.}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_rv_fits.pdf}}
+\caption{LOS velocity fit to Scl.}
+\end{figure}
+
+\textbf{Figure:} Velocity histogram of Scl and UMi in terms of \(v_z\)
+(REF). Orange points are from our crossmatched RV membership sample.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_rv_scatter.pdf}}
+\caption[Scl velocity sample]{RV members of Scl plotted in the tangent
+plane coloured by corrected velocity difference from mean
+\(v_z - \bar v_z\) . The black ellipse marks the half-light radius in
+fig.~\ref{fig:scl_selection}. The black and green arrows mark the proper
+motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to
+scale).}
 \end{figure}
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_vel_gradient_binned.pdf}}
-\caption[Scl velocity gradient]{A velocity gradient in Sculptor! The
-arrow marks the gradient induced by Scl's proper motion on the sky.
-\textbf{TODO}: plot of velocity of Scl in direction of gradient.}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_vel_gradient_scatter.pdf}}
+\caption[Scl velocity gradient]{The corrected LOS velocity along the
+best fit rotational axis. RV members are black points, the systematic
+\(v_z\) is the horizontal grey line, blue lines represent the
+(projected) gradient from MCMC samples, and the orange line is a rolling
+median (with a window size of 50).}
 \end{figure}
 
 For Sculptor, we combine radial velocity measurements from APOGEE,
@@ -411,93 +403,31 @@ crossmatched stars between catalogues. After crossmatching to Gaia and
 excluding significant inter-study dispersions, we have a sample of XXXX
 members.
 
-We derive a systemic velocity of \(111.2\pm0.2\) km/s with velocity
-dispersion \(9.67\pm0.16\) km/s. Our values are very consistent with
-previous work \citep[e.g.][\citet{arroyo-polonio+2024},
-\citet{tolstoy+2023}]{WMO2009}.
+We additionally add a velocity gradient for Sculptor (adding parameters
+A, B \(\sim N(0, 6)\)km/s/deg). We derive a systemic velocity of
+\(111.2\pm0.2\) km/s with velocity dispersion \(9.67\pm0.16\) km/s. Our
+values are very consistent with previous work
+\citep[e.g.][\citet{arroyo-polonio+2024},
+\citet{tolstoy+2023}]{WMO2009}. See Appendix for a more detailed
+comparison and inter-study tests.
 
-Finally, we attempt to fit a linear velocity gradient to Scl by adding
-parameters for the gradient in \(\xi\) ande \(\eta\). We derive a
-gradient of xxx and xxx (see Figure\textasciitilde FIG.), noting that
-this direction is different and higher in magnitude than the proper
-motion of Scl. Comparing the density difference, we find a bayes factor
-of -15. Compared to past work, \citet{battaglia+2008},
-\citet{arroyo-polonio+2021}.
-
-Bayes factor found using relative density via KDE with Silverman's
-bandwith to prior (XXX theorem).
-
-\emph{Is it interesting that the velocity dispersion of Scl seems to
-increase significantly with Rell?}
-
-\begin{table*}[t]
-\centering
-\caption{MCMC fits for different RV datasets for Scl amoung 3 different models.}
-\label{tbl:MCMC-fits-for-different-RV-datasets-for-Scl-amoung-3-different-models}
-\begin{tabular}{lllllll}
-\toprule
-study & mean & sigma & $\partial \log\sigma / \partial \log R$ & $\partial v_z / \partial x$ (km/s/deg) & $\theta_{\rm grad} / ^{\circ}$ & $\log bf$\\
-\midrule
-all &  &  &  &  &  & \\
- & $111.17\pm0.22$ & $9.68\pm0.17$ & - & - & - & 0\\
- & $111.18 \pm 0.23$ & $9.64\pm0.16$ & - & $4.8\pm1.3$ & $-147_{-12}^{+15}$ & -3.7*\\
- & $111.15\pm0.22$ & $9.70\pm0.16$ & $0.055\pm0.021$ & - & - & -0.8\\
-tolstoy+23 &  &  &  &  &  & \\
- & $111.2 \pm 0.3$ & $9.77 \pm 0.18$ & - & - & - & 0\\
- & $111.2\pm0.3$ & $9.73\pm0.18$ & – & $4.8\pm1.4$ & $-154_{-12}^{+16}$ & -2.5\\
- & $111.2 \pm 0.3$ & $9.71\pm0.18$ & $0.081 \pm 0.023$ & – & – & -3.3\\
-walker+09 &  &  &  &  &  & \\
- & $111.0\pm0.3$ & $9.57\pm0.21$ & – & – & – & 0\\
- & $111.1\pm0.3$ & $9.54\pm0.21$ & - & $5.3_{-1.6}^{+1.8}$ & $-134_{-16}^{+22}$ & -2.0\\
- & $111.0\pm0.3$ & $9.61\pm0.21$ & $0.03\pm0.03$ & – & – & +1.6\\
-apogee &  &  &  &  &  & \\
- & $109.9\pm0.8$ & $8.3\pm0.6$ & – & – & – & –\\
- & $109.9\pm0.8$ & $8.3\pm0.6$ & – & $6\pm3$ & $-151_{-36}^{+44}$ & +0.3\\
- & $109.9\pm0.8$ & $8.3\pm0.7$ & $0.05\pm0.08$ & – & – & +1.1\\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-\subsection{Ursa Minor}\label{ursa-minor}
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_rv_2dhist.pdf}}
-\caption[UMi velocity sample]{UMi velocities}
-\end{figure}
-
-Figure: A plot of the corrected los velocities for UMi binned in tangent
-plane coordinates. There is no clear rotation or velocity gradient here.
-Interestingly, many velocity members are as far as 100 arcmin away.
+We detect a gradient of \(4.8\pm1.3\) km/s/deg at a position angle of
+\(-147_{-12}^{+15}\) degrees. Compared to past work,
+\citet{battaglia+2008}, \citet{arroyo-polonio+2024}, our model is XX
 
 For UMi, we collect radial velocities from, APOGEE,
-\citet{sestito+2023b}, \citet{pace+2020}, and \citet{spencer+2018}.
-
-We shifted the velocities of \citet{spencer+2018} (\(-1.1\) km/s) and
+\citet{sestito+2023b}, \citet{pace+2020}, and \citet{spencer+2018}. We
+shifted the velocities of \citet{spencer+2018} (\(-1.1\) km/s) and
 \citet{pace+2020} (\(+1.1\) km/s) to reach the same scale. We found 183
 crossmatched common stars (passing 3\(\sigma\) RV cut, velocity
 dispersion cut, and PSAT J+24 \textgreater{} 0.2 w/o velocities). Since
 the median difference in velocities in this crossmatch is about 2.2
 km/s, we adopt 1 km/s as the approximate systematic error here.
 
-UMi interestingly has a more structured observational pattern, but does
-not appear to have any significant velocity substructure.
-
-\begin{table*}[t]
-\centering
-\caption{MCMC fits for UMi velocity dispersion.}
-\label{tbl:MCMC-fits-for-UMi-velocity-dispersion}
-\begin{tabular}{lllll}
-\toprule
-study & mean & sigma & $\log bf_{\rm sigma}$ & $\log bf_{\rm grad}$\\
-\midrule
-all & $-245.9\pm0.3$ & $8.76\pm0.24$ & +1.5 & +2.2\\
-pace & $-244.5\pm0.4$ & $9.1\pm0.3$ & +0.2 & +1.1\\
-spencer & $-246.9\pm0.4$ & $8.8\pm0.3$ & +1.8 & -0.3\\
-apogee & $-248.2\pm1.6$ & $9.0_{-1.1}^{+1.3}$ & +0.8 & +0.8\\
-\bottomrule
-\end{tabular}
-\end{table*}
+We derive a mean \(-245.9\pm0.3\) and velocity dispersion of
+\(8.76\pm0.24\). However, since the velocity means of
+\citet{spencer+2018} and \citet{pace+2020} differ by 2 km/s, we add a 1
+km/s systematic error to our measurement.
 
 \subsection{Discussion and
 limitations}\label{discussion-and-limitations}
@@ -561,37 +491,7 @@ may have a velocity gradient.
 Sculptor, Ursa Minor, and Fornax compared to Exp2D and Plummer density
 profiles. Dwarf galaxies are scaled to the same half-light radius and
 density at half-light radius (fit from the inner 3 scale radii
-exponential recursively. )}\label{fig:classical_dwarfs_densities}
+exponential recursively. ). Scl and UMi have an excess of stars in the
+outer regions (past \(\log R/R_h \sim 0.3\)) compared with
+Scl.}\label{fig:classical_dwarfs_densities}
 \end{figure}
-
-\section{Appendix / Extra Notes}\label{appendix-extra-notes}
-
-\subsection{Additional density profile
-tests}\label{additional-density-profile-tests}
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_density_methods_extra.pdf}}
-\caption[Density profiles]{Density profiles for various assumptions for
-Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a
-2-component bayesian model assuming circular radii, simple is the series
-of simple cuts described in Appendix ?, bright is the sample of the
-brightest half of stars (scaled by 2), DELVE is a sample of RGB stars
-(background subtracted and rescaled to
-match).}\label{fig:sculptor_observed_profiles}
-\end{figure}
-
-Note that a full rigorous statistical analysis would require a
-simulation study of injecting dwarfs into Gaia and assessing the
-reliability of various methods of membership and density profiles. This
-is beyond the scope of this thesis.
-
-\begin{verbatim}
-SELECT TOP 1000
-       *
-FROM delve_dr2.objects
-WHERE 11 < ra
-and ra < 19
-and -37.7 < dec
-and dec < -29.7
-\end{verbatim}

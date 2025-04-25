@@ -1,25 +1,25 @@
 # Gaia Membership Selection
 
-Gaia provides unprecedented accuracy in proper motions and magnitudes. Gaia data is uniquely excellent to produce low-contamination samples of likely member stars belonging to satellites. Here, we breifly describe J+24's membership estimation and discuss how this informs our observational knoledge of each galaxies density profile. In general, J+24 use a Bayesian framework incorporating proper motion (PM), colour-magnitude diagram (CMD), and spatial information to determine the probability that a given star belongs to the satellite. J+24 extends @MV2020a (see also @pace+li2019, @battaglia+2022, @pace+erkal+li2022, etc.).
+Gaia provides unprecedented accuracy in proper motions and magnitudes. Gaia data is uniquely excellent to produce low-contamination samples of likely member stars belonging to satellites. Here, we breifly describe J+24's membership estimation and discuss how this informs our observational knoledge of each galaxies density profile. In general, J+24 use a Bayesian framework incorporating proper motion (PM), colour-magnitude diagram (CMD), and spatial information to determine the probability that a given star belongs to the satellite. J+24 extends @MV2020a, @MV2020b (see also @pace+li2019, @battaglia+2022, @pace+erkal+li2022, @qi+2022).
 
 J+24 select stars initially from Gaia within a 2--4 degree circular region centred on the dwarf. J+24 only consider stars with:
 
-- Solved parallax, proper motions, colour, and magnitudes.
-- High quality astrometry (`ruwe <= 1.3`).
-- 3$\sigma$ consistency of measured parallax with dwarf distance + uncertainty (typically near zero; with @lindegren+2018 zero-point correction).
+- Solved astrometry, magnitude, and colour.
+- High quality astrometry (renormalized unit weight error, ${\rm ruwe} \leq 1.3$).
+- 3$\sigma$ consistency of measured parallax with dwarf distance (typically near zero; with @lindegren+2021 zero-point correction).
 -  Absolute RA and Dec proper motions less than 10$\,{\rm mas\ yr^{-1}}$ (corresponding to tangental velocities of $\gtrsim 500$ km/s at distances larger than 10 kpc.).
-- No colour excess (@lindegren+2018 equation C.2).
-- 22 > G > 5$\sigma$ brighter than TRGB (in practice astrometry ruwe => 21 > G).
-- Between -0.5 and 2.5 in Bp - Rp.
+- Small colour excess factor, so photometry is good: $|C^*| \leq 3\,\sigma_{C^*}(G)$ (@riello+2021).
+- $22 > G > G_{\rm TRGB} - 5\delta\rm {DM}$. I.e. fainter than the tip of the red giant branch magnitude plus the distance modulus uncertainty.
+- $-0.5 < {\rm BP - RP} <  2.5$ in Bp - Rp (dereddened).
 
-Photometry is dereddened using @schlegel+1988 extinction maps.
+Photometry is dereddened using @schlegel+finkbeiner+davis1998 extinction maps.
 
 J+24 calculate the probability that any star belongs to either the satellite or the MW background with
 $$
 P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}}
 $$
 
-where $f_{\rm sat}$ is the fraction of candidate members in the field, and ${\cal L}_{\rm sat}$ and ${\cal L}$_{\rm bg}$ are the satellite (sat) and background (bg) likelihoods respectively. Each likelihood is the product of a spatial, proper motion, and CMD term:
+where $f_{\rm sat}$ is the fraction of candidate members in the field, and ${\cal L}_{\rm sat}$ and ${\cal L}_{\rm bg}$ are the satellite (sat) and background (bg) likelihoods respectively. Each likelihood is the product of a spatial, proper motion, and CMD term:
 $$
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}.
 $$
@@ -39,9 +39,8 @@ The background likelihoods are constructed as:
 
 Each likelihood map is normalized over the respective 2D parameter space. $f_{\rm sat}$ thus is the only term controlling the total abundance of satellite stars relative to the background.
 
-In J+24, a MCMC simulation is ran using the above total likelihood to solve for the following parameters:
+In J+24, a MCMC simulation is ran using the above total likelihood to solve $\mu_\alpha$, $\mu_\delta$, and $f_{\rm sat}$. For the two component models, the amplitude and scale radius of the excented compopnet is also solved for. The proper motion single  component prior is same as @MV2020: a normal distribution with mean 0 and standard deviation 100 km/s. If 2-component spatial, instead is a uniform distribution  spanning 5$\sigma$ of single component case w/ systematic uncertainties. 
 
-- Systemic proper motions $\mu_\alpha$, $\mu_\delta$.  Single component prior is same as @MV2020: a normal distribution with mean 0 and standard deviation 100 km/s. If 2-component spatial, instead is a uniform distribution  spanning 5$\sigma$ of single component case w/ systematic uncertainties.
 - $f_{\rm sat}$ density normalization. Prior is a uniform distribution between 0 and 1.
 - Spatial component parameters $B$ is uniform from 0-1 and $R_{\rm outer}$ is uniform and greater than $R_s$ for extended profiles (Scl and UMi here.)
 
@@ -111,100 +110,63 @@ J+24 do not account for structural uncertainties in dwarfs for the two component
 
 # Radial velocity modeling
 
+## Methodology
+
 For both Sculptor and Ursa Minor, we construct literature samples of radial velocity measurements. We combine these samples with J+24's members to produce RV consistent stars and to compute velocity dispersion, systematic velocities, and test for the appearance of velocity gradients. 
 
-First, we crossmatch all catalogues to J+24 Gaia stars. If a study did not report GaiaDR3 source ID's, we match to the nearest star within 2 arcseconds. We exclude stars not matched to Gaia for simplicity.
+First, we crossmatch all catalogues to J+24 Gaia stars. If a study did not report GaiaDR3 source ID's, we match to the nearest star within 1-3 arcseconds (see @tab:rv_measurements). We combine the mean RV measurement from each study using the inverse-variance weighted mean $\bar v$, standard uncertainty $\delta \bar v$, and (biased) variance $s^2$. We remove stars with significant velocity dispersions as measured between observations in a study or between studiess
 
-We combine the mean RV measurement from each study using the inverse-variance weighted mean and standard uncertainty. 
 $$
-\bar v = \frac{1}{\sum w_i}\sum_i w_i\ v_{i} 
+P\left(\chi2(N-1) < \frac{s^2}{\delta \bar v^2}\right) > 0.001
 $$
-$$
-\delta v = \sqrt{\frac{1}{\sum_i w_{i}^2}}
-$$
+where $s^2, \delta \bar v, N$ are the weighted standard deviation, weighted standard error, and number of observations. This cut typically removes stars with reduced chi-squared values $\tilde\chi^2 \gtrsim 2$. 
 
-where $w_i = 1/s_i^2$, and we estimate the inter-study standard deviation
-$$
-s^2 = \frac{1}{\sum w_i} \sum_i w_i (v_{i} - \bar v)^2
-$$
-We remove stars with significant velocity dispersions as measured between or within a study:
-$$
-P\left(\chi2(N-1) < \frac{s^2}{\delta v^2}\right) > 0.001
-$$
-where $s, \delta v, N$ are the weighted standard deviation, weighted standard error, and number of observations. We apply this cut to both within a study and between studies, which typically removes stars with reduced $\chi^2 \gtrsim 2$. 
-
-The combined RV likelihood is then
+The combined likelihood, including RV information, becomes
 $$
 {\cal L} = {\cal L}_{\rm space} {\cal L}_{\rm CMD} {\cal L}_{\rm PM} {\cal L}_{\rm RV}
 $$
-where
+where we assume
 $$
-{\cal L}_{\rm RV, sat} = N(\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2)
+{\cal L}_{\rm RV, sat} = N( v_i -\mu_{v}, \sigma_{v}^2 + (\delta v_i)^2)
 $$
 $$
-{\cal L}_{\rm RV, bg} = N(0, \sigma_{\rm halo}^2)
+{\cal L}_{\rm RV, bg} = N(\bar v_i, \sigma_{\rm halo}^2)
 $$
 
 where $\mu_v$ and $\sigma_v$ are the systemic velocity and dispersion of the satellite, and $\delta v_i$ is the individual measurement uncertainty. Typically, the velocity dispersion will dominate the uncertainty budget here. We assume a halo/background velocity dispersion of a constant $\sigma_{\rm halo} = 100$  km/s [e.g. @brown+2010].
 
-Similar to above, we retain stars with the resulting membership probability of greater than 0.2.
+Similar to above, we retain stars with the resulting membership probability of greater than 0.2. Because of the additional information from radial velocities, most stars have probabilities close to 1 or 0 so the probability cut is not too significant. 
 
-Finally, we need to correct the coordinate frames for the solar motion and on-sky size of the galaxy. The first step is to subtract out the solar motion from each radial velocity, corresponding to a typical gradient of ~3 km/s across the field. The next step is to account for the slight differences in the direction of each radial velocity. Define the $\hat z$ direction to point parallel to the direction from the sun to the centre of the dwarf galaxy. Then if $\phi$ is the angular distance between the centre of the galaxy and the individual star, the corrected radial velocity is then
+Finally, we need to correct the coordinate frames for the solar motion and on-sky size of the galaxy. We transform the frame into the galactic standard of rest (GSR). The next step is to account for the slight differences in the direction of each radial velocity. Define the $\hat z$ direction to point parallel to the direction from the sun to the centre of the dwarf galaxy. Then if $\phi$ is the angular distance between the centre of the galaxy and the individual star, the corrected radial velocity is then
 $$
 v_z = v_{\rm los, gsr}\cos\phi  - v_{\alpha}\cos\theta \sin\phi - v_\delta \sin\theta\sin\phi
 $$
-where $v_{\rm tan, R} = d(\mu_{\alpha*}\cos\theta + \mu_\delta \sin \theta)$ is the radial component of the proper motion with respect to the centre of the galaxy.This correction is of the order $v_{\rm tan}\theta$ so induces a gradient of about $1 km/s/degree$ for sculptor [see @WMO2008]. The uncertainty is then the velocity uncertainty plus the distance uncertainties times the PM uncertainty from above. We then use the $v_z$ values for the following modelling, however repeating with uncorrected, heliocentric velocities does not significantly affect the results . 
+where $v_{\rm tan, R} = d(\mu_{\alpha*}\cos\theta + \mu_\delta \sin \theta)$ is the radial component of the proper motion with respect to the centre of the galaxy. The correction from both effects induces an apparent gradient  of about $X {\rm km/s\,degree^{-1}}$ for sculptor [see @walker+mateo+olszewski2008]. The uncertainty is then the velocity uncertainty plus the distance uncertainties times the PM uncertainty from above. We then use the $v_z$ values for the following modelling, however repeating with uncorrected, heliocentric velocities does not significantly affect the results. 
 
-For the priors on the satellite velocity dispersion and systematic velocity, we use
+We assume priors on systematic velocity and velocity dispersion of
 $$
-\mu_{v} = N(0, \sigma_{\rm halo}^2) \\
+\mu_{v} = N(0, \sigma_{\rm halo}^2)\newline
 \sigma_{v} = U(0, 20\,{\rm km\,s^{-1}})
 $$
 where $\sigma_{\rm halo} = 100\,{\rm km\,s^{-1}}$ is the velocity dispersion of the MW halo adopted above, a reasonable assumption for dwarfs in orbit around the MW. 
 
-## Sculptor
+## Results
 
 
 
-**Figure:** Velocity histogram of Scl and UMi.
+![LOS velocity fit to Scl.](figures/scl_umi_rv_fits.pdf)
 
-
-
-![Scl velocity sample](figures/scl_rv_2dhist.pdf)
-
-Figure: A plot of the corrected los velocities for Scl binned in tangent plane coordinates. We detect a slight rotational gradient towards the bottom right. **TODO**: scatter plot and gradient here
-
-
-
-![Scl velocity gradient](figures/scl_vel_gradient_binned.pdf) 
-
-Figure: A velocity gradient in Sculptor! The arrow marks the gradient induced by Scl's proper motion on the sky. **Todo: add running median and scatter points...**
-
-
+**Figure:** Velocity histogram of Scl and UMi in terms of $v_z$ (REF). Orange points are from our crossmatched RV membership sample.
 
 For Sculptor, we combine radial velocity measurements from APOGEE, @sestito+2023a, @tolstoy+2023, and @WMO2009. @tolstoy+2023 and @WMO2009 provide the bulk of the measurements. We find that there is no significant velocity shift in crossmatched stars between catalogues. After crossmatching to Gaia and excluding significant inter-study dispersions, we have a sample of XXXX members.
 
 We additionally add a velocity gradient for Sculptor (adding parameters A, B $\sim N(0, 6)$km/s/deg). We derive a systemic velocity of $111.2\pm0.2$ km/s with velocity dispersion $9.67\pm0.16$ km/s. Our values are very consistent with previous work [e.g. @WMO2009, @arroyo-polonio+2024, @tolstoy+2023]. See Appendix for a more detailed comparison and inter-study tests.
 
+We detect a gradient of $4.8\pm1.3$ km/s/deg  at a position angle of $-147_{-12}^{+15}$ degrees. Compared to past work, @battaglia+2008, @arroyo-polonio+2024, our model is XX
 
+For UMi, we collect radial velocities from, APOGEE, @sestito+2023b, @pace+2020, and @spencer+2018. We shifted the velocities of @spencer+2018 ($-1.1$ km/s) and @pace+2020 ($+1.1$ km/s) to reach the same scale. We found 183 crossmatched common stars (passing 3$\sigma$ RV cut, velocity dispersion cut, and PSAT J+24 > 0.2 w/o velocities). Since the median difference in velocities in this crossmatch is about 2.2 km/s, we adopt 1 km/s as the approximate systematic error here. 
 
-We detect a gradient of $4.8\pm1.3$ km/s/deg  at a position angle of $-147_{-12}^{+15}$ degrees. 
-
-Compared to past work, @battaglia+2008, @arroyo-polonio+2021. 
-
-## Ursa Minor
-
-![UMi velocity sample](figures/umi_rv_hist.pdf)
-
-Figure: UMi velocities. More or less gaussian.
-
-For UMi, we collect radial velocities from, APOGEE, @sestito+2023b, @pace+2020, and @spencer+2018.
-
-We shifted the velocities of @spencer+2018 ($-1.1$ km/s) and @pace+2020 ($+1.1$ km/s) to reach the same scale. We found 183 crossmatched common stars (passing 3$\sigma$ RV cut, velocity dispersion cut, and PSAT J+24 > 0.2 w/o velocities). Since the median difference in velocities in this crossmatch is about 2.2 km/s, we adopt 1 km/s as the approximate systematic error here. 
-
-
-
-We detect a mean $-245.9\pm0.3$  and velocity dispersion of $8.76\pm0.24$.
+We derive a mean $-245.9\pm0.3$  and velocity dispersion of $8.76\pm0.24$. However, since the velocity means of @spencer+2018 and @pace+2020 differ by 2 km/s, we add a 1 km/s systematic error to our measurement.
 
 ## Discussion and limitations
 
@@ -219,9 +181,7 @@ Because the derived parameters are similar for the two different larger surveys 
 
 # Comparison and conclusions
 
-
-
-To illustrate the differences between each dwarf galaxy, in @fig:classical_dwarfs_densities, we compare Scl, UMi, and Fnx against exponential and plummer density profiles (**TODO: state these somewhere**). While all dwarfs have marginal differences in the inner regions, each dwarf diverges in the outer regions relative to an exponential. In particular, while Fnx is underdense, Scl and UMi are both overdense, approximately fitting a Plummer density profile instead. 
+To illustrate the differences between each dwarf galaxy, in @fig:classical_dwarfs_densities, we compare Scl, UMi, and Fnx against exponential and plummer density profiles (REF). While all dwarfs have marginal differences in the inner regions, each dwarf diverges in the outer regions relative to an exponential. In particular, while Fornax is underdense, Sculptor and Ursa Minor are both overdense, approximately fitting a Plummer density profile instead. 
 
 In summary, we have used J+24 data to derive the density profiles for Fornax, Sculptor, and Ursa Minor. In each case, the density profile is robust against different selection criteria. Both Sculptor (Ursa Minor) show strong (weak) evidence for deviations from an exponential profile. We also compile velocity measurements to derive the systemic motions and velocity dispersions of each galaxy. We find evidence for a velocity gradient in Scl of XXX. We find no evidence of additional (velocity or stellar) substructure in either galaxy. Our goal is thus to explain why Scl and UMi have an excess of stars in their outer regions and why Scl may have a velocity gradient.
 
@@ -229,9 +189,4 @@ In summary, we have used J+24 data to derive the density profiles for Fornax, Sc
 
 ![Classical dwarf density profiles](figures/scl_umi_fornax_exp_fit.png){#fig:classical_dwarfs_densities}
 
-Figure: The density profiles of Sculptor, Ursa Minor, and Fornax compared to Exp2D and Plummer density profiles. Dwarf galaxies are scaled to the same half-light radius and density at half-light radius (fit from the inner 3 scale radii exponential recursively. )
-
-
-
-## 
-
+Figure: The density profiles of Sculptor, Ursa Minor, and Fornax compared to Exp2D and Plummer density profiles. Dwarf galaxies are scaled to the same half-light radius and density at half-light radius (fit from the inner 3 scale radii exponential recursively. ). Scl and UMi have an excess of stars in the outer regions (past $\log R/R_h \sim 0.3$) compared with Scl.
