@@ -4,7 +4,10 @@ Many different data sources, here is a short description of what we will need.
 
 ## Radial velocity data
 ### Spencer+2018
-Data from Vizier : . J/AJ/156/257/table2	
+Data from Vizier : . J/AJ/156/257/
+- `spencer+18_all_new.fits`: VizieR Table 2 (new observations)
+- `spencer+18_averaged.fits`: VizieR Table2m (mean of multiple observations from Table 2)
+- `spencer+18_repeated+18.fits`: VizieR Table4. Velocities from various studies with multiepoch observations.
 
 ### Pace+2020
 Data from Vizier: 

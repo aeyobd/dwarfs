@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -211,6 +211,11 @@ md"""
 # Numbers
 """
 
+# ╔═╡ dd2de9c4-86a8-402d-ad38-5106946a84af
+md"""
+# Uncertainties
+"""
+
 # ╔═╡ 89552b84-d12e-4d88-a58e-8b89ad4b2569
 md"""
 # Validation for xmatch
@@ -287,35 +292,11 @@ sum(skipmissing(rv_meas.F_scatter_s18))
 # ╔═╡ ea333b79-abb0-4827-991f-e2c370bdb0be
 sum(skipmissing(.!ismissing.(rv_meas.RV_err_gaia) .* (rv_meas.PSAT .> 001)))
 
-# ╔═╡ 9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
-sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma), 
-	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(rv_meas.RV_nstudy)),
-	0.				
-	)
-
-# ╔═╡ d665895c-9a97-4c36-9ea9-c6e30d0a17ad
-mean(sigma_sigma .> 5)
+# ╔═╡ 90648c2c-d9fb-4f62-bf6f-59d4f54649ca
+p_chi2 = RVUtils.prob_chi2.(rv_meas.RV_sigma, rv_meas.RV_err, rv_meas.RV_nstudy)
 
 # ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
-F_qual_inter = sigma_sigma .< 5
-
-# ╔═╡ 06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		yscale=log10, yticks=Makie.automatic,
-		xlabel = "log sigma / std",
-		ylabel = "count",
-			  limits=(-3, nothing, nothing, nothing)
-			 )
-
-	
-	hist!(filter(isfinite, log10.(sigma_sigma)), bins=120)
-	vlines!(log10(5), color=COLORS[2])
-
-	fig
-
-end
+F_qual_inter = @. isnan(p_chi2) || p_chi2 > 0.001
 
 # ╔═╡ dcec54f8-27b4-405e-a386-6e07470dc073
 F_qual_study = filter_qual_study(rv_meas, "s18") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "p20")
@@ -379,8 +360,44 @@ median(df_out.RV_err)
 # ╔═╡ 53fcc27a-700b-4b67-9ba6-3d4613edfb7b
 sum(df_out.RV_count)
 
+# ╔═╡ 5d181a81-f896-4119-921f-c00ec5d14106
+sum(skipmissing(df_out.RV_count_p20) ) + sum(skipmissing(df_out.RV_count_s18) ) + sum(skipmissing(df_out.RV_count_graces) )
+
 # ╔═╡ 5f3f4b6b-11c3-4c87-96e5-22bf6170f170
 sum(df_out.F_scatter)
+
+# ╔═╡ fade9235-9fa8-4dc0-ba9b-322f711b551c
+median(skipmissing(df_out.RV_err_graces))
+
+# ╔═╡ 9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
+sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma), 
+	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(rv_meas.RV_nstudy)),
+	0.				
+	)
+
+# ╔═╡ 06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		yscale=log10, yticks=Makie.automatic,
+		xlabel = "log sigma / std",
+		ylabel = "count",
+			  limits=(-3, nothing, nothing, nothing)
+			 )
+
+	
+	hist!(filter(isfinite, log10.(sigma_sigma)), bins=120)
+	vlines!(log10(5), color=COLORS[2])
+
+	fig
+
+end
+
+# ╔═╡ d665895c-9a97-4c36-9ea9-c6e30d0a17ad
+mean(sigma_sigma .> 5)
+
+# ╔═╡ fca71345-8b32-4422-b573-b4a4b751dd8f
+sigma_sigma[.!F_qual_inter]
 
 # ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
 all_stars[.!ismissing.(all_stars.RV_graces), [:ra, :dec, :source_id, :pmra, :pmdec, :PSAT]]
@@ -765,10 +782,9 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═ea333b79-abb0-4827-991f-e2c370bdb0be
 # ╟─22564a47-9b03-4778-b30c-d092581ec107
 # ╟─4cda9764-f208-4532-b51f-5deb62992467
-# ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
-# ╠═d665895c-9a97-4c36-9ea9-c6e30d0a17ad
 # ╠═15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
 # ╠═73a41773-39bc-4bd5-9d99-39804000631a
+# ╠═90648c2c-d9fb-4f62-bf6f-59d4f54649ca
 # ╠═dcec54f8-27b4-405e-a386-6e07470dc073
 # ╠═870571f3-f201-47fd-a215-995a416bc223
 # ╠═5c86f548-4838-41e1-b9af-fdd93d900940
@@ -797,7 +813,13 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═e08185ba-dba2-421c-801d-7acb387756ef
 # ╠═a7fd3ec2-964b-4cbb-a2dd-dee99cf33c03
 # ╠═53fcc27a-700b-4b67-9ba6-3d4613edfb7b
+# ╠═5d181a81-f896-4119-921f-c00ec5d14106
 # ╠═5f3f4b6b-11c3-4c87-96e5-22bf6170f170
+# ╠═fade9235-9fa8-4dc0-ba9b-322f711b551c
+# ╟─dd2de9c4-86a8-402d-ad38-5106946a84af
+# ╠═9aafd6b9-6ec8-4b6c-908e-1faac4615e0b
+# ╠═d665895c-9a97-4c36-9ea9-c6e30d0a17ad
+# ╠═fca71345-8b32-4422-b573-b4a4b751dd8f
 # ╟─89552b84-d12e-4d88-a58e-8b89ad4b2569
 # ╠═e6f2de3b-ce32-4d61-851f-4e42fcce95c0
 # ╠═5b2fceff-9c3e-472d-9310-31e920137e41

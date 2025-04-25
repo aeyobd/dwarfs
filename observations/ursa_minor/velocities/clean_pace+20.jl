@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -36,6 +36,15 @@ This notebook analyzes the RV stars in tolstoy+23 and creates a sample sutable t
 
 """
 
+# ╔═╡ 89f5e91b-9970-4f8d-80ae-4766195e6a56
+md"""
+Depends on:
+- `../data/jensen+24_2c.fits`
+- `../data/pace+20.fits`
+Creates:
+- `processed/rv_pace+20.fits`
+"""
+
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, kurtosis, sem
 
@@ -68,7 +77,7 @@ md"""
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 37e6d04b-0347-4f14-9b06-d657a03df225
-pace20_raw = read_fits("$data_dir/umi_rv_pace+20.fits") |> x -> rename(x,
+pace20_raw = read_fits("$data_dir/pace+20.fits") |> x -> rename(x,
 		:vLOS => :RV,
 		:e_vLOS => :RV_err,
 		:RAJ2000 => :ra,
@@ -151,8 +160,11 @@ end
 # ╔═╡ 3f6c0ba3-5f91-4c42-ba9a-833a8c3fa1d8
 F_match = get_f_best.(source_id) .=== 1.0
 
+# ╔═╡ 29c38300-9a84-4f72-b6be-43fdc683d931
+p_chi2 = RVUtils.prob_chi2(pace20_all)
+
 # ╔═╡ cebb491c-88a2-47ae-b851-4a079b5066b7
-F_scatter = (pace20_all.RV_count .< 2) .|| (pace20_all.RV_sigma .< 3*pace20_all.RV_err .* sqrt.(pace20_all.RV_count))
+F_scatter = @. (p_chi2 > 0.001) || isnan(p_chi2)
 
 # ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
 df_out = let
@@ -191,7 +203,7 @@ sum(skipmissing(F_match))
 sum(skipmissing(F_scatter .& F_match))
 
 # ╔═╡ c630d985-ee8a-4d75-8ebc-9e705712474a
-matched = j24[idx_xmatch, :]
+matched = j24[idx_xmatch, :];
 
 # ╔═╡ 8548b355-38f5-474c-b1e5-4b4fbfab4634
 mean(matched[matched.F_BEST .== 0.0, :F_CPAR])
@@ -234,6 +246,11 @@ hist(filter(isfinite, pace20_members.fe_h),
 	 axis = (; xlabel = "[Fe/H]")
 	)
 
+# ╔═╡ 89d38852-1773-4c09-aa0a-3a5580816d57
+md"""
+## MCMC modeling
+"""
+
 # ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
 model = RVUtils.model_vel_1c(pace20_members.RV, pace20_members.RV_err)
 
@@ -253,7 +270,7 @@ samples = DataFrame(chain)
 RVUtils.plot_samples(pace20_members, samples, bins=30)
 
 # ╔═╡ 60f45b81-8beb-4eb0-8f55-db04c5368eee
-CSV.write("processed/rv_pace+20.csv", df_summary)
+CSV.write("processed/mcmc_summary_uncorrected_pace+20.csv", df_summary)
 
 # ╔═╡ 32291b0f-1816-45a6-abcb-99c13512d8af
 md"""
@@ -262,6 +279,11 @@ md"""
 
 # ╔═╡ e856771f-100b-4229-aa51-13dc34860646
 xmatch_max = 1
+
+# ╔═╡ f8814fc8-8621-4e18-96f9-cf85b84ccfec
+md"""
+Uses normal xmatch and probability chi2 cuts, (max seperation = $xmatch_max arcsec)
+"""
 
 # ╔═╡ 1b45a429-59da-4156-ad75-d434a07dee0f
 xmatch_dists = lguys.angular_distance.(df_out.ra, df_out.dec, j24.ra[idx_xmatch], j24.dec[idx_xmatch]) * 60^2
@@ -299,14 +321,18 @@ let
 	fig
 end
 
-# ╔═╡ 9acb9827-3ee1-4e8a-bad9-f4207790fbb9
-p_chi2 = 1 .- cdf.(Chisq.(max.(1., pace20_all.RV_count .- 1)), pace20_all.RV_sigma .^ 2 ./ pace20_all.RV_err .^2)
+# ╔═╡ 94fbac70-e63b-4a24-8245-06ef2ac169c8
+md"""
+## Uncertainties
+"""
 
 # ╔═╡ 55954f5d-0f0b-4106-bc0a-57c1cd280cdb
-hist(filter(isfinite, p_chi2[pace20_all.RV_count .> 1]))
+hist(filter(isfinite, p_chi2))
 
-# ╔═╡ 2c303dcd-ef0b-49fd-8b47-380675063070
-scatter(1 ./ pace20_all.RV_err, filt_xmatch .+ rand(length(filt_xmatch)), alpha=0.1)
+# ╔═╡ a723770b-8a09-4e00-9766-910a5a91485a
+md"""
+## Failed xmatch
+"""
 
 # ╔═╡ 137cd49d-42cc-402d-a8bf-6883a9a071a4
 let 
@@ -317,8 +343,13 @@ let
 	fig
 end
 
+# ╔═╡ 2c303dcd-ef0b-49fd-8b47-380675063070
+scatter(1 ./ pace20_all.RV_err, filt_xmatch .+ rand(length(filt_xmatch)), alpha=0.1)
+
 # ╔═╡ Cell order:
 # ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─89f5e91b-9970-4f8d-80ae-4766195e6a56
+# ╟─f8814fc8-8621-4e18-96f9-cf85b84ccfec
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═2f5ca80c-d98d-45cc-a661-834002b620f6
@@ -342,6 +373,7 @@ end
 # ╠═dce22a0d-a7dc-4642-abdc-68f83b714e94
 # ╠═ea6f5354-9e98-4b2b-ad26-4da839607fb6
 # ╠═3f6c0ba3-5f91-4c42-ba9a-833a8c3fa1d8
+# ╠═29c38300-9a84-4f72-b6be-43fdc683d931
 # ╠═cebb491c-88a2-47ae-b851-4a079b5066b7
 # ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
@@ -361,6 +393,7 @@ end
 # ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
+# ╟─89d38852-1773-4c09-aa0a-3a5580816d57
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
 # ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9
@@ -368,14 +401,15 @@ end
 # ╠═0ae09680-cc34-492d-85bb-dec3ced936cf
 # ╠═beb53bbc-0d2a-468d-a40c-2958df7e95ca
 # ╠═60f45b81-8beb-4eb0-8f55-db04c5368eee
-# ╠═32291b0f-1816-45a6-abcb-99c13512d8af
+# ╟─32291b0f-1816-45a6-abcb-99c13512d8af
 # ╠═e856771f-100b-4229-aa51-13dc34860646
 # ╠═1b45a429-59da-4156-ad75-d434a07dee0f
 # ╠═f671cf05-c097-4d22-8b73-49b75ccd26ac
 # ╠═cb1b4342-2487-46fa-99ed-4cac8b74ee40
 # ╠═a11d26b6-8416-4983-afc0-629433a45cbc
 # ╠═88de547a-ec5d-446f-b092-0fa591d2709c
-# ╠═9acb9827-3ee1-4e8a-bad9-f4207790fbb9
+# ╟─94fbac70-e63b-4a24-8245-06ef2ac169c8
 # ╠═55954f5d-0f0b-4106-bc0a-57c1cd280cdb
-# ╠═2c303dcd-ef0b-49fd-8b47-380675063070
+# ╟─a723770b-8a09-4e00-9766-910a5a91485a
 # ╠═137cd49d-42cc-402d-a8bf-6883a9a071a4
+# ╠═2c303dcd-ef0b-49fd-8b47-380675063070

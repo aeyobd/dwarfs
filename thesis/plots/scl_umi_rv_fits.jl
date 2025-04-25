@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -42,6 +42,15 @@ stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/proces
 # ╔═╡ 799fd372-b4ea-473f-93cb-65eff73b9bbc
 samples = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_vz.csv", DataFrame)
 
+# ╔═╡ 6d558d6c-60b6-4361-b875-c821078c0675
+
+
+# ╔═╡ f9f00f0c-0924-4abe-8c16-a58d46c76faa
+stars_umi = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_members_all.fits")
+
+# ╔═╡ 21bdc277-d3b0-48c6-984b-538bda4348a4
+samples_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/mcmc_samples_vz.csv", DataFrame)
+
 # ╔═╡ 0a22b941-0651-405e-9624-e9c344b7d93c
 v0 = median(samples.μ)
 
@@ -49,7 +58,7 @@ v0 = median(samples.μ)
 σ = median(samples.σ)
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-@savefig "scl_vz_hist" let
+@savefig "scl_umi_rv_fits" let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], 
@@ -57,11 +66,34 @@ v0 = median(samples.μ)
 		ylabel = "density"
 	)
 
+	v0 = median(samples.μ)
+	σ = median(samples.σ)
+
 	bins = LinRange(v0-5σ, v0+5σ, 40)
 	_, values, errs = LilGuys.histogram(stars.vz, bins, normalization=:pdf)
 
 	RVUtils.plot_samples!(samples, LinRange(v0-5σ, v0+5σ, 100), thin=100, )
 	errorscatter!(midpoints(bins), values, yerror=errs, color=COLORS[2], size=5, linewidth=2)
+
+	text!(0.1, 0.8, text="Sculptor", space=:relative)
+
+	ax = Axis(fig[2,1], 
+		xlabel = L"$v_z$ / km\,s$^{-1}$",
+		ylabel = "density"
+	)
+
+
+	v0 = -70 #TODO, fix
+	σ = 9
+	bins = LinRange(v0-5σ, v0+5σ, 40)
+	_, values, errs = LilGuys.histogram(stars_umi.vz, bins, normalization=:pdf)
+
+	# RVUtils.plot_samples!(samples_umi, LinRange(v0-5σ, v0+5σ, 100), thin=100, )
+	errorscatter!(midpoints(bins), values, yerror=errs, color=COLORS[2], size=5, linewidth=2)
+
+	text!(0.1, 0.8, text="Ursa Minor", space=:relative)
+
+	
 	fig
 end
 
@@ -75,6 +107,9 @@ end
 # ╠═f27c2500-b92c-4de0-8482-4a8acfa2667f
 # ╠═3b5e60d4-1ac4-4b8d-8284-fb1c53e966c6
 # ╠═799fd372-b4ea-473f-93cb-65eff73b9bbc
+# ╠═6d558d6c-60b6-4361-b875-c821078c0675
+# ╠═f9f00f0c-0924-4abe-8c16-a58d46c76faa
+# ╠═21bdc277-d3b0-48c6-984b-538bda4348a4
 # ╠═0a22b941-0651-405e-9624-e9c344b7d93c
 # ╠═06746433-dea4-485a-b5cd-e0ef2055c314
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

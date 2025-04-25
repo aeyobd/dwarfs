@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -91,10 +91,7 @@ members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")
 
 # ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
-mean(isfinite.(rv_members.RV_t23))
-
-# ╔═╡ 90ec91b3-02a8-41d7-a5a1-76cf6e84fd00
-
+LilGuys.mean(skipmissing(rv_members.RV_t23))
 
 # ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
 md"""
@@ -271,15 +268,6 @@ end
 # ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
 rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
 
-# ╔═╡ 9a62b3e5-96f1-438b-8fdf-f8427efd145b
-
-
-# ╔═╡ 34758293-664e-4126-a172-32456e9c9d1c
-
-
-# ╔═╡ d5a037a8-e024-4d44-93bb-1cb7265ea2b1
-
-
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
@@ -304,7 +292,6 @@ rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
 # ╠═13f558a3-a42e-4384-ac6e-2a036f6e634f
-# ╠═90ec91b3-02a8-41d7-a5a1-76cf6e84fd00
 # ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
 # ╠═965217b8-b2a5-485b-83de-cac887065b19
 # ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
@@ -318,6 +305,3 @@ rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
 # ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
-# ╠═9a62b3e5-96f1-438b-8fdf-f8427efd145b
-# ╠═34758293-664e-4126-a172-32456e9c9d1c
-# ╠═d5a037a8-e024-4d44-93bb-1cb7265ea2b1

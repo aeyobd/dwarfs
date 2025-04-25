@@ -454,13 +454,14 @@ end
 
 
 function psat_filter(all_stars, psat_min)
-    @info "\tPSAT = NAN:\t $(sum(isnan.(all_stars.PSAT)))" 
-    @info "\tPSAT = 0:\t $(sum(all_stars.PSAT .== 0))" 
-    @info "\tPSAT > 0:\t $(sum(all_stars.PSAT .> 0))" 
-    @info "\tPSAT = 1:\t $(sum(all_stars.PSAT .== 1))" 
+    @info "\tPSAT = NAN:\t $(sum(ismissing.(all_stars.PSAT)))" 
+    @info "\tPSAT = 0:\t $(sum(skipmissing(all_stars.PSAT .== 0)))" 
+    @info "\tPSAT > 0:\t $(sum(skipmissing(all_stars.PSAT .> 0)))" 
+    @info "\tPSAT = 1:\t $(sum(skipmissing(all_stars.PSAT .== 1)))" 
 
-	return all_stars.PSAT .> psat_min
+    return (all_stars.PSAT .> psat_min) .& .!ismissing.(all_stars.PSAT)
 end
+
 
 function psat_filter(all_stars, params::GaiaFilterParams)
     return apply_filter(all_stars, psat_filter, params.PSAT_min)

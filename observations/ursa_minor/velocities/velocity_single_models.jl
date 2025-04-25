@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -28,8 +28,11 @@ using PairPlots
 # ╔═╡ 35c87efe-6899-444d-952f-94e5e5342846
 using Measurements
 
+# ╔═╡ 2e86c0d0-37e8-4b24-beee-abc365cee38b
+using OrderedCollections
+
 # ╔═╡ c05a4e8e-c6d2-43e6-9b87-679f4ecee84c
-study = "s18"
+study = "apogee"
 
 # ╔═╡ b3ad64bc-7dbb-4c27-a91d-a9f2342f98da
 begin 
@@ -151,6 +154,9 @@ hist(memb_stars.RV)
 # ╔═╡ 29405c62-01f3-4f6e-8d92-3b6c36551080
 hist(rv_meas.RV, bins=60)
 
+# ╔═╡ d5bbfe30-45cf-4970-bb13-e25e38da2f64
+hist(rv_meas.PSAT_RV)
+
 # ╔═╡ 372adffe-ece1-4c26-a7ad-e897ba6b829b
 md"""
 # Numbers
@@ -245,13 +251,19 @@ std(memb_stars.RV)
 mean(memb_stars.RV)
 
 # ╔═╡ 9ffcc0b0-11a1-4962-b64e-59a731f22bd8
-samples_gsr = DataFrame(sample(RVUtils.model_vel_1c(memb_stars.vz, memb_stars.vz_err), NUTS(0.65), MCMCThreads(), 10000, 16))
+samples_gsr = sample(RVUtils.model_vel_1c(memb_stars.vz, memb_stars.vz_err), NUTS(0.65), MCMCThreads(), 10000, 16)
+
+# ╔═╡ ef6f1224-e1bf-4e25-b66b-ddac7a3fdd5c
+summary_vz = RVUtils.summarize(samples_gsr)
 
 # ╔═╡ 3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
-pairplot(samples_gsr[:, [:μ, :σ]])
+pairplot(samples_gsr)
+
+# ╔═╡ fd6a4c46-6cfc-4ed4-ab27-24eb9c129d96
+df_gsr = DataFrame(samples_gsr)
 
 # ╔═╡ 212cee31-a04d-47c1-b56e-4a7b06322b99
-median(samples_gsr.μ) + Δv_gsr
+median(df_gsr.μ) + Δv_gsr
 
 # ╔═╡ 0eafe553-4434-4b2b-9646-912ac99beccf
 
@@ -275,7 +287,7 @@ let
 	)
 	h = histogram(Float64.(memb_stars.vz), 30, normalization=:pdf)
 	
-	RVUtils.plot_samples!(samples_gsr, LinRange(-110, -50, 100), thin=15)
+	RVUtils.plot_samples!(df_gsr, LinRange(-110, -50, 100), thin=15)
 	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
@@ -308,7 +320,7 @@ median(df_Rell.μ) + Δv_gsr
 samples_prior_Rell = sample(model_Rell, Prior(), 10000)
 
 # ╔═╡ 68250c58-8b67-42ce-b447-70f87aabecbc
-RVUtils.bayes_evidence(model_Rell, df_Rell, "dlσ_dlR")
+BF_sigma_Rell = RVUtils.bayes_evidence(model_Rell, df_Rell, "dlσ_dlR")
 
 # ╔═╡ 6f734c62-3545-48fb-ae95-9877a7de151e
 kde_Rell = KernelDensity.kde(df_Rell.dlσ_dlR)
@@ -366,7 +378,7 @@ end
 @savefig "gradient_cyl_corner" pairplot(df_gradient[:, [:μ, :σ, :r_grad, :Θ_grad]])
 
 # ╔═╡ 9724df49-645c-43c3-8385-346f78ac82af
-RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
+BF_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
 
 # ╔═╡ 993526b6-bde8-4011-bbda-84d044841980
 RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
@@ -574,6 +586,39 @@ let
 	fig
 end
 
+# ╔═╡ 4d091a13-e616-4f04-93d9-92d7d81a5155
+md"""
+# Summaries
+"""
+
+# ╔═╡ a2489d42-4a4a-4770-a554-2786925b1947
+function OrderedCollections.OrderedDict(summary_vz::DataFrame)
+	
+	df =  OrderedDict(string(col) => summary_vz[!, col] for col in names(summary_vz))
+
+	for key in keys(df)
+		if eltype(df[key]) == Symbol
+			df[key] = string.(df[key])
+		end
+	end
+
+	df
+end
+
+# ╔═╡ 9f62b174-49c4-46cc-923e-53997a27d3ae
+df_summaries = OrderedDict(
+	"vz" => summary_vz |> OrderedDict, 
+	"bf_gradient" => BF_gradient,
+	"bf_rell" => BF_sigma_Rell,
+	"Nmemb" => length(memb_stars.RV), 
+	"Nqual" => sum(rv_meas.F_scatter)
+)
+
+# ╔═╡ ad81cdf7-660a-4ab0-9b18-ca2017bf37f3
+open("processed/mcmc_properties_$study.toml", "w") do f
+	TOML.print(f, df_summaries)
+end
+
 # ╔═╡ Cell order:
 # ╠═c05a4e8e-c6d2-43e6-9b87-679f4ecee84c
 # ╟─6bec7416-40c8-4e2b-9d3d-14aa19e5642d
@@ -609,6 +654,7 @@ end
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 # ╠═29405c62-01f3-4f6e-8d92-3b6c36551080
+# ╠═d5bbfe30-45cf-4970-bb13-e25e38da2f64
 # ╟─372adffe-ece1-4c26-a7ad-e897ba6b829b
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
 # ╠═130c9e30-d900-436e-9749-c915edc43b3d
@@ -626,13 +672,15 @@ end
 # ╠═d0ae48e2-8389-4641-b311-cfb4944b0851
 # ╠═49e7d483-1dd1-4406-9bce-58d6e4412e7b
 # ╠═9ffcc0b0-11a1-4962-b64e-59a731f22bd8
+# ╠═ef6f1224-e1bf-4e25-b66b-ddac7a3fdd5c
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 # ╠═212cee31-a04d-47c1-b56e-4a7b06322b99
+# ╠═fd6a4c46-6cfc-4ed4-ab27-24eb9c129d96
 # ╠═0eafe553-4434-4b2b-9646-912ac99beccf
 # ╠═d321f8ac-1044-45ec-8e1c-a2d8395b6917
 # ╠═931ed52e-5e7a-4692-b568-ae26ea44b638
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
-# ╠═18765306-a840-4173-99e1-ee7c291d2652
+# ╟─18765306-a840-4173-99e1-ee7c291d2652
 # ╠═833c2cb2-fc23-4bc8-8f01-0b5de4fb9c5e
 # ╠═399867cf-5b89-4ed6-8686-d71c6a9d8996
 # ╠═8f5d079b-19f4-4791-9f23-1c09350d5de6
@@ -679,3 +727,8 @@ end
 # ╠═53da82d5-2e69-4f88-8043-6694d57cdd91
 # ╠═b5533db0-a734-4d37-9d75-24471634f855
 # ╠═4eea0a17-257e-4d0e-88df-9ff4858771b1
+# ╟─4d091a13-e616-4f04-93d9-92d7d81a5155
+# ╠═2e86c0d0-37e8-4b24-beee-abc365cee38b
+# ╠═9f62b174-49c4-46cc-923e-53997a27d3ae
+# ╠═a2489d42-4a4a-4770-a554-2786925b1947
+# ╠═ad81cdf7-660a-4ab0-9b18-ca2017bf37f3

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -204,6 +204,12 @@ hist(apogee.RV_sigma)
 # ╔═╡ fba487be-22a5-43b3-9ac5-8505462b7d56
 hist(apogee.RV_sigma ./ (apogee.RV_err .* sqrt.(apogee.RV_count) ))
 
+# ╔═╡ 504eb85d-1b49-4e7a-a8d7-befdd97b2af6
+p_chi2 = RVUtils.prob_chi2.(apogee_all.RV_sigma, apogee_all.RV_err, apogee_all.RV_count)
+
+# ╔═╡ 6ed8cc72-e10e-4c69-a0a8-f6bc1141d35b
+hist(filter(isfinite, p_chi2))
+
 # ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
 model = RVUtils.model_vel_1c(apogee.RV, apogee.RV_err)
 
@@ -217,7 +223,7 @@ pairplot(chain)
 df_summary = RVUtils.summarize(chain)
 
 # ╔═╡ 5db61bab-a71e-4bcb-a706-f150f1126f4c
-CSV.write("processed/rv_apogee.csv", df_summary)
+CSV.write("processed/mcmc_summary_uncorrected_apogee.csv", df_summary)
 
 # ╔═╡ ba337b2c-9a0c-40b3-867f-c9ebf683e1e3
 apogee.RV
@@ -250,12 +256,12 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═7a50a176-96a5-4098-88d6-0fa2874d0f90
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╟─45d6b4aa-ca44-4a71-afb8-ba6b2e674c7a
+# ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
 # ╠═9d63053f-fe2a-4667-b813-943d366a366c
 # ╠═1a698e39-2d12-449c-82ad-601dc4cd5099
 # ╠═4e275dd0-0401-4e7c-856b-5703b4b93331
-# ╠═d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 # ╠═7f13344f-96c8-4dbb-833f-241ea1788506
 # ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
 # ╠═0d9aaa39-1fa9-4514-ad72-8f4f7558b748
@@ -275,6 +281,8 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═5dafeaad-df9e-4558-99a7-721bdb91d28d
 # ╠═949bdb6a-4554-4659-b0d3-7e669f470c10
 # ╠═fba487be-22a5-43b3-9ac5-8505462b7d56
+# ╠═504eb85d-1b49-4e7a-a8d7-befdd97b2af6
+# ╠═6ed8cc72-e10e-4c69-a0a8-f6bc1141d35b
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
 # ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9

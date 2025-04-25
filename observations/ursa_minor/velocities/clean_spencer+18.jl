@@ -117,11 +117,21 @@ end
 # ╔═╡ 2a6e8cda-a3cf-4824-9584-fa3d3c1da53a
 sum(spencer18_all.RV_sigma .=== missing)
 
-# ╔═╡ 103ad378-1ea1-4a2c-86b2-09c78293d06b
-sum(spencer18_all.RV_ .=== missing)
-
 # ╔═╡ 2c4eabb0-3af9-4b6f-b15d-9ed3b4290040
 xmatch_max = 2.0
+
+# ╔═╡ 0ed1ac33-0537-4838-ae0b-200be73c501c
+md"""
+Depends on:
+- `../data/jensen+24_2c.fits`
+- `../observed_properties.toml`
+- `../data/spencer+18_all_new.fits`, `*_averaged.fits`, `*_repeated.fits`
+Creates:
+- `processed/rv_spencer+18.fits`
+- `processed/mcmc_summary_uncorrected_spencer+18.csv`
+
+xmatch by nearest star within $xmatch_max arcmin.
+"""
 
 # ╔═╡ d321c481-0ceb-4e3b-b5fc-12af735155e3
 filt_xmatch, idx_xmatch = RVUtils.xmatch(spencer18_all, j24, xmatch_max)
@@ -132,8 +142,17 @@ begin
 	source_id[.!filt_xmatch] .= missing
 end
 
-# ╔═╡ 5774a0ef-8abf-4b6d-9b34-f80c29b4aab4
-F_scatter = (spencer18_all.RV_count .< 2) .|| (spencer18_all.RV_sigma .< 3*spencer18_all.RV_err .* sqrt.(spencer18_all.RV_count))
+# ╔═╡ 48ca64bd-fd0a-4e49-b281-37ac200ba3ff
+
+
+# ╔═╡ f751b13c-51fc-47c5-af2f-e1188c5bba5f
+p_chi2 = RVUtils.prob_chi2(spencer18_all)
+
+# ╔═╡ a6f7f1a1-2dad-4397-9565-7b2aaf1fa733
+F_scatter = @. (p_chi2 > 0.001) || isnan(p_chi2)
+
+# ╔═╡ 761a7be6-420a-4428-addb-7947125596b3
+(spencer18_all.RV_sigma ./ spencer18_all.RV_err)[.!F_scatter]
 
 # ╔═╡ 25e927e1-773d-4d41-894b-1f4512f01233
 function get_f_best(source_id)
@@ -215,6 +234,11 @@ md"""
 # Plots
 """
 
+# ╔═╡ 8a176998-016d-4932-946f-eca78eb53d2b
+md"""
+## Histograms / exporatory
+"""
+
 # ╔═╡ cee182e1-5545-4b86-9152-b288a9b11d86
 hist(spencer18_raw.S_N)
 
@@ -276,14 +300,31 @@ let
 	fig
 end
 
-# ╔═╡ 613d430d-b13e-492d-a21b-06350290f398
-p_chi2 = 1 .- cdf.(Chisq.(max.(1., spencer18_members.RV_count .- 1)), spencer18_members.RV_sigma .^ 2 ./ spencer18_members.RV_err .^2)
+# ╔═╡ 1a75bca0-c305-47a0-959e-afa42bd75d11
+md"""
+## Probabilities
+"""
+
+# ╔═╡ 5774a0ef-8abf-4b6d-9b34-f80c29b4aab4
+F_scatter_old = (spencer18_all.RV_count .< 2) .|| (spencer18_all.RV_sigma .< 3*spencer18_all.RV_err .* sqrt.(spencer18_all.RV_count))
+
+# ╔═╡ 05e35f22-e682-4ec6-acf4-1d7bd9a4ca79
+md"""
+Histogram below should be uniform + excess at 0.
+"""
 
 # ╔═╡ d86097ad-2feb-46d8-9ceb-a2743a74a1a9
-hist(p_chi2[spencer18_members.RV_count .> 1])
+hist(filter(isfinite, p_chi2), 
+	 axis = (; xlabel = L"P(<\chi^2)")
+	)
 
 # ╔═╡ 5de87579-1d6e-4dc0-860b-501816d75f8c
 hist(filter(isfinite, spencer18_members.RV_sigma ./ spencer18_members.RV_err))
+
+# ╔═╡ 214ed7f8-f338-4186-8f6d-870498486c0a
+md"""
+## MCMC
+"""
 
 # ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
 model = RVUtils.model_vel_1c(spencer18_members.RV, spencer18_members.RV_err)
@@ -304,15 +345,20 @@ samples = DataFrame(chain)
 RVUtils.plot_samples(spencer18_members, samples, bins=30)
 
 # ╔═╡ 60f45b81-8beb-4eb0-8f55-db04c5368eee
-CSV.write("processed/rv_spencer+18.csv", df_summary)
+CSV.write("processed/mcmc_summary_uncorrected_spencer+18.csv", df_summary)
 
 # ╔═╡ cb2923b2-dfda-4257-8d35-cd8f28188dbe
 md"""
 # other dataframe
 """
 
+# ╔═╡ 28ff5e47-468d-4b54-bf24-d822818ec93d
+md"""
+Spencer+18 publishes a few other dataframes, including mixed data and averages across studies.
+"""
+
 # ╔═╡ 9847f6c4-05bd-481c-894d-4966d37be8c8
-spencer_mixed_raw = read_fits(joinpath(data_dir, "umi_rv_spencer+18.fits")) 
+spencer_mixed_raw = read_fits(joinpath(data_dir, "spencer+18_repeated.fits")) 
 
 # ╔═╡ fdfde937-39e5-4d51-8eb9-b2ec1ddd7dbd
 spencer_mixed = let
@@ -378,8 +424,20 @@ pairplot(samples_mixed)
 # ╔═╡ 7538de40-970f-46ab-8e4c-ae1e6ed151fd
 model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_count .> 1], spencer18_members.RV_sigma[spencer18_members.RV_count .> 1])
 
+# ╔═╡ 9437554c-2281-4602-a5a0-d5decc52af31
+md"""
+With multiple epoch observations, chi2 distribution looks quite good.
+"""
+
+# ╔═╡ 7a5f3817-9f49-43fe-a2cb-664feb83e81c
+p_chi2_mixed = RVUtils.prob_chi2(spencer_mixed)
+
+# ╔═╡ 48e544a1-b094-495f-be8e-655e2a32125a
+hist(p_chi2_mixed)
+
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╠═0ed1ac33-0537-4838-ae0b-200be73c501c
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═2f5ca80c-d98d-45cc-a661-834002b620f6
@@ -400,14 +458,15 @@ model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_c
 # ╠═0137b308-f0c6-4e73-afa6-346797b6f304
 # ╠═153b1c3f-88a0-4b31-a2d7-65c084ca3a43
 # ╠═2a6e8cda-a3cf-4824-9584-fa3d3c1da53a
-# ╠═103ad378-1ea1-4a2c-86b2-09c78293d06b
 # ╠═2c4eabb0-3af9-4b6f-b15d-9ed3b4290040
 # ╠═d321c481-0ceb-4e3b-b5fc-12af735155e3
-# ╠═96e1413d-e4fd-48af-8cde-73a5fcb4976a
-# ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═412148d2-3b14-400a-b93b-f4aa18965d8d
-# ╠═5774a0ef-8abf-4b6d-9b34-f80c29b4aab4
+# ╠═96e1413d-e4fd-48af-8cde-73a5fcb4976a
+# ╠═48ca64bd-fd0a-4e49-b281-37ac200ba3ff
+# ╠═f751b13c-51fc-47c5-af2f-e1188c5bba5f
+# ╠═a6f7f1a1-2dad-4397-9565-7b2aaf1fa733
 # ╠═25e927e1-773d-4d41-894b-1f4512f01233
+# ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─4b8a45ce-4862-4842-8c60-bae9a64acd75
 # ╠═423e446b-3cf6-4150-8b94-c4d7388fceb4
@@ -425,6 +484,7 @@ model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_c
 # ╠═08967635-801f-44dc-bb7e-62abbe0f86e4
 # ╠═1853d75f-65e9-4ad0-8a5e-68603d4ecddf
 # ╟─4290a51e-961b-4b38-b954-1a65e946080c
+# ╟─8a176998-016d-4932-946f-eca78eb53d2b
 # ╠═cee182e1-5545-4b86-9152-b288a9b11d86
 # ╠═c0c02bce-e0f9-4fa0-bba6-a5360a825e23
 # ╠═d3e682ee-0dab-4aa5-9f3e-423a9d2f92b0
@@ -434,9 +494,13 @@ model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_c
 # ╠═d3440c3e-be84-403f-a04d-68a237375b62
 # ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
+# ╟─1a75bca0-c305-47a0-959e-afa42bd75d11
+# ╠═761a7be6-420a-4428-addb-7947125596b3
+# ╠═5774a0ef-8abf-4b6d-9b34-f80c29b4aab4
+# ╟─05e35f22-e682-4ec6-acf4-1d7bd9a4ca79
 # ╠═d86097ad-2feb-46d8-9ceb-a2743a74a1a9
-# ╠═613d430d-b13e-492d-a21b-06350290f398
 # ╠═5de87579-1d6e-4dc0-860b-501816d75f8c
+# ╟─214ed7f8-f338-4186-8f6d-870498486c0a
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
 # ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9
@@ -444,7 +508,8 @@ model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_c
 # ╠═0ae09680-cc34-492d-85bb-dec3ced936cf
 # ╠═beb53bbc-0d2a-468d-a40c-2958df7e95ca
 # ╠═60f45b81-8beb-4eb0-8f55-db04c5368eee
-# ╠═cb2923b2-dfda-4257-8d35-cd8f28188dbe
+# ╟─cb2923b2-dfda-4257-8d35-cd8f28188dbe
+# ╟─28ff5e47-468d-4b54-bf24-d822818ec93d
 # ╠═9847f6c4-05bd-481c-894d-4966d37be8c8
 # ╠═fdfde937-39e5-4d51-8eb9-b2ec1ddd7dbd
 # ╠═ae75e97c-b9c7-4ea9-8d91-7d5277d75a9e
@@ -459,3 +524,6 @@ model_higherr = RVUtils.model_vel_1c(spencer18_members.RV[spencer18_members.RV_c
 # ╠═b3bb14ee-3ced-436a-8067-f16052d0ea2d
 # ╠═35470ddd-1185-4d29-b1fa-ca3438bbfa3f
 # ╠═7538de40-970f-46ab-8e4c-ae1e6ed151fd
+# ╟─9437554c-2281-4602-a5a0-d5decc52af31
+# ╠═7a5f3817-9f49-43fe-a2cb-664feb83e81c
+# ╠═48e544a1-b094-495f-be8e-655e2a32125a

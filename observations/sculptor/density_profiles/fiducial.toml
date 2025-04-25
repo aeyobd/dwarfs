@@ -1,4 +1,5 @@
-filename = "../processed/j24_sculptor_all.fits"
+filename = "../data/jensen+24_wide.fits"
+PSAT_col = "P_ell"
 PSAT_min = 0.2
 
 [profile_kwargs]
