@@ -23,14 +23,6 @@ and dec < -29.7
 
 ```
 
-## An MCMC model
-
-We additionally consider a model which solves for the density relative to the background in each annulus. This model is specified as
-$$
-\log\Sigma_i \sim {\rm U}(-12, 6)
-$$
-where the stars are statically placed into each bin. This model solves for the density in each bin independently. 
-
 # Velocity modelling and comparisons
 
 Here, we describe in additional detail, our methods and comparisons for RV modelling between studies.
@@ -52,7 +44,7 @@ Savage-Dickey calculated Bayes factor using Silverman-bandwidth KDE smoothed sam
 |      | spencer+18  | Hectoshell | 1407  | 970   | 596   | 406   | 0.9                  | ?                       |
 |      | APOGEE      | APOGEE     | 9500  | 279   | 37    | 32    | 0.9                  | --                      |
 
-Table: Summary of velocity measurements and derived properties. sestito+2023a number of members depends on spatial model used. 
+Table: Summary of velocity measurements and derived properties. 
 
 
 
@@ -75,7 +67,7 @@ Table: Summary of velocity measurements and derived properties. sestito+2023a nu
 |            | $109.9\pm0.8$     | $8.3\pm0.6$     | --                                      | $6\pm3$                                | $-151_{-36}^{+44}$             |          |               | +0.4           |      |      |
 |            | $109.9\pm0.8$     | $8.3\pm0.7$     | $0.05\pm0.08$                           | --                                     | --                             |          |               | +1.1           |      |      |
 
-Table: MCMC fits for  different RV datasets for Scl amoung 3 different models.
+Table: MCMC fits for  different RV datasets for Sculptor among 3 different models. {#tbl:scl_rv_mcmc short="Sculptor RV fits"}
 
 
 
@@ -88,13 +80,13 @@ Table: MCMC fits for  different RV datasets for Scl amoung 3 different models.
 | spencer | $-246.9\pm0.4$ | $8.8\pm0.3$         |          |               | +1.8                  | -0.3                 |
 | apogee  | $-248.2\pm1.6$ | $9.0_{-1.1}^{+1.3}$ |          |               | +0.8                  | +0.8                 |
 
-Table: MCMC fits for UMi velocity dispersion.
+Table: MCMC fits for UMi velocity dispersion. {#tbl:umi_rv_mcmc short="Ursa Minor RV fits"}
 
 
 
 ![Scl velocity sample](/Users/daniel/thesis/figures/scl_rv_scatter.pdf)
 
-Figure: RV members of Scl plotted in the tangent plane coloured by corrected velocity difference from mean $v_z - \bar v_z$ . The black ellipse marks the half-light radius in @fig:scl_selection. The black and green arrows mark the proper motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to scale).
+Figure: RV members of Sculptor plotted in the tangent plane coloured by corrected velocity difference from mean $v_z - \bar v_z$ . The black ellipse marks the half-light radius in @fig:scl_selection. The black and green arrows mark the proper motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to scale).
 
 
 
