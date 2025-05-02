@@ -11,6 +11,11 @@ The classical dwarfs are some of the earliest discovered systems, begining with 
 
 
 
+- @fattahi+2013, @fattahi+2018
+- @sanchez-salcedo+hernandez2007: mond in dsph
+- @mayer+2001 theory of tidal stripping
+- @IH1995 structural parameters
+
 ## Cosmological context
 
 ![Cosmological Power Spectrum](figures/power_spectrum.png){#fig:cosmological_power_spectrum width=100% }
@@ -21,114 +26,21 @@ Figure: The matter power spectrum under different assumptions for dark matter. D
 
 Figure: Density profiles of comological simulated halos, matching approximantly the NFW formula. 
 
-## Sculptor
 
-![Picture of Sculptor](figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}
 
-Figure: Sculptor image from DES DR 2 via HiPS2FITS. 
+
+
+![Picture of Sculptor](/Users/daniel/thesis/figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}Figure: Image of the Sculptor dwarf spheroidal galaxy from Dark Energy Survey Data Release 2 [@abbott+2021; image created with HiPS2FITS]. Sculptor appears as a fairly prominent, extended over density of predominantly faint, red stars. 0.5 degree field of view centred on Sculptor.
+
+
+
+![Picture of Ursa Minor](figures/umi_DSS2_0.75deg.png){#fig:umi_image width=390pt height=390pt}Figure: Image of Ursa Minor dwarf galaxy from the Digitized Sky Survey 2 (0.75 deg field of view tangent plane). UMi appears as a diagonal/elliptical haze of faint, reddish stars from the top left to the bottom right.  Even as classical dwarf, Ursa minor is fairly diffuse and does not stand obviously out from the background.
 
 
 
 ![Idealized simulations match Scl and UMi](figures/scl_umi_vs_penarrubia.png){#fig:toy_profiles}
 
 Figure: Sculptor and UMi's profiles are well-matched to @PNM2008.  
-
-Sculptor (Scl) is one of the first discovered dwarf galaxies of the Milky Way (Shapley 1938; only preceded by the SMC and LMC!). As a classical dwarf spheroidal, Scl is relatively bright and compact. 
-
-Since the initial discovery of Scl, most authors have noted that Scl has a slight ellipticity ($0.36$), often attributed to tidal effects. However, this does not align with the absolute proper motion or orbital path of the galaxy. 
-
-While Scl has a relatively large pericentre (greater than 50kpc), @sestito+2023a detect that the galaxy likely has an excess of stars in the outskirts (past about 60 arcminutes). This excess is perhaps one of the clearest indications that Scl may be affected by tides. Here, our goal is to determine if under a $\Lambda$ CMD paradigm with DM-only simulations, tidal effects of the Milky Way (or LMC) may indeed be consistent with these observations, or if these observations may reveal instead a extended stellar "halo" or second component of the galaxy—illustrating a complex formation for the galaxy.
-
-
-
-Theoretical work on Sculptor
-
-- @battaglia+2008
-- @iorio+2019
-- @amorisco+zavala+deboer2014
-- @battaglia+2008
-- @breddels+2013
-- @breddels+helmi2013
-- @richardson+fairbairn2014
-- @SFW2017
-- @innanen+papp1979
-
-Observational work on Scl
-
-- @sestito+2023a
-- @tolstoy+2023, @arroyo-polonio+2023, @arroyo-polonio+2024
-- @eskridge1988, @eskridge1988a, @eskridge1988b
-- @coleman+dacosta+bland-hawthorn2005
-- @DQ1994
-- @WMO2009
-- @IH1995, @munoz+2018
-- @kirby+2009
-- @martinez-vazquez+2015, @pietrzynski+2008
-
-
-
-| parameter        | value                                                        | Source     |
-| ---------------- | ------------------------------------------------------------ | ---------- |
-| $\alpha$         | $15.0183 \pm 0.0012^\circ$                                   | 1          |
-| $\delta$         | $-33.7186 \pm 0.0007^\circ$                                  | 1          |
-| distance modulus | $19.60 \pm 0.05$ (RRL)                                       | 2          |
-| distance         | $83.2 \pm 2$ kpc                                             | 2          |
-| $\mu_{\alpha*}$  | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | 3          |
-| $\mu_\delta$     | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3          |
-| radial velocity  | $111.2 \pm 0.2\ {\rm km\,s^{-1}}$                            | this work  |
-| $\sigma_v$       | $9.67\pm0.16\ {\rm km\,s^{-1}}$                              | this work  |
-| $R_h$            | $12.33 \pm 0.05$ arcmin                                      | 4          |
-| $R_{h,inner}$    | $8.69 \pm 0.2$ arcmin                                        | this work? |
-| ellipticity      | $0.36 \pm 0.01$                                              | 1          |
-| position angle   | $92\pm1^\circ$                                               | 1          |
-| $M_V$            | $-10.82\pm0.14$                                              | 1          |
-
-Table: Observed properties of Sculptor. References are: 1. @munoz+2018, 2. @tran+2022, 3. @MV2020b, 4 @MV2020a.
-
-## Ursa Minor
-
-- @sestito+2023b
-
-- @pace+2020
-
-- @bellazzini+2002
-
-- @hargreaves+1994
-
-- @martinez-delgado+2001
-
-- @munoz+2005
-
-- @pace+2020
-
-- @palma+2003
-
-- @spencer+2018
-
-- @vitral+2023
-
-![Picture of Ursa Minor](figures/umi_image.jpg){#fig:umi_image width=390pt height=390pt}
-
-Figure: Ursa Minor Dwarf. UMi appears as a diagonal/elliptical haze of stars from the top left to the bottom right.  Even as as classical dwarf, Ursa minor is fairly diffuse and does not stand obviously out from the background. Composite Public data/Giuseppe Donatiello. Updated image in 2022. https://www.flickr.com/photos/133259498@N05/page8
-
-
-
-| parameter        | value                                                        | Source    |
-| ---------------- | ------------------------------------------------------------ | --------- |
-| $\alpha$         | $ 227.2420 \pm 0.0045$˚                                      | 1         |
-| $\delta$         | $67.2221 \pm 0.0016$˚                                        | 1         |
-| distance modulus | $19.23 \pm 0.11$ (RRL)                                       | 2         |
-| distance         | $70.1 \pm 3.6$ kpc                                           | -         |
-| $\mu_\alpha*$    | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | 3         |
-| $\mu_\delta$     | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | 3         |
-| radial velocity  | $-245.9 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$      | this work |
-| $\sigma_v$       | $8.8 \pm 0.2$                                                | this work |
-| $r_h$            | $18.2 \pm 0.1$ arcmin                                        | 1         |
-| ellipticity      | $0.55 \pm 0.01$                                              | 1         |
-| position angle   | $50 \pm 1^\circ$                                             | 1         |
-| $M_V$            | $-9.03 \pm 0.05$                                             | 1         |
-
-Table: Observed properties of Ursa Minor. References are: (1) @munoz+2018, (2) @garofalo+2025, (3) @MV2020a, (4) average of @pace+2020 and @spencer+2018. 
 
 
 

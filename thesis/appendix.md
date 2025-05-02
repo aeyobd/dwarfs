@@ -1,12 +1,12 @@
-# Appendix / Extra Notes
+# Density profile tests
 
-## Additional density profile tests
+
 
 
 
 ![Density profiles](figures/scl_density_methods_extra.png){#fig:sculptor_observed_profiles}
 
-Figure: Density profiles for various assumptions for Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a 2-component bayesian model assuming circular radii, simple is the series of simple cuts described in Appendix ?, bright is the sample of the brightest half of stars (scaled by 2), DELVE is a sample of  RGB  stars (background subtracted and rescaled to match).
+Figure: Density profiles for various assumptions for Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a 2-component bayesian model assuming circular radii, simple is the series of simple cuts described, bright is the sample of the brightest half of stars (scaled by 2), DELVE is a sample of  RGB  stars (background subtracted and rescaled to match).
 
 Note that a full rigorous statistical analysis would require a simulation study of injecting dwarfs into Gaia and assessing the reliability of various methods of membership and density profiles. This is beyond the scope of this thesis. 
 
@@ -23,62 +23,76 @@ and dec < -29.7
 
 ```
 
-## Velocity fit parameters.
+# Velocity modelling and comparisons
 
-Savage-Dickey calculated bayes factor
+Here, we describe in additional detail, our methods and comparisons for RV modelling between studies.
 
-*Is it interesting that the velocity dispersion of Scl seems to increase significantly with Rell?* 
-
-| study      | mean              | sigma           | $\partial \log\sigma / \partial \log R$ | $\partial v_z / \partial x$ (km/s/deg) | $\theta_{\rm grad} / ^{\circ}$ | $\log bf$ |
-| ---------- | ----------------- | --------------- | --------------------------------------- | -------------------------------------- | ------------------------------ | --------- |
-| all        |                   |                 |                                         |                                        |                                |           |
-|            | $111.17\pm0.22$   | $9.68\pm0.17$   | -                                       | -                                      | -                              | 0         |
-|            | $111.18 \pm 0.23$ | $9.64\pm0.16$   | -                                       | $4.8\pm1.3$                            | $-147_{-12}^{+15}$             | -3.7*     |
-|            | $111.15\pm0.22$   | $9.70\pm0.16$   | $0.055\pm0.021$                         | -                                      | -                              | -0.8      |
-| tolstoy+23 |                   |                 |                                         |                                        |                                |           |
-|            | $111.2 \pm 0.3$   | $9.77 \pm 0.18$ | -                                       | -                                      | -                              | 0         |
-|            | $111.2\pm0.3$     | $9.73\pm0.18$   | --                                      | $4.8\pm1.4$                            | $-154_{-12}^{+16}$             | -2.5      |
-|            | $111.2 \pm 0.3$   | $9.71\pm0.18$   | $0.081 \pm 0.023$                       | --                                     | --                             | -3.3      |
-| walker+09  |                   |                 |                                         |                                        |                                |           |
-|            | $111.0\pm0.3$     | $9.57\pm0.21$   | --                                      | --                                     | --                             | 0         |
-|            | $111.1\pm0.3$     | $9.54\pm0.21$   | -                                       | $5.3_{-1.6}^{+1.8}$                    | $-134_{-16}^{+22}$             | -2.0      |
-|            | $111.0\pm0.3$     | $9.61\pm0.21$   | $0.03\pm0.03$                           | --                                     | --                             | +1.6      |
-| apogee     |                   |                 |                                         |                                        |                                |           |
-|            | $109.9\pm0.8$     | $8.3\pm0.6$     | --                                      | --                                     | --                             | --        |
-|            | $109.9\pm0.8$     | $8.3\pm0.6$     | --                                      | $6\pm3$                                | $-151_{-36}^{+44}$             | +0.3      |
-|            | $109.9\pm0.8$     | $8.3\pm0.7$     | $0.05\pm0.08$                           | --                                     | --                             | +1.1      |
-
-Table: MCMC fits for  different RV datasets for Scl amoung 3 different models.
+Savage-Dickey calculated Bayes factor using Silverman-bandwidth KDE smoothed samples from posterior/prior.
 
 
 
+|      | Study       | Instrument | Nspec | Nstar | Ngood | Nmemb | $\delta v_{\rm med}$ | $R_{\rm xmatch}$/arcmin |
+| ---- | ----------- | ---------- | ----- | ----- | ----- | ----- | -------------------- | ----------------------- |
+| Scl  | combined    |            | 8945  | 2280  | 2034  | 1918  | 0.9                  |                         |
+|      | tolstoy+23  | FLAMES     | 3311  | 1701  | 1522  | 1480  | 0.65                 | --                      |
+|      | sestito+23a | GMOS       | 2     | 2     | 2     | 2     | 13                   | --                      |
+|      | walker+09   | MMFS       | 1818  | 1522  | 1417  | 1329  | 1.8                  | 3                       |
+|      | APOGEE      | APOGEE     | 5082  | 253   | 102   | 98    | 0.6                  | --                      |
+| UMi  | combined    |            | 4714  | 1225  | 1148  | 831   | 2.3                  |                         |
+|      | sestito+23b | GRACES     | 5     | 5     | 5     | 5     | 1.8                  | --                      |
+|      | pace+20     | DEIMOS     | 1716  | 1538  | 829   | 682   | 2.5                  | 1                       |
+|      | spencer+18  | Hectoshell | 1407  | 970   | 596   | 406   | 0.9                  | ?                       |
+|      | APOGEE      | APOGEE     | 9500  | 279   | 37    | 32    | 0.9                  | --                      |
+
+Table: Summary of velocity measurements and derived properties. 
 
 
-| study   | mean           | sigma               | $\log bf_{\rm sigma}$ | $\log bf_{\rm grad}$ |
-| ------- | -------------- | ------------------- | --------------------- | -------------------- |
-| all     | $-245.9\pm0.3$ | $8.76\pm0.24$       | +1.5                  | +2.2                 |
-| pace    | $-244.5\pm0.4$ | $9.1\pm0.3$         | +0.2                  | +1.1                 |
-| spencer | $-246.9\pm0.4$ | $8.8\pm0.3$         | +1.8                  | -0.3                 |
-| apogee  | $-248.2\pm1.6$ | $9.0_{-1.1}^{+1.3}$ | +0.8                  | +0.8                 |
 
-Table: MCMC fits for UMi velocity dispersion.
+| study      | mean              | sigma           | $\partial \log\sigma / \partial \log R$ | $\partial v_z / \partial x$ (km/s/deg) | $\theta_{\rm grad} / ^{\circ}$ | $\hat R$ | $n_{\rm eff}$ | $\log B_2/B_1$ | WAIC | LOO  |
+| ---------- | ----------------- | --------------- | --------------------------------------- | -------------------------------------- | ------------------------------ | -------- | ------------- | -------------- | ---- | ---- |
+| all        |                   |                 |                                         |                                        |                                |          |               |                |      |      |
+|            | $111.18\pm0.23$   | $9.71\pm0.17$   | -                                       | -                                      | -                              |          |               | 0              |      |      |
+|            | $111.19 \pm 0.23$ | $9.68\pm0.17$   | -                                       | $4.3\pm1.3$                            | $-149_{-13}^{+17}$             |          |               | -1.7           |      |      |
+|            | $111.16\pm0.23$   | $9.73\pm0.17$   | $0.056\pm0.021$                         | -                                      | -                              |          |               | -0.9           |      |      |
+| tolstoy+23 |                   |                 |                                         |                                        |                                |          |               |                |      |      |
+|            | $111.3 \pm 0.3$   | $9.80 \pm 0.18$ | -                                       | -                                      | -                              |          |               | 0              |      |      |
+|            | $111.3\pm0.3$     | $9.78\pm0.18$   | --                                      | $4.3\pm1.4$                            | $-154_{-13}^{+19}$             |          |               | -1.4           |      |      |
+|            | $111.2 \pm 0.3$   | $9.74\pm0.19$   | $0.085 \pm 0.023$                       | --                                     | --                             |          |               | -4.5           |      |      |
+| walker+09  |                   |                 |                                         |                                        |                                |          |               |                |      |      |
+|            | $111.0\pm0.3$     | $9.57\pm0.21$   | --                                      | --                                     | --                             |          |               | 0              |      |      |
+|            | $111.1\pm0.3$     | $9.53\pm0.21$   | -                                       | $5.2_{-1.6}^{+1.8}$                    | $-134_{-16}^{+23}$             |          |               | -2.4           |      |      |
+|            | $111.0\pm0.3$     | $9.61\pm0.21$   | $0.03\pm0.03$                           | --                                     | --                             |          |               | +1.6           |      |      |
+| apogee     |                   |                 |                                         |                                        |                                |          |               |                |      |      |
+|            | $109.9\pm0.8$     | $8.3\pm0.6$     | --                                      | --                                     | --                             |          |               | --             |      |      |
+|            | $109.9\pm0.8$     | $8.3\pm0.6$     | --                                      | $6\pm3$                                | $-151_{-36}^{+44}$             |          |               | +0.4           |      |      |
+|            | $109.9\pm0.8$     | $8.3\pm0.7$     | $0.05\pm0.08$                           | --                                     | --                             |          |               | +1.1           |      |      |
+
+Table: MCMC fits for  different RV datasets for Sculptor among 3 different models. {#tbl:scl_rv_mcmc short="Sculptor RV fits"}
 
 
 
-|      | Study       | Instrument | Nspec | Nstar | Ngood | Nmemb | $\delta v_{\rm med}$ |
-| ---- | ----------- | ---------- | ----- | ----- | ----- | ----- | -------------------- |
-| Scl  | combined    |            | 8945  | 2280  | 2034  | 1920  | 0.9                  |
-|      | tolstoy+23  | FLAMES     | 3311  | 1701  | 1522  | 1481  | 0.65                 |
-|      | sestito+23a | GMOS       | 2     | 2     | 2     | 2     | 13                   |
-|      | walker+09   | MMFS       | 1818  | 1522  | 1417  | 1330  | 1.8                  |
-|      | APOGEE      | APOGEE     | 5082  | 253   | 102   | 98    | 0.6                  |
-| UMi  | combined    |            | 4714  | 1225  | 1148  | 831   | 2.3                  |
-|      | sestito+23b | GRACES     | 5     | 5     | 5     | 5     | 1.8                  |
-|      | pace+20     | DEIMOS     | 1716  | 1538  | 829   | 682   | 2.5                  |
-|      | spencer+18  | Hectoshell | 1407  | 970   | 596   | 406   | 0.9                  |
-|      | APOGEE      | APOGEE     | 9500  | 279   | 37    | 32    | 0.9                  |
 
-Table: Summary of velocity measurements and derived properties. sestito+2023a number of members depends on spatial model used. 
+
+| study   | mean           | sigma               | $\hat R$ | $n_{\rm eff}$ | $\log bf_{\rm sigma}$ | $\log bf_{\rm grad}$ |
+| ------- | -------------- | ------------------- | -------- | ------------- | --------------------- | -------------------- |
+| all     | $-245.9\pm0.3$ | $8.76\pm0.24$       |          |               | +1.5                  | +2.2                 |
+| pace    | $-244.5\pm0.4$ | $9.1\pm0.3$         |          |               | +0.2                  | +1.1                 |
+| spencer | $-246.9\pm0.4$ | $8.8\pm0.3$         |          |               | +1.8                  | -0.3                 |
+| apogee  | $-248.2\pm1.6$ | $9.0_{-1.1}^{+1.3}$ |          |               | +0.8                  | +0.8                 |
+
+Table: MCMC fits for UMi velocity dispersion. {#tbl:umi_rv_mcmc short="Ursa Minor RV fits"}
+
+
+
+![Scl velocity sample](/Users/daniel/thesis/figures/scl_rv_scatter.pdf)
+
+Figure: RV members of Sculptor plotted in the tangent plane coloured by corrected velocity difference from mean $v_z - \bar v_z$ . The black ellipse marks the half-light radius in @fig:scl_selection. The black and green arrows mark the proper motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to scale).
+
+
+
+![Scl velocity gradient](/Users/daniel/thesis/figures/scl_vel_gradient_scatter.pdf) 
+
+Figure: The corrected LOS velocity along the best fit rotational axis. RV members are black points, the systematic $v_z$ is the horizontal grey line, blue lines represent the (projected) gradient from MCMC samples, and the orange line is a rolling median (with a window size of 50).
 
 # Numerical Convergence
 

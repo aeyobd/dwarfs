@@ -19,15 +19,15 @@ bulge are less important.
 The galactic bulge is described by a \citet{hernquist1990} potential.
 The potential is
 
-\[
+\begin{equation}
 \Phi(r) = - \frac{GM}{r + a}
-\] where \(a=1.3\,{\rm kpc}\) is the scale radius and
+\end{equation} where \(a=1.3\,{\rm kpc}\) is the scale radius and
 \(M=2.1 \times 10^{10}\,\Mo\) is the total mass.
 
 The thin and thick disks are represented with the
-\citet{miyamoto+nagai1975} cylindrical potential: \[
+\citet{miyamoto+nagai1975} cylindrical potential: \begin{equation}
 \Phi(R, z) = \frac{-GM}{\left(R^2 + \left[a + \sqrt{z^2 + b^2}\right]^{2}\right)^{1/2}}
-\]
+\end{equation}
 
 where \(a\) is the disc radial scale length, \(b\) is the scale height,
 and \(M\) is the total mass of the disk. For the thin disk,
@@ -138,10 +138,10 @@ Our fiducial isolation halo uses \(r_s=2.76\) kpc and
 \(M_s = 0.29 \times 10^{10}\) Msun, but can be easily rescaled for any
 length or mass scale.
 
-We adopt a softening length of \[
+We adopt a softening length of \begin{equation}
 h_{\rm grav} = 0.014 \left(\frac{r_s}{2.76\,{\rm kpc}}\right)\left(\frac{N}{10^7}\right)^{-1/2}.
-\] See appendix REF for a discussion of this choice, which is similar to
-the \citet{power+2003} suggested softening.
+\end{equation} See appendix REF for a discussion of this choice, which
+is similar to the \citet{power+2003} suggested softening.
 
 We use the relative tree opening criterion with the accuracy parameter
 set to 0.005, and adaptive time stepping with integration accuracy set
@@ -153,11 +153,12 @@ As discussed in \citet{power+2003}, the region where density is
 converged is related to the region which becomes collisionally relaxed
 over the time of the universe (so about 5-10 Gyr). (i.e.~where the
 collisionless assumption breaks down). The relaxation timescale is given
-by \(t_{\rm relax} = t_{\rm circ} N(r) / 8\ln N(r)\) or otherwise, \[
+by \(t_{\rm relax} = t_{\rm circ} N(r) / 8\ln N(r)\) or otherwise,
+\begin{equation}
 t_{\rm relax}(r) := t_{\rm circ}(r) \frac{N(r)}{8\,\ln N(r)}
 = {t_{\rm circ}(r_{200})} \frac{\sqrt{200}}{8} \frac{N(r)}{\ln N(r)} \left(\frac{\bar \rho (r)}{\rho_{\textrm crit}}\right)^{-1/2}
-\] This works out to be about 6-10 times (increasing with particle
-number) our adopted softening length for NFW halos given our
+\end{equation} This works out to be about 6-10 times (increasing with
+particle number) our adopted softening length for NFW halos given our
 assumptions. As such, at full resolution, we can only trust density
 profiles down to \(\sim10\epsilon\), just enough to resolve stellar
 density profiles.
@@ -220,9 +221,9 @@ than the numerically converged radius scale.
   shown for every 200th particle (ranked from the centre outwards)
 \end{itemize}
 
-\[
+\begin{equation}
 v_{\rm circ}(r) = \sqrt{\frac{GM(r)}{r}}
-\]
+\end{equation}
 
 \begin{itemize}
 \tightlist
@@ -243,16 +244,16 @@ Let \(\Psi\) be the potential (normalized to vanish at infinity) and
 \({\cal E}\) is the binding energy \({\cal E} = \Psi - 1/2 v^2\). If we
 know \(f({\cal E})\), the distribution function (phase-space density in
 energy), then we assign the stellar weight for a given particle with
-energy \({\cal E}\) is \[
+energy \({\cal E}\) is \begin{equation}
 P_\star({\cal E}) = \frac{f_\star({\cal E})}{f_{\rm halo}({\cal E})}.
-\] While \(f({\cal E})\) is a phase-space density, the differential
-energy distribution includes an additional \(g({\cal E})\) occupation
-term (BTXXX).
+\end{equation} While \(f({\cal E})\) is a phase-space density, the
+differential energy distribution includes an additional \(g({\cal E})\)
+occupation term (BTXXX).
 
 We use Eddington inversion to find the distribution function, (eq.
-4-140b in BT87) \[
+4-140b in BT87) \begin{equation}
 f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
-\]
+\end{equation}
 
 In practice the right, boundary term is zero as \(\Psi \to 0\) as
 \(r\to\infty\), and if \(\rho \propto r^{-n}\) at large \(r\) and
@@ -268,23 +269,23 @@ models:
 
 \subsubsection{Exp2D}\label{exp2d}
 
-The 2D exponential stellar profile is given by \[
+The 2D exponential stellar profile is given by \begin{equation}
 \Sigma_\star(R) = A e^{-R / R_s}
-\] where \(A\) is some normalization and \(R_s\) is the exponential
-scale radius. The 3D deprojected profile is found through abel inversion
-(e.g.~Rapha\ldots), i.e. \[
+\end{equation} where \(A\) is some normalization and \(R_s\) is the
+exponential scale radius. The 3D deprojected profile is found through
+abel inversion (e.g.~Rapha\ldots), i.e. \begin{equation}
 \rho_\star (r) =- \frac{1}{\pi}\int_r^\infty \frac{d\Sigma}{dR} \frac{1}{\sqrt{R^2 - r^2}} dR  = \frac{\Sigma_0}{\pi R_s^2}\,K_0(r/R_s)
-\] where \(K_0\) is the 0th order modified Bessel function of the second
-type.
+\end{equation} where \(K_0\) is the 0th order modified Bessel function
+of the second type.
 
 \subsubsection{Plummer}\label{plummer}
 
-A Plummer profile is defined by \[
+A Plummer profile is defined by \begin{equation}
 \Sigma(R) = \frac{M}{4\pi R_s^2} \left(1 + \frac{R^2}{R_s^2}\right)^{-2} ,
-\] where \(M\) is the total mass and \(R_s\) is the characteristic scale
-radius. The density is \[
+\end{equation} where \(M\) is the total mass and \(R_s\) is the
+characteristic scale radius. The density is \begin{equation}
 \rho(r) = \frac{3M}{4\pi\,R_s^3} \left(1 + \frac{r^2}{R_s^2}\right)^{-5/2}.
-\]
+\end{equation}
 
 \subsection{Stellar density profiles and velocity
 dispersion}\label{stellar-density-profiles-and-velocity-dispersion}

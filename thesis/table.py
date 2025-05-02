@@ -1,5 +1,5 @@
-# from discussion https://gist.github.com/wgroeneveld/9dbeb0d0b60c6cb5d8dfe9b938c5e94e
 import sys
+import re
 
 from panflute import *
 
@@ -16,6 +16,11 @@ def replace_longtables_with_tabular(elem, doc):
                 return '\\verb|' + (item.text) + '|'
             elif isinstance(item, Math):
                 return '$' + (item.text) + '$'
+            elif isinstance(item, Quoted):
+                # Handle quoted text with proper quote characters
+                quote = '"' if item.quote_type == 'DoubleQuote' else "'"
+                content = ''.join(get_text(c) for c in item.content)
+                return f'{quote}{content}{quote}'
             elif isinstance(item, RawInline):
                 return item.text
             elif isinstance(item, Cite):
@@ -27,9 +32,45 @@ def replace_longtables_with_tabular(elem, doc):
 
         def caption():
             if elem.caption and elem.caption.content:
-                return '\\caption{' + get_text(elem.caption.content) + '}\n' + \
-                    '\\label{tbl:' + get_text(elem.caption.content).replace(' ', r'-').translate(str.maketrans("", "", "();,.")) + '}\n'
+                raw_caption = get_text(elem.caption.content)
+            else:
+                return ""
+
+            # Extract components using regex
+            label = None
+            short = None
+            caption_text = raw_caption
+            labels = re.findall(r'\\label\{([^}]+)\}', raw_caption)
+
+            debug(stringify(elem.caption))
+            # Extract short caption (e.g., short="Short caption")
+            if elem.caption.short_caption:
+                debug("table.shortcaption")
+                short = stringify(elem.caption.short_caption)
+                
+            if len(labels) == 1:
+                label = labels[0]
+            elif elem.identifier:
+                debug("id backup")
+                label = get_text(elem.identifier)
+            else:
+                debug("no label found")
+
+            # Build LaTeX components
+            parts = []
+            if short:
+                parts.append(f'\\caption[{short}]{{{caption_text}}}')
+            else:
+                parts.append(f'\\caption{{{caption_text}}}')
+            
+            if label:
+                parts.append(f'\\label{{{label}}}')
+
+            return '\n'.join(parts) + '\n'
+           
+            return '\n'.join(parts) + '\n'
             return ''
+
 
         def tabular():
             return '\\begin{tabular}{' + 'l' * elem.cols + '}\n\\toprule\n'
@@ -57,6 +98,7 @@ def replace_longtables_with_tabular(elem, doc):
 
         print("Table processed successfully", file=sys.stderr)
         return RawBlock(result, 'latex')
+
     except Exception as e:
         print(f"Error processing table: {str(e)}", file=sys.stderr)
         return elem
