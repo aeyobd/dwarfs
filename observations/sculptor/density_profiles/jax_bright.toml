@@ -1,8 +1,8 @@
-filename = "../data/jensen+24_2c.fits"
+inherits = "bins_eqw.toml"
+filename = "../data/jensen+24_wide_2c.fits"
 
 PSAT_min = 0.2
 
-g_max = 20.07828 # median for members
+g_max = 20.080914 # median for members
 g_min = 0.0
 
-[profile_kwargs]

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -56,7 +56,7 @@ md"""
 """
 
 # ╔═╡ f26e6eb1-640b-40fa-8cbc-e87092f132f7
-j24 = read_fits("../data/jensen+24_wide.fits")
+j24 = read_fits("../data/jensen+24_wide_2c.fits")
 
 # ╔═╡ 5a9c76ed-eccf-42d7-96f1-814471f66d89
  apogee_f = read_fits("../../all/data/allStarLite-dr17-synspec_rev1.fits")

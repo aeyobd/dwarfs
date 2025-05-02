@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -84,7 +84,7 @@ No need to filter further...
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ c4649b4e-f8b3-4b2c-8595-5dc9a3a302da
-j24 = read_fits("../data/jensen+24_wide.fits")
+j24 = read_fits("../data/jensen+24_wide_2c.fits")
 
 # ╔═╡ bb7f6769-ec92-460d-8423-449029175f79
 
@@ -190,23 +190,6 @@ md"""
 # ╔═╡ 91208c77-3664-48fd-a659-1151a4dc0bf4
 (tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)[.!F_scatter] # number of sigma for filtered stars
 
-# ╔═╡ 28e07273-2177-408c-aabf-2f9ecf16b155
-hist(filter(isfinite, p_chi2))
-
-# ╔═╡ 67e33e9f-fab3-4fe3-9418-992b50ef8431
-hist(tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)
-
-# ╔═╡ de4788f4-d446-4e04-8d43-6a8308f62a97
-md"""
-## Membership
-"""
-
-# ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
-filt_tolstoy = RVUtils.sigma_clip(tolstoy23_all.RV, 3) .& (tolstoy23_all.Mem .== "m")
-
-# ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
-tolstoy23 = tolstoy23_all[filt_tolstoy, :]
-
 # ╔═╡ 2eebfca4-e364-467f-a1b3-c1cfab2822e6
 chi2 = @. tolstoy23_all.RV_sigma^2 ./ tolstoy23_all.RV_err^2 
 
@@ -223,6 +206,23 @@ import Distributions
 md"""
 If errors are representative, then the below plot should be uniform with only an excess at zero.
 """
+
+# ╔═╡ 28e07273-2177-408c-aabf-2f9ecf16b155
+hist(filter(isfinite, p_chi2))
+
+# ╔═╡ 67e33e9f-fab3-4fe3-9418-992b50ef8431
+hist(tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)
+
+# ╔═╡ de4788f4-d446-4e04-8d43-6a8308f62a97
+md"""
+## Membership
+"""
+
+# ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
+filt_tolstoy = RVUtils.sigma_clip(tolstoy23_all.RV, 3) .& (tolstoy23_all.Mem .== "m")
+
+# ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
+tolstoy23 = tolstoy23_all[filt_tolstoy, :]
 
 # ╔═╡ 4b0f7610-6c7f-4b9f-a0d1-234893d8cb94
 md"""

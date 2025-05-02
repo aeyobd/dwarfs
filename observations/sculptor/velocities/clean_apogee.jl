@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -85,7 +85,7 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("..//data/jensen+24_wide.fits")
+j24 = read_fits("..//data/jensen+24_wide_2c.fits")
 
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_raw = read_fits("processed/apogee_xmatch.fits")

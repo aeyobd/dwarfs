@@ -1,4 +1,6 @@
-filename = "../processed/delve_rgb_sample.fits"
+inherits = "bins_eqw.toml"
+
+filename = "../samples/delve_rgb_sample.fits"
 
 cmd_x1 = "mag_psf_g"
 cmd_x2 = "mag_psf_r"

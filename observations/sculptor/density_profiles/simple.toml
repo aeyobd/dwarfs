@@ -1,3 +1,5 @@
+inherits = "bins_eqw.toml"
+
 filename="../data/gaia_4deg_cen.fits"
 
 n_sigma_dist = 3

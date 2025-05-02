@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -66,7 +66,7 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("../processed/best_fullfield_sample.fits")
+j24 = read_fits("../processed/best_sample.fits")
 
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_all = read_fits("processed/rv_apogee.fits")
@@ -134,7 +134,7 @@ end
 # ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
 all_stars = let
 
-	all_stars = copy(j24)
+	all_stars = copy(j24)[:, [:source_id, :ra, :dec, :dr2_radial_velocity, :dr2_radial_velocity_error]]
 	add_xmatch!(all_stars, apogee_all, "apogee")
 	add_xmatch!(all_stars, walker09_all, "w09")
 	add_xmatch!(all_stars, tolstoy23_all, "t23")
@@ -225,6 +225,21 @@ p_chi2 = RVUtils.prob_chi2.(rv_meas.RV_sigma, rv_meas.RV_err, rv_meas.RV_nstudy 
 
 # ╔═╡ e7c0edd6-770d-40db-8619-b5c471569fb6
 F_scatter = @. isnan(p_chi2) || (p_chi2 > 0.001)
+
+# ╔═╡ ce420c18-b09d-4094-bc06-5537c3d756e8
+chi2 = @. rv_meas.RV_sigma^2 / rv_meas.RV_err^2 / (rv_meas.RV_nstudy - 1)
+
+# ╔═╡ e146c4c6-4843-42b3-aa9e-35c8e0615d70
+hist(filter(isfinite, chi2[F_scatter]))
+
+# ╔═╡ cc44c8c1-6eaa-404b-9470-12c0e6616605
+hist(log10.(chi2[.!F_scatter]))
+
+# ╔═╡ a7fad724-ed91-4ae8-8a9b-0ed05774d2de
+minimum(chi2[.!F_scatter])
+
+# ╔═╡ fb678d98-1b53-4e3d-831d-5cdf6f942995
+maximum(filter(isfinite, chi2[F_scatter]))
 
 # ╔═╡ c833ebb2-9f5e-4fb4-b812-dbc7fe57d8b5
 function filter_qual_study(rv_meas, study)
@@ -402,6 +417,9 @@ function filt_missing(col, verbose=false; low=-Inf, high=Inf)
 	return filt .& filt1
 end
 
+# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
+@savefig "t23_w09_xmatch" compare_rv("t23", "w09")
+
 # ╔═╡ 609f55cd-aa49-4a5e-b871-413ec7ef0990
 import StatsBase as sb
 
@@ -445,9 +463,6 @@ function compare_rv(study1, study2)
 	lines!([75, 150], [75, 150], color=:black)
 	return fig
 end
-
-# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
-@savefig "t23_w09_xmatch" compare_rv("t23", "w09")
 
 # ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
 @savefig "t23_apogee_xmatch" compare_rv("t23", "apogee")
@@ -750,6 +765,11 @@ end
 # ╠═e7c0edd6-770d-40db-8619-b5c471569fb6
 # ╠═73a41773-39bc-4bd5-9d99-39804000631a
 # ╠═dcec54f8-27b4-405e-a386-6e07470dc073
+# ╠═ce420c18-b09d-4094-bc06-5537c3d756e8
+# ╠═e146c4c6-4843-42b3-aa9e-35c8e0615d70
+# ╠═cc44c8c1-6eaa-404b-9470-12c0e6616605
+# ╠═a7fad724-ed91-4ae8-8a9b-0ed05774d2de
+# ╠═fb678d98-1b53-4e3d-831d-5cdf6f942995
 # ╠═c833ebb2-9f5e-4fb4-b812-dbc7fe57d8b5
 # ╟─462a80cb-bfef-47db-a812-65b927fd56d0
 # ╠═06b5c8d8-e531-4f00-a3cf-8d6202bb71f2

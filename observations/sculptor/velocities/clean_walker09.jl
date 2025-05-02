@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -99,7 +99,7 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("../data/jensen+24_wide.fits")
+j24 = read_fits("../data/jensen+24_wide_2c.fits")
 
 # ╔═╡ ea398623-ebc2-420a-8377-65bef43c0154
 begin 
@@ -164,6 +164,7 @@ begin
 	j24_filt, j24_idx = RVUtils.xmatch(walker09_all, j24, 3) # catches 1 missed star
 
 	walker09_all[!, :source_id] = j24.source_id[j24_idx]
+	allowmissing!(walker09_all, :source_id)
 	walker09_all[.!j24_filt, :source_id] .= missing
 
 	walker09_all

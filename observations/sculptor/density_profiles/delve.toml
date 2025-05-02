@@ -1,4 +1,4 @@
-filename = "../processed/delve_sample.fits"
+filename = "../samples/delve_sample.fits"
 
 cmd_x1 = "mag_psf_g"
 cmd_x2 = "mag_psf_r"

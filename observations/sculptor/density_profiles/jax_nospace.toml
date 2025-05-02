@@ -1,2 +1,0 @@
-inherits = "jax.toml"
-PSAT_col = "PSAT_NOSPACE"
