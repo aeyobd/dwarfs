@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -108,7 +108,7 @@ end
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="galaxy"),
-	profilename = TextField(default="jax_eqw_profile.toml")
+	profilename = TextField(default="jax_2c_eqw_profile.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -400,28 +400,6 @@ struct MCMCFit
 	lp::Float64
 end
 
-# ╔═╡ 47ab55c6-e202-47a0-b1d5-684c9a1fef5d
-"""
-	sample_model(density_model; prof, kwargs...)
-
-Samples the provided density model assuming observations in `prof`. 
-Kwargs passed to turing.
-"""
-function sample_model(density_model::DensityModel; 
-		prof=prof, 
-		kwargs...
-	)
-	
-	samples = sample_model(density_model.turing_model, density_model.log_Σ, prof; kwargs...)
-	
-	summary = summarize_chain(samples)
-
-	# easier to reconstruct model here for chi2
-	fit = MCMCFit(density_model, samples, summary, NaN, get_lp(samples))
-	χ2 = get_χ2(fit, prof)
-	return 	MCMCFit(density_model, samples, summary, χ2, get_lp(samples))
-end
-
 # ╔═╡ 3981b6f9-7ace-4de9-b72d-10168512689c
 """
 	sample_model(model, log_Σ, prof; threads, chains, kwargs...)
@@ -507,6 +485,28 @@ function summarize_chain(chain; p=0.16)
 
 	select!(summary, :parameters, :median, :err_low, :err_high, Not([:parameters, :median, :err_low, :err_high]))
 	return summary
+end
+
+# ╔═╡ 47ab55c6-e202-47a0-b1d5-684c9a1fef5d
+"""
+	sample_model(density_model; prof, kwargs...)
+
+Samples the provided density model assuming observations in `prof`. 
+Kwargs passed to turing.
+"""
+function sample_model(density_model::DensityModel; 
+		prof=prof, 
+		kwargs...
+	)
+	
+	samples = sample_model(density_model.turing_model, density_model.log_Σ, prof; kwargs...)
+	
+	summary = summarize_chain(samples)
+
+	# easier to reconstruct model here for chi2
+	fit = MCMCFit(density_model, samples, summary, NaN, get_lp(samples))
+	χ2 = get_χ2(fit, prof)
+	return 	MCMCFit(density_model, samples, summary, χ2, get_lp(samples))
 end
 
 # ╔═╡ 6c59342a-36b8-458b-8b17-92b0f18afb7d
@@ -827,6 +827,49 @@ end
 # ╔═╡ 37dfb46d-e6d5-4e45-91e5-75b58c246e49
 α = LilGuys.R_h(LilGuys.Exp2D())
 
+# ╔═╡ de7eb968-6616-491e-b258-d3f8be1134e8
+md"""
+# Old Fits
+"""
+
+# ╔═╡ 6f101561-2262-4012-9e17-aae2bd873d95
+all_fits = OrderedDict(
+	"exp2d" => mcmc_fit_exp2d,
+	"exp2d_inner" => mcmc_fit_exp2d_inner,
+)
+
+# ╔═╡ a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
+begin
+	derived_props = OrderedDict()
+
+	for (name, fit) in all_fits
+		for argname in [fit.model.argnames; :log_σ]
+			i = findfirst(fit.summary.parameters .== argname)
+
+			derived_props["$(argname)_$(name)"] = fit.summary.median[i]
+			derived_props["$(argname)_$(name)_em"] = fit.summary.err_low[i]
+			derived_props["$(argname)_$(name)_ep"] = fit.summary.err_high[i]
+		end
+		derived_props["chi2_$name"] = fit.χ2
+		derived_props["lp_$name"] = fit.lp
+		derived_props["num_params_$name"] = length(fit.model.argnames)
+	end
+
+	derived_props
+end
+
+# ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
+import TOML
+
+# ╔═╡ 367580e2-6b3f-43fd-aa85-78e818375778
+obs_props = TOML.parsefile("$galaxyname/observed_properties.toml")
+
+# ╔═╡ 62f7e3e3-ae56-4aee-a059-a2a511735d04
+log_R_s_in = log10(obs_props["r_h"] / α)
+
+# ╔═╡ 4f0a4093-957d-44a9-94ba-9158910ad381
+log_R_s_err = 10 * get(obs_props, "r_h_em", get(obs_props, "r_h_err", NaN)) / obs_props["r_h"] / log(10) 
+
 # ╔═╡ dddcca98-ba5d-4b57-ac09-bed82f0d8bba
 @model function turing_model_double_exp2d(exp2d_log_Σ, log_r, log_Σ, log_Σ_err)
 	log_R_s ~ Normal(log_R_s_in, log_R_s_err)
@@ -881,49 +924,6 @@ let
 	@savefig "double_exp2d"
 	fig
 end
-
-# ╔═╡ de7eb968-6616-491e-b258-d3f8be1134e8
-md"""
-# Old Fits
-"""
-
-# ╔═╡ 6f101561-2262-4012-9e17-aae2bd873d95
-all_fits = OrderedDict(
-	"exp2d" => mcmc_fit_exp2d,
-	"exp2d_inner" => mcmc_fit_exp2d_inner,
-)
-
-# ╔═╡ a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
-begin
-	derived_props = OrderedDict()
-
-	for (name, fit) in all_fits
-		for argname in [fit.model.argnames; :log_σ]
-			i = findfirst(fit.summary.parameters .== argname)
-
-			derived_props["$(argname)_$(name)"] = fit.summary.median[i]
-			derived_props["$(argname)_$(name)_em"] = fit.summary.err_low[i]
-			derived_props["$(argname)_$(name)_ep"] = fit.summary.err_high[i]
-		end
-		derived_props["chi2_$name"] = fit.χ2
-		derived_props["lp_$name"] = fit.lp
-		derived_props["num_params_$name"] = length(fit.model.argnames)
-	end
-
-	derived_props
-end
-
-# ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
-import TOML
-
-# ╔═╡ 367580e2-6b3f-43fd-aa85-78e818375778
-obs_props = TOML.parsefile("$galaxyname/observed_properties.toml")
-
-# ╔═╡ 62f7e3e3-ae56-4aee-a059-a2a511735d04
-log_R_s_in = log10(obs_props["r_h"] / α)
-
-# ╔═╡ 4f0a4093-957d-44a9-94ba-9158910ad381
-log_R_s_err = 10 * get(obs_props, "r_h_em", get(obs_props, "r_h_err", NaN)) / obs_props["r_h"] / log(10) 
 
 # ╔═╡ 4a102150-f6f0-4235-963e-b2c05cda39b2
 log_R_s_in, log_R_s_err

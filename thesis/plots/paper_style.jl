@@ -10,5 +10,11 @@ CairoMakie.update_theme!(
     Arrows = (;
         linewidth=2,
         arrowsize=9
-       )
+       ),
+    Legend = (;
+        patchsize=(18, 6)
+   ),
+    ErrorScatter = (;
+        linewidth=1,
+   )
 )

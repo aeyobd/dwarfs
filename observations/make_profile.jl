@@ -1,9 +1,9 @@
 #!/bin/env julia
 
+using Logging, LoggingExtras
+import TOML
 using ArgParse
 using LilGuys
-import PythonCall # for fits
-import TOML
 include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 
 
@@ -30,14 +30,14 @@ function get_args()
     return args
 end
 
-function main()
-    args = get_args()
 
+function main(args)
     params = read_paramfile(args["input"])
 
     profile_kwargs = pop!(params, "profile_kwargs", Dict())
 
     props = TOML.parsefile(dirname(params["filename"]) * "/../observed_properties.toml")
+
 
     params = LilGuys.dict_to_tuple(params)
     filt_params = GaiaFilterParams(props; params...)
@@ -68,6 +68,16 @@ end
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    main()
+    args = get_args()
+    logfile = splitext(args["output"])[1]*".log"
+
+    logger = TeeLogger(
+        global_logger(),
+        FileLogger(logfile)
+    )
+
+    with_logger(logger) do
+        main(args)
+    end
 end
 

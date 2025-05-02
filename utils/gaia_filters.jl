@@ -335,7 +335,7 @@ end
 
 
 function ruwe_filter(all_stars, ruwe_max)
-    return all_stars.ruwe .< ruwe_max
+    return (all_stars.ruwe .< ruwe_max) .& .!ismissing.(all_stars.ruwe)
 end
 
 function ruwe_filter(all_stars, params::GaiaFilterParams)
@@ -382,7 +382,13 @@ end
 
 function cmd_filter(all_stars, cmd_cut)
 	cmd_cut_m = reshape(cmd_cut, 2, :)
-	filt_cmd = is_point_in_polygon.(zip(all_stars.bp_rp, all_stars.G), [cmd_cut_m])
+    filt_cmd = map(eachrow(all_stars)) do row
+        if ismissing(row.bp_rp) || ismissing(row.G)
+            return false
+        else
+            return is_point_in_polygon((row.bp_rp, row.G), cmd_cut_m)
+        end
+    end
 end
 
 
@@ -436,10 +442,16 @@ end
 
 
 function pm_simple_filter(all_stars, pmra, pmdec, dpm)
-    δx = pmra .- all_stars.pmra
-    δy = pmdec .- all_stars.pmdec
-    dist = @. δx ⊕ δy
-    return dist .< dpm
+    map(eachrow(all_stars)) do row
+        if ismissing(row.pmra) || ismissing(row.pmdec)
+            return false
+        else
+            δx = pmra .- row.pmra
+            δy = pmdec .- row.pmdec
+            dist = @. δx ⊕ δy
+            return dist .< dpm
+        end
+    end
 end
 
 
@@ -478,14 +490,18 @@ function ll_filter(all_stars, params::GaiaFilterParams)
 end
 
 function parallax_filter(all_stars, dist, dist_err, n_sigma_dist)
-	parallax = 1/dist
-	parallax_err = 1/dist * dist_err / dist_err
+    map(eachrow(all_stars)) do row
+        if ismissing(row.parallax) || ismissing(row.parallax_error)
+            return false
+        end
+        parallax = 1/dist
+        parallax_err = 1/dist * dist_err / dist_err
 
-	sigma = all_stars.parallax_error .⊕ parallax_err
-	
-	filt_parallax = @. (
-    abs(all_stars.parallax - parallax) <  sigma * n_sigma_dist
-    )
+        sigma = all_stars.row .⊕ parallax_err
+        
+
+        return abs(row.parallax - parallax) <  sigma * n_sigma_dist
+    end
 end
 
 function parallax_simple_filter(all_stars, n_sigma_dist)

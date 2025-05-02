@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -55,6 +55,9 @@ import TOML
 # ╔═╡ cf7aeb0a-d453-462a-b43d-a832567440fd
 
 
+# ╔═╡ ea8e6489-27c8-421b-9512-b0f67a79a294
+import Random
+
 # ╔═╡ 2eb4aa78-0fea-460b-a18e-06a129c41504
 md"""
 # Inputs & Data loading
@@ -67,7 +70,7 @@ obs_dir = ENV["DWARFS_ROOT"] * "/observations/"
 observed_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/" * galaxyname * "/observed_properties.toml")
 
 # ╔═╡ 26cf1867-02be-4d36-8c35-6c58a1feca27
-datafile = obs_dir * "/$galaxyname/data/jensen+24_2c.fits"
+datafile = obs_dir * "/$galaxyname/data/jensen+24_wide_2c.fits"
 
 # ╔═╡ 90cec348-1947-4091-a5dd-ae67cf80fddb
 filt_params = GaiaFilterParams(observed_properties, filename=datafile)
@@ -123,79 +126,62 @@ md"""
 The plots below show various subsamples of the dataset in different planes to get a handle on how generally members are selected using the J+24 algorithm.
 """
 
+# ╔═╡ 8084f25b-ebe9-4f8d-aeef-d36decb5dc31
+COLORS
+
+# ╔═╡ ea34ad98-8041-40d1-b7a4-4f689b9c6a11
+print(COLORS[1])
+
+# ╔═╡ 6e77235b-4c46-4508-ba2d-01a7342cb4d9
+144  + 75
+
+# ╔═╡ 50d90ce5-99df-46af-b309-a8ccd0ccf921
+[colorant"#cecece", colorant"#84aa83", colorant"#207e95", colorant"#4c397c"]
+
+# ╔═╡ 3ab5488e-4c7c-4b8d-9c4b-cc0a04620298
+ my_colors = SELECTION_COLORS
+
+# ╔═╡ 8d3b07c1-1983-4151-9a57-ab0a0edb8212
+LinRange(0.85, 0.4, 4)
+
+# ╔═╡ 28fbacb4-8078-4af2-bf8f-23adab46669b
+ to_colormap(:YlGnBu_4)[end-2:end]
+
+# ╔═╡ f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
+ to_colormap(:seaborn_crest_gradient)[[1, 80, 170, 255]]
+
+# ╔═╡ 6b4f3e96-d525-4885-97fd-a3d35171ad76
+[colorant"black", COLORS[1], COLORS[3], COLORS[8]]
+
+# ╔═╡ 7f6ab558-627e-46c5-8f47-b1ec03fd2b63
+ to_colormap(:seaborn_mako_gradient)[reverse([65, 129, 192, 255])]
+
+# ╔═╡ c3eef548-6678-46a3-96a1-01246f5f70e0
+Arya.get_arya_cmap()
+
+# ╔═╡ 9a73fa3d-259d-493a-90eb-1cb0aaaf9b5d
+LinRange(1, 256, 5)
+
+# ╔═╡ c406b99a-40e6-405d-bcf3-b899145444db
+0.2 * 16
+
 # ╔═╡ 12aa5708-dfee-4b48-8835-69055ad82680
 member_markersize = 3
 
 # ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
 bg_markersize = 2
 
-# ╔═╡ 77b7678f-158f-46cb-82b1-2e719ec6895a
-function compare_samples(datasets, scatter_kwargs) 
-	fig = Figure(
-		size = (4*72, 6*72),
-	)
+# ╔═╡ f6fe794a-e925-4544-b5ac-fda9eb96629b
+import StatsBase: median
 
-	# tangent
-	dθ = θmax
-	ax = Axis(fig[1, 1], 
-		xlabel=plot_labels[:xi_am], 
-		ylabel=plot_labels[:eta_am], 
-		#aspect=1, 
-		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false,
-		xreversed = true
-	)
+# ╔═╡ fefd2f20-7116-4fff-b9c5-8bc3628b508f
+median(members.dRP)
 
+# ╔═╡ 45fb74e8-de19-44b6-8abd-6e2e9d3af76f
+median(members.dBP .+ members.dRP)
 
-	for (label, df) in datasets
-		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
-	end
-
-	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
-	text!(-4observed_properties["r_h"], 0, text=L"3R_h", color=:black)
-
-	
-	axislegend(position=:lt)
-
-
-	grid_low = fig[2, 1] = GridLayout()
-	# cmd
-	ax =  Axis(grid_low[1,1], 
-		yreversed=true,
-		xlabel=plot_labels[:bp_rp],
-		ylabel=plot_labels[:G],
-		limits=(-0.5, 2.5, 15, 21),
-		xgridvisible=false,
-		ygridvisible=false,
-		#aspect = 1,
-	)
-
-	for (label, df) in datasets
-		scatter!(df.bp_rp, df.phot_g_mean_mag; scatter_kwargs[label]...)
-	end
-
-	# proper motions
-	ax = Axis(grid_low[1,2],
-		xlabel = plot_labels[:pmra],
-		ylabel = plot_labels[:pmdec],
-		#aspect=DataAspect(),
-		limits=(-10, 10, -10, 10),
-		xgridvisible=false,
-		ygridvisible=false,
-		)
-	
-	for (label, df) in datasets
-		scatter!(df.pmra, df.pmdec; scatter_kwargs[label]...)
-	end
-
-
-	rowsize!(grid_low, 1, Aspect(1, 1))
-
-	rowsize!(fig.layout, 1, Aspect(1, 1))
-
-	#resize_to_layout!(fig)
-	fig
-end
+# ╔═╡ a8263f41-7b79-4f45-98d7-2d96324bc8fd
+median(members.dG)
 
 # ╔═╡ c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
 R_h = observed_properties["r_h"]
@@ -203,48 +189,58 @@ R_h = observed_properties["r_h"]
 # ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
 rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
 
+# ╔═╡ aeb5e17f-6479-4504-ae4f-c9218f374d48
+rv_distant.PSAT
+
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "scl_selection" compare_samples(
-		(
+@savefig "scl_selection" compare_j24_samples(
+		OrderedDict(
 		:best => best_stars,
 		:members_nospace => members_nospace,
 		:members => members,
-		:rv => rv_members,
+		:rv => rv_members[Random.randperm(size(rv_members, 1)), :],
 		:rv_distant => rv_distant,
 	),
 	Dict(
-		:best => (;	alpha=0.3, markersize=1, color=:black, 
-			label="all" => (alpha=1, markersize=2),
+		:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
+			label="all" => (;markersize=2),
 			rasterize=10,
 		),
 		:members_nospace => (;
 			alpha=1, markersize=1,
 			label = "CMD + PM" =>(alpha=1, markersize=2),
-			color=COLORS[1]
+			color=my_colors[2],
+			strokecolor=my_colors[2],
+			strokewidth=0.3
 		),
 		:members => (;
-			markersize=1.5,
-			label = "probable members" =>(alpha=1, markersize=1.5*2),
+			markersize=3,
+			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
+			marker=:diamond,
 			#color=:transparent,
 			#strokewidth=0.3,
-			color = COLORS[2],
+			color = my_colors[3],
 			alpha=1,
+			strokecolor = my_colors[2],
+			strokewidth=0.0
 		),
 		:rv => (;
-			markersize=2,
-			#marker=:xcross,
-			label = "RV members" =>(alpha=1, markersize=2*2),
-			color = COLORS[4],
-			#strokewidth=0
+			markersize=4,
+			marker=:xcross,
+			label = "RV members" =>(alpha=1, markersize=2.5*2),
+			color = my_colors[4],
+			strokecolor = :black,
+			strokewidth=0.0
 		),
 		:rv_distant => (;
-			markersize=4,
+			markersize=6,
 			marker=:star5,
-			color = COLORS[4],
-			strokewidth=0.4,
+			color = my_colors[4],
+			strokewidth=0.3,
 			strokecolor=:black
 		),
-	)
+	),
+	observed_properties
 )
 
 # ╔═╡ 9c66468e-c357-4268-875b-ec83510fd982
@@ -266,16 +262,15 @@ rv_nonmemb = rv_all[rv_all.source_id .∈ [id_nonmemb], :]
 
 # ╔═╡ 0cf37365-a1bc-4c25-8c03-3054551a6b67
 compare_samples(
-		(
-			:memb => rv_members,
-
+		OrderedDict(
+			:members => rv_members,
 			:nonmemb => rv_nonmemb,	
 		),
 	Dict(
 		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
-			label="all" => (alpha=1, markersize=2),
+			label="nonmemb" => (alpha=1, markersize=2),
 		),
-		:memb => (;	alpha=1, markersize=2, color=:black, 
+		:members => (;	alpha=1, markersize=2, color=:black, 
 			label="memb" => (alpha=1, markersize=2),
 		),
 
@@ -312,6 +307,7 @@ end
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
 # ╠═cf7aeb0a-d453-462a-b43d-a832567440fd
 # ╠═d3bd7158-ea70-47a0-9800-9bfc08f3557c
+# ╠═ea8e6489-27c8-421b-9512-b0f67a79a294
 # ╟─2eb4aa78-0fea-460b-a18e-06a129c41504
 # ╠═5db5adc4-9b98-4025-9b3c-65b40e5d4c59
 # ╠═9ecf79a8-2ed3-40c6-b555-a102250ecbd4
@@ -329,11 +325,28 @@ end
 # ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
 # ╟─5a9b5529-50f1-4cb5-b716-42180ea77d5f
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
+# ╠═8084f25b-ebe9-4f8d-aeef-d36decb5dc31
+# ╠═ea34ad98-8041-40d1-b7a4-4f689b9c6a11
+# ╠═6e77235b-4c46-4508-ba2d-01a7342cb4d9
+# ╠═50d90ce5-99df-46af-b309-a8ccd0ccf921
+# ╠═3ab5488e-4c7c-4b8d-9c4b-cc0a04620298
+# ╠═8d3b07c1-1983-4151-9a57-ab0a0edb8212
+# ╠═28fbacb4-8078-4af2-bf8f-23adab46669b
+# ╠═f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
+# ╠═6b4f3e96-d525-4885-97fd-a3d35171ad76
+# ╠═7f6ab558-627e-46c5-8f47-b1ec03fd2b63
+# ╠═c3eef548-6678-46a3-96a1-01246f5f70e0
+# ╠═9a73fa3d-259d-493a-90eb-1cb0aaaf9b5d
+# ╠═c406b99a-40e6-405d-bcf3-b899145444db
 # ╠═12aa5708-dfee-4b48-8835-69055ad82680
 # ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
-# ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
+# ╠═f6fe794a-e925-4544-b5ac-fda9eb96629b
+# ╠═fefd2f20-7116-4fff-b9c5-8bc3628b508f
+# ╠═45fb74e8-de19-44b6-8abd-6e2e9d3af76f
+# ╠═a8263f41-7b79-4f45-98d7-2d96324bc8fd
 # ╠═c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
 # ╠═430fae9d-c708-4447-80ce-aabf19b161d2
+# ╠═aeb5e17f-6479-4504-ae4f-c9218f374d48
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╟─9c66468e-c357-4268-875b-ec83510fd982
 # ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0

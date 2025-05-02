@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -94,21 +94,6 @@ md"""
 # Utilities
 """
 
-# ╔═╡ 965217b8-b2a5-485b-83de-cac887065b19
-plot_labels = OrderedDict(
-	:xi => L"$\xi$\,/\,degrees",
-	:eta => L"$\eta$\,/\,degrees",
-	:xi_am => L"$\xi$\,/\,arcmin",
-	:eta_am => L"$\eta$\,/\,arcmin",
-	:G => "G (mag)",
-	:bp_rp => "BP – RP (mag)",
-	:pmra => L"$\mu_{\alpha*}$ / mas yr$^{-1}$",
-	:pmdec => L"$\mu_{\delta}$ / mas yr$^{-1}$",
-)
-
-# ╔═╡ 2d4da56b-5d0a-49d3-83ae-a90f85192101
-θmax = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
-
 # ╔═╡ 5a9b5529-50f1-4cb5-b716-42180ea77d5f
 md"""
 # Simple selection plots
@@ -125,73 +110,6 @@ member_markersize = 3
 # ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
 bg_markersize = 2
 
-# ╔═╡ 77b7678f-158f-46cb-82b1-2e719ec6895a
-function compare_samples(datasets, scatter_kwargs) 
-	fig = Figure(
-		size = (4*72, 6*72),
-	)
-
-	# tangent
-	dθ = θmax
-	ax = Axis(fig[1, 1], 
-		xlabel=plot_labels[:xi_am], 
-		ylabel=plot_labels[:eta_am], 
-		#aspect=1, 
-		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false,
-		xreversed = true,
-	)
-
-
-	for (label, df) in datasets
-		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
-	end
-	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
-	text!(-4observed_properties["r_h"], 0, text=L"3R_h", color=:black)
-
-	
-	axislegend(position=:rt)
-
-
-	grid_low = fig[2, 1] = GridLayout()
-	# cmd
-	ax =  Axis(grid_low[1,1], 
-		yreversed=true,
-		xlabel=plot_labels[:bp_rp],
-		ylabel=plot_labels[:G],
-		limits=(-0.5, 2.5, 15, 21),
-		xgridvisible=false,
-		ygridvisible=false,
-		#aspect = 1,
-	)
-
-	for (label, df) in datasets
-		scatter!(df.bp_rp, df.phot_g_mean_mag; scatter_kwargs[label]...)
-	end
-
-	# proper motions
-	ax = Axis(grid_low[1,2],
-		xlabel = plot_labels[:pmra],
-		ylabel = plot_labels[:pmdec],
-		#aspect=DataAspect(),
-		limits=(-10, 10, -10, 10),
-		xgridvisible=false,
-		ygridvisible=false,
-		)
-	
-	for (label, df) in datasets
-		scatter!(df.pmra, df.pmdec; scatter_kwargs[label]...)
-	end
-
-
-	rowsize!(grid_low, 1, Aspect(1, 1))
-
-	rowsize!(fig.layout, 1, Aspect(1, 1))
-
-	resize_to_layout!(fig)
-	fig
-end
-
 # ╔═╡ e7fd8470-9225-4dfc-b4ff-08a8e40069fa
 R_h = observed_properties["r_h"]
 
@@ -204,48 +122,61 @@ rv_distant[:, [:xi, :eta, :R_ell]]
 # ╔═╡ ec974caa-59e6-4555-b9b4-48f33d31d00b
 rv_distant.R_ell ./ R_h
 
+# ╔═╡ 43e9b9bd-b7ba-4d2c-b97e-2d28c1ba270d
+import Random
+
+# ╔═╡ a47cbe4c-15ec-4bb0-8992-e7650e1b072f
+my_colors = SELECTION_COLORS
+
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "umi_selection" compare_samples(
-		(
+@savefig "umi_selection" compare_j24_samples(
+		OrderedDict(
 		:best => best_stars,
 		:members_nospace => members_nospace,
 		:members => members,
-		:rv => rv_members,
-		:rv_dist => rv_distant,
+		:rv => rv_members[Random.randperm(size(rv_members, 1)), :],
+		:rv_distant => rv_distant,
 	),
 	Dict(
-		:best => (;	alpha=0.1, markersize=1, color=:black, 
-			label="all" => (alpha=1, markersize=2),
+		:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
+			label="all" => (;markersize=2),
 			rasterize=10,
 		),
 		:members_nospace => (;
 			alpha=1, markersize=1,
 			label = "CMD + PM" =>(alpha=1, markersize=2),
-			color=COLORS[1]
+			color=my_colors[2],
+			strokecolor=my_colors[2],
+			strokewidth=0.3
 		),
 		:members => (;
-			markersize=1.5,
-			label = "probable members" =>(alpha=1, markersize=3),
+			markersize=3,
+			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
+			marker=:diamond,
 			#color=:transparent,
 			#strokewidth=0.3,
-			color = COLORS[2],
+			color = my_colors[3],
 			alpha=1,
+			strokecolor = my_colors[2],
+			strokewidth=0.0
 		),
 		:rv => (;
-			markersize=2,
-			#marker=:xcross,
-			label = "RV members" =>(alpha=1, markersize=5),
-			color = COLORS[4],
-			strokewidth=0
-		),
-		:rv_dist => (;
 			markersize=4,
-			marker=:star5,
-			color = COLORS[4],
-			strokewidth=0.4,
-			strokecolor=:black
+			marker=:xcross,
+			label = "RV members" =>(alpha=1, markersize=2.5*2),
+			color = my_colors[4],
+			strokecolor = :black,
+			strokewidth=0.0
 		),
-	)
+		:rv_distant => (;
+			markersize=6,
+			marker=:star5,
+			color = my_colors[4],
+			strokewidth=0.3,
+			strokecolor=:black,
+		),
+	),
+	observed_properties
 )
 
 # ╔═╡ 90436a7d-e357-4365-922a-42f61e3dfb22
@@ -263,21 +194,20 @@ id_nonmemb = setdiff(rv_all.source_id, rv_members.source_id)
 rv_nonmemb = rv_all[rv_all.source_id .∈ [id_nonmemb], :]
 
 # ╔═╡ 0f5143a6-f892-4a3e-967d-5e6b04cb12f0
-compare_samples(
-		(
-			:memb => rv_members,
-
+compare_j24_samples(
+		OrderedDict(
+			:members => rv_members,
 			:nonmemb => rv_nonmemb,	
 		),
 	Dict(
 		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
-			label="all" => (alpha=1, markersize=2),
+			label="nonmemb" => (alpha=1, markersize=2),
 		),
-		:memb => (;	alpha=1, markersize=2, color=:black, 
+		:members => (;	alpha=1, markersize=2, color=:black, 
 			label="memb" => (alpha=1, markersize=2),
 		),
-
-	)
+	),
+	observed_properties
 )
 
 # ╔═╡ Cell order:
@@ -304,17 +234,16 @@ compare_samples(
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
 # ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
-# ╠═965217b8-b2a5-485b-83de-cac887065b19
-# ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
 # ╟─5a9b5529-50f1-4cb5-b716-42180ea77d5f
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
 # ╠═12aa5708-dfee-4b48-8835-69055ad82680
 # ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
-# ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
 # ╠═e7fd8470-9225-4dfc-b4ff-08a8e40069fa
 # ╠═96360af3-e877-4c83-88ef-464ea9eb7b14
 # ╠═9eaaf2be-936b-4d26-9e2e-c04f551c515c
 # ╠═ec974caa-59e6-4555-b9b4-48f33d31d00b
+# ╠═43e9b9bd-b7ba-4d2c-b97e-2d28c1ba270d
+# ╠═a47cbe4c-15ec-4bb0-8992-e7650e1b072f
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╠═90436a7d-e357-4365-922a-42f61e3dfb22
 # ╠═5d0a5768-85ba-4913-9108-9302cc63cf4b

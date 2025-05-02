@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -62,10 +62,10 @@ function load_profile(galaxyname; algname="jax")
 end
 
 # ╔═╡ 8adc28b1-b0d0-4735-a1f1-ee3bb82e8ef2
-prof_scl = load_profile("sculptor")
+prof_scl = load_profile("sculptor", algname="jax_2c")
 
 # ╔═╡ c3b52d5a-a8b4-4207-a8c7-9d32914aca93
-prof_umi = load_profile("ursa_minor")
+prof_umi = load_profile("ursa_minor", algname="jax_2c")
 
 # ╔═╡ 740d04a4-4327-47cd-b5aa-b71ed94a0610
 prof_fornax = load_profile("fornax")
@@ -198,7 +198,7 @@ let
 
 	)
 
-    x = LinRange(-1.5, 1, 1000)
+    x = LinRange(-1.5, 1.2, 1000)
     y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
     lines!(x, y, color=:black, label="Exp2D")
     
@@ -220,7 +220,7 @@ let
 		ylabel = L"\delta\log\,\Sigma_\textrm{Exp}",
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
-		limits=(-1.5, 1.0, -1.2, 1.2),
+		limits=(-1.5, 1.6, -1.2, 1.2),
 				  ylabelsize=10
 	)
 
@@ -245,7 +245,7 @@ let
 		ylabel = L"\delta\log\,\Sigma_\textrm{plummer}",
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
-		limits=(-1.5, 1.0, -1.2, 1.2),
+		limits=(-1.5, 1.2, -1.2, 1.2),
 						  ylabelsize=10
 	)
 

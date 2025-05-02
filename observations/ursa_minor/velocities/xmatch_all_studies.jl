@@ -298,6 +298,9 @@ p_chi2 = RVUtils.prob_chi2.(rv_meas.RV_sigma, rv_meas.RV_err, rv_meas.RV_nstudy)
 # ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
 F_qual_inter = @. isnan(p_chi2) || p_chi2 > 0.001
 
+# ╔═╡ 9e92ac8b-2ba5-483d-a02a-12e56d63cd2d
+hist(filter(isfinite, p_chi2))
+
 # ╔═╡ dcec54f8-27b4-405e-a386-6e07470dc073
 F_qual_study = filter_qual_study(rv_meas, "s18") .& filter_qual_study(rv_meas, "apogee") .& filter_qual_study(rv_meas, "p20")
 
@@ -309,6 +312,18 @@ sum(.!F_qual)
 
 # ╔═╡ 870571f3-f201-47fd-a215-995a416bc223
 sum(.!F_qual_study)
+
+# ╔═╡ 8dc1c558-59d1-4bcb-a4cb-44a29103cb29
+chi2 = @. rv_meas.RV_sigma^2 / rv_meas.RV_err^2 / (rv_meas.RV_nstudy-1)
+
+# ╔═╡ f8f7296b-6622-4644-a8e4-fb4861b19e52
+hist(filter(isfinite, chi2[F_qual_inter]))
+
+# ╔═╡ e7e9aaf7-ed6e-45ac-9263-3551d572847e
+hist(log10.(filter(x->x>0, chi2[.!F_qual_inter])))
+
+# ╔═╡ a53f4822-320c-4b67-b929-c28225af019b
+minimum(chi2[.!F_qual_inter])
 
 # ╔═╡ 21daa18e-88c3-43ee-8dfa-ea8d116e5ff4
 sum(.!ismissing.(rv_meas.RV_graces))
@@ -374,24 +389,6 @@ sigma_sigma = ifelse.(isfinite.(rv_meas.RV_sigma),
 	rv_meas.RV_sigma ./ (rv_meas.RV_err .* sqrt.(rv_meas.RV_nstudy)),
 	0.				
 	)
-
-# ╔═╡ 06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		yscale=log10, yticks=Makie.automatic,
-		xlabel = "log sigma / std",
-		ylabel = "count",
-			  limits=(-3, nothing, nothing, nothing)
-			 )
-
-	
-	hist!(filter(isfinite, log10.(sigma_sigma)), bins=120)
-	vlines!(log10(5), color=COLORS[2])
-
-	fig
-
-end
 
 # ╔═╡ d665895c-9a97-4c36-9ea9-c6e30d0a17ad
 mean(sigma_sigma .> 5)
@@ -788,8 +785,12 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═dcec54f8-27b4-405e-a386-6e07470dc073
 # ╠═870571f3-f201-47fd-a215-995a416bc223
 # ╠═5c86f548-4838-41e1-b9af-fdd93d900940
+# ╠═8dc1c558-59d1-4bcb-a4cb-44a29103cb29
+# ╠═f8f7296b-6622-4644-a8e4-fb4861b19e52
+# ╠═e7e9aaf7-ed6e-45ac-9263-3551d572847e
+# ╠═a53f4822-320c-4b67-b929-c28225af019b
+# ╠═9e92ac8b-2ba5-483d-a02a-12e56d63cd2d
 # ╠═40d26853-0d5e-4d55-9a5e-564da1722f33
-# ╠═06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
 # ╟─db3177e7-7132-4f62-846a-f4416a804009
 # ╠═7faa2813-e502-4187-855a-047a2f5dd48d
 # ╠═a6bc7223-3267-4760-9b6a-d886ac6f4544

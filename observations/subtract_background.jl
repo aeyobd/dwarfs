@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -198,12 +198,17 @@ end
 df_bg = OrderedDict(
 	"log_Sigma" => Sigma_bg,
 	"log_Sigma_err" => Sigma_bg_err,
-	"log_R_bg" => prof.log_R[filt_bg]
+	"log_R_bg" => prof.log_R[filt_bg],
+	"n_points_bg" => n_bins_bg,
+	"n_points_skip" => n_bins_cut,
 )
+
+# ╔═╡ 8512c587-73e0-4d94-a1ac-b6a74ef0216e
+import TOML
 
 # ╔═╡ a760ebfc-204c-449d-b83b-c4d2282d2f6e
 open(joinpath(galaxyname, "density_profiles", profilename_bg), "w") do f
-	print(f, df_bg)
+	TOML.print(f, df_bg)
 end
 
 # ╔═╡ Cell order:
@@ -239,4 +244,5 @@ end
 # ╠═b74aee7a-6f7b-43ca-8c30-baa68d679c6f
 # ╠═3a866a51-d79b-4722-8243-0043192d9ce5
 # ╠═3ecf11e6-1dab-476d-a012-d492cce17795
+# ╠═8512c587-73e0-4d94-a1ac-b6a74ef0216e
 # ╠═a760ebfc-204c-449d-b83b-c4d2282d2f6e

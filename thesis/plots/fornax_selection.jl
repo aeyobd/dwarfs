@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -125,107 +125,50 @@ bg_markersize = 2
 # ╔═╡ 8a4f4283-5699-44ca-956a-869a41177f05
 Arya.update_fontsize!(12)
 
-# ╔═╡ 77b7678f-158f-46cb-82b1-2e719ec6895a
-function compare_samples(datasets, scatter_kwargs) 
-	fig = Figure(
-		size = (4*72, 6*72),
-	)
+# ╔═╡ 45559d19-2e95-4ada-bba6-32c2da2b8953
+my_colors = SELECTION_COLORS
 
-	# tangent
-	dθ = θmax
-	ax = Axis(fig[1, 1], 
-		xlabel=plot_labels[:xi_am], 
-		ylabel=plot_labels[:eta_am], 
-		#aspect=1, 
-		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false
-	)
+# ╔═╡ 5d16eae8-887a-4fae-909a-aad274576268
+Colors = Makie.Colors
 
+# ╔═╡ c8a100ed-8bdd-461a-88fc-736be572af52
+COLORS
 
-	for (label, df) in datasets
-		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
-	end
-
-	ellipse!(3observed_properties["r_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
-	text!(4observed_properties["r_h"], 0, text=L"3r_h", color=:black)
-
-	
-	axislegend(position=:lt)
-
-
-	grid_low = fig[2, 1] = GridLayout()
-	# cmd
-	ax =  Axis(grid_low[1,1], 
-		yreversed=true,
-		xlabel=plot_labels[:bp_rp],
-		ylabel=plot_labels[:G],
-		limits=(-0.5, 2.5, 15, 21),
-		xgridvisible=false,
-		ygridvisible=false,
-		#aspect = 1,
-	)
-
-	for (label, df) in datasets
-		scatter!(df.bp_rp, df.phot_g_mean_mag; scatter_kwargs[label]...)
-	end
-
-	# proper motions
-	ax = Axis(grid_low[1,2],
-		xlabel = plot_labels[:pmra],
-		ylabel = plot_labels[:pmdec],
-		#aspect=DataAspect(),
-		limits=(-10, 10, -10, 10),
-		xgridvisible=false,
-		ygridvisible=false,
-		)
-	
-	for (label, df) in datasets
-		scatter!(df.pmra, df.pmdec; scatter_kwargs[label]...)
-	end
-
-
-	rowsize!(grid_low, 1, Aspect(1, 1))
-
-	rowsize!(fig.layout, 1, Aspect(1, 1))
-
-	resize_to_layout!(fig)
-	fig
-end
+# ╔═╡ 4c7ab4a7-df3d-406d-b338-e55eadba7bae
+[colorant"#cecece"; to_colormap(:YlGnBu_5)[end-2:end]]
 
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "fornax_selection" compare_samples(
-		(
+@savefig "fornax_selection" compare_j24_samples(
+		OrderedDict(
 		:best => best_stars,
 		:members_nospace => members_nospace,
 		:members => members,
-		#:rv => rv_members,
 	),
 	Dict(
-		:best => (;	alpha=0.1, markersize=1, color=:black, 
-			label="all" => (alpha=1, markersize=2),
+		:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
+			label="all" => (;markersize=2),
 			rasterize=10,
 		),
 		:members_nospace => (;
 			alpha=1, markersize=1,
 			label = "CMD + PM" =>(alpha=1, markersize=2),
-			color=COLORS[1]
+			color=my_colors[2],
+			strokecolor=my_colors[2],
+			strokewidth=0.3
 		),
 		:members => (;
-			markersize=1,
-			label = "probable members" =>(alpha=1, markersize=3),
+			markersize=3,
+			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
 			#color=:transparent,
 			#strokewidth=0.3,
-			color = COLORS[2],
+			color = my_colors[3],
 			alpha=1,
+			strokecolor = my_colors[3],
+			strokewidth=0.0,
+			marker=:diamond
 		),
-		:rv => (;
-			markersize=2,
-			#marker=:xcross,
-			label = "RV members" =>(alpha=1, markersize=4),
-			color = COLORS[4],
-			#strokewidth=0
-		),
-	)
+	),
+	observed_properties
 )
 
 # ╔═╡ Cell order:
@@ -258,5 +201,8 @@ end
 # ╠═12aa5708-dfee-4b48-8835-69055ad82680
 # ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
 # ╠═8a4f4283-5699-44ca-956a-869a41177f05
-# ╠═77b7678f-158f-46cb-82b1-2e719ec6895a
+# ╠═45559d19-2e95-4ada-bba6-32c2da2b8953
+# ╠═5d16eae8-887a-4fae-909a-aad274576268
+# ╠═c8a100ed-8bdd-461a-88fc-736be572af52
+# ╠═4c7ab4a7-df3d-406d-b338-e55eadba7bae
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
