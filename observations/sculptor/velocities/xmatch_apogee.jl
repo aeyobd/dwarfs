@@ -128,22 +128,34 @@ sum( goodspec)
 Δv = @. abs(allvisit.RV .- allvisit.RV_mean) / (allvisit.RV_mean_err ⊕ allvisit.RV_err)
 
 # ╔═╡ c959db9d-02c7-416d-ad22-8ae639d3dec9
-Δv2 = @. abs(allvisit.RV_mean .- allvisit.RV) / allvisit.RV_sigma
+Δv2 = @. abs(allvisit.RV_mean .- allvisit.RV) / (allvisit.RV_sigma ./ sqrt(2))
 
 # ╔═╡ dcaf2cd3-34bd-44fa-9c0a-ec29dd4aa8dc
 import Distributions: cdf, Normal, Chisq
 
 # ╔═╡ 84eb7182-f6e3-4d20-99a9-9065eb08804f
-p = @. 1 - cdf(Chisq(2), Δv[goodspec])
+p = @. 1 - cdf(Chisq(1), Δv[goodspec] .^ 2)
 
 # ╔═╡ d6c46bae-238d-4cdb-b45c-c79db84ef0a0
-p2 = @. 1 - cdf(Chisq(1), Δv2[goodspec])
+p2 = @. 1 - cdf(Chisq(1), Δv2[goodspec] .^ 2)
+
+# ╔═╡ 88526f05-ac8c-48e7-a977-51d1384e1f1f
+p3 = @. 1 - cdf(Chisq(apogee.RV_count[apogee.RV_count .>= 2] - 1), (apogee.RV_sigma^2/apogee.RV_err^2)[apogee.RV_count .>= 2])
+
+# ╔═╡ e43c1670-ee9a-4299-9916-237999beb3a7
+hist(p3)
 
 # ╔═╡ cb974375-e0ed-4f2f-a919-1c1616ee2391
 minimum(skipmissing(Δv))
 
 # ╔═╡ 75a77f2c-16e1-4ab3-a41b-4d8b8e8a71d6
-hist(p)
+hist(filter(isfinite, p), bins=0:0.01:1)
+
+# ╔═╡ 81bd4c52-0cd3-4b2d-a77c-c648e210dfca
+lguys.mean(p .< 0.1)
+
+# ╔═╡ b9c40fe6-1926-4fdd-9f62-773415095445
+hist(filter(isfinite, p2), bins=0:0.01:1)
 
 # ╔═╡ 1fbd52ab-bbca-482a-80dc-35733fb534ed
 hist(filter(x->!ismissing(x) & isfinite(x), allvisit.RV_err))
@@ -226,8 +238,12 @@ hist(filter(x -> !ismissing(x) && x<30, apogee.K))
 # ╠═dcaf2cd3-34bd-44fa-9c0a-ec29dd4aa8dc
 # ╠═84eb7182-f6e3-4d20-99a9-9065eb08804f
 # ╠═d6c46bae-238d-4cdb-b45c-c79db84ef0a0
+# ╠═88526f05-ac8c-48e7-a977-51d1384e1f1f
+# ╠═e43c1670-ee9a-4299-9916-237999beb3a7
 # ╠═cb974375-e0ed-4f2f-a919-1c1616ee2391
 # ╠═75a77f2c-16e1-4ab3-a41b-4d8b8e8a71d6
+# ╠═81bd4c52-0cd3-4b2d-a77c-c648e210dfca
+# ╠═b9c40fe6-1926-4fdd-9f62-773415095445
 # ╠═1fbd52ab-bbca-482a-80dc-35733fb534ed
 # ╠═095ae700-774b-4ec8-a47b-abb89a16702e
 # ╠═c340afca-9bd2-44dc-898a-cf721a5af909

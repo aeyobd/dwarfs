@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -18,6 +18,9 @@ end
 # ╔═╡ 5df6928e-59aa-4f38-ba3a-6428855934ec
 using PyFITS
 
+# ╔═╡ e45fd038-238e-43c0-aa30-947fd738c4c1
+using OrderedCollections
+
 # ╔═╡ 6562dd6e-397b-4632-bc44-f227201d9012
 using KernelDensity
 
@@ -34,7 +37,7 @@ import TOML
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 4c551542-92dc-4a61-b4aa-e272fd29d565
-stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")
+stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined_x_wide_2c_psat_0.2.fits")
 
 # ╔═╡ b2f9ed4b-52be-4eeb-a419-d6406148e6c3
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", "sculptor", "observed_properties.toml"))
@@ -297,6 +300,7 @@ end
 # ╠═63d5e3f6-6cec-4e50-8fa1-8907508aa47f
 # ╠═88025a55-f541-4aa1-8426-14e83bd790b7
 # ╠═880b78c0-574f-454e-ad81-4525aa8d9713
+# ╠═e45fd038-238e-43c0-aa30-947fd738c4c1
 # ╠═c6631ad6-cc41-4a67-82c9-9d2b20115c9c
 # ╠═4c551542-92dc-4a61-b4aa-e272fd29d565
 # ╠═b2f9ed4b-52be-4eeb-a419-d6406148e6c3

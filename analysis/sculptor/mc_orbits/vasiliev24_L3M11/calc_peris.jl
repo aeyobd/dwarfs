@@ -1,4 +1,5 @@
 using LilGuys
+using PyFITS
 using DataFrames, CSV
 
 filename = "combined.hdf5"
@@ -17,4 +18,4 @@ df[!, :apo_lmc] = df_lmc.apocentre
 df[!, :t_last_peri_lmc] = df_lmc.t_last_peri
 df[!, :t_last_apo_lmc] = df_lmc.t_last_apo
 
-LilGuys.write_fits("peris_apos.fits", df)
+write_fits("peris_apos.fits", df)

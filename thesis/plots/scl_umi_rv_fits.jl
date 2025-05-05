@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -37,19 +37,19 @@ module RVUtils
 end
 
 # ╔═╡ 3b5e60d4-1ac4-4b8d-8284-fb1c53e966c6
-stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")
+stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined_x_wide_2c_psat_0.2.fits")
 
 # ╔═╡ 799fd372-b4ea-473f-93cb-65eff73b9bbc
-samples = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_vz.csv", DataFrame)
+samples = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_vz.rv_combined_x_wide_2c_psat_0.2.csv", DataFrame)
 
 # ╔═╡ 6d558d6c-60b6-4361-b875-c821078c0675
 
 
 # ╔═╡ f9f00f0c-0924-4abe-8c16-a58d46c76faa
-stars_umi = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_members_all.fits")
+stars_umi = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined_x_2c_psat_0.2.fits")
 
 # ╔═╡ 21bdc277-d3b0-48c6-984b-538bda4348a4
-samples_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/mcmc_samples_vz.csv", DataFrame)
+samples_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/mcmc_samples_vz.rv_combined_x_2c_psat_0.2.csv", DataFrame)
 
 # ╔═╡ 0a22b941-0651-405e-9624-e9c344b7d93c
 v0 = median(samples.μ)
@@ -72,13 +72,38 @@ v0_umi = median(samples_umi.μ)
 # ╔═╡ cb1ff71e-48df-41b3-9da1-8b29c9118e05
 (extrema(stars_umi.vz[stars_umi.vz_err .< 2])  .- v0_umi )./ σ_umi
 
+# ╔═╡ 91f9f767-7d35-4a99-9493-d9bb3ef6e28c
+function make_label(galaxy, samples; digits=1, digits_sigma=digits)
+	μ = median(samples.μ)
+	μ_err = round.(LilGuys.quantile(samples.μ, [0.16, 0.84]) .- μ, digits=digits)
+	μ = round(μ, digits=digits)
+
+	
+
+	σ = median(samples.σ)
+	σ_err = round.(LilGuys.quantile(samples.σ, [0.16, 0.84]) .- σ, digits=digits_sigma)
+
+	σ = round(σ, digits=digits_sigma)
+
+	s = L"""
+%$galaxy\\
+$\mu = %$(μ)_{%$(μ_err[1])}^{+%$(μ_err[2])}$\\
+$\sigma = %$(σ)_{%$(σ_err[1])}^{+%$(σ_err[2])}$
+"""
+
+	return s
+end
+
+# ╔═╡ e10a7697-58f8-4a65-bd7c-47b0771b811d
+make_label("Sculptor", samples, digits_sigma=1)
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "scl_umi_rv_fits" let
 	fig = Figure()
 	v0 = median(samples.μ)
 	σ = median(samples.σ)
 	ax = Axis(fig[1,1], 
-		xlabel = L"$v_z$ / km\,s$^{-1}$",
+		xlabel = L"$v_\textrm{gsr}'$ / km\,s$^{-1}$",
 		ylabel = "density",
 			  limits=(v0-4σ, v0+4σ, 0, nothing)
 	)
@@ -88,17 +113,17 @@ v0_umi = median(samples_umi.μ)
 	bins = LinRange(v0-4σ, v0+4σ, 40)
 	_, values, errs = LilGuys.histogram(stars.vz, bins, normalization=:pdf)
 
-	RVUtils.plot_samples!(samples, LinRange(v0-4σ, v0+4σ, 100), thin=800, )
-	errorscatter!(midpoints(bins), values, yerror=errs, color=COLORS[2], size=5, linewidth=2)
+	RVUtils.plot_samples!(samples, LinRange(v0-4σ, v0+4σ, 100), thin=800, color=COLORS[3])
+	errorscatter!(midpoints(bins), values, yerror=errs, color=:black)
 
-	text!(0.1, 0.8, text="Sculptor", space=:relative)
+	text!(0.05, 0.9, text=make_label("Sculptor", samples, digits_sigma=2), space=:relative, align=(:left, :top), justification=:left)
 
 
 
 	v0 = median(samples_umi.μ)
 	σ = median(samples_umi.σ)
 	ax = Axis(fig[2,1], 
-		xlabel = L"$v_z$ / km\,s$^{-1}$",
+		xlabel = L"$v_\textrm{gsr}'$ / km\,s$^{-1}$",
 		ylabel = "density",
 		limits=(v0-4σ, v0+4σ, 0, nothing)
 
@@ -108,10 +133,10 @@ v0_umi = median(samples_umi.μ)
 	bins = LinRange(v0-5σ, v0+5σ, 40)
 	_, values, errs = LilGuys.histogram(stars_umi.vz, bins, normalization=:pdf)
 
-	RVUtils.plot_samples!(samples_umi, LinRange(v0-4σ, v0+4σ, 100), thin=800, )
-	errorscatter!(midpoints(bins), values, yerror=errs, color=COLORS[2], size=5, linewidth=2)
+	RVUtils.plot_samples!(samples_umi, LinRange(v0-4σ, v0+4σ, 100), thin=800, color=COLORS[3])
+	errorscatter!(midpoints(bins), values, yerror=errs, color=:black)
 
-	text!(0.1, 0.8, text="Ursa Minor", space=:relative)
+	text!(0.05, 0.9, text=make_label("Ursa Minor", samples_umi), space=:relative, align=(:left, :top), justification=:left)
 
 	
 	fig
@@ -137,4 +162,6 @@ end
 # ╠═0ff4cce0-601b-4532-8c75-1e8961631fa1
 # ╠═f7999d84-cfe7-4803-b135-c6c7c7050066
 # ╠═cb1ff71e-48df-41b3-9da1-8b29c9118e05
+# ╠═91f9f767-7d35-4a99-9493-d9bb3ef6e28c
+# ╠═e10a7697-58f8-4a65-bd7c-47b0771b811d
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

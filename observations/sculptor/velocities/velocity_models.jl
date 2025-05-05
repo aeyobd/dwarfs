@@ -39,9 +39,6 @@ md"""
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
 rv_file = "rv_combined_x_wide_2c_psat_0.2.fits"
 
-# ╔═╡ 4827c99d-6326-42fb-a329-d56992f6d20d
-j24_sample = "wide_2c"
-
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
 n_samples = 10000
 
@@ -104,7 +101,7 @@ md"""
 data_dir = "processed"
 
 # ╔═╡ 1bc6b7f5-4884-479d-b4be-54f28c2e0a8a
-f_sat = TOML.parsefile("../j+24_fsat.toml")[j24_sample]["f_sat"]
+
 
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
@@ -128,12 +125,6 @@ memb_stars = let
 	RVUtils.add_gsr!(rv_meas, 
 					 distance=obs_properties["distance"],
 					pmra=obs_properties["pmra"], pmdec=obs_properties["pmdec"])
-
-
-	rv_meas[:, :vz] .= rv_meas.radial_velocity_gsr .+ rv_meas.delta_rv
-	rv_meas[:, :vz_err] .= rv_meas.RV_err .⊕ rv_meas.delta_rv_err
-
-	RVUtils.add_PSAT_RV!(rv_meas; sigma_v=σv, radial_velocity_gsr=rv0, f_sat=f_sat)
 	
 	rv_meas
 end
@@ -142,15 +133,6 @@ end
 md"""
 ## Membership
 """
-
-# ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
-
-
-# ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
-# ╠═╡ disabled = true
-#=╠═╡
-memb_stars = rv_meas
-  ╠═╡ =#
 
 # ╔═╡ 7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 hist(memb_stars.RV)
@@ -170,7 +152,7 @@ extrema(memb_stars.RV)
 length(memb_stars.RV)
 
 # ╔═╡ 45d748e7-42a0-471e-b290-e3469c0aa283
-memb_stars[.!ismissing.(memb_stars.RV_gmos), [:source_id, :ra, :dec, :PSAT]]
+
 
 # ╔═╡ 6734991c-16c0-4424-a2bb-84bfa811121f
 md"""
@@ -388,31 +370,13 @@ bf_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
 θs = mod1.(df_gradient.Θ_grad, 360.) .- 360
 
 # ╔═╡ 96b41e0b-b9f3-41ba-bc56-f3febd8833d3
-quantile(θs, [0.16, 0.5, 0.84]) .- median(θs)
+θ_err = quantile(θs, [0.16, 0.5, 0.84]) .- median(θs)
 
 # ╔═╡ cbf50d46-219b-489d-b359-6b473b85735d
 median(θs)
 
 # ╔═╡ 4d7e7b96-74a0-4066-88cf-739c043c7f47
 summary_gradient = RVUtils.summarize(samples_gradient)
-
-# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
-md"""
-code below validates induced PM gradient (should be approx 2).
-"""
-
-# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
-θ_m = median(df_gradient.Θ_grad)
-
-# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
-xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m) .* 60
-
-
-# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
-icrs0 = lguys.ICRS(obs_properties)
-
-# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
-vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 
 # ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 @savefig "v_gradient_derived" let
@@ -436,6 +400,24 @@ vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 	fig
 end
 
+# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
+md"""
+code below validates induced PM gradient (should be approx 2).
+"""
+
+# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
+θ_m = median(df_gradient.Θ_grad)
+
+# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
+xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m) .* 60
+
+
+# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
+icrs0 = lguys.ICRS(obs_properties)
+
+# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
+vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
+
 # ╔═╡ af0d2050-b42e-4a7f-aabb-5b08d23381e9
 lguys.transform(ICRS, lguys.GSR(ra=icrs0.ra + 2/vec_pm[1] *cos(icrs0.dec), dec=icrs0.dec + 2/vec_pm[2], distance=icrs0.distance, radial_velocity=0)).radial_velocity  .- Δv_gsr
 
@@ -452,7 +434,10 @@ kde = KernelDensity.kde((df_gradient.A, df_gradient.B))
 log(pdf(kde, 0, 0) ./ lguys.gaussian(0, 0., 0.1)^2)
 
 # ╔═╡ b827e765-646c-4928-9f66-c64e7a20539f
-sum(df_gradient.A .> 0)
+mean(df_gradient.A .> 0)
+
+# ╔═╡ 4b5263d4-0f97-491c-b911-46273510f600
+mean(df_gradient.B .> 0)
 
 # ╔═╡ 6371d804-cc73-4ce1-9b36-79fa61780d75
 median(atand.(df_gradient.B ./ df_gradient.A))
@@ -500,436 +485,13 @@ end
 # ╔═╡ 7fce47a1-16be-4dad-afb5-0fb04bd91355
 CSV.write("processed/mcmc_samples_gradient$FIGSUFFIX.csv", df_gradient)
 
-# ╔═╡ 7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
-md"""
-## Binned properties along orbit
-"""
-
-# ╔═╡ c2735c49-2892-46ac-bcf8-7cdcef409f44
-function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
-
-	if !issorted(bins)
-		error("bins must be sorted")
-	end
-
-	N = length(bins) - 1
-	μs = Vector{Float64}(undef, N)
-	σs = Vector{Float64}(undef, N)
-	μ_errs = Vector{Tuple{Float64, Float64}}(undef, N)
-	σ_errs = Vector{Tuple{Float64, Float64}}(undef, N)
-	xs = Vector{Float64}(undef, N)
-
-	
-	for i in 1:N
-		filt = x .>= bins[i]
-		filt .&= x .< bins[i+1]
-		@info "calculating bin $i"
-
-		μs[i], σs[i], μ_errs[i], σ_errs[i] = fit_rv_sigma(y[filt], yerr[filt]; kwargs...)
-		xs[i] = median(x[filt])
-	end
-
-	return DataFrame(
-		x=xs,
-		x_low = bins[1:end-1],
-		x_high = bins[2:end],
-		μ=μs, 
-		σ = σs, 
-		μ_err = μ_errs, 
-		σ_err = σ_errs,
-		
-	)
-end	
-
-# ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = bins_equal_number(memb_stars.R_ell, n=10)
-
-# ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
-df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.vz_err, bins)
-
-# ╔═╡ 03928d42-ee61-4480-82d3-a482842f8521
-CSV.write("processed/vz_r_ell_binned$FIGSUFFIX.csv", df_r_ell_z)
-
-# ╔═╡ 38da4da1-74f5-4661-89f2-4b25562a1faf
-function scatter_range!(df_r_ell)
-	errorscatter!(df_r_ell.x, df_r_ell.μ, yerror=df_r_ell.μ_err, color=:black)
-	
-	errorbars!(df_r_ell.x, df_r_ell.μ .+ df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x,  direction = :x, color=:black)
-	errorbars!(df_r_ell.x, df_r_ell.μ .- df_r_ell.σ, df_r_ell.x .- df_r_ell.x_low, df_r_ell.x_high .- df_r_ell.x, direction = :x, color=:black)
-end
-
-# ╔═╡ e05ec20a-3165-4360-866e-3e8cae8665e5
-let
-	fig, ax = FigAxis(
-		xlabel = "R / arcmin",
-		ylabel = L"RV / km s$^{-1}$"
-	)
-
-	scatter!(memb_stars.R_ell, memb_stars.vz, color=COLORS[3], alpha=0.1)
-
-	scatter_range!(df_r_ell_z)
-
-	fig
-end
-
-# ╔═╡ 31aa8fc5-1415-4c44-9b92-a7d097181639
-md"""
-# Binned properties with radius
-"""
-
-# ╔═╡ 2f5db664-fc99-41ac-a726-f21dd5d88ad4
-df_xi_p = calc_binned_mu_sigma(xi_rot, memb_stars.vz, memb_stars.vz_err, bins_equal_number(xi_rot, n=10))
-
-# ╔═╡ 301ad1d5-83a1-418d-aa06-583f7212541d
-CSV.write("processed/vz_xi_p_binned$FIGSUFFIX.csv", df_xi_p)
-
-# ╔═╡ 090acae4-1209-49e6-882c-20ac2c972dd5
-df_eta_p = calc_binned_mu_sigma(eta_rot, memb_stars.vz, memb_stars.vz_err, bins_equal_number(eta_rot, n=10))
-
-# ╔═╡ fd0a74a1-6513-4612-8181-745d5b7c3f4c
-let
-	fig, ax = FigAxis(
-		xlabel = L"$\xi'$ / arcmin",
-		ylabel = L"RV / km s$^{-1}$"
-	)
-
-	scatter!(memb_stars.xi, memb_stars.radial_velocity_gsr, color=COLORS[3], alpha=0.1)
-
-	scatter_range!(df_xi_p)
-
-	fig
-end
-
-# ╔═╡ 3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
-@savefig "vel_gradient_binned" let
-	fig, ax = FigAxis(
-		xlabel = L"$\xi'$ / degree",
-		ylabel = L"$\mu_{v,z}$ / km s$^{-1}$"
-	)
-
-	errorscatter!(df_xi_p.x ./ 60, df_xi_p.μ, yerror=df_xi_p.μ_err, color=:black)
-
-	for i in 1:400:size(df_gradient, 1)
-		M = 60df_gradient.B[i] .* sind(θ_m) .+ 60df_gradient.A[i] .* cosd(θ_m)
-		x=LinRange(-0.4, 0.4, 100)
-		y = M*x  .+ df_gradient.μ[i]
-		lines!(x, y, alpha=0.03, color=COLORS[1])
-	end
-			
-	fig
-end
-
-# ╔═╡ bf8a9940-1c8b-4fdd-a231-1861721ea8e9
-sind(θ_m), cosd(θ_m)
-
-# ╔═╡ 14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
-let
-	fig, ax = FigAxis(
-		xlabel = L"$\eta'$ / arcmin",
-		ylabel = L"$\mu_{v, \textrm{gsr}}$ / km s$^{-1}$"
-	)
-
-	errorscatter!(df_eta_p.x, df_eta_p.μ, yerror=df_eta_p.μ_err, color=:black)
-
-	fig
-end
-
-# ╔═╡ d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
-let
-	fig, ax = FigAxis(
-		xlabel = L"$\xi'$ / arcmin",
-		ylabel = L"$\sigma_{v, \textrm{gsr}}$ / km s$^{-1}$"
-	)
-
-	errorscatter!(df_xi_p.x, df_xi_p.σ, yerror=df_xi_p.σ_err, color=:black)
-
-
-		
-	@savefig "sigma_v_vs_eta_p"
-	fig
-end
-
-# ╔═╡ dbea26bd-539f-4eda-a4de-ed00efdc93a9
-df_gradient
-
-# ╔═╡ 1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
-bin_errs = diff(bins) / 2
-
-# ╔═╡ 0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
-σ_m = median(samples.σ)
-
-# ╔═╡ f82d2ff7-7a7f-4520-811e-126f3f4f5349
-let
-	fig, ax = FigAxis(
-		xlabel = L"$R_\textrm{ell}$ / arcmin",
-		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$"
-	)
-
-	errorscatter!(midpoints(bins), df_r_ell_z.σ, yerror=df_r_ell_z.σ_err, xerror=bin_errs, color=:black)
-	hlines!(σ_m)
-
-	@savefig "sigma_v_vs_rell"
-	fig
-end
-
-# ╔═╡ e50a1968-9f91-4751-a7a9-0a4768c9ab7e
-let
-	fig, ax = FigAxis(
-		xlabel = L"$\log\ R$ / arcmin",
-		ylabel = L"$\log\ \sigma_{v, \textrm{los}}$ / km s$^{-1}$"
-	)
-
-	x_mid = midpoints(log10.(bins))
-	log_bin_errs = [(x_mid[i] - log10(bins[i]), log10(bins[i+1]) - x_mid[i]) for i in eachindex(x_mid)]
-	@info log_bin_errs
-	
-	errorscatter!(x_mid, log10.(df_r_ell_z.σ), yerror=maximum.(df_r_ell_z.σ_err) ./ df_r_ell_z.σ ./ log(10), xerror=log_bin_errs, color=:black)
-	hlines!(log10.(σ_m), color=:black)
-
-	for i in 1:400:size(df_Rell, 1)
-		x=LinRange(-0.5, 2, 100)
-		y = df_Rell.σ[i] .* 10 .^ ((x .- 1.0) .* df_Rell.dlσ_dlR[i])
-		lines!(x, log10.(y), alpha=0.03, color=COLORS[1])
-	end
-	@savefig "log_sigma_log_R"
-	fig
-end
-
-# ╔═╡ 319bd778-7e17-4bd7-856f-d6785b287219
-quantile(samples.σ, [0.16, 0.84]) .- σ_m
-
-# ╔═╡ 82a0e58a-30a4-4e42-b9c1-cb184eb551aa
-md"""
-# Misc plots
-"""
-
-# ╔═╡ 3a69f395-3c2d-4357-89af-5963d5fa79b8
-let
-	fig, ax = FigAxis(
-		xlabel=L"$\log r_\textrm{ell}$ / arcmin",
-		ylabel = L"RV / km s$^{-1}$"
-	)
-	
-	scatter!(log10.(memb_stars.R_ell), memb_stars.RV)
-
-
-	fig
-end
-
-# ╔═╡ 9b4a0a1f-4b0c-4c90-b871-2bd244f0a908
-not = !
-
-# ╔═╡ f2313731-5b83-42d6-b624-c618bfb0bb5c
-rv_mean_gsr = median(df_gsr.μ)
-
-# ╔═╡ d688d2e5-faca-4b14-801a-d58b08fd6654
-let
-	dr = 10
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{arcmin}",
-		ylabel = L"\eta / \textrm{arcmin}",
-		aspect=DataAspect()
-	)
-
-	p = scatter!(memb_stars.xi, memb_stars.eta, color=memb_stars.vz,
-		colorrange=(rv_mean_gsr - dr, rv_mean_gsr + dr),
-		colormap=:bluesreds,
-		markersize = 1 ./ memb_stars.vz_err
-	)
-
-	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ 687b79fb-b0ce-4a93-8c0e-83b77aec081e
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi' / \textrm{arcmin}",
-		ylabel = L"RV",
-		#aspect=DataAspect(),
-		xgridvisible=false,
-		ygridvisible=false
-	)
-
-	p = scatter!(xi_rot, memb_stars.RV,
-		alpha=0.1
-	)
-
-	#Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ 9c66756b-af33-48fb-9947-201d53cdeba3
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi' / \textrm{arcmin}",
-		ylabel = L"absolute radial velocity / km s$^{-1}$",
-		#aspect=DataAspect(),
-		xgridvisible=false,
-		ygridvisible=false
-	)
-
-	p = scatter!(xi_rot,  memb_stars.radial_velocity_gsr,
-		alpha=0.1
-	)
-
-	#Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ e834933b-ef6c-4347-a24d-787ee65bc9b5
-let
-	fig, ax = FigAxis(
-		xlabel = L"\eta' / \textrm{degree}",
-		ylabel = L"RV",
-		#aspect=DataAspect()
-	)
-
-	p = scatter!(eta_rot, memb_stars.RV
-	)
-
-	#Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s")
-	fig
-end
-
-# ╔═╡ eb16cb5b-562f-4ef5-8a3b-247664d47f52
-r_max_tangent = 30
-
-# ╔═╡ 36c37e0b-924d-4a7f-b3ab-81e79e27a059
-tangent_bins = LinRange(-r_max_tangent, r_max_tangent, 20)
-
-# ╔═╡ 8f555e41-58d4-4e16-8f4a-1c0f58589b08
-outside_bins = abs.(memb_stars.xi) .> r_max_tangent .|| abs.(memb_stars.eta) .> r_max_tangent
-
-# ╔═╡ 8bee2f6a-c65d-4f89-8a4e-5f5789a7b03d
-rv_mean = 111.0
-
-# ╔═╡ 6b59d6e9-833b-4582-b5fb-f0a1f69a16c1
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-
-	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins)
-
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=Reverse(:greys)
-		)
-
-	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
-		color=:grey
-	)
-	Colorbar(fig[1, 2], p, label="density",
-)
-	fig
-end
-
-# ╔═╡ 89bf44ef-1ff5-443e-b8be-a3d1571b72e3
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-	w = 1 ./ memb_stars.RV_err
-
-	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights= w .* memb_stars.RV)
-	k2 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights=w)
-
-	k1.values ./= k2.values
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20)
-		)
-
-	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
-		color = memb_stars.RV[outside_bins],
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20),
-			 markersize=1
-	)
-	Colorbar(fig[1, 2], p, label="heliocentric radial velocity / km/s",
-)
-	fig
-end
-
-# ╔═╡ 53da82d5-2e69-4f88-8043-6694d57cdd91
-import StatsBase: weights
-
-# ╔═╡ 106482c9-a9f9-4b6e-95a9-614ab7991e23
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{degree}",
-		ylabel = L"\eta / \textrm{degree}",
-		aspect=DataAspect()
-	)
-
-
-	w = 1 ./ memb_stars.vz_err .^ 2
-	rv_mean = mean(memb_stars.vz, weights(w))
-
-	k1 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights= w .* memb_stars.vz)
-	k2 = Arya.histogram2d(memb_stars.xi, memb_stars.eta, tangent_bins, weights=w)
-
-	k1.values ./= k2.values
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20)
-		)
-
-	scatter!(memb_stars.xi[outside_bins], memb_stars.eta[outside_bins],
-		color = memb_stars.vz[outside_bins],
-		colormap=:bluesreds,
-		colorrange=(rv_mean - 20, rv_mean + 20),
-			markersize=2
-	)
-	Colorbar(fig[1, 2], p, label=L"$v_{z}$ / km/s",
-)
-	fig
-end
-
-# ╔═╡ b5533db0-a734-4d37-9d75-24471634f855
-memb_stars
-
-# ╔═╡ 4eea0a17-257e-4d0e-88df-9ff4858771b1
-let
-	fig, ax = FigAxis(
-		xlabel = L"\xi / \textrm{arcmin}",
-		ylabel = L"\eta / \textrm{arcmin}",
-		aspect=DataAspect(),
-		xreversed=true,
-	)
-
-	w = 1 ./ memb_stars.vz_err .^2
-
-	bins = (33, 25)
-	k1 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights= w .* memb_stars.vz)
-	k2 = Arya.histogram2d(memb_stars.xi,memb_stars.eta, bins, weights=w)
-
-	k1.values ./= k2.values
-
-	p = heatmap!(k1.xbins, k1.ybins, k1.values, 
-		colormap=:bluesreds,
-		colorrange=(50, 100)
-		)
-	Colorbar(fig[1, 2], p, label="GSR radial velocity / km/s",
-)
-	@savefig "vlos_xi_eta_hist"
-
-	fig
-end
-
 # ╔═╡ 1acdc61b-fb5f-449d-ba86-46525c881a39
 md"""
 # Writing Information
 """
+
+# ╔═╡ 280ad72b-b4f9-4082-8795-3de522acfbf1
+r_grad_m = median(df_gradient.r_grad)
 
 # ╔═╡ a393eeca-c9a4-412f-ae86-35ee1aca4d51
 function OrderedCollections.OrderedDict(summary_vz::DataFrame)
@@ -952,6 +514,12 @@ df_summaries = OrderedDict(
 	"rell" => summary_Rell |> OrderedDict,
 	"bf_gradient" => bf_gradient,
 	"bf_rell" => bf_sigma_Rell,
+	"R_grad_median" => r_grad_m,
+	"R_grad_el" => r_grad_m .- quantile(df_gradient.r_grad, 0.16),
+	"R_grad_ep" => quantile(df_gradient.r_grad, 0.84) - r_grad_m,
+	"theta_grad_median" => θ_m,
+	"theta_grad_el" => -θ_err[1],
+	"theta_grad_ep" => θ_err[3]
 )
 
 # ╔═╡ d71f6eba-7d64-4212-91c3-707a664c6b0b
@@ -962,7 +530,6 @@ end
 # ╔═╡ Cell order:
 # ╟─3ed8c28f-5908-42dc-a56b-24a9b2685a07
 # ╠═50488b8f-6886-4191-8778-af66929f1445
-# ╠═4827c99d-6326-42fb-a329-d56992f6d20d
 # ╠═8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
 # ╠═0b8f0193-f1e5-471e-8c34-498ac827be63
 # ╠═ad79710a-0392-4b75-94ac-23881376a70b
@@ -994,8 +561,6 @@ end
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
-# ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
-# ╠═cc6c65db-ef57-4745-8ada-e11427274a77
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 # ╟─55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 # ╠═3377f632-713d-4fec-84a9-b0211b02cb43
@@ -1061,6 +626,7 @@ end
 # ╠═ed35eb68-74f7-4009-9b68-dfca2ea547af
 # ╠═f523cf48-82bf-4b20-9d7c-215bbe10a193
 # ╠═b827e765-646c-4928-9f66-c64e7a20539f
+# ╠═4b5263d4-0f97-491c-b911-46273510f600
 # ╠═6371d804-cc73-4ce1-9b36-79fa61780d75
 # ╠═70a22ef4-2eb1-4094-94e3-5a13fb51b9e6
 # ╠═183f572a-bc0f-435b-a656-2ee2a3057559
@@ -1069,48 +635,9 @@ end
 # ╠═39bb4bb9-8445-4ee1-a3af-639d8fa96f65
 # ╠═3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
 # ╠═7fce47a1-16be-4dad-afb5-0fb04bd91355
-# ╟─7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
-# ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
-# ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
-# ╠═f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
-# ╠═03928d42-ee61-4480-82d3-a482842f8521
-# ╠═38da4da1-74f5-4661-89f2-4b25562a1faf
-# ╠═e05ec20a-3165-4360-866e-3e8cae8665e5
-# ╠═f82d2ff7-7a7f-4520-811e-126f3f4f5349
-# ╠═e50a1968-9f91-4751-a7a9-0a4768c9ab7e
-# ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
-# ╠═2f5db664-fc99-41ac-a726-f21dd5d88ad4
-# ╠═301ad1d5-83a1-418d-aa06-583f7212541d
-# ╠═090acae4-1209-49e6-882c-20ac2c972dd5
-# ╠═fd0a74a1-6513-4612-8181-745d5b7c3f4c
-# ╠═3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
-# ╠═bf8a9940-1c8b-4fdd-a231-1861721ea8e9
-# ╠═14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
-# ╠═d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
-# ╠═dbea26bd-539f-4eda-a4de-ed00efdc93a9
-# ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7
-# ╠═0f5a9d9e-c5ca-4eb6-a0d2-5bb39b81daf6
-# ╠═319bd778-7e17-4bd7-856f-d6785b287219
-# ╟─82a0e58a-30a4-4e42-b9c1-cb184eb551aa
-# ╠═3a69f395-3c2d-4357-89af-5963d5fa79b8
-# ╠═9b4a0a1f-4b0c-4c90-b871-2bd244f0a908
-# ╠═f2313731-5b83-42d6-b624-c618bfb0bb5c
-# ╠═d688d2e5-faca-4b14-801a-d58b08fd6654
-# ╠═687b79fb-b0ce-4a93-8c0e-83b77aec081e
-# ╠═9c66756b-af33-48fb-9947-201d53cdeba3
-# ╠═e834933b-ef6c-4347-a24d-787ee65bc9b5
-# ╠═eb16cb5b-562f-4ef5-8a3b-247664d47f52
-# ╠═36c37e0b-924d-4a7f-b3ab-81e79e27a059
-# ╠═8f555e41-58d4-4e16-8f4a-1c0f58589b08
-# ╠═8bee2f6a-c65d-4f89-8a4e-5f5789a7b03d
-# ╠═6b59d6e9-833b-4582-b5fb-f0a1f69a16c1
-# ╠═89bf44ef-1ff5-443e-b8be-a3d1571b72e3
-# ╠═53da82d5-2e69-4f88-8043-6694d57cdd91
-# ╠═106482c9-a9f9-4b6e-95a9-614ab7991e23
-# ╠═b5533db0-a734-4d37-9d75-24471634f855
-# ╠═4eea0a17-257e-4d0e-88df-9ff4858771b1
 # ╟─1acdc61b-fb5f-449d-ba86-46525c881a39
 # ╠═0532010e-7832-44d4-a7ee-5a6f6ee9d7da
+# ╠═280ad72b-b4f9-4082-8795-3de522acfbf1
 # ╠═ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
 # ╠═a393eeca-c9a4-412f-ae86-35ee1aca4d51
 # ╠═d71f6eba-7d64-4212-91c3-707a664c6b0b

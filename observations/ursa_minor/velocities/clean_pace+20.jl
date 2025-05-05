@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -43,6 +43,8 @@ Depends on:
 - `../data/pace+20.fits`
 Creates:
 - `processed/rv_pace+20.fits`
+- `processed/mcmc_summary_uncorrected_pace+20.csv`
+
 """
 
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -146,25 +148,14 @@ end
 # ╔═╡ dce22a0d-a7dc-4642-abdc-68f83b714e94
 pace20_all[.!filt_xmatch, :]
 
-# ╔═╡ ea6f5354-9e98-4b2b-ad26-4da839607fb6
-function get_f_best(source_id)
-	if ismissing(source_id)
-		return missing
-	end
-	if source_id ∉ j24.source_id
-		return missing
-	end
-	return j24.F_BEST[j24.source_id .== source_id] |> only
-end
-
 # ╔═╡ 3f6c0ba3-5f91-4c42-ba9a-833a8c3fa1d8
-F_match = get_f_best.(source_id) .=== 1.0
+F_match = RVUtils.get_f_best.([j24], source_id) .=== 1.0
 
 # ╔═╡ 29c38300-9a84-4f72-b6be-43fdc683d931
 p_chi2 = RVUtils.prob_chi2(pace20_all)
 
 # ╔═╡ cebb491c-88a2-47ae-b851-4a079b5066b7
-F_scatter = @. (p_chi2 > 0.001) || isnan(p_chi2)
+F_scatter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
 df_out = let
@@ -347,8 +338,8 @@ end
 scatter(1 ./ pace20_all.RV_err, filt_xmatch .+ rand(length(filt_xmatch)), alpha=0.1)
 
 # ╔═╡ Cell order:
-# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
-# ╟─89f5e91b-9970-4f8d-80ae-4766195e6a56
+# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╠═89f5e91b-9970-4f8d-80ae-4766195e6a56
 # ╟─f8814fc8-8621-4e18-96f9-cf85b84ccfec
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -371,7 +362,6 @@ scatter(1 ./ pace20_all.RV_err, filt_xmatch .+ rand(length(filt_xmatch)), alpha=
 # ╠═686ede3b-fb97-434a-abe1-337759e45ff9
 # ╠═032a02f9-1697-4f85-897c-a0f623a78da6
 # ╠═dce22a0d-a7dc-4642-abdc-68f83b714e94
-# ╠═ea6f5354-9e98-4b2b-ad26-4da839607fb6
 # ╠═3f6c0ba3-5f91-4c42-ba9a-833a8c3fa1d8
 # ╠═29c38300-9a84-4f72-b6be-43fdc683d931
 # ╠═cebb491c-88a2-47ae-b851-4a079b5066b7

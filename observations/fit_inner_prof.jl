@@ -52,9 +52,6 @@ The only inputs are the name of the galaxy and the name of the profile to load (
 # ╔═╡ 0a070858-01c8-4cdc-bb8d-f5d587371cdb
 R_s_inner = 3
 
-# ╔═╡ 6b818039-3fde-492a-bcd6-d52a5ef4b0cb
-
-
 # ╔═╡ bd933a63-45e8-4e6c-9a0a-5d20c7d55eaf
 md"""
 # Setup
@@ -938,7 +935,6 @@ end
 # ╟─9d3245ef-f774-4add-9b1d-60bb69b04c8d
 # ╠═72524f04-bd5b-4f4b-a41d-8c038c180ce0
 # ╠═0a070858-01c8-4cdc-bb8d-f5d587371cdb
-# ╠═6b818039-3fde-492a-bcd6-d52a5ef4b0cb
 # ╠═2d9df1e2-1824-4f53-82dd-86afad6600ea
 # ╠═d1302080-dfb4-458f-85ba-d6999fc7aa88
 # ╠═48f59ed4-209b-45c5-857f-3c309141e8a7

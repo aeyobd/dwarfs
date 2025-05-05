@@ -55,7 +55,7 @@ SELECT * FROM gaiadr3.gaia_source where 1 = CONTAINS( POINT(5.28, -15.62), CIRCL
 
 ### DELVE
 
-Use topcat with TAP to noirlab.edu/datalab/tap
+Use topcat with TAP to noirlab.edu/datalab/tap. Should retrieve 7,215,671 entries.
 
 ```
 SELECT *

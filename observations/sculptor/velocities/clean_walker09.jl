@@ -51,11 +51,11 @@ about 11 stars are not xmatched well to gaia. We exclude these for simplicity.
 md"""
 Creates:
 - `processed/rv_walker+09.fits`
-- ---`.csv`
+- `mcmc_summary.---.csv`
 Depends on:
 - `../data/walker+09_observations.fits`
 - `../data/walker+09_summary.fits`
-- `../data/jensen+24_wide.fits`
+- `../data/jensen+24_wide_2c.fits`
 - `../observed_properties.toml`
 
 Assumes
@@ -180,7 +180,7 @@ F_match = j24_filt .& (j24.F_BEST[j24_idx] .== 1)
 p_chi2 =RVUtils.prob_chi2(walker09_all)
 
 # ╔═╡ 034c138c-61f1-4e46-b312-6fcddc289721
-F_scatter = @. isnan(p_chi2) || p_chi2 > 0.001
+F_scatter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ 39bd84c6-330b-4ddd-86f9-05136ba77316
 (walker09_all.RV_sigma ./ walker09_all.RV_err)[.!F_scatter] # number of sigma for filtered stars
@@ -227,9 +227,6 @@ md"""
 # ╔═╡ 87a55d42-3000-4acf-a5de-087be9034da4
 F_scatter_old = walker09_all.RV_sigma .< 3walker09_all.RV_err .* sqrt.(walker09_all.RV_count)
 
-# ╔═╡ f9a69065-b4ff-4cbc-898a-8501dd3ff3ad
-hist(p_chi2[.!F_scatter])
-
 # ╔═╡ 8a0f11fd-86f9-4bab-9f5b-e5a8309d26d2
 v_mean = leftjoin(walker09_single, walker09_averaged, on="Target", makeunique=true).__HV_
 
@@ -252,6 +249,9 @@ If uncertanties are representative, then the plot below should be uniform with e
 
 # ╔═╡ 0ec06d3c-ee56-4d91-978c-d29d2656da41
 [1 - cdf(Chisq(n-1), 2n) for n in 2:30]
+
+# ╔═╡ f9a69065-b4ff-4cbc-898a-8501dd3ff3ad
+hist(p_chi2[.!F_scatter])
 
 # ╔═╡ c9578ca4-dfd0-4ba8-b295-c3f25c41f22b
 hist(filter(isfinite, p_chi2))
@@ -312,7 +312,7 @@ pairplot(chain)
 df_summary = RVUtils.summarize(chain)
 
 # ╔═╡ 60f45b81-8beb-4eb0-8f55-db04c5368eee
-CSV.write("processed/rv_walker+09.csv", df_summary)
+CSV.write("processed/mcmc_summary.rv_walker+09.csv", df_summary)
 
 # ╔═╡ 0ae09680-cc34-492d-85bb-dec3ced936cf
 samples = DataFrame(chain)
@@ -418,7 +418,6 @@ end
 # ╠═a4d01dff-e5fe-49e2-90bb-f4929ede1fbd
 # ╟─66c42d45-0ac3-4613-a60c-99d3038d95d2
 # ╠═87a55d42-3000-4acf-a5de-087be9034da4
-# ╠═f9a69065-b4ff-4cbc-898a-8501dd3ff3ad
 # ╠═8a0f11fd-86f9-4bab-9f5b-e5a8309d26d2
 # ╠═5d447127-483f-4d2a-a0b2-8211aff7867e
 # ╠═393574f2-3c81-4815-80cd-b02de200d48f
@@ -426,6 +425,7 @@ end
 # ╠═e21b95df-92d1-4b25-b249-b06098f9375d
 # ╟─24066b44-227f-49de-8375-c65929506889
 # ╠═0ec06d3c-ee56-4d91-978c-d29d2656da41
+# ╠═f9a69065-b4ff-4cbc-898a-8501dd3ff3ad
 # ╠═c9578ca4-dfd0-4ba8-b295-c3f25c41f22b
 # ╟─7a959d88-95a0-4330-bdea-68df2574a902
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe

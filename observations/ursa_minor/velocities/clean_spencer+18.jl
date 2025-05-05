@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -142,31 +142,17 @@ begin
 	source_id[.!filt_xmatch] .= missing
 end
 
-# ╔═╡ 48ca64bd-fd0a-4e49-b281-37ac200ba3ff
-
-
 # ╔═╡ f751b13c-51fc-47c5-af2f-e1188c5bba5f
 p_chi2 = RVUtils.prob_chi2(spencer18_all)
 
+# ╔═╡ 438c78ab-c417-42ba-a7ef-755903bcb64f
+F_scatter = RVUtils.filter_chi2(p_chi2)
+
 # ╔═╡ a6f7f1a1-2dad-4397-9565-7b2aaf1fa733
-F_scatter = @. (p_chi2 > 0.001) || isnan(p_chi2)
-
-# ╔═╡ 761a7be6-420a-4428-addb-7947125596b3
-(spencer18_all.RV_sigma ./ spencer18_all.RV_err)[.!F_scatter]
-
-# ╔═╡ 25e927e1-773d-4d41-894b-1f4512f01233
-function get_f_best(source_id)
-	if ismissing(source_id)
-		return missing
-	end
-	if source_id ∉ j24.source_id
-		return missing
-	end
-	return j24.F_BEST[j24.source_id .== source_id] |> only
-end
+F_best = RVUtils.get_f_best.([j24], source_id)
 
 # ╔═╡ 412148d2-3b14-400a-b93b-f4aa18965d8d
-F_match = get_f_best.(source_id) .=== 1.0
+F_match = F_best .=== 1.
 
 # ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
 df_out = let
@@ -305,6 +291,9 @@ md"""
 ## Probabilities
 """
 
+# ╔═╡ 761a7be6-420a-4428-addb-7947125596b3
+(spencer18_all.RV_sigma ./ spencer18_all.RV_err)[.!F_scatter]
+
 # ╔═╡ 5774a0ef-8abf-4b6d-9b34-f80c29b4aab4
 F_scatter_old = (spencer18_all.RV_count .< 2) .|| (spencer18_all.RV_sigma .< 3*spencer18_all.RV_err .* sqrt.(spencer18_all.RV_count))
 
@@ -437,7 +426,7 @@ hist(p_chi2_mixed)
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
-# ╠═0ed1ac33-0537-4838-ae0b-200be73c501c
+# ╟─0ed1ac33-0537-4838-ae0b-200be73c501c
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═2f5ca80c-d98d-45cc-a661-834002b620f6
@@ -460,12 +449,11 @@ hist(p_chi2_mixed)
 # ╠═2a6e8cda-a3cf-4824-9584-fa3d3c1da53a
 # ╠═2c4eabb0-3af9-4b6f-b15d-9ed3b4290040
 # ╠═d321c481-0ceb-4e3b-b5fc-12af735155e3
-# ╠═412148d2-3b14-400a-b93b-f4aa18965d8d
 # ╠═96e1413d-e4fd-48af-8cde-73a5fcb4976a
-# ╠═48ca64bd-fd0a-4e49-b281-37ac200ba3ff
 # ╠═f751b13c-51fc-47c5-af2f-e1188c5bba5f
+# ╠═438c78ab-c417-42ba-a7ef-755903bcb64f
 # ╠═a6f7f1a1-2dad-4397-9565-7b2aaf1fa733
-# ╠═25e927e1-773d-4d41-894b-1f4512f01233
+# ╠═412148d2-3b14-400a-b93b-f4aa18965d8d
 # ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─4b8a45ce-4862-4842-8c60-bae9a64acd75

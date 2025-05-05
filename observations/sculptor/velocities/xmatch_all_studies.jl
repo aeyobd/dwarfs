@@ -19,7 +19,7 @@ end
 # ╔═╡ 7ed5bcf5-dfc3-4e79-a608-d503124a1e96
 using LilGuys
 
-# ╔═╡ 02c55b13-5681-475b-bead-9e0e0b9e9656
+# ╔═╡ 68da1f4c-93d8-4125-8792-188bcf15b306
 using Measurements
 
 # ╔═╡ 811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -66,7 +66,7 @@ data_dir = "../data/"
 obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("../processed/best_sample.fits")
+j24 = read_fits("../samples/best_sample.fits")
 
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_all = read_fits("processed/rv_apogee.fits")
@@ -91,9 +91,6 @@ md"""
 
 # ╔═╡ 8e0095e7-2198-439d-bd19-976bdb1d3766
 gmos_raw = CSV.read("$data_dir/sestito+23_gmos.csv", DataFrame)
-
-# ╔═╡ a076af44-586c-4f4c-9eee-4ec4e775bd17
-RVUtils.xmatch(gmos_raw |> x-> rename(x, "RA"=>"ra", "Dec"=>"dec"), j24, 1)
 
 # ╔═╡ b7345279-4f80-47ad-a726-537571849eae
 gmos = let
@@ -207,8 +204,14 @@ md"""
 Gaia stars are too bright to be members :(
 """
 
+# ╔═╡ bebba70b-3d89-48a6-9fe8-53ca4428f241
+PSAT = [only(j24.PSAT[j24.source_id .== row.source_id]) for row in eachrow(rv_meas)]
+
 # ╔═╡ 0f50ae12-e207-4748-9c45-780c9215be73
-sum(skipmissing(.!ismissing.(rv_meas.RV_err_gaia) .* (rv_meas.PSAT .> 001)))
+sum(skipmissing(.!ismissing.(rv_meas.RV_err_gaia) .* (PSAT .> 001)))
+
+# ╔═╡ 103f7c18-fefa-4d3c-a1b2-3324cc2239d3
+R_ell = [only(j24.R_ell[j24.source_id .== row.source_id]) for row in eachrow(rv_meas)]
 
 # ╔═╡ 22564a47-9b03-4778-b30c-d092581ec107
 md"""
@@ -224,7 +227,7 @@ We want to remove stars with statistically large standard deviations. If our int
 p_chi2 = RVUtils.prob_chi2.(rv_meas.RV_sigma, rv_meas.RV_err, rv_meas.RV_nstudy )
 
 # ╔═╡ e7c0edd6-770d-40db-8619-b5c471569fb6
-F_scatter = @. isnan(p_chi2) || (p_chi2 > 0.001)
+F_scatter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ ce420c18-b09d-4094-bc06-5537c3d756e8
 chi2 = @. rv_meas.RV_sigma^2 / rv_meas.RV_err^2 / (rv_meas.RV_nstudy - 1)
@@ -287,34 +290,6 @@ md"""
 # write data
 """
 
-# ╔═╡ 7faa2813-e502-4187-855a-047a2f5dd48d
-σ_pm = lguys.kms2pm(obs_properties["sigma_v"], obs_properties["distance"])
-
-# ╔═╡ 7567ad1b-3f31-49cc-8efa-ad5d9e0c3bf2
-icrs0 = RVUtils.icrs(obs_properties)
-
-# ╔═╡ 61853cc2-2ff0-498f-bb3b-5e9877aa3352
-gsr0 = lguys.transform(GSR, icrs0)
-
-# ╔═╡ e52df885-745b-4421-acda-bf0353ed8084
-Δrv = RVUtils.rv_correction(rv_meas.ra, rv_meas.dec, gsr0)
-
-# ╔═╡ 4d3cd232-81c0-4c32-bfc9-7ba8098d2e4d
-icrs0.ra, icrs0.dec, icrs0.pmra, icrs0.pmdec, icrs0.distance, icrs0.radial_velocity
-
-# ╔═╡ 2b6a78d1-e69e-4661-85de-1f73c2ab1dcb
-gsr0.ra, gsr0.dec, gsr0.pmra, gsr0.pmdec, gsr0.distance, gsr0.radial_velocity
-
-# ╔═╡ 6a406ddc-3fe9-40ff-adcf-9e2e429016a7
-md"""
-The plot below validates the strength of the uncertainty. 
-
-The velocity correction is magnitude 3 kms with uncertainty < 5x measurement uncertainties 
-"""
-
-# ╔═╡ 2ecbc309-2b17-4e75-a09b-6483b8b0a711
-hist(Measurements.uncertainty.(Δrv) ./ rv_meas.RV_err )
-
 # ╔═╡ 615f05fb-4907-40bc-9251-3065f565929b
 let
 	filename = "processed/rv_combined.fits"
@@ -322,8 +297,7 @@ let
 		rm(filename); 
 	end
 	rv_meas[!, :F_scatter] = F_qual
-	rv_meas[!, :delta_rv] = Measurements.value.(Δrv)
-	rv_meas[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
+	rv_meas[!, :F_match] .= true
 	write_fits(filename, rv_meas)
 	@info "wrote data"
 end
@@ -417,9 +391,6 @@ function filt_missing(col, verbose=false; low=-Inf, high=Inf)
 	return filt .& filt1
 end
 
-# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
-@savefig "t23_w09_xmatch" compare_rv("t23", "w09")
-
 # ╔═╡ 609f55cd-aa49-4a5e-b871-413ec7ef0990
 import StatsBase as sb
 
@@ -463,6 +434,9 @@ function compare_rv(study1, study2)
 	lines!([75, 150], [75, 150], color=:black)
 	return fig
 end
+
+# ╔═╡ f9e1bcbd-2def-4e64-b69e-d1cfcf7ffedd
+@savefig "t23_w09_xmatch" compare_rv("t23", "w09")
 
 # ╔═╡ f61debe4-8b23-4415-b77c-43c4465ccfcb
 @savefig "t23_apogee_xmatch" compare_rv("t23", "apogee")
@@ -509,7 +483,7 @@ function compare_rv_mean(study1, rv_meas=rv_meas)
 	y = float.(rv1[filt] .- rv2[filt])
 	xerr = float.(rv2_err[filt])
 	yerr = float.(rv1_err[filt])
-	errorscatter!(x, y, xerror=xerr, yerror=yerr, color=(COLORS[1], 0.2), size=1)
+	errorscatter!(x, y, xerror=xerr, yerror=yerr, color=(COLORS[1], 0.2), markersize=1)
 
 	w = 1 ./ xerr .^2
 	μ = LilGuys.mean(y, w)
@@ -538,11 +512,11 @@ md"""
 # ╔═╡ 01e0cfcd-92af-4c04-a7d4-9c9d8fd5a9f1
 rv_mean = obs_properties["radial_velocity"]; sigma_los = obs_properties["sigma_v"] # from mcmc modeling in next section
 
+# ╔═╡ 92a32c4c-59d8-4d3f-8709-d66fae10bfe9
+rv_mean
+
 # ╔═╡ f15ad626-bb0d-4484-8004-d6f81ccf0825
 ⊕ = RVUtils.:⊕
-
-# ╔═╡ a6bc7223-3267-4760-9b6a-d886ac6f4544
-obs_properties["pmra_err"] ⊕ σ_pm
 
 # ╔═╡ 03462abb-32d6-433c-a9c4-65ef2dd58965
 function is_rv_member(rv, err)
@@ -552,8 +526,11 @@ end
 # ╔═╡ 82d4e049-7f47-4f8b-a3a0-7191ef82912b
 filt_rv = is_rv_member.(rv_meas.RV, rv_meas.RV_err) 
 
+# ╔═╡ daa1295f-3e76-4794-ab6d-dba1b3b9f779
+memb_filt = (abs.(rv_meas.RV .- rv_mean) .< 3*obs_properties["sigma_v"]) .&& F_qual .&& filt_rv
+
 # ╔═╡ 3920e27f-48fd-41a5-bf53-1f80edf3d56d
-memb_stars = rv_meas[rv_meas.PSAT .> 0.2 .&& F_qual .&& filt_rv .|| .!ismissing.(rv_meas.RV_gmos), :]
+memb_stars = rv_meas[memb_filt, :]
 
 # ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
 compare_rv_mean("apogee", memb_stars)
@@ -591,16 +568,16 @@ rv_meas.RV
 
 # ╔═╡ e899faa9-580b-4aad-902e-382008048908
 function purity_given_p(psatlow, psathigh)
-	filt = psathigh .> rv_meas.PSAT .>= psatlow
-	filt .&= .!isnan.(rv_meas.PSAT)
+	filt = psathigh .> PSAT .>= psatlow
+	filt .&= .!isnan.(PSAT)
 	filt .&= .!ismissing.(filt_rv)
 	return sum(filt_rv[filt]) / sum(filt)
 end
 
 # ╔═╡ c0a4e207-9778-4d43-8197-5fc8887b2b82
 function number_satisfying(psatlow, psathigh)
-	filt = psathigh .> rv_meas.PSAT .>= psatlow
-	filt .&= .!isnan.(rv_meas.PSAT)
+	filt = psathigh .> PSAT .>= psatlow
+	filt .&= .!isnan.(PSAT)
 	filt .&= .!ismissing.(filt_rv)
 
 	return sum(filt)
@@ -661,10 +638,10 @@ let
 	)
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
-	scatter!(memb_stars.R_ell, memb_stars.RV_apogee, label="APOGEE", markersize=3)
-	scatter!(memb_stars.R_ell, memb_stars.RV_gmos, label="Sestito+23", markersize=5)
-	scatter!(memb_stars.R_ell, memb_stars.RV_w09, label="Walker+09", markersize=3)
-	scatter!(memb_stars.R_ell, memb_stars.RV_t23, label="Tolstoy+23", markersize=3)
+	scatter!(R_ell[memb_filt], memb_stars.RV_apogee, label="APOGEE", markersize=3)
+	scatter!(R_ell[memb_filt], memb_stars.RV_gmos, label="Sestito+23", markersize=5)
+	scatter!(R_ell[memb_filt], memb_stars.RV_w09, label="Walker+09", markersize=3)
+	scatter!(R_ell[memb_filt], memb_stars.RV_t23, label="Tolstoy+23", markersize=3)
 
 	Legend(fig[1,2], ax)
 	#axislegend(ax, position=:rb)
@@ -704,10 +681,10 @@ let
 	)
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
-	scatter!(rv_meas.R_ell, rv_meas.RV_apogee, label="APOGEE", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_gmos, label="GMOS", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_w09, label="Walker+09", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_t23, label="tolstoy + 23", markersize=3)
+	scatter!(R_ell, rv_meas.RV_apogee, label="APOGEE", markersize=3)
+	scatter!(R_ell, rv_meas.RV_gmos, label="GMOS", markersize=3)
+	scatter!(R_ell, rv_meas.RV_w09, label="Walker+09", markersize=3)
+	scatter!(R_ell, rv_meas.RV_t23, label="tolstoy + 23", markersize=3)
 
 	Legend(fig[1,2], ax)
 
@@ -724,6 +701,7 @@ end
 # ╠═257caa92-ccce-44ff-88ee-6a9c550ae5d9
 # ╠═ef1bb6f5-00b8-405b-8702-244eca618644
 # ╠═7ed5bcf5-dfc3-4e79-a608-d503124a1e96
+# ╠═68da1f4c-93d8-4125-8792-188bcf15b306
 # ╠═58caad92-a887-4527-ac84-be02fba5b23c
 # ╠═9a59505b-039b-41e1-8907-a8107ce68177
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
@@ -737,7 +715,6 @@ end
 # ╠═15f2a8e2-90df-48a9-a7bf-e86955f566ce
 # ╟─09b3aaf8-d189-4f84-8705-d2b25bffcc94
 # ╠═8e0095e7-2198-439d-bd19-976bdb1d3766
-# ╠═a076af44-586c-4f4c-9eee-4ec4e775bd17
 # ╠═b7345279-4f80-47ad-a726-537571849eae
 # ╟─bbf49122-11b1-4272-a660-0437c6aa2b3f
 # ╠═d3333b48-aa4e-42c1-9e0a-bbff98e3647d
@@ -759,6 +736,8 @@ end
 # ╠═31d468ff-b77c-4714-935e-5247558a3fc6
 # ╟─04ff1abd-c584-41de-8c83-7503482c3731
 # ╠═0f50ae12-e207-4748-9c45-780c9215be73
+# ╠═bebba70b-3d89-48a6-9fe8-53ca4428f241
+# ╠═103f7c18-fefa-4d3c-a1b2-3324cc2239d3
 # ╟─22564a47-9b03-4778-b30c-d092581ec107
 # ╟─4cda9764-f208-4532-b51f-5deb62992467
 # ╠═d7a1abbf-21bb-4aee-9f8e-9204b9bd1ead
@@ -774,18 +753,8 @@ end
 # ╟─462a80cb-bfef-47db-a812-65b927fd56d0
 # ╠═06b5c8d8-e531-4f00-a3cf-8d6202bb71f2
 # ╟─db3177e7-7132-4f62-846a-f4416a804009
-# ╠═02c55b13-5681-475b-bead-9e0e0b9e9656
-# ╠═7faa2813-e502-4187-855a-047a2f5dd48d
-# ╠═a6bc7223-3267-4760-9b6a-d886ac6f4544
-# ╠═7567ad1b-3f31-49cc-8efa-ad5d9e0c3bf2
-# ╠═61853cc2-2ff0-498f-bb3b-5e9877aa3352
-# ╠═e52df885-745b-4421-acda-bf0353ed8084
-# ╠═4d3cd232-81c0-4c32-bfc9-7ba8098d2e4d
-# ╠═2b6a78d1-e69e-4661-85de-1f73c2ab1dcb
-# ╟─6a406ddc-3fe9-40ff-adcf-9e2e429016a7
-# ╠═2ecbc309-2b17-4e75-a09b-6483b8b0a711
 # ╠═615f05fb-4907-40bc-9251-3065f565929b
-# ╠═23d894e1-d976-45d0-bacb-286cc0d6915c
+# ╟─23d894e1-d976-45d0-bacb-286cc0d6915c
 # ╠═ad832280-d456-411d-9199-47a1a2909c79
 # ╠═2ce6f17b-38f4-4a60-8e11-510650b83f04
 # ╠═768bb669-2f9a-41f6-97c5-23f0bba9be9c
@@ -810,6 +779,8 @@ end
 # ╠═102c73ef-2c95-4784-80df-ed0312511c00
 # ╟─3655b6a0-ac9a-4a49-86fd-6a6484409819
 # ╠═7f13339e-6a0c-4944-8a36-5ab136fd8415
+# ╠═92a32c4c-59d8-4d3f-8709-d66fae10bfe9
+# ╠═daa1295f-3e76-4794-ab6d-dba1b3b9f779
 # ╠═3920e27f-48fd-41a5-bf53-1f80edf3d56d
 # ╠═a2370516-e7ec-4502-ae4b-b111bcf68d36
 # ╠═aaaf5ba2-c9ed-41ec-a22a-d78ed96fd84e

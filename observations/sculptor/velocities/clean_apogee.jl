@@ -39,7 +39,7 @@ This notebook analyzes the RV stars in APOGEE and creates a sample sutable to be
 md"""
 Creates:
 - `processed/rv_apogee.fits`
-- ---`.csv`
+- `mcmc_summary.---.csv`
 Depends on:
 - `processed/rv_apogee_xmatch.fits` (`apogee_xmatch.jl`)
 """
@@ -124,19 +124,14 @@ end
 # ╔═╡ 961e230d-e549-49b5-a98c-aaa330fa42da
 @assert 0 == sum(apogee_all.RV_FLAG .> 0) # no need to include more flags
 
-# ╔═╡ d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
-F_scatter = apogee_all.RV_sigma .< 3*apogee_all.RV_err
-
-# ╔═╡ baa419cb-6d24-4291-9dca-4d03f9da192b
-function get_f_best(source_id)
-	if source_id ∉ j24.source_id
-		return missing
-	end
-	return j24.F_BEST[j24.source_id .== source_id] |> only
-end
-
 # ╔═╡ aa66b278-c408-49f4-b7e5-232341d98c3e
-F_best = get_f_best.(apogee_all.source_id)
+F_best = RVUtils.get_f_best.([j24], apogee_all.source_id)
+
+# ╔═╡ 9c7aff9c-80d3-463d-9d38-585daf1feba6
+p_chi2 = RVUtils.prob_chi2(apogee_all)
+
+# ╔═╡ d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
+F_scatter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ 16559e75-f1b7-4078-a176-cb44e30942dd
 F_match = .!ismissing.(apogee_all.source_id) .& (F_best .== 1.0)
@@ -208,6 +203,9 @@ hist(apogee.RV)
 # ╔═╡ 63792b12-dde2-4361-88b2-1f5a789631ff
 hist(filter(isfinite, apogee.fe_h))
 
+# ╔═╡ 832e9183-13b5-4d67-8bec-b16af0ccd651
+hist(filter(isfinite, (apogee.RV_sigma ./ apogee.RV_err) .^ 2 ./ sqrt.(apogee.RV_count)))
+
 # ╔═╡ 5dafeaad-df9e-4558-99a7-721bdb91d28d
 hist(apogee.RV_err)
 
@@ -217,17 +215,11 @@ hist(apogee.RV_err .* sqrt.(apogee.RV_count))
 # ╔═╡ 949bdb6a-4554-4659-b0d3-7e669f470c10
 hist(apogee.RV_sigma)
 
-# ╔═╡ fba487be-22a5-43b3-9ac5-8505462b7d56
-hist(apogee_all.RV_sigma ./ (apogee_all.RV_err ))
-
 # ╔═╡ 4f230076-cad7-425a-8156-ca47e7f6c911
-hist(apogee.RV_sigma ./ (apogee.RV_err ))
+hist((apogee.RV_sigma) .^ 2 ./ (apogee.RV_err ) .^ 2)
 
 # ╔═╡ 8bd988f3-884f-430b-b30c-3efc2ecbdd9c
 hist(apogee.SNR)
-
-# ╔═╡ 9c7aff9c-80d3-463d-9d38-585daf1feba6
-p_chi2 = RVUtils.prob_chi2(apogee_all)
 
 # ╔═╡ 27603f1a-cce9-44c9-99e9-903cf375ee98
 hist(filter(isfinite, p_chi2))
@@ -289,7 +281,7 @@ pairplot(chain)
 df_summary = RVUtils.summarize(chain)
 
 # ╔═╡ 5db61bab-a71e-4bcb-a706-f150f1126f4c
-CSV.write("processed/rv_apogee.csv", df_summary)
+CSV.write("processed/mcmc_summary.rv_apogee.csv", df_summary)
 
 # ╔═╡ ba337b2c-9a0c-40b3-867f-c9ebf683e1e3
 apogee.RV
@@ -311,12 +303,12 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═05c93bf4-0f94-44cc-9aab-7c6193831806
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
 # ╠═2f5ca80c-d98d-45cc-a661-834002b620f6
-# ╠═257caa92-ccce-44ff-88ee-6a9c550ae5d9
 # ╠═ef1bb6f5-00b8-405b-8702-244eca618644
 # ╠═7ed5bcf5-dfc3-4e79-a608-d503124a1e96
 # ╠═36634dea-21bc-4823-8a15-7bce20b6fc17
 # ╠═e67ec69b-cfd1-4da7-8f0a-3c1a30f6f48c
 # ╠═9a20ce08-79ce-4e23-ac4d-1c0af8de6ea7
+# ╠═257caa92-ccce-44ff-88ee-6a9c550ae5d9
 # ╠═dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
@@ -328,12 +320,12 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
 # ╠═d1073372-b1bc-4c12-ab7f-e2bcd6ed47c3
-# ╠═baa419cb-6d24-4291-9dca-4d03f9da192b
 # ╠═aa66b278-c408-49f4-b7e5-232341d98c3e
+# ╠═9c7aff9c-80d3-463d-9d38-585daf1feba6
 # ╠═16559e75-f1b7-4078-a176-cb44e30942dd
 # ╠═14094089-b9cd-464c-82aa-a41be8fc1bbf
 # ╠═f71152ad-d576-4205-bece-92c85783c089
-# ╠═bb5aefb9-7db5-4ae2-8f32-ef2a442e5c77
+# ╟─bb5aefb9-7db5-4ae2-8f32-ef2a442e5c77
 # ╠═f1742d6c-effc-465e-bbea-5c89ac575241
 # ╠═013dcaf5-36f0-4bf1-bbd0-5facc465e30e
 # ╠═9c2f80c3-83ff-465b-9f1d-577661f1aa2f
@@ -345,13 +337,12 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═bf088da8-a7c5-46e7-8e5f-ef5b91c10fb8
 # ╠═1bc2541c-69ac-40aa-94f5-743707ca5a66
 # ╠═63792b12-dde2-4361-88b2-1f5a789631ff
+# ╠═832e9183-13b5-4d67-8bec-b16af0ccd651
 # ╠═5dafeaad-df9e-4558-99a7-721bdb91d28d
 # ╠═68960b6f-081b-46c1-8e27-8fda8a0521ee
 # ╠═949bdb6a-4554-4659-b0d3-7e669f470c10
-# ╠═fba487be-22a5-43b3-9ac5-8505462b7d56
 # ╠═4f230076-cad7-425a-8156-ca47e7f6c911
 # ╠═8bd988f3-884f-430b-b30c-3efc2ecbdd9c
-# ╠═9c7aff9c-80d3-463d-9d38-585daf1feba6
 # ╠═27603f1a-cce9-44c9-99e9-903cf375ee98
 # ╠═2a514055-3f00-4dbc-86d4-882a0d0df77b
 # ╠═68cc4da9-b30c-4e51-9f96-b641dd89a7cf

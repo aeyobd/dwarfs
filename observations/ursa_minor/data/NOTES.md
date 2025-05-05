@@ -10,9 +10,19 @@ Data from Vizier : . J/AJ/156/257/
 - `spencer+18_repeated+18.fits`: VizieR Table4. Velocities from various studies with multiepoch observations.
 
 ### Pace+2020
-Data from Vizier: 
+Data from Vizier: J/MNRAS/495/3022/table2
 
 ## Unions
+- *.UMi.5deg.fits
+c/o simon. From UNIONS internal data, jusst 5deg rect tangent plane centred on UMI. 
+
+## graces
+- sestito+23_graces.csv
+- sestito+23_pace_xmatch.fits
+- sestito+23_spencer_notpace.csv
+- table_keck_pace_members.csv
+All from Federico.
+
 
 Selected from FLAGS_CFIS == 0 and s21 <= 3 and s31 <= 3.
 Data from simon few degrees IR in unions.

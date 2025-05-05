@@ -602,3 +602,28 @@ function prob_chi2(sigma, sem, count)
     ccdf(Chisq(ν), chi2)
 end
 
+
+
+"""
+    filt_chi2(prob_chi2s)
+
+Fiducial cut on chi2 (probability of 0.001).
+"""
+function filter_chi2(p_chi2)
+    return @. isnan(p_chi2) || p_chi2 > 0.001
+end
+
+
+
+"""
+Retrieve the value of F_BEST if source_id exists, otherwise return missing.
+"""
+function get_f_best(j24, source_id)
+    if source_id |> ismissing
+        return missing
+    end
+	if source_id ∉ j24.source_id
+		return missing
+	end
+	return j24.F_BEST[j24.source_id .== source_id] |> only
+end

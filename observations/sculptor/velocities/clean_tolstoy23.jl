@@ -9,7 +9,6 @@ begin
 	import Pkg; Pkg.activate()
 	
 	using CSV, DataFrames
-	using PythonCall
 	using Arya
 	using CairoMakie
 
@@ -40,8 +39,8 @@ This notebook analyzes the RV stars in tolstoy+23 and creates a sample sutable t
 md"""
 Creates:
 - `processed/rv_tolstoy+23.fits`
-- `processed/rv_dart.csv`
-- `processed/rv_tolstoy+23.csv` (MCMC property summary)
+- `processed/mcmc_summary.rv_dart.csv`
+- `processed/mcmc_summary.rv_tolstoy+23.csv` (MCMC property summary)
 Depends on:
 - `../observed_properties.toml`
 - `../data/jensen+24_wide.fits`
@@ -108,16 +107,8 @@ begin
 	tolstoy23_all = tolstoy23_all
 end
 
-# ╔═╡ 6c8d1b6d-9e4c-4f70-aa84-ac5869cb04e3
-function get_f_best(source_id)
-	if source_id ∉ j24.source_id
-		return missing
-	end
-	return j24.F_BEST[j24.source_id .== source_id] |> only
-end
-
 # ╔═╡ 6ce17cfa-66c8-4666-873f-95e68f7c236b
-F_best = get_f_best.(tolstoy23_all.source_id)
+F_best = RVUtils.get_f_best.([j24], apogee_all.source_id)
 
 # ╔═╡ 449ed8cb-4d6e-44db-b8c3-66aba7a3a29a
 sum(ismissing.(F_best))
@@ -132,7 +123,7 @@ p_chi2 = RVUtils.prob_chi2(tolstoy23_all)
 F_scatter_old = tolstoy23_all.RV_sigma .< 3*tolstoy23_all.RV_err .* sqrt.(tolstoy23_all.RV_count)
 
 # ╔═╡ 986a8caf-fc50-4d75-919a-51d03ce98c4f
-F_scatter = @. isnan(p_chi2) || (p_chi2 > 0.001)
+F_scatter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ 0596b1ee-059f-4570-8a22-869d5b65074a
 hist(p_chi2[.!F_scatter])
@@ -285,7 +276,7 @@ samples = DataFrame(chain)
 RVUtils.plot_samples(tolstoy23, samples, bins=30)
 
 # ╔═╡ 60f45b81-8beb-4eb0-8f55-db04c5368eee
-CSV.write("processed/rv_tolstoy+23.csv", df_summary)
+CSV.write("processed/mcmc_summary.rv_tolstoy+23.csv", df_summary)
 
 # ╔═╡ 8b909559-c7e9-4fac-9d29-bf3b654393fa
 md"""
@@ -371,7 +362,7 @@ samples_dart = DataFrame(chain_dart)
 RVUtils.plot_samples(dart, samples_dart, bins=30)
 
 # ╔═╡ db4256f6-23df-49e5-8a3b-d81c03257b5a
-CSV.write("processed/rv_dart.csv", df_summary_dart)
+CSV.write("processed/mcmc_summary.rv_dart.csv", df_summary_dart)
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -392,13 +383,11 @@ CSV.write("processed/rv_dart.csv", df_summary_dart)
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═c4649b4e-f8b3-4b2c-8595-5dc9a3a302da
 # ╠═bb7f6769-ec92-460d-8423-449029175f79
-# ╠═6c8d1b6d-9e4c-4f70-aa84-ac5869cb04e3
 # ╠═6ce17cfa-66c8-4666-873f-95e68f7c236b
 # ╠═449ed8cb-4d6e-44db-b8c3-66aba7a3a29a
 # ╠═10cce492-1457-46ef-a3a5-f034f5d1f147
 # ╠═744832f2-3a89-4df8-b1f5-7a088ee84139
 # ╠═0596b1ee-059f-4570-8a22-869d5b65074a
-# ╠═957ae76e-aa8f-4e72-999a-d560b7530183
 # ╠═986a8caf-fc50-4d75-919a-51d03ce98c4f
 # ╠═95a9a1c0-e2ed-40c3-837e-cd148ce6bafa
 # ╠═f71152ad-d576-4205-bece-92c85783c089
@@ -413,6 +402,7 @@ CSV.write("processed/rv_dart.csv", df_summary_dart)
 # ╠═859ca55e-ea29-451b-8528-1e4e3eb08c53
 # ╟─4290a51e-961b-4b38-b954-1a65e946080c
 # ╟─0664487f-2eda-471f-b562-7fb1b89a5ee5
+# ╠═957ae76e-aa8f-4e72-999a-d560b7530183
 # ╠═91208c77-3664-48fd-a659-1151a4dc0bf4
 # ╠═2eebfca4-e364-467f-a1b3-c1cfab2822e6
 # ╠═542551c0-d131-4ef8-aa19-69caf531027f

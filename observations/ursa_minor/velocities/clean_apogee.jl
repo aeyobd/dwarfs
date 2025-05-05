@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -81,14 +81,6 @@ md"""
 APOGEE DR 17 sample from federico's paper is apogee_raw_2. I have also xmatched the field against apogee which I use for self-consistency.
 """
 
-# ╔═╡ 4e275dd0-0401-4e7c-856b-5703b4b93331
-function get_f_best(source_id)
-	if source_id ∉ j24.source_id
-		return missing
-	end
-	return j24.F_BEST[j24.source_id .== source_id] |> only
-end
-
 # ╔═╡ d4d0a488-1c0e-4bc6-9a88-94b27d84e8ce
 apogee_raw = read_fits("processed/apogee_xmatch.fits")
 
@@ -117,13 +109,16 @@ end
 @assert 0 == sum(apogee_all.RV_FLAG .> 0) # no need to include more flags
 
 # ╔═╡ 9d63053f-fe2a-4667-b813-943d366a366c
-F_best = get_f_best.(apogee_all.source_id)
+F_best = RVUtils.get_f_best.([j24], apogee_all.source_id)
 
 # ╔═╡ 1a698e39-2d12-449c-82ad-601dc4cd5099
 F_match = .!ismissing.(apogee_all.source_id) .& (F_best .== 1.0)
 
+# ╔═╡ 504eb85d-1b49-4e7a-a8d7-befdd97b2af6
+p_chi2 = RVUtils.prob_chi2(apogee_all)
+
 # ╔═╡ 7f13344f-96c8-4dbb-833f-241ea1788506
-F_scatter = apogee_all.RV_sigma .< 3*apogee_all.RV_err
+F_scatter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ bb57569e-0a4c-455e-b3c6-7bd2897bb843
 sum(apogee_raw.RV_FLAG .> 0)
@@ -204,9 +199,6 @@ hist(apogee.RV_sigma)
 # ╔═╡ fba487be-22a5-43b3-9ac5-8505462b7d56
 hist(apogee.RV_sigma ./ (apogee.RV_err .* sqrt.(apogee.RV_count) ))
 
-# ╔═╡ 504eb85d-1b49-4e7a-a8d7-befdd97b2af6
-p_chi2 = RVUtils.prob_chi2.(apogee_all.RV_sigma, apogee_all.RV_err, apogee_all.RV_count)
-
 # ╔═╡ 6ed8cc72-e10e-4c69-a0a8-f6bc1141d35b
 hist(filter(isfinite, p_chi2))
 
@@ -261,7 +253,7 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═961e230d-e549-49b5-a98c-aaa330fa42da
 # ╠═9d63053f-fe2a-4667-b813-943d366a366c
 # ╠═1a698e39-2d12-449c-82ad-601dc4cd5099
-# ╠═4e275dd0-0401-4e7c-856b-5703b4b93331
+# ╠═504eb85d-1b49-4e7a-a8d7-befdd97b2af6
 # ╠═7f13344f-96c8-4dbb-833f-241ea1788506
 # ╠═bb57569e-0a4c-455e-b3c6-7bd2897bb843
 # ╠═0d9aaa39-1fa9-4514-ad72-8f4f7558b748
@@ -281,7 +273,6 @@ RVUtils.plot_samples(apogee, samples, bins=30)
 # ╠═5dafeaad-df9e-4558-99a7-721bdb91d28d
 # ╠═949bdb6a-4554-4659-b0d3-7e669f470c10
 # ╠═fba487be-22a5-43b3-9ac5-8505462b7d56
-# ╠═504eb85d-1b49-4e7a-a8d7-befdd97b2af6
 # ╠═6ed8cc72-e10e-4c69-a0a8-f6bc1141d35b
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
 # ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c

@@ -22,14 +22,16 @@ using LilGuys; FIGDIR = "figures"
 # ╔═╡ 72f1febc-c6ea-449a-8cec-cd0e49c4e20c
 using DataFrames
 
-# ╔═╡ 9070c811-550c-4c49-9c58-0943b0f808b2
-using Turing
-
-# ╔═╡ e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
-using PairPlots
+# ╔═╡ d7d439be-b77b-4a3d-9fb6-7dd7583dc52e
+using OrderedCollections
 
 # ╔═╡ 035cdedb-da23-4cfd-aa19-a3aff089d3ac
 using Measurements
+
+# ╔═╡ 3114c0ba-3332-4da2-aba5-f6e9108e6215
+md"""
+This notebook loads in a file, selects the members according to J+24 probabilities, and finally corrects the velocities and saves the resulting, cleaned file.
+"""
 
 # ╔═╡ 3ed8c28f-5908-42dc-a56b-24a9b2685a07
 md"""
@@ -37,13 +39,11 @@ md"""
 """
 
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
-rv_file = "rv_tolstoy+23.fits"
-
-# ╔═╡ 4827c99d-6326-42fb-a329-d56992f6d20d
-j24_sample = "1c"
-
-# ╔═╡ cfadb58a-5569-41f5-a72b-04eba70cc89e
-psat_min = 0.2
+begin 
+	rv_file = "rv_combined.fits"
+	j24_sample = "wide_2c"
+	psat_min = 0.2
+end
 
 # ╔═╡ 680e7f76-cb4d-40d6-9a9f-d4672427a633
 md"""
@@ -69,14 +69,8 @@ This notebook takes the dataset created from velocity_xmatch.jl and analyzes it 
 # ╔═╡ 34e43f4a-bcff-41cb-92c4-0c8d600fd053
 import CSV
 
-# ╔═╡ 2a422e88-fc0d-4a89-a841-42f3c5c8dace
-import KernelDensity
-
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, sem
-
-# ╔═╡ c3298b45-7c5d-4937-8e4c-c87de36a1354
-import DensityEstimators: histogram, bins_equal_number
 
 # ╔═╡ d2888213-61e3-4a6f-872b-48a075640ef5
 import TOML
@@ -176,6 +170,9 @@ memb_filt = (rv_meas.PSAT_RV .> 0.2) .&
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
 
+# ╔═╡ 92f4c8b3-442d-4a56-b05f-1fc547231508
+"RV_gmos" ∈ names(memb_stars) && memb_stars[.!ismissing.(memb_stars.RV_gmos), [:source_id, :ra, :dec, :PSAT]]
+
 # ╔═╡ 55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 md"""
 # Numbers
@@ -228,11 +225,32 @@ scatter(nonmemb_stars.xi, nonmemb_stars.eta)
 # ╔═╡ 6493a62d-cdb7-4831-9da6-25035e3cb7c5
 scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 
+# ╔═╡ 9e23b685-8a84-421e-8539-e5c1ae87d53b
+let
+	fig = Figure(
+		size=(5*72, 3*72)
+	)
+	
+	ax = Axis(fig[1,1],
+		xlabel = "R / arcmin",
+		ylabel = L"RV / km s$^{-1}$",
+		#limits=(nothing, (60, 150))
+	)
+
+	scatter!(rv_meas.R_ell[.!memb_filt], rv_meas.RV[.!memb_filt])
+
+	scatter!(memb_stars.R_ell, memb_stars.RV)
+
+
+
+	fig
+
+end
+
 # ╔═╡ Cell order:
+# ╟─3114c0ba-3332-4da2-aba5-f6e9108e6215
 # ╟─3ed8c28f-5908-42dc-a56b-24a9b2685a07
 # ╠═50488b8f-6886-4191-8778-af66929f1445
-# ╠═4827c99d-6326-42fb-a329-d56992f6d20d
-# ╠═cfadb58a-5569-41f5-a72b-04eba70cc89e
 # ╟─680e7f76-cb4d-40d6-9a9f-d4672427a633
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═86fe351f-ef12-474a-85cc-c10c22a65e77
@@ -240,15 +258,12 @@ scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 # ╟─6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═34e43f4a-bcff-41cb-92c4-0c8d600fd053
-# ╠═2a422e88-fc0d-4a89-a841-42f3c5c8dace
 # ╠═93838644-cad6-4df3-b554-208b7afeb3b8
 # ╠═bd6dfd17-02ee-4855-be37-fecfdab6776f
 # ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
+# ╠═d7d439be-b77b-4a3d-9fb6-7dd7583dc52e
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
-# ╠═9070c811-550c-4c49-9c58-0943b0f808b2
-# ╠═e1cdc7ac-b1a4-45db-a363-2ea5b5ad9990
 # ╠═035cdedb-da23-4cfd-aa19-a3aff089d3ac
-# ╠═c3298b45-7c5d-4937-8e4c-c87de36a1354
 # ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
 # ╠═2ab0018f-1628-4f5e-b7da-370eb20c00d0
@@ -265,12 +280,13 @@ scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 # ╠═84509e42-8484-410a-8a76-38473b9f4b71
 # ╠═66682e56-4ad9-4823-99da-fc599882eb41
 # ╠═b20720ac-2787-4cf7-a44b-0cb5293a00b9
-# ╠═fc3ec4d1-5812-4177-90b8-29bbba72d720
 # ╠═097a102b-d6a6-444d-9761-ecb06d64d07f
+# ╠═fc3ec4d1-5812-4177-90b8-29bbba72d720
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
+# ╠═92f4c8b3-442d-4a56-b05f-1fc547231508
 # ╟─55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 # ╠═31a6c2e4-538c-4adc-bbda-5043680b17f7
 # ╠═3377f632-713d-4fec-84a9-b0211b02cb43
@@ -285,3 +301,4 @@ scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 # ╠═68edc01b-496e-466e-9980-83a586b0bb82
 # ╠═fb52ac04-1483-471f-a164-9bbe15464378
 # ╠═6493a62d-cdb7-4831-9da6-25035e3cb7c5
+# ╠═9e23b685-8a84-421e-8539-e5c1ae87d53b

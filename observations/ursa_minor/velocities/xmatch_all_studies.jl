@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -203,9 +203,6 @@ md"""
 # ╔═╡ a23adf32-8854-422a-8b7b-2b625132b9f2
 import Dates
 
-# ╔═╡ da2b045f-e767-486c-a999-0838a2dbae87
-
-
 # ╔═╡ c90a03c9-1da2-4bd3-bff8-c620b1bc98a2
 md"""
 # Numbers
@@ -249,12 +246,12 @@ v_shift_p20 = -1.1
 v_shift_s18 = 1.1
 
 # ╔═╡ 070de76a-e917-48ab-8efe-52f665ceca2f
-v_shift_apogee = 0
+v_shift_apogee = -0.4
 
 # ╔═╡ e472cbb6-258e-4303-85e2-56f26358c97b
 all_stars = let
 
-	all_stars = copy(j24)
+	all_stars = copy(j24)[:, [:source_id, :ra, :dec, :dr2_radial_velocity, :dr2_radial_velocity_error]]
 	add_xmatch!(all_stars, apogee_all, "apogee")
 	add_xmatch!(all_stars, spencer18_all, "s18")
 	add_xmatch!(all_stars, pace20_all, "p20")
@@ -289,14 +286,20 @@ rv_meas = all_stars[filt_is_meas, :]
 # ╔═╡ f6ebd104-84c7-4f86-ab58-acb65ebc789a
 sum(skipmissing(rv_meas.F_scatter_s18))
 
+# ╔═╡ ec89c364-61ed-455e-8352-6b3eec70f787
+PSAT = [only(j24.PSAT[j24.source_id .== row.source_id]) for row in eachrow(rv_meas)]
+
+# ╔═╡ 6c8596f8-7018-470f-9204-583c7b08dfd7
+R_ell = [only(j24.R_ell[j24.source_id .== row.source_id]) for row in eachrow(rv_meas)]
+
 # ╔═╡ ea333b79-abb0-4827-991f-e2c370bdb0be
-sum(skipmissing(.!ismissing.(rv_meas.RV_err_gaia) .* (rv_meas.PSAT .> 001)))
+sum(skipmissing(.!ismissing.(rv_meas.RV_err_gaia) .* (PSAT .> .001)))
 
 # ╔═╡ 90648c2c-d9fb-4f62-bf6f-59d4f54649ca
 p_chi2 = RVUtils.prob_chi2.(rv_meas.RV_sigma, rv_meas.RV_err, rv_meas.RV_nstudy)
 
 # ╔═╡ 15b1baf7-d9bc-4d3e-a9fa-9d8b8a4dbc6e
-F_qual_inter = @. isnan(p_chi2) || p_chi2 > 0.001
+F_qual_inter = RVUtils.filter_chi2(p_chi2)
 
 # ╔═╡ 9e92ac8b-2ba5-483d-a02a-12e56d63cd2d
 hist(filter(isfinite, p_chi2))
@@ -397,7 +400,7 @@ mean(sigma_sigma .> 5)
 sigma_sigma[.!F_qual_inter]
 
 # ╔═╡ 0d2dbc73-1ded-46e3-b142-9bc7b777728d
-all_stars[.!ismissing.(all_stars.RV_graces), [:ra, :dec, :source_id, :pmra, :pmdec, :PSAT]]
+all_stars[.!ismissing.(all_stars.RV_graces), [:ra, :dec, :source_id]]
 
 # ╔═╡ bd51fe42-7e39-4cd8-8065-58ab9814f966
  @assert sum(apogee_all.F_match) == sum(.!ismissing.(all_stars.RV_apogee)) 
@@ -479,7 +482,7 @@ function compare_rv_mean(study1, rv_meas=rv_meas; low=μ0-3σ0, high=μ0+3σ0)
 	y = float.(rv1[filt] .- rv2[filt])
 	xerr = float.(rv2_err[filt])
 	yerr = float.(rv1_err[filt])
-	errorscatter!(x, y, xerror=xerr, yerror=yerr, color=(COLORS[1], 0.2), size=1)
+	errorscatter!(x, y, xerror=xerr, yerror=yerr, color=(COLORS[1], 0.2), markersize=1)
 
 	w = 1 ./ xerr .^2
 	μ = LilGuys.mean(y, w)
@@ -519,8 +522,11 @@ end
 # ╔═╡ 82d4e049-7f47-4f8b-a3a0-7191ef82912b
 filt_rv = is_rv_member.(rv_meas.RV, rv_meas.RV_err) 
 
+# ╔═╡ 2ff28c4b-27a0-48d8-97e6-284279f44d8a
+memb_filt = PSAT .> 0.2 .&& F_qual .&& filt_rv
+
 # ╔═╡ 3920e27f-48fd-41a5-bf53-1f80edf3d56d
-memb_stars = rv_meas[rv_meas.PSAT .> 0.2 .&& F_qual .&& filt_rv , :]
+memb_stars = rv_meas[memb_filt , :]
 
 # ╔═╡ 9213cc36-74d1-452f-bd9a-eb5c5cab1f87
 function compare_rv(study1, study2)
@@ -570,7 +576,7 @@ end
 @savefig "s18_apogee" compare_rv("s18", "apogee")
 
 # ╔═╡ 102c73ef-2c95-4784-80df-ed0312511c00
-@savefig "apogee_w09_xmatch" compare_rv("apogee", "p20")
+@savefig "apogee_w09_xmatch" compare_rv("p20", "apogee")
 
 # ╔═╡ a2370516-e7ec-4502-ae4b-b111bcf68d36
 compare_rv_mean("apogee", memb_stars)
@@ -608,16 +614,16 @@ rv_meas.RV
 
 # ╔═╡ e899faa9-580b-4aad-902e-382008048908
 function purity_given_p(psatlow, psathigh)
-	filt = psathigh .> rv_meas.PSAT .>= psatlow
-	filt .&= .!isnan.(rv_meas.PSAT)
+	filt = psathigh .> PSAT .>= psatlow
+	filt .&= .!isnan.(PSAT)
 	filt .&= .!ismissing.(filt_rv)
 	return sum(filt_rv[filt]) / sum(filt)
 end
 
 # ╔═╡ c0a4e207-9778-4d43-8197-5fc8887b2b82
 function number_satisfying(psatlow, psathigh)
-	filt = psathigh .> rv_meas.PSAT .>= psatlow
-	filt .&= .!isnan.(rv_meas.PSAT)
+	filt = psathigh .> PSAT .>= psatlow
+	filt .&= .!isnan.(PSAT)
 	filt .&= .!ismissing.(filt_rv)
 
 	return sum(filt)
@@ -681,10 +687,10 @@ let
 	)
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
-	scatter!(memb_stars.R_ell, memb_stars.RV_apogee, label="APOGEE", markersize=3)
-	scatter!(memb_stars.R_ell, memb_stars.RV_graces, label="Sestito+23", markersize=5)
-	scatter!(memb_stars.R_ell, memb_stars.RV_p20, label="pace+20", markersize=3)
-	scatter!(memb_stars.R_ell, memb_stars.RV_s18, label="spencer+18", markersize=3)
+	scatter!(R_ell[memb_filt], memb_stars.RV_apogee, label="APOGEE", markersize=3)
+	scatter!(R_ell[memb_filt], memb_stars.RV_graces, label="Sestito+23", markersize=5)
+	scatter!(R_ell[memb_filt], memb_stars.RV_p20, label="pace+20", markersize=3)
+	scatter!(R_ell[memb_filt], memb_stars.RV_s18, label="spencer+18", markersize=3)
 
 	Legend(fig[1,2], ax)
 	#axislegend(ax, position=:rb)
@@ -721,10 +727,10 @@ let
 	)
 
 	#scatter!(memb_stars.r_ell, memb_stars.RV_dart, label="DART", markersize=5)
-	scatter!(rv_meas.R_ell, rv_meas.RV_apogee, label="APOGEE", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_graces, label="sestito + 23", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_s18, label="spencer + 18", markersize=3)
-	scatter!(rv_meas.R_ell, rv_meas.RV_p20, label="pace + 20", markersize=3)
+	scatter!(R_ell, rv_meas.RV_apogee, label="APOGEE", markersize=3)
+	scatter!(R_ell, rv_meas.RV_graces, label="sestito + 23", markersize=3)
+	scatter!(R_ell, rv_meas.RV_s18, label="spencer + 18", markersize=3)
+	scatter!(R_ell, rv_meas.RV_p20, label="pace + 20", markersize=3)
 
 	Legend(fig[1,2], ax)
 
@@ -737,7 +743,7 @@ end
 sum(sum(eachcol(ismissing.(rv_meas))))
 
 # ╔═╡ 1deb1520-194a-40b5-8968-bf73b756ba3d
-rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
+PSAT[ .! ismissing.(rv_meas.RV_graces)]
 
 # ╔═╡ Cell order:
 # ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
@@ -776,6 +782,8 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═0c6c6d84-fb14-4eaf-858e-22fb90ab4d8d
 # ╠═f6ebd104-84c7-4f86-ab58-acb65ebc789a
 # ╟─04ff1abd-c584-41de-8c83-7503482c3731
+# ╠═ec89c364-61ed-455e-8352-6b3eec70f787
+# ╠═6c8596f8-7018-470f-9204-583c7b08dfd7
 # ╠═ea333b79-abb0-4827-991f-e2c370bdb0be
 # ╟─22564a47-9b03-4778-b30c-d092581ec107
 # ╟─4cda9764-f208-4532-b51f-5deb62992467
@@ -806,7 +814,6 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╠═615f05fb-4907-40bc-9251-3065f565929b
 # ╠═24d67978-1013-40ed-b2ff-37eec77c00fc
 # ╠═a23adf32-8854-422a-8b7b-2b625132b9f2
-# ╠═da2b045f-e767-486c-a999-0838a2dbae87
 # ╠═57568618-1323-46bc-a8ef-53eb95fc2929
 # ╠═4e52deab-26c0-43e1-b2b0-5b7477737801
 # ╠═6737a85e-55d5-4f0b-b14e-4866af3bc605
@@ -843,6 +850,7 @@ rv_meas[ .! ismissing.(rv_meas.RV_graces), :PSAT]
 # ╟─3655b6a0-ac9a-4a49-86fd-6a6484409819
 # ╠═7f13339e-6a0c-4944-8a36-5ab136fd8415
 # ╠═3920e27f-48fd-41a5-bf53-1f80edf3d56d
+# ╠═2ff28c4b-27a0-48d8-97e6-284279f44d8a
 # ╠═a2370516-e7ec-4502-ae4b-b111bcf68d36
 # ╠═aaaf5ba2-c9ed-41ec-a22a-d78ed96fd84e
 # ╠═78e7aff0-3658-4d64-b117-58189a85307a

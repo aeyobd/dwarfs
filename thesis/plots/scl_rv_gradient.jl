@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -21,9 +21,6 @@ using CSV, DataFrames
 
 # ╔═╡ 71335ca6-b58b-4c68-8467-81cd4f481b1f
 using PyFITS
-
-# ╔═╡ 535d6048-d83b-4439-9fbb-40616ad7b35b
-using RollingFunctions
 
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
@@ -48,17 +45,17 @@ obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/o
 # ╔═╡ 47ddbd9b-6d22-4c11-85d8-9b3f672e5287
 gsr = LilGuys.transform(GSR, ICRS(obs_props))
 
+# ╔═╡ 2f067cc4-9793-44e0-885e-2875d36e2a20
+filename = "rv_combined_x_wide_2c_psat_0.2"
+
 # ╔═╡ 799fd372-b4ea-473f-93cb-65eff73b9bbc
-df_gradient = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_gradient.csv", DataFrame)
+df_gradient = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_gradient.$filename.csv", DataFrame)
 
 # ╔═╡ 5927a386-fdb1-459f-b042-0f95677e345e
-rv_memb = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")
+rv_memb = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/$filename.fits")
 
 # ╔═╡ 33ee935f-36f6-424c-9f26-138c871c812a
 minimum(rv_memb.PSAT_RV) 
-
-# ╔═╡ bc3e07a1-ff18-44ae-8f5e-3abc043c5769
-df_xi_p[:, :μ_err2] = [tuple(parse.(Float64, split(s[2:end-1], ", "))...) for s in df_xi_p.μ_err]
 
 # ╔═╡ 668bea30-c7e4-4f90-a0e8-fa315dc79cd1
 θ_m = median(df_gradient.Θ_grad)
@@ -109,10 +106,10 @@ sort(xi_p[filt])[[300, end-300]]
 @savefig "scl_vel_gradient_scatter" let
 	fig, ax = FigAxis(
 		xlabel = L"$\xi'$ / degree",
-		ylabel = L"$v_z$ / km s$^{-1}$",
+		ylabel = L"$v_\textrm{gsr}'$ / km s$^{-1}$",
 		limits=(-0.8, 0.8, 35, 115)
 	)
-	scatter!(xi_p[filt] ./ 60, rv_memb.vz[filt], markersize=2, color=:black, label="members")
+	scatter!(xi_p[filt], rv_memb.vz[filt], markersize=2, color=:black, label="members")
 
 	
 	for i in 1:400:size(df_gradient, 1)
@@ -124,7 +121,7 @@ sort(xi_p[filt])[[300, end-300]]
 
 	hlines!(gsr.radial_velocity, color=:black, linewidth=1, alpha=0.3, label="systematic velocity")
 
-	xs, ys = rolling_medians(xi_p[filt] ./ 60, rv_memb.vz[filt], window=200)
+	xs, ys = rolling_medians(xi_p[filt] , rv_memb.vz[filt], window=200)
 	lines!(xs, ys,  color=COLORS[2], label="rolling median")
 
 	axislegend(position=:lb, unique=true, merge=true)
@@ -143,13 +140,12 @@ end
 # ╠═f27c2500-b92c-4de0-8482-4a8acfa2667f
 # ╠═0ef64034-7d3e-4270-a36e-f4d6b5f7eaaf
 # ╠═47ddbd9b-6d22-4c11-85d8-9b3f672e5287
+# ╠═2f067cc4-9793-44e0-885e-2875d36e2a20
 # ╠═799fd372-b4ea-473f-93cb-65eff73b9bbc
 # ╠═5927a386-fdb1-459f-b042-0f95677e345e
 # ╠═33ee935f-36f6-424c-9f26-138c871c812a
-# ╠═bc3e07a1-ff18-44ae-8f5e-3abc043c5769
 # ╠═4c05511c-d209-4213-a380-d16c60a834a4
 # ╠═668bea30-c7e4-4f90-a0e8-fa315dc79cd1
-# ╠═535d6048-d83b-4439-9fbb-40616ad7b35b
 # ╠═fc4794cf-e45b-41ee-acac-6d5dcf8c02ab
 # ╠═dbebfa62-77df-4e38-8fc6-47e36dc6e7b6
 # ╠═51fc1b13-1cf6-4e7d-b156-1a5bd44cf17b

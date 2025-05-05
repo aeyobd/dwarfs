@@ -1,6 +1,6 @@
+inherits = "bins_eqw.toml"
 filename = "../data/jensen+24_wide_2c.fits"
 PSAT_min = 0.2
 
-[profile_kwargs]
-normalization = "none"
+
 

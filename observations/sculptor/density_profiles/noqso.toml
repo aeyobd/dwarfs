@@ -1,4 +1,5 @@
 inherits = "./fiducial.toml"
+filename = "../samples/jensen+24_wide_2c_extracols.fits"
 
 remove_qso = true
 remove_galaxy = true
