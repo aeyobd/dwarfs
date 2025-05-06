@@ -17,7 +17,7 @@ MaxMemSize                  2400    # TUNE to system (MB)
 
 #---Time
 TimeBegin                   0
-TimeMax	                    424      # 2 Gyr
+TimeMax	                    2120      # 10 Gyr
 
 #---Output frequency
 OutputListOn                0
@@ -64,11 +64,6 @@ UnitLength_in_cm            1
 UnitMass_in_g               1
 UnitVelocity_in_cm_per_s    1 
 GravityConstantInternal     1
-
-AgamaLengthScale         1.0
-AgamaVelocityScale       -0.004822
-# only change to scale the halo, length+velocity => Mass
-AgamaMassScale           1.0
 
 #---Cosmological Parameters 
 ComovingIntegrationOn	    0 # no cosmology

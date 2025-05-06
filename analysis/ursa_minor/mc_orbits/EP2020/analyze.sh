@@ -1,5 +1,5 @@
 #!/bin/bash
-out_dir=$DWARFS_ROOT/simulations/ursa_minor/mc_orbits/vasiliev24_M11/
+out_dir=$DWARFS_ROOT/simulations/ursa_minor/mc_orbits/EP2020/
 rm simulation
 rm *.hdf5
 

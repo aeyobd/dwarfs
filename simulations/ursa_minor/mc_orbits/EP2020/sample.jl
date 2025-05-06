@@ -12,7 +12,7 @@ obs_props = TOML.parsefile(obs_props_filename)
 
 function (@main)(ARGS)
     @info("Sampling initial conditions")
-    snap = sample(obs_props)
+    snap = sample(obs_props, 100_000)
 
     lguys.write("initial.hdf5", snap)
 

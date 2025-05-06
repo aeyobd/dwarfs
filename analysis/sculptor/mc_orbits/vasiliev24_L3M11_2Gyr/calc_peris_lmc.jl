@@ -2,13 +2,6 @@ using LilGuys
 using DataFrames, CSV
 using PyFITS
 
-
-if length(ARGS) > 0
-    t_max = ARGS[1]
-else
-    t_max = 0
-end
-
 filename = "combined.hdf5"
 out = Output(filename)
 
