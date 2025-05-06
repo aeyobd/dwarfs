@@ -17,8 +17,8 @@ iso_stars_path="../../stars/"
 stars_file=$iso_stars_path/$1/probabilities_stars.hdf5
 
 out_path="../combined.hdf5"
-project_snapshot.jl $out_path $stars_file $1/final.fits -i $idx_f
-project_snapshot.jl $out_path $stars_file $1/initial.fits -i 1 --distance $dist
+#project_snapshot.jl $out_path $stars_file $1/final.fits -i $idx_f
+#project_snapshot.jl $out_path $stars_file $1/initial.fits -i 1 --distance $dist
 
 
 out_path=$iso_path

@@ -32,13 +32,13 @@ using LilGuys; FIGDIR = "figures"
 using OrderedCollections
 
 # ╔═╡ aea6dd0e-930c-4ccf-9fd4-276c50c2d861
-rv_file = "rv_pace+20_x_2c_psat_0.2.fits"
+rv_file = "old_rv_memb.fits"
 
 # ╔═╡ ff6df679-7ec8-4822-a6ad-3d5faf590765
-n_samples = 10000
+n_samples = 1000
 
 # ╔═╡ f282dbef-9276-4c1c-af3f-366d8b51aa38
-n_threads = 16
+n_threads = 4
 
 # ╔═╡ 729206f5-72fb-4592-bc6d-92f39d9ca305
 sampler = NUTS(0.65)
@@ -100,6 +100,7 @@ rv0 = obs_properties["radial_velocity"] .- Δv_gsr
 memb_stars = let
 	rv_meas = read_fits(joinpath(data_dir, rv_file))
 
+	# filter!(row->!ismissing(row.pmra), rv_meas)
 	RVUtils.add_gsr!(rv_meas, 
 					 distance=obs_properties["distance"],
 					pmra=obs_properties["pmra"], pmdec=obs_properties["pmdec"])

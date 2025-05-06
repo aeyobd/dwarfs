@@ -5,4 +5,4 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-paint_stars.jl distribution_function.hdf5 energies.hdf5 $1/profile.toml $1/probabilities --r-max 100 > $1/paint.log 2>&1
+paint_stars.jl distribution_function.hdf5 energies.hdf5 $1/profile.toml $1/probabilities --r-max 100 
