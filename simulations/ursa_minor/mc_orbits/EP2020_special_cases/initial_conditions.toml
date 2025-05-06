@@ -22,6 +22,6 @@ name = "largeperi"
 ra               =  227.2420
 dec              =   67.2221
 distance         =   75.172
-pmra             =    0.093
+pmra             =  -0.093
 pmdec            =   0.107
 radial_velocity  =  -245.159
