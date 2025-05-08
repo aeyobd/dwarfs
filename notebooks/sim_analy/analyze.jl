@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -45,6 +45,12 @@ md"""
 # Setup
 """
 
+# ╔═╡ 2b2a1cc7-d005-4bef-b2cf-5d26b8c203a0
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ a16571bd-d231-4d70-a077-3983ea847833
+import LinearAlgebra: cross
+
 # ╔═╡ 5f2e646b-a7aa-453a-8afd-30b81ef07ff3
 function notebook_inputs(; kwargs...)
 	return PlutoUI.combine() do Child
@@ -66,8 +72,8 @@ end
 
 # ╔═╡ d3bd61d8-1e90-4787-b892-d90717f6be6e
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="ursa_minor"),
-	modelname = TextField(60, default="1e6_v37_r5.0/orbit_"),
+	galaxyname = TextField(default="sculptor"),
+	modelname = TextField(60, default="1e6_V31_r3.2/orbit_"),
 ))
 
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
@@ -117,14 +123,9 @@ snap_f = out[idx_f]
 
 # ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
 begin 
-	profiles = LilGuys.read_structs_from_hdf5(joinpath(model_dir, "profiles.hdf5"), LilGuys.MassProfile3D)
-
-	snap_idx = parse.(Int, first.(profiles))
-
-	profiles = last.(profiles)
-
-	profiles = profiles[sortperm(snap_idx)]
-	snap_idx = sort(snap_idx)
+	profiles = LilGuys.read_ordered_structs(joinpath(model_dir, "profiles.hdf5"), LilGuys.MassProfile3D)
+	snap_idx = first.(profiles)
+	profiles = last.(profiles);
 end
 
 # ╔═╡ 8dae2e01-652b-4afc-b040-dd2ba1c6eedb
@@ -133,8 +134,23 @@ prof_i = profiles[1]
 # ╔═╡ b64c1caf-9ee0-4633-bd52-0258557b8847
 prof_f = profiles[end]
 
+# ╔═╡ b0e336df-678a-4406-b294-0c353f3c0c38
+dens_profiles = LilGuys.read_ordered_structs(joinpath(model_dir, "profiles_densities.hdf5"), LilGuys.DensityProfile3D) .|> last
+
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
+
+# ╔═╡ 06fd0062-6c89-4428-8970-676749e4e072
+function enclosed_mass(mass_profile, R)
+	mass = mass_profile.v_circ .^ 2 .* mass_profile.radii
+	return LilGuys.lerp(mass_profile.radii, mass)(R)
+end
+
+# ╔═╡ 9d6459eb-d0f5-4e2c-96de-191ede510442
+prof_i.v_circ
+
+# ╔═╡ 2a3eb14e-d54e-4c79-a5e8-70d6ac607116
+enclosed_mass(prof_i, 1)
 
 # ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
 let
@@ -148,12 +164,12 @@ let
 
 	#ax.yticks = [0.1:0.1:1;]
 
-	for r in [Inf, 10, 1]
-		M_dm_h = LilGuys.calc_M_in(out, r)
-		scatter!(times[1:10:end], M_dm_h ./ M_dm_h[1], label="$r")
+	for r in [100, 10, 1, 0.1]
+		M_dm_h = enclosed_mass.(profiles, [r])
+		lines!(times, M_dm_h ./ M_dm_h[1], label="$r")
 	end
 	
-	Legend(fig[1, 2], ax)
+	Legend(fig[1, 2], ax, "r/kpc")
 	
 	@savefig "boundmass"
 
@@ -175,6 +191,9 @@ v_max = [f.v_circ_max for f in profiles]
 # ╔═╡ d57501a1-4764-4b23-962f-2d37547d7bcc
 r_max = [f.r_circ_max for f in profiles]
 
+# ╔═╡ 04ca92d1-f64b-4d2c-a079-30f89866fda9
+prof_i
+
 # ╔═╡ db320665-f46d-4aed-a2b2-4b39bcb605c5
 let 
 	fig = Figure()
@@ -190,12 +209,12 @@ let
 	)
 
 	r_model = 10 .^ LinRange(-2, 3, 1000)
-	v_model = calc_v_circ.(halo, r_model)
+	v_model = v_circ.(halo, r_model)
 	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="analytic")
 	
-	lines!(log10.(prof_i.r_circ), prof_i.v_circ * V2KMS, label="initial")
+	lines!(log10.(prof_i.radii), prof_i.v_circ * V2KMS, label="initial")
 
-	lines!(log10.(prof_f.r_circ), prof_f.v_circ * V2KMS, label="final")
+	lines!(log10.(prof_f.radii), prof_f.v_circ * V2KMS, label="final")
 
 
 	α = 0.4
@@ -221,12 +240,12 @@ let
 	prof = profiles[argmin(abs.(snap_idx .- i))]
 
 	
-	fig = Figure(size=(700, 500))
+	fig = Figure(size=(7*72, 5*72))
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", 
 		ylabel=L"V_\textrm{circ}",
 	title="time = $(out.times[i]  * T2GYR) Gyr")
 
-	r, v = LilGuys.calc_v_circ(snap)
+	r, v = LilGuys.v_circ(snap)
 	scatter!(log10.(r), v * V2KMS)
 
 	fit = LilGuys.fit_v_r_circ_max(snap)
@@ -235,7 +254,7 @@ let
 
 	lines!(log10.(r_fit), v_fit * V2KMS, linewidth=3, color=COLORS[2])
 
-	r_fit = 10 .^ LinRange(prof.log_r[1], prof.log_r[end], 1000)
+	r_fit = 10 .^ LinRange(log10(prof.radii[1]), log10(prof.radii[end]), 1000)
 	v_fit = LilGuys._v_circ_max_model(r_fit, [fit.r_circ_max, fit.v_circ_max])
 	lines!(log10.(r_fit), v_fit * V2KMS, color=COLORS[2])
 	
@@ -277,7 +296,13 @@ md"""
 """
 
 # ╔═╡ 3aa62ecf-495a-434b-8008-02783bd5b56e
-prof_f_allpart = LilGuys.MassProfile3D(snap_f, filt_bound=false)
+prof_f_allpart = LilGuys.DensityProfile3D(snap_f, filt_bound=false)
+
+# ╔═╡ 79d8fbe1-09fb-4ed7-b75d-a9ac3a0fa9c5
+dens_prof_i = dens_profiles[idx_i]
+
+# ╔═╡ 71a9e730-68fd-4047-a647-54a95a448c01
+dens_prof_f = dens_profiles[idx_f]
 
 # ╔═╡ dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 let 
@@ -285,15 +310,15 @@ let
 	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\log\rho_\textrm{DM}",
 	limits=((-2, 2.5), (-10, 0)))
 
-	lines!(prof_i.log_r, log10.(prof_i.rho), label="initial")
-	lines!(prof_f.log_r, log10.(prof_f.rho), label="final")
+	lines!(dens_prof_i.log_r, log10.(dens_prof_i.rho), label="initial")
+	lines!(dens_prof_f.log_r, log10.(dens_prof_f.rho), label="final")
 
 	
-	lines!(prof_f_allpart.log_r, log10.(prof_f_allpart.rho), label="final (all particles)", color=COLORS[2], linestyle=:dash)
+	lines!(prof_f_allpart.log_r, log10.(prof_f_allpart.rho), label="final (all particles)", color=COLORS[2], linestyle=:solid)
 
 	#LP.plot_ρ!(halo, linestyle=:dot, label="NFW", color=:black)
 
-	axislegend(ax)
+	axislegend(ax, position=:lb)
 	#lines!([0, 0] .+ log10.(r_break), [-11.5, -10],  color=:black)
 	#scatter!(log10.(r_break), -10, marker=:utriangle, color=:black)
 
@@ -304,6 +329,9 @@ let
 	# only include bound points in profile...
 end
 
+# ╔═╡ 4a8fb43f-e2b1-4fa3-a99c-aa6fff4b727f
+dens_profiles[1].time
+
 # ╔═╡ 871f7679-dbaa-4901-85ab-357b58588d46
 let 
 	fig = Figure()
@@ -312,8 +340,8 @@ let
 
 	colorrange = (prof_i.time, prof_f.time) .* T2GYR
 
-	for prof in profiles[1:5:end]
-		lines!(prof.log_r, log10.(prof.rho), color=prof.time * T2GYR, colorrange=colorrange)
+	for (i, prof) in enumerate(dens_profiles[1:1:end])
+		lines!(prof.log_r, log10.(middle.(prof.rho)), color=profiles[i].time * T2GYR, colorrange=colorrange)
 	end
 	
 	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
@@ -334,7 +362,7 @@ let
 	colorrange = (prof_i.time, prof_f.time) .* T2GYR
 
 	for prof in profiles[1:1:end]
-		lines!(log10.(prof.r_circ), log10.(prof.v_circ * V2KMS), color=prof.time * T2GYR, colorrange=colorrange)
+		lines!(log10.(prof.radii), log10.(prof.v_circ * V2KMS), color=prof.time * T2GYR, colorrange=colorrange)
 	end
 	
 	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
@@ -413,13 +441,13 @@ let
 	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-1, 1e2)),
 		xlabel=L"\epsilon", ylabel=L"dN/d\epsilon")
 
-	x = LilGuys.calc_ϵ(snap_i)
+	x = LilGuys.specific_energy(snap_i)
 	bins, values, errs = LilGuys.histogram(x[x .> 0], 
 		normalization=:pdf)
 	
 	scatter!(midpoints(bins), values, label="initial")
 
-	x = LilGuys.calc_ϵ(snap_f)
+	x = LilGuys.specific_energy(snap_f)
 	bins, values, errs = LilGuys.histogram(x[x .> 0], 
 		normalization=:pdf)
 	
@@ -430,7 +458,7 @@ let
 end
 
 # ╔═╡ e385f8cf-faa1-49bf-88c9-15c3d2489f90
-let 
+if length(out[1].index) < 1e7 
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log r / kpc", ylabel=L"\beta",
 	limits=((-2, 2.5), (-2, 1))
@@ -442,13 +470,13 @@ let
 
 	for i in 1:30:length(out)
 		snap = out[i]
-		bins = LilGuys.quantile(calc_r(snap), LinRange(0, 1, 100))
+		bins = LilGuys.quantile(radii(snap), LinRange(0, 1, 100))
 	
-		σs, β = LilGuys.calc_β_prof(snap, r_bins=bins)
+		σs, β = LilGuys.β_prof(snap, r_bins=bins)
 		x = log10.(midpoints(bins))
 		lines!(ax, x, β, color=i, colorrange=(1, length(out)))
 		
-		lines!(ax2, x, σs .* V2KMS^2, color=i, colorrange=(1, length(out)))
+		lines!(ax2, x, sqrt.(σs) .* V2KMS, color=i, colorrange=(1, length(out)))
 	end
 
 
@@ -459,26 +487,28 @@ end
 # ╔═╡ 5af581bc-613c-4728-9626-dbef0ebaef7d
 let 
 	snap_test = deepcopy(snap_i)
-	v_test = calc_v(snap_test)
+	v_test = LilGuys.speeds(snap_test)
 
-	bins = LilGuys.quantile(calc_r(snap_test), LinRange(0, 1, 30))
+	bins = LilGuys.quantile(radii(snap_test), LinRange(0, 1, 30))
 
-	println(1 .- LilGuys.calc_β_prof(snap_test, r_bins=bins)[2])
+	println(1 .- LilGuys.β_prof(snap_test, r_bins=bins)[2])
 
 	snap_test.positions .-= snap_test.x_cen
 	snap_test.velocities .-= snap_test.v_cen
 	snap_test.x_cen .= zeros(3)
 	snap_test.v_cen .= zeros(3)
 
-	println(1 .- LilGuys.calc_β_prof(snap_test, r_bins=bins)[2])
+	println(1 .- LilGuys.β_prof(snap_test, r_bins=bins)[2])
 end
 
 # ╔═╡ Cell order:
 # ╟─bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
-# ╟─d3bd61d8-1e90-4787-b892-d90717f6be6e
+# ╠═d3bd61d8-1e90-4787-b892-d90717f6be6e
 # ╟─99f96d71-b543-4680-a022-2195e6cca897
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
+# ╠═2b2a1cc7-d005-4bef-b2cf-5d26b8c203a0
 # ╠═987c3284-5a8f-463e-9c68-9011b348e076
+# ╠═a16571bd-d231-4d70-a077-3983ea847833
 # ╠═5f2e646b-a7aa-453a-8afd-30b81ef07ff3
 # ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
 # ╠═3db38875-fe22-4cfd-8c5a-47f4a0fa7f3a
@@ -496,18 +526,26 @@ end
 # ╠═8dae2e01-652b-4afc-b040-dd2ba1c6eedb
 # ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
 # ╠═2470e05f-9215-45e4-88fc-daab0638272f
+# ╠═b0e336df-678a-4406-b294-0c353f3c0c38
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
-# ╟─0fa11815-3ab0-4b19-9be7-186b7c2c1063
+# ╠═06fd0062-6c89-4428-8970-676749e4e072
+# ╠═9d6459eb-d0f5-4e2c-96de-191ede510442
+# ╠═2a3eb14e-d54e-4c79-a5e8-70d6ac607116
+# ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╠═ef2274ba-0220-49f5-8478-d5eac824c3ee
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
 # ╠═e6fc3297-c1b7-40a4-b2bb-98490a42604a
 # ╠═d57501a1-4764-4b23-962f-2d37547d7bcc
+# ╠═04ca92d1-f64b-4d2c-a079-30f89866fda9
 # ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
 # ╠═c068c177-e879-4b8e-b1af-18690af9b334
 # ╠═245721a6-01aa-43e7-922d-ed5da02207c1
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
 # ╠═3aa62ecf-495a-434b-8008-02783bd5b56e
+# ╠═79d8fbe1-09fb-4ed7-b75d-a9ac3a0fa9c5
+# ╠═71a9e730-68fd-4047-a647-54a95a448c01
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
+# ╠═4a8fb43f-e2b1-4fa3-a99c-aa6fff4b727f
 # ╠═871f7679-dbaa-4901-85ab-357b58588d46
 # ╠═48e54b34-4b22-4609-8928-ba6d8d027370
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd

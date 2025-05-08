@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -49,6 +49,9 @@ import DensityEstimators as DE
 # ╔═╡ f0d2b68a-fae2-4486-a434-a8816e400e84
 import TOML
 
+# ╔═╡ 5c7e710a-c7ed-452a-891b-eae8bf9e6d49
+CairoMakie.activate!(type=:png)
+
 # ╔═╡ da3a9778-0f7c-482b-831b-d93a0d80a48c
 function notebook_inputs(; kwargs...)
 	return PlutoUI.combine() do Child
@@ -70,8 +73,8 @@ end
 
 # ╔═╡ ab06c999-3ff6-4580-a979-f0ddeb466569
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="ursa_minor"),
-	modelname = TextField(60, default="1e6_v37_r5.0/orbit"),
+	galaxyname = TextField(default="sculptor"),
+	modelname = TextField(60, default="1e6_V31_r3.2/orbit_mean"),
 	starsname = TextField(default="exp2d_rs0.13"),
 ))
 
@@ -93,10 +96,8 @@ stars_dir_out = joinpath(model_dir, "stars/$starsname")
 # ╔═╡ 64350409-6bae-4e1f-be11-b2ec7d48d1f1
 FIGDIR = joinpath(stars_dir_out,  "figures")
 
-# ╔═╡ ff99e841-7cb0-4f86-8ac8-9cd19be7358f
-if isdir(stars_dir_out) && !isdir(FIGDIR)
-	mkdir(FIGDIR)
-end
+# ╔═╡ 84755c6a-8a91-4d9a-a6ec-895debcf6608
+readdir(stars_dir_out)
 
 # ╔═╡ 1b5c00d2-9df6-4a9c-ae32-05abcbf0e41a
 paramsfile = joinpath(stars_dir_in, "profile.toml")
@@ -172,9 +173,9 @@ let
 	fig = Figure(size=(700, 700))
 	r_max = 100
 
-	x = lguys.get_x(snap_f)
-	y = lguys.get_y(snap_f)
-	z = lguys.get_z(snap_f)
+	x = lguys.x_position(snap_f)
+	y = lguys.y_position(snap_f)
+	z = lguys.z_position(snap_f)
 	ps = snap_f.weights
 	bins = LinRange(-r_max, r_max, 300)
 
@@ -297,10 +298,10 @@ let
 		xlabel=L"\epsilon", ylabel="count")
 
 	bins = 200
-	stephist!(lguys.calc_ϵ(snap_i), bins=bins, weights=snap_i.weights,
+	stephist!(lguys.specific_energy(snap_i), bins=bins, weights=snap_i.weights,
 		label = "initial"
 	)
-	es = lguys.calc_ϵ(snap_f)
+	es = lguys.specific_energy(snap_f)
 	filt = es .> 0
 	es = es[filt]
 	stephist!(es, bins=bins, weights = snap_f.weights[filt],
@@ -318,7 +319,7 @@ md"""
 
 # ╔═╡ a1138e64-5fa5-4a0e-aeef-487ee78a7adc
 function plot_ρ_s!(snap; bins=100, kwargs...)
-	rs = lguys.calc_r(snap.positions, snap.x_cen)
+	rs = lguys.radii(snap.positions, snap.x_cen)
 	r, ρ = lguys.calc_ρ_hist(rs, bins, weights=snap.weights)
 	lines!(log10.(lguys.midpoints(r)), log10.(ρ); kwargs...)
 end
@@ -327,23 +328,23 @@ end
 profile = lguys.load_profile(params)
 
 # ╔═╡ 91daae57-94dc-4a8e-b981-75f1406e0768
-ρ_s(r) = lguys.calc_ρ(profile, r)
+ρ_s(r) = lguys.density(profile, r)
 
 # ╔═╡ 44e065d8-e85b-4972-adc7-340a2af22a54
-prof_i = lguys.StellarProfile3D(snap_i)
+prof_i = lguys.StellarDensity3D(snap_i)
 
 # ╔═╡ 11d8c251-28ae-412c-8a96-646e19adef56
-prof_f = lguys.StellarProfile3D(snap_f)
+prof_f = lguys.StellarDensity3D(snap_f)
 
 # ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
 function v_rad_hist(snap, bins=100)
 
 	mass = snap.weights
 
-	v_rad = lguys.calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad .* mass)
-	_, counts, _ = lguys.histogram(logr, x_bins, weights=mass)
+	v_rad = lguys.radial_velocities(snap)
+	logr = log10.(lguys.radii(snap))
+	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad .* mass, errors=:weighted)
+	_, counts, _ = lguys.histogram(logr, x_bins, weights=mass, errors=:weighted)
 
 
 	return x_bins, v_bins ./ counts, err ./ counts
@@ -353,9 +354,9 @@ end
 function v_rad_hist_dm(snap, bins=100)
 
 
-	v_rad = lguys.calc_v_rad(snap)
-	logr = log10.(lguys.calc_r(snap))
-	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad)
+	v_rad = lguys.radial_velocities(snap)
+	logr = log10.(lguys.radii(snap))
+	x_bins, v_bins, err = lguys.histogram(logr, bins, weights=v_rad, errors=:weighted)
 	_, counts, _ = lguys.histogram(logr, x_bins)
 
 
@@ -451,9 +452,9 @@ end
 
 # ╔═╡ b4f7cbb0-fb5b-4dc5-b66e-679a8e5b630d
 function calc_σv(snap::lguys.Snapshot; r_max=1)
-	rs = lguys.calc_r(snap)
+	rs = lguys.radii(snap)
 	filt = rs .< r_max
-	vs = lguys.calc_v(snap[filt])
+	vs = lguys.speeds(snap[filt])
 	masses = snap.weights[filt]
 	σ = lguys.std(vs, weights(masses), mean=0) # zero mean
 
@@ -462,7 +463,7 @@ end
 
 # ╔═╡ 422839f0-6da4-46b9-8689-2dd13b03188b
 function calc_σvx(snap::lguys.Snapshot; r_max=1)
-	rs = lguys.calc_r(snap)
+	rs = lguys.radii(snap)
 	filt = rs .< r_max
 	vs = snap[filt].velocities[1, :] .- snap.v_cen[1]
 	masses = snap.weights[filt]
@@ -482,8 +483,8 @@ gaussian(x, μ, σ) = 1/sqrt(2π)* 1/σ * exp(-(x-μ)^2/(2σ^2))
 
 # ╔═╡ c2ccf9de-e3cd-4950-9a4d-6f425d261ccb
 function calc_v_tan(snap)
-	v = lguys.calc_v(snap)
-	v_rad = lguys.calc_v_rad(snap)
+	v = lguys.speeds(snap)
+	v_rad = lguys.radial_velocities(snap)
 	v_tan = @. sqrt(v^2 - v_rad^2)
 	return vec(v_tan)
 end
@@ -499,11 +500,11 @@ let
 	
 	mass = snap.weights
 	v_x = (snap.velocities[1, :] .- snap.v_cen[1]) * V2KMS
-	logr = log10.(lguys.calc_r(snap))
+	logr = log10.(lguys.radii(snap))
 	filt = logr .< logr_max
 
 	h = DE.histogram(v_x[filt], 25,
-		weights=mass[filt], normalization=:pdf, limits=(-vmax, vmax))
+		weights=mass[filt], normalization=:pdf, limits=(-vmax, vmax), errors=:weighted)
 
 
 	fig = Figure()
@@ -531,13 +532,13 @@ end
 Δt = out.times[idx_f] - filter(x->x < out.times[idx_f], orbit_props["t_peris"])[end]
 
 # ╔═╡ 13a87549-1318-494c-9147-3f71095bf2ef
-r_b_kpc = LilGuys.calc_break_radius(σv / V2KMS, Δt)
+r_b_kpc = LilGuys.break_radius(σv / V2KMS, Δt)
 
 # ╔═╡ 1866c280-89c3-4a71-9dbf-50b583360145
 let 
 	fig = Figure()
 
-	ymax = log10(maximum(prof_i.rho))
+	ymax = log10(maximum(middle.(prof_i.rho)))
 	
 	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log \rho_\star", 
 		limits=((-1.9, 1), (ymax - 15, ymax)))
@@ -565,8 +566,8 @@ let
 	snap = snap_f
 	
 	mass = snap.weights
-	v_rad = lguys.calc_v_rad(snap) 
-	logr = log10.(lguys.calc_r(snap))
+	v_rad = lguys.radial_velocities(snap) 
+	logr = log10.(lguys.radii(snap))
 
 	limits = (-2, 3, -100, 100)
 	fig = Figure()
@@ -597,7 +598,7 @@ let
 	)
 	
 	x, y, ye = v_rad_hist(snap_f, 150)
-	errscatter!(lguys.midpoints(x), y * V2KMS, yerr=ye*V2KMS)
+	errorscatter!(lguys.midpoints(x), y * V2KMS, yerror=ye*V2KMS)
 
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
 	text!(log10.(r_b_kpc), -20, text=L"r_b")
@@ -616,7 +617,7 @@ let
 	)
 	
 	x, y, ye = v_rad_hist_dm(snap_f, 200)
-	errscatter!(lguys.midpoints(x), y * V2KMS, yerr=ye*V2KMS)
+	errorscatter!(lguys.midpoints(x), y * V2KMS, yerror=ye*V2KMS)
 
 	vlines!(log10.(r_b_kpc), linestyle=:dash, color=:black)
 	text!(log10.(r_b_kpc), -20, text=L"r_b")
@@ -628,7 +629,7 @@ end
 orbit_props["t_last_peri"]
 
 # ╔═╡ d53669fc-84a1-4138-8445-5f31c3ec44a5
-r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, orbit_props["distance_f"])
+r_b_arcmin = lguys.kpc2arcmin(r_b_kpc, orbit_props["distance_f"])
 
 # ╔═╡ 27184a9d-07c9-4b4d-ad17-74ed279ed4e3
 r_b_arcmin / 60
@@ -645,7 +646,7 @@ function get_M_h(out, rh, skip=1)
 	M = Vector{Float64}(undef, length(idx))
 
 	for (i, i_out) in enumerate(idx)
-		r = calc_r(out[i_out])
+		r = radii(out[i_out])
 		f = r .< rh
 		m = sum(out[i_out].weights[f])
 		M[i] = m
@@ -654,23 +655,20 @@ function get_M_h(out, rh, skip=1)
 	return out.times[idx], M
 end
 
-# ╔═╡ a985bc1a-6bf7-448a-b0d3-61bbac301819
-sum(prof_f.mass_in_shell_err[.!isnan.(prof_f.mass_in_shell_err)])
+# ╔═╡ d96b0478-a925-4a6b-abda-54972141a771
+prof_i.rho
 
 # ╔═╡ ade76f31-e638-4061-bcbc-509d0512b162
-r_h = LilGuys.calc_r_h(profile)
+r_h = LilGuys.r_h(profile)
 
 # ╔═╡ 9729d5e4-5e35-4432-82d0-ff53bd491e6e
 #t_dm_h, M_dm_h = get_M_h(out, n_rh * r_h)
 
-# ╔═╡ 16c7a61a-6ee4-43cb-8a46-136c8e3956dd
-prof_f.bound_mass
-
 # ╔═╡ df229124-325f-4f0c-9cf3-9930002b7767
-profiles = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarProfile)
+profiles = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarDensityProfile)
 
 # ╔═╡ 49052b15-7cfc-488c-974e-7b9c1872d082
-profiles_3D = lguys.read_structs_from_hdf5(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
+profiles_3D = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarDensity3D)
 
 # ╔═╡ 5b23eaca-c5ab-4907-ab92-7cb6bc0e0381
 function get_M_h_fast(profs, rh)
@@ -682,8 +680,9 @@ function get_M_h_fast(profs, rh)
 
 	for i in idx
 		prof = profiles_3D[i].second
-		rs = prof.log_r
-		Ms = cumsum(prof.mass_in_shell)
+		rs = 10 .^ prof.log_r
+		As = 4π/3 * diff((10 .^ prof.log_r_bins) .^ 3)
+		Ms = cumsum(middle.(prof.rho) .* As)
 		M[i] = lguys.lerp(rs, Ms)(log10(rh))
 		times[i] = prof.time
 	end
@@ -694,6 +693,9 @@ end
 
 # ╔═╡ 0f2af99f-355a-4477-aa5c-265dc509d458
 get_M_h_fast(profiles_3D, 1 * r_h)
+
+# ╔═╡ c16d9d8a-8151-4bc6-a86b-7996ebc20e53
+prof_scalars = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles_3d_scalars.hdf5"), lguys.StellarScalars)
 
 # ╔═╡ d97d7d5d-6f6d-4f4b-97fe-bb825b71ee80
 let
@@ -719,7 +721,7 @@ let
 	
 	times = [(prof.time .- t_f) * T2GYR for (_, prof) in profiles_3D]
 
-	boundmass = [prof.bound_mass  for (_, prof) in profiles_3D]
+	boundmass = [prof.bound_mass  for (_, prof) in prof_scalars]
 
 	scatter!(times, log10.(boundmass), label="bound")
 
@@ -745,7 +747,7 @@ let
 
 	times = [(prof.time .- t_f) * T2GYR for (_, prof) in profiles_3D]
 
-	vs = [prof.sigma_vx * V2KMS for (_, prof) in profiles_3D]
+	vs = [prof.sigma_v * V2KMS for (_, prof) in prof_scalars]
 
 	scatter!(times, vs)
 
@@ -772,8 +774,8 @@ let
 	)
 
 	colorrange = (prof_i.time .- t_f, prof_f.time .- t_f) .* T2GYR
-	for (_, prof) in profiles
-		lines!(prof.log_r, prof.log_Sigma, color=(prof.time .- t_f)* T2GYR, colorrange=colorrange)
+	for (i, prof) in profiles
+		lines!(prof.log_R, prof.log_Sigma, color=(out.times[i] .- t_f)* T2GYR, colorrange=colorrange)
 	end
 
 
@@ -827,9 +829,10 @@ end
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
 # ╠═283d335c-2941-4dc6-9a8e-c47b0864087c
+# ╠═5c7e710a-c7ed-452a-891b-eae8bf9e6d49
 # ╠═da3a9778-0f7c-482b-831b-d93a0d80a48c
 # ╠═64350409-6bae-4e1f-be11-b2ec7d48d1f1
-# ╠═ff99e841-7cb0-4f86-8ac8-9cd19be7358f
+# ╠═84755c6a-8a91-4d9a-a6ec-895debcf6608
 # ╠═2106bfe1-a53d-4ef8-9111-e191a8056351
 # ╠═f0d74eaa-81e9-4b04-9765-24a0935b1430
 # ╠═9c42eb0a-029d-46f7-afb0-de03f82c5889
@@ -895,15 +898,15 @@ end
 # ╟─9b75409d-55f5-47c3-ab63-8168d31d3d54
 # ╠═e26b40a5-b69f-4c9c-baf3-0d8aea717a63
 # ╠═5b23eaca-c5ab-4907-ab92-7cb6bc0e0381
-# ╠═a985bc1a-6bf7-448a-b0d3-61bbac301819
+# ╠═d96b0478-a925-4a6b-abda-54972141a771
 # ╠═ade76f31-e638-4061-bcbc-509d0512b162
 # ╠═9729d5e4-5e35-4432-82d0-ff53bd491e6e
 # ╠═0f2af99f-355a-4477-aa5c-265dc509d458
-# ╠═16c7a61a-6ee4-43cb-8a46-136c8e3956dd
 # ╠═d97d7d5d-6f6d-4f4b-97fe-bb825b71ee80
 # ╠═d42795d0-bd69-4c2c-be5b-e27e85199ee3
 # ╠═df229124-325f-4f0c-9cf3-9930002b7767
 # ╠═49052b15-7cfc-488c-974e-7b9c1872d082
+# ╠═c16d9d8a-8151-4bc6-a86b-7996ebc20e53
 # ╠═60ffd004-9770-4b96-8845-0d694cfbced8
 # ╠═0112797c-ecb8-4ea7-8a66-365f9fbe952e
 # ╠═b0b2948a-0299-4b90-83be-4bdcf2a75eaf

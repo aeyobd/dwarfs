@@ -4,6 +4,8 @@ source paths.sh
 
 set -xe
 
+ln -s $out_path simulation
+
 echo out $out_path
 ls $out_path
 combine_outputs.py $out_path/out/
