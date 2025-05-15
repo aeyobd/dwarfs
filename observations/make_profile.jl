@@ -59,7 +59,7 @@ function main(args)
 
 
     profile_kwargs = LilGuys.dict_to_tuple(profile_kwargs)
-    prof = LilGuys.StellarDensityProfile(members.R_ell; R_units="arcmin", profile_kwargs...)
+    prof = LilGuys.SurfaceDensityProfile(members.R_ell; R_units="arcmin", profile_kwargs...)
 
     open(args["output"], "w") do f
         print(f, prof)

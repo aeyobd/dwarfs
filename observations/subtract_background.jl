@@ -65,7 +65,7 @@ profpath = joinpath(galaxyname, "density_profiles", profilename)
 
 
 # ╔═╡ 7b07b18f-8048-4947-b72c-ffaf69306a44
-prof_all = LilGuys.StellarDensityProfile(profpath)
+prof_all = LilGuys.SurfaceDensityProfile(profpath)
 
 # ╔═╡ d0560f4f-39e5-48d1-a361-7a9f513e0fa0
 prof = LilGuys.filter_empty_bins(prof_all)
@@ -114,7 +114,7 @@ Sigma_bg_u = LilGuys.Measurement(Sigma_bg, Sigma_bg_err)
 begin
 	Sigma_sub = 10 .^ prof.log_Sigma .- 10 .^ Sigma_bg_u
 	log_Sigma_sub = log10.(Sigma_sub[1:end-n_bins_bg-n_bins_cut])
-	prof_sub = LilGuys.StellarDensityProfile(
+	prof_sub = LilGuys.SurfaceDensityProfile(
 		R_units=prof.R_units,
 		log_R=prof.log_R[1:end-n_bins_bg-n_bins_cut],
 		log_R_bins=prof.log_R_bins[1:end-n_bins_bg-n_bins_cut],
@@ -150,7 +150,7 @@ let
 
 	errorscatter!(prof.log_R, LilGuys.middle.(prof.log_Sigma), 
 		yerror=LilGuys.error_interval.(prof.log_Sigma),
-		size=2
+		markersize=2
 				 )
 
 	fig

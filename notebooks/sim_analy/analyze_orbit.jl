@@ -27,6 +27,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ 4018f9cb-b54f-408a-8047-cc995a167034
+using OrderedCollections
+
 # ╔═╡ cd43d649-1d52-46a7-a621-68c8122fce6d
 using PyFITS
 
@@ -646,17 +649,20 @@ md"""
 # ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 let
 	
-	orbital_properties = Dict(
+	orbital_properties = OrderedDict(
 		"pericentre" => r_peri,
 		"apocentre" => r[idx_apos[idx_apos .< idx_f]],
 		"period" => period,
 		"idx_f" => idx_f,
-		"distance_f" => obs_c.distance[idx_f],
 		"idx_peri" => idx_peri,
 		"t_last_peri" => t_f - t_peri,
 		# these three are for the final stream coordinate frame
-		"ra0" => ra0,
-		"dec0" => dec0,
+		"ra_f" => ra0,
+		"dec_f" => dec0,
+		"distance_f" => obs_c.distance[idx_f],
+		"pmra_f" => obs_c.pmra[idx_f],
+		"pmdec_f" => obs_c.pmdec[idx_f],
+		"radial_velocity_f" => obs_c.pmdec[idx_f],
 		"theta0" => θ0,
 		"idx_peris" => idx_peris, 
 		"idx_apos" => idx_apos,
@@ -681,6 +687,7 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═d94663e8-b30e-4712-8a3e-6ef7f954f141
 # ╟─27577252-53dc-415c-b9a1-82155ef9e4ca
 # ╠═061b1886-1878-11ef-3806-b91643300982
+# ╠═4018f9cb-b54f-408a-8047-cc995a167034
 # ╠═cd43d649-1d52-46a7-a621-68c8122fce6d
 # ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600

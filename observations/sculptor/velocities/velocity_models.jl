@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
-rv_file = "rv_combined_x_wide_2c_psat_0.2.fits"
+rv_file = "rv_combined_x_wide_2c_psat_j24_0.2.fits"
 
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
 n_samples = 10000
@@ -378,6 +378,24 @@ median(θs)
 # ╔═╡ 4d7e7b96-74a0-4066-88cf-739c043c7f47
 summary_gradient = RVUtils.summarize(samples_gradient)
 
+# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
+md"""
+code below validates induced PM gradient (should be approx 2).
+"""
+
+# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
+θ_m = median(df_gradient.Θ_grad)
+
+# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
+xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m) .* 60
+
+
+# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
+icrs0 = lguys.ICRS(obs_properties)
+
+# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
+vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
+
 # ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
 @savefig "v_gradient_derived" let
 	fig = Figure()
@@ -399,24 +417,6 @@ summary_gradient = RVUtils.summarize(samples_gradient)
 
 	fig
 end
-
-# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
-md"""
-code below validates induced PM gradient (should be approx 2).
-"""
-
-# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
-θ_m = median(df_gradient.Θ_grad)
-
-# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
-xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m) .* 60
-
-
-# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
-icrs0 = lguys.ICRS(obs_properties)
-
-# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
-vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
 
 # ╔═╡ af0d2050-b42e-4a7f-aabb-5b08d23381e9
 lguys.transform(ICRS, lguys.GSR(ra=icrs0.ra + 2/vec_pm[1] *cos(icrs0.dec), dec=icrs0.dec + 2/vec_pm[2], distance=icrs0.distance, radial_velocity=0)).radial_velocity  .- Δv_gsr

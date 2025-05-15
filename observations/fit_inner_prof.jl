@@ -105,7 +105,7 @@ end
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="galaxy"),
-	profilename = TextField(default="jax_2c_eqw_profile.toml")
+	profilename = TextField(default="jax_eqw_profile.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -142,7 +142,7 @@ md"""
 
 # ╔═╡ 20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
 begin
-	prof_in = LilGuys.StellarDensityProfile(joinpath(galaxyname, "density_profiles/$(profilename)"))
+	prof_in = LilGuys.SurfaceDensityProfile(joinpath(galaxyname, "density_profiles/$(profilename)")) |> LilGuys.filter_empty_bins
 	if prof_in.log_m_scale != 0
 		prof_in.log_Sigma .-= prof_in.log_m_scale
 		prof_in.notes["normalization"] = "none"
@@ -397,6 +397,28 @@ struct MCMCFit
 	lp::Float64
 end
 
+# ╔═╡ 47ab55c6-e202-47a0-b1d5-684c9a1fef5d
+"""
+	sample_model(density_model; prof, kwargs...)
+
+Samples the provided density model assuming observations in `prof`. 
+Kwargs passed to turing.
+"""
+function sample_model(density_model::DensityModel; 
+		prof=prof, 
+		kwargs...
+	)
+	
+	samples = sample_model(density_model.turing_model, density_model.log_Σ, prof; kwargs...)
+	
+	summary = summarize_chain(samples)
+
+	# easier to reconstruct model here for chi2
+	fit = MCMCFit(density_model, samples, summary, NaN, get_lp(samples))
+	χ2 = get_χ2(fit, prof)
+	return 	MCMCFit(density_model, samples, summary, χ2, get_lp(samples))
+end
+
 # ╔═╡ 3981b6f9-7ace-4de9-b72d-10168512689c
 """
 	sample_model(model, log_Σ, prof; threads, chains, kwargs...)
@@ -482,28 +504,6 @@ function summarize_chain(chain; p=0.16)
 
 	select!(summary, :parameters, :median, :err_low, :err_high, Not([:parameters, :median, :err_low, :err_high]))
 	return summary
-end
-
-# ╔═╡ 47ab55c6-e202-47a0-b1d5-684c9a1fef5d
-"""
-	sample_model(density_model; prof, kwargs...)
-
-Samples the provided density model assuming observations in `prof`. 
-Kwargs passed to turing.
-"""
-function sample_model(density_model::DensityModel; 
-		prof=prof, 
-		kwargs...
-	)
-	
-	samples = sample_model(density_model.turing_model, density_model.log_Σ, prof; kwargs...)
-	
-	summary = summarize_chain(samples)
-
-	# easier to reconstruct model here for chi2
-	fit = MCMCFit(density_model, samples, summary, NaN, get_lp(samples))
-	χ2 = get_χ2(fit, prof)
-	return 	MCMCFit(density_model, samples, summary, χ2, get_lp(samples))
 end
 
 # ╔═╡ 6c59342a-36b8-458b-8b17-92b0f18afb7d
@@ -789,6 +789,9 @@ plot_chains(mcmc_fit_exp2d_inner.samples)
 # ╔═╡ 6518f711-4912-421f-b169-7b7d4fb365e5
 pairplot(mcmc_fit_exp2d_inner.samples)
 
+# ╔═╡ aaba5e19-ec3b-4a08-8114-4e2052e3dc6a
+10^0.922 * 1.67 / sqrt(0.45)
+
 # ╔═╡ 44500a4e-9be6-486b-94e7-364b1c64749a
 let
 	fig = plot_samples_residuals(mcmc_fit_exp2d_inner)
@@ -823,49 +826,6 @@ end
 
 # ╔═╡ 37dfb46d-e6d5-4e45-91e5-75b58c246e49
 α = LilGuys.R_h(LilGuys.Exp2D())
-
-# ╔═╡ de7eb968-6616-491e-b258-d3f8be1134e8
-md"""
-# Old Fits
-"""
-
-# ╔═╡ 6f101561-2262-4012-9e17-aae2bd873d95
-all_fits = OrderedDict(
-	"exp2d" => mcmc_fit_exp2d,
-	"exp2d_inner" => mcmc_fit_exp2d_inner,
-)
-
-# ╔═╡ a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
-begin
-	derived_props = OrderedDict()
-
-	for (name, fit) in all_fits
-		for argname in [fit.model.argnames; :log_σ]
-			i = findfirst(fit.summary.parameters .== argname)
-
-			derived_props["$(argname)_$(name)"] = fit.summary.median[i]
-			derived_props["$(argname)_$(name)_em"] = fit.summary.err_low[i]
-			derived_props["$(argname)_$(name)_ep"] = fit.summary.err_high[i]
-		end
-		derived_props["chi2_$name"] = fit.χ2
-		derived_props["lp_$name"] = fit.lp
-		derived_props["num_params_$name"] = length(fit.model.argnames)
-	end
-
-	derived_props
-end
-
-# ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
-import TOML
-
-# ╔═╡ 367580e2-6b3f-43fd-aa85-78e818375778
-obs_props = TOML.parsefile("$galaxyname/observed_properties.toml")
-
-# ╔═╡ 62f7e3e3-ae56-4aee-a059-a2a511735d04
-log_R_s_in = log10(obs_props["r_h"] / α)
-
-# ╔═╡ 4f0a4093-957d-44a9-94ba-9158910ad381
-log_R_s_err = 10 * get(obs_props, "r_h_em", get(obs_props, "r_h_err", NaN)) / obs_props["r_h"] / log(10) 
 
 # ╔═╡ dddcca98-ba5d-4b57-ac09-bed82f0d8bba
 @model function turing_model_double_exp2d(exp2d_log_Σ, log_r, log_Σ, log_Σ_err)
@@ -922,11 +882,57 @@ let
 	fig
 end
 
+# ╔═╡ de7eb968-6616-491e-b258-d3f8be1134e8
+md"""
+# Old Fits
+"""
+
+# ╔═╡ 6f101561-2262-4012-9e17-aae2bd873d95
+all_fits = OrderedDict(
+	"exp2d" => mcmc_fit_exp2d,
+	"exp2d_inner" => mcmc_fit_exp2d_inner,
+)
+
+# ╔═╡ a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
+begin
+	derived_props = OrderedDict()
+
+	for (name, fit) in all_fits
+		for argname in [fit.model.argnames; :log_σ]
+			i = findfirst(fit.summary.parameters .== argname)
+
+			derived_props["$(argname)_$(name)"] = fit.summary.median[i]
+			derived_props["$(argname)_$(name)_em"] = fit.summary.err_low[i]
+			derived_props["$(argname)_$(name)_ep"] = fit.summary.err_high[i]
+		end
+		derived_props["chi2_$name"] = fit.χ2
+		derived_props["lp_$name"] = fit.lp
+		derived_props["num_params_$name"] = length(fit.model.argnames)
+	end
+
+	derived_props
+end
+
+# ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
+import TOML
+
+# ╔═╡ 367580e2-6b3f-43fd-aa85-78e818375778
+obs_props = TOML.parsefile("$galaxyname/observed_properties.toml")
+
+# ╔═╡ 62f7e3e3-ae56-4aee-a059-a2a511735d04
+log_R_s_in = log10(obs_props["R_h"] / α)
+
+# ╔═╡ 4f0a4093-957d-44a9-94ba-9158910ad381
+log_R_s_err = 10 * get(obs_props, "R_h_em", get(obs_props, "R_h_err", NaN)) / obs_props["R_h"] / log(10) 
+
 # ╔═╡ 4a102150-f6f0-4235-963e-b2c05cda39b2
 log_R_s_in, log_R_s_err
 
+# ╔═╡ ba7d41b3-25ea-4e2e-8fd2-3c4428cc866d
+outfile = split(profilename, "_profile")[1] * "_inner_fits.toml"
+
 # ╔═╡ 456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca
-open(joinpath(galaxyname, "density_profiles/$(profilename)_inner_fits.toml"), "w") do f
+open(joinpath(galaxyname, "density_profiles/$outfile"), "w") do f
 	TOML.print(f, derived_props)
 end
 
@@ -1016,8 +1022,9 @@ end
 # ╠═bdf90521-e8f3-40e5-a61f-ab8503cce9fe
 # ╠═8e81babf-1963-4187-a8c5-0b1e1a325ab3
 # ╠═6518f711-4912-421f-b169-7b7d4fb365e5
-# ╠═44500a4e-9be6-486b-94e7-364b1c64749a
-# ╠═718c9f03-e128-4233-8875-5b1d79141e3d
+# ╠═aaba5e19-ec3b-4a08-8114-4e2052e3dc6a
+# ╟─44500a4e-9be6-486b-94e7-364b1c64749a
+# ╟─718c9f03-e128-4233-8875-5b1d79141e3d
 # ╠═cfc67825-2563-48d7-b25e-3c3081dad384
 # ╠═37dfb46d-e6d5-4e45-91e5-75b58c246e49
 # ╠═62f7e3e3-ae56-4aee-a059-a2a511735d04
@@ -1037,4 +1044,5 @@ end
 # ╠═6f101561-2262-4012-9e17-aae2bd873d95
 # ╠═a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
 # ╠═84fe5bae-c470-4df8-86fa-51cdf4300f01
+# ╠═ba7d41b3-25ea-4e2e-8fd2-3c4428cc866d
 # ╠═456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca

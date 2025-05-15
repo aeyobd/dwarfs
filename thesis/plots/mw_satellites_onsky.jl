@@ -24,11 +24,38 @@ include("./paper_style.jl")
 # ╔═╡ 97993507-1ab6-4aae-8363-f439fb98c2e5
 FIGDIR = "./figures"
 
-# ╔═╡ 2f76352c-fc02-4274-8350-e99ce3b7ccdc
-allsat = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/pace/pace_all.csv"), DataFrame)
+# ╔═╡ 261a9e5c-93af-48d2-8a71-2c9e70ee8b1f
+abbreviations = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/iau_abbrev.tsv"), DataFrame, delim='\t')
 
-# ╔═╡ 70477210-9891-4225-a544-b0030feb7af2
-dwarfs = allsat[.!ismissing.(allsat.host) .& (allsat.host .∈ [["mw", "lmc", "smc"]]), :]
+# ╔═╡ 38857534-663a-4764-b1d2-e9b861daf862
+function shorten_name(name)
+	for row in reverse(eachrow(abbreviations))
+		if contains(name, row.nomative)
+			name = replace(name, row.nomative => row.abbreviation)
+		end
+	end
+	name
+end
+
+# ╔═╡ 3b149121-2b73-4bae-bd94-877e581ea5e6
+shorten_name("Sagittarius")
+
+# ╔═╡ 1a775735-4db9-4507-95e6-ea7ca052143c
+function read_pace(name)
+	CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/pace/$name.csv"), DataFrame)
+end
+
+# ╔═╡ f21a3642-d321-4d35-9472-df8049dab6c0
+ambiguous_table = read_pace("gc_ambiguous")
+
+# ╔═╡ 2f76352c-fc02-4274-8350-e99ce3b7ccdc
+alldwarfs = read_pace("pace_all")
+
+# ╔═╡ 915259bc-05ef-40c5-acf1-c49c1fba19f1
+allcluster = vcat(read_pace("gc_harris"), read_pace("gc_mw_new"))
+
+# ╔═╡ 0b63949c-24dc-40f6-8683-27a64a78459d
+
 
 # ╔═╡ ece9f710-a071-4b0e-a6df-667d12a4638f
 dwarfs.ll
@@ -125,12 +152,29 @@ grid_color = (:white, 0.3)
 	fig
 end
 
+# ╔═╡ 70477210-9891-4225-a544-b0030feb7af2
+# ╠═╡ disabled = true
+#=╠═╡
+dwarfs = allsat[.!ismissing.(allsat.host) .& (allsat.host .∈ [["mw", "lmc", "smc"]]), :]
+  ╠═╡ =#
+
+# ╔═╡ 923f7988-c344-49e4-98c8-ee4b69527fcc
+dwarfs = alldwarfs[.!ismissing.(alldwarfs.host) .& (alldwarfs.host .∈ [["mw", "lmc", "smc"]]) .& (alldwarfs.confirmed_dwarf .== 1), :]
+
 # ╔═╡ Cell order:
 # ╠═4c0da6d9-c5d9-4971-8b69-7ec9c107d981
 # ╠═97993507-1ab6-4aae-8363-f439fb98c2e5
 # ╠═726c1519-d147-4c7c-9901-55c0d4fab221
+# ╠═261a9e5c-93af-48d2-8a71-2c9e70ee8b1f
+# ╠═38857534-663a-4764-b1d2-e9b861daf862
+# ╠═3b149121-2b73-4bae-bd94-877e581ea5e6
+# ╠═1a775735-4db9-4507-95e6-ea7ca052143c
+# ╠═f21a3642-d321-4d35-9472-df8049dab6c0
 # ╠═2f76352c-fc02-4274-8350-e99ce3b7ccdc
-# ╠═70477210-9891-4225-a544-b0030feb7af2
+# ╠═915259bc-05ef-40c5-acf1-c49c1fba19f1
+# ╠═923f7988-c344-49e4-98c8-ee4b69527fcc
+# ╟─70477210-9891-4225-a544-b0030feb7af2
+# ╠═0b63949c-24dc-40f6-8683-27a64a78459d
 # ╠═ece9f710-a071-4b0e-a6df-667d12a4638f
 # ╠═d098bbec-0e99-4aaa-9096-717c785c17e9
 # ╠═aeb2540f-3832-42fe-a5f7-709bcf2932b8

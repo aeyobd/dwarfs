@@ -30,6 +30,10 @@ sigma_v = 8.8
 sigma_v_err = 0.2
 sigma_v_ref = "this work"
 
+metallicity = -2.13
+metallicity_err = 0.01
+metallicity_ref = "MV2020a"
+
 ellipticity = 0.55
 ellipticity_err = 0.01
 ellipticity_ref = "Munoz+2018"
@@ -50,3 +54,11 @@ r_h = 17.32
 r_h_em = 0.11
 r_h_ep = 0.11
 r_h_ref = "MV2020"
+R_h = 11.62
+R_h_em = 0.07
+R_h_ep = 0.07
+
+R_h_inner = 11.7
+R_h_inner_em = 0.5
+R_h_inner_ep = 0.5
+R_h_inner_ref = "this"

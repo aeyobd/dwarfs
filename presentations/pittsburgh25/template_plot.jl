@@ -19,9 +19,6 @@ end
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./style.jl")
 
-# ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-CairoMakie.activate!(type=:png)
-
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "test" let
 	fig = Figure()
@@ -59,6 +56,5 @@ end
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
-# ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═82f72204-4340-41a6-a7c4-4fc8bc86d87a

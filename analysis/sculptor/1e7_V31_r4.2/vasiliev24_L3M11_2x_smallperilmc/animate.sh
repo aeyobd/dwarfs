@@ -1,10 +1,11 @@
 set -xe 
 
 # project density
-project_2d.jl . --limits 150 -k 1
+#project_potential.jl simulation/agama_potential.ini -T agama_times.txt -k 1 --limits 500 -n 101 -o projected_lmc.hdf5
+project_2d.jl . --limits 500 -k 1 -n 101
 
 # make pictures (:)
-animate_dm.jl -i projected_densities.hdf5 --scalebar 100 -s max -P 0.5
+animate_dm.jl -i projected_densities.hdf5 projected_lmc.hdf5 --scalebar 100 -s max max -P 0.5
 
 # combine to movie!!!
 cd figures/dm_animation

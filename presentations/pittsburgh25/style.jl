@@ -1,31 +1,21 @@
 using CairoMakie
 using Arya
 
-CairoMakie.activate!(type=:svg)
 
 
-Arya.update_figsize!(4)
-Arya.update_fontsize!(16)
+function scale_theme_element!(key, scale)
+    @info "old $key value = $(theme(key)[])"
+    update_theme!(; (; key => scale*theme(key)[])...)
+    @info "new $key value = $(theme(key)[])"
+end
 
+let
 
-CairoMakie.update_theme!(
-    linewidth=2,
-    markersize=6,
-    arrowsize=12,
-	fonts = (;
-		:regular => "TeX Gyre Heros Makie",
-		:bold => "TeX Gyre Heros Makie Bold",
-		:italic => "TeX Gyre Heros Makie Italic",
-		:bold_italic => "TeX Gyre Heros Makie Bold Italic",
-	),
-    Arrows = (;
-        linewidth=2,
-        arrowsize=9
-    ),
-    Legend = (;
-        patchsize=(18, 6)
-    ),
-    ErrorScatter = (;
-        linewidth=1,
-    ),
-)
+    set_theme!(theme_arya(width=860/72, fontsize=48, px_per_unit=1))
+    CairoMakie.activate!(type=:svg, px_per_unit=1, pt_per_unit=1)
+
+    scale_theme_element!(:linewidth, 2)
+    legend_attr = theme(:Legend)
+    legend_attr.margin = legend_attr.padding
+    update_theme!(Legend = legend_attr)
+end

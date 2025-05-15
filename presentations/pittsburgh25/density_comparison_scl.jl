@@ -26,20 +26,20 @@ import TOML
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
-prof_expected = StellarDensityProfile(ENV["DWARFS_ROOT"] * "/observations/sculptor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
+prof_expected = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/sculptor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
 
 # ╔═╡ 8d90a98b-09df-4834-ab9d-0aed44d6206b
 function load_profile(haloname, orbitname, starsname)
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/$haloname/$orbitname/stars/$starsname/")
 
-	return StellarDensityProfile(model_dir * "initial_profile.toml"), StellarDensityProfile(model_dir * "final_profile.toml")
+	return SurfaceDensityProfile(model_dir * "initial_profile.toml"), SurfaceDensityProfile(model_dir * "final_profile.toml")
 end
 
 # ╔═╡ b9e03109-9f49-4897-b26c-e31698a5fe49
 function get_r_b(haloname, orbitname, starsname)
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/$haloname/$orbitname/stars/$starsname/")
 
-	prof_f = StellarDensityProfile(model_dir * "final_profile.toml")
+	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml")
 
 	σv = prof_f.annotations["sigma_v"]
 	props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
@@ -74,15 +74,15 @@ function compare_profiles(prof_i, prof, r_b)
 
 	dy = get_normalization(prof)
 	
-	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, 
+	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, color=COLORS[2], linestyle=:dot,
 			label="initial")
 
-	lines!(prof.log_R, prof.log_Sigma .+ dy, 
+	lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
 			label="final")
 
-	vlines!(log10(r_b), color=:grey, label="break radius", linewidth=1, linestyle=:dot)
+	vlines!(log10(r_b), color=:grey, label="break radius", linewidth=3, linestyle=:dot)
 
-	axislegend(position=:lb)
+	axislegend(position=:lb, margin=theme(:Legend).padding, patchsize=(48*1.5, 24))
 	fig
 end
 

@@ -30,9 +30,6 @@ end
 # ╔═╡ 69c98029-165c-407b-9a63-a27e06e30e45
 include("paper_style.jl")
 
-# ╔═╡ 9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
-include("utils.jl")
-
 # ╔═╡ d3bd7158-ea70-47a0-9800-9bfc08f3557c
 include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 
@@ -47,6 +44,11 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
 galaxyname = "ursa_minor"
+
+# ╔═╡ 9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
+module Utils 
+	include("utils.jl")
+end
 
 # ╔═╡ 0004f638-c57a-4dab-8b97-c77840cafbbf
 import TOML
@@ -87,12 +89,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_members_all.fits")
-
-# ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
-md"""
-# Utilities
-"""
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined_x_2c_psat_0.2.fits")
 
 # ╔═╡ 5a9b5529-50f1-4cb5-b716-42180ea77d5f
 md"""
@@ -104,32 +101,31 @@ md"""
 The plots below show various subsamples of the dataset in different planes to get a handle on how generally members are selected using the J+24 algorithm.
 """
 
-# ╔═╡ 12aa5708-dfee-4b48-8835-69055ad82680
-member_markersize = 3
-
-# ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
-bg_markersize = 2
-
 # ╔═╡ e7fd8470-9225-4dfc-b4ff-08a8e40069fa
-R_h = observed_properties["r_h"]
+R_h = observed_properties["R_h"]
 
 # ╔═╡ 96360af3-e877-4c83-88ef-464ea9eb7b14
-rv_distant = rv_members[rv_members.R_ell .> 3R_h, :]
+rv_distant = rv_members[rv_members.R_ell .> 5R_h, :]
 
 # ╔═╡ 9eaaf2be-936b-4d26-9e2e-c04f551c515c
 rv_distant[:, [:xi, :eta, :R_ell]]
 
-# ╔═╡ ec974caa-59e6-4555-b9b4-48f33d31d00b
+# ╔═╡ 1b31378d-480d-4a7a-9007-9e0b5fd512e1
+md"""
+Compare the above table against sestito+23b
+"""
+
+# ╔═╡ 52506697-0d8b-4242-97c0-1e1f56da18a1
 rv_distant.R_ell ./ R_h
 
 # ╔═╡ 43e9b9bd-b7ba-4d2c-b97e-2d28c1ba270d
 import Random
 
 # ╔═╡ a47cbe4c-15ec-4bb0-8992-e7650e1b072f
-my_colors = SELECTION_COLORS
+my_colors = Utils.SELECTION_COLORS
 
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "umi_selection" compare_j24_samples(
+@savefig "umi_selection" Utils.compare_j24_samples(
 		OrderedDict(
 		:best => best_stars,
 		:members_nospace => members_nospace,
@@ -152,7 +148,7 @@ my_colors = SELECTION_COLORS
 		:members => (;
 			markersize=3,
 			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
-			marker=:diamond,
+			marker=:x,
 			#color=:transparent,
 			#strokewidth=0.3,
 			color = my_colors[3],
@@ -162,21 +158,22 @@ my_colors = SELECTION_COLORS
 		),
 		:rv => (;
 			markersize=4,
-			marker=:xcross,
+			marker=:diamond,
 			label = "RV members" =>(alpha=1, markersize=2.5*2),
 			color = my_colors[4],
 			strokecolor = :black,
 			strokewidth=0.0
 		),
 		:rv_distant => (;
-			markersize=6,
+			markersize=8,
 			marker=:star5,
 			color = my_colors[4],
-			strokewidth=0.3,
-			strokecolor=:black,
+			strokewidth=1,
+			strokecolor=COLORS[4]
 		),
 	),
-	observed_properties
+	observed_properties,
+	legend_position=:rt
 )
 
 # ╔═╡ 90436a7d-e357-4365-922a-42f61e3dfb22
@@ -185,19 +182,13 @@ md"""
 """
 
 # ╔═╡ 5d0a5768-85ba-4913-9108-9302cc63cf4b
-rv_all = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined.fits")
-
-# ╔═╡ a776c46b-4a7e-4857-aac2-4120c6d1d4d2
-id_nonmemb = setdiff(rv_all.source_id, rv_members.source_id)
-
-# ╔═╡ 55ab1364-bcf5-4c29-8081-cc3808b4e53c
-rv_nonmemb = rv_all[rv_all.source_id .∈ [id_nonmemb], :]
+rv_nonmemb = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined_x_2c_psat_0.2_nonmemb.fits")
 
 # ╔═╡ 0f5143a6-f892-4a3e-967d-5e6b04cb12f0
-compare_j24_samples(
+Utils.compare_j24_samples(
 		OrderedDict(
 			:members => rv_members,
-			:nonmemb => rv_nonmemb,	
+		#	:nonmemb => rv_nonmemb,	
 		),
 	Dict(
 		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
@@ -210,8 +201,47 @@ compare_j24_samples(
 	observed_properties
 )
 
+# ╔═╡ d22c7f3b-8d6c-4a96-9827-d2333a02b2f0
+Ag, Ab, Ar = Utils.get_extinction(best_stars.ra, best_stars.dec, best_stars.bp_rp)
+
+# ╔═╡ 36137254-95f3-4fd9-a364-064d3073e964
+scatter(best_stars.xi, best_stars.eta, color=Ag, markersize=5)
+
+# ╔═╡ 75d76095-fb9c-4951-a226-5298cae5e24e
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], aspect=DataAspect(), limits=(-3, 3, -3, 3), xreversed=true)
+
+	Utils.ellipse!(17.3 / 60 * 5 * sqrt(0.45), 0.55, 50)
+	Utils.ellipse!(17.3 / 60 * 5, 0.0, 50)
+
+	scatter!(rv_distant.xi / 60, rv_distant.eta / 60)
+	fig
+end
+
+# ╔═╡ f37c88e8-eafd-43e7-8ceb-a1594a63a568
+prof_simple = lguys.Exp2D()
+
+# ╔═╡ 5c286955-28cf-4b02-968a-d9fd1bac6578
+alpha_R = lguys.R_h(prof_simple)
+
+# ╔═╡ e0a10219-0e6f-401b-b92b-0cc65af5b29e
+(1 - mass(LilGuys.Exp2D(), 6alpha_R)) * sum(best_stars.PSAT)
+
+# ╔═╡ 46b87169-be7e-41c1-8809-791c0d773e55
+10^0.841 * alpha_R / sqrt(0.45)
+
+# ╔═╡ f9b2a93f-8d74-49da-99df-78e6026b9d44
+import StatsBase: median
+
+# ╔═╡ 798365ed-ad72-45fa-bbff-428b547e7906
+10 ^ Measurement(1.1733, 0.10) 
+
+# ╔═╡ 4d33f91e-e9c2-416a-a270-dad15915b299
+median(members.R_ell) 
+
 # ╔═╡ Cell order:
-# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
@@ -233,20 +263,26 @@ compare_j24_samples(
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
-# ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
 # ╟─5a9b5529-50f1-4cb5-b716-42180ea77d5f
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
-# ╠═12aa5708-dfee-4b48-8835-69055ad82680
-# ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
-# ╠═e7fd8470-9225-4dfc-b4ff-08a8e40069fa
 # ╠═96360af3-e877-4c83-88ef-464ea9eb7b14
+# ╠═e7fd8470-9225-4dfc-b4ff-08a8e40069fa
 # ╠═9eaaf2be-936b-4d26-9e2e-c04f551c515c
-# ╠═ec974caa-59e6-4555-b9b4-48f33d31d00b
+# ╟─1b31378d-480d-4a7a-9007-9e0b5fd512e1
+# ╠═52506697-0d8b-4242-97c0-1e1f56da18a1
 # ╠═43e9b9bd-b7ba-4d2c-b97e-2d28c1ba270d
 # ╠═a47cbe4c-15ec-4bb0-8992-e7650e1b072f
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╠═90436a7d-e357-4365-922a-42f61e3dfb22
 # ╠═5d0a5768-85ba-4913-9108-9302cc63cf4b
-# ╠═a776c46b-4a7e-4857-aac2-4120c6d1d4d2
-# ╠═55ab1364-bcf5-4c29-8081-cc3808b4e53c
 # ╠═0f5143a6-f892-4a3e-967d-5e6b04cb12f0
+# ╠═d22c7f3b-8d6c-4a96-9827-d2333a02b2f0
+# ╠═36137254-95f3-4fd9-a364-064d3073e964
+# ╠═75d76095-fb9c-4951-a226-5298cae5e24e
+# ╠═f37c88e8-eafd-43e7-8ceb-a1594a63a568
+# ╠═5c286955-28cf-4b02-968a-d9fd1bac6578
+# ╠═e0a10219-0e6f-401b-b92b-0cc65af5b29e
+# ╠═46b87169-be7e-41c1-8809-791c0d773e55
+# ╠═f9b2a93f-8d74-49da-99df-78e6026b9d44
+# ╠═798365ed-ad72-45fa-bbff-428b547e7906
+# ╠═4d33f91e-e9c2-416a-a270-dad15915b299

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -304,6 +304,15 @@ md"""
 Works excatly. Reillo 2021.
 """
 
+# ╔═╡ a04d229c-5001-44ff-991e-99804fbd3a06
+flag_excess = @. (abs.(Cc) < 3 *( 0.0059898 + 8.817481e-12 * df.phot_g_mean_mag .^ 7.618399)) .& (df.phot_g_mean_mag .> 4)
+
+# ╔═╡ b8b32430-7ced-4349-9093-f08545d87043
+missed_flux = (flag_excess .& .!ismissing.(flag_excess)) .!= (df.F_FLUXEXCESS .== 1)
+
+# ╔═╡ 77d5b1ca-4f92-4191-9142-f66450f14eb5
+@assert sum(missed_flux)==0 "flux excess filter wonk"
+
 # ╔═╡ 6c4b0d0d-dab0-48c6-9c94-5b566fde6cd4
 function flux_correction(x)
 	if x === missing
@@ -320,15 +329,6 @@ end
 
 # ╔═╡ c4f01609-86dd-4920-bb5b-5e2e8650d474
 Cc = df.phot_bp_rp_excess_factor .- flux_correction.(df.bp_rp)
-
-# ╔═╡ a04d229c-5001-44ff-991e-99804fbd3a06
-flag_excess = @. (abs.(Cc) < 3 *( 0.0059898 + 8.817481e-12 * df.phot_g_mean_mag .^ 7.618399)) .& (df.phot_g_mean_mag .> 4)
-
-# ╔═╡ b8b32430-7ced-4349-9093-f08545d87043
-missed_flux = (flag_excess .& .!ismissing.(flag_excess)) .!= (df.F_FLUXEXCESS .== 1)
-
-# ╔═╡ 77d5b1ca-4f92-4191-9142-f66450f14eb5
-@assert sum(missed_flux)==0 "flux excess filter wonk"
 
 # ╔═╡ f118cf45-ed74-46d0-97bd-6b7118a1a633
 

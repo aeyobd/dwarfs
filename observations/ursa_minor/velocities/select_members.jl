@@ -168,6 +168,12 @@ memb_stars = rv_meas[memb_filt, :]
 # ╔═╡ 92f4c8b3-442d-4a56-b05f-1fc547231508
 "RV_gmos" ∈ names(memb_stars) && memb_stars[.!ismissing.(memb_stars.RV_gmos), [:source_id, :ra, :dec, :PSAT]]
 
+# ╔═╡ ea3d420f-00f8-4ca2-a49d-e26b48e50afd
+nonmemb_stars = rv_meas[.!memb_filt, :]
+
+# ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
+write_fits(joinpath(data_dir, "$(outname)_nonmemb.fits"), nonmemb_stars, overwrite=true)
+
 # ╔═╡ 55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 md"""
 # Numbers
@@ -185,9 +191,6 @@ number_qual = sum(rv_meas.F_scatter .& (rv_meas.F_BEST .== 1.0))
 # ╔═╡ a1938588-ca40-4844-ab82-88c4254c435b
 number_memb = length(memb_stars.RV)
 
-# ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
-write_fits(joinpath(data_dir, "$outname.fits"), memb_stars, overwrite=true)
-
 # ╔═╡ b8ee2ea3-98aa-44c4-a309-1a356feb0686
 sample_info = OrderedDict(
 	"median_err" => median_err,
@@ -204,9 +207,6 @@ end
 md"""
 # Plots
 """
-
-# ╔═╡ ea3d420f-00f8-4ca2-a49d-e26b48e50afd
-nonmemb_stars = rv_meas[(rv_meas.PSAT_RV .< psat_min) .& rv_meas.F_scatter, :]
 
 # ╔═╡ 081c30c7-28e9-4155-80a5-d35317ba926a
 hist(nonmemb_stars.RV)
@@ -259,16 +259,16 @@ scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
 # ╠═92f4c8b3-442d-4a56-b05f-1fc547231508
+# ╠═ea3d420f-00f8-4ca2-a49d-e26b48e50afd
+# ╠═a162219f-df5a-41d8-bf54-927a355f6431
 # ╟─55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 # ╠═31a6c2e4-538c-4adc-bbda-5043680b17f7
 # ╠═3377f632-713d-4fec-84a9-b0211b02cb43
 # ╠═064dff05-192d-41bb-993f-5fb5abc36ecd
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
-# ╠═a162219f-df5a-41d8-bf54-927a355f6431
 # ╠═b8ee2ea3-98aa-44c4-a309-1a356feb0686
 # ╠═b1230b9d-e3ea-4330-b7f5-e708f08db51c
 # ╟─cb3bc2ab-8ed7-493d-9868-f793fe24bc42
-# ╠═ea3d420f-00f8-4ca2-a49d-e26b48e50afd
 # ╠═081c30c7-28e9-4155-80a5-d35317ba926a
 # ╠═68edc01b-496e-466e-9980-83a586b0bb82
 # ╠═fb52ac04-1483-471f-a164-9bbe15464378

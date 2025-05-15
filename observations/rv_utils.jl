@@ -330,7 +330,7 @@ Retrieve the uncertainty of the key in the given dict (either max of key_em and 
 """
 function get_error(df, key)
     if key*"_em" ∈ keys(df)
-        return max(df[key*"_em", key*"_ep"])
+        return max(df[key*"_em"], df[key*"_ep"])
     elseif key*"_err" ∈ keys(df)
         return df[key * "_err"]
     else

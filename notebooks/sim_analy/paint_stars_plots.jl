@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -35,9 +35,6 @@ begin
 	using HDF5
 	import DensityEstimators
 end
-
-# ╔═╡ 631a70f3-5284-4c3f-81ef-714455b876ee
-using FITSIO
 
 # ╔═╡ 17ffde4b-5796-4915-9741-d594cf0c5ca7
 md"""
@@ -132,10 +129,10 @@ end
 snap.x_cen
 
 # ╔═╡ 0a4521ac-7e35-4976-8781-bdbd4f7242c7
-lguys.get_M_tot(profile)
+lguys.mass(profile)
 
 # ╔═╡ 29930595-5255-4454-8550-22ac6a96f609
-r_h = lguys.calc_r_h(profile)
+r_h = lguys.r_h(profile)
 
 # ╔═╡ f5582e2e-6cbf-4b32-9da0-86b4f33c55b6
 bins = LinRange(log10(minimum(df_probs.radii)), log10(maximum(df_probs.radii)), 100)
@@ -178,7 +175,7 @@ let
 	bins, h1, _ = lguys.histogram(ϵs, 200, normalization=:pdf)
 	h1 = y_trans(h1)
 
-	_, h_s, _ = lguys.histogram(ϵs, 200, weights=ps, normalization=:pdf)
+	_, h_s, _ = lguys.histogram(ϵs, 200, weights=ps, normalization=:pdf, errors=:weighted)
 	h_s .= y_trans(h_s)
 
 	
@@ -262,7 +259,7 @@ end
 bins
 
 # ╔═╡ 6fba7fa7-9a50-4379-b376-5c07f3638411
-ν_s_nbody = lguys.calc_ρ_from_hist(10 .^ bins, histogram(df_probs.radii, 10 .^ bins, weights=df_probs.probability).values)
+ν_s_nbody = lguys.density_from_hist(10 .^ bins, histogram(df_probs.radii, 10 .^ bins, weights=df_probs.probability, errors=:weighted).values)
 
 # ╔═╡ 9e28a6e0-4375-414c-bbe4-287d4a13e22d
 md"""
@@ -271,7 +268,7 @@ The below plot simply compares the simperical DM and stellar profiles
 
 # ╔═╡ a9335e17-a410-455a-9a9e-d63706a026bd
 let
-	fig = Figure(size=(700, 500))
+	fig = Figure()
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
 		limits=((-1.5, 1), (-15, 3)),
 		xlabel = "log r / kpc",
@@ -298,7 +295,7 @@ let
 
 	Axis(fig[1,1], xlabel="log radii", ylabel="pstar > $thresh")
 
-	hist!(log10.(lguys.calc_r(snap)[snap.weights .> thresh]))
+	hist!(log10.(lguys.radii(snap)[snap.weights .> thresh]))
 
 	fig
 end
@@ -339,7 +336,7 @@ let
 	)
 	
 	h = Arya.hist2d!(ax, 
-		lguys.get_x(snap), lguys.get_y(snap), 
+		lguys.x_position(snap), lguys.y_position(snap), 
 		bins=N_hist,
 		colorscale=log10,
 		colorrange=(1e-2, nothing)
@@ -366,7 +363,7 @@ let
 	)
 	
 	h = Arya.hist2d!(ax, 
-		lguys.get_x(snap)[filt], lguys.get_y(snap)[filt], 
+		lguys.x_position(snap)[filt], lguys.y_position(snap)[filt], 
 		weights=snap.weights[filt], bins=N_hist,
 		colorscale=log10,
 		colorrange=(1e-7, nothing)
@@ -379,7 +376,7 @@ let
 end
 
 # ╔═╡ 89b7d969-2294-4d07-a6a3-fcfa92498d48
-lguys.arcmin_to_kpc(14, 83.2)
+lguys.arcmin2kpc(14, 83.2)
 
 # ╔═╡ cdcc6bf6-f15e-45f1-b837-1db4e0fdc654
 md"""
@@ -389,7 +386,7 @@ We would like the residuals to be << 1 and the profile to qualitatively match we
 
 # ╔═╡ 7f7d8cb9-761c-4f30-a336-ab5657144961
 let
-	r = lguys.calc_r(snap)
+	r = lguys.radii(snap)
 	ms = snap.weights 
 
 	
@@ -398,12 +395,12 @@ let
 	println("rh n-body = ", r_h2)
 	
 	r_e = 10 .^ DensityEstimators.bins_min_width_equal_number(log10.(r), N_per_bin_min=100, dx_min=0.03)
-	ν_s_nbody = lguys.calc_ρ_from_hist(r_e, histogram(r, r_e, weights=ms).values)
+	ν_s_nbody = lguys.density_from_hist(r_e, histogram(r, r_e, weights=ms, errors=:weighted).values)
  
 	r = lguys.midpoints(r_e)
-	ν_s = lguys.calc_ρ.(profile, r)
+	ν_s = lguys.density.(profile, r)
 	
-	fig = Figure(size=(700, 500))
+	fig = Figure()
 	ax = Axis(fig[1,1], ylabel=L"\log \nu", 
 		limits=(nothing, (-15, 3))
 		)
@@ -433,7 +430,7 @@ let
 end
 
 # ╔═╡ a2f72082-7145-42be-9f40-e00d18deb267
-sum(snap.weights .* (lguys.calc_r(snap) .< r_h))
+sum(snap.weights .* (lguys.radii(snap) .< r_h))
 
 # ╔═╡ bf8305f4-a5b8-4c79-8a01-e2aa18e4a5c5
 md"""
@@ -453,7 +450,7 @@ let
 
 	bins = DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=100, dx_min=0.03)
 
-	prof = lguys.StellarProfile(R, weights=snap.weights, bins=bins)
+	prof = lguys.SurfaceDensityProfile(R, weights=snap.weights, bins=bins)
 
 	
 	fig = Figure()
@@ -463,12 +460,12 @@ let
 		)
 
 
-	log_Σ(r) = log10(lguys.calc_Σ(profile, r))
+	log_Σ(r) = log10(lguys.surface_density(profile, r))
 
 	log_R = LinRange(-2, 2, 1000)
 	y = log_Σ.(10 .^ log_R)
 	
-	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err)
+	errorscatter!(prof.log_R, prof.log_Sigma, yerror=lguys.error_interval.(prof.log_Sigma))
 	lines!(log_R, y)
 
 	fig
@@ -502,7 +499,7 @@ let
 	bins = 	DensityEstimators.bins_min_width_equal_number(log10.(R), N_per_bin_min=5, dx_min=0.03)
 	@info "using $(length(bins)) bins"
 
-	prof = lguys.StellarProfile(R, weights=ms, bins=bins, normalization=:central, r_centre=3)
+	prof = lguys.SurfaceDensityProfile(R, weights=ms, bins=bins, normalization=:central)
 
 
 	fig = Figure()
@@ -511,10 +508,10 @@ let
 		limits=((-1, 3), (-15, 3))
 		)
 
-	errscatter!(prof.log_r, prof.log_Sigma, yerr=prof.log_Sigma_err)
+	errorscatter!(prof.log_R, prof.log_Sigma)
 
 	
-	log_Σ(r) = log10(lguys.calc_Σ(profile, lguys.arcmin_to_kpc(r, distance)))
+	log_Σ(r) = log10(lguys.surface_density(profile, lguys.arcmin2kpc(r, distance)))
 
 	log_R = LinRange(-2, 3, 1000)
 	y = log_Σ.(10 .^ log_R)
@@ -567,7 +564,6 @@ end
 # ╠═81bf8451-f417-4e37-a234-07bb5317fff1
 # ╠═b3663c19-c029-4a1e-ab82-a05177e3a5d0
 # ╠═530c6c09-4454-4952-8351-dccbb4ed429f
-# ╠═631a70f3-5284-4c3f-81ef-714455b876ee
 # ╠═835cafca-868b-4e94-955f-2eab4e7c2bc4
 # ╠═48ce69f2-09d5-4166-9890-1ab768f3b59f
 # ╠═939cc89e-7273-4bb5-a13f-241139d922ea

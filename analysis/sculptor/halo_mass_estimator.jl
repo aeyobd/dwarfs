@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -70,14 +70,17 @@ Asya's crater II paper provides one example of this procedure.
 Or for Fornax, Mstr = 2.39e7, leaving Vmax = 39.6km / s, r_max = 8
 """
 
-# ╔═╡ 60eba328-c047-4b59-8b8c-8b24a4884541
-import CairoMakie: save
-
 # ╔═╡ 21619de9-8960-46fe-8a0c-808776b33c6d
 import StatsBase: quantile, median
 
 # ╔═╡ a334b0a2-b408-4c81-a074-67cb1bcb58be
 import TOML
+
+# ╔═╡ 76003206-050b-4913-9ab3-d4c0c2dd05f8
+FIGDIR = "./figures/"
+
+# ╔═╡ 3dd1e03b-ef25-401d-829f-79292c465724
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 24b4184d-7f69-47fc-a758-50f21840283a
 obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml")
@@ -178,8 +181,8 @@ begin
 	M200_mean = 10 .^ LinRange(-2, 1.5, 1000)
 	c_mean2 = LilGuys.Ludlow.c_ludlow.(M200_mean, 0)
 	halo_mean = [NFW(M200=M200_mean[i], c=c_mean2[i]) for i in eachindex(M200_mean)]
-	Vc_mean = calc_v_circ_max.(halo_mean)
-	Rc_mean = calc_r_circ_max.(halo_mean)
+	Vc_mean = v_circ_max.(halo_mean)
+	Rc_mean = r_circ_max.(halo_mean)
 	Ms_mean = M_s_from_vel.(Vc_mean)
 end
 
@@ -231,10 +234,10 @@ end
 halo_samples = [NFW(M200=M200, c=c) for (M200, c) in zip(M200_samples, c_samples)]
 
 # ╔═╡ d9db5c56-b8d6-4e08-aa47-979c191496b0
-Vc_samples = LilGuys.calc_v_circ_max.(halo_samples)
+Vc_samples = LilGuys.v_circ_max.(halo_samples)
 
 # ╔═╡ 9695b55c-ff53-4369-9d12-324dd35ab021
-Rc_samples = LilGuys.calc_r_circ_max.(halo_samples)
+Rc_samples = LilGuys.r_circ_max.(halo_samples)
 
 # ╔═╡ d8c978f3-57e9-48cb-b20a-6f441a241f7e
 begin 
@@ -381,8 +384,8 @@ end
 # ╔═╡ 28e09f56-7a1c-4fc9-95da-36ef0ed75a74
 function calc_σv_star_mean(p; stellar_profile=stellar_profile, R_min=0, R_max=Inf)
 
-	ρ(r) = calc_ρ(stellar_profile, r)
-	M(r) = calc_M(p, r)
+	ρ(r) = LilGuys.density(stellar_profile, r)
+	M(r) = mass(p, r)
 	integrand_1(r) = ρ(r) * M(r) * LilGuys.G / r^2
 	integrand_2(r) = ρ(r) * M(r)  * LilGuys.G * 4π/3 * r
 
@@ -391,7 +394,7 @@ function calc_σv_star_mean(p; stellar_profile=stellar_profile, R_min=0, R_max=I
 		LilGuys.integrate(integrand_2, R_min, R_max)
 	)
 
-	Mtot = LilGuys.calc_M(stellar_profile, R_max)
+	Mtot = LilGuys.mass(stellar_profile, R_max)
 	sqrt(weighted_σ2 / Mtot)
 end
 
@@ -418,7 +421,7 @@ function sample_halo(;
 
     halo = NFW(r_circ_max=r_circ_max, v_circ_max=v_circ_max)
 
-	M200 = LilGuys.calc_M200(halo) .* M2MSUN
+	M200 = LilGuys.M200(halo) .* M2MSUN
 
 	σv_kms = calc_σv_star_mean(halo) * V2KMS
 	
@@ -460,6 +463,18 @@ pairplot(samples[:, [:MV, :L, :Ms]])
 # ╔═╡ 0af29495-0d78-4e32-bbf9-69587e8ae222
 pairplot(samples[:, [:Ms, :log_M200, :c]])
 
+# ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
+let
+	fig = pairplot(samples[:, [:Ms, :log_v_circ_max, :r_circ_max]], labels=Dict(
+	:Ms2 => L"$M_\star$", 
+	:V_max => L"$v_\textrm{circ, max}$ / km\,s$^{-1}$", 
+	:r_max => L"$r_\textrm{circ, max}$ / kpc", ))
+
+	@savefig "v_max_r_max_mcmc"
+
+	fig
+end
+
 # ╔═╡ 4e1290b5-171e-4715-a87b-28a2cfcb4325
 samples.Ms * 1e4
 
@@ -491,21 +506,6 @@ describe(samples.c)
 md"""
 # Self-consistency calculator
 """
-
-# ╔═╡ 76003206-050b-4913-9ab3-d4c0c2dd05f8
-fig_dir = "./figures/"
-
-# ╔═╡ 7fd48721-749d-4e99-91cc-5ffde830487d
-let
-	fig = pairplot(samples[:, [:Ms, :log_v_circ_max, :r_circ_max]], labels=Dict(
-	:Ms2 => L"$M_\star$", 
-	:V_max => L"$v_\textrm{circ, max}$ / km\,s$^{-1}$", 
-	:r_max => L"$r_\textrm{circ, max}$ / kpc", ))
-
-	save(joinpath(fig_dir, "v_max_r_max_mcmc.pdf"), fig)
-
-	fig
-end
 
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = Dict(
@@ -540,7 +540,7 @@ LilGuys.Ludlow.solve_rmax.(20 / V2KMS, 0.2)
 NFW_small = LilGuys.TruncNFW(r_circ_max=1.85, v_circ_max = 20 / V2KMS, trunc=10)
 
 # ╔═╡ eee22cf7-79c6-427e-9542-ef7a042e9787
-LilGuys.calc_M(NFW_small, 10000)
+LilGuys.mass(NFW_small, 10000)
 
 # ╔═╡ a0be8f75-a69b-447c-b616-442cf423fffd
 LilGuys.Ludlow.solve_rmax.(31 / V2KMS, 0.2)
@@ -569,8 +569,8 @@ let
 	)
 
 	for label in labels_ex
-		y = LilGuys.calc_v_circ_max(halos_ex[label]) * V2KMS
-		x = LilGuys.calc_r_circ_max(halos_ex[label]) 
+		y = LilGuys.v_circ_max(halos_ex[label]) * V2KMS
+		x = LilGuys.r_circ_max(halos_ex[label]) 
 		scatter!(log10(x), log10(y), label=string(label))
 	end
 
@@ -623,7 +623,7 @@ let
 
 	Colorbar(fig[1, 2], h, label="counts")
 
-	save(joinpath(fig_dir, "r_max_v_max_in.pdf"), fig)
+	@savefig "r_max_v_max_in"
 	
 	fig
 end
@@ -663,7 +663,7 @@ let
 
 	Colorbar(fig[1, 2], h, label=L"$\sigma_v$ / km\,s$^{-1}$")
 
-	save(joinpath(fig_dir, "r_max_v_max_in.pdf"), fig)
+	@savefig "r_max_v_max_in"
 	
 	fig
 end
@@ -707,13 +707,13 @@ halo_in = NFW(v_circ_max=V_max_in, r_circ_max=r_max_in)
 calc_σv_star_mean(halo_in) * V2KMS
 
 # ╔═╡ ecda5f20-27cd-41a8-8545-9f3a6b91a80e
-LilGuys.calc_M200(halo_in)
+LilGuys.M200(halo_in)
 
 # ╔═╡ ab5bc36d-d203-45be-8e7d-d8c5c9473388
-LilGuys.calc_R200(halo_in)
+LilGuys.R200(halo_in)
 
 # ╔═╡ 84892a5a-f816-450b-9757-e4135a40aebc
-LilGuys.calc_v_circ_max(halo_in) * V2KMS
+LilGuys.v_circ_max(halo_in) * V2KMS
 
 # ╔═╡ cb42028b-eeb0-48a7-b23d-5abe792eb4f0
 md"""
@@ -725,14 +725,14 @@ Np = 1e7
 
 # ╔═╡ e582e62c-d851-4dd0-95d4-82fd1d97c26c
 function calc_h(halo, N=Np)
-	return 4 * LilGuys.calc_R200(halo) / sqrt(N) / sqrt(10)
+	return 4 * LilGuys.R200(halo) / sqrt(N) / sqrt(10)
 end
 
 # ╔═╡ c3e1326c-772b-4d8c-aabe-a997b77bede4
 calc_h(halo_in)
 
 # ╔═╡ a75e163e-3489-4f82-901b-c511d1e44395
-m = LilGuys.calc_M200(halo_in) / Np
+m = LilGuys.M200(halo_in) / Np
 
 # ╔═╡ 8b7f61d5-dcef-4889-8aab-a85b0ccdaf02
 let
@@ -743,7 +743,7 @@ let
 
 	lx = LinRange(-2, 2, 100)
 	
-	y = LilGuys.calc_M.(halo_in, 10 .^ lx) ./ m
+	y = LilGuys.mass.(halo_in, 10 .^ lx) ./ m
 	
 
 	lines!(lx, log10.(y))
@@ -754,27 +754,28 @@ let
 end
 
 # ╔═╡ 93715b38-1790-4b1e-a551-17d69b68876f
-LilGuys.calc_M(halo_in, LilGuys.calc_R200(halo_in))
+LilGuys.mass(halo_in, LilGuys.R200(halo_in))
 
 # ╔═╡ 896ccd5d-8e92-4c26-944d-04d42550caef
-LilGuys.calc_R200(halo_in)
+LilGuys.R200(halo_in)
 
 # ╔═╡ 2ae19d4f-659f-4985-8fc2-98d94cc52730
 4^2 * LilGuys.G * m / calc_h(halo_in)^2
 
 # ╔═╡ b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
-LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
+LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 
 # ╔═╡ Cell order:
 # ╟─07a710d8-0ae4-4d9f-9759-002750730010
 # ╟─33f433ec-e94e-41fd-a808-6254bf4d34ce
 # ╟─45ac95e4-a9a1-4f8f-9523-8f670f076ae5
 # ╠═2c90aad4-87e7-11ee-2fbd-05f67c7e0343
-# ╠═60eba328-c047-4b59-8b8c-8b24a4884541
 # ╠═f4269d1a-940d-41da-9183-5130978f7d7b
 # ╠═ef991557-7bf7-4add-b29f-f16187297e46
 # ╠═21619de9-8960-46fe-8a0c-808776b33c6d
 # ╠═a334b0a2-b408-4c81-a074-67cb1bcb58be
+# ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
+# ╠═3dd1e03b-ef25-401d-829f-79292c465724
 # ╠═24b4184d-7f69-47fc-a758-50f21840283a
 # ╟─67e892f1-3969-484f-9671-e0ac018babf2
 # ╟─fc490d05-d494-4771-9dec-7d1837485ff0
@@ -838,7 +839,6 @@ LilGuys.G * LilGuys.calc_M200(halo_in) / LilGuys.calc_R200(halo_in)^2
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
-# ╠═76003206-050b-4913-9ab3-d4c0c2dd05f8
 # ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 # ╠═9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
 # ╠═8a06c0ad-2b48-48ba-a542-85926e164712

@@ -26,7 +26,7 @@ include("./style.jl")
 import TOML
 
 # ╔═╡ b31bfb7e-8550-4f97-8b42-91b92edaa255
-CairoMakie.activate!(type="svg", pt_per_unit=2)
+
 
 # ╔═╡ 4ee54995-a31f-4ae1-8204-e55884d786bb
 α = LilGuys.R_h(LilGuys.Exp2D(R_s=1))
@@ -38,7 +38,7 @@ function load_profile(galaxyname; algname="jax")
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
 		"density_profiles/$(algname)_eqw_profile.toml")
 	
-    prof = LilGuys.StellarDensityProfile(filename) |> LilGuys.filter_empty_bins
+    prof = LilGuys.SurfaceDensityProfile(filename) |> LilGuys.filter_empty_bins
 
 	density_fit = TOML.parsefile(filename * "_inner_fits.toml")
 	R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
@@ -83,20 +83,20 @@ galaxies = OrderedDict(
 		color = COLORS[1],
 		marker = :dot,
 		label = "Fornax",
-		linewidth=2
+		#linewidth=2
 	),
 	"sculptor" => (
 		color = COLORS[2], 
 		marker=:rect,
 		label = "Sculptor",
-		linewidth=1.75
+		#linewidth=1.75
 	),
 	"ursa_minor" => (
 		color = COLORS[3],
 		marker = :star5,
 		label = "Ursa Minor",
-		markersize=8,
-		linewidth=1.5
+		#markersize=8,
+		#linewidth=1.5
 	),
 )
 
@@ -145,7 +145,7 @@ let
 	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", linewidth=1, markersize=3)
 	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", linewidth=1, markersize=3)
 
-	axislegend(position=:lb, merge=true, unique=true)
+	Legend(fig[1,2], ax,  merge=true, unique=true)
 
 
 
@@ -221,7 +221,7 @@ let
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
 		limits=(-1.5, 1.6, -1.2, 1.2),
-				  ylabelsize=10
+				 # ylabelsize=10
 	)
 
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))

@@ -25,11 +25,22 @@ include("./paper_style.jl")
 # ╔═╡ 67dd3488-79e1-4ba2-b9ac-f417765d55de
 import TOML
 
-# ╔═╡ b31bfb7e-8550-4f97-8b42-91b92edaa255
-CairoMakie.activate!(type="svg", pt_per_unit=2)
+# ╔═╡ 9f06a5c4-a8ae-49d2-991e-1c1576361700
+function get_R_h(galaxyname)
+	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
+	R_h = obs_props["R_h"]
+	return R_h
+end
 
-# ╔═╡ 4ee54995-a31f-4ae1-8204-e55884d786bb
-α = LilGuys.R_h(LilGuys.Exp2D(R_s=1))
+# ╔═╡ be13884c-fe1b-4b30-95a0-983ff73eaa0c
+get_R_h("fornax")
+
+# ╔═╡ 0d5d8a0f-97df-4a46-876e-3f11f52ceecf
+function get_R_h_inner(galaxyname)
+	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
+	R_h = obs_props["R_h_inner"]
+	return R_h
+end
 
 # ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
 function load_profile(galaxyname; algname="jax")
@@ -38,28 +49,28 @@ function load_profile(galaxyname; algname="jax")
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
 		"density_profiles/$(algname)_eqw_profile.toml")
 	
-    prof = LilGuys.StellarDensityProfile(filename) |> LilGuys.filter_empty_bins
-
-	density_fit = TOML.parsefile(filename * "_inner_fits.toml")
-	R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
-	R_h_u = α * 10 ^ LilGuys.Measurement(density_fit["log_R_s_exp2d_inner"], density_fit["log_R_s_exp2d_inner_em"], density_fit["log_R_s_exp2d_inner_ep"])
+    prof = LilGuys.SurfaceDensityProfile(filename) |> LilGuys.filter_empty_bins
 	
-	@info "R_h = $R_h_u arcmin"
+	R_h = get_R_h_inner(galaxyname)
+	
+	@info "R_h = $R_h arcmin"
 	@info "counts = $(sum(prof.counts))"
 
-	Σ_h = 10 .^ LilGuys.lerp(prof.log_R, middle.(prof.log_Sigma))(log10(R_h))
-	M_s = Σ_h * R_h .^ 2
+	Σ_h = 10 .^ LilGuys.lerp(prof.log_R, middle.(prof.log_Sigma))(log10(middle(R_h)))
+	M_s = Σ_h * middle(R_h) .^ 2
 
 	
-    prof = LilGuys.scale(prof, 1/R_h, 1/M_s)
+    prof = LilGuys.scale(prof, 1/middle(R_h), 1/M_s)
 
 	filt = maximum.(LilGuys.error_interval.(prof.log_Sigma)).< 1
 
-	prof.log_R = prof.log_R[filt]
-	prof.log_Sigma = prof.log_Sigma[filt]
+	prof.log_Sigma[.!filt] .= Measurement(NaN, NaN)
 
-	prof
+	prof |> LilGuys.filter_empty_bins
 end
+
+# ╔═╡ 4ee54995-a31f-4ae1-8204-e55884d786bb
+α = LilGuys.R_h(LilGuys.Exp2D(R_s=1))
 
 # ╔═╡ 8adc28b1-b0d0-4735-a1f1-ee3bb82e8ef2
 prof_scl = load_profile("sculptor", algname="jax_2c")
@@ -103,11 +114,11 @@ galaxies = OrderedDict(
 # ╔═╡ 552e9438-862f-4710-a7d4-c8d798b5f1aa
 galaxynames = [
 	"fornax",
-	"leo1",
-	"leo2",
-	"carina",
-	"sextans1",
-	"draco",	
+	# "leo1",
+	# "leo2",
+	# "carina",
+	# "sextans1",
+	# "draco",	
 ]
 
 # ╔═╡ f4e8b66c-5f18-45fd-8859-32479d7227bc
@@ -413,7 +424,9 @@ end
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═67dd3488-79e1-4ba2-b9ac-f417765d55de
-# ╠═b31bfb7e-8550-4f97-8b42-91b92edaa255
+# ╠═9f06a5c4-a8ae-49d2-991e-1c1576361700
+# ╠═be13884c-fe1b-4b30-95a0-983ff73eaa0c
+# ╠═0d5d8a0f-97df-4a46-876e-3f11f52ceecf
 # ╠═40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
 # ╠═4ee54995-a31f-4ae1-8204-e55884d786bb
 # ╠═8adc28b1-b0d0-4735-a1f1-ee3bb82e8ef2

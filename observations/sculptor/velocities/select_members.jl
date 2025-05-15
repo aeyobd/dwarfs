@@ -211,10 +211,16 @@ md"""
 """
 
 # ╔═╡ ea3d420f-00f8-4ca2-a49d-e26b48e50afd
-nonmemb_stars = rv_meas[(rv_meas.PSAT_RV .< psat_min) .& rv_meas.F_scatter, :]
+nonmemb_stars = rv_meas[.!memb_filt, :]
+
+# ╔═╡ 2ef9b009-0acc-4fdb-9fd4-b2e2202d28bb
+write_fits(joinpath(data_dir, "$(outname)_nonmemb.fits"), nonmemb_stars, overwrite=true)
 
 # ╔═╡ 081c30c7-28e9-4155-80a5-d35317ba926a
-hist(nonmemb_stars.RV)
+hist(nonmemb_stars.RV[nonmemb_stars.F_scatter])
+
+# ╔═╡ 31717f13-cbca-4984-a3c1-e7dbc9dcb114
+hist(nonmemb_stars.RV[RVUtils.sigma_clip(nonmemb_stars.RV, 3)])
 
 # ╔═╡ 68edc01b-496e-466e-9980-83a586b0bb82
 hist(memb_stars.RV)
@@ -293,11 +299,13 @@ end
 # ╠═064dff05-192d-41bb-993f-5fb5abc36ecd
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
 # ╠═a162219f-df5a-41d8-bf54-927a355f6431
+# ╠═2ef9b009-0acc-4fdb-9fd4-b2e2202d28bb
 # ╠═b8ee2ea3-98aa-44c4-a309-1a356feb0686
 # ╠═b1230b9d-e3ea-4330-b7f5-e708f08db51c
 # ╟─cb3bc2ab-8ed7-493d-9868-f793fe24bc42
 # ╠═ea3d420f-00f8-4ca2-a49d-e26b48e50afd
 # ╠═081c30c7-28e9-4155-80a5-d35317ba926a
+# ╠═31717f13-cbca-4984-a3c1-e7dbc9dcb114
 # ╠═68edc01b-496e-466e-9980-83a586b0bb82
 # ╠═fb52ac04-1483-471f-a164-9bbe15464378
 # ╠═6493a62d-cdb7-4831-9da6-25035e3cb7c5

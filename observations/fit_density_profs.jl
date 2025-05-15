@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -101,8 +101,8 @@ end
 
 # ╔═╡ 72524f04-bd5b-4f4b-a41d-8c038c180ce0
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="leo2"),
-	profilename = TextField(default="../mcmc/hist_fast_profile.toml")
+	galaxyname = TextField(default="galaxy"),
+	profilename = TextField(default="jax_profile.toml")
 ))
 
 # ╔═╡ 1238d232-a2c0-44e5-936b-62fd9137d552
@@ -136,7 +136,7 @@ md"""
 
 # ╔═╡ 20e017f2-c90b-46a5-a6f1-8e4aeb5ffde8
 begin
-	prof_in = LilGuys.StellarDensityProfile(joinpath(galaxyname, "density_profiles/$(profilename)"))
+	prof_in = LilGuys.SurfaceDensityProfile(joinpath(galaxyname, "density_profiles/$(profilename)"))
 	if prof_in.log_m_scale != 0
 		prof_in.log_Sigma .-= prof_in.log_m_scale
 		prof_in.notes["normalization"] = "none"
@@ -166,8 +166,24 @@ begin
 		log_R = prof_in.log_R[_filt_prof],
 		log_Sigma = middle.(prof_in.log_Sigma[_filt_prof]),
 		log_Sigma_err = max.(LilGuys.lower_error.(prof_in.log_Sigma)[_filt_prof],  upper_error.(prof_in.log_Sigma)[_filt_prof]),
-		log_R_bins = prof_in.log_R_bins[_filt_bins],
+		#log_R_bins = prof_in.log_R_bins[_filt_bins],
 	)
+end
+
+# ╔═╡ 48f59ed4-209b-45c5-857f-3c309141e8a7
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel = log_R_label,
+		ylabel = log_sigma_label,
+		limits=(nothing, nothing, -4, 2)
+	)
+
+	LilGuys.plot_log_Σ!(ax, prof_in, label="input")
+	scatter!(prof.log_R, prof.log_Sigma, color=COLORS[2], label="mcmc input")
+
+	axislegend(position=:lb)
+	fig
 end
 
 # ╔═╡ d382db17-36c3-4a7c-884e-c93b6b00603f
@@ -178,7 +194,7 @@ prof
 
 # ╔═╡ 5026118a-85f6-4f71-bd0f-d25c4916c834
 "a list of log radii to sample analytic models over"
-log_R_model = LinRange(prof.log_R_bins[1], prof.log_R_bins[end], 1000)
+log_R_model = LinRange(prof.log_R[1], prof.log_R[end], 1000)
 
 # ╔═╡ 30154472-316b-4489-b1e5-f503447928cb
 md"""
@@ -352,6 +368,28 @@ struct MCMCFit
 	lp::Float64
 end
 
+# ╔═╡ 47ab55c6-e202-47a0-b1d5-684c9a1fef5d
+"""
+	sample_model(density_model; prof, kwargs...)
+
+Samples the provided density model assuming observations in `prof`. 
+Kwargs passed to turing.
+"""
+function sample_model(density_model::DensityModel; 
+		prof=prof, 
+		kwargs...
+	)
+	
+	samples = sample_model(density_model.turing_model, density_model.log_Σ, prof; kwargs...)
+	
+	summary = summarize_chain(samples)
+
+	# easier to reconstruct model here for chi2
+	fit = MCMCFit(density_model, samples, summary, NaN, get_lp(samples))
+	χ2 = get_χ2(fit, prof)
+	return 	MCMCFit(density_model, samples, summary, χ2, get_lp(samples))
+end
+
 # ╔═╡ 3981b6f9-7ace-4de9-b72d-10168512689c
 """
 	sample_model(model, log_Σ, prof; threads, chains, kwargs...)
@@ -437,28 +475,6 @@ function summarize_chain(chain; p=0.16)
 
 	select!(summary, :parameters, :median, :err_low, :err_high, Not([:parameters, :median, :err_low, :err_high]))
 	return summary
-end
-
-# ╔═╡ 47ab55c6-e202-47a0-b1d5-684c9a1fef5d
-"""
-	sample_model(density_model; prof, kwargs...)
-
-Samples the provided density model assuming observations in `prof`. 
-Kwargs passed to turing.
-"""
-function sample_model(density_model::DensityModel; 
-		prof=prof, 
-		kwargs...
-	)
-	
-	samples = sample_model(density_model.turing_model, density_model.log_Σ, prof; kwargs...)
-	
-	summary = summarize_chain(samples)
-
-	# easier to reconstruct model here for chi2
-	fit = MCMCFit(density_model, samples, summary, NaN, get_lp(samples))
-	χ2 = get_χ2(fit, prof)
-	return 	MCMCFit(density_model, samples, summary, χ2, get_lp(samples))
 end
 
 # ╔═╡ 6c59342a-36b8-458b-8b17-92b0f18afb7d
@@ -645,6 +661,9 @@ mcmc_fit_sersic = sample_model(sersic_model)
 # ╔═╡ efad6b83-73a5-4aea-944b-ddc1942ac71a
 plot_chains(mcmc_fit_sersic.samples)
 
+# ╔═╡ db6544fb-1339-4085-bffc-6ed04b8dd576
+10 ^ mcmc_fit_sersic.summary.median[mcmc_fit_sersic.summary.parameters .== :log_R_h][1]
+
 # ╔═╡ ebc0cbc2-d9f3-4cab-a3ee-6a21763f4d20
 pairplot(mcmc_fit_sersic.samples)
 
@@ -707,6 +726,9 @@ plot_chains(mcmc_fit_exp2d.samples)
 # ╔═╡ d634a7c8-b35c-4237-95f2-6fb52c666b2f
 pairplot(mcmc_fit_exp2d.samples)
 
+# ╔═╡ 8d9aff92-7156-4803-b9a9-e22c82d1a912
+
+
 # ╔═╡ 31725ed6-3e11-4526-9e99-d3ffda80f859
 let
 	fig = plot_samples_residuals(mcmc_fit_exp2d)
@@ -720,79 +742,6 @@ ml_fit_exp2d  = fit_profile(prof, LilGuys.Exp2D, [], [0.0, 0.0])
 
 # ╔═╡ 76326a80-b709-4f96-a379-8aaea4d3af44
 plot_Σ_fit_res(prof, ml_fit_exp2d, title="Exp2D")
-
-# ╔═╡ c2301858-2be3-4945-bef2-4525cd123030
-md"""
-### Inner exp2d
-"""
-
-# ╔═╡ 0a070858-01c8-4cdc-bb8d-f5d587371cdb
-R_s_inner = 3
-
-# ╔═╡ 19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
-log_R_max_exp = let
-	ml_fit_exp2d_iter = []
-
-	ml_fit_exp2d_old = ml_fit_exp2d
-	log_R_max = log10(R_s_inner) + ml_fit_exp2d_old["log_R_s"]
-
-	for i in 1:10
-		log_R_max_old = log_R_max
-		ml_fit_exp2d_new  = fit_profile(filter_prof(prof, log_R_max), LilGuys.Exp2D, [], [0.0, 0.0])
-		ml_fit_exp2d_old = ml_fit_exp2d_new
-		push!(ml_fit_exp2d_iter, ml_fit_exp2d_new)
-
-		log_R_max = log10(R_s_inner) + ml_fit_exp2d_old["log_R_s"]
-
-		if log_R_max ≈ log_R_max_old rtol=1e-1
-			@info "converged by iteration $i"
-			break
-		else
-			@info "R max $log_R_max"
-		end
-	end
-
-	ml_fit_exp2d
-	log_R_max
-end
-
-# ╔═╡ 48f59ed4-209b-45c5-857f-3c309141e8a7
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], 
-		xlabel = log_R_label,
-		ylabel = log_sigma_label,
-		limits=(nothing, nothing, -4, 2)
-	)
-
-	LilGuys.plot_log_Σ!(ax, prof_in, label="input")
-	scatter!(prof.log_R, prof.log_Sigma, color=COLORS[2], label="mcmc input")
-	prof2 = filter_prof(prof, log_R_max_exp)
-	scatter!(prof2.log_R, prof2.log_Sigma, color=COLORS[3], label="exp input")
-
-	axislegend(position=:lb)
-	fig
-end
-
-# ╔═╡ 6922839a-1b5d-4a5c-8f68-50cd57d986a8
-model_exp2d_inner = DensityModel(log_Σ_exp2d, turing_model_exp2d, [:log_M, :log_R_s])
-
-# ╔═╡ bdf90521-e8f3-40e5-a61f-ab8503cce9fe
-mcmc_fit_exp2d_inner = sample_model(model_exp2d_inner, prof=filter_prof(prof, log_R_max_exp))
-
-# ╔═╡ 8e81babf-1963-4187-a8c5-0b1e1a325ab3
-plot_chains(mcmc_fit_exp2d_inner.samples)
-
-# ╔═╡ 6518f711-4912-421f-b169-7b7d4fb365e5
-pairplot(mcmc_fit_exp2d_inner.samples)
-
-# ╔═╡ 44500a4e-9be6-486b-94e7-364b1c64749a
-let
-	fig = plot_samples_residuals(mcmc_fit_exp2d_inner)
-
-	@savefig "exp2d_inner"
-	fig
-end
 
 # ╔═╡ bde4f544-7b5b-4224-9ce3-090fa7fe8311
 md"""
@@ -837,6 +786,9 @@ plot_chains(mcmc_fit_plummer.samples)
 
 # ╔═╡ 8ae13c5e-0bd0-4a37-977a-92b4730be75a
 pairplot(mcmc_fit_plummer.samples)
+
+# ╔═╡ bbb88c44-f9ee-428e-bc1e-70219731b38b
+10 ^ mcmc_fit_plummer.summary.median[mcmc_fit_plummer.summary.parameters .== :log_R_s][1] 
 
 # ╔═╡ 7d47a188-b26a-4beb-8bca-d6761bf21ee6
 ml_fit_plummer = fit_profile(prof, LilGuys.Plummer, [], [1.0, 0.0])
@@ -905,6 +857,9 @@ ml_fit_king = fit_profile(prof, LilGuys.KingProfile, ["c"], [2.0, 2.0, 3.0], M=1
 # ╔═╡ 942a9c71-e568-4828-bfd5-6072d587bf47
 pairplot(mcmc_fit_king.samples)
 
+# ╔═╡ 43f5a0b7-c548-485a-beab-5ec324706c26
+10 ^ mcmc_fit_king.summary.median[mcmc_fit_king.summary.parameters .== :log_R_s][1]  
+
 # ╔═╡ 6473e3e9-393b-4952-8600-a16506cd0537
 let 
 	fig = plot_samples_residuals(mcmc_fit_king)
@@ -926,7 +881,6 @@ md"""
 all_fits = OrderedDict(
 	"sersic" => mcmc_fit_sersic,
 	"exp2d" => mcmc_fit_exp2d,
-	"exp2d_inner" => mcmc_fit_exp2d_inner,
 	"plummer" => mcmc_fit_plummer,
 	"king" => mcmc_fit_king,
 )
@@ -954,8 +908,11 @@ end
 # ╔═╡ 84fe5bae-c470-4df8-86fa-51cdf4300f01
 import TOML
 
+# ╔═╡ fe64c75f-ec06-476f-90c8-238705338bd9
+outfile = split(profilename, "_profile")[1] * "_density_fits.toml"
+
 # ╔═╡ 456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca
-open(joinpath(galaxyname, "density_profiles/$(profilename)_density_fits.toml"), "w") do f
+open(joinpath(galaxyname, "density_profiles/$outfile"), "w") do f
 	TOML.print(f, derived_props)
 end
 
@@ -1023,6 +980,7 @@ end
 # ╠═29ee50a7-9287-46e7-a804-1aada9cd88b8
 # ╠═dd327a8e-a83d-4423-b507-54033c7934c4
 # ╠═efad6b83-73a5-4aea-944b-ddc1942ac71a
+# ╠═db6544fb-1339-4085-bffc-6ed04b8dd576
 # ╠═ebc0cbc2-d9f3-4cab-a3ee-6a21763f4d20
 # ╠═61b28598-11fd-4ef3-bb7b-527482815eaa
 # ╠═85731957-d441-47ad-b67b-ef1ea5b56c77
@@ -1034,17 +992,10 @@ end
 # ╠═1ad2610a-7f62-4dbc-a22e-7209f6c3e881
 # ╠═7239698d-f802-4be3-9c2e-c7102858998a
 # ╠═d634a7c8-b35c-4237-95f2-6fb52c666b2f
+# ╠═8d9aff92-7156-4803-b9a9-e22c82d1a912
 # ╠═31725ed6-3e11-4526-9e99-d3ffda80f859
 # ╠═415397c4-f4b0-4e21-9df4-cf8faf761648
 # ╠═76326a80-b709-4f96-a379-8aaea4d3af44
-# ╠═c2301858-2be3-4945-bef2-4525cd123030
-# ╠═0a070858-01c8-4cdc-bb8d-f5d587371cdb
-# ╠═19f1f280-b36c-43e2-971b-2b2d3bdc7a4f
-# ╠═6922839a-1b5d-4a5c-8f68-50cd57d986a8
-# ╠═bdf90521-e8f3-40e5-a61f-ab8503cce9fe
-# ╠═8e81babf-1963-4187-a8c5-0b1e1a325ab3
-# ╠═6518f711-4912-421f-b169-7b7d4fb365e5
-# ╠═44500a4e-9be6-486b-94e7-364b1c64749a
 # ╟─bde4f544-7b5b-4224-9ce3-090fa7fe8311
 # ╠═fbd8d5b6-3d48-4525-b99d-483c946cc6a3
 # ╠═81e50d1f-609b-46f5-b9e2-873dfeba1b45
@@ -1052,6 +1003,7 @@ end
 # ╠═ad16e44b-4f56-4ff5-a85e-f619cbf0c24f
 # ╠═e8168f09-b8d1-42fc-93eb-16063417795c
 # ╠═8ae13c5e-0bd0-4a37-977a-92b4730be75a
+# ╠═bbb88c44-f9ee-428e-bc1e-70219731b38b
 # ╠═7d47a188-b26a-4beb-8bca-d6761bf21ee6
 # ╠═3407d0ad-856e-415b-948a-3592b3f6b28c
 # ╠═22b49e19-30b4-40dd-b641-6a8f477aa541
@@ -1064,10 +1016,12 @@ end
 # ╠═4b316372-11e4-42dc-b12f-e74637a35824
 # ╠═4d70a044-7954-48df-a8b2-07ac930ee0bb
 # ╠═942a9c71-e568-4828-bfd5-6072d587bf47
+# ╠═43f5a0b7-c548-485a-beab-5ec324706c26
 # ╠═6473e3e9-393b-4952-8600-a16506cd0537
 # ╠═9840c373-dbf2-4d26-85b5-15ecbbb2c657
 # ╟─de7eb968-6616-491e-b258-d3f8be1134e8
 # ╠═6f101561-2262-4012-9e17-aae2bd873d95
 # ╠═a406d50a-468e-4b8a-ac0d-2bc4ea8e4251
 # ╠═84fe5bae-c470-4df8-86fa-51cdf4300f01
+# ╠═fe64c75f-ec06-476f-90c8-238705338bd9
 # ╠═456d26b3-6ec0-4fdc-95cc-78d35cc2e7ca

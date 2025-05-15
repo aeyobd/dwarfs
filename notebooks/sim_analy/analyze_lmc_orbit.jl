@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -17,6 +17,9 @@ end
 
 # ╔═╡ 2c702eb7-ebb6-44c9-8e01-ca52d011c014
 using HDF5
+
+# ╔═╡ 3f1890df-eea5-4903-b991-b68dd6b85cbf
+using OrderedCollections
 
 # ╔═╡ 8b41af50-9ae0-475b-bacc-3799e2949b30
 md"""
@@ -39,7 +42,7 @@ md"""
 galaxyname = "sculptor"
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "$galaxyname/1e6_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
+modelname = "$galaxyname/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -61,8 +64,11 @@ lmc_file = joinpath(parentdir, "analysis", modelname, "lmc_traj.csv")
 # ╔═╡ 3711412d-ae30-449b-8671-88fe0d128d20
 lmc_exp_file = joinpath(parentdir, "analysis", modelname, "lmc_traj_exp.csv")
 
+# ╔═╡ 48a8bc72-fd81-44f5-abab-9afded7df15f
+modeldir = joinpath(parentdir, "analysis", modelname)
+
 # ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
-outfile = joinpath(parentdir, "analysis", modelname, "orbital_properties.toml")
+outfile = joinpath(parentdir, "analysis", modelname, "orbital_properties_lmc.toml")
 
 # ╔═╡ bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
 centresfile = joinpath(parentdir, "analysis", modelname, "centres.hdf5")
@@ -129,7 +135,7 @@ md"""
 """
 
 # ╔═╡ 78b1e507-14c3-4279-b502-d92ed5bfb27b
-idx_interest = [1, argmin(calc_r(x_scl_lmc))]
+idx_interest = [1, argmin(radii(x_scl_lmc))]
 
 # ╔═╡ 8535eb24-a43b-4680-a54a-a7bddb535999
 x_cen[:, idx_interest]
@@ -141,7 +147,7 @@ x_lmc[:, idx_interest]
 x_lmc[:, end]
 
 # ╔═╡ 3410ae62-b91f-42c1-a8ee-9445565923d3
-LilGuys.calc_r((v_cen[:, idx_interest] .- v_lmc[:, idx_interest]) * V2KMS)
+LilGuys.radii((v_cen[:, idx_interest] .- v_lmc[:, idx_interest]) * V2KMS)
 
 # ╔═╡ 79147e9e-f09b-4e05-882f-367b31cbcef2
 
@@ -168,9 +174,9 @@ T2GYR = LilGuys.T2GYR
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = calc_r(x_cen)
+	r = radii(x_cen)
 	lines!(t * T2GYR, r, label="model")
-	lines!(T2GYR*(orbit_expected.t), calc_r(x_cen_exp),
+	lines!(T2GYR*(orbit_expected.t), radii(x_cen_exp),
 		label="expected"
 	)
 
@@ -184,11 +190,11 @@ let
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "Scl - LMC distance / kpc",
 		limits=(nothing, nothing, 0, nothing)
 	)
-	r = calc_r(x_scl_lmc)
+	r = radii(x_scl_lmc)
 	lines!(t * T2GYR, r, label="nbody")
 	@info minimum(r)
 
-	r = calc_r(x_scl_lmc_exp)
+	r = radii(x_scl_lmc_exp)
 	lines!(orbit_expected.t * T2GYR, r, label="point particle")
 	axislegend(ax, position=:lb)
 	fig
@@ -209,7 +215,7 @@ let
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "Scl - LMC distance / kpc",
 		limits=(nothing, nothing, 0, nothing)
 	)
-	r = calc_r(x_scl_lmc)
+	r = radii(x_scl_lmc)
 	lines!(t * T2GYR, r, label="nbody")
 	scatter!(t[idx_gyr] * T2GYR, r[idx_gyr], label="nbody")
 
@@ -250,17 +256,17 @@ let
 	fig
 end
 
-# ╔═╡ 1238e21a-75d1-4a57-a578-50e7ebb387ae
-	LilGuys.kpc_to_arcmin(LilGuys.calc_break_radius(0.15 / T2GYR, 10.6 / V2KMS), 83.2)
-
 # ╔═╡ cb4241fe-30d0-4a27-bc90-e3bdf15aa32e
 length(times)
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
-r = calc_r(x_cen)
+r = radii(x_cen)
 
 # ╔═╡ 76a51188-2168-4cc6-b9e2-ede9f6ec34e4
 times[argmin(r)]
+
+# ╔═╡ 4d696d88-216c-40e9-9159-2e23441b61d3
+r_lmc = radii(x_scl_lmc)
 
 # ╔═╡ cae63625-df19-4efc-95f2-58887e8fb759
 md"""
@@ -277,10 +283,52 @@ times[idx_f_2]
 times[argmin(r)] - times[idx_f_2]
 
 # ╔═╡ d574d14c-c48b-4439-b533-7352c2858b8a
-calc_r(x_cen[:, idx_f_2] .- [8.122, 0, 0])
+radii(x_cen[:, idx_f_2] .- [8.122, 0, 0])
 
 # ╔═╡ b45cced1-51ef-432b-a800-24ba5d543f2a
-calc_r(x_scl_lmc[:, idx_f_2])
+radii(x_scl_lmc[:, idx_f_2])
+
+# ╔═╡ 619a9aae-dcdc-4264-8086-c8149387ed6b
+md"""
+# Saving
+"""
+
+# ╔═╡ 35a185f0-ef91-4db0-abba-607005b6bc1a
+idx_peri = argmin(r_lmc)
+
+# ╔═╡ 4ac8a97d-9142-42e1-9826-7b81a5b9a28a
+t_peri = times[idx_peri]
+
+# ╔═╡ c289ee03-5926-4ce0-80e4-02f297f0636c
+r_peri = r_lmc[idx_peri]
+
+# ╔═╡ 6ef4980c-8987-4263-bedf-273bb065724b
+delta_v_peri = radii(v_scl_lmc)[idx_peri] * V2KMS
+
+# ╔═╡ 8f8a9115-d7bf-4ce5-9132-bb6dbd71c8c7
+orbital_props = TOML.parsefile(modeldir * "/orbital_properties.toml")
+
+# ╔═╡ e901b8c7-9989-4dd9-9298-420ab96d78f1
+t_f = t[orbital_props["idx_f"]]
+
+# ╔═╡ 38e23f2e-962d-4edb-90c8-4a9e16b1d793
+let
+	
+	orbital_properties = OrderedDict(
+		"pericentre" => r_peri,
+		"idx_peri" => idx_peri,
+		"t_last_peri" => t_f - t_peri,
+		"delta_v_peri" => delta_v_peri
+	)
+
+
+	open(outfile, "w") do f
+		TOML.print(f, orbital_properties)
+	end
+
+	println("saved properties to $outfile")
+	orbital_properties
+end
 
 # ╔═╡ Cell order:
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
@@ -295,6 +343,7 @@ calc_r(x_scl_lmc[:, idx_f_2])
 # ╠═0dd476fd-be53-4e9b-a686-a4462485c64c
 # ╠═460dfdff-7f5f-46bc-bd5c-4a43d916d157
 # ╠═3711412d-ae30-449b-8671-88fe0d128d20
+# ╠═48a8bc72-fd81-44f5-abab-9afded7df15f
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 # ╠═bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
 # ╠═9c427388-c657-4bb7-bc0a-b4de3597c645
@@ -336,12 +385,21 @@ calc_r(x_scl_lmc[:, idx_f_2])
 # ╠═a82343a4-e41b-44a0-9f3f-b0fccc0bc2b2
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 # ╠═76a51188-2168-4cc6-b9e2-ede9f6ec34e4
-# ╠═1238e21a-75d1-4a57-a578-50e7ebb387ae
 # ╠═cb4241fe-30d0-4a27-bc90-e3bdf15aa32e
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
+# ╠═4d696d88-216c-40e9-9159-2e23441b61d3
 # ╠═cae63625-df19-4efc-95f2-58887e8fb759
 # ╠═53d482ae-1e74-4b33-9392-90bc110c113d
 # ╠═335763ff-bca3-406c-b2a9-7769260cabad
 # ╠═9d901528-b95c-4d91-899e-033ae68ae73d
 # ╠═d574d14c-c48b-4439-b533-7352c2858b8a
 # ╠═b45cced1-51ef-432b-a800-24ba5d543f2a
+# ╠═619a9aae-dcdc-4264-8086-c8149387ed6b
+# ╠═3f1890df-eea5-4903-b991-b68dd6b85cbf
+# ╠═35a185f0-ef91-4db0-abba-607005b6bc1a
+# ╠═4ac8a97d-9142-42e1-9826-7b81a5b9a28a
+# ╠═c289ee03-5926-4ce0-80e4-02f297f0636c
+# ╠═6ef4980c-8987-4263-bedf-273bb065724b
+# ╠═8f8a9115-d7bf-4ce5-9132-bb6dbd71c8c7
+# ╠═e901b8c7-9989-4dd9-9298-420ab96d78f1
+# ╠═38e23f2e-962d-4edb-90c8-4a9e16b1d793

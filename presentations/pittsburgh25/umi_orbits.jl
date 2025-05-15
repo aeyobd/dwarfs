@@ -28,13 +28,28 @@ using CSV, DataFrames
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./style.jl")
 
-# ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-CairoMakie.activate!(type=:png)
+# ╔═╡ 15ef3ea9-fe17-44d1-924e-c18722ddf35a
+import TOML
+
+# ╔═╡ 20bc3e9a-ea85-46f3-9a56-1fae435a8575
+set_theme!(theme_arya())
 
 # ╔═╡ b9b99de2-1c01-4562-8295-75b770e232dc
 md"""
 # Utils
 """
+
+# ╔═╡ 68d1a6c9-128c-4abf-93e0-3f3e36431ccb
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/observed_properties.toml"))
+
+# ╔═╡ 940c54c4-8331-4c26-a8e8-8ef94486bb3b
+icrs0 = ICRS(obs_props)
+
+# ╔═╡ 9aca37e5-6d53-48d7-b4db-b84770e66a4a
+gc0 = LilGuys.transform(LilGuys.Galactocentric, icrs0)
+
+# ╔═╡ 37e8a3c3-03e0-45e6-890d-8071c3343c64
+pos_0 = LilGuys.position(gc0)
 
 # ╔═╡ 14f862cc-8e53-4d10-9d73-579ed1d26cd9
 function read_traj(name)
@@ -91,7 +106,7 @@ function plot_x_y_traj!(traj; thin=1, x_direction=2, y_direction=3, alpha=0.01, 
         x = positions[x_direction, i, filt]
         y = positions[y_direction, i, filt]
         
-        lines!(x, y; rasterize=true, alpha=alpha, color=color, linewidth=1, kwargs...)
+        lines!(x, y; rasterize=true, alpha=alpha, color=color, kwargs...)
     
     end
 end
@@ -141,19 +156,43 @@ md"""
 """
 
 # ╔═╡ fb3f61f2-f425-40b4-9983-dfc7528df6ab
-@savefig "scl_mc_orbits_xy" compare_x_y_traj(Dict("fiducial" => traj_fiducial), t_min=-10/T2GYR, r_max=120, thin=2)
+@savefig "umi_mc_orbits_xy" let
+
+	fig = compare_x_y_traj(Dict("fiducial" => traj_fiducial), t_min=-5/T2GYR, r_max=120, thin=2,)
+
+	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
+	
+	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(24, 0), fontsize=0.8*theme(:fontsize)[])
+
+
+	fig
+end
 
 # ╔═╡ 1d3f999b-b25d-49dc-b1ca-7dfdbf1d3d59
 compare_r_t_traj(["" => traj_fiducial], thin=3)
 
 # ╔═╡ 0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
 let
-	fig = compare_x_y_traj(trajectories, t_min=-8/T2GYR, thin=5 )
+	fig = compare_x_y_traj(trajectories, t_min=-5/T2GYR, thin=2 )
 
-	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, linewidth=2, t_min=-4/T2GYR)
-	
+	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, t_min=-5/T2GYR)
+
+	axislegend(position=:lb, merge=true, unique=true, margin=(19,19,19,19))
 	fig
 end
+
+# ╔═╡ 515bbb85-29e6-4fd9-a031-98fc45e0f426
+let
+	fig = compare_x_y_traj(trajectories, t_min=-10/T2GYR, thin=2 )
+
+	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, t_min=-10/T2GYR)
+
+	axislegend(position=:lt, merge=true, unique=true, margin=(19,19,19,19))
+	fig
+end
+
+# ╔═╡ c1062412-37ff-488e-a423-67c5adaa8e66
+theme(:Legend)
 
 # ╔═╡ 34e480a6-8e9e-4278-80a2-c788ccb01327
 function subtract_lmc(traj, traj_lmc)
@@ -171,6 +210,15 @@ trajectories_radii = OrderedDict(
 
 )
 
+# ╔═╡ f48b494b-8b65-47d8-aa8f-3ea37e8a48ed
+let 
+	fig = compare_r_t_traj(["" => traj_fiducial], limits=(-5, 0, 0, 100), colors=[COLORS[1], COLORS[2], :black], thin=2)
+
+	vlines!(-0.12, color=:black)
+
+	fig
+end
+
 # ╔═╡ a876edb6-d0c4-4420-95b2-09c90f33a4b5
 let 
 	fig = compare_r_t_traj(trajectories_radii, limits=(-4, 0, 0, 300), colors=[COLORS[1], COLORS[2], :black], thin=2)
@@ -178,24 +226,19 @@ let
 	fig
 end
 
-# ╔═╡ f48b494b-8b65-47d8-aa8f-3ea37e8a48ed
-let 
-	fig = compare_r_t_traj(["" => traj_fiducial], limits=(-4, 0, 0, 100), colors=[COLORS[1], COLORS[2], :black], thin=2)
-
-	vlines!(-0.1, color=COLORS[3])
-
-	hspan!(0, 16, color=COLORS[4], alpha=0.3)
-	fig
-end
-
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═15ef3ea9-fe17-44d1-924e-c18722ddf35a
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
-# ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
+# ╠═20bc3e9a-ea85-46f3-9a56-1fae435a8575
 # ╠═c2c320b8-3b14-4e49-9048-92a546a6b275
 # ╠═a1606881-5138-4c90-b66f-34bcffd563eb
 # ╠═2d94b40a-2a38-48d5-9b7e-6b493d504aec
 # ╟─b9b99de2-1c01-4562-8295-75b770e232dc
+# ╠═68d1a6c9-128c-4abf-93e0-3f3e36431ccb
+# ╠═940c54c4-8331-4c26-a8e8-8ef94486bb3b
+# ╠═9aca37e5-6d53-48d7-b4db-b84770e66a4a
+# ╠═37e8a3c3-03e0-45e6-890d-8071c3343c64
 # ╠═14f862cc-8e53-4d10-9d73-579ed1d26cd9
 # ╠═18b45a96-ddcd-4a9d-88e2-4dde209676cf
 # ╠═af5cc193-033b-48d2-b2f5-266f7c54c8d6
@@ -211,7 +254,9 @@ end
 # ╠═fb3f61f2-f425-40b4-9983-dfc7528df6ab
 # ╠═1d3f999b-b25d-49dc-b1ca-7dfdbf1d3d59
 # ╠═0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
+# ╠═515bbb85-29e6-4fd9-a031-98fc45e0f426
+# ╠═c1062412-37ff-488e-a423-67c5adaa8e66
 # ╠═34e480a6-8e9e-4278-80a2-c788ccb01327
 # ╠═081e6a08-92e3-4f9d-bc8e-7ff80ca74693
-# ╠═a876edb6-d0c4-4420-95b2-09c90f33a4b5
 # ╠═f48b494b-8b65-47d8-aa8f-3ea37e8a48ed
+# ╠═a876edb6-d0c4-4420-95b2-09c90f33a4b5

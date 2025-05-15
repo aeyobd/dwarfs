@@ -31,9 +31,6 @@ end
 # ╔═╡ 69c98029-165c-407b-9a63-a27e06e30e45
 include("paper_style.jl")
 
-# ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
-include("utils.jl")
-
 # ╔═╡ d3bd7158-ea70-47a0-9800-9bfc08f3557c
 include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 
@@ -52,8 +49,10 @@ galaxyname = "sculptor"
 # ╔═╡ 0004f638-c57a-4dab-8b97-c77840cafbbf
 import TOML
 
-# ╔═╡ cf7aeb0a-d453-462a-b43d-a832567440fd
-
+# ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
+module Utils 
+	include("utils.jl")
+end 
 
 # ╔═╡ ea8e6489-27c8-421b-9512-b0f67a79a294
 import Random
@@ -68,6 +67,9 @@ obs_dir = ENV["DWARFS_ROOT"] * "/observations/"
 
 # ╔═╡ 9ecf79a8-2ed3-40c6-b555-a102250ecbd4
 observed_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/" * galaxyname * "/observed_properties.toml")
+
+# ╔═╡ 7865b1b1-3a55-41cf-b566-a6770c471077
+observed_properties
 
 # ╔═╡ 26cf1867-02be-4d36-8c35-6c58a1feca27
 datafile = obs_dir * "/$galaxyname/data/jensen+24_wide_2c.fits"
@@ -91,30 +93,7 @@ Nmemb = size(members, 1)
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_members_all.fits")
-
-# ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
-LilGuys.mean(skipmissing(rv_members.RV_t23))
-
-# ╔═╡ a9d94121-ea6e-416a-bae8-aa93c16bde72
-md"""
-# Utilities
-"""
-
-# ╔═╡ 965217b8-b2a5-485b-83de-cac887065b19
-plot_labels = OrderedDict(
-	:xi => L"$\xi$\,/\,degrees",
-	:eta => L"$\eta$\,/\,degrees",
-	:xi_am => L"$\xi$\,/\,arcmin",
-	:eta_am => L"$\eta$\,/\,arcmin",
-	:G => "G (mag)",
-	:bp_rp => "BP – RP (mag)",
-	:pmra => L"$\mu_{\alpha*}$ / mas yr$^{-1}$",
-	:pmdec => L"$\mu_{\delta}$ / mas yr$^{-1}$",
-)
-
-# ╔═╡ 2d4da56b-5d0a-49d3-83ae-a90f85192101
-θmax = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined_x_wide_2c_psat_0.2.fits")
 
 # ╔═╡ 5a9b5529-50f1-4cb5-b716-42180ea77d5f
 md"""
@@ -126,74 +105,34 @@ md"""
 The plots below show various subsamples of the dataset in different planes to get a handle on how generally members are selected using the J+24 algorithm.
 """
 
-# ╔═╡ 8084f25b-ebe9-4f8d-aeef-d36decb5dc31
-COLORS
-
-# ╔═╡ ea34ad98-8041-40d1-b7a4-4f689b9c6a11
-print(COLORS[1])
-
-# ╔═╡ 6e77235b-4c46-4508-ba2d-01a7342cb4d9
-144  + 75
-
-# ╔═╡ 50d90ce5-99df-46af-b309-a8ccd0ccf921
-[colorant"#cecece", colorant"#84aa83", colorant"#207e95", colorant"#4c397c"]
-
 # ╔═╡ 3ab5488e-4c7c-4b8d-9c4b-cc0a04620298
- my_colors = SELECTION_COLORS
+ my_colors = Utils.SELECTION_COLORS
 
-# ╔═╡ 8d3b07c1-1983-4151-9a57-ab0a0edb8212
-LinRange(0.85, 0.4, 4)
-
-# ╔═╡ 28fbacb4-8078-4af2-bf8f-23adab46669b
- to_colormap(:YlGnBu_4)[end-2:end]
-
-# ╔═╡ f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
- to_colormap(:seaborn_crest_gradient)[[1, 80, 170, 255]]
-
-# ╔═╡ 6b4f3e96-d525-4885-97fd-a3d35171ad76
-[colorant"black", COLORS[1], COLORS[3], COLORS[8]]
-
-# ╔═╡ 7f6ab558-627e-46c5-8f47-b1ec03fd2b63
- to_colormap(:seaborn_mako_gradient)[reverse([65, 129, 192, 255])]
-
-# ╔═╡ c3eef548-6678-46a3-96a1-01246f5f70e0
-Arya.get_arya_cmap()
-
-# ╔═╡ 9a73fa3d-259d-493a-90eb-1cb0aaaf9b5d
-LinRange(1, 256, 5)
-
-# ╔═╡ c406b99a-40e6-405d-bcf3-b899145444db
-0.2 * 16
-
-# ╔═╡ 12aa5708-dfee-4b48-8835-69055ad82680
-member_markersize = 3
-
-# ╔═╡ 57f558c1-ca31-44bb-a681-a2ed083a0b70
-bg_markersize = 2
-
-# ╔═╡ f6fe794a-e925-4544-b5ac-fda9eb96629b
-import StatsBase: median
-
-# ╔═╡ fefd2f20-7116-4fff-b9c5-8bc3628b508f
-median(members.dRP)
-
-# ╔═╡ 45fb74e8-de19-44b6-8abd-6e2e9d3af76f
-median(members.dBP .+ members.dRP)
-
-# ╔═╡ a8263f41-7b79-4f45-98d7-2d96324bc8fd
-median(members.dG)
+# ╔═╡ 9c66468e-c357-4268-875b-ec83510fd982
+md"""
+# Extra
+"""
 
 # ╔═╡ c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
-R_h = observed_properties["r_h"]
+R_h = observed_properties["R_h"]
+
+# ╔═╡ bbae75e1-b317-4e4f-a62e-817715a5a095
+observed_properties["R_h_inner"]
+
+# ╔═╡ b83ebaf6-cae2-40c0-bd71-98bbbc10eb92
+Ag, Ab, Ar = Utils.get_extinction(best_stars.ra, best_stars.dec, best_stars.bp_rp)
+
+# ╔═╡ f37a09e1-3c0f-44a7-b7ad-b48c5553871e
+scatter(best_stars.xi, best_stars.eta, color=Ag, markersize=5)
 
 # ╔═╡ 430fae9d-c708-4447-80ce-aabf19b161d2
-rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
+rv_distant = rv_members[rv_members.R_ell .> 7R_h, :]
 
 # ╔═╡ aeb5e17f-6479-4504-ae4f-c9218f374d48
 rv_distant.PSAT
 
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "scl_selection" compare_j24_samples(
+@savefig "scl_selection" Utils.compare_j24_samples(
 		OrderedDict(
 		:best => best_stars,
 		:members_nospace => members_nospace,
@@ -216,7 +155,7 @@ rv_distant.PSAT
 		:members => (;
 			markersize=3,
 			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
-			marker=:diamond,
+			marker=:x,
 			#color=:transparent,
 			#strokewidth=0.3,
 			color = my_colors[3],
@@ -226,56 +165,46 @@ rv_distant.PSAT
 		),
 		:rv => (;
 			markersize=4,
-			marker=:xcross,
+			marker=:diamond,
 			label = "RV members" =>(alpha=1, markersize=2.5*2),
 			color = my_colors[4],
 			strokecolor = :black,
 			strokewidth=0.0
 		),
 		:rv_distant => (;
-			markersize=6,
+			markersize=8,
 			marker=:star5,
 			color = my_colors[4],
-			strokewidth=0.3,
-			strokecolor=:black
+			strokewidth=1,
+			strokecolor=COLORS[4]
 		),
 	),
 	observed_properties
 )
 
-# ╔═╡ 9c66468e-c357-4268-875b-ec83510fd982
-md"""
-# Extra
-"""
-
 # ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
-rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta]]
+rv_members[.!ismissing.(rv_members.RV_gmos), [:xi, :eta, :R_ell]]
+
+# ╔═╡ a373edbf-d441-46ce-bc0f-08ac0d693c44
+rv_distant.R_ell ./ observed_properties["R_h"]
+
+# ╔═╡ 9376c4d1-4237-408f-a845-1decf183cf10
+ 12.33 .* sqrt(1-0.33)
 
 # ╔═╡ 51c1f61c-b2b1-4d51-bd02-51806217278a
-rv_all = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined.fits")
+
 
 # ╔═╡ 065741fb-dd59-406c-b4f6-ac6413a652a7
-id_nonmemb = setdiff(rv_all.source_id, rv_members.source_id)
+
 
 # ╔═╡ 885f8487-8f3c-4db8-ab05-ddacf1581491
-rv_nonmemb = rv_all[rv_all.source_id .∈ [id_nonmemb], :]
+# ╠═╡ disabled = true
+#=╠═╡
 
-# ╔═╡ 0cf37365-a1bc-4c25-8c03-3054551a6b67
-compare_samples(
-		OrderedDict(
-			:members => rv_members,
-			:nonmemb => rv_nonmemb,	
-		),
-	Dict(
-		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
-			label="nonmemb" => (alpha=1, markersize=2),
-		),
-		:members => (;	alpha=1, markersize=2, color=:black, 
-			label="memb" => (alpha=1, markersize=2),
-		),
+  ╠═╡ =#
 
-	)
-)
+# ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
+LilGuys.mean(skipmissing(rv_members.RV_t23))
 
 # ╔═╡ 2d474904-ec96-41e7-bd17-8969ea5e3c40
 let
@@ -295,6 +224,86 @@ let
 	fig
 end
 
+# ╔═╡ 9380d93d-34bb-4e67-a423-a624182d6a56
+rv_nonmemb = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined_x_wide_2c_psat_0.2_nonmemb.fits")
+
+# ╔═╡ 4e06c085-3024-4c8a-ba1b-833e3f8630b1
+Utils.compare_j24_samples(
+		OrderedDict(
+			:members => rv_members,
+		  :nonmemb => rv_nonmemb,	
+		),
+	Dict(
+		:nonmemb => (;	alpha=1, markersize=2, color=:red, 
+			label="nonmemb" => (alpha=1, markersize=2),
+		),
+		:members => (;	alpha=1, markersize=2, color=:black, 
+			label="memb" => (alpha=1, markersize=2),
+		),
+
+	),
+	observed_properties,
+	age= 2
+)
+
+# ╔═╡ 065175ac-e754-4629-b56c-a4895c8aec70
+alpha_R = LilGuys.R_h(LilGuys.Exp2D())
+
+# ╔═╡ 24609348-e4c3-437e-b36a-fb45d7a7352c
+(1 - mass(LilGuys.Exp2D(), 9alpha_R)) * sum(best_stars.PSAT)
+
+# ╔═╡ 28fbacb4-8078-4af2-bf8f-23adab46669b
+ to_colormap(:YlGnBu_4)[end-2:end]
+
+# ╔═╡ f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
+ to_colormap(:seaborn_crest_gradient)[[1, 80, 170, 255]]
+
+# ╔═╡ 6b4f3e96-d525-4885-97fd-a3d35171ad76
+[colorant"black", COLORS[1], COLORS[3], COLORS[8]]
+
+# ╔═╡ 7f6ab558-627e-46c5-8f47-b1ec03fd2b63
+ to_colormap(:seaborn_mako_gradient)[reverse([65, 129, 192, 255])]
+
+# ╔═╡ c3eef548-6678-46a3-96a1-01246f5f70e0
+Arya.get_arya_cmap()
+
+# ╔═╡ f6fe794a-e925-4544-b5ac-fda9eb96629b
+import StatsBase: median
+
+# ╔═╡ 508f8d47-f731-4a0a-a761-c1ef2403ec8b
+median(members.R_ell)
+
+# ╔═╡ fefd2f20-7116-4fff-b9c5-8bc3628b508f
+median(members.dRP)
+
+# ╔═╡ 45fb74e8-de19-44b6-8abd-6e2e9d3af76f
+median(members.dBP .+ members.dRP)
+
+# ╔═╡ a8263f41-7b79-4f45-98d7-2d96324bc8fd
+median(members.dG)
+
+# ╔═╡ 8b1539ed-a52a-4d12-91e7-50c3690b29b8
+isochrone = Utils.get_isochrone(-0.5, 5)
+
+# ╔═╡ 4a9f3b39-ee38-4624-a87b-d15489642f7d
+let
+	fig = Figure()
+		
+	ax = Axis(fig[1,1], yreversed=true)
+		
+	
+	p = lines!(isochrone.G_BPbrmag .- isochrone.G_RPmag, isochrone.Gmag .+ observed_properties["distance_modulus"], color = isochrone.Mini, )
+
+
+	Colorbar(fig[1,2], p)
+
+	fig
+
+end
+
+# ╔═╡ 50d90ce5-99df-46af-b309-a8ccd0ccf921
+[colorant"#cecece", colorant"#84aa83", colorant"#207e95", colorant"#4c397c"]
+
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
@@ -303,9 +312,9 @@ end
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
-# ╠═a4848423-9be3-48d7-98c2-8d1096eb2560
 # ╠═1fbbd6cd-20d4-4025-829f-a2cc969b1cd7
-# ╠═cf7aeb0a-d453-462a-b43d-a832567440fd
+# ╠═a4848423-9be3-48d7-98c2-8d1096eb2560
+# ╠═7865b1b1-3a55-41cf-b566-a6770c471077
 # ╠═d3bd7158-ea70-47a0-9800-9bfc08f3557c
 # ╠═ea8e6489-27c8-421b-9512-b0f67a79a294
 # ╟─2eb4aa78-0fea-460b-a18e-06a129c41504
@@ -319,39 +328,39 @@ end
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
-# ╠═13f558a3-a42e-4384-ac6e-2a036f6e634f
-# ╟─a9d94121-ea6e-416a-bae8-aa93c16bde72
-# ╠═965217b8-b2a5-485b-83de-cac887065b19
-# ╠═2d4da56b-5d0a-49d3-83ae-a90f85192101
 # ╟─5a9b5529-50f1-4cb5-b716-42180ea77d5f
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
-# ╠═8084f25b-ebe9-4f8d-aeef-d36decb5dc31
-# ╠═ea34ad98-8041-40d1-b7a4-4f689b9c6a11
-# ╠═6e77235b-4c46-4508-ba2d-01a7342cb4d9
-# ╠═50d90ce5-99df-46af-b309-a8ccd0ccf921
 # ╠═3ab5488e-4c7c-4b8d-9c4b-cc0a04620298
-# ╠═8d3b07c1-1983-4151-9a57-ab0a0edb8212
+# ╠═aeb5e17f-6479-4504-ae4f-c9218f374d48
+# ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
+# ╟─9c66468e-c357-4268-875b-ec83510fd982
+# ╠═c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
+# ╠═bbae75e1-b317-4e4f-a62e-817715a5a095
+# ╠═b83ebaf6-cae2-40c0-bd71-98bbbc10eb92
+# ╠═f37a09e1-3c0f-44a7-b7ad-b48c5553871e
+# ╠═430fae9d-c708-4447-80ce-aabf19b161d2
+# ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
+# ╠═a373edbf-d441-46ce-bc0f-08ac0d693c44
+# ╠═9376c4d1-4237-408f-a845-1decf183cf10
+# ╠═508f8d47-f731-4a0a-a761-c1ef2403ec8b
+# ╠═51c1f61c-b2b1-4d51-bd02-51806217278a
+# ╠═065741fb-dd59-406c-b4f6-ac6413a652a7
+# ╠═885f8487-8f3c-4db8-ab05-ddacf1581491
+# ╠═13f558a3-a42e-4384-ac6e-2a036f6e634f
+# ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
+# ╠═4e06c085-3024-4c8a-ba1b-833e3f8630b1
+# ╠═9380d93d-34bb-4e67-a423-a624182d6a56
+# ╠═065175ac-e754-4629-b56c-a4895c8aec70
+# ╠═24609348-e4c3-437e-b36a-fb45d7a7352c
 # ╠═28fbacb4-8078-4af2-bf8f-23adab46669b
 # ╠═f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
 # ╠═6b4f3e96-d525-4885-97fd-a3d35171ad76
 # ╠═7f6ab558-627e-46c5-8f47-b1ec03fd2b63
 # ╠═c3eef548-6678-46a3-96a1-01246f5f70e0
-# ╠═9a73fa3d-259d-493a-90eb-1cb0aaaf9b5d
-# ╠═c406b99a-40e6-405d-bcf3-b899145444db
-# ╠═12aa5708-dfee-4b48-8835-69055ad82680
-# ╠═57f558c1-ca31-44bb-a681-a2ed083a0b70
 # ╠═f6fe794a-e925-4544-b5ac-fda9eb96629b
 # ╠═fefd2f20-7116-4fff-b9c5-8bc3628b508f
 # ╠═45fb74e8-de19-44b6-8abd-6e2e9d3af76f
 # ╠═a8263f41-7b79-4f45-98d7-2d96324bc8fd
-# ╠═c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
-# ╠═430fae9d-c708-4447-80ce-aabf19b161d2
-# ╠═aeb5e17f-6479-4504-ae4f-c9218f374d48
-# ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
-# ╟─9c66468e-c357-4268-875b-ec83510fd982
-# ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
-# ╠═51c1f61c-b2b1-4d51-bd02-51806217278a
-# ╠═065741fb-dd59-406c-b4f6-ac6413a652a7
-# ╠═885f8487-8f3c-4db8-ab05-ddacf1581491
-# ╠═0cf37365-a1bc-4c25-8c03-3054551a6b67
-# ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
+# ╠═8b1539ed-a52a-4d12-91e7-50c3690b29b8
+# ╠═4a9f3b39-ee38-4624-a87b-d15489642f7d
+# ╠═50d90ce5-99df-46af-b309-a8ccd0ccf921

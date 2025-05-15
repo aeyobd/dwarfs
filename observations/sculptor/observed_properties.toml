@@ -35,11 +35,23 @@ position_angle = 92.0
 position_angle_err = 1
 position_angle_ref = "munoz+2018"
 
+metallicity = -1.68
+metallicity_err = 0.02
+metallicity_ref = "MV2020a"
 
 r_h = 12.33
 r_h_err = 0.05
 r_h_ref = "MV2020"
-r_h_note = "also measured in munoz+2018"
+
+R_h = 9.79
+R_h_err = 0.04
+R_h_ref = "MV2020"
+R_h_note = "also measured in munoz+2018"
+
+R_h_inner = 9.46
+R_h_inner_em = 0.26
+R_h_inner_ep = 0.26
+
 
 Mv = -10.82
 Mv_err = 0.14
