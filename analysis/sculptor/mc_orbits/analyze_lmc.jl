@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
 begin 
@@ -18,11 +30,17 @@ begin
 end
 
 
-# ╔═╡ bb90f6a2-cb19-43f1-ad04-a4b258b5812f
-using LilGuys
+# ╔═╡ 1ae6d0aa-34f7-4d73-a52f-28ad4e7ac53f
+using PlutoUI
+
+# ╔═╡ cdc87dea-cb1a-4f54-9fce-b5008e6decad
+using PyFITS
 
 # ╔═╡ e7ad41b9-2845-4a6d-8fc5-7c35544d766c
 using Statistics
+
+# ╔═╡ 5acfcb43-9144-4a07-b983-2ee5096f82fc
+include("mc_analysis_utils.jl")
 
 # ╔═╡ 7450144e-5464-4036-a215-b6e2cd270405
 md"""
@@ -30,13 +48,16 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 """
 
 # ╔═╡ e0d2af42-c9ad-42b8-b223-440d19ac1138
-modelname = "vasiliev24_L3M11_2x"
+@bind modelname TextField(24, default="example") |> confirm
+
+# ╔═╡ bb90f6a2-cb19-43f1-ad04-a4b258b5812f
+using LilGuys; FIGDIR = "./$modelname/figures"
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 p_value = 0.0014
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
-figdir = "./$modelname/figures"
+
 
 # ╔═╡ e4d8e811-6c9a-4500-bc59-c9aedd94bfbb
 extract_orbit = true
@@ -45,6 +66,12 @@ extract_orbit = true
 md"""
 # Setup
 """
+
+# ╔═╡ 9edf5ba2-afc1-422d-98a7-f282869e3253
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ 28a113b2-d9a3-4f96-b8d8-e534ff5bd2d0
+import TOML
 
 # ╔═╡ 3b83205d-91c1-481e-9305-0d59bc692135
 coord_labels = Dict(
@@ -62,8 +89,8 @@ kms_label = L" / km\,s$^{-1}$"
 # ╔═╡ 6651d141-f6ca-4e8f-a785-5b14275b367c
 T2GYR = lguys.T2GYR
 
-# ╔═╡ 0fda708e-8d30-4065-b3bf-875167b1fa71
-mkpath(figdir)
+# ╔═╡ 084e5fc4-ccae-41b9-bc35-151d5a67704b
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observed_properties.toml"))
 
 # ╔═╡ fbfece31-31dc-469a-89da-5dbde7e19127
 md"""
@@ -77,17 +104,11 @@ These are used to compare the medians of the samples against the input
 means.
 """
 
-# ╔═╡ 90bee0d7-e09b-4e38-a06c-a37ed80c376c
-module SampleSetup
-	import ..modelname 
-	include(joinpath(modelname, "simulation/sample.jl"))
-end
-
-# ╔═╡ 23fe463b-d269-46b9-8797-69f801a45f68
-obs = SampleSetup.obs
+# ╔═╡ 302a4ddb-9e4f-434a-9b57-3ee66b6bf528
+obs = ICRS(obs_props)
 
 # ╔═╡ f782f563-a771-4652-9406-2bfeb7c624d9
-err = SampleSetup.err
+err = get_coord_err(obs_props)
 
 # ╔═╡ 88536e86-cf2a-4dff-ae64-514821957d40
 md"""
@@ -108,7 +129,7 @@ end
 begin 
 	out = lguys.Output(modelname);
 
-	df_peris_apos = lguys.read_fits("$modelname/peris_apos.fits")
+	df_peris_apos = read_fits("$modelname/peris_apos.fits")
 	snap = out[1] |> sort_snap
 
 	@assert all(snap.index  .== df_peris_apos.index) "snapshot and peri apo index must match"
@@ -188,7 +209,7 @@ function median_residual(observations)
 	println()
 	for sym in [:distance, :pmra, :pmdec, :radial_velocity, :ra, :dec]
 		md = median(getproperty.(observations, sym))
-		res = (md - getproperty(obs, sym) ) / getproperty(err, sym)
+		res = (md - getproperty(obs, sym) ) / err[string(sym)]
 		@printf "Δ ln %-15s  = %6.2f \t \n"  sym res
 	end
 end
@@ -272,12 +293,12 @@ let
 end
 
 # ╔═╡ 471a5501-bc7b-4114-be1a-9088b4e674cd
-hist(lguys.calc_r(snap.positions),
+hist(lguys.radii(snap.positions),
 	axis=(; xlabel="initial galactocentric radius / kpc")
 )
 
 # ╔═╡ 68b0383a-3d5a-4b94-967c-f0e31e8a0ce1
-hist(lguys.calc_r(snap.velocities) * lguys.V2KMS,
+hist(lguys.radii(snap.velocities) * lguys.V2KMS,
 	axis=(; xlabel="initial galactocentric velocity / km/s")
 )
 
@@ -507,9 +528,6 @@ let
 	fig
 end
 
-# ╔═╡ e7826eb1-5add-4a5b-870a-4102f5f356a7
-?lguys.coords_from_df
-
 # ╔═╡ e9311003-b6af-4e09-907f-c3388d59287d
 let
 	fig = Figure(size=(600, 600))
@@ -589,16 +607,16 @@ end
 
 # ╔═╡ d3de3a33-8f9a-44a5-9851-1992c88f04ae
 if extract_orbit
-	Φs_ext = [lguys.extract(out, :Φs_ext, i) for i in idx]
-	Φs = [lguys.extract(out, :Φs, i) for i in idx]
+	Φs_ext = [lguys.extract(out, :potential_ext, i) for i in idx]
+	Φs = [lguys.extract(out, :potential, i) for i in idx]
 end
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 if extract_orbit
-	rs = lguys.calc_r.(positions)
-	vs = lguys.calc_r.(velocities)
-	accs = lguys.calc_r.(accelerations)
-	rs_lmc = lguys.calc_r.(positions, [lmc_pos])
+	rs = lguys.radii.(positions)
+	vs = lguys.radii.(velocities)
+	accs = lguys.radii.(accelerations)
+	rs_lmc = lguys.radii.(positions, [lmc_pos])
 end
 
 # ╔═╡ e5d40e2f-ac47-4827-853d-2f94bc39a624
@@ -747,17 +765,21 @@ end
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═e4d8e811-6c9a-4500-bc59-c9aedd94bfbb
 # ╟─581df0c4-a509-43d0-beef-c4cc67329d10
+# ╠═9edf5ba2-afc1-422d-98a7-f282869e3253
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═1ae6d0aa-34f7-4d73-a52f-28ad4e7ac53f
+# ╠═28a113b2-d9a3-4f96-b8d8-e534ff5bd2d0
+# ╠═cdc87dea-cb1a-4f54-9fce-b5008e6decad
 # ╠═bb90f6a2-cb19-43f1-ad04-a4b258b5812f
 # ╠═e7ad41b9-2845-4a6d-8fc5-7c35544d766c
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
 # ╠═6651d141-f6ca-4e8f-a785-5b14275b367c
-# ╠═0fda708e-8d30-4065-b3bf-875167b1fa71
+# ╠═084e5fc4-ccae-41b9-bc35-151d5a67704b
+# ╠═5acfcb43-9144-4a07-b983-2ee5096f82fc
 # ╟─fbfece31-31dc-469a-89da-5dbde7e19127
 # ╟─b4f11f71-8857-4a6f-8917-b5e278362b0f
-# ╠═90bee0d7-e09b-4e38-a06c-a37ed80c376c
-# ╠═23fe463b-d269-46b9-8797-69f801a45f68
+# ╠═302a4ddb-9e4f-434a-9b57-3ee66b6bf528
 # ╠═f782f563-a771-4652-9406-2bfeb7c624d9
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
 # ╠═26d616da-95ec-4fb9-b9a8-2f095d74c722
@@ -800,7 +822,6 @@ end
 # ╟─99cbc08e-5b0e-4748-9727-667e0eca2f74
 # ╟─456acc60-e7e1-428e-bd5d-bc72a18a146f
 # ╟─c48b4e73-480e-4a50-b5fc-db5f6c5b040e
-# ╠═e7826eb1-5add-4a5b-870a-4102f5f356a7
 # ╟─e9311003-b6af-4e09-907f-c3388d59287d
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb

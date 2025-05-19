@@ -5,8 +5,7 @@
     
 # Gravity options
     TREE_NUM_BEFORE_NODESPLIT=2.5
-    #RANDOMIZE_DOMAINCENTER
-    #MULTIPOLE_ORDER=1
+    RANDOMIZE_DOMAINCENTER
     
 # Softening types and particle types
     NSOFTCLASSES=1

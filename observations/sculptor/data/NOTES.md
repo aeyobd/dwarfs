@@ -22,6 +22,7 @@ The next five entries are useful to exactly reproduce the plots in Sestito et al
 - `battaglia+22_sculptor.fits` the data from Battaglia+22 for Sculptor, very similar to J+24 below.
 - `gaia_4deg_cen.fits` is simply every stars within 4 degrees of sculptor on the sky downloaded from Gaia's ASQL tool.
 - `gaia_6deg_ruwe.fits` is simply every stars within 6 degrees of the centre of Scl additionally imposing a ruwe cut so the size is not huge. The ASQL query is:
+- `sgr_stream_near_scl-result.fits` was taken from the nearby saggitarius stream.
 ```sql
 SELECT * FROM gaiadr3.gaia_source
 where 1 = CONTAINS(
@@ -38,6 +39,7 @@ AND pmdec IS NOT NULL
 - `jensen+24_1_comp_circ.fits`
 - `jensen+24_2_comp_circ.fits`
 - `jensen+24_2_comp_ell.fits`
+- `jensen+24_wide.fits` ( 2 component elliptical)
 
 These files are based on GaiaDR3, but applying J+24 membership selection to the stars. Ask J+24 for data access.
 
@@ -50,3 +52,16 @@ It turns out that this is likely just part of the Sgr stream. To double check th
 SELECT * FROM gaiadr3.gaia_source where 1 = CONTAINS( POINT(5.28, -15.62), CIRCLE( ra, dec, 4) ) AND ruwe < 1.3 AND pmra IS NOT NULL AND pmdec IS NOT NULL
 ```
 
+
+### DELVE
+
+Use topcat with TAP to noirlab.edu/datalab/tap. Should retrieve 7,215,671 entries.
+
+```
+SELECT *
+FROM delve_dr2.objects
+WHERE 11 < ra
+and ra < 19
+and -37.7 < dec
+and dec < -29.7
+```

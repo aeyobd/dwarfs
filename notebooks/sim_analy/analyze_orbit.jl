@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -26,6 +26,12 @@ begin
 
 	using Arya
 end
+
+# ╔═╡ 4018f9cb-b54f-408a-8047-cc995a167034
+using OrderedCollections
+
+# ╔═╡ cd43d649-1d52-46a7-a621-68c8122fce6d
+using PyFITS
 
 # ╔═╡ 6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
 using PlutoUI
@@ -50,6 +56,9 @@ md"""
 # Setup
 """
 
+# ╔═╡ 882d4fc5-07ae-4b06-8da5-67f0894595db
+import LinearAlgebra: dot
+
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
 import TOML
 
@@ -58,6 +67,9 @@ save = Makie.save
 
 # ╔═╡ 7834415a-b479-495b-998a-1d12f42f0dc6
 Slider = PlutoUI.Slider
+
+# ╔═╡ 56d15948-4fd8-4541-9925-99837d9584f5
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 643cd0bf-77b3-4201-9ff7-09dd5aee277c
 md"""
@@ -135,12 +147,6 @@ centresfile = joinpath(parentdir, "analysis", modelname, "centres.hdf5")
 # ╔═╡ 9c427388-c657-4bb7-bc0a-b4de3597c645
 skyorbit_outfile = joinpath(parentdir, "analysis", modelname, "skyorbit.fits")
 
-# ╔═╡ 4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
-begin 
-	FIGDIR = joinpath(parentdir, "analysis", modelname, "figures")
-	mkdir(FIGDIR)
-end
-
 # ╔═╡ 30969f77-667e-4ae4-9897-82c1c1182652
 md"""
 # File loading
@@ -201,9 +207,9 @@ T2GYR = LilGuys.T2GYR
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = calc_r(x_cen)
+	r = radii(x_cen)
 	lines!(t * T2GYR, r, label="n-body")
-	lines!(T2GYR*(orbit_expected.t), calc_r(x_cen_exp),
+	lines!(T2GYR*(orbit_expected.t), radii(x_cen_exp),
 		label="point particle"
 	)
 
@@ -288,7 +294,8 @@ let
 	ax = Axis(fig[1,1],
 		xlabel="time",
 		ylabel="chi2 property fit",
-		yscale=log10
+		yscale=log10,
+			  yticks = Makie.automatic,
 	)
 	
 	lines!(t * T2GYR, χ2,)
@@ -301,13 +308,10 @@ end
 χ2[idx_f]
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
-r = calc_r(x_cen)
+r = radii(x_cen)
 
 # ╔═╡ 6d0612d6-8609-4832-80ae-4e8e78c557cc
 minimum(r)
-
-# ╔═╡ 882d4fc5-07ae-4b06-8da5-67f0894595db
-import LinearAlgebra: dot
 
 # ╔═╡ 7a30bd90-946e-418c-8339-be64c37cda76
 vr = [dot(x_cen[:, i], v_cen[:, i]) / r[i] for i in 1:size(x_cen, 2)]
@@ -369,14 +373,14 @@ lcm
 
 # ╔═╡ 04d29fcb-70a0-414b-a487-7a18c44b9d58
 let
-	fig = Figure(size=(700, 300))
+	fig = Figure(size=(400, 150))
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = calc_r(x_cen)
+	r = radii(x_cen)
 	lines!(t * T2GYR, r)
 	scatter!(t[idx_f] * T2GYR, r[idx_f], 
 		label="adpoted end", marker=:rect
 	)
-	scatter!(t[idx_f] * T2GYR, calc_r(x_cen_exp)[end], 
+	scatter!(t[idx_f] * T2GYR, radii(x_cen_exp)[end], 
 		marker=:+, markersize=10, label="expected"
 	)
 	
@@ -430,7 +434,7 @@ end
 # ╔═╡ cdabdc7d-76a1-45f5-b83a-2454576d3964
 let
 
-	fig = Figure(size=(400, 600))
+	fig = Figure(size=(4*72, 6*72))
 	for i in 1:3
 		x, y = [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")][i]
 		ax = Axis(fig[i,1],
@@ -438,12 +442,12 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f+1
+		idx = idx_f-3:idx_f
 	
 		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		
-		errscatter!([obs_today[x]], [obs_today[y]],
-			xerr=[obs_today[x * "_err"]], yerr=[obs_today[y * "_err"]]
+		errorscatter!([obs_today[x]], [obs_today[y]],
+			xerror=[obs_today[x * "_err"]], yerror=[obs_today[y * "_err"]]
 		)
 	
 	end
@@ -455,7 +459,7 @@ end
 # ╔═╡ 891f31ed-5565-4f43-ab82-b8bc3a76c1cf
 let
 
-	fig = Figure(size=(400, 600))
+	fig = Figure(size=(3*72, 6*72))
 	for i in 1:3
 		x, y = [("ra", "dec"), ("pmra", "pmdec"), ("distance", "radial_velocity")][i]
 		ax = Axis(fig[i,1],
@@ -463,12 +467,12 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f+1
+		idx = idx_f-3:idx_f
 	
 		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=times[idx])
 		
-		errscatter!([obs_today[x]], [obs_today[y]],
-			xerr=[obs_today[x * "_err"]], yerr=[obs_today[y * "_err"]]
+		errorscatter!([obs_today[x]], [obs_today[y]],
+			xerror=[obs_today[x * "_err"]], yerror=[obs_today[y * "_err"]]
 		)
 	
 	end
@@ -476,6 +480,9 @@ let
 	@savefig "skyorbit_agreement_today"
 	fig
 end
+
+# ╔═╡ ca193997-61c3-4302-a200-4e7d4e777521
+Arya.UNITS_PER_INCH
 
 # ╔═╡ 293090a7-8ee0-442e-b70f-e6b7750ab319
 lerps = Dict(c => LilGuys.lerp(times, obs_c[:, c]) for c in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"])
@@ -488,7 +495,7 @@ let
 	global obs_c_new, t_best, idx_best
 
 	
-	ts = LinRange(times[idx_f-1], times[idx_f+1], 1000)
+	ts = LinRange(times[idx_f-1], times[idx_f], 1000)
 
 	obs_c_new = DataFrame()
 
@@ -512,7 +519,7 @@ end
 # ╔═╡ 225a8adb-82ee-4479-806e-15796e2b08e2
 let
 
-	fig = Figure(size=(400, 800))
+	fig = Figure(size=(3*72, 8*72))
 	for i in 1:6
 		x = "times"
 		y = ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"][i]
@@ -522,14 +529,14 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f+1
+		idx = idx_f-3:idx_f
 	
 		scatterlines!(times[idx], obs_c[idx, y], color=log10.(χ2[idx]))
 		
-		errscatter!([times[idx_f]], [obs_today[y]], yerr=[obs_today[y * "_err"]]
+		errorscatter!([times[idx_f]], [obs_today[y]], yerror=[obs_today[y * "_err"]]
 		)
 	
-		errscatter!([obs_c_new[idx_best, :times]], [obs_today[y]], yerr=[obs_today[y * "_err"]]
+		errorscatter!([obs_c_new[idx_best, :times]], [obs_today[y]], yerror=[obs_today[y * "_err"]]
 		)
 
 
@@ -642,17 +649,20 @@ md"""
 # ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 let
 	
-	orbital_properties = Dict(
+	orbital_properties = OrderedDict(
 		"pericentre" => r_peri,
 		"apocentre" => r[idx_apos[idx_apos .< idx_f]],
 		"period" => period,
 		"idx_f" => idx_f,
-		"distance_f" => obs_c.distance[idx_f],
 		"idx_peri" => idx_peri,
 		"t_last_peri" => t_f - t_peri,
 		# these three are for the final stream coordinate frame
-		"ra0" => ra0,
-		"dec0" => dec0,
+		"ra_f" => ra0,
+		"dec_f" => dec0,
+		"distance_f" => obs_c.distance[idx_f],
+		"pmra_f" => obs_c.pmra[idx_f],
+		"pmdec_f" => obs_c.pmdec[idx_f],
+		"radial_velocity_f" => obs_c.pmdec[idx_f],
 		"theta0" => θ0,
 		"idx_peris" => idx_peris, 
 		"idx_apos" => idx_apos,
@@ -670,17 +680,21 @@ let
 end
 
 # ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
-LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
+write_fits(skyorbit_outfile, obs_c, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═d94663e8-b30e-4712-8a3e-6ef7f954f141
 # ╟─27577252-53dc-415c-b9a1-82155ef9e4ca
 # ╠═061b1886-1878-11ef-3806-b91643300982
+# ╠═4018f9cb-b54f-408a-8047-cc995a167034
+# ╠═cd43d649-1d52-46a7-a621-68c8122fce6d
+# ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
 # ╠═7bf1a839-b24e-4478-bdd3-200989779f68
 # ╠═6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
 # ╠═7834415a-b479-495b-998a-1d12f42f0dc6
+# ╠═56d15948-4fd8-4541-9925-99837d9584f5
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
 # ╠═0e2e7f93-09d1-4902-ad24-223df50d37cb
 # ╠═3953b76f-a726-4211-a6b8-5cf38149dcdf
@@ -697,7 +711,6 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 # ╠═bb9ef388-bb5a-45a3-836e-4c06dbe0ab65
 # ╠═9c427388-c657-4bb7-bc0a-b4de3597c645
-# ╠═4ceac504-5ad2-4cbb-ac15-e094f80ffdbc
 # ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
@@ -726,7 +739,6 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═7646ea5b-f1b1-4934-be68-330139f7f838
 # ╠═d9df3376-6ca1-4701-afb5-2df994bb3442
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
-# ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
 # ╠═7a30bd90-946e-418c-8339-be64c37cda76
 # ╠═0c69519c-9650-46b9-89f9-cc37227f5b1a
 # ╠═d95c457b-c9be-4570-bc90-b4bbb7de56e2
@@ -745,6 +757,7 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═54cf5233-a955-4831-86ad-23b72f15789d
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
 # ╠═891f31ed-5565-4f43-ab82-b8bc3a76c1cf
+# ╠═ca193997-61c3-4302-a200-4e7d4e777521
 # ╠═225a8adb-82ee-4479-806e-15796e2b08e2
 # ╠═293090a7-8ee0-442e-b70f-e6b7750ab319
 # ╠═052fb31a-788a-485f-b8d2-1cf49f6ffb4b
@@ -765,6 +778,6 @@ LilGuys.write_fits(skyorbit_outfile, obs_c, verbose=true, overwrite=true)
 # ╠═5676b72f-a981-4efb-8328-c25d3c5d6fb0
 # ╠═592a18e9-ee9a-4638-9454-f0bda3a0a3f2
 # ╟─179c3c32-1368-4a58-b4b8-26d9d3f19f8c
-# ╠═5704daca-a8c4-4292-a6c0-ea294f4373fd
+# ╟─5704daca-a8c4-4292-a6c0-ea294f4373fd
 # ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 # ╠═fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67

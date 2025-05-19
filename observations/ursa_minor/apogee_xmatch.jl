@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -12,10 +12,8 @@ begin
 	using CairoMakie
 	
 	import LilGuys as lguys
+	import PythonCall # fits
 end
-
-# ╔═╡ 717e156b-9002-4fb9-b9c0-301b8cf24798
-using FITSIO
 
 # ╔═╡ 08fc8a65-fa92-4739-879e-a32d0228d181
 using DataFrames: innerjoin
@@ -30,21 +28,21 @@ With this catalogue, detailed radial velocity analysis can then be calculated.
 """
 
 # ╔═╡ f26e6eb1-640b-40fa-8cbc-e87092f132f7
-j24 = lguys.read_fits("processed/j24_umi_all.fits")
+j24 = lguys.read_fits("data/jensen+24_2c.fits")
 
-# ╔═╡ d9d4eb78-a0c0-4c15-bdaa-cd436d972c97
-apogee_f = FITS("../data/allStarLite-dr17-synspec_rev1.fits")[2]
+# ╔═╡ 5a9c76ed-eccf-42d7-96f1-814471f66d89
+ apogee_f = lguys.read_fits("../all/data/allStarLite-dr17-synspec_rev1.fits", columns=["GAIAEDR3_SOURCE_ID", "VHELIO_AVG", "VERR", "VSCATTER", "NVISITS", "RV_FLAG", "RA", "DEC"])
 
 # ╔═╡ a1dd09f8-b635-48e5-8d0c-afd58dff4641
 apogee = lguys.DataFrame(
-	:source_id => read(apogee_f, "GAIAEDR3_SOURCE_ID"),
-	:RV => read(apogee_f, "VHELIO_AVG"),
-	:RV_err => read(apogee_f, "VERR"),
-	:RV_sigma => read(apogee_f, "VSCATTER"),
-	:RV_count => read(apogee_f, "NVISITS"),
-	:RV_flag => read(apogee_f, "RV_FLAG"),
-	:RA_apogee => read(apogee_f, "RA"),
-	:DEC_apogee => read(apogee_f, "DEC"),
+	:source_id => apogee_f.GAIAEDR3_SOURCE_ID,
+	:RV => apogee_f.VHELIO_AVG,
+	:RV_err => apogee_f.VERR,
+	:RV_sigma => apogee_f.VSCATTER,
+	:RV_count => apogee_f.NVISITS,
+	:RV_flag => apogee_f.RV_FLAG,
+	:RA_apogee => apogee_f.RA,
+	:DEC_apogee => apogee_f.DEC,
 )
 
 # ╔═╡ bc8791ad-dfc3-49c2-9849-3d7bcf448978
@@ -63,14 +61,13 @@ scatter(joined.dec, joined.DEC_apogee)
 hist(good.RV)
 
 # ╔═╡ ff98fe21-fc5a-4bb8-bb0e-3cd2f4725fa3
-lguys.write_fits( "data/apogee_xmatch.fits", good)
+lguys.write_fits( "data/apogee_xmatch.fits", good, overwrite=true)
 
 # ╔═╡ Cell order:
 # ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═f26e6eb1-640b-40fa-8cbc-e87092f132f7
-# ╠═717e156b-9002-4fb9-b9c0-301b8cf24798
-# ╠═d9d4eb78-a0c0-4c15-bdaa-cd436d972c97
+# ╠═5a9c76ed-eccf-42d7-96f1-814471f66d89
 # ╠═a1dd09f8-b635-48e5-8d0c-afd58dff4641
 # ╠═08fc8a65-fa92-4739-879e-a32d0228d181
 # ╠═bc8791ad-dfc3-49c2-9849-3d7bcf448978

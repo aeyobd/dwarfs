@@ -76,6 +76,23 @@ Instructions to get an account: https://www.dur.ac.uk/resources/icc/cosma/gettin
 
 I typically ssh into cosma to edit any files or run scripts.
 
+### System
+
+Cosma has several serves. Personally, i only have access to cosma5/cosma. This means it is best practice to also login to cosma5 so that compiled software works properly, as each system has a different architecture. My cosma ssh config looks like
+
+```
+Host cosma
+  User dc-boye1
+  IgnoreUnknown UseKeychain
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519_cosma
+  HostName login5b.cosma.dur.ac.uk
+  ForwardX11 yes
+  ForwardX11Trusted yes
+```
+
+
+
 ### Jupyter
 
 See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/. 
@@ -83,10 +100,12 @@ See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/.
 to launch a jupyter session, 
 
 ``` bash
-ssh -i .ssh/id_ed25519_cosma -N -L 8443:login8b.cosma.dur.ac.uk:443 dc-boye1@login8b.cosma.dur.ac.uk
+ssh -i .ssh/id_ed25519_cosma -N -L 8443:login5c.cosma.dur.ac.uk:443 dc-boye1@login5c.cosma.dur.ac.uk
 ```
 
 then open https://localhost:8443
+
+- TODO: julia does not seem to behave in jupyter on cosma. 
 
 ### Modules/Dependencies
 
@@ -348,63 +367,4 @@ In ordinary evolution around the Milky Way, mass loss and tidal forces cause dev
 
 
 
-
-
-![image-20250222121907610](/Users/daniel/Library/Application Support/typora-user-images/image-20250222121907610.png)
-
-Essential next steps
-
-- *Shrinking spheres robust tests
-- *Coordinate constructors more tests
-- cylindrical coordinate frame & tests
-- velocity anisotropy first tests
-
-More features
-
-- Create working density centres
-- First tests for potentials
-- first tests for orbits
-- more tests for project.jl
-- interface.jl
-- io.jl
-
-# Code nomenclature
-
-snake case for all variable names. I prefer to keep nouns as variable names and verb phrases as functions (especially since if e.g. `position` is a function, then it is easy to accidentally overwrite this in the body of a function.)
-
-Symbols and domain-specific names are okay here, so referring back to this should help. 
-
-
-
-The below should be in code units
-
-- `position` 3-vector (column) of real x, y, and z coordinates
-  - `positions` is a matrix with three rows and `n` columns for `n` different individual positions
-- `velocity`: 3-vector (column) of 
-- `time`: A time coordinate
-  - `times`, vector of times for e.g. positions
-- `acceleration`: 
-- `\Phi`:
-- `E`: Normal, total energy
-- `\epsilon`: binding specific energy per particle
-- `L`: angular momentum
-- `J`: Action (3-vector) in Jr, Jz, Jphi order.
-- `\Theta`:  Action angles (3-vector) in same order.
-
-
-
-Observables (below) may also specify symmetric errors as `_err` or assymetric errors with `_em` and `_ep`. 
-
-- `ra`: Right ascension (ICRS J2000) in degrees
-- `dec`: Declination (ICRS J2000) in degrees
-- `distance`: heliocentric distance in kpc
-- `pmra`: Corrected proper motion in right ascension (mas/yr). Name is technically inconsistent with underscore rule but kept for consistency with Gaia
-- `pmdec`: Corrected proper motion in declination (mas/yr).
-- `radial_velocity`: Heliocentric line-of-sight radial velocity of a stars (km/s). 
-- `position_angle`: Position angle of satillite major axis in degrees (North to East). 
-- `ellipticity`: Ellipticity of satellite density profile (1 - b/a?)
-- `xi`, `eta`: tangent plane coordinates (ra / dec) in degrees. Based on `ra` and `dec` and presently assumed centre (probably from `observations/galaxyname/observed_properties.toml` or simulation centre)
-- `r_h`: Half light radius of satellite in *arcminutes*
-- 
-- `r_ell`: elliptical radius in units of arcminutes
 

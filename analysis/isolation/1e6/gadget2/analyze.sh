@@ -1,6 +1,8 @@
 #!/bin/bash
 
 source paths.sh
+rm simulation combined.hdf5 centres.hdf5 profiles.hdf5 halo.toml
+ln -s $out_path simulation
 
 set -xe
 
@@ -11,6 +13,6 @@ mass_profiles.jl -k 1
 
 cp $out_path/halo.toml .
 
-get_energies.jl combined.hdf5/$idx_stars energies.hdf5
-calc_dist_ana.jl energies.hdf5 halo.toml distribution_function.hdf5
+# get_energies.jl combined.hdf5/$idx_stars energies.hdf5
+# calc_dist_ana.jl energies.hdf5 halo.toml distribution_function.hdf5
 

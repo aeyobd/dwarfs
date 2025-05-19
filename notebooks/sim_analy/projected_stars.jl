@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -26,6 +26,9 @@ begin
 
 	using Arya
 end
+
+# ╔═╡ 7d82571f-4d80-412a-9813-1eee1f916e56
+using PyFITS
 
 # ╔═╡ acbb16c7-07ff-4793-b9b0-173678c93e2e
 using PlutoUI
@@ -111,10 +114,10 @@ md"""
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
-stars = lguys.read_fits(joinpath(model_dir, "stars", starsname, "final.fits"))
+stars = read_fits(joinpath(model_dir, "stars", starsname, "final.fits"))
 
 # ╔═╡ 1e3d61ea-16d0-4bbf-a19e-03e54f0f5a0f
-stars_i = lguys.read_fits(joinpath(model_dir, "stars", starsname, "initial.fits"))
+stars_i = read_fits(joinpath(model_dir, "stars", starsname, "initial.fits"))
 
 # ╔═╡ 2612e3a2-6e6e-494e-b140-720dd2db6ec2
 obs_today_file = TOML.parsefile(obs_today_filename)
@@ -141,7 +144,7 @@ obs_today_err = lguys.ICRS(;
 )
 
 # ╔═╡ 240077b7-dc20-4cfa-9ada-d3aedcf36a75
-sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits"))
+sky_orbit = read_fits(joinpath(model_dir, "skyorbit.fits"))
 
 # ╔═╡ 9b5e75e7-171d-40e9-9148-718bb498c56d
 idx_f = orbit_props["idx_f"]
@@ -257,7 +260,7 @@ let
 	
 		
 	h = heatmap!(hi, colorscale=log10, colorrange=(1e-6, maximum(hi.values)))
-	errscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], size=10)
+	errorscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], size=10)
 
 	# idx = idx_f - 20: idx_f + 20
 	# lines!(sky_orbit.ra[idx], sky_orbit.dec[idx])
@@ -449,7 +452,7 @@ let
 	h = Arya.hist2d!(ax, x, y, weights=stars.weights[filt], bins=100, 
 		colorscale=log10, colorrange=(1e-10, nothing))
 	
-	errscatter!([obs_today.pmra], [obs_today.pmdec], xerr=[obs_today_err.pmra], yerr=[obs_today_err.pmra], color=COLORS[3])
+	errorscatter!([obs_today.pmra], [obs_today.pmdec], xerr=[obs_today_err.pmra], yerror=[obs_today_err.pmra], color=COLORS[3])
 	
 	scatter!([sky_orbit.pmra[idx_f]], 
 		[sky_orbit.pmdec[idx_f]], markersize=10)
@@ -481,7 +484,7 @@ let
 	x = stars.pmra[filt]
 	y = stars.pmdec[filt]
 	
-	h = DensityEstimators.histogram(x, bins, weights=stars.weights[filt], normalization=:pdf)
+	h = DensityEstimators.histogram(x, bins, weights=stars.weights[filt], normalization=:pdf, errors=:weighted)
 
 	
 	barplot!(h)
@@ -519,7 +522,7 @@ let
 		colorscale=log10, colorrange=(1e-10, nothing)
 	)
 	
-	errscatter!([obs_today.distance], [obs_today.radial_velocity], xerr=[obs_today_err.distance], yerr=[obs_today_err.radial_velocity], color=COLORS[3])
+	errorscatter!([obs_today.distance], [obs_today.radial_velocity], xerror=[obs_today_err.distance], yerror=[obs_today_err.radial_velocity], color=COLORS[3])
 
 	scatter!([sky_orbit.distance[idx_f]], 
 		[sky_orbit.radial_velocity[idx_f]], markersize=10)
@@ -630,7 +633,7 @@ let
 		Ns[i] = N
 	end
 
-	errscatter!(lguys.midpoints(r_bins), σs, yerr=err)
+	errorscatter!(lguys.midpoints(r_bins), σs, yerror=err)
 
 	# ax2 = Axis(fig[1, 1], ylabel="count / bin")
 	# scatter!(ax2, lguys.midpoints(r_bins), Ns)
@@ -656,7 +659,7 @@ end
 σv = calc_σv(stars.r_ell, stars.radial_velocity, stars.weights, r_max=r_cut)
 
 # ╔═╡ cfccf1a1-22ac-4fb8-8b91-c7af98ad3c4d
-lguys.arcmin_to_kpc(240, 86)
+lguys.arcmin2kpc(240, 86)
 
 # ╔═╡ fbd46bd2-79d7-460e-b0ab-0e34a68a1f0a
 gaussian(x, μ, σ) = 1/sqrt(2π)* 1/σ * exp(-(x-μ)^2/(2σ^2))
@@ -678,9 +681,9 @@ let
 
 	μ = DensityEstimators.mean(rv, DensityEstimators.sb.weights(mass))
 	
-	h = DensityEstimators.histogram(rv, 60, weights=mass, normalization=:pdf)
+	h = DensityEstimators.histogram(rv, 60, weights=mass, normalization=:pdf, errors=:weighted)
 
-	errscatter!(lguys.midpoints(h.bins), h.values, h.err)
+	errorscatter!(lguys.midpoints(h.bins), h.values, yerror=h.err)
 
 	x_model = LinRange(μ - 3σv, μ+3σv, 100)
 	y_model = gaussian.(x_model, μ, σv)
@@ -725,10 +728,10 @@ orbit_props["t_last_peri"]
 r_b_kpc = calc_rb(σv, orbit_props["t_last_peri"]) # kpc
 
 # ╔═╡ 9eb85c51-cf51-4fb4-b95b-7ba74fad9f8d
- lguys.kpc_to_arcmin(calc_rb(9.6, orbit_props["t_last_peri"]), obs_today.distance) # kpc
+ lguys.kpc2arcmin(calc_rb(9.6, orbit_props["t_last_peri"]), obs_today.distance) # kpc
 
 # ╔═╡ 02183d68-bf7a-4774-9b48-f50712eeb552
-r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, obs_today.distance)
+r_b_arcmin = lguys.kpc2arcmin(r_b_kpc, obs_today.distance)
 
 # ╔═╡ 3b3f3219-fae4-4f3c-be82-27759b7fece7
 @info "r break = $r_b_arcmin"
@@ -742,13 +745,13 @@ md"""
 nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 
 # ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
-prof = lguys.StellarProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:none, r_centre=3, bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
+prof = lguys.StellarDensityProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:none,  bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
 
 # ╔═╡ 0fb0dfd7-8536-4d8f-b368-d5ca3dc74783
-prof_i = lguys.StellarProfile(stars_i.r_ell, weights=stars_i.weights, normalization=:none, r_centre=3, bins=lguys.Interface.bins_both(stars_i.r_ell, nothing, bin_width=0.05, num_per_bin=1))
+prof_i = lguys.StellarDensityProfile(stars_i.r_ell, weights=stars_i.weights, normalization=:none, bins=lguys.Interface.bins_both(stars_i.r_ell, nothing, bin_width=0.05, num_per_bin=1))
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
-prof_expected = lguys.StellarProfile("/astro/dboyea/dwarfs/observations/ursa_minor/density_profiles/fiducial_profile.toml")
+prof_expected = lguys.StellarDensityProfile(ENV["DWARFS_ROOT"] * "/observations/$(inputs.galaxyname)/density_profiles/jax_2c_eqw_profile.toml") |> lguys.filter_empty_bins
 
 # ╔═╡ b5fd1bcd-b554-48d3-8472-024cb0bd0792
 lguys.GalactocentricFrame().d
@@ -762,13 +765,13 @@ end
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel=L"\log\ r \ /\ \textrm{arcmin}",
+		xlabel=L"\log\ R \ /\ \textrm{arcmin}",
 		ylabel = L"\log\ \Sigma\ /\ \textrm{fraction\ arcmin^{-2}}",
-		limits=((nothing, 2.5), (-6, nothing))
+		limits=((0, 2.5), (-6, nothing))
 	)
 
-	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ get_normalization(prof_expected),
-		yerr=prof_expected.log_Sigma_err,
+	errorscatter!(prof_expected.log_R, prof_expected.log_Sigma .+ get_normalization(prof_expected),
+		yerror=error_interval.(prof_expected.log_Sigma),
 		label="J+24",
 		color=:black
 	)
@@ -776,10 +779,10 @@ let
 
 	dy = get_normalization(prof)
 	
-	lines!(prof_i.log_r, prof_i.log_Sigma .+ dy, 
+	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, 
 			label="initial")
 
-	lines!(prof.log_r, prof.log_Sigma .+ dy, 
+	lines!(prof.log_R, prof.log_Sigma .+ dy, 
 			label="final")
 
 	vlines!(log10(r_b_arcmin), color=:grey, label="break radius", linestyle=:dot)
@@ -856,6 +859,7 @@ end
 # ╟─1de340a6-da4e-47a6-b499-ced8c469a70d
 # ╟─145490bd-d87e-4153-865b-342506af8f5a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
+# ╠═7d82571f-4d80-412a-9813-1eee1f916e56
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84

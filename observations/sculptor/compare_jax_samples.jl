@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -12,6 +12,9 @@ begin
 	using Arya
 	using LilGuys
 end
+
+# ╔═╡ 1e58c7d7-1071-45cd-81fc-d486b0b2c0ae
+using PyFITS
 
 # ╔═╡ 9d548f5a-223c-4827-b2d3-8361d0ced243
 using DataFrames: rename!, leftjoin
@@ -138,16 +141,19 @@ md"""
 data_dir = "data"
 
 # ╔═╡ 330a4e01-59e0-4eb6-9900-d23db1159dd5
-scl_ell = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2c.fits"))
+scl_ell = read_fits(joinpath(data_dir, "jensen+24_2c.fits"))
 
 # ╔═╡ b37ad796-1695-4665-b592-b68a99356907
-scl_circ = LilGuys.read_fits(joinpath(data_dir, "jensen+24_2c_circ.fits"))
+scl_circ = read_fits(joinpath(data_dir, "jensen+24_2c_circ.fits"))
 
 # ╔═╡ 39be2272-202a-4bb9-95cb-a9e584589d97
-scl_1comp = LilGuys.read_fits(joinpath(data_dir, "jensen+24_1c.fits"))
+scl_1comp = read_fits(joinpath(data_dir, "jensen+24_1c.fits"))
+
+# ╔═╡ 628b0992-b0f5-4114-b477-c0bd97877180
+scl_wide = read_fits(joinpath(data_dir, "jensen+24_wide.fits"))
 
 # ╔═╡ 08cf3854-66e9-4358-8925-e069f59f65e6
-scl_gaia = LilGuys.read_fits("data/gaia_4deg_cen.fits")
+scl_gaia = read_fits("data/gaia_4deg_cen.fits")
 
 # ╔═╡ 035a4b04-729a-413d-b1e4-d7fc0ecbfad9
 md"""
@@ -159,6 +165,74 @@ setdiff(scl_1comp.source_id, scl_ell.source_id)
 
 # ╔═╡ 9ec35690-9048-4f7f-954f-33a474d33bf3
 setdiff(scl_1comp.source_id, scl_circ.source_id)
+
+# ╔═╡ 235e625f-0cec-440a-bb07-be3e11cbe851
+md"""
+# Is widefield probabilities similar to 1c model
+"""
+
+# ╔═╡ dc508d1f-1876-4e85-96fd-7f4e224d7945
+scl_wide_match = leftjoin(scl_ell, scl_wide, on=:source_id, makeunique=true)
+
+# ╔═╡ 729108a6-2f3c-4a74-992f-7ae50edd9947
+scatter(
+	scl_wide_match.PSAT, scl_wide_match.P_ell
+)
+
+# ╔═╡ dc4e77af-d1bd-4b40-8645-7fc4d8dc2752
+scatter(
+	scl_wide_match.r_ell, abs.(scl_wide_match.P_ell .- scl_wide_match.PSAT),
+	alpha=0.4, markersize=2
+)
+
+# ╔═╡ 337c3d97-c954-42d6-a2b1-c5035faf751e
+psat_diff =  abs.(scl_wide_match.P_ell .- scl_wide_match.PSAT)
+
+# ╔═╡ 547e3f0a-8962-4865-8f2a-48d10a8a57d8
+psat_filt = map(x->(x>0.05) & !ismissing(x), psat_diff)
+
+# ╔═╡ c45d205c-8514-4031-a430-f97c950d5801
+scatter(scl_wide_match.xi[psat_filt], scl_wide_match.eta[psat_filt])
+
+# ╔═╡ 674b6034-e868-4bfb-9e2f-6d4527a12daf
+scatter(scl_wide_match.bp_rp[psat_filt], scl_wide_match.phot_g_mean_mag[psat_filt])
+
+# ╔═╡ 3f9aa87e-ce2a-4ce7-97a2-3d7cfdc88ac0
+hist(filter(x->isfinite(x) & !ismissing(x), abs.(scl_wide_match.P_ell .- scl_wide_match.PSAT)))
+
+# ╔═╡ 5f271559-a84e-4ad1-b9ca-db99ec0fb399
+filt_wide = scl_wide_match.P_ell .> 0.5
+
+# ╔═╡ 44714fd2-37cf-49f1-8388-86d169441288
+filt_ell = scl_wide_match.PSAT .> 0.5
+
+# ╔═╡ d9810ca5-6d13-4bad-aa23-aeddd1e02a6b
+sum(filt_wide .!== filt_ell)
+
+# ╔═╡ 865a85c8-cb48-4fd9-a835-0ddb4c47fc6c
+scatter(scl_wide_match.L_PM_BKD, log10.(scl_wide_match.L_PM_BKD_1 ./ scl_wide_match.L_PM_BKD),alpha=0.1, markersize=1)
+
+# ╔═╡ dffbbb69-43d2-4e6f-b7c9-e8c59b521b08
+scatter(scl_wide_match.L_PM_SAT, scl_wide_match.L_PM_SAT_1 ./ scl_wide_match.L_PM_SAT)
+
+# ╔═╡ ae22d0fc-eb19-4ccb-9389-d30cdd131c37
+scatter(log10.(scl_wide_match.L_CMD_BKD), log10.(scl_wide_match.L_CMD_BKD_1),
+	   axis=(; limits=(-10, 0, -10, 0)),alpha=0.1, markersize=1)
+
+# ╔═╡ f590c80e-18b3-48e6-8183-2064f03358d3
+log10.(scl_wide_match.L_CMD_BKD)
+
+# ╔═╡ 27bd2998-49bc-4461-a4ff-481497792df4
+scatter(log10.(scl_wide_match.L_CMD_SAT), log10.(scl_wide_match.L_CMD_SAT_1 ./ scl_wide_match.L_CMD_SAT),
+	   axis=(; limits=(-10, 0, -1, 2)),
+		markersize=1, alpha=0.1
+)
+
+# ╔═╡ 15e8ba81-8e8d-4523-9ca5-0a210712587d
+sum(scl_wide_match.F_BEST .!= scl_wide_match.F_BEST)
+
+# ╔═╡ d60fa56a-46a2-4dd0-a7eb-2e8a57290c09
+sum(ismissing.(scl_wide_match.ra_1))
 
 # ╔═╡ f66e116c-ad7a-4804-a3e9-099b7743fafa
 md"""
@@ -192,7 +266,7 @@ md"""
 """
 
 # ╔═╡ b28733d4-7335-4157-b0ab-173aa6c56505
-scl_gaia[:, "r_ell"] = LilGuys.calc_r_ell_sky(scl_gaia.ra, scl_gaia.dec, 0, PA; centre=(ra, dec))
+scl_gaia[:, "r_ell"] = LilGuys.calc_R_ell_sky(scl_gaia.ra, scl_gaia.dec, 0, PA; centre=(ra, dec))
 
 # ╔═╡ 1e1f45d7-2b42-4ab3-b895-2e9fca8f4bc1
 scl_gaia_filt = scl_gaia[scl_gaia.r_ell .< 120, :]
@@ -219,12 +293,12 @@ scatter(xi, df.xi .- xi;
 )
 
 # ╔═╡ 6a58d6b1-5320-4515-8dad-18481cdca74f
-scatter(eta, df.eta .- eta,
+scatter(xi, df.eta .- eta,
 	axis=(; xlabel="eta (degrees)", ylabel="eta jax - xi me")
 )
 
 # ╔═╡ 52bd977c-cec6-4483-bd0c-470a3a8f071f
-r_ell = LilGuys.calc_r_ell(xi, eta, ell, PA) *60
+r_ell = LilGuys.calc_R_ell(xi, eta, ell, PA) *60
 
 # ╔═╡ f5547f0a-b4ad-4d98-97a6-953a7be11950
 scatter(r_ell, df.r_ell .- r_ell / 12.33 / sqrt(1-ell);
@@ -822,75 +896,17 @@ df.source_id
 # ╔═╡ 83462485-795b-4efe-b3d8-3e882f9077b6
 scl_gaia.source_id
 
-# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
-@assert all(scl_1comp.source_id .== df.source_id)
-
-# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
-@assert all(scl_circ.source_id .== df.source_id)
-
-# ╔═╡ a9ebb6fa-569c-4418-b92e-101fec1e0730
-import DataFrames: disallowmissing!
-
-# ╔═╡ 0a48ae68-348b-4494-9c81-d11c9bbe87a0
-begin 
-	df_out = leftjoin(df,  scl_gaia[:, extra_cols], on=:source_id, order=:left)
-
-	disallowmissing!(df_out)
-	
-	df_out[!, :L_S_SAT_1C] .= scl_1comp.L_S_SAT
-	df_out[!, :PSAT_S_1C] .= scl_1comp.PSAT_S
-	df_out[!, :PSAT_1C] .= scl_1comp.PSAT
-
-	df_out[!, :L_S_SAT_CIRC] .= scl_circ.L_S_SAT
-	df_out[!, :PSAT_S_CIRC] .= scl_circ.PSAT_S
-	df_out[!, :PSAT_CIRC] .= scl_circ.PSAT
-
-	rename!(df_out, :PSAT => :PSAT_ELL, 
-		:L_S_SAT => :L_S_SAT_ELL,
-		:PSAT_S => :PSAT_S_ELL,
-	)
-
-	df_out[!, :PSAT] = max.(df_out.PSAT_CIRC, df_out.PSAT_1C, df_out.PSAT_ELL)
-
-end
-
 # ╔═╡ 67a1bf24-9ed1-4a0f-907d-4300a81028f9
 df_out
 
 # ╔═╡ d1cea355-9dea-4531-b69a-40423d84013a
 setdiff(names(scl_gaia), names(df_out))
 
-# ╔═╡ dd1bbf56-4d9a-445c-9722-5541b63d227d
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1],
-		xlabel = "Psat 2c circ",
-		ylabel = "Psat 1c ell",
-	)
-	
-	scatter!(df_out.PSAT_CIRC, df_out.PSAT_1C)
-	fig
-end
+# ╔═╡ b546c73a-823b-4f19-a9a3-d01946c4982f
+@assert all(scl_1comp.source_id .== df.source_id)
 
-# ╔═╡ d39d9fba-288f-48fc-8db5-eb10854cb4a7
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1],
-		xlabel = "Psat 2c circ",
-		ylabel = "Psat 2c ell",
-	)
-	
-	
-	scatter!(df_out.PSAT_CIRC, df_out.PSAT_ELL)
-
-	fig
-end
-
-# ╔═╡ 6f3096a4-812c-47c1-94be-2d3715282bd4
-disallowmissing!(df_out)
-
-# ╔═╡ 9b57518d-98b0-4cb6-a290-9b9ea22cefac
-LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, overwrite=true)
+# ╔═╡ ff29e7c1-5aa4-4295-b114-e38fc3a208c7
+@assert all(scl_circ.source_id .== df.source_id)
 
 # ╔═╡ Cell order:
 # ╟─b653409b-fa89-4399-98d2-09c794aa88dc
@@ -901,6 +917,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╟─4d967c49-4074-4e07-b175-841dde78f609
 # ╠═ed4b328a-59a1-11ef-2a75-092fdb7659b8
 # ╠═2dacbd3e-b027-44cd-bb39-d3bfcf99366f
+# ╠═1e58c7d7-1071-45cd-81fc-d486b0b2c0ae
 # ╠═9d548f5a-223c-4827-b2d3-8361d0ced243
 # ╠═ad941746-1014-4385-a515-93979afc27fc
 # ╟─27d01941-3d40-4447-847f-e21191a20dd1
@@ -909,10 +926,30 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═330a4e01-59e0-4eb6-9900-d23db1159dd5
 # ╠═b37ad796-1695-4665-b592-b68a99356907
 # ╠═39be2272-202a-4bb9-95cb-a9e584589d97
+# ╠═628b0992-b0f5-4114-b477-c0bd97877180
 # ╠═08cf3854-66e9-4358-8925-e069f59f65e6
 # ╠═035a4b04-729a-413d-b1e4-d7fc0ecbfad9
 # ╠═8a8aadb5-b84f-4ed0-8942-2c407ccc2517
 # ╠═9ec35690-9048-4f7f-954f-33a474d33bf3
+# ╟─235e625f-0cec-440a-bb07-be3e11cbe851
+# ╠═dc508d1f-1876-4e85-96fd-7f4e224d7945
+# ╠═729108a6-2f3c-4a74-992f-7ae50edd9947
+# ╠═dc4e77af-d1bd-4b40-8645-7fc4d8dc2752
+# ╠═337c3d97-c954-42d6-a2b1-c5035faf751e
+# ╠═547e3f0a-8962-4865-8f2a-48d10a8a57d8
+# ╠═c45d205c-8514-4031-a430-f97c950d5801
+# ╠═674b6034-e868-4bfb-9e2f-6d4527a12daf
+# ╠═3f9aa87e-ce2a-4ce7-97a2-3d7cfdc88ac0
+# ╠═5f271559-a84e-4ad1-b9ca-db99ec0fb399
+# ╠═44714fd2-37cf-49f1-8388-86d169441288
+# ╠═d9810ca5-6d13-4bad-aa23-aeddd1e02a6b
+# ╠═865a85c8-cb48-4fd9-a835-0ddb4c47fc6c
+# ╠═dffbbb69-43d2-4e6f-b7c9-e8c59b521b08
+# ╠═ae22d0fc-eb19-4ccb-9389-d30cdd131c37
+# ╠═f590c80e-18b3-48e6-8183-2064f03358d3
+# ╠═27bd2998-49bc-4461-a4ff-481497792df4
+# ╠═15e8ba81-8e8d-4523-9ca5-0a210712587d
+# ╠═d60fa56a-46a2-4dd0-a7eb-2e8a57290c09
 # ╟─f66e116c-ad7a-4804-a3e9-099b7743fafa
 # ╠═8ac66e16-932c-466f-bb56-0befe5681c04
 # ╠═e8dc3faf-e3e4-44e6-988d-bbfdc9098d07
@@ -1014,13 +1051,7 @@ LilGuys.write_fits("processed/j24_sculptor_all.fits", df_out, verbose=true, over
 # ╠═6e3b43a1-4d90-46d7-9cad-7f258930c019
 # ╠═c378e6e7-a599-4dda-893d-1bc739cc7b3d
 # ╠═83462485-795b-4efe-b3d8-3e882f9077b6
-# ╠═0a48ae68-348b-4494-9c81-d11c9bbe87a0
 # ╠═67a1bf24-9ed1-4a0f-907d-4300a81028f9
 # ╠═d1cea355-9dea-4531-b69a-40423d84013a
-# ╠═dd1bbf56-4d9a-445c-9722-5541b63d227d
-# ╠═d39d9fba-288f-48fc-8db5-eb10854cb4a7
 # ╠═b546c73a-823b-4f19-a9a3-d01946c4982f
 # ╠═ff29e7c1-5aa4-4295-b114-e38fc3a208c7
-# ╠═a9ebb6fa-569c-4418-b92e-101fec1e0730
-# ╠═6f3096a4-812c-47c1-94be-2d3715282bd4
-# ╠═9b57518d-98b0-4cb6-a290-9b9ea22cefac

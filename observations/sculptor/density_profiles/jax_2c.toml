@@ -1,5 +1,4 @@
-filename = "../data/jensen+24_2_comp_ell.fits"
-jax_filt = true
+filename = "../data/jensen+24_wide_2c.fits"
+PSAT_min = 0.2
 
 [profile_kwargs]
-normalization = "mass"

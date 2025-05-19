@@ -48,6 +48,14 @@ r_h = 18.399999618530273
 r_h_em = 0.20000000298023224
 r_h_ep = 0.20000000298023224
 r_h_ref = "MV2020"
+R_h = 15.6
+R_h_em = 0.2
+R_h_ep = 0.2
+R_h_inner = 17.74
+R_h_inner_em = 0.60
+R_h_inner_ep = 0.62
+R_h_inner_ref = "this"
+
 metallicity = -0.9900000095367432
 metallicity_em = 0.009999999776482582
 metallicity_ep = 0.009999999776482582

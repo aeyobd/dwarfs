@@ -1,0 +1,7 @@
+inherits = "bins_eqw.toml"
+filename = "../data/jensen+24_2c.fits"
+
+PSAT_min = 0.2
+
+g_max = 19.83225727081299
+g_min = 0.0

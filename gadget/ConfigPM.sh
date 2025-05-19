@@ -11,9 +11,6 @@
     PMGRID=512
     TREEPM_NOTIMESPLIT # required
     RANDOMIZE_DOMAINCENTER
-    # ASMTH=2.0
-    # TREE_NUM_BEFORE_NODESPLIT=3
-    # TREEPM_NOTIMESPLIT
     
 # Softening types and particle types
     NSOFTCLASSES=1

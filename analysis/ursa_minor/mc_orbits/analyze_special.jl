@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -31,11 +31,17 @@ begin
 end
 
 
+# ╔═╡ 91cac7f1-e3a7-4f4e-a136-d99cbfef75ed
+using PyFITS
+
 # ╔═╡ d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 using Statistics, Distributions
 
 # ╔═╡ 1be546d7-8b11-4dc5-9295-393d39f65123
 using OrderedCollections
+
+# ╔═╡ 83fca0a6-5693-4b06-89ff-2d097231c402
+include("./mc_analysis_utils.jl")
 
 # ╔═╡ 7450144e-5464-4036-a215-b6e2cd270405
 md"""
@@ -43,7 +49,7 @@ This notebook analyzes the result of the MC samples of orbits in the same potent
 """
 
 # ╔═╡ baf5a0e0-3ee1-4056-b3a5-15058b4a0e53
-@bind modelname TextField(default="EP20")
+@bind modelname TextField(default="EP2020")
 
 # ╔═╡ abac7f99-fc5d-4536-a845-52cc269deee7
 FIGDIR = "./$(modelname)_special_cases/figures"
@@ -96,7 +102,7 @@ md"""
 begin 
 	out = lguys.Output("$modelname");
 
-	df_peris_apos = lguys.read_fits("$modelname/peris_apos.fits")
+	df_peris_apos = read_fits("$modelname/peris_apos.fits")
 	snap = out[1] |> sort_snap
 
 	@assert all(snap.index  .== df_peris_apos.index) "snapshot and peri apo index must match"
@@ -106,18 +112,16 @@ end
 begin 
 	out_special = lguys.Output(modelname_special);
 
-	df_peris_apos_special = lguys.read_fits("$modelname_special/peris_apos.fits")
+	df_peris_apos_special = read_fits("$modelname_special/peris_apos.fits")
 	snap_special = out_special[1] |> sort_snap
 
 	@assert all(snap_special.index  .== df_peris_apos_special.index) "snapshot and peri apo index must match"
 end
 
 # ╔═╡ 56631a4d-323e-42ac-ad71-3e35face895d
-obs_props_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"
+obs_props_filename = ENV["DWARFS_ROOT"] * 
+	"/observations/ursa_minor/observed_properties.toml"
 
-
-# ╔═╡ d51da98c-d3df-491d-a14c-bc6575e6c22a
-err = lguys.coord_err_from_file(obs_props_filename)
 
 # ╔═╡ c60b4d12-642f-4247-a022-f2c0bb16a092
 delta_t = df_peris_apos.t_last_peri
@@ -182,7 +186,7 @@ let
 end
 
 # ╔═╡ 2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
-ϵ = -lguys.calc_K_spec(out[1]) .- out[1].Φs_ext
+ϵ = -lguys.specific_kinetic_energy(out[1]) .- out[1].potential_ext
 
 # ╔═╡ 8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
 extrema(ϵ)
@@ -228,6 +232,9 @@ orbit_points_kwargs = [Dict(
 	:label => orbit_labels[i]
 ) for i in 1:length(snap_special)
 ]
+
+# ╔═╡ 8a863d67-2535-4117-ae19-437b3e4c6c71
+observations_special
 
 # ╔═╡ c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 let
@@ -400,14 +407,14 @@ begin
 	
 	positions = [lguys.extract_vector(out_special, :positions, i) for i in eachindex(orbit_labels)]
 	velocities = [lguys.extract_vector(out_special, :velocities, i) for i in eachindex(orbit_labels)]
-	Φs_ext = [lguys.extract(out_special, :Φs_ext, i) for i in eachindex(orbit_labels)]
+	Φs_ext = [lguys.extract(out_special, :potential_ext, i) for i in eachindex(orbit_labels)]
 
 end
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 begin
-	rs = lguys.calc_r.(positions)
-	vs = lguys.calc_r.(velocities)
+	rs = lguys.radii.(positions)
+	vs = lguys.radii.(velocities)
 end
 
 # ╔═╡ e5d40e2f-ac47-4827-853d-2f94bc39a624
@@ -554,14 +561,17 @@ import TOML
 # ╔═╡ 3639400c-e5eb-4ce6-9ec5-7a4eafa9f458
 obs_props = TOML.parsefile(obs_props_filename)
 
+# ╔═╡ d51da98c-d3df-491d-a14c-bc6575e6c22a
+err = get_coord_err(obs_props)
+
 # ╔═╡ 106ebb4c-300f-4b7e-b9a2-85c0da493c8c
 σv = obs_props["sigma_v"] .+ randn(length(peris)) * obs_props["sigma_v_err"]
 
 # ╔═╡ 54e8d50a-2e01-465c-b423-afced2272a51
-r_breaks = lguys.calc_break_radius.(σv/lguys.V2KMS, delta_t)
+r_breaks = lguys.break_radius.(σv/lguys.V2KMS, delta_t)
 
 # ╔═╡ a4fe3b8b-ca53-40fc-b729-e70e95bd9fd9
-r_breaks_arcmin = lguys.kpc_to_arcmin.(r_breaks, [o.distance for o in observations])
+r_breaks_arcmin = lguys.kpc2arcmin.(r_breaks, [o.distance for o in observations])
 
 # ╔═╡ 98b33c5a-b6cf-4472-a87b-3b8a278e0e36
 mean(r_breaks_arcmin), std(r_breaks_arcmin)
@@ -571,6 +581,9 @@ hist(r_breaks)
 
 # ╔═╡ 515fdab4-012a-4a16-a4e6-392fb203c7b9
 mean(r_breaks), std(r_breaks)
+
+# ╔═╡ 97ac4c60-ddb2-4165-a739-0e726d3bc690
+obs_props["radial_velocity"]
 
 # ╔═╡ 519a88f0-8e2d-4c09-83e0-3cc2ee147e35
 function get_initial_t(rs)
@@ -626,10 +639,10 @@ for i in 1:length(orbit_labels)
 		"pmra" => o.pmra,
 		"pmdec" => o.pmdec,
 		"radial_velocity" => o.radial_velocity,
-		"distance_err" => err.distance,
-		"pmra_err" => err.pmra,
-		"pmdec_err" => err.pmdec,
-		"radial_velocity_err" => err.radial_velocity,
+		"distance_err" => err["distance"],
+		"pmra_err" => err["pmra"],
+		"pmdec_err" => err["pmdec"],
+		"radial_velocity_err" => err["radial_velocity"],
 		"pericentre" => df_peris_apos_special.pericentre[i],
 		"apocentre" => df_peris_apos_special.apocentre[i],
 		"t_apo_i" => lguys.T2GYR*(out_special.times[end] - out.times[t]),
@@ -698,6 +711,7 @@ end
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
 # ╠═3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═91cac7f1-e3a7-4f4e-a136-d99cbfef75ed
 # ╠═b3e118f4-0503-4a6c-8f0d-d096bd0236a3
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
@@ -708,6 +722,7 @@ end
 # ╠═dcdca4a7-08a6-4d1b-a972-c386493207d0
 # ╠═56631a4d-323e-42ac-ad71-3e35face895d
 # ╠═3639400c-e5eb-4ce6-9ec5-7a4eafa9f458
+# ╠═83fca0a6-5693-4b06-89ff-2d097231c402
 # ╠═d51da98c-d3df-491d-a14c-bc6575e6c22a
 # ╠═106ebb4c-300f-4b7e-b9a2-85c0da493c8c
 # ╠═c60b4d12-642f-4247-a022-f2c0bb16a092
@@ -731,6 +746,8 @@ end
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
 # ╠═44660b2f-6220-473b-bb2f-07e23b176491
 # ╠═67ca9626-8416-4254-87f8-d1c5c88bf2de
+# ╠═8a863d67-2535-4117-ae19-437b3e4c6c71
+# ╠═97ac4c60-ddb2-4165-a739-0e726d3bc690
 # ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 # ╟─43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╠═f14fb67d-37c1-46f8-9d63-3f0d4fd93b3c

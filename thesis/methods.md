@@ -1,0 +1,183 @@
+In this section, we discuss our simulation methods from orbital estimation and initial conditions to post-processing and software.
+
+We use Agama [@agama] for potential specification and initial conditions, and Gadget-4 [@gadget4] for orbit integration and dark matter simulations (with a custom patch to integrate with Agama). 
+
+# Milky Way Potential 
+
+@fig:v_circ_potential plots the circular velocity profiles of each component of our fiducially potential. We adopt the potential described in @EP2020, an analytic approximation of @mcmillan2011. The potential consisting of a stellar Bulge, a thin and thick disk, and a dark matter NFW halo. Especially in the regime where Sculptor and Ursa Minor orbit, the dark matter halo is the dominant component of the potential. The details of the stellar disk and bulge are less important. 
+
+The galactic bulge is described by a @hernquist1990 potential. The potential is
+
+$$
+\Phi(r) = - \frac{GM}{r + a}
+$$
+where  $a=1.3\,{\rm kpc}$ is the scale radius and $M=2.1 \times 10^{10}\,\Mo$ is the total mass.
+
+The thin and thick disks are represented with the @miyamoto+nagai1975  cylindrical potential:
+$$
+\Phi(R, z) = \frac{-GM}{\left(R^2 + \left[a + \sqrt{z^2 + b^2}\right]^{2}\right)^{1/2}}
+$$
+
+where $a$ is the disc radial scale length, $b$ is the scale height, and $M$ is the total mass of the disk. For the thin disk,  $a=3.944\,$kpc, $b=0.311\,$kpc, $M=3.944\times10^{10}\,$M$_\odot$. For the thick disk, $a=4.4\,$kpc, $b=0.92\,$kpc, and $M=2\times10^{10}\,$M$_\odot$.
+
+The halo is a NFW dark matter halo (REF) with $M_s=79.5\times10^{10}\,$M$_\odot$.  and $r_s = 20.2\,$kpc.
+
+Variations to the potential of the inner disk (exclusion of a bar) should minimally affect our results as no orbit we consider reaches less than ~15 kpc of the MW centre. We exclude the mass evolution of the halo from this analysis. Over $10\,$Gyr, this would be fairly significant (factor of $\sim 2$in MW mass, REF) but since we want to determine the upper limit of tidal effects, it is safe to neglect this. 
+
+Finally, in chapter REF, we consider the influence of the large Milky Cloud on the orbits and evolution of Scl. We adopt the @vasiliev2024 multipole approximation of an N-body simulation of the LMC and MW. Their initial conditions are
+
+- MW halo:
+- MW bulge (static):
+- MW disk (static):
+- LMC halo:
+
+![Circular velocity of potential](figures/v_circ_potential.png){#fig:v_circ_potential} 
+
+Figure: Circular velocity profile of @EP2020 potential. We also show the MW and LMC potential from @vasiliev2024 for their L3M11 model.
+
+# Orbital Estimation
+
+To estimate the orbits of a dwarf galaxy, we perform a Monte Carlo sampling of the present-day observables. We integrate each sampled observable back in time for 10 Gyr in Gadget as massless point particles outputting positions every 5Myr (with otherwise similar parameters to n-body runs below.)
+
+To convert from Gaia to galactocentric coordinates, we use the @astropy v4 galactocentric frame. This frame assumes the galactic centre (Sagittarius A*) appears:
+
+- J2000 'ra' = 17h45m37.224s, 'dec' = -28°56'10.23", $\mu_{\alpha*}=-3.151\pm0.018$ mas/yr, $\mu_\delta=-5.547\pm0.026$ from the appendix and Table 2 of @reid+brunthaler2004.
+- distance = $8.122\pm0.033\,$kpc, solar radial velocity = $11 + 1.9 \pm 3$ km/s.  from  @gravitycollaboration+2018.
+
+Finally, adding that the sun is $20.8\pm0.3\,$pc above the disk from bennett+bovy2019,  and using  the procedure described in @drimmel+poggio2018, the solar velocity relative to the galactic rest frame is 
+
+- 'v_sun' = $[-12.9 \pm 3.0, 245.6 \pm 1.4, 7.78 \pm 0.08]$ km/s
+
+
+
+We select the initial conditions from the location of the first apocentre of a selected orbit.
+
+While we assume that the galaxy can be described as a point particle, not subject to (internal) dynamical friction, this approximation works well if the galaxy is not strongly affected by tides (like Scl). Analytic approximations of dynamical friction tend to be inadequate to more accurately model the N-body trajectory.
+
+# N-Body Modelling
+
+## Initial conditions
+
+We use Agama [@agama] to generate initial conditions. We initially assume galaxies are described by an NFW dark matter potential (REF) and the stars are merely collisionless tracers embedded in this potential (added on in post-processing). The density is exponentially truncated with a profile
+$$
+\rho_{\rm tNFW} = e^{-r/r_t}\ \rho_{\rm NFW}(t)
+$$ {#eq:trunc_nfw}
+where we adopt $r_t = 100 r_s$ or approximately 10 times $r_{200}$. 
+
+## Isolation runs and simulation parameters
+
+To ensure that the initial conditionss of the simulation are dynamically relaxed and well-converged, we run the simulation in isolation (no external potential) for 5 Gyr (or approximately the crossing timescale). Our fiducial isolation halo uses $r_s=2.76$ kpc and $M_s = 0.29 \times 10^{10}$ Msun, but can be easily rescaled for any length or mass scale. 
+
+We adopt a softening length of 
+$$
+h_{\rm grav} = 0.014 \left(\frac{r_s}{2.76\,{\rm kpc}}\right)\left(\frac{N}{10^7}\right)^{-1/2}.
+$$
+See appendix REF for a discussion of this choice, which is similar to the @power+2003  suggested softening. 
+
+We use the relative tree opening criterion with the accuracy parameter set to 0.005, and adaptive time stepping with integration accuracy set to 0.01. 
+
+### Numerical convergence
+
+As discussed in @power+2003, the region where density is converged is related to the region which becomes collisionally relaxed over the time of the universe (so about 5-10 Gyr). (i.e. where the collisionless assumption breaks down). The relaxation timescale is given by $t_{\rm relax} = t_{\rm circ} N(r) / 8\ln N(r)$ or otherwise, 
+$$
+t_{\rm relax}(r) := t_{\rm circ}(r) \frac{N(r)}{8\,\ln N(r)}
+= {t_{\rm circ}(r_{200})} \frac{\sqrt{200}}{8} \frac{N(r)}{\ln N(r)} \left(\frac{\bar \rho (r)}{\rho_{\textrm crit}}\right)^{-1/2}
+$$
+This works out to be about 6-10 times  (increasing with particle number) our adopted softening length for NFW halos given our assumptions. As such, at full resolution, we can only trust density profiles down to $\sim10\epsilon$, just enough to resolve stellar density profiles. 
+
+Note that by decreasing the truncation radius, the effective particle number is improved, so future experiments could be less generous with this parameter to improve computational performance (order 30% better resolution).
+
+![Numerical halo convergence](figures/iso_converg_num.png){#fig:numerical_convergance}
+
+Figure: Numerical convergence test for circular velocity as a function of log radius for simulations with different total numbers of particles in isolation. Residuals in lower panel are relative to NFW. The initial conditions are dotted and the converged radius is marked by arrows (REF). 
+
+## Orbital runs
+
+To perform the simulations of a given galaxy in a given potential, we centre the isolation run's final snapshot and place the dwarf galaxy in the specified orbit in the given potential. We typically run the simulation for 10 Gyr, which allows us to orbit slightly past the expected initial conditions. 
+
+# Post Processing
+
+## Centring
+
+Shrinking spheres centres inspired by @power+2003
+
+- Recursively shrink radius by 0.975 quantile and recalculating centroid until radius is less than ~1kpc or fewer than 0.1% of particles remain.
+- Remove bound particles (using instantanious potential).
+- Use previous snapshot centre and acceleration to predict new centre for next snapshot and only include particles included in previous centring timestep.
+
+The statistical centring uncertainty for the 1e7 particle isolation run is of order 0.003 kpc, however oscillations in the centre are of order 0.03 kpc. This is about three times the softening length but is less than the numerically converged radius scale. 
+
+## Velocity profiles
+
+
+
+- Circular velocity is computed assuming spherical symmetry and only shown for every 200th particle (ranked from the centre outwards)
+
+$$
+v_{\rm circ}(r) = \sqrt{\frac{GM(r)}{r}}
+$$
+
+
+
+- $v_{\rm circ\ max}$ and $r_{\rm circ,\ max}$ is found by least-squares fitting the NFW functional velocity form to the points of the velocity profile that have the 10% highest velocities. This is not a necessarily good fit, especially as the halo becomes stripped, but accurate enough to find a reliable maximum. 
+
+## Stellar Probabilities
+
+We assign stellar probabilities (assuming spherical, isotropic symmetry) via Eddington inversion. 
+
+Let $\Psi$ be the potential (normalized to vanish at infinity) and  ${\cal E}$ is the binding energy ${\cal E} = \Psi - 1/2 v^2$. If we know $f({\cal E})$, the distribution function (phase-space density in energy), then we assign the stellar weight for a given particle with energy ${\cal E}$ is 
+$$
+P_\star({\cal E}) = \frac{f_\star({\cal E})}{f_{\rm halo}({\cal E})}.
+$$
+While $f({\cal E})$ is a phase-space density, the differential energy distribution includes an additional $g({\cal E})$ occupation term (BTXXX).
+
+We use Eddington inversion to find the distribution function, (eq. 4-140b in BT87)
+$$
+f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
+$$
+
+In practice the right, boundary term is zero as $\Psi \to 0$ as $r\to\infty$, and if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$.
+
+
+
+$\Psi$ is taken as known from the underlying assumed analytic dark matter potential. $\rho_\star$ is pre-specified or calculated via Abel integration / deprojection
+
+
+
+We consider both a Plummer and 2-dimensional exponential (Exp2D) stellar models:
+
+### Exp2D
+
+The 2D exponential stellar profile is given  by 
+$$
+\Sigma_\star(R) = A e^{-R / R_s}
+$$
+where $A$ is some normalization and $R_s$ is the exponential scale radius. The 3D deprojected profile is found through abel inversion (e.g. Rapha...), i.e.
+$$
+\rho_\star (r) =- \frac{1}{\pi}\int_r^\infty \frac{d\Sigma}{dR} \frac{1}{\sqrt{R^2 - r^2}} dR  = \frac{\Sigma_0}{\pi R_s^2}\,K_0(r/R_s)
+$$
+where $K_0$ is the 0th order modified Bessel function of the second type. 
+
+### Plummer
+
+A Plummer profile is defined by
+$$
+\Sigma(R) = \frac{M}{4\pi R_s^2} \left(1 + \frac{R^2}{R_s^2}\right)^{-2} ,
+$$
+where $M$ is the total mass and $R_s$ is the characteristic scale radius. The density is 
+$$
+\rho(r) = \frac{3M}{4\pi\,R_s^3} \left(1 + \frac{r^2}{R_s^2}\right)^{-5/2}.
+$$
+
+
+
+## Stellar density profiles and velocity dispersion
+
+- Stellar velocity dispersion is calculated for all stars within 1kpc (3D) of the centre by assuming $\sigma_{\rm los} = \sqrt{\sigma_x^2 + \sigma_y^2 + \sigma_z^2}/ \sqrt 3$, i.e. isotropic velocity dispersion
+- We calculate density profiles similar to stars and assume a constant bin width in $\log R$ of $2 {\rm IQR} / \sqrt[3]{N}$ (Freedman-Diaconis prescription). $R$ may be either the cylendrical radius in $x-y$ or the on-sky project $\xi, \eta$ tangent plane coordinates. 
+- Because our dwarfs are assumed to be spherical/isotropic, we retain this assumption when calculating predicted density profiles. 
+
+
+
+
+

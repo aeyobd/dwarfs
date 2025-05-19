@@ -12,8 +12,8 @@ function sample()
 
     # transform to phase space coordinates
     mc_phase = [lguys.transform(lguys.Galactocentric, o) for o in obs]
-    pos = hcat([lguys.position_of(p) for p in mc_phase]...)
-    vel = hcat([lguys.velocity_of(p) for p in mc_phase]...)
+    pos = hcat([lguys.position(p) for p in mc_phase]...)
+    vel = hcat([lguys.velocity(p) for p in mc_phase]...)
 
     pos ./= lguys.R2KPC
     vel ./= lguys.V2KMS
@@ -28,5 +28,5 @@ end
 
 function (@main)(ARGS)
     snap = sample()
-    lguys.save("initial.hdf5", snap)
+    lguys.write("initial.hdf5", snap)
 end

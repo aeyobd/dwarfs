@@ -1,4 +1,0 @@
-inherits = "./fiducial.toml"
-
-PSAT_col = "PSAT_CIRC"
-ellipticity = 0

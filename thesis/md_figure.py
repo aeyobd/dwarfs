@@ -1,5 +1,21 @@
 from panflute import *
 import sys
+from os import path
+
+def rename_url(blocks, i):
+    content = blocks[i].content
+    for j in range(len(content)):
+        if isinstance(content[j], Plain):
+            for con2 in content[j].content:
+                if isinstance(con2, Image):
+                    url = con2.url
+                    print("Found image at ", url, file=sys.stderr)
+                    if url.startswith("figures"):
+                        url_new = path.splitext(url)[0] + ".pdf"
+                        if path.isfile(url_new):
+                            con2.url = url_new
+                            print("Renaming ", url,"=>", con2.url, file=sys.stderr)
+
 
 def process_figures(doc):
     blocks = list(doc.content)
@@ -7,18 +23,21 @@ def process_figures(doc):
     while i < len(blocks):
         if isinstance(blocks[i], Figure):
             print("Figure found!", file=sys.stderr) 
+            url = rename_url(blocks, i)
+
             if i + 1 < len(blocks) and isinstance(blocks[i+1], Para):
                 next_para = blocks[i+1]
                 if next_para.content:
                     first_part = next_para.content[0]
-                    if isinstance(first_part, Str) and first_part.text == "Figure:" and isinstance(next_para.content[1], Space):
+                    if (len(next_para.content) > 2 
+                            and isinstance(first_part, Str) 
+                            and first_part.text == "Figure:"
+                            and isinstance(next_para.content[1], Space)
+                        ):
 
                         print("Figure caption found!", file=sys.stderr) 
                          # Get original caption from the Figure
                         original_caption = blocks[i].caption
-                        print(original_caption.content, file=sys.stderr)
-                        print(original_caption.content[0], file=sys.stderr)
-                        print(type(original_caption.content[0]), file=sys.stderr)
                         # Create new caption: [original] + LineBreak + [new content]
                         inl = original_caption.content[0].content
 

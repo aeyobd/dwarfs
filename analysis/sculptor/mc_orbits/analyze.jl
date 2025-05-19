@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ e9e2c787-4e0e-4169-a4a3-401fea21baba
 begin 
@@ -19,8 +31,20 @@ begin
 end
 
 
+# ╔═╡ fdea5667-7aa1-4d68-8d43-2742e9f5eb22
+using PlutoUI
+
+# ╔═╡ f823e80a-f6db-440f-8d25-56860618c82f
+using LilGuys
+
+# ╔═╡ a39d4241-ac9c-40bf-807e-9577cb2cc855
+using PyFITS
+
 # ╔═╡ d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 using Statistics, Distributions
+
+# ╔═╡ 96b2aace-17fa-48fc-97f0-5766bc308fbe
+include("mc_analysis_utils.jl")
 
 # ╔═╡ 7450144e-5464-4036-a215-b6e2cd270405
 md"""
@@ -36,10 +60,10 @@ The most important variable is to set the modelname to the appropriate directory
 """
 
 # ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-modelname = "vasiliev24_L3M11_2x"
+@bind modelname TextField(24, default="example") |> confirm
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
-fig_dir = "./$modelname/figures"
+FIGDIR = "./$modelname/figures"
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 p_value = 0.0014 # 3sigma
@@ -48,6 +72,12 @@ p_value = 0.0014 # 3sigma
 md"""
 ## Setup
 """
+
+# ╔═╡ a7111062-b025-43a9-bdb1-aee08deb60e9
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ 00ba3075-c3e2-4965-acf3-00cda0ef320f
+import TOML
 
 # ╔═╡ 3b83205d-91c1-481e-9305-0d59bc692135
 coord_labels = Dict(
@@ -62,6 +92,9 @@ coord_labels = Dict(
 # ╔═╡ 8b818798-69fb-481d-ade1-9fd436b1f281
 kms_label = L" / km\,s$^{-1}$"
 
+# ╔═╡ 18d6d521-1abf-4085-b9b0-6f45c0eb2feb
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observed_properties.toml"))
+
 # ╔═╡ 8f70add4-effe-437d-a10a-4e15228f9fec
 md"""
 # Data loading
@@ -73,17 +106,11 @@ The code below lets us import the obs variable from the sample.jl file in the si
 This is primarily used for tests later.
 """
 
-# ╔═╡ 9583b7d0-0d86-4346-998b-000ea68e94b6
-module SampleSetup
-	import ..modelname 
-	include(joinpath(modelname, "simulation/sample.jl"))
-end
-
 # ╔═╡ fa790a4d-e74f-479b-8ff6-aa2f23cb573d
-obs = SampleSetup.obs
+obs = lguys.ICRS(obs_props)
 
 # ╔═╡ eff58c52-a32b-4faa-9b98-c8234d9b21fc
-err = SampleSetup.err
+err = get_coord_err(obs_props)
 
 # ╔═╡ 88536e86-cf2a-4dff-ae64-514821957d40
 md"""
@@ -104,7 +131,7 @@ end
 begin 
 	out = lguys.Output(modelname);
 
-	df_peris_apos = lguys.read_fits("$modelname/peris_apos.fits")
+	df_peris_apos = read_fits("$modelname/peris_apos.fits")
 	snap = out[1] |> sort_snap
 
 	@assert all(snap.index  .== df_peris_apos.index) "snapshot and peri apo index must match"
@@ -163,7 +190,7 @@ Since these values are (likely) not in the random samples, I simply run new orbi
 function median_residual(observations)
 	for sym in [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
 		md = median(getproperty.(observations, sym))
-		res = (md - getproperty(obs, sym) ) / getproperty(err, sym)
+		res = (md - getproperty(obs, sym) ) / err[string(sym)]
 		@printf "Δ ln %-15s  = %6.2f \t \n"  sym res
 	end
 end
@@ -176,9 +203,6 @@ function median_percen(observations)
 		@printf "     %-15s  = %8.3f ± %8.3f \n"  sym md err
 	end
 end
-
-# ╔═╡ 6c8b1c1e-d441-4f31-9017-a11caeab5af0
-lguys.GalactocentricFrame
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -227,20 +251,21 @@ let
 		ylabel = "count"
 	)
 
-	bins, counts, err = lguys.histogram(df_peris_apos.t_last_peri .* lguys.T2GYR)
+	bins = midpoints(sort(unique(df_peris_apos.t_last_peri))) .* T2GYR
+	bins, counts, err = lguys.histogram(df_peris_apos.t_last_peri .* lguys.T2GYR, bins)
 	scatter!(lguys.midpoints(bins), counts)
 
 	fig
 end
 
 # ╔═╡ 471a5501-bc7b-4114-be1a-9088b4e674cd
-hist(lguys.calc_r(snap.positions),
+hist(lguys.radii(snap.positions),
 	axis=(; xlabel="initial galactocentric radius / kpc",
 	ylabel="count")
 )
 
 # ╔═╡ 68b0383a-3d5a-4b94-967c-f0e31e8a0ce1
-hist(lguys.calc_r(snap.velocities) * lguys.V2KMS,
+hist(lguys.radii(snap.velocities) * lguys.V2KMS,
 	axis=(; xlabel="initial galactocentric velocity / km/s",
 		ylabel="count"
 	)
@@ -305,7 +330,7 @@ end
 
 # ╔═╡ c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 let
-	fig = Figure(size=(600, 600))
+	fig = Figure(size=(5*72, 5*72))
 	plot_kwargs = Dict(
 		:color => :black,
 		:alpha => 0.1,
@@ -350,7 +375,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
@@ -372,7 +397,7 @@ end
 
 # ╔═╡ 8b6f95f7-284f-4133-b6f1-a22dd9c405f0
 let
-	fig = Figure(size=(600, 600))
+	fig = Figure(size=(5*72, 5*72))
 	plot_kwargs = Dict(
 		:color => :black,
 		:alpha => 0.1,
@@ -417,7 +442,7 @@ let
 	linkyaxes!(fig.content...)
 
 
-	save(joinpath(fig_dir, "t_last_peri.pdf"), fig)
+	@savefig "t_last_peri"
 	fig
 end
 
@@ -465,7 +490,7 @@ let
 		x_mod = LinRange(minimum(x), maximum(x), 1000)
 
 		mu_exp = getproperty(obs, sym)
-		err_exp = getproperty(err, sym)
+		err_exp = err[string(sym)]
 		y_mod = normal_dist.(x_mod, mu_exp, err_exp)
 		lines!(x_mod, y_mod, label="expected gaussian")
 			
@@ -474,7 +499,7 @@ let
 
 	
 
-	save(joinpath(fig_dir, "peri_mc_orbits_corr.pdf"), fig)
+	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
@@ -496,7 +521,7 @@ let
 
 
 		μ = getproperty(obs, sym)
-		σ = getproperty(err, sym)
+		σ = err[string(sym)]
 		x_mod = LinRange(μ - 3σ, μ + 3σ, 10_000)
 		y_mod = normal_dist.(x_mod, μ, σ) 
 		lines!(x_mod, y_mod, label="expected")
@@ -520,17 +545,17 @@ begin
 	velocities = [lguys.extract_vector(out, :velocities, i) for i in idx]
 	accelerations = [lguys.extract_vector(out, :accelerations, i) for i in idx]
 
-	Φs_ext = [lguys.extract(out, :Φs_ext, i) for i in idx]
-	Φs = [lguys.extract(out, :Φs, i) for i in idx]
+	Φs_ext = [lguys.extract(out, :potential_ext, i) for i in idx]
+	Φs = [lguys.extract(out, :potential, i) for i in idx]
 
 
 end
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 begin
-	rs = lguys.calc_r.(positions)
-	vs = lguys.calc_r.(velocities)
-	accs = lguys.calc_r.(accelerations)
+	rs = lguys.radii.(positions)
+	vs = lguys.radii.(velocities)
+	accs = lguys.radii.(accelerations)
 end
 
 # ╔═╡ 14c36202-66ca-46b3-b282-3895b72311fe
@@ -549,7 +574,7 @@ let
 	for i in eachindex(idx)
 		lines!(-out.times * lguys.T2GYR, rs[i], label=orbit_labels[i])
 	
-		hlines!([peris[idx[i]], apos[idx[i]]], linestyle=:dot)
+		hlines!([peris[idx[i]], apos[idx[i]]], linestyle=:solid, alpha=0.1, color=:black)
 		scatter!(-df_peris_apos.t_last_peri[idx[i]] .* lguys.T2GYR, peris[idx[i]], color=COLORS[i])
 		scatter!(-df_peris_apos.t_last_apo[idx[i]] .* lguys.T2GYR, apos[idx[i]], color=COLORS[i], marker=:utriangle)
 
@@ -557,7 +582,7 @@ let
 
 	scatter!([NaN], [NaN], color=:black, label="pericentre")
 	scatter!([NaN], [NaN], color=:black, label="apocentre", marker=:utriangle)
-	hlines!([NaN], linestyle=:dot, color=:black, label="global peri/apocentre")
+	hlines!([NaN], linestyle=:solid, alpha=0.1, color=:black, label="extrema")
 	
 	Legend(fig[1, 2], ax)
 	fig
@@ -755,12 +780,18 @@ end
 # ╠═b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═fdea5667-7aa1-4d68-8d43-2742e9f5eb22
+# ╠═a7111062-b025-43a9-bdb1-aee08deb60e9
+# ╠═f823e80a-f6db-440f-8d25-56860618c82f
+# ╠═00ba3075-c3e2-4965-acf3-00cda0ef320f
+# ╠═a39d4241-ac9c-40bf-807e-9577cb2cc855
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
+# ╠═18d6d521-1abf-4085-b9b0-6f45c0eb2feb
+# ╠═96b2aace-17fa-48fc-97f0-5766bc308fbe
 # ╟─8f70add4-effe-437d-a10a-4e15228f9fec
 # ╠═b15fb3ac-2219-419a-854a-31a783acf891
-# ╠═9583b7d0-0d86-4346-998b-000ea68e94b6
 # ╠═fa790a4d-e74f-479b-8ff6-aa2f23cb573d
 # ╠═eff58c52-a32b-4faa-9b98-c8234d9b21fc
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
@@ -781,7 +812,6 @@ end
 # ╠═c8aec4f8-975f-4bbc-b874-bf0172d35868
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 # ╠═34104429-05e0-40a6-83e5-078dbe346504
-# ╠═6c8b1c1e-d441-4f31-9017-a11caeab5af0
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
 # ╠═ef57611c-2986-4b03-aa5a-ab45003edd72
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
@@ -807,7 +837,7 @@ end
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
-# ╟─e5d40e2f-ac47-4827-853d-2f94bc39a624
+# ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
 # ╟─57a8d1c8-3940-4430-8b46-375fb2bf1695

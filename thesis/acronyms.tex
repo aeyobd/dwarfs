@@ -7,35 +7,17 @@ stylemods={longextra}
 ]{glossaries-extra}
 \makeglossaries
 
+
+% Ordinary abbreviations
+\newcommand{\kms}{{\rm km\,s^{-1}}}
+\newcommand{\kmsdeg}{{\rm km\,s^{-1}\,deg^{-1}}}
+
 \setabbreviationstyle[acronym]{long-short-sc}
 \GlsXtrEnablePreLocationTag{\S }{\S }
 
 
-\newacronym
-[ description ={Core collapse supernovae. Massive star explosions. {\sc Ccsne} produce many elements including \gls{alpha}, \gls{fepeak}, and r and \gls{sproc}.}
-]
-{cc}{ccsne}{core collapse supernovae}
-
-\newacronym
-[description={Asymptotic giant branch stars. The {\sc agb} phase is the last phase of \glspl{lowmass}, before stars become white dwarfs. Produces C, N, and heavy \gls{sproc} elements. See \ref{sec:stel_evo}.}.]
-{agb}{agb}{asymptotic giant branch}
-
-\newacronym
-[description={Type Ia Supernovae. Exploding white dwarfs. Produces \gls{fepeak} and has a long delay time.}]
-{ia}{sne ia}{supernovae type Ia}
 
 
-\newacronym
-[description={Galactic chemical evolution.}]
-{gce}{gce}{galactic chemical evolution}
-
-\newacronym
-[description={Star formation history.}]
-{sfh}{sfh}{star formation history}
-
-\newacronym
-[description={Single stellar population. A group of stars formed all at the same time.}]
-{ssp}{ssp}{single stellar population}
 
 \newacronym
 [description={Initial mass function. A function describing the mass distribution of newly formed stars. I use a \citet{kroupa01} {\sc imf}, which is described as a piecewise power-law function of $M$.}]
@@ -47,29 +29,6 @@ Apache Point Observatory Galactic Evolution Experiment.
 A large near-infrared spectroscopic survey of stars in the Milky Way. \citep{apogee17.}}]
 {apogee}{apogee}{Apache Point Observatory Galactic Evolution Experiment}
 
-\newacronym
-[
-description={Damped Lyman-alpha system. {\sc dla}s are clouds of gas from the 
-early universe which are observed through their absorption of quasar spectra. The name 
-comes from the strong Lyman-alpha lines ($1216\AA$) due to H absorption.}
-]
-{dla}{dla}{damped Lyman-alpha systems}
-
-
-
-
-
-\newcommand{\cc}{\gls{cc}}
-\newcommand{\Cc}{\Gls{cc}}
-\newcommand{\agb}{\gls{agb}}
-\newcommand{\ia}{\gls{ia}}
-\newcommand{\sfh}{\gls{sfh}}
-\newcommand{\dla}{\gls{dla}}
-\newcommand{\ssp}{\gls{ssp}}
-\newcommand{\imf}{\gls{imf}}
-\newcommand{\gce}{\gls{gce}}
-\newcommand{\Gce}{\Gls{gce}}
-\newcommand{\apogee}{\gls{apogee}}
 
 
 
@@ -85,87 +44,6 @@ comes from the strong Lyman-alpha lines ($1216\AA$) due to H absorption.}
 
 \newglossaryentry{nucleosynthesis}{name={nucleosynthesis},
     description={The synthesis of new elements through fusion inside stars. See section \ref{sec:stel_evo}.}
-}
-
-\newglossaryentry{multizone}{name={multi-zone},
-    description={A chemical evolution model where a galaxy is divided into several zones, each with different stars, gas, and properties. }
-}
-
-\newglossaryentry{onezone}{name={one-zone},
-    description={A chemical evolution model where the gas is all the same composition, i.e. neglecting spatial variations.}
-}
-
-\newglossaryentry{alpha}{name={$\alpha$-element},
-    description={Elements which are made up of $\alpha$-particles (He nuclei) throuch the triple-$\alpha$ process (see Eq.~\ref{eq:triple_alpha}). Essentially light, even-numbered elements like O, Mg, and Na.}
-}
-
-\newglossaryentry{fepeak}{name={Fe-peak elements},
-    description={Fe and nearby elements, produced in \gls{cc} and \gls{ia}.}
-}
-
-\newglossaryentry{sproc}{name={s-process elements},
-    description={Elements produced through slow neutron captures, typically in \agb\ stars.}
-}
-
-\newglossaryentry{rgb}{name={red giant branch},
-    description={Red giant branch stars are stars that have completed hydrogen core burning and have expanded in size. See Appendix \ref{sec:stel_evo}.}
-}
-
-\newglossaryentry{tdu}{name={third dredge up},
-    description={Third dredge up occurs inside \gls{agb} stars. During each thermal pulse, material is {\it dredged up} from the core, changing the chemical abundances of the stellar atmosphere. (While nominally called {\it third dredge up}, there are typically several third dredge ups.). See Appendix \ref{sec:stel_evo}.}
-}
-
-\newglossaryentry{fdu}{name={first dredge up},
-    description={First dredge up occurs when a \gls{lowmass} enters the \gls{rgb} phase. Material from the core is brought to the surface, increasing N and decreasing C abundances. See Appendix \ref{sec:stel_evo}.}
-}
-
-\newglossaryentry{hbb}{name={hot bottom burning},
-    description={Hot bottom burning occurs inside \agb\ stars. The base of the convective envelope becomes hot enough for CNO burning to initiate.}
-}
-
-\newglossaryentry{subgiant}{name={subgiant},
-    description={A star in the process of leaving the main sequence and becoming a \gls{rgb}.}
-}
-
-\newglossaryentry{imfave}{name={\gls{imf}-averaged},
-    description={Averaged over the initial-mass function ({\sc imf}). The {\imf}-weighted yield is the mass of the newly produced element divided by the mass of star formation for a single stellar population (see \ssp).}
-}
-
-
-\newglossaryentry{dtd}{name={delay time distribution},
-    description={The distribution in time of when an element is produced 
-    after a star formation event.}
-}
-
-\newglossaryentry{massloading}{name={mass loading},
-    description={The strength of outflows relative to star formation. See also $\eta$. }
-}
-
-\newglossaryentry{lowalpha}{name={low-$\alpha$},
-    description={The low-$\alpha$ sequence, as described by Eq.~\ref{eq:high_alpha}. }
-}
-
-\newglossaryentry{highalpha}{name={high-$\alpha$},
-    description={The high-$\alpha$ sequence, as described by Eq.~\ref{eq:high_alpha}. }
-}
-
-
-\newglossaryentry{lowmass}{name={low-mass star},
-    description={Stars with masses $\lesssim 8\,M_\odot$ which end life as a white dwarf. }
-}
-
-\newglossaryentry{highmass}{name={high-mass star},
-    description={Stars with masses $\lesssim 8\,M_\odot$, which end as a neutron star, black hole, or supernovae.}
-}
-
-\newglossaryentry{insideout}{name={{\it insideout}},
-    description={Our fiducial star formation history. The rate of star formation is highest towards the center of the galaxy and at earlier times. See Eq.~\ref{eq:inside_out}.}
-}
-
-\newglossaryentry{cno}{name={CNO cycle},
-    description = { A proton-fusion cycle which occurs in \gls{rgb} stars 
-        consisting of a chain of proton captures releasing a He nucleus ($\alpha$-particle) and energy. See Eq.~\ref{eq:cno_cycle}.
-}
 }
 
 

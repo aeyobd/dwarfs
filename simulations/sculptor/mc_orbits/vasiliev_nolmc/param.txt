@@ -1,88 +1,89 @@
+# -----------------------------------IO---------------------------------------
 
-%----  Relevant files 
-InitCondFile         initial
-OutputDir            ./out
-SnapshotFileBase     snapshot
-OutputListFilename   outputs.txt
+#---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
 
+#---File formats 
+ICFormat                    3       # use HDF5
+SnapFormat                  3 
 
-%---- File formats
-ICFormat             3 # use HDF5
-SnapFormat           3 
+#---Mem & CPU limits
+TimeLimitCPU                3600    # 1h
+CpuTimeBetRestartFile       3600    # 1h 
+MaxMemSize                  2400    # TUNE to system (MB)
 
+#---Time
+TimeBegin                   0
+TimeMax			            1036.892895 # 5 Gyr, our time units are reversed
 
-%---- CPU-time limits
-TimeLimitCPU              1800000   % 500h
-CpuTimeBetRestartFile     18000.0    % 2h,  in seconds
-
-%----- Memory alloction
-MaxMemSize                1800    % in MByte
-
-%---- Caracteristics of run
-TimeBegin                 0
-TimeMax			  1060 % 5 Gyr
-
-%---- Cosmological parameters
-Omega0	                  0
-OmegaLambda               0
-OmegaBaryon               0
-HubbleParam               1.0
-Hubble                    100.0
-BoxSize                   3000
-ComovingIntegrationOn	  0
+#---Output frequency
+OutputListOn                0
+TimeBetSnapshot             1      # change as needed
+TimeOfFirstSnapshot         0       # MATCH to TimeBegin
+TimeBetStatistics           1      # change as needed 
+NumFilesPerSnapshot         1
+MaxFilesWithConcurrentIO    1 
 
 
-%---- System of units
-UnitLength_in_cm         1.0 
-UnitMass_in_g            1.0 
-UnitVelocity_in_cm_per_s 1.0 
-GravityConstantInternal  1.0
+# ----------------------------------Gravity-----------------------------------
+
+# MATCH all the below if continuing run
+
+#---Timestep accuracy
+ErrTolIntAccuracy           0.01    # MATCH
+CourantFac                  0.1     # ignored; for SPH
+MaxSizeTimestep             0.5     # MATCH
+MinSizeTimestep             0.0 
+
+#---Tree algorithm
+TypeOfOpeningCriterion      1       # 0: Barnes-Hut, 1: Relative
+ErrTolTheta                 0.5     # mostly used for Barnes-Hut
+ErrTolThetaMax              1.0     # (used only for relative)
+ErrTolForceAcc              0.005   # (used only for relative)
+
+#---Domain decomposition: should only affect performance
+TopNodeFactor                       3.0
+ActivePartFracForNewDomainDecomp    0.02
+
+#---Gravitational Softening
+SofteningComovingClass0      0.001  # should not matter
+SofteningMaxPhysClass0       0      # ignored; for cosmological
+SofteningClassOfPartType0    0
+SofteningClassOfPartType1    0
+
+
+#--------------------------------Misc-------------------------------------
+
+# probably do not need to change the options below 
+
+#---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
 
 AgamaLengthScale         1.0
 AgamaVelocityScale       -0.004822
 # only change to scale the halo, length+velocity => Mass
 AgamaMassScale           1.0
 
+#---Cosmological Parameters 
+ComovingIntegrationOn	    0 # no cosmology
+Omega0	                    0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+Hubble                      100
+BoxSize                     0
 
-%---- Output frequency and output paramaters
-OutputListOn              0
-TimeBetSnapshot           1
-TimeOfFirstSnapshot       0.
-TimeBetStatistics         1
-NumFilesPerSnapshot       1
-MaxFilesWithConcurrentIO  1 
-
-%---- Accuracy of time integration
-ErrTolIntAccuracy        0.025
-CourantFac               0.15
-MaxSizeTimestep          1.0
-MinSizeTimestep          0.0 
-
-%---- Tree algorithm, force accuracy, domain update frequency
-TypeOfOpeningCriterion                0
-ErrTolTheta                           0.5
-ErrTolThetaMax                        1.0
-ErrTolForceAcc                        0.005
-TopNodeFactor                         1.0
-
-ActivePartFracForNewDomainDecomp      0.02
-# ActivePartFracForPMinsteadOfEwald     0.05
-
-%---- Initial density estimate
-DesNumNgb                        64
-MaxNumNgbDeviation               2
-
-
-
-%---- Gravitational softening length
-SofteningMaxPhysClass0       0.01	# 10 pc
-SofteningComovingClass0      0.01	# 10 pc
-SofteningClassOfPartType0    0
-SofteningClassOfPartType1    0
-
-
-%----- SPH
+#---SPH
 ArtBulkViscConst             0.8
 MinEgySpec                   0
-InitGasTemp                  0
+InitGasTemp                  100
 
+#---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1 

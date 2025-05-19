@@ -1,38 +1,64 @@
 ra = 227.2420
 ra_err = 0.0045
+ra_ref = "munoz+18"
+
 dec = 67.2221
 dec_err = 0.0016
+dec_ref = "munoz+18"
+
 distance = 70.1
-distance_err = 2.9
+distance_err = 3.6
+distance_modulus = 19.23
+distance_modulus_em = 0.11
+distance_modulus_ep = 0.11
+distance_ref = "garofolo+25"
+
 pmra = -0.124
-pmra_err = 0.017 #0.002 + gaia sys
+pmra_err = 0.017
+pmra_ref = "MV2020b"
 pmdec = 0.078
-pmdec_err = 0.017 #0.002 + gaia sys
-radial_velocity = -245.2
+pmdec_err = 0.017 
+pmdec_ref = "MV2020b"
+pmra_note = "includes systematic error. (statistical is 0.004)"
+
+radial_velocity = -245.9
 radial_velocity_err = 1
+radial_velocity_ref = "pace+2020"
+radial_velocity_note = "average of MMT and Keck measurements in pace++, uncertainty is estimated from systematic shift in mean between samples (-244.7 vs -247.0)."
 
-distance_modulus = 19.399999618530273
-distance_modulus_em = 0.10000000149011612
-distance_modulus_ep = 0.10000000149011612
-distance_ref = "MV2020"
+sigma_v = 8.6
+sigma_v_err = 0.3
+sigma_v_ref = "pace+2020"
 
-# TODO: revise...
-sigma_v = 9
-sigma_v_err = 0.6
+metallicity = -2.13
+metallicity_err = 0.01
+metallicity_ref = "MV2020a"
 
 ellipticity = 0.55
 ellipticity_err = 0.01
+ellipticity_ref = "Munoz+2018"
 position_angle = 50
 position_angle_err = 1
+position_angle_ref = "Munoz+2018"
 
 theta_pm_gsr = 55.97 # atand(pmra_gsr, pmdec_gsr)
 
 Mv = -9.03
 Mv_err = 0.03
+Mv_ref = "munoz+2018"
+
 M_L_s = 1.4 
 M_L_s_err = 0.3
 
-r_h = 12.329999923706055
-r_h_em = 0.05000000074505806
-r_h_ep = 0.05000000074505806
+r_h = 17.32
+r_h_em = 0.11
+r_h_ep = 0.11
 r_h_ref = "MV2020"
+R_h = 11.62
+R_h_em = 0.07
+R_h_ep = 0.07
+
+R_h_inner = 11.7
+R_h_inner_em = 0.5
+R_h_inner_ep = 0.5
+R_h_inner_ref = "this"

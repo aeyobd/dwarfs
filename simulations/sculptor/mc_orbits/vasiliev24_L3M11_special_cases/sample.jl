@@ -11,8 +11,6 @@ obs = lguys.coord_from_file(obs_props_filename)
 
 
 function sample(N = 100_000)
-    mean_frame = lguys.default_gc_frame
-
     obs_special = [obs,
         lguys.ICRS(
             ra=obs.ra,
@@ -32,14 +30,11 @@ function sample(N = 100_000)
            ),
        ]
 
-    frames_special = [mean_frame, mean_frame, mean_frame]
 
-    mc_obs = obs_special
-    frames = frames_special
     # transform to phase space coordinates
-    mc_phase = [lguys.transform(lguys.Galactocentric, o, frame=frame) for (o, frame) in zip(mc_obs, frames)]
-    pos = hcat([lguys.position_of(p) for p in mc_phase]...)
-    vel = hcat([lguys.velocity_of(p) for p in mc_phase]...)
+    mc_phase = [lguys.transform(lguys.Galactocentric, o) for o in obs_special]
+    pos = hcat([lguys.position(p) for p in mc_phase]...)
+    vel = hcat([lguys.velocity(p) for p in mc_phase]...)
 
     pos ./= lguys.R2KPC
     vel ./= lguys.V2KMS
@@ -48,12 +43,11 @@ function sample(N = 100_000)
     m = 0.
     snap = lguys.Snapshot(pos, vel, m)
 
-    return snap#, frames_df_special
+    return snap
 end
 
 
 function (@main)(ARGS)
     snap = sample()
-    # lguys.write_fits("gc_frames.fits", frames_df)
-    lguys.save("initial.hdf5", snap)
+    lguys.write("initial.hdf5", snap)
 end

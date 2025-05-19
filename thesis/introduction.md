@@ -3,160 +3,190 @@
 - What is dark matter? Why do we look at dwarfs?
 - Forms of dark matter, lambda-CDM, and dwarf galaxies
 - How does gravity affect dwarfs, theory of tidal perturbations
-  - EN21, peñarrubia+09, etc.
+  - @EN2021, @PNM2008, etc.
 - Instances of dwarfs undergoing weird processess
 - Alternative processes and uncertainties in the evolution of dwarfs
 
-### Sculptor
-
-- sestito+23a
-- tolstoy+22
-- battaglia+09
-- arroyo-polonio+22
+The classical dwarfs are some of the earliest discovered systems, begining with @shapley1938
 
 
 
-| parameter                | value                                                        | Source    |
-| ------------------------ | ------------------------------------------------------------ | --------- |
-| $\alpha$                 | $15.0183 \pm 0.0012$˚                                        | M+18      |
-| $\delta$                 | $-33.7186 \pm 0.00072$˚                                      | M+18      |
-| distance                 | $83.2 \pm 2$ kpc                                             | Tran+22   |
-| $\mu_\alpha \cos \delta$ | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | MV20a     |
-| $\mu_\delta$             | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | MV20a     |
-| RV                       | $111.03 \pm 0.23$                                            | This work |
-| $\sigma_v$               | $9.61\pm0.16$                                                | This work |
-| $r_h$                    | $12.33 \pm 0.05$ arcmin                                      | MV20*     |
-| ell                      | $0.36 \pm 0.01$                                              | M+18      |
-| PA                       | $92\pm1$                                                     | M+18      |
-| $M_V$                    | $-10.82\pm0.14$                                              | M+18      |
-| $\Upsilon_\star$         | $1.5 \pm 0.3$                                                | assumed   |
+- @fattahi+2013, @fattahi+2018
+- @sanchez-salcedo+hernandez2007: mond in dsph
+- @mayer+2001 theory of tidal stripping
+- @IH1995 structural parameters
 
-Table: Measured properties of Sculptor
+## Cosmological context
 
-## Gaia Membership Selection
+![Cosmological Power Spectrum](figures/power_spectrum.png){#fig:cosmological_power_spectrum width=100% }
 
-![Sculptor selection criteria. This will be a super long caption to test the figure list.](figures/scl_selection.png){#fig:sculptor_selection}
-
-We use J+24 data. J+24 select members using a multi-component Baysian algorithm:
-
-- Remove stars with poor astrometry or photometry, no colour excess (@lindegren+2018 equation C.2), 3$\sigma$ consistency of measured parallax with dwarf distance (near zero with @lindegren+2018 zero-point correction), and absolute RA and Dec proper motions less than 10$\,{\rm mas\ yr^{-1}}$.
-
-- Spatial likelihood based on a double exponential $\Sigma_\star \propto e^{-r/r_s} + B\,e^{-r/r_{\rm outer}}$ where the inner scale radius is fixed. 
-
-- Stars are assigned a likelihood based on the location on the CMD (using Padova isochrones including an intrinsic 0.1 CMD width in colour convolved with colour and distance modulus)
-
-- Background KDE density maps for the CMD and PM are constructed using the other quality-selected stars outside of $5R_h$, where the satellite density would be orders of magnitude less than the background (even in the presence of extended tidal features).
-
-- Likelihoods normalized to unity to represnt a PDF
-
-  
-
-  Membership probabilities are then given by
-
-$$
-P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}} = \frac{1}{1 + \frac{(1-f_{\rm sat}){\cal L}_{\rm bg}}{f_{\rm sat}{\cal L}_{\rm sat} }}
-$$
-
-where $f_{\rm sat}$ is the fraction of stars belonging to the system inside the given field, ${\cal L}_{\rm sat}$ is the likelihood of a star belonging to the satellite, and ${\cal L}_{\rm bg}$ is the likelihood of the star belonging to the background. Each likelihood is calculated as a product of the CMD, PM, and spatial likelihoods:
-$$
-{\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}
-$$
+Figure: The matter power spectrum under different assumptions for dark matter. Dwarf galaxies occupy the middle and low end of the blue region (10^10 - 10^8 solar masses), enabling a unique window into properties of dark matter on small scales. The smaller scales we can understand dark matter, the better we are able to test different models of dark matter. figure 1 from @bechtol+2022. 
 
 
 
-Not shown here, we explore simple cuts of the stars, using absolute cuts in parallax, proper motions, and the CMD. The results are similar to the nospace model.
+Figure: Density profiles of comological simulated halos, matching approximantly the NFW formula. 
 
-The above formula suggests that a cut in $P_{\rm sat}$ is equivalent to the cut in likelihoods
-$$
-\frac{{\cal L}_{\rm sat}}{{\cal L}_{\rm bg}} > \frac{(1-f_{\rm sat})/f_{\rm sat}}{1/P_{\rm sat}- 1}
-$$
 
-Note that if we remove the spatial component of the likelihood, then $f_{\rm sat}$ represents a global normalization
 
-### Searches for tidal tails
 
-![Density profiles](figures/scl_tidal_tails.png){#fig:sculptor_tidal_tails}
 
-- The above figure shows the distribution of member stars (orange), PM & CMD only selected stars (blue) and all stars (passing quality cuts, black)
+![Picture of Sculptor](/Users/daniel/thesis/figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}Figure: Image of the Sculptor dwarf spheroidal galaxy from Dark Energy Survey Data Release 2 [@abbott+2021; image created with HiPS2FITS]. Sculptor appears as a fairly prominent, extended over density of predominantly faint, red stars. 0.5 degree field of view centred on Sculptor.
 
-- There are no apparent overdensities in the PM & CMD only selected stars to suggest the presence of a tidal tail
 
-- This means that at least at the level of where the background density dominates, we can exclude models which produce tidal tails brighter than a density of $\Sigma_\star \approx 10^{-2}\,\text{Gaia-stars\ arcmin}^{-2} \approx 10^{-6} \, {\rm M_\odot\ kpc^{-2}}$ (TODO assuming a distance  of ... and stellar mass of ...). 
+
+![Picture of Ursa Minor](figures/umi_DSS2_0.75deg.png){#fig:umi_image width=390pt height=390pt}Figure: Image of Ursa Minor dwarf galaxy from the Digitized Sky Survey 2 (0.75 deg field of view tangent plane). UMi appears as a diagonal/elliptical haze of faint, reddish stars from the top left to the bottom right.  Even as classical dwarf, Ursa minor is fairly diffuse and does not stand obviously out from the background.
+
+
+
+![Idealized simulations match Scl and UMi](figures/scl_umi_vs_penarrubia.png){#fig:toy_profiles}
+
+Figure: Sculptor and UMi's profiles are well-matched to @PNM2008.  
+
+
+
+
+
+## Theoretical Background
+
+- Cosmology foundations
+  - power spectrum plot
+
+- NFW plot (density or energy), maybe borrow from paper?
+  - Explain origin of NFW
+- Dwarf galaxy formation, halos
+
+N-body DM simulations
+
+- Collisionless Boltzmann equation and meaning of such simulations
+- Assumptions & context & past work
+- Evolution under tidal field
+
+
+
+To motivate why a tidal interaction may give rise to the observed density profiles, we create a toy simulation following @PNM2008. 
+
+- NFW initial conditions (sculptor like, vcm, rcm)
+
+- Evolved in x-y plane using @EP2020 potential for ~ 5Gyr with pericentre of 15 kpc and apocentre of 100 kpc. 
+
+- Exponential initial stellar profile.
 
   
 
+As a dark matter halo is perturbed on a pericentric passage with the milky way,
 
-## Density Profile Reliability and Uncertainties
+- Tidal stress heats halo slightly
+- Mass loss, particularly of loosely bound particles
 
-- How well do we know the density profiles? 
-- What uncertainties affect derived density profiles? 
-- Can we determine if Gaia, structural, or algorithmic systematics introduce important errors in derived density profiles?
+The stellar component tracers will similarly follow the behaviour of the dark matter. 
 
-
-
-J+24's algorithm takes spatial position into account, assuming either a one or two component exponential density profile. When deriving a density profile, this assumption may influence the derived density profile, especially when the galaxy density is fainter than the background of similar appearing stars. To remedy this and estimate where the background begins to take over, we also explore a cut based on the likelihood ratio of only the CMD and PM components. This is in essence assuming that the spatial position of a star contains no information on it's membership probability (a uniform distribution like the background)
-
-To incorporate the structural uncertainties and robustly model the sampling uncertainty, we construct the following bootstrap model
-
-- Centre is varied by a centring error, estimated from the standard normal error of the positions plus the systematic shift of the mean
-
-- Position angle and ellipticity are sampled from a normal distribution given the reported uncertainties 
-
-- $f_{\rm sat}$ is sampled from ...
-
-  
-
-  **TODO**: Look into normalization of Likelihoods and check how $f_{\rm sat}$ matters. If $f_{\rm sat}$ is related to the normalizations of fg / bg densities, and other likelihoods are area-normalized to 1, then this makes life much easier. 
-
-  Test if psat weighted density profiles are similar
-
-  Save MC density profile outputs
-
-  
-
-  
-
-  
+An emperical estimate of where the simulation's stars are becoming unbound is, as stated in @PNM2008, the break radius
+$$
+R_b = C\,\sigma_{v}\,\Delta t
+$$
+where $\sigma_v$ is the present line of sight velocity dispersion , $\delta t$ is the time since pericentre, and $C \approx 0.55$ is a fit. The idea motivating this equation is stars in the inner regions will have dynamically equilibriated to the new potential (phase mixed), however the outer regions are no longer in steady state, so we have to wait until the crossing time reaches them as well.
 
 
 
+As illustrated in @fig:toy_profiles, the density profile initially stars off exponential. At increasing times since the first pericentric passage, the break radius, appearing as an apparent separation between the slopes of the inner and outer profile, increases. 
+
+## Introduction to Dark Matter simulations
+
+In this section, we will cover
+
+- How are dark matter simulations conducted
+- Interpretations and uncertainties 
+- Methods
 
 
 
+![Break radius validation](/Users/daniel/thesis/figures/idealized_break_radius.png){#fig:idealized_break_radius}
 
-![Density profiles](figures/scl_density_methods.png){#fig:sculptor_observed_profiles}
-
-Figure: add simple cuts & delve to convince more...
-
-
-
-# Comparison of the Classical dwarfs
-
-- Using J+24 data, we validate
-  - Check that PSAT, magnitude, no-space do not affect density profile shape too significantly
-- Our "high quality" members all have > 50 member stars and do not depend too highly on the spatial component, mostly corresponding to the classical dwarfs
-- We fit Sérsic profiles to each galaxy
-  - The Sérsic index, $n$, is a measure of the deviation from an exponential. Exponentials have $n=1$, whereas more extended dwarf galaxies will have higher $n$
-- To better estimate the uncertainties due to unknown galaxy properties and flexibility in the likelihood cut, we can 
-
-![image-20250313130050775](/Users/daniel/Library/Application Support/typora-user-images/image-20250313130050775.png)
-
-![image-20250313130110550](/Users/daniel/Library/Application Support/typora-user-images/image-20250313130110550.png)
-
-![image-20250313130043114](/Users/daniel/Library/Application Support/typora-user-images/image-20250313130043114.png)
+Figure: The break radius of the simulations is set by the time since pericentre. 
 
 
 
-## Radial Velocity Measurements
+From this argument, we note that the following properties must be approximately true for tides to occur:
+
+- Close enough pericentre. The other break radius $r_J$ implies that if the host density is 3x the satellite, stars will be lost
+- Corresponding time since last pericentre: If the time since last pericentre is not $\sim$ consistent with an observed break in the density profile, then tides 
+- Halo evolution. As found in @EN2021, galaxies evolve along well defined tidal tracks (assuming spherical, isotropic, NFW halo, which may not be true, see ...). These tracks tend to "puff up" the stellar component while also removing dark matter mass, leaving a smaller, compacter DM halo with a more extended stellar component.
+  - This information is mostly related to the statistical initial distribution of satellites from cosmology [ludlow+2016; @fattahi+2018]
+
+## Potentials
+
+From the @nfw1996 paper, eqns. 3 & 4
+$$
+\frac{\rho}{\rho_c} = \frac{\delta_c}{(r/r_s)(1+r/r_s)^2}
+$$
+where 
+$$
+\delta_c = \frac{200}{3}\frac{c^3}{[\ln(1+c)-c/(1+c)]}
+$$
+$c$ is concentration parameter, $\rho_c$ is the critical density of the universe, and $r_s$ is the characteristic scale length of the halo.
+
+The NFW halo is sometimes described by $M_{200}$. $r_{200}$ is the radius at which the mean density of the halo interior to $r_{200}$ is 200 times the critical density of the universe, and $M_{200}$ is the mass contained inside $r_{200}$. As equations:
+$$
+\rho_{200} = 200\rho_{c} = \frac{M_{200}}{(4\pi/3) r_{200}^3}
+$$
+
+$$
+r_{200} = \sqrt[3]{\frac{1}{200}\frac{3M_{200}}{4\pi \rho_{\rm c
+}}}
+$$
 
 
+$$
+M_{200} = \frac{4\pi}{3} r_{200}^3\ \rho_{200}
+$$
 
-## Summary
-
-- Of the classical dwarfs, UMi & Scl stand out statistically, with high $n$ given their luminosity
-- Including fainter dwarf galaxies, Boo 3 and Boo 1 appear to also have extended density profiles
-  - Deeper data would be required to robustly measure this
-
+$M_{200}$ is also sometimes called the virial mass of the halo. $r_{200}$ is directly related to $r_s$ by
+$$
+r_{200} = c\,r_s
+$$
 
 
-**TODO**: Use updated density profiles (nospace) with uncertainties included to MCMC fit Sérsic profiles to every dwarf galaxy. 
+Another useful definition is
+$$
+A(x) \equiv \log (1+x) - \frac{x}{1+x}.
+$$
+
+
+We will also define a dimensionless radius
+$$
+x \equiv r/r_s.
+$$
+
+A simple substitution to the definition gives
+
+
+$$
+\rho(x) =  \frac{\rho_s/3}{x\ (1+x)^2}
+$$
+where
+$$
+\rho_s = \frac{c^3}{A(c)} \rho_{200}
+$$
+and $A(c)$ is as above. The characteristic density can also be written in terms of scale mass,  $M_s = M_{200}/{A(c)}$  (see below), giving
+$$
+\rho_s = \frac{c^3}{A(c)} \frac{M_{200}}{(4\pi/3)\ r_{200}^3}  = \frac{3M_s}{4\pi\, {r_s}^3}
+$$
+Note that the NFW density profile is the same as an alpha-beta-gamma profile where $\alpha=\gamma=1$ and $\beta =3$.
+
+### Circular velocity
+
+The circular velocity in terms of $v_{200} = \sqrt{G M_{200} / R_{200}}$ is
+$$
+\left(v_{\rm circ}/v_{200}\right)^2 = \frac{A(x)/x}{A(c)/c},
+$$
+
+or in terms of $M_s$ and $r_s$, 
+$$
+v_{\rm circ}^2 = \frac{G M(r)}{r} = \frac{G M_s A(r/r_s)}{r}.
+$$
+Another parameterization of the NFW profile is in terms of the maximum circular velocity $v_{\rm circ}^{\rm max}$ and the radius at which it is reached $r_{\rm circ}^{\rm max}$. Given the scale radius, 
+$$
+r_{\rm circ}^{\rm max} = \alpha\ r_s
+$$
+
+where $\alpha\approx2.16258$, and $v_{\rm circ}^{\rm max}$ can be found from either of the equations above.

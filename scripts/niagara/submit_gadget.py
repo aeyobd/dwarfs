@@ -32,8 +32,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Submit a job to SLURM with default or specified parameters.')
     parser.add_argument('--nodes', type=int, default=1, 
                         help='number of nodes')
-    parser.add_argument('--mem', type=str, default=None, 
-                        help='Memory per job (default: from param.txt)')
     parser.add_argument('--time', type=str, default=None, 
                         help='(wall) time limit (HH:MM:SS) (default: from param.txt)')
     parser.add_argument('--account', type=str, default=os.getenv("SLURM_ACCOUNT"), )
@@ -124,8 +122,6 @@ def _set_default_mem(args, params):
     """
     If the args do not specify `mem`, set it to the value in the parameter file.
     """
-    if args.mem is None:
-        args.mem = params['MaxMemSize'] + 'MB'
 
     return args
 

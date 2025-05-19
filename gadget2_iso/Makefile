@@ -50,7 +50,7 @@ OPT   +=  -DOUTPUTTIMESTEP
 #--------------------------------------- Things for special behaviour
 #OPT   +=  -DNOGRAVITY     
 #OPT   +=  -DNOTREERND 
-#OPT   +=  -DNOTYPEPREFIX_FFTW        
+OPT   +=  -DNOTYPEPREFIX_FFTW        
 #OPT   +=  -DLONG_X=60
 #OPT   +=  -DLONG_Y=5
 #OPT   +=  -DLONG_Z=0.2
@@ -96,9 +96,22 @@ MPICHLIB =  -lmpich
 
 #--------------------------------------- Select target computer
 
-SYSTYPE="raphalinux"
+SYSTYPE="niagara"
 
 #--------------------------------------- Adjust settings for target computer
+
+ifeq ($(SYSTYPE),"cosma")
+CC       =  mpicc   
+OPTIMIZE =  -O3 -Wall -DH5_USE_16_API -g
+GSL_INCL =  -I/cosma/local/gsl/2.8/include
+GSL_LIBS =  -L/cosma/local/gsl/2.8/lib  -Wl,"-R /cosma/local/gsl/2.8/lib"
+FFTW_INCL=  -I/cosma/local/fftw//gnu_13.1.0_ompi_4.1.5/3.3.10/include
+FFTW_LIBS=  -L/cosma/local/fftw//gnu_13.1.0_ompi_4.1.5/3.3.10/lib
+MPICHLIB =
+HDF5INCL =  -I/cosma/local/hdf5//gnu_13.1.0/1.12.2/include
+HDF5LIB  =  -L/cosma/local/hdf5//gnu_13.1.0/1.12.2/lib
+endif
+
 
 ifeq ($(SYSTYPE),"raphalinux")
 CC       =  mpicc   
@@ -110,6 +123,19 @@ FFTW_LIBS=  -L/astro/errani/fftw2/lib
 MPICHLIB =
 HDF5INCL =  -I/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include
 HDF5LIB  =  -L/usr/lib/x86_64-linux-gnu/hdf5/openmpi/lib -lhdf5 -lz 
+endif
+
+
+ifeq ($(SYSTYPE),"niagara")
+CC       =  mpicc   
+OPTIMIZE =  -O3 -Wall -DH5_USE_16_API -g
+GSL_INCL =  -I/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/gsl/2.7/include
+GSL_LIBS =  -L//cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/gsl/2.7/lib  -Wl,"-R //cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/gsl/2.7/lib"
+FFTW_INCL=  -I/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/fftw/3.3.10/include
+FFTW_LIBS=  -L/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/fftw/3.3.10/lib
+MPICHLIB =
+HDF5INCL =  -I/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/hdf5/1.14.2/include
+HDF5LIB  =  -L/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcc12/hdf5/1.14.2/lib -lhdf5 -lz 
 endif
 
 ifneq (HAVE_HDF5,$(findstring HAVE_HDF5,$(OPT))) 
@@ -148,6 +174,13 @@ else
 endif
 endif
 
+ifeq ($(SYSTYPE),"cosma")
+  FFTW_LIB = $(FFTW_LIBS)  -lfftw3_mpi -lfftw3
+endif
+
+ifeq ($(SYSTYPE),"niagara")
+  FFTW_LIB = $(FFTW_LIBS)  -lfftw3_omp -lfftw3
+endif
 
 LIBS   =   $(HDF5LIB) -g  $(MPICHLIB)  $(GSL_LIBS) -lgsl -lgslcblas -lm $(FFTW_LIB) 
 

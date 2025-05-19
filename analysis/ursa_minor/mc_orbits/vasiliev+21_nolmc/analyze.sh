@@ -1,6 +1,10 @@
 #!/bin/bash
 out_dir=$DWARFS_ROOT/simulations/ursa_minor/mc_orbits/vasiliev+21_nolmc
-combine_outputs.py $out_dir/out
-julia resample_lmc.jl $out_dir/trajlmc.txt
-julia calc_peris.jl
-ln -s $out_dir/initial.hdf5 .
+
+bash clean.sh
+ln -s $out_dir simulation
+
+combine_outputs.py simulation/out
+julia ../resample_lmc.jl simulation/trajlmc.txt
+julia ../calc_peris_lmc.jl
+ln -s simulation/initial.hdf5 .

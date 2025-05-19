@@ -1,0 +1,11 @@
+filename="../data/jensen+24_1c.fits"
+
+n_sigma_dist = 3
+dpm = 1
+
+ruwe_max = 1.3
+
+cmd_cut = [0.793,20.76, 1.235,19.93, 1.465,19.09, 1.674,19.09, 1.427,20.24, 1.342,20.37, 1.379,20.70
+]
+
+ellipticity = 0

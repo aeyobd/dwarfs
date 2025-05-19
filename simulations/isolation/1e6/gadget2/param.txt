@@ -11,8 +11,8 @@ ICFormat                    3
 SnapFormat                  3
 
 %---Mem & CPU limits
-TimeLimitCPU                3600
-CpuTimeBetRestartFile       1800
+TimeLimitCPU                86400
+CpuTimeBetRestartFile       7200
 BufferSize                  15
 PartAllocFactor             1.5
 TreeAllocFactor             1.0
@@ -20,7 +20,7 @@ TreeAllocFactor             1.0
 
 %---Time
 TimeBegin                   0
-TimeMax                     117
+TimeMax                     1176
 
 %---Output frequency
 OutputListOn                0
