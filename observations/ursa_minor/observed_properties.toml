@@ -21,14 +21,14 @@ pmdec_err = 0.017
 pmdec_ref = "MV2020b"
 pmra_note = "includes systematic error. (statistical is 0.004)"
 
-radial_velocity = -245.8
+radial_velocity = -245.9
 radial_velocity_err = 1
-radial_velocity_ref = "this work"
-radial_velocity_notes = "systematic error, combines pace+2020 and spencer+2018 and apogee measurements"
+radial_velocity_ref = "pace+2020"
+radial_velocity_note = "average of MMT and Keck measurements in pace++, uncertainty is estimated from systematic shift in mean between samples (-244.7 vs -247.0)."
 
-sigma_v = 8.8
-sigma_v_err = 0.2
-sigma_v_ref = "this work"
+sigma_v = 8.6
+sigma_v_err = 0.3
+sigma_v_ref = "pace+2020"
 
 metallicity = -2.13
 metallicity_err = 0.01

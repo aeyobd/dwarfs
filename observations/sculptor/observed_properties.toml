@@ -19,13 +19,13 @@ pmdec_err = 0.017
 pmdec_ref = "MV2020a"
 pmra_note = "0.002 uncertainty but adds gaia systematics"
 
-radial_velocity = 111.3
-radial_velocity_err = 0.2
-radial_velocity_ref = "this"
+radial_velocity = 111.2
+radial_velocity_err = 0.3
+radial_velocity_ref = "arroyo-polonio+2024"
 
-sigma_v = 9.64
-sigma_v_err = 0.16
-sigma_v_ref = "this"
+sigma_v = 9.7
+sigma_v_err = 0.2
+sigma_v_ref = "arroyo-polonio+2024"
 
 ellipticity = 0.36
 ellipticity_err = 0.01
