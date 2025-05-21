@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -40,6 +40,9 @@ Check the initial DM halo. Loads a snapshot and checks if the halo has the expec
 
 # ╔═╡ 920546bd-4838-413c-b687-f891a7f5e985
 import TOML
+
+# ╔═╡ d8998dd8-bac8-450d-9e9f-fa5d0b282e13
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 md"""
@@ -97,7 +100,7 @@ halo = lguys.load_profile(joinpath(model_dir,paramname ))
 halo.r_s
 
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
-lguys.calc_M(halo, (1))
+lguys.mass(halo, (1))
 
 # ╔═╡ 020bbb15-235d-468c-bc02-01f3b75708e9
 LilGuys.expint(Complex(-0.01))
@@ -106,8 +109,7 @@ LilGuys.expint(Complex(-0.01))
 begin 
 	println("loading model from $model_dir")
 	snap = lguys.Snapshot(joinpath(model_dir, "$name.hdf5"))
-	snap.Φs = - ones(length(snap))
-
+	snap.potential = -ones(size(snap.positions, 2)) # all particles bound
 	sss = lguys.Centres.SS_State(snap)
 	lguys.calc_centre!(sss, snap)
 
@@ -117,7 +119,7 @@ begin
 	println(snap.x_cen)
 	println(snap.v_cen)
 
-	lguys.calc_r(snap)
+	lguys.radii(snap)
 end
 
 # ╔═╡ 0ccb9018-d88c-4cec-a8da-625be1289bfe
@@ -130,16 +132,22 @@ snap.v_cen * V2KMS
 snap.v_cen
 
 # ╔═╡ 14e3b593-17b9-4acd-a9cb-d5923662a02c
-prof = lguys.MassProfile3D(snap)
+prof = lguys.MassProfile(snap)
+
+# ╔═╡ 0d9f39fa-acfb-4408-806b-924c7b177c05
+density_prof = DensityProfile(snap)
+
+# ╔═╡ ac08974f-8d28-4098-81a8-21884157e76a
+props = LilGuys.MassScalars(snap, prof)
 
 # ╔═╡ 9fb58f1b-c98b-4a93-9683-ab478e44e2d7
-prof.v_circ_max# * V2KMS
+props.v_circ_max
 
 # ╔═╡ 3d4f1a39-fbfc-4e07-8bd4-17e7813da5af
-prof.v_circ_max * V2KMS
+props.v_circ_max * V2KMS
 
 # ╔═╡ 2e293959-9c05-4d9b-b889-a68584ca88f0
-prof.r_circ_max 
+props.r_circ_max 
 
 # ╔═╡ 3cc4a870-da17-4c0a-8ab8-27e134c71044
 0.044 * 0.53612788
@@ -155,32 +163,33 @@ let
 	
 	log_r = LinRange(-2, 4, 1000)
 
-	lines!(log10.(prof.r_circ), prof.v_circ .* V2KMS, label="snapshot")
+	lines!(log10.(prof.radii), lguys.circular_velocity(prof) .* V2KMS, label="snapshot")
 
-	lines!(log_r, lguys.V2KMS * lguys.calc_v_circ.(halo, 10 .^ log_r), label="analytic")
+	lines!(log_r, lguys.V2KMS * lguys.v_circ.(halo, 10 .^ log_r), label="analytic")
 
-	scatter!(log10.(prof.r_circ_max), prof.v_circ_max * lguys.V2KMS, label="max; observed")
+	scatter!(log10.(props.r_circ_max), props.v_circ_max * lguys.V2KMS, label="max; observed")
 	
-	scatter!(log10.(lguys.calc_r_circ_max(halo)), lguys.calc_v_circ_max(halo) * lguys.V2KMS, label="max; halo")
+	scatter!(log10.(lguys.r_circ_max(halo)), lguys.v_circ_max(halo) * lguys.V2KMS, label="max; halo")
 	
 	axislegend()
 
 	
 	ax2 = Axis(fig[2,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"d v / v")
-	ax2.limits=(nothing, nothing, -0.1, 0.1)
+	ax2.limits=(nothing, nothing, -0.2, 0.2)
 
-	y = prof.v_circ
-	x = log10.(prof.r_circ)
-	ye = calc_v_circ.(halo, 10 .^ x)
+	y = lguys.circular_velocity(prof)
+	x = log10.(prof.radii)
+	ye = v_circ.(halo, 10 .^ x)
 
 	res = (y .- ye) ./ ye
 
-	err = prof.v_circ_err ./ ye
+	err = lguys.sym_error.(y) ./ ye
 
-	errscatter!(x, res, yerr=err)
+	errorscatter!(x, res, yerror=err)
 
 	rowsize!(fig.layout, 2, Relative(0.3))
-	
+
+	linkxaxes!(ax, ax2)
 	fig
 end
 
@@ -193,7 +202,7 @@ phase space distribution of star particles initial and final snapshot
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="log radius / kpc", ylabel="velocity (km/s)" )
-	Arya.hist2d!(ax, log10.(lguys.calc_r(snap)), lguys.calc_v(snap) * lguys.V2KMS, bins=100)
+	Arya.hist2d!(ax, log10.(lguys.radii(snap)), lguys.speeds(snap) * lguys.V2KMS, bins=100)
 
 
 	fig
@@ -238,15 +247,15 @@ let
 	fig = Figure()
 
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
-	limits=(-2, 5, -12, 2)
+	limits=(-2, 2, -12, 2)
 	)
 
 	log_r = LinRange(-2, 3, 1000)
-	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
+	y = log10.(lguys.density.(halo, 10 .^ log_r))
 	lines!(log_r, y, label="NFW", color="black", linestyle=:dot)
 
 	
-	lines!(prof.log_r, log10.(prof.rho))
+	lines!(density_prof.log_r, log10.(density_prof.rho))
 
 	axislegend(ax)
 	fig
@@ -254,14 +263,14 @@ let
 end
 
 # ╔═╡ aca95a0a-98e0-4b7a-bca2-e3c30f9df6e9
-lguys.get_M_tot(halo)
+lguys.mass(halo)
 
 # ╔═╡ 84b3759e-a598-4afc-a2b4-ce841e80ff96
 let
 	skip = 10
 	snap_i = snap
 	idx = 1:skip:length(snap_i)
-	r = sort(lguys.calc_r(snap_i))[idx]
+	r = sort(lguys.radii(snap_i))[idx]
 	
 	M = cumsum(snap_i.masses)[idx]
 
@@ -277,7 +286,7 @@ let
 
 	
 	log_r = LinRange(-2, 3, 1000)
-	y = log10.(lguys.calc_M.(halo, 10 .^ log_r) )
+	y = log10.(lguys.mass.(halo, 10 .^ log_r) )
 	lines!(log_r, y, label="expected", color="black", linestyle=:dot)
 
 	fig
@@ -292,13 +301,13 @@ let
 		#limits=((-3, 3), nothing)
 	)
 
-	lines!(prof.log_r_bins[2:end], log10.(cumsum(prof.counts)))
+	lines!(density_prof.log_r_bins[2:end], log10.(cumsum(density_prof.counts)))
 
 	fig
 end
 
 # ╔═╡ f01efc63-c4ac-45ae-8dac-209819a6249e
-lguys.calc_M(halo, 1)
+lguys.mass(halo, 1)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
@@ -306,7 +315,7 @@ let
 		limits=(nothing, (-0.1, log10(length(snap)/10)))
 	)
 	
-	scatter!(prof.log_r, log10.(prof.counts))
+	scatter!(density_prof.log_r, log10.(density_prof.counts))
 
 	fig
 end
@@ -315,14 +324,14 @@ end
 if halo isa lguys.ExpCusp
 	R200 = 3halo.r_s
 else
-	R200 = lguys.calc_R200(halo)
+	R200 = lguys.R200(halo)
 end
 
 # ╔═╡ 233c5aca-4966-4ba5-b5ac-f5d0e0a727dc
 EXTRA_SOFTENING = 1/sqrt(10)
 
 # ╔═╡ da55fc43-69f7-4375-b8fc-c61dd606fb24
-N200 = sum(lguys.calc_r(snap) .< R200)
+N200 = sum(lguys.radii(snap) .< R200)
 
 # ╔═╡ d841539a-f755-460f-9994-16229aadca6a
 grav_softening = 4R200 / sqrt(N200) * EXTRA_SOFTENING
@@ -358,13 +367,13 @@ md"""
 r_circs = 10 .^ LinRange(-3, 0, 1000)
 
 # ╔═╡ ac22ac31-f4bf-497b-9971-c98a9900acfb
-v_circs = lguys.calc_v_circ.(halo, r_circs)
+v_circs = lguys.v_circ.(halo, r_circs)
 
 # ╔═╡ d112b4d5-6a79-43ae-9ec1-23285e7c4a6e
 t_dyn = 2π * r_circs ./ v_circs
 
 # ╔═╡ c0fd9958-2ba9-45d4-87d0-0a401939811b
-t_dyn_rho = @. 1 / sqrt(lguys.G * lguys.calc_ρ(halo, r_circs))
+t_dyn_rho = @. 1 / sqrt(lguys.G * lguys.density(halo, r_circs))
 
 # ╔═╡ df08309c-8939-4abb-ac45-684c175c24f0
 let
@@ -380,10 +389,10 @@ let
 end
 
 # ╔═╡ 5798f8f8-32ce-4e9e-8489-4a165f6d240c
- @. 1 / sqrt(lguys.G * lguys.calc_ρ(halo, grav_softening))
+ @. 1 / sqrt(lguys.G * lguys.density(halo, grav_softening))
 
 # ╔═╡ 3e94b33f-35a9-4ccc-a90e-340b6beb310d
-t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
+t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 
 # ╔═╡ Cell order:
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
@@ -392,6 +401,7 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═01165464-35b2-43e9-9d52-d06fa9edf3cf
 # ╠═920546bd-4838-413c-b687-f891a7f5e985
 # ╠═9303ace1-bd7c-4391-bace-8a0a8eccd251
+# ╠═d8998dd8-bac8-450d-9e9f-fa5d0b282e13
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═80da94f9-6fdd-4591-93e3-c98ea1479c65
@@ -408,6 +418,8 @@ t_max = lguys.calc_r_circ_max(halo) / lguys.calc_v_circ_max(halo)
 # ╠═020bbb15-235d-468c-bc02-01f3b75708e9
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═14e3b593-17b9-4acd-a9cb-d5923662a02c
+# ╠═0d9f39fa-acfb-4408-806b-924c7b177c05
+# ╠═ac08974f-8d28-4098-81a8-21884157e76a
 # ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 # ╠═3d4f1a39-fbfc-4e07-8bd4-17e7813da5af
 # ╠═2e293959-9c05-4d9b-b889-a68584ca88f0

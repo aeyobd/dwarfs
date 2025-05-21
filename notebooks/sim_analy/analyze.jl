@@ -28,6 +28,9 @@ begin
 	using Arya
 end
 
+# ╔═╡ ba60baa5-4213-4b24-b7f0-3eb647c5d311
+using PyFITS
+
 # ╔═╡ 987c3284-5a8f-463e-9c68-9011b348e076
 using PlutoUI
 
@@ -104,13 +107,31 @@ end
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
+# ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
+begin 
+	profiles = LilGuys.read_ordered_structs(joinpath(model_dir, "profiles.hdf5"), LilGuys.MassProfile)
+	snap_idx = first.(profiles)
+	profiles = last.(profiles);
+end
+
+# ╔═╡ b0e336df-678a-4406-b294-0c353f3c0c38
+dens_profiles = LilGuys.read_ordered_structs(joinpath(model_dir, "profiles_densities.hdf5"), LilGuys.DensityProfile) .|> last
+
+# ╔═╡ 50bb0dfa-7332-484f-a27d-d8491413ef1e
+df_scalars = read_fits(joinpath(model_dir, "profiles_scalars.fits"))
+
 # ╔═╡ a9e79439-16a4-4908-bfe0-f0770cdb26df
 md"""
 # Mass evolution
 """
 
 # ╔═╡ 53641449-c5b3-45ff-a692-a5cd717c8369
-idx_f = orbit_props["idx_f"]
+idx_f = min(orbit_props["idx_f"], length(profiles))
+
+# ╔═╡ 9429b4e0-96d0-4fae-a7d6-44737d568f76
+if idx_f < orbit_props["idx_f"]
+	@warn "snapshots do not line up:/"
+end
 
 # ╔═╡ 7e3df305-9678-447e-a48e-f102cf6ebced
 idx_i = 2
@@ -121,36 +142,34 @@ snap_i = out[idx_i]
 # ╔═╡ 8d127679-401c-439d-913d-e2020df1c600
 snap_f = out[idx_f]
 
-# ╔═╡ 2470e05f-9215-45e4-88fc-daab0638272f
-begin 
-	profiles = LilGuys.read_ordered_structs(joinpath(model_dir, "profiles.hdf5"), LilGuys.MassProfile3D)
-	snap_idx = first.(profiles)
-	profiles = last.(profiles);
-end
-
 # ╔═╡ 8dae2e01-652b-4afc-b040-dd2ba1c6eedb
 prof_i = profiles[1]
 
 # ╔═╡ b64c1caf-9ee0-4633-bd52-0258557b8847
 prof_f = profiles[end]
 
-# ╔═╡ b0e336df-678a-4406-b294-0c353f3c0c38
-dens_profiles = LilGuys.read_ordered_structs(joinpath(model_dir, "profiles_densities.hdf5"), LilGuys.DensityProfile3D) .|> last
-
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
 
-# ╔═╡ 06fd0062-6c89-4428-8970-676749e4e072
-function enclosed_mass(mass_profile, R)
-	mass = mass_profile.v_circ .^ 2 .* mass_profile.radii
-	return LilGuys.lerp(mass_profile.radii, mass)(R)
+# ╔═╡ 193e78d7-e902-4b6b-8eae-43bae7e5722b
+df_scalars.time
+
+# ╔═╡ f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "bound mass",
+			 yscale=log10, yticks=Makie.automatic)
+
+
+	lines!(df_scalars.time * T2GYR .- df_scalars.time[idx_f] * T2GYR, df_scalars.bound_mass ./ df_scalars.bound_mass[1])
+	fig
 end
 
-# ╔═╡ 9d6459eb-d0f5-4e2c-96de-191ede510442
-prof_i.v_circ
-
-# ╔═╡ 2a3eb14e-d54e-4c79-a5e8-70d6ac607116
-enclosed_mass(prof_i, 1)
+# ╔═╡ 4c042ef0-21a9-4a54-9562-05dc891f1dbf
+function enclosed_mass(profile, r)
+	f = LilGuys.lerp(profile.radii, middle.(profile.M_in))
+	return f(r)
+end
 
 # ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
 let
@@ -160,13 +179,14 @@ let
 		ylabel=L"Bound mass within $r$ kpc",
 		yscale=log10,
 		#limits=(nothing, (1e-3, 2)),
+		yticks=Makie.automatic
 	)
 
 	#ax.yticks = [0.1:0.1:1;]
 
-	for r in [100, 10, 1, 0.1]
+	for r in [10, 3, 1, 0.3, 0.1, 0.03]
 		M_dm_h = enclosed_mass.(profiles, [r])
-		lines!(times, M_dm_h ./ M_dm_h[1], label="$r")
+		lines!(df_scalars.time, M_dm_h ./ M_dm_h[1], label="$r")
 	end
 	
 	Legend(fig[1, 2], ax, "r/kpc")
@@ -186,10 +206,10 @@ md"""
 """
 
 # ╔═╡ e6fc3297-c1b7-40a4-b2bb-98490a42604a
-v_max = [f.v_circ_max for f in profiles]
+v_max = df_scalars.v_circ_max
 
 # ╔═╡ d57501a1-4764-4b23-962f-2d37547d7bcc
-r_max = [f.r_circ_max for f in profiles]
+r_max = df_scalars.r_circ_max
 
 # ╔═╡ 04ca92d1-f64b-4d2c-a079-30f89866fda9
 prof_i
@@ -212,9 +232,9 @@ let
 	v_model = v_circ.(halo, r_model)
 	lines!(log10.(r_model), v_model * V2KMS, linestyle=:dot, label="analytic")
 	
-	lines!(log10.(prof_i.radii), prof_i.v_circ * V2KMS, label="initial")
+	lines!(log10.(prof_i.radii), LilGuys.circular_velocity(prof_i) * V2KMS, label="initial")
 
-	lines!(log10.(prof_f.radii), prof_f.v_circ * V2KMS, label="final")
+	lines!(log10.(prof_f.radii), LilGuys.circular_velocity(prof_f) * V2KMS, label="final")
 
 
 	α = 0.4
@@ -225,7 +245,7 @@ let
 	lines!(log10.(x .* r_max[1]), y .* v_max[1] * V2KMS,  label="EN21",
 	color=:black, linestyle=:dash)
 
-	scatter!(log10.(r_max), v_max * V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
+	scatter!(log10.(skipmissing(r_max)), skipmissing(v_max) .* V2KMS, color=Arya.COLORS[4], label=L"v_\textrm{circ,\ max}")
 
 		
 	axislegend(ax, position=:rt)
@@ -235,7 +255,7 @@ end
 
 # ╔═╡ c068c177-e879-4b8e-b1af-18690af9b334
 let 
-	i = length(out) - 10
+	i = idx_f - 30
 	snap = out[i]
 	prof = profiles[argmin(abs.(snap_idx .- i))]
 
@@ -245,10 +265,11 @@ let
 		ylabel=L"V_\textrm{circ}",
 	title="time = $(out.times[i]  * T2GYR) Gyr")
 
-	r, v = LilGuys.v_circ(snap)
-	scatter!(log10.(r), v * V2KMS)
+	prof = MassProfile(snap)
+	v = LilGuys.circular_velocity(prof)
+	scatter!(log10.(prof.radii), middle.(v) * V2KMS)
 
-	fit = LilGuys.fit_v_r_circ_max(snap)
+	fit = LilGuys.fit_v_r_circ_max(prof.radii, middle.(v))
 	r_fit = LinRange(fit.r_min, fit.r_max, 100)
 	v_fit = LilGuys._v_circ_max_model(r_fit, [fit.r_circ_max, fit.v_circ_max])
 
@@ -263,9 +284,9 @@ let
 
 	ax2 = Axis(fig[2, 1], xlabel="r/kpc", ylabel="residual")
 
-	filt = fit.r_min .<= r .<= fit.r_max
-	dv = v[filt] .- LilGuys._v_circ_max_model(r[filt], [fit.r_circ_max, fit.v_circ_max])
-	scatter!(log10.(r[filt]), dv * V2KMS)
+	filt = fit.r_min .<= prof.radii .<= fit.r_max
+	dv = v[filt] .- LilGuys._v_circ_max_model(prof.radii[filt], [fit.r_circ_max, fit.v_circ_max])
+	scatter!(log10.(prof.radii[filt]), dv * V2KMS)
 	vlines!(log10(fit.r_circ_max))
 	
     rowsize!(fig.layout, 2, Relative(1/4))
@@ -296,7 +317,7 @@ md"""
 """
 
 # ╔═╡ 3aa62ecf-495a-434b-8008-02783bd5b56e
-prof_f_allpart = LilGuys.DensityProfile3D(snap_f, filt_bound=false)
+prof_f_allpart = LilGuys.DensityProfile(snap_f, filt_bound=false)
 
 # ╔═╡ 79d8fbe1-09fb-4ed7-b75d-a9ac3a0fa9c5
 dens_prof_i = dens_profiles[idx_i]
@@ -362,7 +383,7 @@ let
 	colorrange = (prof_i.time, prof_f.time) .* T2GYR
 
 	for prof in profiles[1:1:end]
-		lines!(log10.(prof.radii), log10.(prof.v_circ * V2KMS), color=prof.time * T2GYR, colorrange=colorrange)
+		lines!(log10.(prof.radii), log10.(LilGuys.circular_velocity(prof) * V2KMS), color=prof.time * T2GYR, colorrange=colorrange)
 	end
 	
 	Colorbar(fig[1,2], colorrange=colorrange, label="time / Gyr")
@@ -439,7 +460,8 @@ end
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-1, 1e2)),
-		xlabel=L"\epsilon", ylabel=L"dN/d\epsilon")
+		xlabel=L"\epsilon", ylabel=L"dN/d\epsilon",
+			 yticks=Makie.automatic)
 
 	x = LilGuys.specific_energy(snap_i)
 	bins, values, errs = LilGuys.histogram(x[x .> 0], 
@@ -505,6 +527,7 @@ end
 # ╟─bafc8bef-6646-4b2f-9ac0-2ac09fbcb8e1
 # ╠═d3bd61d8-1e90-4787-b892-d90717f6be6e
 # ╟─99f96d71-b543-4680-a022-2195e6cca897
+# ╠═ba60baa5-4213-4b24-b7f0-3eb647c5d311
 # ╠═bb92b6c2-bf8d-11ee-13fb-770bf04d91e9
 # ╠═2b2a1cc7-d005-4bef-b2cf-5d26b8c203a0
 # ╠═987c3284-5a8f-463e-9c68-9011b348e076
@@ -518,19 +541,21 @@ end
 # ╠═1b87d662-da3c-4438-98eb-72dc93e32f6a
 # ╠═63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
 # ╠═510706ac-ffbd-4996-af9e-67f1b910d51c
+# ╠═2470e05f-9215-45e4-88fc-daab0638272f
+# ╠═b0e336df-678a-4406-b294-0c353f3c0c38
+# ╠═50bb0dfa-7332-484f-a27d-d8491413ef1e
 # ╟─a9e79439-16a4-4908-bfe0-f0770cdb26df
 # ╠═53641449-c5b3-45ff-a692-a5cd717c8369
+# ╠═9429b4e0-96d0-4fae-a7d6-44737d568f76
 # ╠═7e3df305-9678-447e-a48e-f102cf6ebced
 # ╠═9c3f79ee-89db-4fe1-aa62-4e706bdd73f8
 # ╠═8d127679-401c-439d-913d-e2020df1c600
 # ╠═8dae2e01-652b-4afc-b040-dd2ba1c6eedb
 # ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
-# ╠═2470e05f-9215-45e4-88fc-daab0638272f
-# ╠═b0e336df-678a-4406-b294-0c353f3c0c38
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
-# ╠═06fd0062-6c89-4428-8970-676749e4e072
-# ╠═9d6459eb-d0f5-4e2c-96de-191ede510442
-# ╠═2a3eb14e-d54e-4c79-a5e8-70d6ac607116
+# ╠═193e78d7-e902-4b6b-8eae-43bae7e5722b
+# ╠═f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
+# ╠═4c042ef0-21a9-4a54-9562-05dc891f1dbf
 # ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╠═ef2274ba-0220-49f5-8478-d5eac824c3ee
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63

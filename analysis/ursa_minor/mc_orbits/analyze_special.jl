@@ -186,7 +186,7 @@ let
 end
 
 # ╔═╡ 2c094ad9-23b4-40f1-a1ec-3b61bf96bffe
-ϵ = -lguys.specific_kinetic_energy(out[1]) .- out[1].potential_ext
+ϵ = -lguys.kinetic_energy(out[1]) .- out[1].potential_ext
 
 # ╔═╡ 8501b0a7-a71f-41b4-b6f6-5f34b37f24d5
 extrema(ϵ)
@@ -238,7 +238,7 @@ observations_special
 
 # ╔═╡ c48b4e73-480e-4a50-b5fc-db5f6c5b040e
 let
-	fig = Figure(size=(600, 600))
+	fig = Figure(size=(6*72, 6*72))
 	plot_kwargs = Dict(
 		:color => :black,
 		:alpha => 0.1,

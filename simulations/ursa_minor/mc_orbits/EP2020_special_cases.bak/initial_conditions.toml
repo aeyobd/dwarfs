@@ -1,0 +1,27 @@
+
+[[orbits]]
+name = "mean"
+ra = 227.2420
+dec = 67.2221
+distance = 70.1
+pmra = -0.124
+pmdec = 0.078
+radial_velocity = -245.2
+
+[[orbits]]
+name = "smallperi"
+ra               = 227.2420
+dec              =  67.2221
+distance         =  65.917
+pmra             = -0.160
+pmdec            =  0.051
+radial_velocity  = -245.258
+
+[[orbits]]
+name = "largeperi"
+ra               =  227.2420
+dec              =   67.2221
+distance         =   75.172
+pmra             =  -0.093
+pmdec            =   0.107
+radial_velocity  =  -245.159

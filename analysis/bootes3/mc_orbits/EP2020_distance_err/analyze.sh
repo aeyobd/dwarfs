@@ -1,0 +1,9 @@
+#!/bin/bash
+out_dir=$DWARFS_ROOT/simulations/bootes3/mc_orbits/EP2020_distance_err/
+rm simulation
+rm *.fits *.hdf5
+
+ln -s $out_dir simulation
+
+combine_outputs.py $out_dir/out
+julia ../calc_peris.jl

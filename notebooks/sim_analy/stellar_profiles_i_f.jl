@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -26,22 +26,57 @@ begin
 	using PlutoUI
 end
 
+# ╔═╡ 7caa0c82-b2ed-45e7-a1a9-beb0b20a2e65
+using PyFITS
+
 # ╔═╡ 1de31271-dcf3-4513-9786-04822fe99294
 md"""
-The goal of this script is to compare the initial and final simulation density profiles for a given stars model against the observations
+The goal of this script is to compare the initial and final simulation density profiles for a given stars model against the density profile and compare the velocity dispersions against observations. This enables a quick iteration to find the appropriate stellar profile and halo to match present-day stuctural properties.
 """
 
-# ╔═╡ e78d1592-f001-4710-9daa-826498258374
-@bind galaxyname TextField(default="sculptor")
+# ╔═╡ b47c355b-48d3-499f-9333-e469878eb4f2
+lmc = false
+
+# ╔═╡ ce947244-6184-48a3-9635-5c5ec7734d6b
+md"""
+# Setup
+"""
+
+# ╔═╡ 0d2ebb2b-0942-4f8b-8b4c-bf02ae60e20e
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 2aba5629-9e59-489e-9831-45868365fbed
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="sculptor"),
+	haloname = TextField(default="1e7_V31_r3.2"),
+	orbitname = TextField(default="orbit_"),
+	starsname = TextField(default="exp2d_rs0.13"),
+))
 
 # ╔═╡ af83e902-3cdf-4fea-8a41-95daefe4e0df
-@bind starsname TextField(default="exp2d_rs0.13")
+starsname = inputs.starsname
 
-# ╔═╡ 511e3e8d-8278-4e7b-998c-097b1513320e
-@bind modelname TextField()
+# ╔═╡ a1e70d0d-f515-4233-9568-fb7261fe494e
+modelname = joinpath(inputs.haloname, inputs.orbitname)
 
-# ╔═╡ f01ad318-2ca3-430a-a121-7370b03085db
-@bind run_program CheckBox()
+# ╔═╡ e78d1592-f001-4710-9daa-826498258374
+galaxyname = inputs.galaxyname
 
 # ╔═╡ ee38471c-043c-4571-bcf6-5fd93df84132
 md"""
@@ -52,97 +87,193 @@ md"""
 model_stars_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname, "stars", starsname)
 
 # ╔═╡ f3754857-3222-474f-9e9c-cb956a966125
-figdir = model_stars_dir * "/figures"
+FIGDIR = model_stars_dir * "/figures"
 
 # ╔═╡ 5d21d511-8e33-4c25-b9be-57dd8bf6998f
 begin
 	using LilGuys
-	figdir
+	FIGDIR
 end
 
+# ╔═╡ 63cd3e0e-414c-498e-965c-9e943e6b8fb8
+readdir("/cosma/home/durham/dc-boye1/data/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi/stars")
+
 # ╔═╡ 9fecfed4-8aba-42f6-bcf2-1891e0b5f947
-if run_program
-	if isdir(model_stars_dir)
-		mkpath(figdir)
-	end
-	
-	prof_sim = LilGuys.StellarProfile(model_stars_dir *  "/final_profile.toml")
-	prof_sim_i = LilGuys.StellarProfile(model_stars_dir *  "/initial_profile.toml")
-	prof_obs = LilGuys.StellarProfile(
+begin
+	prof_sim = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/final_profile.toml")
+	prof_sim_i = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/initial_profile.toml")
+	prof_obs = LilGuys.SurfaceDensityProfile(
 	joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "density_profiles", "fiducial_profile.toml")
-)
+	) |> LilGuys.filter_empty_bins
 end
+
+# ╔═╡ 8358c354-29f3-4d62-940f-7085419a1970
+if lmc 
+	orbital_props_lmc = TOML.parsefile(joinpath(model_stars_dir, "../../orbital_properties_lmc.toml"))
+end
+
+# ╔═╡ 604a2e03-e3cc-4c48-80d3-04f10017170f
+orbital_props = TOML.parsefile(joinpath(model_stars_dir, "../../orbital_properties.toml"))
+
+# ╔═╡ 2226b7b1-fa78-4428-9cea-3f3a8b17db5f
+if lmc
+	r_J = TOML.parsefile(joinpath(model_stars_dir, "../../jacobi_lmc.toml"))["r_J"]
+else
+	r_J = TOML.parsefile(joinpath(model_stars_dir, "../../jacobi.toml"))["r_J"]
+end
+	
+
+# ╔═╡ f6df0a6f-ee08-49f1-92e6-24516397bda9
+if lmc
+	t_last_peri = orbital_props_lmc["t_last_peri"]
+else
+	t_last_peri = orbital_props["t_last_peri"]
+end
+
+# ╔═╡ a55ebe61-f364-4cde-9006-5e022226e110
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
+
+# ╔═╡ dc6e60d9-7203-48a5-b277-9555c5773851
+times = Output(joinpath(model_stars_dir, "../..")).times
+
+# ╔═╡ c4c8bb3c-7460-4946-b025-0f56f5502946
+time_f = times[orbital_props["idx_f"]]
 
 # ╔═╡ 64aa553d-b024-4991-9265-e0ccbd57d6fb
 md"""
 # Plots
 """
 
+# ╔═╡ a4eb7940-b145-4db9-b82c-94b46fc44035
+md"""
+## Profiles
+"""
+
+# ╔═╡ 940b085c-e78c-4800-8b3e-bdd13ed970d1
+n_center = 13
+
 # ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
-norm_sim = prof_sim.log_Sigma[2]
+norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]])
 
 # ╔═╡ ab47f03b-4eac-439d-869e-1ee6c2e22ebe
-norm_obs = prof_obs.log_Sigma[2]
+norm_obs = LilGuys.mean(prof_obs.log_Sigma[1:n_center])
+
+# ╔═╡ 60cc712c-fea1-4d19-b97d-d14a6b275a77
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ acc308e5-a3e5-46d7-9311-34f0c4ee7c54
+ymin = -8
+
+# ╔═╡ 5876165d-6232-436b-aea2-a9636f1557b6
+
+
+# ╔═╡ e86ff7fe-b424-4edf-bf23-264a327e3926
+md"""
+## Velocity Dispersions
+"""
+
+# ╔═╡ 41bcae3a-d1ea-4620-a2d0-aa9eddfe8554
+readdir(model_stars_dir)
+
+# ╔═╡ 7bc27716-2c02-47a3-9e04-b9d55a526000
+scalars = read_fits(joinpath(model_stars_dir, "stellar_profiles_3d_scalars.fits"))
+
+# ╔═╡ 9a9ff46c-2237-4e01-a37d-374dff336f58
+sigma_v = scalars.sigma_v[
+	argmin(abs.(scalars.time .- time_f))]
+
+# ╔═╡ 9fc456ac-7ab9-4033-b682-d2cb5c386392
+r_break = LilGuys.break_radius(t_last_peri/T2GYR, sigma_v)
+
+# ╔═╡ b04a894b-33c2-4daf-9506-cb310ba0c218
+R_b = LilGuys.kpc2arcmin(r_break, orbital_props["distance_f"])
 
 # ╔═╡ 54724d9f-0619-4374-abbe-fa600fc5cc92
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		xlabel = "log r / arcmin",
+		xlabel = "log R / arcmin",
 		ylabel = L"\log \Sigma / \Sigma_0",
-		limits = (-0.5, 2.5, -8, 1),
+			  limits=(-1, 2.5, ymin, 0.5)
 	)
 
-	lines!(prof_sim.log_r, prof_sim.log_Sigma .- norm_sim, label = "simulation" )
-	lines!(prof_sim_i.log_r, prof_sim_i.log_Sigma .- norm_sim, label = "simulation (initial)", color=COLORS[3], linestyle=:dot)
+	lines!(log_radii(prof_sim_i), log_surface_density(prof_sim_i) .- norm_sim, label ="initial", color=COLORS[2], linestyle=:dot)
 	
-	errscatter!(prof_obs.log_r, prof_obs.log_Sigma .- norm_obs, yerr = prof_obs.log_Sigma_err,
-		color=COLORS[2],
-		label = "observation",
-	)
+	lines!(log_radii(prof_sim), log_surface_density(prof_sim) .- norm_sim, label ="final", color=COLORS[2])
 
-	axislegend()
+	prof = LilGuys.scale(prof_obs, 1.0, 10^-float(norm_obs))
+	LilGuys.plot_log_Σ!(ax,prof, label ="data", markersize=3, color=:black, )
 
+	axislegend(position=:lb)
+
+	if @isdefined R_b
+		arrows!([log10(R_b)], [-7], [0], [-0.5])
+		text!([log10(R_b)], [-7], text=L"R_b", fontsize=8)
+	
+		arrows!([log10(r_J)], [-7], [0], [-0.5], color=COLORS[1])
+		text!([log10(r_J)], [-7], text=L"R_j", fontsize=8, color=COLORS[1])
+	end
+	
 	@savefig "Sigma_vs_obs_i_f"
 	fig
 end
 
-# ╔═╡ 2759953d-65c3-4645-a271-4996a83b62f1
+# ╔═╡ b8796e05-b149-4aed-ad68-c61f56c41093
+σ_obs = obs_props["sigma_v"]
+
+# ╔═╡ 5205de59-6cda-47c1-a988-83b6d5f52b87
 let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		xlabel = "log r / arcmin",
-		ylabel = L"\log \Sigma / \Sigma_0",
-		limits = (-0.5, 2.5, -5, 0.3),
-	)
+			 xlabel = "time", ylabel = L"$\sigma_v$ / km\,s$^{-1}$")
 
-	lines!(prof_sim.log_r, prof_sim.log_Sigma .- norm_sim, label = "simulation" )
-	lines!(prof_sim_i.log_r, prof_sim_i.log_Sigma .- norm_sim, label = "simulation (initial)", color=COLORS[3], linestyle=:dot)
-	
-	errscatter!(prof_obs.log_r, prof_obs.log_Sigma .- norm_obs, yerr = prof_obs.log_Sigma_err,
-		color=COLORS[2],
-		label = "observation",
-	)
+	hlines!(middle(σ_obs), color=:black)
+	hspan!(σ_obs.middle - σ_obs.lower, σ_obs.middle + σ_obs.upper, alpha=0.2, color=:black)
 
-	axislegend()
+	lines!(scalars.time * T2GYR .- time_f*T2GYR, scalars.sigma_v * V2KMS)
 
 	fig
+	@savefig "sigma_v_evolution"
 end
 
 # ╔═╡ Cell order:
-# ╠═1de31271-dcf3-4513-9786-04822fe99294
+# ╟─1de31271-dcf3-4513-9786-04822fe99294
+# ╠═2aba5629-9e59-489e-9831-45868365fbed
+# ╠═7caa0c82-b2ed-45e7-a1a9-beb0b20a2e65
+# ╠═b47c355b-48d3-499f-9333-e469878eb4f2
+# ╟─ce947244-6184-48a3-9635-5c5ec7734d6b
 # ╠═2820df64-e001-11ef-08e2-d730b6110af3
-# ╠═e78d1592-f001-4710-9daa-826498258374
+# ╟─0d2ebb2b-0942-4f8b-8b4c-bf02ae60e20e
 # ╠═af83e902-3cdf-4fea-8a41-95daefe4e0df
 # ╠═f3754857-3222-474f-9e9c-cb956a966125
-# ╠═511e3e8d-8278-4e7b-998c-097b1513320e
-# ╠═f01ad318-2ca3-430a-a121-7370b03085db
+# ╠═a1e70d0d-f515-4233-9568-fb7261fe494e
+# ╠═e78d1592-f001-4710-9daa-826498258374
 # ╠═5d21d511-8e33-4c25-b9be-57dd8bf6998f
 # ╟─ee38471c-043c-4571-bcf6-5fd93df84132
 # ╠═a9ca639c-c7ab-4ba4-b47a-4a78ed0b2269
+# ╠═63cd3e0e-414c-498e-965c-9e943e6b8fb8
 # ╠═9fecfed4-8aba-42f6-bcf2-1891e0b5f947
+# ╠═8358c354-29f3-4d62-940f-7085419a1970
+# ╠═604a2e03-e3cc-4c48-80d3-04f10017170f
+# ╠═2226b7b1-fa78-4428-9cea-3f3a8b17db5f
+# ╠═f6df0a6f-ee08-49f1-92e6-24516397bda9
+# ╠═a55ebe61-f364-4cde-9006-5e022226e110
+# ╠═dc6e60d9-7203-48a5-b277-9555c5773851
+# ╠═c4c8bb3c-7460-4946-b025-0f56f5502946
+# ╠═9a9ff46c-2237-4e01-a37d-374dff336f58
+# ╠═9fc456ac-7ab9-4033-b682-d2cb5c386392
 # ╟─64aa553d-b024-4991-9265-e0ccbd57d6fb
+# ╟─a4eb7940-b145-4db9-b82c-94b46fc44035
+# ╠═940b085c-e78c-4800-8b3e-bdd13ed970d1
+# ╠═b04a894b-33c2-4daf-9506-cb310ba0c218
 # ╠═9a1dd286-f0d0-499a-a421-9e94a0d19bc0
 # ╠═ab47f03b-4eac-439d-869e-1ee6c2e22ebe
+# ╠═60cc712c-fea1-4d19-b97d-d14a6b275a77
+# ╠═acc308e5-a3e5-46d7-9311-34f0c4ee7c54
 # ╠═54724d9f-0619-4374-abbe-fa600fc5cc92
-# ╠═2759953d-65c3-4645-a271-4996a83b62f1
+# ╠═5876165d-6232-436b-aea2-a9636f1557b6
+# ╟─e86ff7fe-b424-4edf-bf23-264a327e3926
+# ╠═41bcae3a-d1ea-4620-a2d0-aa9eddfe8554
+# ╠═7bc27716-2c02-47a3-9e04-b9d55a526000
+# ╠═5205de59-6cda-47c1-a988-83b6d5f52b87
+# ╠═b8796e05-b149-4aed-ad68-c61f56c41093

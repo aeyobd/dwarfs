@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ 6e08e538-bc82-11ee-1a75-d97f506d18c5
 begin
@@ -14,8 +26,8 @@ begin
 	import LilGuys as lguys
 end
 
-# ╔═╡ 07ce4cef-df87-494b-8f16-02489e88bca6
-using LilGuys
+# ╔═╡ 06d06ab0-4585-4cc6-b875-5cdd2e47657a
+using PyFITS
 
 # ╔═╡ 374489bc-627f-4fc9-9734-7c49456710ac
 begin 
@@ -23,6 +35,33 @@ begin
 	using HDF5
 	import NaNMath as nm
 end
+
+# ╔═╡ 7e232e3c-34b9-4b08-a297-7aa19aca644b
+using PlutoUI
+
+# ╔═╡ 4f1e87b3-f776-4550-a0f9-45eec1b79340
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 03a1bd03-dc40-42c0-bbcb-4aa562f47bbf
+@bind inputs confirm(notebook_inputs(;
+	haloname = TextField(default="1e5/fiducial"),
+))
 
 # ╔═╡ 7e548032-56a4-4b5c-bc47-ea86bb4cf917
 md"""
@@ -34,25 +73,28 @@ In particular, we plot the density profiles, velocity profiles, and evolution of
 # ╔═╡ 96c91860-f3cc-4531-a8cf-39c85887b394
 import TOML
 
-# ╔═╡ 6dc6b811-5993-42d1-a6ac-07920aa4f564
-save = CairoMakie.save
-
 # ╔═╡ 7eb3e35f-c2a5-499e-b884-85fb59060ec5
 md"""
 # Inputs
 """
 
-# ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
-name = "/arc7/home/dboyea/dwarfs/analysis/isolation/1e5_beta0.5/fiducial"
+# ╔═╡ 03164025-b3e0-4535-abba-7cf7da5360d7
+outpath = joinpath(ENV["DWARFS_ROOT"], "analysis/isolation", inputs.haloname)
+
+# ╔═╡ c4fc0a87-c75f-4528-aa20-75cc7aff856c
+FIGDIR = joinpath(outpath, "figures/")
+
+# ╔═╡ 07ce4cef-df87-494b-8f16-02489e88bca6
+using LilGuys; FIGDIR
 
 # ╔═╡ a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
-halo = lguys.load_profile(joinpath(name, "halo.toml"))
+halo = lguys.load_profile(joinpath(outpath, "halo.toml"))
 
 # ╔═╡ 6435d239-4a83-4990-a25e-cd03bb0e2022
 softening = 0.044 # kpc
 
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
-out = lguys.Output(joinpath(name, "combined.hdf5"))
+out = lguys.Output(joinpath(outpath, "combined.hdf5"))
 
 # ╔═╡ dd31d3ee-7fdf-46f5-b213-45faae93ae5e
 idxs = [1, 3, 6, length(out)]
@@ -63,14 +105,27 @@ snaps = [out[i] for i in idxs]
 # ╔═╡ 97f89831-00e6-49a2-a712-ac47fd2dee47
 out.times[idxs] * lguys.T2GYR
 
-# ╔═╡ c4fc0a87-c75f-4528-aa20-75cc7aff856c
-figure_dir = joinpath(name, "figures/")
-
-# ╔═╡ 327f790d-e652-48b2-92e5-e2dffd5b15e2
-mkpath(figure_dir)
+# ╔═╡ 382d9256-5a83-4a70-be12-4818fe6c19b4
+x_cen_err, v_cen_err = h5open(joinpath(outpath, "centres.hdf5"), "r") do f
+	xe = f["position_errs"][:]
+	ve = f["velocity_errs"][:]
+	return xe, ve
+end
 
 # ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-profs = LilGuys.read_structs_from_hdf5(joinpath(name, "profiles.hdf5"), LilGuys.MassProfile3D)
+# ╠═╡ disabled = true
+#=╠═╡
+profs = LilGuys.read_structs_from_hdf5(joinpath(outpath, "profiles.hdf5"), LilGuys.MassProfile)
+  ╠═╡ =#
+
+# ╔═╡ 13fddaff-5379-47ba-a0cf-aba1c87124a0
+scalars = read_fits(joinpath(outpath, "profiles_scalars.fits"))
+
+# ╔═╡ 669967a7-0f29-4537-adc1-e96712793db7
+profs = LilGuys.read_ordered_structs(joinpath(outpath, "profiles.hdf5"), LilGuys.MassProfile)
+
+# ╔═╡ 537906ed-1c2d-4be6-9e5b-4696dd3aa854
+density_profs = LilGuys.read_ordered_structs(joinpath(outpath, "density_profiles.hdf5"), LilGuys.DensityProfile)
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -78,13 +133,13 @@ md"""
 """
 
 # ╔═╡ 9a9f4dc1-3573-41ee-be1a-eee39d3371b0
-fit = lguys.fit_v_r_circ_max(snaps[end])
+fit = lguys.fit_v_r_circ_max(profs[end].second.radii, LilGuys.circular_velocity(profs[end].second))
 
 # ╔═╡ 9dc4f57d-2bb2-4718-9f9d-86445e23bd75
-calc_v_circ_max(halo) * V2KMS
+ v_circ_max(halo) * V2KMS
 
 # ╔═╡ 72e84e62-b6c6-4afe-9708-7be49064d081
-calc_r_circ_max(halo)
+r_circ_max(halo)
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
@@ -93,20 +148,19 @@ let
 
 
 	for i in eachindex(profs)
-		lines!(log10.(profs[i].second.r_circ), profs[i].second.v_circ * V2KMS, color=i, colorrange=(1, length(profs)))
+		lines!(log10.(profs[i].second.radii), LilGuys.circular_velocity(profs[i].second) * V2KMS, color=i, colorrange=(1, length(profs)))
 	end
 
 
-	scatter!(log10.(fit.r_circ_max), fit.v_circ_max * V2KMS)
+	scatter!(log10.(fit.r_circ_max), float.(fit.v_circ_max)* V2KMS)
 
-	V_nfw(x) = lguys.calc_v_circ(halo, x)
+	V_nfw(x) = lguys.v_circ(halo, x)
 	log_r = LinRange(-2, 2.5, 1000)
 	y = V_nfw.(10 .^ log_r)
 	lines!(log_r, y * V2KMS, label="NFW", linestyle=:dot, color=:black)
 
 	axislegend(position=:lt)
 
-	save(figure_dir * "v_circ.pdf", fig)
 	fig
 end
 
@@ -139,7 +193,7 @@ let
 	limits=(-2.5, 4, -20, 1))
 
 	for i in eachindex(profs)
-		lines!(profs[i].second.log_r, log10.(profs[i].second.rho))
+		lines!(profs[i].second.radii, log10.(profs[i].second.rho))
 	end
 
 	log_r = LinRange(-2, 4, 1000)
@@ -160,7 +214,7 @@ let
 	skip = 10
 	snap = snaps[1]
 	idx = 1:skip:length(snap)
-	r = sort(lguys.calc_r(snap))[idx]
+	r = sort(lguys.radii(snap))[idx]
 	
 	M = idx
 
@@ -178,13 +232,13 @@ let
 end
 
 # ╔═╡ e33d56a7-7a0e-4fa9-8f0d-041b43584d59
-sum(lguys.calc_r(snaps[end]) .< 0.1)
+sum(lguys.radii(snaps[end]) .< 0.1)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
 	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", yscale=log10)
 	
-	hist!(log10.(lguys.calc_r(snaps[1])), label="", bins=100)
+	hist!(log10.(lguys.radii(snaps[1])), label="", bins=100)
 
 	fig
 end
@@ -192,11 +246,12 @@ end
 # ╔═╡ 5f1c61f9-50d4-43cb-aa78-fa85314f26b7
 let
 	fig, ax = FigAxis( ylabel="count", xlabel="e spec", yscale=log10, 
-		limits=(-4, -1, 1, 1e6)
+		limits=(-4, -1, 1, 1e6),
+			yticks = Makie.automatic,
 	)
 
 	for i in eachindex(snaps)
-		e = -lguys.calc_E_spec(snaps[i])
+		e = lguys.specific_energy(snaps[i])
 		e = e[e .> 0]
 		stephist!(log10.(e), bins=100, label="$i")
 	end
@@ -205,7 +260,7 @@ let
 end
 
 # ╔═╡ 1ce0aa3c-953e-4f7b-bf7e-7c815c505b5e
-println(sum(lguys.calc_r(snaps[1]) .< softening))
+println(sum(lguys.radii(snaps[1]) .< softening))
 
 # ╔═╡ fb0dec74-aaab-43a4-9b37-d13634c5dcad
 md"""
@@ -228,8 +283,8 @@ let
 		ylabel="total angular momentum component"
 	)
 
-	t = parse.(Int64, [profs[i].first for i in eachindex(profs)])
-	Ls = [profs[i].second.L for i in eachindex(profs)]
+	t = scalars.time
+	Ls = scalars.L
 	Ls = hcat(Ls...)
 
 	for i in 1:3
@@ -245,10 +300,8 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="relative change in energy")
-	Es = [profs[i].second.E for i in eachindex(profs)]
+	Es = scalars.E
 	scatter!((Es ./ Es[1]))
-
-	save(figure_dir * "energy.pdf", fig)
 
 	fig
 end
@@ -258,14 +311,14 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel="snapshot", ylabel="-W / 2T (virial ratio)")
 	
-	E_kin = [profs[i].second.K for i in eachindex(profs)]
-	E_pot = -[profs[i].second.W for i in eachindex(profs)]
+	E_kin = scalars.K
+	E_pot = -scalars.W
 
 	scatter!(-E_pot ./ 2E_kin)
 	hlines!(1, color=:black)
 
-	save(figure_dir * "virial.pdf", fig)
 
+	@savefig "virial_ratio"
 	fig
 end
 
@@ -274,13 +327,36 @@ let
 	fig = lguys.plot_xyz(out.x_cen)
 	fig.content[1].title = "centre"
 
-	save(figure_dir * "centre.pdf", fig)
 	
 	fig
 end
 
+# ╔═╡ 4d2da507-7250-4685-9602-6bd65247592a
+cen_vel_mean = (out.x_cen[:, end]) ./ (out.times[end] - out.times[begin])
+
+# ╔═╡ 7588c578-499b-4dae-817e-ecff230ab6be
+let
+	fig = lguys.plot_xyz((out.x_cen .- cen_vel_mean .* out.times') ./ x_cen_err')
+	fig.content[1].title = "centre sigma"
+
+	
+	fig
+end
+
+# ╔═╡ faa5a990-71da-4971-afeb-b56ac04ad191
+LilGuys.std((out.x_cen .- cen_vel_mean .* out.times') ./ x_cen_err')
+
+# ╔═╡ bfe804ef-2080-431d-9544-ab151a3c609b
+LilGuys.std((out.x_cen ) ./ x_cen_err')
+
 # ╔═╡ e61c095e-a763-466b-b419-755fd0aadd0d
 lguys.plot_xyz(out.v_cen * V2KMS, units=" / km s⁻¹")
+
+# ╔═╡ fe25dc38-621b-47f8-aac5-f81c69ad7d8f
+lguys.plot_xyz(out.v_cen ./ v_cen_err', units=" vel sigma")
+
+# ╔═╡ 46bd928f-cbe3-4cb6-b09c-532164a64ce2
+LilGuys.std((out.v_cen ) ./ v_cen_err')
 
 # ╔═╡ 84f0bac9-5655-4acd-88db-8ba3114f712f
 let 
@@ -361,13 +437,13 @@ function calc_β_prof(snap)
 	pos = snap.positions .- snap.x_cen
 	N = size(vel, 2)
 
-	rs = 	lguys.calc_r(snap)
+	rs = 	lguys.radii(snap)
 	r_hat = pos ./ rs'
 	
 	ϕ_hat = hcat([r_hat[:, i] × [1,0,0] for i in 1:N]...)
-	ϕ_hat ./= calc_r(ϕ_hat)'
+	ϕ_hat ./= radii(ϕ_hat)'
 	θ_hat = hcat([r_hat[:, i] × ϕ_hat[:, i] for i in 1:N]...)
-	θ_hat ./= calc_r(θ_hat)'
+	θ_hat ./= radii(θ_hat)'
 
 	v_r = [snap.velocities[:, i] ⋅ r_hat[:, i] for i in 1:N]
 	v_ϕ = [snap.velocities[:, i] ⋅ ϕ_hat[:, i] for i in 1:N]
@@ -420,8 +496,8 @@ end
 
 # ╔═╡ e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 function calc_phase_dens(snap; bins=100)
-	rs = lguys.calc_r(snap)
-	vs = lguys.calc_v(snap)
+	rs = lguys.radii(snap)
+	vs = lguys.speeds(snap)
 	xbins = 10 .^ DE.make_bins(log10.(rs), DE.calc_limits(log10.(rs)), bins)
 	ybins = DE.make_bins(vs, DE.calc_limits(vs), bins)
 	h = DE.histogram2d(rs, vs, (xbins, ybins), weights=snap.masses, limits=(xbins[1], xbins[end], ybins[1], ybins[end]))
@@ -465,7 +541,7 @@ function plot_rv_dens(snap_i)
 
 	hist_kwargs = (; bins=100, colorscale=log10, colorrange=(1, nothing))
 	
-	h = Arya.hist2d!(ax, log10.(lguys.calc_r(snap_i.positions)), lguys.calc_r(snap_i.velocities) * V2KMS; hist_kwargs...)
+	h = Arya.hist2d!(ax, log10.(lguys.radii(snap_i.positions)), lguys.radii(snap_i.velocities) * V2KMS; hist_kwargs...)
 
 	Colorbar(fig[1, 2], h)
 
@@ -477,8 +553,8 @@ plot_rv_dens(snaps[end])
 
 # ╔═╡ 9b88e37a-93eb-4c03-b654-0cd9284fc811
 function plot_phase_rvr!(snap; bins=100)
-	x = lguys.calc_r(snap)
-	v = lguys.calc_v_rad(snap)
+	x = lguys.radii(snap)
+	v = lguys.radial_velocities(snap)
 
 	h = Arya.histogram2d(log10.(x), v *V2KMS, bins)
 
@@ -523,23 +599,29 @@ end
 5/cbrt(1e6)
 
 # ╔═╡ Cell order:
+# ╠═03a1bd03-dc40-42c0-bbcb-4aa562f47bbf
+# ╟─4f1e87b3-f776-4550-a0f9-45eec1b79340
 # ╠═7e548032-56a4-4b5c-bc47-ea86bb4cf917
 # ╠═6e08e538-bc82-11ee-1a75-d97f506d18c5
+# ╠═06d06ab0-4585-4cc6-b875-5cdd2e47657a
 # ╠═07ce4cef-df87-494b-8f16-02489e88bca6
 # ╠═374489bc-627f-4fc9-9734-7c49456710ac
 # ╠═96c91860-f3cc-4531-a8cf-39c85887b394
-# ╠═6dc6b811-5993-42d1-a6ac-07920aa4f564
+# ╠═7e232e3c-34b9-4b08-a297-7aa19aca644b
+# ╠═c4fc0a87-c75f-4528-aa20-75cc7aff856c
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
-# ╠═405c2a84-cfaf-469f-8eaa-0765f30a21de
+# ╠═03164025-b3e0-4535-abba-7cf7da5360d7
 # ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec
 # ╠═dd31d3ee-7fdf-46f5-b213-45faae93ae5e
 # ╠═38ab4838-960e-4321-b70c-6f14584e9e27
 # ╠═6435d239-4a83-4990-a25e-cd03bb0e2022
 # ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
-# ╠═c4fc0a87-c75f-4528-aa20-75cc7aff856c
-# ╠═327f790d-e652-48b2-92e5-e2dffd5b15e2
+# ╠═382d9256-5a83-4a70-be12-4818fe6c19b4
 # ╠═5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
+# ╠═13fddaff-5379-47ba-a0cf-aba1c87124a0
+# ╠═669967a7-0f29-4537-adc1-e96712793db7
+# ╠═537906ed-1c2d-4be6-9e5b-4696dd3aa854
 # ╟─97e98ab8-b60b-4b48-b465-a34a16858f88
 # ╠═9a9f4dc1-3573-41ee-be1a-eee39d3371b0
 # ╠═9dc4f57d-2bb2-4718-9f9d-86445e23bd75
@@ -562,7 +644,13 @@ end
 # ╠═bfa7593c-4915-4e03-83e6-8f790de4c1a5
 # ╠═e3a45a8e-cc52-4e9d-9db3-97109b59fc77
 # ╠═91a44ed4-8466-4a58-b3ff-1e7630b8ac8c
+# ╠═4d2da507-7250-4685-9602-6bd65247592a
+# ╠═7588c578-499b-4dae-817e-ecff230ab6be
+# ╠═faa5a990-71da-4971-afeb-b56ac04ad191
+# ╠═bfe804ef-2080-431d-9544-ab151a3c609b
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
+# ╠═fe25dc38-621b-47f8-aac5-f81c69ad7d8f
+# ╠═46bd928f-cbe3-4cb6-b09c-532164a64ce2
 # ╠═84f0bac9-5655-4acd-88db-8ba3114f712f
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
 # ╟─5153654a-567f-4663-9b4a-6f08f9e49d1a

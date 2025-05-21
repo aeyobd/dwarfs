@@ -3,9 +3,10 @@ using PythonCall
 
 using ArgParse
 using LilGuys
+import TOML
 
 agama = pyimport("agama")
-SCRIPT_VERSION = "v0.1.1"
+SCRIPT_VERSION = "v0.1.2"
 
 
 function get_args()
@@ -45,6 +46,9 @@ function get_args()
         end
         if args["r-a"] != Inf
             filename = filename * "_ra$(args["r-a"])"
+        end
+        if args["cutoff"] != 100
+            filename = filename * "_t$(args["cutoff"])"
         end
 
         @info "Saving to $filename.hdf5"
@@ -100,10 +104,10 @@ function main()
     mass = pyconvert(Float64, mass[1])
 
     snap = Snapshot(pos, vel, mass) 
-    LilGuys.save(args["output"], snap)
+    LilGuys.write(args["output"], snap)
 
     halo_kwargs = Dict(
-       "profile.TruncNFW" => Dict("trunc" => cutoff, "M_s"=>M_s, "r_s"=>r_s)
+       "profile.TruncNFW" => Dict("trunc" => cutoff, "M_s"=>M_s, "r_s"=>r_s),
        "beta0" => args["beta"],
        "r_a_om" => args["r-a"],
       )

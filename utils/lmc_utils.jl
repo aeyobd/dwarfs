@@ -189,3 +189,34 @@ function calc_σv_func(pot_halo)
     sigmafnc = agama.Spline(gridr, sigmas)
     return sigmafnc
 end
+
+
+"""
+    calc_σv_interp(pot; log_r = LinRange(-3, 5, 100000))
+
+Computes the velocity dispersion as a function of radius by integrating the Jeans equation.
+
+"""
+function calc_σv_interp(pot; log_r = LinRange(-3, 5, 100000))
+    x0 = [1/√2, 0., 1/√2] # direction
+
+    if !issorted(log_r)
+        @warn "log_r is not sorted. Sorting."
+        log_r = sort(log_r)
+    end
+
+    log_r = reverse(log_r)
+    radii = 10 .^ log_r
+
+    positions = x0' .* radii
+    acc = pyconvert(Matrix{Float64}, pot.force(positions))
+    rho = pyconvert(Array{Float64}, pot.density(positions))
+
+    a = calc_r(acc')
+    
+    dr = abs.(LilGuys.gradient(radii))
+
+    σ2 = 1 ./ rho .* cumsum(rho .* a .* dr)
+
+    return LilGuys.lerp(radii, sqrt.(σ2))
+end

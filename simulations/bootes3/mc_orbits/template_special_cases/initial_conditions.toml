@@ -1,0 +1,9 @@
+
+[[orbits]]
+name = "mean"
+ra = 209.3
+dec = 26.8
+distance = 46.55860935229591
+pmra = -1.160
+pmdec = -0.88
+radial_velocity = 197.5
