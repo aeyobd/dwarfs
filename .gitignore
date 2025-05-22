@@ -23,6 +23,7 @@ core.*
 
 *.err
 *.out
+*.log
 out*/
 *-usedvalues
 *_profile.toml

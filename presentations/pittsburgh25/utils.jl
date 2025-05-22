@@ -102,13 +102,13 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 	for (label, df) in datasets
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
         if label == :members
-            ellipse!(6observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black, linewidth=2*theme(:linewidth)[])
+            ellipse!(6observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
         end
 	end
 
     b = 6observed_properties["R_h"] * sqrt(1 - observed_properties["ellipticity"])
     θ = observed_properties["position_angle"]
-    text!(-b*cosd(θ), b*sind(θ), text=L"6R_h", rotation=deg2rad(θ-90), 
+    text!(b*cosd(θ), -b*sind(θ), text=L"6R_h", rotation=deg2rad(θ-90), 
           align = (:center, :bottom), color=:black, fontsize=0.8*theme(:fontsize)[])
 
 	
@@ -144,7 +144,7 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 		scatter!(df.bp_rp .- Ab .+ Ar, df.phot_g_mean_mag .- Ag; scatter_kwargs[label]...)
 
         if label == :members
-            lines!(BP_RP_iso, G_iso, color=:black, linewidth=2*theme(:linewidth)[])
+            lines!(BP_RP_iso, G_iso, color=:black)
         end
 	end
 

@@ -285,6 +285,12 @@ md"""
 ## Observed properties
 """
 
+# ╔═╡ d2ab7faf-27ed-43f3-b915-374b244149d3
+md"""
+To properly estimate the uncertainties on the actions, we just MC sample over the uncertainties on the observed properties (rv, distances, pms, etc.).
+Then we take the mean and standard deviaton for the action distributions
+"""
+
 # ╔═╡ 8af92209-eafb-4da6-b641-a9c3c2ea1080
 df_coord_samples = let
 	coords = LilGuys.rand_coords(obs_props, 3000)
@@ -325,6 +331,9 @@ L_obs = [LilGuys.mean(x) ± LilGuys.std(x) for x in eachcol(df_coord_samples[:, 
 # ╔═╡ c133bc01-0493-4ccf-b584-6f34722e9c91
 J_obs = [LilGuys.mean(x) ± LilGuys.std(x) for x in eachcol(df_coord_samples[:, [:J_R, :J_z, :J_phi]])]
 
+# ╔═╡ 6d0d7acb-cf73-4ad8-ad74-1b84b343bc10
+hist(df_coord_samples.J_phi)
+
 # ╔═╡ 7131d149-c2b6-4ea4-a022-954102bf0870
 md"""
 ## For the orbits
@@ -351,7 +360,7 @@ J_f_mean = [LilGuys.mean((act_nbody .± act_err_nbody)[i, idx_f-window:idx_f]) f
 dJ_suggested =  Measurements.value.(J_obs) .- J_f_mean
 
 # ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
-dθ_suggested = [Measurements.value(Theta_obs[i]) .- ang_nbody[i, idx_f] for i in 1:3]
+dθ_suggested = [Theta_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
 
 # ╔═╡ ae8f7bbd-46ee-4fcb-900a-557e5bb11088
 @bind change_in_act_angles confirm(notebook_inputs(;
@@ -708,10 +717,12 @@ end
 # ╠═3ab820ad-1e95-4533-aa70-ad56b11b549a
 # ╠═0cc89288-a915-49a5-a7f3-10abbc02b184
 # ╟─eec1b26c-d028-4305-b2ff-f5772868dfed
+# ╠═d2ab7faf-27ed-43f3-b915-374b244149d3
 # ╠═8af92209-eafb-4da6-b641-a9c3c2ea1080
 # ╠═0706ee1c-74a6-4a5d-907f-8884895b0361
 # ╠═bbfbf56b-eb98-45f1-bafc-4b04b1f0eda1
 # ╠═c133bc01-0493-4ccf-b584-6f34722e9c91
+# ╠═6d0d7acb-cf73-4ad8-ad74-1b84b343bc10
 # ╟─7131d149-c2b6-4ea4-a022-954102bf0870
 # ╠═8f3f6ff6-eaf9-4ee4-8a66-0edbe7785162
 # ╠═95359526-d9e0-4b6f-8f65-6394ef433e35

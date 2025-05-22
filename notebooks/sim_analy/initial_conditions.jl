@@ -94,7 +94,10 @@ md"""
 """
 
 # ╔═╡ 3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
-halo = lguys.load_profile(joinpath(model_dir,paramname ))
+halo_in = lguys.load_profile(joinpath(model_dir,paramname ))
+
+# ╔═╡ 7430e5ef-7cf6-4d0e-a1e8-3db3c35388e8
+halo = NFW(r_s=halo_in.r_s, M_s=halo_in.M_s)
 
 # ╔═╡ 7f9db45f-38ea-4427-9af1-d5431429f612
 halo.r_s
@@ -157,11 +160,13 @@ props.r_circ_max
 
 # ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
 let 
-	fig = Figure()
+	fig = Figure(
+		size=(4*72, 4*72)
+	)
 	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
 
 	
-	log_r = LinRange(-2, 4, 1000)
+	log_r = LinRange(-2, 2, 1000)
 
 	lines!(log10.(prof.radii), lguys.circular_velocity(prof) .* V2KMS, label="snapshot")
 
@@ -170,7 +175,8 @@ let
 	scatter!(log10.(props.r_circ_max), props.v_circ_max * lguys.V2KMS, label="max; observed")
 	
 	scatter!(log10.(lguys.r_circ_max(halo)), lguys.v_circ_max(halo) * lguys.V2KMS, label="max; halo")
-	
+
+	hidexdecorations!(ticks=false, minorticks=false)
 	axislegend()
 
 	
@@ -261,6 +267,9 @@ let
 	fig
 
 end
+
+# ╔═╡ 2b7c7517-4b28-4db0-860b-dc6e5e514e6c
+LilGuys.mean(radii(snap) .> 2)
 
 # ╔═╡ aca95a0a-98e0-4b7a-bca2-e3c30f9df6e9
 lguys.mass(halo)
@@ -364,7 +373,7 @@ md"""
 """
 
 # ╔═╡ 7032a304-1448-4182-b22b-6083a2efea5d
-r_circs = 10 .^ LinRange(-3, 0, 1000)
+r_circs = 10 .^ LinRange(-3, log10(R200), 1000)
 
 # ╔═╡ ac22ac31-f4bf-497b-9971-c98a9900acfb
 v_circs = lguys.v_circ.(halo, r_circs)
@@ -383,7 +392,7 @@ let
 	lines!(log10.(r_circs), log10.(t_dyn_rho), label="grav")
 	vlines!(log10(grav_softening), linestyle=:dot, color=:black, label="softening")
 
-	axislegend()
+	axislegend(position=:lt)
 
 	fig
 end
@@ -410,6 +419,7 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
 # ╟─eb17e47b-b650-4362-ba29-77344e37bc48
 # ╠═3dd35dd4-8e3c-458b-a6ce-b1c957266ce4
+# ╠═7430e5ef-7cf6-4d0e-a1e8-3db3c35388e8
 # ╠═7f9db45f-38ea-4427-9af1-d5431429f612
 # ╠═0ccb9018-d88c-4cec-a8da-625be1289bfe
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
@@ -434,6 +444,7 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
 # ╠═09139e38-fdb7-4754-9cc0-79e13a131b08
 # ╠═60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
+# ╠═2b7c7517-4b28-4db0-860b-dc6e5e514e6c
 # ╠═aca95a0a-98e0-4b7a-bca2-e3c30f9df6e9
 # ╠═84b3759e-a598-4afc-a2b4-ce841e80ff96
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb

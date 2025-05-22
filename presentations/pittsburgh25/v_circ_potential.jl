@@ -38,7 +38,7 @@ function plot_v_circ!(pot; x=LinRange(0, 2.5, 1000), kwargs...)
 	m = pot.enclosedMass(r) |> Agama.py2vec
 	v = @. sqrt( m / r) * V2KMS
 
-	lines!(x, v; kwargs...)
+	lines!(r, v; kwargs...)
 	
 end
 
@@ -50,25 +50,27 @@ CairoMakie.activate!(type=:png)
 	fig = Figure()
 
 	ax = Axis(fig[1,1], 
-		xlabel = L"$\log\, R$ / kpc",
+		xlabel = L"$R$ / kpc",
 		ylabel = L"$v_\textrm{circ}$ / km\,s$^{-1}$",
-		yscale=log10, 
-		yticks = [10, 20, 100, 200],
-		yminorticks = [10:10:100; 200:100:1000;],
-		limits=(0, 2.5, nothing, nothing)
+		limits=(0, 100, nothing, nothing),
 	)
+	lw = theme(:linewidth)
 
-	plot_v_circ!(Φ_ep._py, label="total", linestyle=:solid, color=:black, linewidth=8)
+	plot_v_circ!(Φ_ep._py, label="total", linestyle=:solid, color=:black, linewidth=lw)
 
-	plot_v_circ!(Φ_bulge, label="bulge", linestyle=:dot, color=COLORS[1], linewidth=6)
-	plot_v_circ!(Φ_thin + Φ_thick, label = "disk", linestyle=:dashdot,  color=COLORS[2], linewidth=6)
-	plot_v_circ!(Φ_nfw, label="halo", linestyle=:dash,  color=COLORS[3], linewidth=6)
+	plot_v_circ!(Φ_bulge, label="bulge", linestyle=:dash, color=COLORS[1], linewidth=lw)
+	plot_v_circ!(Φ_thin + Φ_thick, label = "disk", linestyle=:dashdot,  color=COLORS[2], linewidth=lw)
+	plot_v_circ!(Φ_nfw, label="halo", linestyle=:dot,  color=COLORS[3], linewidth=lw)
 
 
-	axislegend(position=:lb, margin=(19, 19, 19, 19))
-	#Legend(fig[1,2], ax)
+	axislegend(position=:rb, patchsize=(4/3*theme(:fontsize)[], theme(:fontsize)[]), margin=theme(:Legend).padding)
+
+	resize_to_layout!(fig)
 	fig
 end
+
+# ╔═╡ 22b2fe30-a419-4d57-a487-b50fce20e77e
+theme(:padding)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -80,3 +82,4 @@ end
 # ╠═86961f65-fa3e-4899-81d5-94c6bec3b8de
 # ╠═cf74dd35-70f3-4a88-b1c0-580d0ffe69aa
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╠═22b2fe30-a419-4d57-a487-b50fce20e77e

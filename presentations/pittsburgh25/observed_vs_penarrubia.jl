@@ -118,12 +118,12 @@ begin
 
 end
 
-# ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
+# ╔═╡ 57d7cd00-9d14-43d9-86d4-2be8d03cfcba
 let
 	fig = Figure()
 	
 	ax = Axis(fig[1,1],
-		limits = (-2.2, nothing, nothing, nothing),
+		limits = (-1.9, 1.2, -4.5, 1.5),
 		xlabel = L"log $R$ / $R_h$",
 		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
 	)
@@ -140,8 +140,73 @@ let
 	end
 
 
-	lines!(prof_i.log_R, prof_i.log_Sigma, label="P+08 no tides", linestyle=:dot, color=:black)
-	lines!(prof_f.log_R, prof_f.log_Sigma, label="P+08 tides", linewidth=6, color=:black)
+
+	axislegend(position=:lb, margin=(19,19,19,19))
+
+	@savefig "scl_umi_vs_penarrubia" fig
+end
+
+# ╔═╡ d0c1d099-f07b-440e-8192-573b95c9354b
+
+
+# ╔═╡ 2ab5af72-4667-42e5-8e3c-20a68952d2e6
+let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		limits = (-1.9, 1.2, -4.5, 1.5),
+		xlabel = L"log $R$ / $R_h$",
+		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
+	)
+
+	
+	
+	for i in eachindex(galaxies)
+		galaxy = galaxies[i]
+		prof = obs_profs[i]
+
+		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
+					  label=Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")[galaxy], 
+					  color=[COLORS[4], COLORS[2], COLORS[1]][i])
+	end
+
+prof_ana = LilGuys.Exp2D(R_s = 1/LilGuys.R_h(LilGuys.Exp2D()))
+	x = LinRange(-1.9, 1.2, 1000)
+	y = @. log10(LilGuys.surface_density(prof_ana, 10^x))
+	y .-= log10(LilGuys.surface_density(prof_ana, 1))
+
+	lines!(x, y, color=:black)
+
+	
+	axislegend(position=:lb, margin=(19,19,19,19))
+
+	@savefig "scl_umi_vs_penarrubia" fig
+end
+
+# ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
+let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		limits = (-1.9, 1.2, -4.5, 1.5),
+		xlabel = L"log $R$ / $R_h$",
+		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
+	)
+
+
+
+	for i in eachindex(galaxies)
+		galaxy = galaxies[i]
+		prof = obs_profs[i]
+
+		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
+					  label=Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")[galaxy], 
+					  color=[COLORS[4], COLORS[2], COLORS[1]][i])
+	end
+
+
+	lines!(prof_i.log_R, prof_i.log_Sigma, label="", linestyle=:dot, color=:black)
+	lines!(prof_f.log_R, prof_f.log_Sigma, label="", linewidth=6, color=:black)
 
 	axislegend(position=:lb, margin=(19,19,19,19))
 
@@ -167,4 +232,7 @@ end
 # ╠═940c75b5-e19b-474f-8913-a489d770372a
 # ╠═b0e33ee3-ae02-400a-b468-33de44a44c06
 # ╠═0732a179-aca0-4bf4-8be7-be1e713ee18e
+# ╠═57d7cd00-9d14-43d9-86d4-2be8d03cfcba
+# ╠═d0c1d099-f07b-440e-8192-573b95c9354b
+# ╠═2ab5af72-4667-42e5-8e3c-20a68952d2e6
 # ╠═21ace95e-ba98-4728-a8f7-8303f0eac247

@@ -34,15 +34,6 @@ CairoMakie.activate!(type=:png)
 # ╔═╡ 1e5451e3-87ec-4c04-ae1a-87a2f62c2891
 import TOML
 
-# ╔═╡ 76cf78d3-5f15-48f1-927f-37266bd49865
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1])
-scatter!([1], [1], label="hi")
-axislegend(margin=(20,20,20,20))
-fig
-end
-
 # ╔═╡ a2d26cab-b562-4d4c-88f7-5f5b8ee49116
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observed_properties.toml"))
 
@@ -124,16 +115,31 @@ end
 # ╔═╡ efae8808-1768-40c1-a11d-253402cdfe43
 function compare_x_y_traj(trajectories; r_max=300, kwargs...)
     fig = Figure()
-    ax = Axis(fig[1, 1], xlabel="y / kpc", ylabel="z / kpc",
+  	ax2 = Axis(fig[1, 1], xlabel="x / kpc", ylabel="z / kpc",
         xgridvisible=false, ygridvisible=false, 
-        aspect=DataAspect(),
+			  limits=(-0.2, 0.2, -1, 1) .* r_max,
+			   aspect= DataAspect()
+    )
+
+    for (i, (label, traj)) in enumerate(trajectories)
+        plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
+    end
+
+	
+    ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
+        xgridvisible=false, ygridvisible=false, 
 			  limits=(-1, 1, -1, 1) .* r_max,
+			  aspect = DataAspect()
     )
     
     for (i, (label, traj)) in enumerate(trajectories)
         plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
-        
+	hideydecorations!(ticks=false, minorticks=false)
+
+	#rowsize!(fig.layout, 1, Aspect(1, 1.0))
+	linkyaxes!(ax, ax2)
+  
     fig
 end
 
@@ -165,9 +171,6 @@ md"""
 # Plots
 """
 
-# ╔═╡ c4761049-4e08-4fce-85f9-6970f6530e4b
-theme(:markersize)
-
 # ╔═╡ fb3f61f2-f425-40b4-9983-dfc7528df6ab
 @savefig "scl_mc_orbits_xy" let
 
@@ -196,6 +199,12 @@ filter(x->x > -4/T2GYR, Vector(traj_lmc[3]))
 # ╔═╡ 56b4119d-3d74-483e-9340-c98512cda640
 theme(:size)
 
+# ╔═╡ 865f71c1-0cf8-4a63-b417-a2aed5c5a3ae
+traj_lmc[3]
+
+# ╔═╡ bb635c9c-facf-4fbf-b9c9-2445d017c046
+pos_0_lmc = traj_lmc[1][:, 1, 1]
+
 # ╔═╡ 0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
 @savefig "scl_lmc_mc_orbits_xy" let
     fig = Figure(size=(1000, 645))
@@ -219,12 +228,6 @@ theme(:size)
 	Legend(fig[1,2], Makie.current_axis(), merge=true, unique=true)
 	fig
 end
-
-# ╔═╡ 865f71c1-0cf8-4a63-b417-a2aed5c5a3ae
-traj_lmc[3]
-
-# ╔═╡ bb635c9c-facf-4fbf-b9c9-2445d017c046
-pos_0_lmc = traj_lmc[1][:, 1, 1]
 
 # ╔═╡ dfecdf9a-b28c-4561-991e-d555c4fdcb39
 theme(:linewidth)
@@ -325,7 +328,6 @@ LilGuys.break_radius(0.130/T2GYR, obs_props["sigma_v"] / V2KMS)
 # ╠═a1606881-5138-4c90-b66f-34bcffd563eb
 # ╠═2d94b40a-2a38-48d5-9b7e-6b493d504aec
 # ╠═1e5451e3-87ec-4c04-ae1a-87a2f62c2891
-# ╠═76cf78d3-5f15-48f1-927f-37266bd49865
 # ╠═a2d26cab-b562-4d4c-88f7-5f5b8ee49116
 # ╠═e095772c-7c5e-4dec-b29a-4cad97683a7d
 # ╠═b9f1f612-efb3-4b8a-9b3e-1d7d61e08726
@@ -343,7 +345,6 @@ LilGuys.break_radius(0.130/T2GYR, obs_props["sigma_v"] / V2KMS)
 # ╠═1014f681-8014-4df2-bd07-bce4f3348056
 # ╠═ff89d7db-c954-48b8-b87a-446ccfb2d79b
 # ╟─a1c44523-e31e-4b50-bb00-db80ab080004
-# ╠═c4761049-4e08-4fce-85f9-6970f6530e4b
 # ╠═fb3f61f2-f425-40b4-9983-dfc7528df6ab
 # ╠═0272f30a-49f5-405c-9bcb-4c03f32d697d
 # ╠═b2709a10-2bf6-4f60-8167-ea56c67f218a

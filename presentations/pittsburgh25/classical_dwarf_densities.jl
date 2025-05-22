@@ -117,73 +117,6 @@ begin
 	profiles["ursa_minor"] = prof_umi
 end
 
-# ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-let
-	fig = Figure()
-
-	ax = Axis(fig[1,1], 
-		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
-				xticks = -2:1:1,
-		limits=(-1, nothing, -4.2, 1.1)
-
-	)
-
-    x = LinRange(-1.4, 1, 1000)
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y, color=:black, label="Exp2D")
-    
-
-    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
-    lines!(x, y, color=:black, label="Plummer", linestyle=:dash)
-
-
-	for (galaxy, prof) in profiles
-		lines!(prof.log_R, prof.log_Sigma, color=COLORS[1], alpha=0.5, label="classical dwarfs")
-	end
-
-
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", linewidth=1, markersize=3)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", linewidth=1, markersize=3)
-
-	Legend(fig[1,2], ax,  merge=true, unique=true)
-
-
-
-	# residuals
-	ax_res = Axis(fig[2,1], 
-		ylabel = L"\delta \log\,\Sigma",
-		xlabel = L"\log\,R\ / \ R_h",
-		xticks = -2:1:1,
-		limits=(-1, 1.0, -1.2, 1.2)
-	)
-
-	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-	
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Exp2D")
-    
-
-    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Plummer", linestyle=:dash)
-
-	
-	for (galaxy, prof) in profiles
-		lines!(prof.log_R, prof.log_Sigma .- f(prof.log_R), color=COLORS[1], alpha=0.5)
-	end
-
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], linewidth=1, markersize=3)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3], linewidth=1, markersize=3)
-
-
-	linkxaxes!(ax, ax_res)
-	rowgap!(fig.layout, 0)
-	rowsize!(fig.layout, 2, Relative(1/4))
-	hidexdecorations!(ax, ticks=false, minorticks=false)
-
-	@savefig "classical_dwarf_profiles"
-	fig
-end
-
 # ╔═╡ d34dfbe4-c80a-46e8-9082-30148cbcbd0b
 profiles["sculptor"]
 
@@ -421,7 +354,6 @@ end
 # ╠═740d04a4-4327-47cd-b5aa-b71ed94a0610
 # ╠═6d2bff6d-b347-49c4-87df-ad58d8a27ff3
 # ╠═dea5ec9f-7f31-42eb-b8f7-6ca5d22e9f0b
-# ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═d34dfbe4-c80a-46e8-9082-30148cbcbd0b
 # ╠═8821d235-5622-48c6-ab49-587d0382e583
 # ╠═552e9438-862f-4710-a7d4-c8d798b5f1aa

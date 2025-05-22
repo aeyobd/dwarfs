@@ -169,6 +169,12 @@ begin
 	obs_today
 end
 
+# ╔═╡ 3112cdf4-5971-4e24-b1d3-aeffaf566056
+icrs0 = ICRS(obs_today)
+
+# ╔═╡ 3fa82743-7bc5-4e7a-8ec5-69de1ef647e9
+gc0 = LilGuys.transform(Galactocentric, icrs0)
+
 # ╔═╡ b250bf10-c228-4b14-938a-35561ae871d7
 h5open(centresfile, "r") do  f
 	global x_cen, v_cen, t
@@ -380,8 +386,8 @@ let
 	scatter!(t[idx_f] * T2GYR, r[idx_f], 
 		label="adpoted end", marker=:rect
 	)
-	scatter!(t[idx_f] * T2GYR, radii(x_cen_exp)[end], 
-		marker=:+, markersize=10, label="expected"
+	scatter!(t[idx_f] * T2GYR, radii(LilGuys.position(gc0)),
+		marker=:+, markersize=6, label="expected", color=COLORS[4]
 	)
 	
 	scatter!(t[idx_peris] * T2GYR, r[idx_peris], 
@@ -657,6 +663,7 @@ let
 		"idx_peri" => idx_peri,
 		"t_last_peri" => t_f - t_peri,
 		# these three are for the final stream coordinate frame
+		"t_f_gyr" => t_f * T2GYR,
 		"ra_f" => ra0,
 		"dec_f" => dec0,
 		"distance_f" => obs_c.distance[idx_f],
@@ -713,6 +720,8 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═9c427388-c657-4bb7-bc0a-b4de3597c645
 # ╟─30969f77-667e-4ae4-9897-82c1c1182652
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
+# ╠═3112cdf4-5971-4e24-b1d3-aeffaf566056
+# ╠═3fa82743-7bc5-4e7a-8ec5-69de1ef647e9
 # ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
 # ╠═b250bf10-c228-4b14-938a-35561ae871d7
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a

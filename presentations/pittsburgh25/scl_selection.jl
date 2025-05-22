@@ -38,13 +38,14 @@ include(ENV["DWARFS_ROOT"] * "/utils/gaia_filters.jl")
 md"""
 # Jensen et al. 2024 sammple
 
-Some plots to understand the (unmodified) J+24 data sample.
-The goals here are to investigate the main density profile, likelihoods, and what the cuts appear as in CMD space. 
+This notebook creates plots of Jaclyn's sample for sculptor or ursa minor (controled with `galaxyname`).
+The idea is to show the background compared to selected stars. 
+Additionally, versions of the plots are made with very distant member stars highlighted.
 
 """
 
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
-galaxyname = "sculptor"
+galaxyname = "ursa_minor"
 
 # ╔═╡ 0004f638-c57a-4dab-8b97-c77840cafbbf
 import TOML
@@ -52,7 +53,7 @@ import TOML
 # ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
 module Utils 
 	include("utils.jl")
-end
+end 
 
 # ╔═╡ 2eb4aa78-0fea-460b-a18e-06a129c41504
 md"""
@@ -103,7 +104,11 @@ rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/velocitie
 R_h = observed_properties["R_h"]
 
 # ╔═╡ a04a394e-4d4b-4d95-baab-9886e151ec44
-rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
+if galaxyname == "sculptor"
+	rv_distant = rv_members[rv_members.R_ell .> 7R_h, :]
+else
+	rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
+end
 
 # ╔═╡ b7244cfb-7326-4e81-b751-0121f202f2b3
 rv_distant.R_ell ./ R_h
@@ -128,6 +133,12 @@ samples = OrderedDict(
 	:distant => rv_distant
 )
 
+# ╔═╡ 5af9ddf6-7d14-4120-9d20-bcd20e756a09
+samples_norv = OrderedDict(
+	:best => best_stars,
+	:members => members,
+)
+
 # ╔═╡ 31bac4e9-4f19-4391-8a2a-4408c746a753
 styles = Dict(
 	:best => (;	markersize=3, color=grey, 
@@ -138,7 +149,7 @@ styles = Dict(
 	:members => (;
 		markersize=12,
 		label = "members" =>(; alpha=1, markersize=24),
-		marker=:x,
+		marker=:diamond,
 		color = COLORS[1],
 		alpha=1,
 	),
@@ -146,7 +157,7 @@ styles = Dict(
 		 markersize=24,
 		 label = "distant RV members", 
 		 marker = :star5,
-		 color = COLORS[4],
+		 color = COLORS[2],
 		 alpha=1, 
 		 strokecolor=:black, 
 		 strokewidth = 0.0
@@ -154,9 +165,21 @@ styles = Dict(
 )
 
 # ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "$(galaxyname)_selection" let
+@savefig "$(galaxyname)_selection_w_rv" let
 	fig = Utils.compare_j24_samples(
 		samples, styles,
+		observed_properties
+	)
+
+	Makie.resize_to_layout!(fig)
+	fig
+
+end
+
+# ╔═╡ b4cef660-5ec1-429d-972b-fb50dd0b155c
+@savefig "$(galaxyname)_selection" let
+	fig = Utils.compare_j24_samples(
+		samples_norv, styles,
 		observed_properties
 	)
 
@@ -183,7 +206,7 @@ prof = LilGuys.Exp2D()
 (1 - LilGuys.mass_2D(prof, 6α)) *  sum(best_stars.PSAT)
 
 # ╔═╡ Cell order:
-# ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
+# ╠═47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
@@ -212,9 +235,11 @@ prof = LilGuys.Exp2D()
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
 # ╠═dc0fa286-0dbb-4da5-bfae-ebe3655f7d8a
 # ╠═74a3920c-f93d-4a7c-932a-2938cd6bb020
+# ╠═5af9ddf6-7d14-4120-9d20-bcd20e756a09
 # ╠═31bac4e9-4f19-4391-8a2a-4408c746a753
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
-# ╠═889cc1ea-f453-42a3-8036-8ee12191be7f
+# ╠═b4cef660-5ec1-429d-972b-fb50dd0b155c
+# ╟─889cc1ea-f453-42a3-8036-8ee12191be7f
 # ╠═26574dbe-b201-4ea4-aa37-239c4d38b271
 # ╠═0363e1b8-c9be-4059-a2a5-166f01d7fe56
 # ╠═e52ae552-1221-4871-8877-65cf33eb5a4c

@@ -113,7 +113,7 @@ magellanic = dwarfs[dwarfs.key .∈ [["smc", "lmc"]], :]
 
 # ╔═╡ d8e0b701-166b-438c-9c36-5564e7e488c9
 confirmed_dwarfs = dwarfs[(dwarfs.confirmed_dwarf .=== 1) .&
-	(dwarfs.key .∉ [["smc", "lmc"]]), :]
+	(dwarfs.key .∉ [["smc", "lmc", classical_systems...]]), :]
 
 # ╔═╡ 42c02a3d-5d7d-4559-8911-b197408343f1
 key_dwarfs = dwarfs[dwarfs.key .∈ [["sculptor_1", "ursa_minor_1", "fornax_1"]], :]
@@ -122,7 +122,7 @@ key_dwarfs = dwarfs[dwarfs.key .∈ [["sculptor_1", "ursa_minor_1", "fornax_1"]]
 magellanic[:, [:key, :ll, :bb]]
 
 # ╔═╡ 89ae71c5-08eb-4c92-9301-ad2e630bf943
-labels = vcat(confirmed_dwarfs.key, "ursa_major_3", "lmc", "smc")
+labels = vcat(confirmed_dwarfs.key, "ursa_major_3", "lmc", "smc", classical_systems...)
 
 # ╔═╡ 0ee0aa61-3046-4dae-92e9-bd6b124d8f5f
 CairoMakie.activate!(type=:png)
@@ -139,9 +139,24 @@ grid_color = (:white, 0.3)
 # ╔═╡ fa060f84-e39f-4d6a-a6d8-421f70a3c20e
 theme(:fonts)
 
+# ╔═╡ bddcd6bb-5dba-4b6e-ba07-e21df433f812
+ms = theme(:markersize)[] * 3/2
+
+# ╔═╡ d415fac3-d155-44fc-86af-35e6ead45734
+COLORS
+
+# ╔═╡ 5097c6a8-c67c-4564-8b69-4605ea265579
+Makie.Polygon([Point2f(0), Point2f(1), Point2f(1,0)])
+
+# ╔═╡ b7fd5546-ecc9-444b-9862-1954c3c762e1
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ 6aef99ed-bcf9-4977-a17f-1efa44a9925d
+COLORS[9]
+
 # ╔═╡ 3051cdfb-63fb-44e4-a75d-37a51fd40508
 @savefig "mw_satellites_onsky" let
-	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080))
+	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080), pad = 0)
 	
 	ax = GeoAxis(fig[1,1];
 		dest = "+proj=hammer",
@@ -153,22 +168,25 @@ theme(:fonts)
 		yticklabelsize=8,
 		xgridwidth=0.5,
 		ygridwidth=0.5,
+				 valign=:top,
+				 
 	)
 	xlims!(-180, 180)
 
-	scatter!(ax, -allcluster.ll, allcluster.bb, markersize=2, label="cluster")
+	scatter!(ax, -allcluster.ll, allcluster.bb, markersize=3/4*ms, label="cluster",
+			color=COLORS[4], marker=:o)
 
-	scatter!(ax, -confirmed_dwarfs.ll, confirmed_dwarfs.bb, markersize=3, label="dwarf")
-	scatter!(ax, -ambiguous.ll, ambiguous.bb, markersize=4, label="ambiguous")
+	scatter!(ax, -confirmed_dwarfs.ll, confirmed_dwarfs.bb,  label="dwarf", 
+			 markersize=ms, color=COLORS[1], marker=:rect)
+	scatter!(ax, -ambiguous.ll, ambiguous.bb, label="ambiguous",
+			 markersize=ms/3*2, color=:transparent, marker=:diamond, strokewidth=ms/8,
+			 strokecolor=COLORS[5]
+			)
 
-	scatter!(ax, -classicals.ll, classicals.bb, markersize=6, label="classical")
-	
+	scatter!(ax, -classicals.ll, classicals.bb, markersize=3/2*ms, label="classical",
+			 marker=:star5, color=COLORS[3]
+			)
 
-	for row in eachrow(magellanic)
-		color = ifelse(row.key == "lmc", COLORS[5], COLORS[5])
-		
-	
-	end
 
 	
 	Legend(fig[1, 1], ax, tellwidth=false, tellheight=false, halign=:right, valign=:bottom, nbanks=2, backgroundcolor=:transparent, labelcolor=fg_color, framecolor=fg_color)
@@ -180,21 +198,27 @@ theme(:fonts)
 		end
 		
 		name = row.name[1]
-		offset = (3., 0.)
+		offset = (12., 0.)
+		fontsize=24
+		color = fg_color
+		align = (:left, :center)
+
 
 		if name ∈ ["Sculptor", "Ursa Minor", "Fornax"]
-			color = COLORS[4]
+			color = COLORS[9]
 			fontsize=48
+			offset = (24., 0.)
+		elseif key ∈ classical_systems
+			offset = (24., 0.)
 		elseif name ∈ ["LMC", "SMC"]
-			fontsize=36 
-			color=COLORS[5]
-			offset = (0., 0.)
-		else
-			color = fg_color
-			fontsize=24
+			continue
+			# align = (:center, :center)
+			# fontsize=36 
+			# color= fg_color #COLORS[5]
+			# offset = (0., 0.)
 		end
 
-		text!(ax, -row.ll, row.bb, text=shorten_name(name), fontsize=fontsize, align=(:left, :center), offset=offset,  color=color)
+		text!(ax, -row.ll, row.bb, text=shorten_name(name), fontsize=fontsize, align=align, offset=offset,  color=color)
 	end
 	
 
@@ -203,7 +227,7 @@ end
 
 # ╔═╡ 82e8db20-91cc-43b4-8183-7e302ce74041
 @savefig "mw_satellites_onsky_all" let
-	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080))
+	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080), figure_padding = 0)
 	
 	ax = GeoAxis(fig[1,1];
 		dest = "+proj=hammer",
@@ -215,22 +239,25 @@ end
 		yticklabelsize=8,
 		xgridwidth=0.5,
 		ygridwidth=0.5,
+				 valign=:top,
+				 
 	)
 	xlims!(-180, 180)
 
-	scatter!(ax, -allcluster.ll, allcluster.bb, markersize=2, label="cluster")
+	scatter!(ax, -allcluster.ll, allcluster.bb, markersize=3/4*ms, label="cluster",
+			color=COLORS[4], marker=:o)
 
-	scatter!(ax, -confirmed_dwarfs.ll, confirmed_dwarfs.bb, markersize=3, label="dwarf")
-	scatter!(ax, -ambiguous.ll, ambiguous.bb, markersize=4, label="ambiguous")
+	scatter!(ax, -confirmed_dwarfs.ll, confirmed_dwarfs.bb,  label="dwarf", 
+			 markersize=ms, color=COLORS[1], marker=:rect)
+	scatter!(ax, -ambiguous.ll, ambiguous.bb, label="ambiguous",
+			 markersize=ms/3*2, color=:transparent, marker=:diamond, strokewidth=ms/8,
+			 strokecolor=COLORS[5]
+			)
 
-	scatter!(ax, -classicals.ll, classicals.bb, markersize=6, label="classical")
-	
+	scatter!(ax, -classicals.ll, classicals.bb, markersize=3/2*ms, label="classical",
+			 marker=:star5, color=COLORS[3]
+			)
 
-	for row in eachrow(magellanic)
-		color = ifelse(row.key == "lmc", COLORS[5], COLORS[5])
-		
-	
-	end
 
 	
 	Legend(fig[1, 1], ax, tellwidth=false, tellheight=false, halign=:right, valign=:bottom, nbanks=2, backgroundcolor=:transparent, labelcolor=fg_color, framecolor=fg_color)
@@ -242,13 +269,23 @@ end
 		end
 		
 		name = row.name[1]
-		offset = (3., 0.)
-
-		color = fg_color
+		offset = (12., 0.)
 		fontsize=24
+		color = fg_color
+		align = (:left, :center)
 
 
-		text!(ax, -row.ll, row.bb, text=shorten_name(name), fontsize=fontsize, align=(:left, :center), offset=offset,  color=color)
+		if key ∈ classical_systems
+			offset = (24., 0.)
+		elseif name ∈ ["LMC", "SMC"]
+			continue
+			# align = (:center, :center)
+			# fontsize=36 
+			# color= fg_color #COLORS[5]
+			# offset = (0., 0.)
+		end
+
+		text!(ax, -row.ll, row.bb, text=shorten_name(name), fontsize=fontsize, align=align, offset=offset,  color=color)
 	end
 	
 
@@ -293,6 +330,11 @@ end
 # ╠═a7b54b66-9d44-46ab-a4c2-d9326acccda5
 # ╠═7564bd74-d182-4d89-bf57-2d0fe286bc7a
 # ╠═fa060f84-e39f-4d6a-a6d8-421f70a3c20e
+# ╠═bddcd6bb-5dba-4b6e-ba07-e21df433f812
+# ╠═d415fac3-d155-44fc-86af-35e6ead45734
+# ╠═5097c6a8-c67c-4564-8b69-4605ea265579
+# ╠═b7fd5546-ecc9-444b-9862-1954c3c762e1
+# ╠═6aef99ed-bcf9-4977-a17f-1efa44a9925d
 # ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
 # ╠═82e8db20-91cc-43b4-8183-7e302ce74041
 # ╠═25514746-3762-4cb0-8b03-0e3e38d82a69

@@ -113,7 +113,7 @@ begin
 end
 
 # ╔═╡ 667937b2-006f-4429-b134-91934adb53c8
-stellar_profile = LilGuys.Exp2D(R_s=0.10) # best fit to present day
+stellar_profile = LilGuys.Exp2D(R_s=0.26) # best fit to present day
 
 # ╔═╡ bdd43353-da4c-48fb-bb67-b2aec628dd71
 md"""
@@ -410,9 +410,6 @@ function calc_σv_star_mean(p; stellar_profile=stellar_profile, R_min=0, R_max=I
 	sqrt(weighted_σ2 / Mtot)
 end
 
-# ╔═╡ 0ad2bc38-9145-4e3a-8a07-2db6dad4404d
-0.04 * LilGuys.V2KMS
-
 # ╔═╡ 9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
 lc_err = 0.10
 
@@ -522,7 +519,14 @@ md"""
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = OrderedDict(
 	:mean => NFW(v_circ_max = 22 / V2KMS, r_circ_max = 3.9),
+	:heavier => NFW(v_circ_max = 35 / V2KMS, r_circ_max=6.9)
 )
+
+# ╔═╡ f81eeb5a-0059-45a3-b9b5-c0b3307ccc08
+22 * 10^0.2
+
+# ╔═╡ 2f350388-6e0f-424b-a444-5a78fe08c5b1
+LilGuys.Ludlow.solve_rmax(35/V2KMS)
 
 # ╔═╡ 3a4ae3e1-4b7c-492c-b9da-eda05bcbfa35
 for (label, halo) in halos_ex
@@ -644,6 +648,9 @@ end
 
 # ╔═╡ 8f5a2253-18da-49c6-b1ee-94e9e7ababb2
 lMs_to_lVc_err
+
+# ╔═╡ 45bd5f50-ad6f-491b-89fb-caa16565e8c4
+0.446 / LilGuys.R_h(LilGuys.Exp2D())
 
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
 let
@@ -900,7 +907,6 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═b665cd0f-8669-4520-974b-9ab9fba8ad15
 # ╠═5cdc46ec-6d1b-403f-a3a2-a15b2c82ee16
 # ╠═0af29495-0d78-4e32-bbf9-69587e8ae222
-# ╠═0ad2bc38-9145-4e3a-8a07-2db6dad4404d
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
 # ╠═4e1290b5-171e-4715-a87b-28a2cfcb4325
 # ╠═9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
@@ -914,6 +920,8 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
 # ╠═d6e23609-87f7-466c-b865-0aa1da1ecb9d
 # ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
+# ╠═f81eeb5a-0059-45a3-b9b5-c0b3307ccc08
+# ╠═2f350388-6e0f-424b-a444-5a78fe08c5b1
 # ╠═a018f6f1-5222-4124-894b-715cb8b7b310
 # ╠═3a4ae3e1-4b7c-492c-b9da-eda05bcbfa35
 # ╠═d08cbd1a-7635-4679-aa95-6b17f34970ba
@@ -926,6 +934,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
 # ╠═6cc2372a-208b-4839-b5c6-6f625fcc483c
 # ╠═8f5a2253-18da-49c6-b1ee-94e9e7ababb2
+# ╠═45bd5f50-ad6f-491b-89fb-caa16565e8c4
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═41283b0b-6563-4b2b-b978-4e65f32c8240
 # ╠═fb835e20-957e-4866-8ba6-2e64df38f68e
