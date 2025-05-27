@@ -57,12 +57,12 @@ function get_normalization(prof)
 end
 
 # ╔═╡ 89cc7dd4-6643-463d-9fa3-bfc2859476f2
-function compare_profiles(prof_i, prof, r_b) 
+function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing) 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel=L"\log\ R \ /\ \textrm{arcmin}",
-		ylabel = L"\log \Sigma",
-		limits=((-0.3, 2.5), (-9, 1))
+		xlabel="log radius / arcmin",
+		ylabel = "log surface density",
+		limits=((-0.3, 2.5), (-10, 0.5)),
 	)
 
 	errorscatter!(prof_expected.log_R, prof_expected.log_Sigma .+ get_normalization(prof_expected),
@@ -72,7 +72,7 @@ function compare_profiles(prof_i, prof, r_b)
 	)
 
 
-	dy = get_normalization(prof)
+	dy = get_normalization(prof) + norm_shift
 	
 	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, color=COLORS[2], linestyle=:dot,
 			label="initial")
@@ -80,24 +80,41 @@ function compare_profiles(prof_i, prof, r_b)
 	lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
 			label="final")
 
-	vlines!(log10(r_b), color=:grey, label="break radius", linewidth=3, linestyle=:dot)
+	if !isnothing(break_height)
+		arrows!([log10(r_b) ], [break_height], [0], [-2], color=COLORS[2], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
+		text!([log10(r_b) ], [break_height],text="break", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
+	end
 
-	axislegend(position=:lb, margin=theme(:Legend).padding, patchsize=(48*1.5, 24))
+	if !isnothing(r_j)
+		arrows!([log10(r_j) ], [break_height], [0], [-2], color=COLORS[1], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
+		text!([log10(r_j) ], [break_height],text="jacobi", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
+	end
+
+	
+	axislegend(position=:lb, margin=theme(:Legend).padding, patchsize=(36*1.5, 36/2))
 	fig
 end
 
+# ╔═╡ 64073fad-7ebd-484b-ba95-c740186f02d7
+function get_r_j(haloname, orbitname)
+	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/ursa_minor/$haloname/$orbitname/")
+
+	props = TOML.parsefile(model_dir * "jacobi.toml")
+	return props["r_J"]
+end
+
 # ╔═╡ 4851087d-2679-4409-b44f-cb22f778974e
-function compare_profiles(halo::String, orbit::String, star)
+function compare_profiles(halo::String, orbit::String, star; kwargs...)
 	prof_i, prof_f = load_profile(halo, orbit, star)
 	r_b = get_r_b(halo, orbit, star)
-	compare_profiles(prof_i, prof_f, r_b)
+	compare_profiles(prof_i, prof_f, r_b; kwargs...)
 end
 
 # ╔═╡ 4e76a22b-631a-4478-b3bd-47be18496b3a
-compare_profiles("1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.15")
+@savefig "umi_i_f_mean" compare_profiles("1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10", norm_shift=-0.3, break_height= - 4, r_j=get_r_j("1e6_v37_r5.0", "orbit_mean.2"))
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-compare_profiles("1e6_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.10")
+@savefig "umi_i_f_smallperi" compare_profiles("1e6_v38_r4.0", "orbit_smallperi.3", "exp2d_rs0.08", norm_shift=-0.2, break_height=-4, r_j=get_r_j("1e6_v38_r4.0", "orbit_smallperi.3", ))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -110,6 +127,7 @@ compare_profiles("1e6_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.10")
 # ╠═43c973e6-ad30-4bf8-93b3-4924bc498927
 # ╠═f875e0e9-2f05-4420-8f40-76284be58e03
 # ╠═89cc7dd4-6643-463d-9fa3-bfc2859476f2
+# ╠═64073fad-7ebd-484b-ba95-c740186f02d7
 # ╠═4851087d-2679-4409-b44f-cb22f778974e
 # ╠═4e76a22b-631a-4478-b3bd-47be18496b3a
 # ╠═3317cfec-be70-418c-944a-0a6741f03cf3

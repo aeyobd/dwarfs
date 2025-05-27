@@ -31,9 +31,6 @@ include("./style.jl")
 # ╔═╡ 15ef3ea9-fe17-44d1-924e-c18722ddf35a
 import TOML
 
-# ╔═╡ 20bc3e9a-ea85-46f3-9a56-1fae435a8575
-set_theme!(theme_arya())
-
 # ╔═╡ b9b99de2-1c01-4562-8295-75b770e232dc
 md"""
 # Utils
@@ -114,16 +111,31 @@ end
 # ╔═╡ efae8808-1768-40c1-a11d-253402cdfe43
 function compare_x_y_traj(trajectories; r_max=300, kwargs...)
     fig = Figure()
-    ax = Axis(fig[1, 1], xlabel="y / kpc", ylabel="z / kpc",
+  	ax2 = Axis(fig[1, 1], xlabel="x / kpc", ylabel="z / kpc",
         xgridvisible=false, ygridvisible=false, 
-        aspect=DataAspect(),
+			  limits=(-1, 1., -1, 1) .* r_max,
+    )
+
+    for (i, (label, traj)) in enumerate(trajectories)
+        plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
+    end
+
+	
+    ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
+        xgridvisible=false, ygridvisible=false, 
 			  limits=(-1, 1, -1, 1) .* r_max,
+			  aspect = DataAspect()
     )
     
     for (i, (label, traj)) in enumerate(trajectories)
         plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
-        
+	hideydecorations!(ticks=false, minorticks=false)
+
+	colsize!(fig.layout, 1, Aspect(1, 1.0))
+	colsize!(fig.layout, 2, Aspect(1, 1.0))
+	linkyaxes!(ax, ax2)
+  
     fig
 end
 
@@ -136,7 +148,7 @@ function compare_r_t_traj(trajectories; limits = (nothing, nothing), colors=COLO
     )
 
     for (i, (label, traj)) in enumerate(trajectories)
-        plot_r_t_traj!(traj, label=label, color=colors[i]; kwargs...)
+        plot_r_t_traj!(traj, label=label =>(; alpha=0.5, ), color=colors[i]; kwargs...)
     end
     
     fig
@@ -150,44 +162,105 @@ trajectories = OrderedDict(
 	 "w/ LMC" => traj_w_lmc,
 )
 
+# ╔═╡ 859df394-8b33-410a-9979-ef5fdac72369
+CairoMakie.activate!(type=:png)
+
 # ╔═╡ a1c44523-e31e-4b50-bb00-db80ab080004
 md"""
 # Plots
 """
 
-# ╔═╡ fb3f61f2-f425-40b4-9983-dfc7528df6ab
-@savefig "umi_mc_orbits_xy" let
+# ╔═╡ ce0314a1-a07e-4608-9ee4-a2db61dc6043
+function get_nbody_orbit(model)
+	positions, times = HDF5.h5open(joinpath(ENV["DWARFS_ROOT"], "analysis/$model/centres.hdf5")) do f
+		return f["positions"][:, :], f["times"][:]
+	end
+
+	idx_f = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis/$model/orbital_properties.toml"))["idx_f"]
+
+	return positions[:, 1:idx_f], times[1:idx_f]
+end
+						
+
+# ╔═╡ 61e3ae56-873c-48a4-8058-34f792660df8
+orbit_nbody = get_nbody_orbit("ursa_minor/1e6_v38_r4.0/orbit_smallperi.3")
+
+# ╔═╡ 43ef72f8-7d7e-4976-82ce-74831bf0cbeb
+@savefig "umi_mc_orbits_xy_act" let
 
 	fig = compare_x_y_traj(Dict("fiducial" => traj_fiducial), t_min=-5/T2GYR, r_max=120, thin=2,)
 
-	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
+	scatter!(pos_0[2], pos_0[3],  color=:black)
+	ax = fig.content[1]
+
+
 	
 	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(24, 0), fontsize=0.8*theme(:fontsize)[])
 
+	o = orbit_nbody[1][:, orbit_nbody[2] .- orbit_nbody[2][end] .> -5/T2GYR]
+	
+	lines!(ax, o[1, :], o[3, :])
+
+	Makie.current_axis!(fig.content[2])
+
+	lines!(o[2, :], o[3, :])
+	scatter!(ax, pos_0[1], pos_0[3],  color=:black)
+
+	
+	resize_to_layout!(fig)
 
 	fig
 end
 
 # ╔═╡ 1d3f999b-b25d-49dc-b1ca-7dfdbf1d3d59
-compare_r_t_traj(["" => traj_fiducial], thin=3)
+let
+	fig = compare_r_t_traj(["" => traj_fiducial], thin=3)
+	lines!((orbit_nbody[2] .- orbit_nbody[2][end]) * T2GYR, radii(orbit_nbody[1]))
+
+	fig
+end
 
 # ╔═╡ 0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
-let
-	fig = compare_x_y_traj(trajectories, t_min=-5/T2GYR, thin=2 )
+@savefig "umi_mc_orbits_w_lmc_yz" let
+	fig = Figure()
+
+	r_max=150
+	
+    ax = Axis(fig[1, 1], xlabel="y / kpc", ylabel="z / kpc",
+        xgridvisible=false, ygridvisible=false, 
+			  limits=(-1, 1, -1, 1) .* r_max,
+			  aspect = DataAspect()
+    )
+    
+	  for (i, (label, traj)) in enumerate(trajectories)
+        plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i], t_min=-5/T2GYR)
+    end
 
 	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, t_min=-5/T2GYR)
-
 	axislegend(position=:lb, merge=true, unique=true, margin=(19,19,19,19))
+
+
+
 	fig
 end
 
 # ╔═╡ 515bbb85-29e6-4fd9-a031-98fc45e0f426
-let
+@savefig "umi_mc_orbits_w_lmc" let
 	fig = compare_x_y_traj(trajectories, t_min=-10/T2GYR, thin=2 )
+	
+	#ax.xticks = collect(-100:100:100)
+	ax = fig.content[1]
 
 	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, t_min=-10/T2GYR)
+	axislegend(position=:rb, merge=true, unique=true, margin=(19,19,19,19))
 
-	axislegend(position=:lt, merge=true, unique=true, margin=(19,19,19,19))
+	CairoMakie.current_axis!(fig.content[1])
+
+	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, x_direction=1, t_min=-10/T2GYR)
+
+
+	resize_to_layout!(fig)
+
 	fig
 end
 
@@ -210,19 +283,12 @@ trajectories_radii = OrderedDict(
 
 )
 
-# ╔═╡ f48b494b-8b65-47d8-aa8f-3ea37e8a48ed
-let 
-	fig = compare_r_t_traj(["" => traj_fiducial], limits=(-5, 0, 0, 100), colors=[COLORS[1], COLORS[2], :black], thin=2)
-
-	vlines!(-0.12, color=:black)
-
-	fig
-end
-
 # ╔═╡ a876edb6-d0c4-4420-95b2-09c90f33a4b5
 let 
-	fig = compare_r_t_traj(trajectories_radii, limits=(-4, 0, 0, 300), colors=[COLORS[1], COLORS[2], :black], thin=2)
+	fig = compare_r_t_traj(trajectories_radii, limits=(-10, 0, 0, 300), colors=[COLORS[1], COLORS[2], :black], thin=2)
 
+	axislegend(position=:rt, merge=true, unique=true)
+	
 	fig
 end
 
@@ -230,7 +296,6 @@ end
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═15ef3ea9-fe17-44d1-924e-c18722ddf35a
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
-# ╠═20bc3e9a-ea85-46f3-9a56-1fae435a8575
 # ╠═c2c320b8-3b14-4e49-9048-92a546a6b275
 # ╠═a1606881-5138-4c90-b66f-34bcffd563eb
 # ╠═2d94b40a-2a38-48d5-9b7e-6b493d504aec
@@ -250,13 +315,15 @@ end
 # ╠═70d81f4a-8e01-45b1-a695-234d0249cca9
 # ╠═1014f681-8014-4df2-bd07-bce4f3348056
 # ╠═ff89d7db-c954-48b8-b87a-446ccfb2d79b
+# ╠═859df394-8b33-410a-9979-ef5fdac72369
 # ╟─a1c44523-e31e-4b50-bb00-db80ab080004
-# ╠═fb3f61f2-f425-40b4-9983-dfc7528df6ab
+# ╠═ce0314a1-a07e-4608-9ee4-a2db61dc6043
+# ╠═61e3ae56-873c-48a4-8058-34f792660df8
+# ╠═43ef72f8-7d7e-4976-82ce-74831bf0cbeb
 # ╠═1d3f999b-b25d-49dc-b1ca-7dfdbf1d3d59
 # ╠═0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
 # ╠═515bbb85-29e6-4fd9-a031-98fc45e0f426
 # ╠═c1062412-37ff-488e-a423-67c5adaa8e66
 # ╠═34e480a6-8e9e-4278-80a2-c788ccb01327
 # ╠═081e6a08-92e3-4f9d-bc8e-7ff80ca74693
-# ╠═f48b494b-8b65-47d8-aa8f-3ea37e8a48ed
 # ╠═a876edb6-d0c4-4420-95b2-09c90f33a4b5

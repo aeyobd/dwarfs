@@ -34,6 +34,9 @@ md"""
 The goal of this script is to compare the initial and final simulation density profiles for a given stars model against the density profile and compare the velocity dispersions against observations. This enables a quick iteration to find the appropriate stellar profile and halo to match present-day stuctural properties.
 """
 
+# ╔═╡ 0ec88057-7dab-45a3-a4c0-cf4cd7d86590
+import HDF5
+
 # ╔═╡ b47c355b-48d3-499f-9333-e469878eb4f2
 lmc = false
 
@@ -134,7 +137,9 @@ end
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
 
 # ╔═╡ dc6e60d9-7203-48a5-b277-9555c5773851
-times = Output(joinpath(model_stars_dir, "../..")).times
+times = HDF5.h5open(joinpath(model_stars_dir, "../../centres.hdf5")) do f
+	return f["times"][:]
+end
 
 # ╔═╡ c4c8bb3c-7460-4946-b025-0f56f5502946
 time_f = times[orbital_props["idx_f"]]
@@ -152,9 +157,6 @@ md"""
 # ╔═╡ 940b085c-e78c-4800-8b3e-bdd13ed970d1
 n_center = 13
 
-# ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
-norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]])
-
 # ╔═╡ ab47f03b-4eac-439d-869e-1ee6c2e22ebe
 norm_obs = LilGuys.mean(prof_obs.log_Sigma[1:n_center])
 
@@ -163,6 +165,12 @@ CairoMakie.activate!(type=:png)
 
 # ╔═╡ acc308e5-a3e5-46d7-9311-34f0c4ee7c54
 ymin = -8
+
+# ╔═╡ 7671fc47-15d4-4970-98a7-b0ad64f1114c
+dy = -0.2
+
+# ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
+norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]]) + dy
 
 # ╔═╡ 5876165d-6232-436b-aea2-a9636f1557b6
 
@@ -209,7 +217,9 @@ let
 	if @isdefined R_b
 		arrows!([log10(R_b)], [-7], [0], [-0.5])
 		text!([log10(R_b)], [-7], text=L"R_b", fontsize=8)
+	end
 	
+	if @isdefined r_J
 		arrows!([log10(r_J)], [-7], [0], [-0.5], color=COLORS[1])
 		text!([log10(r_J)], [-7], text=L"R_j", fontsize=8, color=COLORS[1])
 	end
@@ -217,6 +227,9 @@ let
 	@savefig "Sigma_vs_obs_i_f"
 	fig
 end
+
+# ╔═╡ 250f4593-5ac1-472b-bdc1-95fd28ce2466
+orbital_props["distance_f"]
 
 # ╔═╡ b8796e05-b149-4aed-ad68-c61f56c41093
 σ_obs = obs_props["sigma_v"]
@@ -240,6 +253,7 @@ end
 # ╟─1de31271-dcf3-4513-9786-04822fe99294
 # ╠═2aba5629-9e59-489e-9831-45868365fbed
 # ╠═7caa0c82-b2ed-45e7-a1a9-beb0b20a2e65
+# ╠═0ec88057-7dab-45a3-a4c0-cf4cd7d86590
 # ╠═b47c355b-48d3-499f-9333-e469878eb4f2
 # ╟─ce947244-6184-48a3-9635-5c5ec7734d6b
 # ╠═2820df64-e001-11ef-08e2-d730b6110af3
@@ -270,10 +284,12 @@ end
 # ╠═ab47f03b-4eac-439d-869e-1ee6c2e22ebe
 # ╠═60cc712c-fea1-4d19-b97d-d14a6b275a77
 # ╠═acc308e5-a3e5-46d7-9311-34f0c4ee7c54
+# ╠═7671fc47-15d4-4970-98a7-b0ad64f1114c
 # ╠═54724d9f-0619-4374-abbe-fa600fc5cc92
 # ╠═5876165d-6232-436b-aea2-a9636f1557b6
 # ╟─e86ff7fe-b424-4edf-bf23-264a327e3926
 # ╠═41bcae3a-d1ea-4620-a2d0-aa9eddfe8554
 # ╠═7bc27716-2c02-47a3-9e04-b9d55a526000
+# ╠═250f4593-5ac1-472b-bdc1-95fd28ce2466
 # ╠═5205de59-6cda-47c1-a988-83b6d5f52b87
 # ╠═b8796e05-b149-4aed-ad68-c61f56c41093

@@ -25,6 +25,10 @@ function get_args()
             help="exponential cutoff radius in units of scale radius"
             arg_type=Float64
             default=100
+        "-x", "--xi"
+            help="exponential cutoff strength"
+            arg_type=Float64
+            default=1
         "-b", "--beta"
             help="Velocity anisotropy parameter"
             arg_type=Float64
@@ -49,6 +53,9 @@ function get_args()
         end
         if args["cutoff"] != 100
             filename = filename * "_t$(args["cutoff"])"
+        end
+        if args["xi"] != 1.
+            filename = filename * "_xi$(args["xi"])"
         end
 
         @info "Saving to $filename.hdf5"
@@ -88,7 +95,7 @@ function main()
     pot = agama.Potential(type="Spheroid", densityNorm=rho_s,
         gamma=1, beta=3, alpha=1, scaleRadius=r_s,
         outerCutoffRadius = cutoff*r_s,
-        cutoffStrength=1)
+        cutoffStrength=args["xi"])
 
     df = agama.DistributionFunction(type="QuasiSpherical", potential=pot,
         beta0=args["beta"], r_a=args["r-a"])
@@ -107,7 +114,9 @@ function main()
     LilGuys.write(args["output"], snap)
 
     halo_kwargs = Dict(
-       "profile.TruncNFW" => Dict("trunc" => cutoff, "M_s"=>M_s, "r_s"=>r_s),
+        "profile" => Dict(
+                          "TruncNFW" => Dict("trunc" => cutoff, "M_s"=>M_s, "r_s"=>r_s, "xi"=>args["xi"])
+        ),
        "beta0" => args["beta"],
        "r_a_om" => args["r-a"],
       )

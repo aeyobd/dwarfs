@@ -23,7 +23,7 @@ include("./style.jl")
 import TOML
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-CairoMakie.activate!(type=:png)
+CairoMakie.activate!(type=:svg)
 
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
 prof_expected = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/sculptor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
@@ -48,6 +48,17 @@ function get_r_b(haloname, orbitname, starsname)
 	return LilGuys.kpc2arcmin(r_b, props["distance_f"])	
 end
 
+# ╔═╡ fe3bc6ee-14ed-4006-b3ec-f068d2492da4
+function get_r_j(haloname, orbitname)
+	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/$haloname/$orbitname/")
+
+	props = TOML.parsefile(model_dir * "jacobi.toml")
+	return props["r_J"]
+end
+
+# ╔═╡ 991fe214-c10c-44a6-a284-0356ef993412
+get_r_j("1e7_V31_r3.2", "orbit_smallperi", )
+
 # ╔═╡ 43c973e6-ad30-4bf8-93b3-4924bc498927
 readdir("/cosma/home/durham/dc-boye1/data/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_mean/stars/")
 
@@ -56,13 +67,16 @@ function get_normalization(prof)
 	return -LilGuys.mean(prof.log_Sigma[1:5])
 end
 
+# ╔═╡ 56da34d4-7ccd-41f0-98b4-31bb1afc8a49
+theme(:size)
+
 # ╔═╡ 89cc7dd4-6643-463d-9fa3-bfc2859476f2
-function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0) 
+function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing) 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel=L"\log\ R \ /\ \textrm{arcmin}",
-		ylabel = L"\log \Sigma",
-		limits=((-0.3, 2.2), (-10, 0.5)),
+		xlabel="log radius / arcmin",
+		ylabel = "log surface density",
+		limits=((-0.3, 2.5), (-10, 0.5)),
 	)
 
 	errorscatter!(prof_expected.log_R, prof_expected.log_Sigma .+ get_normalization(prof_expected),
@@ -74,6 +88,8 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0)
 
 	dy = get_normalization(prof) + norm_shift
 	
+	@info dy - get_normalization(prof_expected)
+	
 	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, color=COLORS[2], linestyle=:dot,
 			label="initial")
 
@@ -83,6 +99,11 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0)
 	if !isnothing(break_height)
 		arrows!([log10(r_b) ], [break_height], [0], [-2], color=COLORS[2], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
 		text!([log10(r_b) ], [break_height],text="break", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
+	end
+
+	if !isnothing(r_j)
+		arrows!([log10(r_j) ], [break_height], [0], [-2], color=COLORS[1], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
+		text!([log10(r_j) ], [break_height],text="jacobi", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
 	end
 
 	axislegend(position=:lb, margin=theme(:Legend).padding, patchsize=(36*1.5, 36/2))
@@ -97,10 +118,19 @@ function compare_profiles(halo::String, orbit::String, star; kwargs...)
 end
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.08", norm_shift=0.3)
+@savefig "scl_smallperi_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=-4.5, r_j=get_r_j("1e7_V31_r3.2", "orbit_smallperi"))
+
+# ╔═╡ f053b7f9-f934-4cd4-ae46-32a0a373ff7e
+@savefig "scl_mean_i_f" compare_profiles("1e7_V31_r3.2", "orbit_mean", "exp2d_rs0.10", norm_shift=0.15, break_height=-5, r_j=get_r_j("1e7_V31_r3.2", "orbit_smallperi"))
+
+# ╔═╡ fc45829c-bf28-4d7b-9bea-e223e4b29e7d
+@savefig "scl_plummer_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "plummer_rs0.20", norm_shift=0.0, break_height=-1.5)
 
 # ╔═╡ 5f989e91-8870-462e-a363-767be64dac5c
-compare_profiles("1e7_V31_r4.2", "vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.13", break_height=nothing)
+@savefig "scl_lmc_i_f" compare_profiles("1e7_V31_r4.2", "vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.10", break_height=nothing, norm_shift=0.1)
+
+# ╔═╡ fab0c970-7d9a-4ed6-9632-72a7b0d52c5b
+LilGuys.Plummer(r_s=0.3)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -110,9 +140,15 @@ compare_profiles("1e7_V31_r4.2", "vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.
 # ╠═65d3653d-5734-40ec-a057-aaa1e509968a
 # ╠═8d90a98b-09df-4834-ab9d-0aed44d6206b
 # ╠═b9e03109-9f49-4897-b26c-e31698a5fe49
+# ╠═fe3bc6ee-14ed-4006-b3ec-f068d2492da4
+# ╠═991fe214-c10c-44a6-a284-0356ef993412
 # ╠═43c973e6-ad30-4bf8-93b3-4924bc498927
 # ╠═f875e0e9-2f05-4420-8f40-76284be58e03
+# ╠═56da34d4-7ccd-41f0-98b4-31bb1afc8a49
 # ╠═89cc7dd4-6643-463d-9fa3-bfc2859476f2
 # ╠═6e17334f-86a8-470b-a9aa-30c382b0e5ae
 # ╠═3317cfec-be70-418c-944a-0a6741f03cf3
+# ╠═f053b7f9-f934-4cd4-ae46-32a0a373ff7e
+# ╠═fc45829c-bf28-4d7b-9bea-e223e4b29e7d
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
+# ╠═fab0c970-7d9a-4ed6-9632-72a7b0d52c5b

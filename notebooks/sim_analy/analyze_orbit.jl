@@ -98,7 +98,7 @@ end
 # ╔═╡ d94663e8-b30e-4712-8a3e-6ef7f954f141
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	haloname = TextField(default="1e6_v37_r5.0"),
+	haloname = TextField(default="1e6_v38_r4.0"),
 	orbitname = TextField(default="orbit_"),
 	t_min = NumberField(-10:0.1:10),
 ))
@@ -437,6 +437,9 @@ for property in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
 	@printf "%20s\t%8.4f\t%8.4f\t%8.4f\t%8.4f\n" property obs_today[property] obs_today[property * "_err"]  obs_c[idx_f, property]  dy
 end
 
+# ╔═╡ 1def5368-73c5-460f-9323-86f2c093e6d1
+idx_max = min(idx_f+2, length(t))
+
 # ╔═╡ cdabdc7d-76a1-45f5-b83a-2454576d3964
 let
 
@@ -448,7 +451,7 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f
+		idx = idx_f-3:idx_max
 	
 		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=log10.(χ2[idx]))
 		
@@ -473,7 +476,7 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f
+		idx = idx_f-3:idx_max
 	
 		scatterlines!(obs_c[idx, x], obs_c[idx, y], color=times[idx])
 		
@@ -501,7 +504,7 @@ let
 	global obs_c_new, t_best, idx_best
 
 	
-	ts = LinRange(times[idx_f-1], times[idx_f], 1000)
+	ts = LinRange(times[idx_f-1], times[idx_max], 1000)
 
 	obs_c_new = DataFrame()
 
@@ -535,7 +538,7 @@ let
 			ylabel=y
 		)
 	
-		idx = idx_f-3:idx_f
+		idx = idx_f-3:idx_max
 	
 		scatterlines!(times[idx], obs_c[idx, y], color=log10.(χ2[idx]))
 		
@@ -766,6 +769,7 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═54cf5233-a955-4831-86ad-23b72f15789d
 # ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
 # ╠═891f31ed-5565-4f43-ab82-b8bc3a76c1cf
+# ╠═1def5368-73c5-460f-9323-86f2c093e6d1
 # ╠═ca193997-61c3-4302-a200-4e7d4e777521
 # ╠═225a8adb-82ee-4479-806e-15796e2b08e2
 # ╠═293090a7-8ee0-442e-b70f-e6b7750ab319

@@ -86,7 +86,11 @@ model_dir = joinpath(ENV["DWARFS_ROOT"], "simulations", inputs.modelname)
 name = "initial"
 
 # ╔═╡ 8b79ec3a-73d7-4dd6-8c91-8d3358f7896e
-paramname = "../halo.toml"
+paramname = if isfile(joinpath(model_dir, "halo.toml"))
+	"halo.toml"
+elseif isfile(joinpath(model_dir, "../halo.toml"))
+	"../halo.toml"
+end
 
 # ╔═╡ eb17e47b-b650-4362-ba29-77344e37bc48
 md"""
@@ -156,48 +160,7 @@ props.r_circ_max
 0.044 * 0.53612788
 
 # ╔═╡ bc127b27-c573-462b-84f1-66890391b49b
-
-
-# ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
-let 
-	fig = Figure(
-		size=(4*72, 4*72)
-	)
-	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
-
-	
-	log_r = LinRange(-2, 2, 1000)
-
-	lines!(log10.(prof.radii), lguys.circular_velocity(prof) .* V2KMS, label="snapshot")
-
-	lines!(log_r, lguys.V2KMS * lguys.v_circ.(halo, 10 .^ log_r), label="analytic")
-
-	scatter!(log10.(props.r_circ_max), props.v_circ_max * lguys.V2KMS, label="max; observed")
-	
-	scatter!(log10.(lguys.r_circ_max(halo)), lguys.v_circ_max(halo) * lguys.V2KMS, label="max; halo")
-
-	hidexdecorations!(ticks=false, minorticks=false)
-	axislegend()
-
-	
-	ax2 = Axis(fig[2,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"d v / v")
-	ax2.limits=(nothing, nothing, -0.2, 0.2)
-
-	y = lguys.circular_velocity(prof)
-	x = log10.(prof.radii)
-	ye = v_circ.(halo, 10 .^ x)
-
-	res = (y .- ye) ./ ye
-
-	err = lguys.sym_error.(y) ./ ye
-
-	errorscatter!(x, res, yerror=err)
-
-	rowsize!(fig.layout, 2, Relative(0.3))
-
-	linkxaxes!(ax, ax2)
-	fig
-end
+10*16
 
 # ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
 md"""
@@ -247,26 +210,6 @@ end
 
 # ╔═╡ 09139e38-fdb7-4754-9cc0-79e13a131b08
 12*3600
-
-# ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
-let 
-	fig = Figure()
-
-	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
-	limits=(-2, 2, -12, 2)
-	)
-
-	log_r = LinRange(-2, 3, 1000)
-	y = log10.(lguys.density.(halo, 10 .^ log_r))
-	lines!(log_r, y, label="NFW", color="black", linestyle=:dot)
-
-	
-	lines!(density_prof.log_r, log10.(density_prof.rho))
-
-	axislegend(ax)
-	fig
-
-end
 
 # ╔═╡ 2b7c7517-4b28-4db0-860b-dc6e5e514e6c
 LilGuys.mean(radii(snap) .> 2)
@@ -334,6 +277,73 @@ if halo isa lguys.ExpCusp
 	R200 = 3halo.r_s
 else
 	R200 = lguys.R200(halo)
+end
+
+# ╔═╡ 0e89851e-763f-495b-b677-b664501a17ef
+let 
+	fig = Figure(
+		size=(4*72, 4*72)
+	)
+	ax = Axis(fig[1,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"$V_\textrm{circ}$ / km s$^{-1}$")
+
+	
+	log_r = LinRange(-2, 2, 1000)
+
+	lines!(log10.(prof.radii), lguys.circular_velocity(prof) .* V2KMS, label="snapshot")
+
+	lines!(log_r, lguys.V2KMS * lguys.v_circ.(halo, 10 .^ log_r), label="NFW")
+	lines!(log_r, lguys.V2KMS * lguys.v_circ.(halo_in, 10 .^ log_r), label="analytic")
+
+	scatter!(log10.(props.r_circ_max), props.v_circ_max * lguys.V2KMS, label="max; observed")
+	
+	scatter!(log10.(lguys.r_circ_max(halo)), lguys.v_circ_max(halo) * lguys.V2KMS, label="max; halo")
+
+	vlines!(log10(R200))
+
+	hidexdecorations!(ticks=false, minorticks=false)
+	axislegend(position=:rb)
+
+	
+	ax2 = Axis(fig[2,1], xlabel=L"\log \; r / \textrm{kpc}", ylabel=L"d v / v")
+	ax2.limits=(nothing, nothing, -0.2, 0.2)
+
+	y = lguys.circular_velocity(prof)
+	x = log10.(prof.radii)
+	ye = v_circ.(halo, 10 .^ x)
+
+	res = (y .- ye) ./ ye
+
+	err = lguys.sym_error.(y) ./ ye
+
+	errorscatter!(x, res, yerror=err)
+
+	rowsize!(fig.layout, 2, Relative(0.3))
+
+	linkxaxes!(ax, ax2)
+	fig
+end
+
+# ╔═╡ 60f8d0cd-ca8e-457c-98b9-1ee23645f9dd
+let 
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
+	limits=(-2, 2, -12, 2)
+	)
+
+	log_r = LinRange(-2, 3, 1000)
+	y = log10.(lguys.density.(halo, 10 .^ log_r))
+	lines!(log_r, y, label="NFW", color="black", linestyle=:dot)
+	y = log10.(lguys.density.(halo_in, 10 .^ log_r))
+	lines!(log_r, y, label="expected", color="black", linestyle=:dash)
+
+	
+	lines!(density_prof.log_r, log10.(density_prof.rho))
+
+	vlines!(log10(R200))
+	axislegend(ax)
+	fig
+
 end
 
 # ╔═╡ 233c5aca-4966-4ba5-b5ac-f5d0e0a727dc

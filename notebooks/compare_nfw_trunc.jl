@@ -19,6 +19,38 @@ using OrderedCollections
 # ╔═╡ 1a510a83-6109-4021-8bd8-5a2dc9f4a890
 import LilGuys
 
+# ╔═╡ 2ebf7145-8f73-4d6a-9a86-c411092e0465
+Base.@kwdef struct NFWZeno <: LilGuys.SphericalProfile
+	m_a = LilGuys.A_NFW(1)
+	a = 1
+	b = 64
+	taper = :exp
+end
+
+# ╔═╡ 0b24d241-f874-477d-8e0e-35631d80422f
+
+function calc_ρ_nfw(halo, r)
+	return halo.m_a / (4π * LilGuys.A_NFW(1) * r * (halo.a + r)^2)
+end
+
+# ╔═╡ eb6721a8-9d17-4e1b-8665-e31e9a49c8f8
+function calc_ρ_e(halo, r)
+	ρ_b = calc_ρ_nfw(halo, halo.b)
+
+	b = halo.b
+	γ = b/(b+halo.a) - 1/2
+	return ρ_b * (b/r)^2 * exp(-2γ * (r/b - 1))
+end
+
+# ╔═╡ 1128a3fb-aa3d-48bc-8985-b090b5069bcb
+function LilGuys.density(halo::NFWZeno, r)
+	if r < halo.b
+		return calc_ρ_nfw(halo, r)
+	else
+		return calc_ρ_e(halo, r)
+	end
+end
+
 # ╔═╡ 20f425a2-5f1a-4097-b522-f5d25cf1f772
 h = LilGuys.NFW(v_circ_max=31/LilGuys.V2KMS, r_circ_max  = 4.2)
 
@@ -54,6 +86,9 @@ nfw_sharp = Agama.Potential(type="spheroid", alpha=1, beta=3, gamma=1, densityNo
 	outerCutoffRadius=Rvir, cutoffStrength=10
 )
 
+# ╔═╡ 16dc124c-2e1e-42dd-b3fb-bb2b92c2dbac
+halo_zeno = NFWZeno(b=Rvir, a=h.r_s, m_a=h.M_s*LilGuys.A_NFW(1))
+
 # ╔═╡ a469c963-8f5a-4973-ab0c-914bebe53465
 potentials = OrderedDict(
 	"NFW" => nfw,
@@ -74,13 +109,16 @@ let
 	)
 
 	x = LinRange(-2, log10(2Rvir), 1000)
+	r = 10 .^ x
 
 	for (label, pot) in potentials
-		r = 10 .^ x
 		y =  log10.(max.(0, Agama.density(pot, r' .* [1, 0, 0])))
 
 		lines!(x, y, label=label)
 	end
+
+	lines!(x, log10.(LilGuys.density.(halo_zeno, r)))
+	
 	hidexdecorations!(ticks=false, minorticks=false)
 
 	axislegend(position=:lb)
@@ -198,8 +236,20 @@ for (label, pot) in potentials
 	println(label, "\t",  (m_in)/mtot)
 end
 
+# ╔═╡ 622b521c-ce20-4239-942f-40c49df04e61
+let
+	mtot = LilGuys.mass(halo_zeno, 1000Rvir)
+	m_in = LilGuys.mass(halo_zeno, Rvir)
+
+	println("zeno", "\t",  (m_in)/mtot)
+end
+
 # ╔═╡ Cell order:
 # ╠═62c47b3c-3699-11f0-16dd-5d8818928d6b
+# ╠═2ebf7145-8f73-4d6a-9a86-c411092e0465
+# ╠═0b24d241-f874-477d-8e0e-35631d80422f
+# ╠═eb6721a8-9d17-4e1b-8665-e31e9a49c8f8
+# ╠═1128a3fb-aa3d-48bc-8985-b090b5069bcb
 # ╠═12111900-614e-4a81-8cbf-67c2a9a470e9
 # ╠═1a510a83-6109-4021-8bd8-5a2dc9f4a890
 # ╠═20f425a2-5f1a-4097-b522-f5d25cf1f772
@@ -211,6 +261,7 @@ end
 # ╠═14e61f2b-71a9-4219-94e2-f6c41b1380d2
 # ╠═8ac25b73-3052-4669-ba42-b7eadd25b013
 # ╠═88faf52b-984e-4c3b-aace-51aa02951420
+# ╠═16dc124c-2e1e-42dd-b3fb-bb2b92c2dbac
 # ╠═a469c963-8f5a-4973-ab0c-914bebe53465
 # ╠═3c01ae79-56ed-4c52-8330-6202cbfb37c4
 # ╠═d3e1ca46-9a25-4c08-b0e0-3c528b2cb9a2
@@ -222,3 +273,4 @@ end
 # ╠═596e747f-1ddb-4fd3-a358-054842575a98
 # ╠═13073a02-4ae6-41b6-8514-4a8393c1cb7c
 # ╠═1c37d00d-27a5-41db-816d-a58b8dac7671
+# ╠═622b521c-ce20-4239-942f-40c49df04e61

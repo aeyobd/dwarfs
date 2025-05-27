@@ -99,11 +99,6 @@ out =  Output(model_dir)
 # ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
 FIGDIR = joinpath(model_dir, "figures")
 
-# ╔═╡ 63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
-if !isdir(FIGDIR)
-mkdir(FIGDIR)
-end
-
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
@@ -223,7 +218,7 @@ let
 		yscale=log10,
 		yticks=[1, 10, 20, 30, 40, 50, 60],
 		yminorticks=[1:9; 10:2:60],
-		limits=((-2, 3), (5, 50)),
+		limits=((-2, 3), (1, 50)),
 		xgridvisible=false,
 		ygridvisible=false
 	)
@@ -239,7 +234,7 @@ let
 
 	α = 0.4
 	β = 0.65
-	x = LinRange(1, 0.1, 100)
+	x = LinRange(1, 0.01, 100)
 
 	y = @. 2^α * x^β * (1 + x^2)^(-α)
 	lines!(log10.(x .* r_max[1]), y .* v_max[1] * V2KMS,  label="EN21",
@@ -539,7 +534,6 @@ end
 # ╠═d010a230-7331-4afd-86dc-380da0e0f720
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 # ╠═1b87d662-da3c-4438-98eb-72dc93e32f6a
-# ╠═63b7c3a2-247e-41b3-8a52-b92fd7a3cffe
 # ╠═510706ac-ffbd-4996-af9e-67f1b910d51c
 # ╠═2470e05f-9215-45e4-88fc-daab0638272f
 # ╠═b0e336df-678a-4406-b294-0c353f3c0c38

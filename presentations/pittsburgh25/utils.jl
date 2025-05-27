@@ -78,18 +78,11 @@ end
 
 
 
-
-
-function compare_j24_samples(datasets, scatter_kwargs, observed_properties; 
-        age=12)
-	fig = Figure(
-		size = (1720, 800),
-	)
-
+function plot_tangent!(gs, datasets, scatter_kwargs, observed_properties)
     all_stars = first(datasets)[2]
 	# tangent
     dθ = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
-	ax = Axis(fig[1, 1], 
+	ax = Axis(gs,
 		xlabel=plot_labels[:xi_am], 
 		ylabel=plot_labels[:eta_am], 
 		#aspect=1, 
@@ -111,8 +104,18 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
     text!(b*cosd(θ), -b*sind(θ), text=L"6R_h", rotation=deg2rad(θ-90), 
           align = (:center, :bottom), color=:black, fontsize=0.8*theme(:fontsize)[])
 
-	
 
+    return ax
+end
+
+
+function compare_j24_samples(datasets, scatter_kwargs, observed_properties; 
+        age=12)
+	fig = Figure(
+		size = (1720, 800),
+	)
+
+    ax = plot_tangent!(fig[1,1], datasets, scatter_kwargs, observed_properties)
 
 	# cmd
     df_best = datasets[(collect∘keys)(datasets)[1]]

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -23,6 +23,9 @@ begin
 	using CairoMakie
 	using Arya
 end
+
+# ╔═╡ b8feefa7-8ec7-4c57-afb7-296aaf6aa24b
+using PyFITS
 
 # ╔═╡ 451c25f8-2a47-4503-a5c6-658b008d13c2
 using PlutoUI
@@ -47,6 +50,9 @@ This notebook double checks that there is minimal change to the stellar profile 
 md"""
 # Setup
 """
+
+# ╔═╡ 146a5666-cf82-45c7-ba56-bc8014cd41c7
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ feb6cc17-a25d-4ba8-a152-78412f422b80
 import TOML
@@ -127,15 +133,18 @@ md"""
 
 # ╔═╡ 83fbe8a1-5d95-458a-87f2-b1d5c66846d2
 begin 
-	stellar_profiles = lguys.read_structs_from_hdf5(joinpath(modeldir, "stars", starsname * "/stellar_profiles_3d.hdf5"), lguys.StellarProfile3D)
+	stellar_profiles = lguys.read_ordered_structs(joinpath(modeldir, "stars", starsname * "/stellar_profiles_3d.hdf5"), lguys.DensityProfile)
 	
-	snap_idxs = parse.(Int, first.(stellar_profiles))
-	stellar_profiles = last.(stellar_profiles)[sortperm(snap_idxs)]
-	snap_idxs = sort(snap_idxs)
+	
+	snap_idxs = first.(stellar_profiles)
+	stellar_profiles = last.(stellar_profiles)
 
 	snap_idxs, stellar_profiles
 end
 	
+
+# ╔═╡ 7ebfe65b-e717-4a06-ab73-3f0382af1251
+scalars = read_fits(joinpath(modeldir, "stars", starsname * "/stellar_profiles_3d_scalars.fits"))
 
 # ╔═╡ b4e107d1-5b14-4e64-80ce-a02ece3b41b7
 prob_df = lguys.read_hdf5_table(joinpath(modeldir, "stars", starsname, starsfile))
@@ -220,13 +229,13 @@ let
 	lines!(star_prof_f.log_r, log10.(star_prof_f.rho), label="final")
 
 	log_r_pred = LinRange(-2, 2, 1000)
-	ρ_s_pred = lguys.calc_ρ.(profile, 10 .^ log_r_pred)
+	ρ_s_pred = lguys.density.(profile, 10 .^ log_r_pred)
 
 	lines!(log_r_pred, log10.(ρ_s_pred), label="expected", color="black", linestyle=:dot)
 
 	@savefig "rho_ini_fin"
 
-	axislegend(ax)
+	axislegend(ax, position=:lb)
 	fig
 end
 
@@ -255,7 +264,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 	yscale=log10, xlabel="probability", ylabel="count")
-	
+	, yticks=Makie.automatic)
 	hist!(probabilities, bins=20, )
 	fig
 end
@@ -321,8 +330,8 @@ let
 		ylabel = L"\sigma_v / \textrm{km s^{-1}}",
 	)
 	
-	ts = times[snap_idxs]
-	sigmas = [p.sigma_vx for p in stellar_profiles]
+	ts = scalars.time
+	sigmas = scalars.sigma_v
 	scatter!(ts, sigmas * lguys.V2KMS)
 
 	@savefig "sigma_v_t"
@@ -335,7 +344,9 @@ end
 # ╠═4340af50-de93-4a8d-b850-6d47d7685995
 # ╟─4af1e554-05ed-485f-a15a-c588daf5fd3a
 # ╠═6238c3fa-1974-11ef-1539-2f50fb31fe9a
+# ╠═b8feefa7-8ec7-4c57-afb7-296aaf6aa24b
 # ╠═b8942c7f-5e20-42ad-bea6-b3c56d0840ba
+# ╠═146a5666-cf82-45c7-ba56-bc8014cd41c7
 # ╠═451c25f8-2a47-4503-a5c6-658b008d13c2
 # ╠═feb6cc17-a25d-4ba8-a152-78412f422b80
 # ╠═bb3b3395-a64d-4907-a4bd-1b3f621010b1
@@ -354,6 +365,7 @@ end
 # ╠═bffc3bb2-9be5-40b3-95f9-05b2ed27e680
 # ╟─7e5edb0d-afd7-4437-86c0-f2532e25971e
 # ╠═83fbe8a1-5d95-458a-87f2-b1d5c66846d2
+# ╠═7ebfe65b-e717-4a06-ab73-3f0382af1251
 # ╠═b4e107d1-5b14-4e64-80ce-a02ece3b41b7
 # ╠═e32e2d66-2dad-4f09-84f1-a3081e3891a7
 # ╠═c76c8acc-ea88-4ce1-81cb-be0b67ef23fd
@@ -366,7 +378,7 @@ end
 # ╠═a888cc8f-e27c-4989-a535-6a2862c60c91
 # ╟─4a32cad7-c18a-4494-aca9-e292d64ef6b7
 # ╟─addf19a4-088b-4aff-89a9-df73e8049f2c
-# ╟─6065db1e-1387-4735-ad9d-0f401d9f0f73
+# ╠═6065db1e-1387-4735-ad9d-0f401d9f0f73
 # ╠═cea9464d-d620-4fc9-9224-d24e075bf42a
 # ╠═d8f546d3-9e2e-4703-b652-5bea7bbbbd26
 # ╠═193273c9-5b13-4af6-a345-4326cdebcf04

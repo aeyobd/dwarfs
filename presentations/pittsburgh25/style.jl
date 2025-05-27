@@ -11,7 +11,7 @@ end
 
 let
 
-    set_theme!(theme_arya(width=860/72, fontsize=40, px_per_unit=1))
+    set_theme!(theme_arya(width=800/72 / Arya.HW_RATIO, fontsize=40, px_per_unit=1))
     CairoMakie.activate!(type=:svg, px_per_unit=1, pt_per_unit=1)
 
     scale_theme_element!(:linewidth, 2)

@@ -22,13 +22,13 @@ using PythonCall
 using OrderedCollections
 
 # ╔═╡ 26886e5c-546f-45ca-a882-2b354a962f07
-galaxy = "sculptor"
+galaxy = "ursa_minor"
 
 # ╔═╡ cc2c7b51-5483-4693-bda6-40563ffb7289
-modelname = "1e7_V31_r3.2"
+modelname = "1e6_v38_r4.0"
 
 # ╔═╡ d9849d12-43fe-4788-aa26-145ed0d7db19
-orbitname = "orbit_smallperi"
+orbitname = "orbit_smallperi.3"
 
 # ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
 vasiliev_units = false
@@ -39,16 +39,8 @@ r_break_obs_arcmin = 25
 # ╔═╡ c73efb23-ba43-43ba-952a-18ed7fec9e91
 lmc = false
 
-# ╔═╡ 8bb2a7f2-97de-4f09-afdd-6cbebe9b86f5
-begin 
-	potential_name = "simulation/agama_potential.ini"
-	if lmc
-		potential_name = joinpath(potential_dir, "vasiliev24", "L3M11", "potential_lmc_init.ini")
-	end
-end
+# ╔═╡ 1374aa1e-ee19-4a17-b317-cf0be4196dfe
 
-# ╔═╡ 8db8ca90-4c26-4277-8697-5ffd370a7bec
-readdir(potential_dir * "vasiliev24/L3M11")
 
 # ╔═╡ f7b10565-3af7-4fa3-8dbf-a34e82b044cb
 md"""
@@ -83,6 +75,9 @@ CairoMakie.activate!(type=:png)
 # ╔═╡ 9e99b247-77db-4383-acf0-52e16df3bd97
 import TOML
 
+# ╔═╡ 44334862-c17b-4ed1-8239-1b0902748fa8
+import Agama
+
 # ╔═╡ 7ca75d0b-cd00-4fae-a03b-f88f740b6743
 md"""
 # Data loading
@@ -90,6 +85,17 @@ md"""
 
 # ╔═╡ 3b645724-08a1-4689-99c6-2ff45c5cf676
 potential_dir = ENV["DWARFS_ROOT"] * "/agama/potentials/"
+
+# ╔═╡ 8bb2a7f2-97de-4f09-afdd-6cbebe9b86f5
+begin 
+	potential_name = "simulation/agama_potential.ini"
+	if lmc
+		potential_name = joinpath(potential_dir, "vasiliev24", "L3M11", "potential_lmc_init.ini")
+	end
+end
+
+# ╔═╡ 8db8ca90-4c26-4277-8697-5ffd370a7bec
+readdir(potential_dir * "vasiliev24/L3M11")
 
 # ╔═╡ f3d4a880-300f-450a-bd57-9f9639f5966e
 readdir(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxy,modelname))
@@ -104,7 +110,7 @@ readdir(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxy, modelname))
 dwarf_halo = LilGuys.load_profile(joinpath(modeldir, "../halo.toml"))
 
 # ╔═╡ 0d8ae710-df73-45f7-910b-cf127f38e9d4
-mw_halo = agama.Potential(joinpath(modeldir, potential_name))
+mw_halo = Agama.Potential(file=joinpath(modeldir, potential_name))
 
 # ╔═╡ 29a0a1ee-d953-487f-8be3-1f9335fb098b
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "observed_properties.toml"))
@@ -139,21 +145,9 @@ function calc_ρ_mean(prof::LilGuys.SphericalProfile, r)
     rho_mean = @. y / (4π/3*r^3)
 end
 
-# ╔═╡ f70b0396-2360-4008-be6e-513a6c68a602
-function calc_ρ_mean(prof::Py, r; vasiliev_units=vasiliev_units)
-    rho = prof.enclosedMass(np.array(r))
-    M = pyconvert(Array{Float64}, rho) 
-    if vasiliev_units
-        M .*= AgamaUtils.V_M2MSUN ./ M2MSUN
-    end
-
-    y = @. M / (4π/3 * r^3)
-end
-
 # ╔═╡ 2d61739c-4330-4cce-8203-e2dd92a99e46
-function calc_ρ_mean(prof::Py, r::Real; vasiliev_units=vasiliev_units)
-    rho = prof.enclosedMass(np.array(r))
-    M = pyconvert(Float64, rho) 
+function calc_ρ_mean(prof::Agama.Potential, r; vasiliev_units=vasiliev_units)
+    M = Agama.enclosed_mass(prof, r)
     if vasiliev_units
         M *= AgamaUtils.V_M2MSUN ./ M2MSUN
     end
@@ -195,7 +189,7 @@ end
 ρ_host = calc_ρ_mean(mw_halo, [peri, peri])[1]
 
 # ╔═╡ 7784c958-e815-4f08-a255-ddd7cc2af8b0
-r_J = LilGuys.find_zero(r -> calc_ρ_mean(dwarf_halo, r) - 3*ρ_host, 10.)
+r_J = LilGuys.find_zero(r -> calc_ρ_mean(dwarf_halo, r) - 3*ρ_host, 1.)
 
 # ╔═╡ 4e072f88-f319-4ae7-8220-3f8d5b0766b9
 r_J_arcmin = LilGuys.kpc2arcmin(r_J, orbital_props["distance_f"])
@@ -286,7 +280,7 @@ let
 
 	x = LinRange(-1, 2, 100)
 
-	lines!(x, log10.(calc_ρ_mean.(mw_halo, 10 .^ x)))
+	lines!(x, log10.(calc_ρ_mean(mw_halo, 10 .^ x)))
 	hideydecorations!(ax_mw, ticks=false, minorticks=false)
 
 	for x in [log10(peri), log10(r_peri_req)]
@@ -336,6 +330,7 @@ end
 # ╠═620d4b82-d277-46d1-b01c-329a65ca3626
 # ╠═c73efb23-ba43-43ba-952a-18ed7fec9e91
 # ╠═8bb2a7f2-97de-4f09-afdd-6cbebe9b86f5
+# ╠═1374aa1e-ee19-4a17-b317-cf0be4196dfe
 # ╠═8db8ca90-4c26-4277-8697-5ffd370a7bec
 # ╟─f7b10565-3af7-4fa3-8dbf-a34e82b044cb
 # ╟─bea952a4-e48a-489e-8f31-62dd8827e869
@@ -344,6 +339,7 @@ end
 # ╠═733b8ae6-681a-4362-a6aa-10fd5457c6c6
 # ╠═9e99b247-77db-4383-acf0-52e16df3bd97
 # ╠═ad687c7e-a9d9-4a80-b7d1-dc24f7be8a76
+# ╠═44334862-c17b-4ed1-8239-1b0902748fa8
 # ╟─7ca75d0b-cd00-4fae-a03b-f88f740b6743
 # ╠═3b645724-08a1-4689-99c6-2ff45c5cf676
 # ╠═f3d4a880-300f-450a-bd57-9f9639f5966e
@@ -357,7 +353,6 @@ end
 # ╟─944a99f4-f0a7-4206-bbbc-a12d6154234d
 # ╠═bc854ffd-64df-4037-8cbf-2811d8df6644
 # ╠═031f5ee5-1ce9-49f0-ad3d-5df668924e43
-# ╠═f70b0396-2360-4008-be6e-513a6c68a602
 # ╠═2d61739c-4330-4cce-8203-e2dd92a99e46
 # ╠═88df87cf-5b6c-4ad6-afe5-27dd2a42a674
 # ╠═c1499c52-e66f-4946-abf0-39d14d5b2a09

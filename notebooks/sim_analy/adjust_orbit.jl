@@ -60,6 +60,9 @@ md"""
 I prefer the actions/angles framwork. For a test-particle orbit, the actions are conserved and action angles linearly increase with time. Thus, the deviations from the test-particle orbit in the N-body simulation should (to first order) be easily corrected by equivialnt shifts in the action (angle) initial conditions. The challenge with this framework is action (angles) are more nontrival quantities to calculate and depend on our knowledge of the potential. I use `agama` to compute these quantities, and in a fixed (azimuthal) potential, this framework should be a good approximation. 
 """
 
+# ╔═╡ 9c404056-2980-4620-9e4f-459157533c77
+
+
 # ╔═╡ 9dad1bb5-4d04-4dd8-88a9-335f87688044
 window = 10
 
@@ -105,7 +108,7 @@ end
 # ╔═╡ 5006f134-648a-4318-9dc3-5de383ac4d0e
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	haloname = TextField(default="1e6_v37_r5.0"),
+	haloname = TextField(default="1e6_v38_r4.0"),
 	orbitname = TextField(default="orbit_"),
 ))
 
@@ -353,14 +356,14 @@ md"""
 Note: actions are more important to adjust on initial iterations. Angle evolution changes depending on the actions, so this is best adjusted at the last step.
 """
 
+# ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
+dθ_suggested = [Theta_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
+
 # ╔═╡ 8ebf47fd-acd6-48d1-95df-d83a602e75f4
 J_f_mean = [LilGuys.mean((act_nbody .± act_err_nbody)[i, idx_f-window:idx_f]) for i in 1:3]
 
 # ╔═╡ b266eafd-debd-4942-a210-71102ba172ff
 dJ_suggested =  Measurements.value.(J_obs) .- J_f_mean
-
-# ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
-dθ_suggested = [Theta_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
 
 # ╔═╡ ae8f7bbd-46ee-4fcb-900a-557e5bb11088
 @bind change_in_act_angles confirm(notebook_inputs(;
@@ -401,6 +404,9 @@ v_new = orbit.velocities
 # ╔═╡ 3fa86c92-e6bd-41b6-bd64-cfd33f74b229
 act_new, ang_new = get_actions(pot, x_new, v_new)
 
+# ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
+get_actions(pot, pos_new, vel_new)
+
 # ╔═╡ b8f2475a-3588-4611-99ac-de156f25b853
 @savefig "actions_adjustment" let
 	fig = Figure(size=(6*72, 5*72))
@@ -434,9 +440,6 @@ act_new, ang_new = get_actions(pot, x_new, v_new)
 	fig
 end
 
-
-# ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
-get_actions(pot, pos_new, vel_new)
 
 # ╔═╡ d5be7108-a6c6-4e2a-98b9-562dbd0dc999
 ang_nbody_err[:, idx_f]
@@ -562,7 +565,7 @@ let
 	
 	lines!(out.times, E_nbody)
 	lines!(orbit_old.times, E_old)
-	lines!(orbit.times, E_new .- dE_suggested)
+	lines!(orbit.times, E_new )
 
 	lines!(out.times[idx_f-window:idx_f], fill(E_nbody_f, window+1), color=:black, linestyle=:solid, linewidth=2)
 
@@ -600,7 +603,7 @@ let
 		end
 
 		L_mean = LilGuys.mean(L_nbody[i, idx_f-window:idx_f])
-		lines!(out.times[idx_f-window:idx_f], fill(L_mean, window+1), color=:black, linestyle=:solid, linewidth=2)
+		lines!(out.times[idx_f-window:idx_f], fill(L_mean, window+1), color=COLORS[4], linestyle=:solid, linewidth=2)
 
 	end
 
@@ -668,6 +671,7 @@ end
 # ╟─9bfa1465-2ca9-495c-bab6-5110072f02ed
 # ╟─0c21b10f-ad86-4894-8959-721742d2a2c1
 # ╠═5006f134-648a-4318-9dc3-5de383ac4d0e
+# ╠═9c404056-2980-4620-9e4f-459157533c77
 # ╠═9dad1bb5-4d04-4dd8-88a9-335f87688044
 # ╠═7372c7f3-3ea0-413a-81af-6aa93a04bd62
 # ╠═056cf4aa-cb61-4cce-9429-22366e9f7e97
@@ -736,11 +740,11 @@ end
 # ╠═9da81ee9-5638-48dc-949e-603874b3f627
 # ╠═0fef057f-2f68-447d-9926-8704536cc7e5
 # ╟─a1caf3e7-5b10-4872-a980-5b4fa8448f65
+# ╠═b266eafd-debd-4942-a210-71102ba172ff
+# ╠═571ae542-406c-4e62-9b8f-af34e777748f
 # ╠═ae8f7bbd-46ee-4fcb-900a-557e5bb11088
 # ╠═b8f2475a-3588-4611-99ac-de156f25b853
 # ╠═8ebf47fd-acd6-48d1-95df-d83a602e75f4
-# ╠═b266eafd-debd-4942-a210-71102ba172ff
-# ╠═571ae542-406c-4e62-9b8f-af34e777748f
 # ╠═d5be7108-a6c6-4e2a-98b9-562dbd0dc999
 # ╠═706a0753-018a-48f7-8c77-23af747141fd
 # ╠═e7aba352-84a1-417c-b25b-7d0503030e6a
