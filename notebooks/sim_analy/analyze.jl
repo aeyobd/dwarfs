@@ -160,11 +160,17 @@ let
 	fig
 end
 
+# ╔═╡ 485eab53-43ec-4591-a3af-9e4cbfefbbe2
+df_scalars.bound_mass[end] ./ df_scalars.bound_mass[1]
+
 # ╔═╡ 4c042ef0-21a9-4a54-9562-05dc891f1dbf
 function enclosed_mass(profile, r)
 	f = LilGuys.lerp(profile.radii, middle.(profile.M_in))
 	return f(r)
 end
+
+# ╔═╡ 04a07b4f-b747-4738-9d0f-18eae2f85baf
+Rvir = LilGuys.R200(halo)
 
 # ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
 let
@@ -179,8 +185,9 @@ let
 
 	#ax.yticks = [0.1:0.1:1;]
 
-	for r in [10, 3, 1, 0.3, 0.1, 0.03]
+	for r in [37, 10, 3, 1, 0.3, 0.1, 0.03]
 		M_dm_h = enclosed_mass.(profiles, [r])
+		@info M_dm_h[end] ./ M_dm_h[1]
 		lines!(df_scalars.time, M_dm_h ./ M_dm_h[1], label="$r")
 	end
 	
@@ -415,7 +422,7 @@ let
 
 	)
 	
-	Colorbar(fig[:, end+1], hm, label="DM density")
+	Colorbar(fig[:, end+1], hm, label="DM density", ticks=Makie.automatic)
 	
     rowsize!(fig.layout, 1, ax.scene.viewport[].widths[2])
 
@@ -444,7 +451,7 @@ let
 		xdirection=2, ydirection=3
 	)
 
-	Colorbar(fig[1, 2], h, label="DM density")
+	Colorbar(fig[1, 2], h, label="DM density", ticks=Makie.automatic)
 
 	@savefig "xz_fin_projection"
 
@@ -549,7 +556,9 @@ end
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
 # ╠═193e78d7-e902-4b6b-8eae-43bae7e5722b
 # ╠═f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
+# ╠═485eab53-43ec-4591-a3af-9e4cbfefbbe2
 # ╠═4c042ef0-21a9-4a54-9562-05dc891f1dbf
+# ╠═04a07b4f-b747-4738-9d0f-18eae2f85baf
 # ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╠═ef2274ba-0220-49f5-8478-d5eac824c3ee
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
@@ -569,7 +578,7 @@ end
 # ╠═48e54b34-4b22-4609-8928-ba6d8d027370
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═f7f8ed80-c715-43db-bebe-e62b14173ac6
-# ╟─4cd952f3-555d-401b-aa31-8b79a23ca42e
+# ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 # ╠═e385f8cf-faa1-49bf-88c9-15c3d2489f90
 # ╠═5af581bc-613c-4728-9626-dbef0ebaef7d

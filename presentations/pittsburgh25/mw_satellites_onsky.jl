@@ -22,6 +22,15 @@ md"""
 # Setup
 """
 
+# ╔═╡ 1ee09c26-16be-4919-a2c8-8a21612b9873
+import SkyCoords
+
+# ╔═╡ 75878bfc-6d21-4662-aa88-e2d501c06d95
+import FileIO
+
+# ╔═╡ 02df901a-cbae-454c-a907-32aaf07bf3e1
+img = FileIO.load(("Gaia_s_sky_in_colour.png"))
+
 # ╔═╡ 97993507-1ab6-4aae-8363-f439fb98c2e5
 FIGDIR = "./figures"
 
@@ -72,8 +81,42 @@ alldwarfs = read_pace("dwarf_all")
 # ╔═╡ a232715d-a27f-499b-8123-9adf5257acf5
 ambiguous_table = read_pace("gc_ambiguous")
 
+# ╔═╡ 45499b5b-2c79-4a0e-8cc8-930581a8dec7
+function to_galcoords(ra, dec)
+	coords = SkyCoords.ICRSCoords.(deg2rad.(ra), deg2rad.(dec))
+	galcoords = SkyCoords.convert.(SkyCoords.GalCoords, coords)
+
+	l = SkyCoords.lon.(galcoords) .|> rad2deg
+	b = SkyCoords.lat.(galcoords) .|> rad2deg
+
+	return l, b
+end
+
+# ╔═╡ c3442639-f5ad-4b60-b1a6-c9321c5a38c6
+yasone_table = let
+	df = CSV.read(
+		Vector{UInt8}("""name,ra,dec
+		Yasone 1,265.52019,13.17146
+		Yasone 2,262.34921,6.42302
+		Yasone 3,292.96258,-26.44994
+		Yasone 4,95.8822,20.7678
+		"""),
+			DataFrame
+		)
+
+	df[!, :key] = lowercase.(replace.(df.name, " "=>"_"))
+
+	df[!, "ll"], df[!, "bb"] = to_galcoords(df.ra, df.dec)
+
+	df
+
+end
+
 # ╔═╡ bce24033-3bca-42d4-9224-b40378cdedab
 allcluster = vcat(read_pace("gc_harris"), read_pace("gc_mw_new"))
+
+# ╔═╡ 71e21c9d-95c0-4397-929d-b415b0720dbf
+hcat(to_galcoords(allcluster.ra, allcluster.dec)..., allcluster.ll, allcluster.bb)
 
 # ╔═╡ 88d507e8-98cb-42ca-be20-16580f5beb4b
 read_pace("gc_other")
@@ -133,7 +176,28 @@ ambiguous = vcat(ambiguous_table, dwarfs[(dwarfs.confirmed_dwarf .!== 1), :])
 classicals = dwarfs[dwarfs.key .∈ [classical_systems], :]
 
 # ╔═╡ 5918ea56-83ad-48b7-8e7b-a4a5038e236b
-magellanic = dwarfs[dwarfs.key .∈ [["smc", "lmc"]], :]
+magellanic = alldwarfs[alldwarfs.key .∈ [["smc", "lmc", "m_033"]], :]
+
+# ╔═╡ a09fe200-9239-4e74-a8c4-c548e67481f4
+andromida = let
+	df = DataFrame(
+		name = ["M31", "M33"], 
+		ra = [010.684708, 023.4620690621800], #
+		dec = [41.268750, 30.6601751119800],
+		ra_ref = ["2006AJ....131.1163S", "2020yCat.1350....0G"],
+	)
+
+	df[!, :ll], df[!, :bb] = to_galcoords(df.ra, df.dec)
+
+	df[!, :key] = lowercase.(replace.(df.name, " "=>"_"))
+	df
+end
+
+# ╔═╡ d16c6607-b4ea-4648-bf8d-d6a02feacbd2
+alldwarfs.key[.!ismissing.(alldwarfs.host) .& (alldwarfs.host .== "m_031")]
+
+# ╔═╡ b2d74e34-b6d9-4069-a398-9e33b5ea405c
+unique(alldwarfs.host)
 
 # ╔═╡ d8e0b701-166b-438c-9c36-5564e7e488c9
 confirmed_dwarfs = dwarfs[(dwarfs.confirmed_dwarf .=== 1), :]
@@ -148,13 +212,13 @@ key_dwarfs = dwarfs[dwarfs.key .∈ [["sculptor_1", "ursa_minor_1", "fornax_1"]]
 magellanic[:, [:key, :ll, :bb]]
 
 # ╔═╡ 89ae71c5-08eb-4c92-9301-ad2e630bf943
-labels = vcat(confirmed_faint_dwarfs.key, "ursa_major_3", "lmc", "smc", classical_systems...)
+labels = vcat(confirmed_faint_dwarfs.key, "ursa_major_3", "lmc", "smc", classical_systems, yasone_table.key, andromida.key)
 
 # ╔═╡ 0ee0aa61-3046-4dae-92e9-bd6b124d8f5f
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 594fbbef-40c8-4cb8-9d56-14c39c65a914
-allsatalites = vcat(dwarfs, allcluster, ambiguous_table)
+allsatalites = vcat(dwarfs, allcluster, ambiguous_table, andromida, yasone_table, cols=:union)
 
 # ╔═╡ 095ed289-8086-4da3-aaeb-36dec2b4d349
 md"""
@@ -180,10 +244,8 @@ red = colorant"#e41a1c"
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ c954772f-9e75-484e-bfdb-4455249b1f99
-function clear_axis()
-	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080), figure_padding = 0)
-	
-	ax = GeoAxis(fig[1,1];
+function clear_axis!(gs)	
+	ax = GeoAxis(gs;
 		dest = "+proj=hammer",
 		#limits = (0., 360, -90, 90),
 		xgridcolor=grid_color,
@@ -193,12 +255,17 @@ function clear_axis()
 		yticklabelsize=8,
 		xgridwidth=0.5,
 		ygridwidth=0.5,
-				 valign=:top,
+				 valign=:center,
 				 
 	)
 	xlims!(-180, 180)
 
-	return fig, ax
+	return ax
+end
+
+# ╔═╡ 21f0d8c8-76a2-41f0-a390-390c5b539ed3
+function clear_figure(;backgroundcolor=:transparent)
+	fig = Figure(backgroundcolor=backgroundcolor, size=(1920, 1080), figure_padding = 0)
 end
 
 # ╔═╡ 8ea50ebf-87d3-4810-9699-89617463d9b4
@@ -210,11 +277,12 @@ function dark_axis()
 		#limits = (0., 360, -90, 90),
 		yticklabelsvisible=false,
 		xticklabelsvisible=false,
+		yticksvisible=false,
+		xticksvisible=false,
 		yticklabelsize=8,
 		xgridwidth=0.5,
 		ygridwidth=0.5,
-				 valign=:top,
-				 
+		titlegap=0
 	)
 	xlims!(-180, 180)
 
@@ -231,7 +299,7 @@ end
 allcluster[!, :M_V]
 
 # ╔═╡ 5a537690-3c29-4a0b-9a31-15d19e456db6
-function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red)
+function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red, yasone=false)
 
 	if xreverse
 		xfactor = -1
@@ -252,21 +320,17 @@ function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red)
 	scatter!(ax, xfactor * classicals[!, x], classicals[!, y], label="classical",
 		markersize=5/4*ms, color=COLORS[3], marker=:diamond, )
 
-end
+	if yasone
+		scatter!(ax, xfactor*yasone_table[!, x], yasone_table[!, y], markersize=ms*3/2, color=COLORS[5], marker=:hexagon)
+	end
 
-# ╔═╡ c6da3e29-3234-4d25-aa12-060ad1bd1b45
-let
-	fig, ax = dark_axis()
-	plot_points!(ax)
-	Legend(fig[1, 1], ax, tellwidth=false, tellheight=false, halign=:right, valign=:bottom, nbanks=2, backgroundcolor=:transparent, labelcolor=fg_color, margin=2ones(4))
-	fig
 end
 
 # ╔═╡ 3b31bf9e-1d07-460a-80d9-75625d06bf41
 abbreviations
 
 # ╔═╡ 756bb316-6afa-4217-b52b-eff39e5c02d6
-function plot_labels!(ax; highlight=[])
+function plot_labels!(ax; highlight=[], yasone=false)
 	for key in labels
 		row = allsatalites[allsatalites.key .== key, :]
 		if size(row, 1) != 1
@@ -285,18 +349,18 @@ function plot_labels!(ax; highlight=[])
 			color = COLORS[9]
 			fontsize=48
 			offset = (24., 0.)
+		elseif startswith(key, "yasone") & !yasone
+			continue
 		elseif key ∈ ["ursa_major_1", "leo_1", "leo_2", "pegasus_3", "pisces_2", "horologium_1"]
 			align = (:left, :top)
 		elseif key ∈ ["leo_5",]
 			align = (:left, 0.25)
-		elseif key ∈ ["tucana_2",  "columba_1"]
+		elseif key ∈ ["tucana_2",  "columba_1", "yasone_1"]
 			align = (:left, :bottom)
 			offset = (0, 8.)
-		elseif key ∈ ["lmc", "smc"]
-			offset = (0., 0.)
-			align = (:center, :center)
-			color=fg_color
-			fontsize=36
+		elseif key ∈ ["smc"]
+		elseif key == "lmc"
+			offset = (18., 0.)
 		elseif text == "Car II"
 			text = ""
 		elseif text == "Car III"
@@ -305,11 +369,13 @@ function plot_labels!(ax; highlight=[])
 			text = ""
 		elseif text == "Boo II"
 			text = "Boo I & II"
-		elseif text == "Gru I"
+		elseif key ∈ ["grus_1", "yasone_4"]
 			align = (:right, :center)
 			offset = (-offset[1], 0.)
 		elseif key ∈ classical_systems
 			offset = (18., 0.)
+		elseif key == "yasone_1"
+			
 		end
 
 
@@ -323,31 +389,7 @@ theme(:fontsize)
 
 # ╔═╡ 3f44fb3f-865a-4acb-9101-283c7918e11b
 function acknowledgment!(ax)
-	text!(ax, 0, 0, text="Daniel Boyea, 2025\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(theme(:Legend).margin[][1], 0))
-end
-
-# ╔═╡ 3051cdfb-63fb-44e4-a75d-37a51fd40508
-@savefig "mw_satellites_onsky" let
-	fig, ax = clear_axis()
-	plot_points!(ax)
-	clear_legend(fig, ax)
-
-
-	acknowledgment!(ax)
-
-	plot_labels!(ax)
-
-	fig
-end
-
-# ╔═╡ 58ea3ff0-40ab-4967-aa97-80d4aa903183
-@savefig "mw_satellites_onsky_cb" let
-	fig, ax = clear_axis()
-	plot_points!(ax, red=COLORS[4])
-	clear_legend(fig, ax)
-	plot_labels!(ax)
-	acknowledgment!(ax)
-	fig
+	text!(ax, 0, 0, text="Daniel Boyea, 2025\nBackground image: ESA/Gaia/DPAC\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(theme(:Legend).margin[][1], 0))
 end
 
 # ╔═╡ 6931654b-55a9-45f6-b17f-092ec506bccf
@@ -356,14 +398,68 @@ theme(:Legend).labelsize[]
 # ╔═╡ a9d10018-c329-4731-9f25-7726e6acdd66
 theme(:fontsize)[] * 0.8
 
+# ╔═╡ 91493d9c-c7ff-442f-b51a-395532a69d38
+size(img)
+
+# ╔═╡ 2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
+function plot_gaia_image!(gs)
+	ax2 = Axis(gs, aspect=DataAspect(), backgroundcolor=:transparent,)
+	image!(ax2, rotr90(img), interpolate=true)
+	hidespines!(ax2)
+	hidedecorations!(ax2)
+end
+
+# ╔═╡ 3051cdfb-63fb-44e4-a75d-37a51fd40508
+@savefig "mw_satellites_onsky" let
+	fig = clear_figure(backgroundcolor=:black)
+	plot_gaia_image!(fig[1,1])
+	ax = clear_axis!(fig[1,1])
+	
+	plot_points!(ax, yasone=true)
+	clear_legend(fig, ax)
+
+
+	acknowledgment!(ax)
+
+	plot_labels!(ax, yasone=true)
+
+	resize_to_layout!(fig)
+
+	fig
+end
+
+# ╔═╡ 58ea3ff0-40ab-4967-aa97-80d4aa903183
+@savefig "mw_satellites_onsky_cb" let
+	fig = clear_figure(backgroundcolor=:black)
+
+	plot_gaia_image!(fig[1,1])
+
+	ax = clear_axis!(fig[1,1])
+	plot_points!(ax, red=COLORS[4])
+	clear_legend(fig, ax)
+	plot_labels!(ax)
+	acknowledgment!(ax)
+	fig
+end
+
+# ╔═╡ c04cab38-6e6e-4097-a82f-91cc8a3864f1
+CairoMakie.activate!(type=:png, px_per_unit=4)
+
 # ╔═╡ 82e8db20-91cc-43b4-8183-7e302ce74041
 @savefig "mw_satellites_onsky_scl_umi_for" let
-	fig, ax = clear_axis()
+	fig = clear_figure(backgroundcolor=:black)
+
+	plot_gaia_image!(fig[1,1])
+
+	ax = clear_axis!(fig[1,1])
+
 	plot_points!(ax, red=COLORS[4])
 	clear_legend(fig, ax)
 	plot_labels!(ax, highlight=["sculptor_1", "ursa_minor_1", "fornax_1"])
 
 	acknowledgment!(ax)
+
+	
 
 	fig
 end
@@ -398,9 +494,11 @@ let
 
 		if key ∈ classical_systems
 			offset = (18., 0.)
-		elseif name ∈ ["LMC", "SMC"]
+		elseif name ∈ ["LMC", "SMC", "M31", "M33"]
 			continue 
 			offset = (0., 0.)
+		elseif startswith(key, "yasone")
+			continue
 		end
 
 		@info row.distance_gc, row.M_V
@@ -446,6 +544,8 @@ let
 		elseif name ∈ ["LMC", "SMC"]
 			continue 
 			offset = (0., 0.)
+		elseif startswith(key, "yasone") | (key ∈ ["m31", "m33"])
+			continue
 		end
 
 		text!(ax, disallowmissing(row.rhalf_physical), disallowmissing(row.M_V), text=text, fontsize=fontsize, align=align, offset=offset,  color=:grey)
@@ -475,6 +575,9 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╔═╡ Cell order:
 # ╟─7216773a-bf24-49bb-a4ab-4afb35ce2a2b
 # ╠═4c0da6d9-c5d9-4971-8b69-7ec9c107d981
+# ╠═1ee09c26-16be-4919-a2c8-8a21612b9873
+# ╠═75878bfc-6d21-4662-aa88-e2d501c06d95
+# ╠═02df901a-cbae-454c-a907-32aaf07bf3e1
 # ╠═97993507-1ab6-4aae-8363-f439fb98c2e5
 # ╠═36021dc4-d970-4425-b39e-c3cbad8ce0cb
 # ╠═726c1519-d147-4c7c-9901-55c0d4fab221
@@ -487,6 +590,9 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═516eb72e-44e6-4637-ba75-8b0c5ce6f12a
 # ╠═70477210-9891-4225-a544-b0030feb7af2
 # ╠═a232715d-a27f-499b-8123-9adf5257acf5
+# ╠═45499b5b-2c79-4a0e-8cc8-930581a8dec7
+# ╠═c3442639-f5ad-4b60-b1a6-c9321c5a38c6
+# ╠═71e21c9d-95c0-4397-929d-b415b0720dbf
 # ╠═bce24033-3bca-42d4-9224-b40378cdedab
 # ╠═88d507e8-98cb-42ca-be20-16580f5beb4b
 # ╟─7258550c-c49a-4f67-83f7-58c157d4b5de
@@ -499,6 +605,9 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═6142560a-9cd1-491f-a108-b3b45b85df2e
 # ╠═ce9d55e5-c840-4f5c-a2de-7c3538f42bd2
 # ╠═5918ea56-83ad-48b7-8e7b-a4a5038e236b
+# ╠═a09fe200-9239-4e74-a8c4-c548e67481f4
+# ╠═d16c6607-b4ea-4648-bf8d-d6a02feacbd2
+# ╠═b2d74e34-b6d9-4069-a398-9e33b5ea405c
 # ╠═d8e0b701-166b-438c-9c36-5564e7e488c9
 # ╠═a401d47d-e064-429e-baf3-d38ba64b3c4a
 # ╠═42c02a3d-5d7d-4559-8911-b197408343f1
@@ -514,11 +623,11 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═b27ae510-f567-4623-a2a8-d4f192d2f792
 # ╠═b7fd5546-ecc9-444b-9862-1954c3c762e1
 # ╠═c954772f-9e75-484e-bfdb-4455249b1f99
+# ╠═21f0d8c8-76a2-41f0-a390-390c5b539ed3
 # ╠═8ea50ebf-87d3-4810-9699-89617463d9b4
 # ╠═21373373-2dec-4bd8-a178-6af90df0835a
 # ╠═51eea365-1dd0-4ebf-8a89-30928c51ab5f
 # ╠═5a537690-3c29-4a0b-9a31-15d19e456db6
-# ╠═c6da3e29-3234-4d25-aa12-060ad1bd1b45
 # ╠═3b31bf9e-1d07-460a-80d9-75625d06bf41
 # ╠═756bb316-6afa-4217-b52b-eff39e5c02d6
 # ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
@@ -527,6 +636,9 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═58ea3ff0-40ab-4967-aa97-80d4aa903183
 # ╠═6931654b-55a9-45f6-b17f-092ec506bccf
 # ╠═a9d10018-c329-4731-9f25-7726e6acdd66
+# ╠═91493d9c-c7ff-442f-b51a-395532a69d38
+# ╠═2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
+# ╠═c04cab38-6e6e-4097-a82f-91cc8a3864f1
 # ╠═82e8db20-91cc-43b4-8183-7e302ce74041
 # ╠═25514746-3762-4cb0-8b03-0e3e38d82a69
 # ╠═6fb045c9-fce3-4d24-8edc-8ddde135972a
@@ -535,3 +647,4 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═5f321550-4d2e-4f6c-8dbf-9ec1c72f1a44
 # ╠═9326b0d6-847d-49fe-bfe3-380f328d5eb0
 # ╠═c6140b22-0744-456e-a0fe-164d72c577af
+                                                                                                                                                                              

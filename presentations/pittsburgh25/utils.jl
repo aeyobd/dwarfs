@@ -207,3 +207,66 @@ function get_isochrone(M_H, age=12)
     #insert!(isochrone, findlast(isochrone.label .== 3) + 1, fill(NaN, size(isochrone, 2)), promote=true)
     isochrone
 end
+
+
+
+function integrate_isodensity(pot, x0=[8., 0.]; x_direction=2, y_direction=3, s_factor=0.01, h_factor=0.01, h0=0.0001)
+	x = x0[1]
+	y = x0[2]
+
+	xs = [x]
+	ys = [y]
+	h = h0
+    s = h0
+
+	θ = atan(y, x)
+	x_vec = zeros(3)
+	x_vec[x_direction] = 1
+
+	y_vec = zeros(3)
+	y_vec[y_direction] = 1
+	ρ(x) = Agama.density(pot, x)
+	ρ_0 = ρ(x_vec * x0[1] .+ y_vec * x0[2])
+    dlρ_max = 0
+	
+    dx = (ρ(x0 .+ x_vec * h) - ρ(x0))/h
+    dy = (ρ(x0 .+ y_vec * h) - ρ(x0))/h
+
+    s = s_scale * (sqrt(x^2 + y^2) / sqrt(dx^2 + dy^2) )
+    h = h_scale * s
+
+	for i in 1:100000
+		x0 = zeros(3)
+		x0[x_direction] = x
+		x0[y_direction] = y
+		dx = (ρ(x0 .+ x_vec * h) - ρ(x0))/h
+		dy = (ρ(x0 .+ y_vec * h) - ρ(x0))/h
+		x += ds .* dy
+		y += -ds .* dx
+
+		push!(xs, x)
+		push!(ys, y)
+
+        s = s_scale * (sqrt(x^2 + y^2) / sqrt(dx^2 + dy^2) )
+        h = h_scale * s
+
+		θ_new = atan(y, x)
+        dlρ_max = max(dlρ_max, abs(log10(ρ(x0) - ρ_0)))
+
+		if θ_new > 0 && (θ < 0)
+			break
+		end
+
+		θ = θ_new
+	end
+    @info "max log rel error = $dlρ_max"
+
+    return xs, ys
+end
+
+
+X_SUN = [-LilGuys.GalactocentricFrame().d, 0, 0]
+function plot_sun!(; x_direction=2, y_direction=3)
+	scatter!(X_SUN[x_direction], X_SUN[y_direction], marker=:star5, color=COLORS[9])
+end
+		

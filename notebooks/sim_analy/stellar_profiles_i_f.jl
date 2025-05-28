@@ -167,7 +167,7 @@ CairoMakie.activate!(type=:png)
 ymin = -8
 
 # ╔═╡ 7671fc47-15d4-4970-98a7-b0ad64f1114c
-dy = -0.2
+@bind dy NumberField(-1:0.05:1, default=0)
 
 # ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
 norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]]) + dy

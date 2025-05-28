@@ -30,6 +30,9 @@ end
 # ╔═╡ d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 using LilGuys
 
+# ╔═╡ 0e405727-b322-4cf5-98f9-bb3e695f616d
+using PyFITS
+
 # ╔═╡ 283d335c-2941-4dc6-9a8e-c47b0864087c
 using PlutoUI
 
@@ -295,7 +298,7 @@ end
 let 
 	fig = Figure()
 	ax = Axis(fig[1,1], yscale=log10, limits=(nothing, (1e-8, 1)),
-		xlabel=L"\epsilon", ylabel="count")
+		xlabel=L"\epsilon", ylabel="count", yticks=Makie.automatic)
 
 	bins = 200
 	stephist!(lguys.specific_energy(snap_i), bins=bins, weights=snap_i.weights,
@@ -331,10 +334,10 @@ profile = lguys.load_profile(params)
 ρ_s(r) = lguys.density(profile, r)
 
 # ╔═╡ 44e065d8-e85b-4972-adc7-340a2af22a54
-prof_i = lguys.StellarDensity3D(snap_i)
+prof_i = lguys.DensityProfile(snap_i, snap_i.weights)
 
 # ╔═╡ 11d8c251-28ae-412c-8a96-646e19adef56
-prof_f = lguys.StellarDensity3D(snap_f)
+prof_f = lguys.DensityProfile(snap_f, snap_f.weights)
 
 # ╔═╡ 6e34b91c-c336-4538-a961-60833d37f070
 function v_rad_hist(snap, bins=100)
@@ -581,7 +584,7 @@ let
 	)
 	vlines!(log10.(r_b_kpc))
 
-	Colorbar(fig[1, 2], h, label="stellar mass density")
+	Colorbar(fig[1, 2], h, label="stellar mass density", ticks=Makie.automatic)
 	fig
 end
 
@@ -593,7 +596,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel=L"log $r$ / kpc",
-		ylabel=L"mean 3D radial velocity in bin (km\,s$^{-1}$)",
+		ylabel=L"$\bar{v}_\textrm{radial}$ (km\,s$^{-1}$)",
 		limits=((nothing, 1.5), (-20, 20))
 	)
 	
@@ -665,10 +668,10 @@ r_h = LilGuys.r_h(profile)
 #t_dm_h, M_dm_h = get_M_h(out, n_rh * r_h)
 
 # ╔═╡ df229124-325f-4f0c-9cf3-9930002b7767
-profiles = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.StellarDensityProfile)
+profiles = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles.hdf5"), lguys.SurfaceDensityProfile)
 
 # ╔═╡ 49052b15-7cfc-488c-974e-7b9c1872d082
-profiles_3D = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.StellarDensity3D)
+profiles_3D = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles_3d.hdf5"), lguys.DensityProfile)
 
 # ╔═╡ 5b23eaca-c5ab-4907-ab92-7cb6bc0e0381
 function get_M_h_fast(profs, rh)
@@ -695,7 +698,7 @@ end
 get_M_h_fast(profiles_3D, 1 * r_h)
 
 # ╔═╡ c16d9d8a-8151-4bc6-a86b-7996ebc20e53
-prof_scalars = lguys.read_ordered_structs(joinpath(stars_dir_out, "stellar_profiles_3d_scalars.hdf5"), lguys.StellarScalars)
+df_scalars = read_fits(joinpath(stars_dir_out, "stellar_profiles_3d_scalars.fits"))
 
 # ╔═╡ d97d7d5d-6f6d-4f4b-97fe-bb825b71ee80
 let
@@ -719,11 +722,10 @@ let
 	scatterlines!((t_dm_h2 .- t_f) * lguys.T2GYR, log10.(M_dm_h2) .- log10.(M_dm_h2[1]), color="black", label=L"r_b")
 
 	
-	times = [(prof.time .- t_f) * T2GYR for (_, prof) in profiles_3D]
+	times = df_scalars.time * T2GYR
+	boundmass = df_scalars.bound_mass
 
-	boundmass = [prof.bound_mass  for (_, prof) in prof_scalars]
-
-	scatter!(times, log10.(boundmass), label="bound")
+	scatter!(times .- t_f*T2GYR, log10.(boundmass), label="bound", color=COLORS[4])
 
 
 	axislegend(position=:lb)
@@ -745,9 +747,9 @@ let
 	)
 
 
-	times = [(prof.time .- t_f) * T2GYR for (_, prof) in profiles_3D]
+	times = df_scalars.time * T2GYR
 
-	vs = [prof.sigma_v * V2KMS for (_, prof) in prof_scalars]
+	vs =df_scalars.sigma_v * V2KMS
 
 	scatter!(times, vs)
 
@@ -827,6 +829,7 @@ end
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
+# ╠═0e405727-b322-4cf5-98f9-bb3e695f616d
 # ╠═f0d2b68a-fae2-4486-a434-a8816e400e84
 # ╠═283d335c-2941-4dc6-9a8e-c47b0864087c
 # ╠═5c7e710a-c7ed-452a-891b-eae8bf9e6d49

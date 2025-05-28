@@ -28,6 +28,9 @@ using CSV, DataFrames
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./style.jl")
 
+# ╔═╡ 2e8868b0-9c42-4b98-8e13-8e096c606e92
+include("./utils.jl")
+
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
 
@@ -125,6 +128,9 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
         plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
 
+	plot_isodensity!(pot_stars, color=:black, x_direction=1)
+	plot_sun!(x_direction=1)
+
 	
     ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
         xgridvisible=false, ygridvisible=false, 
@@ -135,6 +141,10 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
     for (i, (label, traj)) in enumerate(trajectories)
         plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
+	
+	plot_isodensity!(pot_stars, color=:black)
+	plot_sun!()
+	
 	hideydecorations!(ticks=false, minorticks=false)
 
 	colsize!(fig.layout, 1, Aspect(1, 1.0))
@@ -308,6 +318,9 @@ theme(:Legend).margin[]
 	fig
 end
 
+# ╔═╡ bb635c9c-facf-4fbf-b9c9-2445d017c046
+pos_0_lmc = traj_lmc[1][:, 1, 1]
+
 # ╔═╡ 71f9123a-838f-4677-acc3-138eeaf5daa2
 @savefig "scl_nolmc_mc_orbits_xy" let
     fig = Figure()
@@ -474,9 +487,6 @@ end
 	fig
 end
 
-# ╔═╡ bb635c9c-facf-4fbf-b9c9-2445d017c046
-pos_0_lmc = traj_lmc[1][:, 1, 1]
-
 # ╔═╡ 34e480a6-8e9e-4278-80a2-c788ccb01327
 function subtract_lmc(traj, traj_lmc)
 	@assert all(traj[3] .≈ traj_lmc[3])
@@ -607,6 +617,7 @@ LilGuys.break_radius(0.130/T2GYR, obs_props["sigma_v"] / V2KMS)
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
+# ╠═2e8868b0-9c42-4b98-8e13-8e096c606e92
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═c2c320b8-3b14-4e49-9048-92a546a6b275
 # ╠═a1606881-5138-4c90-b66f-34bcffd563eb
