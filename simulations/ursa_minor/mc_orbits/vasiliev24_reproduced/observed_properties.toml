@@ -1,0 +1,25 @@
+ra = 227.2854
+ra_err = 0.0
+ra_ref = "mcconnachie2012"
+
+dec = 67.2225
+dec_err = 0.0
+dec_ref = "mcconnachie2012"
+
+distance = 75.85
+distance_err = 3.6
+distance_modulus = 19.4
+distance_modulus_em = 0.1
+distance_modulus_ep = 0.1
+distance_ref = "mcconnachie2012"
+
+pmra = -0.124
+pmra_err = 0.004
+pmra_ref = "battaglia2022"
+pmdec = 0.071
+pmdec_err = 0.005 
+pmdec_ref = "battaglia2022"
+
+radial_velocity = -246.9
+radial_velocity_err = 0.1
+radial_velocity_ref = "mcconnachie2012"

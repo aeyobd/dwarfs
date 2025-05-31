@@ -57,10 +57,10 @@ function get_normalization(prof)
 end
 
 # ╔═╡ 89cc7dd4-6643-463d-9fa3-bfc2859476f2
-function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing) 
+function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing, plot_final=true) 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel="log radius / arcmin",
+		xlabel="log Radius / arcmin",
 		ylabel = "log surface density",
 		limits=((-0.3, 2.5), (-10, 0.5)),
 	)
@@ -77,8 +77,10 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, color=COLORS[2], linestyle=:dot,
 			label="initial")
 
-	lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
-			label="final")
+	if plot_final
+		lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
+				label="final")
+	end
 
 	if !isnothing(break_height)
 		arrows!([log10(r_b) ], [break_height], [0], [-2], color=COLORS[2], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
@@ -113,8 +115,17 @@ end
 # ╔═╡ 4e76a22b-631a-4478-b3bd-47be18496b3a
 @savefig "umi_i_f_mean" compare_profiles("1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10", norm_shift=-0.3, break_height= - 4, r_j=get_r_j("1e6_v37_r5.0", "orbit_mean.2"))
 
+# ╔═╡ 26a20e13-7b1f-4c6b-a3de-b16bd9883a93
+@savefig "umi_i_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=nothing, plot_final=false)
+
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-@savefig "umi_i_f_smallperi" compare_profiles("1e6_v38_r4.0", "orbit_smallperi.3", "exp2d_rs0.08", norm_shift=-0.2, break_height=-4, r_j=get_r_j("1e6_v38_r4.0", "orbit_smallperi.3", ))
+@savefig "umi_i_f_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=-4, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
+
+# ╔═╡ 7eb32f5b-2765-488a-a7aa-cea11a63315e
+@savefig "umi_i_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=nothing, plot_final=false)
+
+# ╔═╡ 302bbb9f-6eb8-4b32-a375-8a86f2f5c8d1
+@savefig "umi_i_f_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=-2, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -130,4 +141,7 @@ end
 # ╠═64073fad-7ebd-484b-ba95-c740186f02d7
 # ╠═4851087d-2679-4409-b44f-cb22f778974e
 # ╠═4e76a22b-631a-4478-b3bd-47be18496b3a
+# ╠═26a20e13-7b1f-4c6b-a3de-b16bd9883a93
 # ╠═3317cfec-be70-418c-944a-0a6741f03cf3
+# ╠═7eb32f5b-2765-488a-a7aa-cea11a63315e
+# ╠═302bbb9f-6eb8-4b32-a375-8a86f2f5c8d1

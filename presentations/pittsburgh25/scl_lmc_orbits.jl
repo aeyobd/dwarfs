@@ -29,7 +29,9 @@ using CSV, DataFrames
 include("./style.jl")
 
 # ╔═╡ 2e8868b0-9c42-4b98-8e13-8e096c606e92
-include("./utils.jl")
+module Utils 
+	include("./utils.jl")
+end
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
@@ -89,6 +91,60 @@ traj_w_lmc = read_traj("vasiliev24_L3M11")
 # ╔═╡ bc7f29c3-0368-48e9-b74d-728ed072df44
 traj_nolmc = read_traj("vasiliev24_M11")
 
+# ╔═╡ 23b191a9-7c84-4b23-8874-b36f9f55ad35
+
+
+# ╔═╡ 84ade841-db6a-4f0f-a95c-b68dd0e862f0
+import Agama
+
+# ╔═╡ c2289a2a-a38d-45bf-8f66-b53452338462
+pot = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama", "potentials", "EP2020.ini"))
+
+# ╔═╡ 4f8d2437-52e0-4dc1-8811-b675a6b87ca0
+pot_v24 = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama", "potentials/vasiliev24/L3M11/potential_stars.ini"))
+
+# ╔═╡ c5df8f81-6bde-408c-9f6f-e6b40cdb3613
+pot_stars = Agama.Potential(pot._py[0] + pot._py[1] + pot._py[2])
+
+# ╔═╡ 19c03f54-c138-475f-80bd-377c2a3f6cfd
+xz_iso = Utils.integrate_isodensity(pot_stars, x_direction=1, s_scale=3e-4, h_scale=1e-4)
+
+# ╔═╡ 4fa6fa97-207a-4763-ba68-8b72cfbc90ff
+
+
+# ╔═╡ e9027fba-d651-4675-b4bb-665a9fb0931e
+yz_iso = Utils.integrate_isodensity(pot_stars, s_scale=3e-4)
+
+# ╔═╡ 58f6abe8-95ea-471b-8dda-ad03305bafce
+xy_iso = Utils.integrate_isodensity(pot_stars, x_direction=1, y_direction=2, s_scale=3e-4)
+
+# ╔═╡ 8663d658-dc06-434f-9c84-3d33755ba6c2
+xz_iso_v24 = Utils.integrate_isodensity(pot_v24, s_scale=3e-4, x_direction=1)
+
+# ╔═╡ a1f2dcb2-6d66-4547-8314-828affeba047
+yz_iso_v24 = Utils.integrate_isodensity(pot_v24, s_scale=3e-4)
+
+# ╔═╡ 876d9817-d84a-4ad8-9a43-9cd4b09058a9
+let
+	fig = Figure()
+
+
+	ax = Axis(fig[1,1])
+	poly!(yz_iso_v24...)
+
+	poly!(xz_iso..., color=COLORS[8])
+	#lines!(xz_iso[1], -xz_iso[2], color=COLORS[2])
+	xlims!(-100, 100)
+	ylims!(-100, 100)
+
+	Utils.plot_sun!(x_direction=1)
+	fig
+
+end
+
+# ╔═╡ 77dcd0eb-9c81-474c-ae18-2754e547eca9
+scatter(yz_iso[1][1:300:end], yz_iso[2][1:300:end])
+
 # ╔═╡ 088dceb9-fd77-4c95-9040-5f30f3fe1a53
 function plot_r_t_traj!(traj; alpha=0.01, thin=1, color=:black, kwargs...)
     positions, velocities, times = traj
@@ -128,8 +184,8 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
         plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
 
-	plot_isodensity!(pot_stars, color=:black, x_direction=1)
-	plot_sun!(x_direction=1)
+	poly!(xz_iso..., color=COLORS[8])
+	Utils.plot_sun!(x_direction=1)
 
 	
     ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
@@ -142,8 +198,8 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
         plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
 	
-	plot_isodensity!(pot_stars, color=:black)
-	plot_sun!()
+	poly!(yz_iso..., color=COLORS[8])
+	Utils.plot_sun!()
 	
 	hideydecorations!(ticks=false, minorticks=false)
 
@@ -203,6 +259,17 @@ orbit_lmc_resampled = CSV.read(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/1
 # ╔═╡ 9596578a-1c53-4164-874c-0d47bb4a539e
 orbit_nbody_smallperi = get_nbody_orbit("sculptor/1e7_V31_r3.2/orbit_smallperi")
 
+# ╔═╡ fcbe859a-e5e8-48b5-bcbf-a5575196acb1
+@savefig "empty_mc_orbits_xy" let
+
+	fig = compare_x_y_traj(Dict(), t_min=-5/T2GYR, r_max=120, thin=2,)
+	ax = fig.content[1]
+
+
+	resize_to_layout!(fig)
+	fig
+end
+
 # ╔═╡ fb3f61f2-f425-40b4-9983-dfc7528df6ab
 @savefig "scl_mc_orbits_xy" let
 
@@ -224,13 +291,13 @@ orbit_nbody_smallperi = get_nbody_orbit("sculptor/1e7_V31_r3.2/orbit_smallperi")
 end
 
 # ╔═╡ 08a9c431-5ea8-4a8d-b4ba-db0b1d687c94
-collect(-100:100:100)
+
 
 # ╔═╡ c792d2ce-c929-489a-9745-286094d53dd8
 orbit_nbody_smallperi[2]
 
 # ╔═╡ 29d44461-c80e-468d-958b-d14e6010cdd8
-theme(:linewidth)
+
 
 # ╔═╡ 066ccb4d-3ccd-4d20-8d11-5022a8585d8f
 @savefig "scl_mc_orbits_xy_w_act" let
@@ -261,12 +328,19 @@ theme(:linewidth)
 	fig
 end
 
+# ╔═╡ aa88f83d-366e-438e-83b9-98cf414664f8
+function plot_traj_lmc!(; x_direction = 2, t_min=-5/T2GYR)
+	times = Vector(traj_lmc[3])
+	times = times[times .> t_min]
+	plot_x_y_traj!(traj_lmc, label="LMC", color=-times, colormap=:greys, linewidth=6, t_min=t_min, alpha=1, x_direction=x_direction)
+end
+
+
 # ╔═╡ 0272f30a-49f5-405c-9bcb-4c03f32d697d
 let
 	fig = Figure()
 	ax = Axis(fig[1,1])
-		plot_x_y_traj!(traj_lmc, label="LMC", color=-filter(x->x > -4/T2GYR, Vector(traj_lmc[3])), colormap=:greys, linewidth=6, t_min=-4/T2GYR, alpha=1)
-
+		plot_traj_lmc!(x_direction=1)
 	fig
 end
 
@@ -276,163 +350,22 @@ theme(:Legend).padding
 # ╔═╡ b11faada-9f5b-4e4c-a52a-7ae729765c52
 theme(:Legend).margin[]
 
-# ╔═╡ 5f73d865-7241-4e7e-9aba-7801e51e5372
-@savefig "scl_nonolmc_mc_orbits_xy" let
-    fig = Figure()
-	r_max = 300
-
-  	ax2 = Axis(fig[1, 1], xlabel="x / kpc", ylabel="z / kpc",
-        xgridvisible=false, ygridvisible=false, 
-			  limits=(-1, 1, -1, 1) .* r_max,
-    )
-
-    plot_x_y_traj!(traj_nolmc, x_direction=1, label="MW only"=>(; alpha=0.5), color=COLORS[1]; t_min=-5/T2GYR)
-
-	
-	scatter!(pos_0[1], pos_0[3], markersize=20, color=:black)
-
-	
-    ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
-        xgridvisible=false, ygridvisible=false, 
-        aspect=DataAspect(),
-			  limits=(-1, 1, -1, 1) .* r_max,
-			  xticks = -200:100:300
-
-			 )
-    
-    plot_x_y_traj!(traj_nolmc, label="MW only"=>(; alpha=0.5), color=COLORS[1], t_min=-5/T2GYR;)
-        
-	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
-	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(12, 0), fontsize=0.8*theme(:fontsize)[])
-	
-	
-	hideydecorations!(ax, ticks=false, minorticks=false)
-
-	colsize!(fig.layout, 1, Aspect(1, 1.0))
-	colsize!(fig.layout, 2, Aspect(1, 1.0))
-	linkyaxes!(ax, ax2)
-	
-	resize_to_layout!(fig)
-
-	axislegend(ax, merge=true, unique=true, position=:lb, margin=theme(:Legend).margin[])
-	fig
-end
+# ╔═╡ 0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
+md"""
+# Extra
+"""
 
 # ╔═╡ bb635c9c-facf-4fbf-b9c9-2445d017c046
 pos_0_lmc = traj_lmc[1][:, 1, 1]
 
-# ╔═╡ 71f9123a-838f-4677-acc3-138eeaf5daa2
-@savefig "scl_nolmc_mc_orbits_xy" let
-    fig = Figure()
+# ╔═╡ 639997a6-1faa-43c8-afe6-ff219aeab3b7
+function plot_orbits_w_lmc(trajectories; lmc_visible=false, act_visible=false)
+	fig = Figure()
 	r_max = 300
-
-  	ax2 = Axis(fig[1, 1], xlabel="x / kpc", ylabel="z / kpc",
-        xgridvisible=false, ygridvisible=false, 
-			  limits=(-1, 1, -1, 1) .* r_max,
-    )
-
-    plot_x_y_traj!(traj_nolmc, x_direction=1, label="MW only"=>(; alpha=0.5), color=COLORS[1]; t_min=-5/T2GYR)
-
-	plot_x_y_traj!(traj_lmc, x_direction=1,
-		label="LMC", 
-		color=-filter(x->x > -5/T2GYR, Vector(traj_lmc[3])), 
-		colormap=:greys, linewidth=6, t_min=-5/T2GYR, alpha=1, )
+	t_min = -5/T2GYR
 	
-	scatter!(pos_0_lmc[1], pos_0_lmc[3], markersize=20, color=:black)
-
-	scatter!(pos_0[1], pos_0[3], markersize=20, color=:black)
-
-	
-    ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
-        xgridvisible=false, ygridvisible=false, 
-			  limits=(-1, 1, -1, 1) .* r_max,
-			  xticks = -200:100:300
-    )
-    
-    plot_x_y_traj!(traj_nolmc, label="MW only"=>(; alpha=0.5), color=COLORS[1], t_min=-5/T2GYR;)
-        
-	plot_x_y_traj!(traj_lmc, label="LMC", color=-filter(x->x > -5/T2GYR, Vector(traj_lmc[3])), colormap=:greys, linewidth=6, t_min=-5/T2GYR, alpha=1)
-	scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=:black)
-
-	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
-	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(12, 0), fontsize=0.8*theme(:fontsize)[])
-	
-	
-	hideydecorations!(ax, ticks=false, minorticks=false)
-
-	colsize!(fig.layout, 1, Aspect(1, 1.0))
-	colsize!(fig.layout, 2, Aspect(1, 1.0))
-	linkyaxes!(ax, ax2)
-	
-	resize_to_layout!(fig)
-
-	axislegend(ax, merge=true, unique=true, position=:lb, margin=theme(:Legend).margin[])
-	fig
-end
-
-# ╔═╡ 0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
-@savefig "scl_lmc_mc_orbits_xy" let
-    fig = Figure()
-	r_max = 300
-
-  	ax2 = Axis(fig[1, 1], xlabel="x / kpc", ylabel="z / kpc",
-        xgridvisible=false, ygridvisible=false, 
-			  limits=(-1.0, 1.0, -1, 1) .* r_max,
-    )
-
-    for (i, (label, traj)) in enumerate(trajectories)
-        plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), color=COLORS[i]; t_min=-5/T2GYR)
-    end
-
-	plot_x_y_traj!(traj_lmc, x_direction=1,
-		label="LMC", 
-		color=-filter(x->x > -5/T2GYR, Vector(traj_lmc[3])), 
-		colormap=:greys, linewidth=6, t_min=-5/T2GYR, alpha=1, )
-	
-	scatter!(pos_0_lmc[1], pos_0_lmc[3], markersize=20, color=:black)
-
-	scatter!(pos_0[1], pos_0[3], markersize=20, color=:black)
-
-	
-    ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
-        xgridvisible=false, ygridvisible=false, 
-        aspect=DataAspect(),
-			  limits=(-1, 1, -1, 1) .* r_max,
-			  xticks = -200:100:300
-
-    )
-    
-    for (i, (label, traj)) in enumerate(trajectories)
-        plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i], t_min=-5/T2GYR;)
-    end
-        
-	plot_x_y_traj!(traj_lmc, label="LMC", color=-filter(x->x > -5/T2GYR, Vector(traj_lmc[3])), colormap=:greys, linewidth=6, t_min=-5/T2GYR, alpha=1)
-	scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=:black)
-
-	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
-	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(12, 0), fontsize=0.8*theme(:fontsize)[])
-	
-	
-	hideydecorations!(ax, ticks=false, minorticks=false)
-
-	colsize!(fig.layout, 1, Aspect(1, 1.0))
-	colsize!(fig.layout, 2, Aspect(1, 1.0))
-	linkyaxes!(ax, ax2)
-	
-	resize_to_layout!(fig)
-
-	axislegend(ax, merge=true, unique=true, position=:lb, margin=theme(:Legend).margin[])
-	fig
-end
-
-# ╔═╡ 46932557-e958-48ae-9343-dbdc3f18d34d
-@savefig "scl_lmc_mc_orbits_xy_w_act" let
-    fig = Figure()
-	r_max = 300
 	o = orbit_nbody_lmc[1]
 
-
-	
   	ax2 = Axis(fig[1, 1], xlabel="x / kpc", ylabel="z / kpc",
         xgridvisible=false, ygridvisible=false, 
 			  limits=(-1, 1, -1, 1) .* r_max,
@@ -441,18 +374,23 @@ end
 
     for (i, (label, traj)) in enumerate(trajectories)
         plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), 	
-					   color=COLORS[i]; t_min=-5/T2GYR)
+					   color=COLORS[i]; t_min=t_min)
     end
 
-	plot_x_y_traj!(traj_lmc, x_direction=1,
-		label="LMC", 
-		color=-filter(x->x > -5/T2GYR, Vector(traj_lmc[3])), 
-		colormap=:greys, linewidth=6, t_min=-5/T2GYR, alpha=1, )
 	
-	scatter!(pos_0_lmc[1], pos_0_lmc[3], markersize=20, color=:black)
-
+	if lmc_visible
+		scatter!(pos_0_lmc[1], pos_0_lmc[3], markersize=20, color=:black)
+		plot_traj_lmc!(x_direction=1, t_min=t_min)
+	end
+	
 	scatter!(pos_0[1], pos_0[3], markersize=20, color=:black)
-	lines!(o[1, :], o[3, :])
+
+	if act_visible
+		lines!(o[1, :], o[3, :])
+	end
+
+	poly!(xz_iso_v24..., color=COLORS[8])
+	Utils.plot_sun!(x_direction=1)
 
 	
     ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
@@ -466,14 +404,23 @@ end
     for (i, (label, traj)) in enumerate(trajectories)
         plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i], t_min=-5/T2GYR;)
     end
-        
-	plot_x_y_traj!(traj_lmc, label="LMC", color=-filter(x->x > -5/T2GYR, Vector(traj_lmc[3])), colormap=:greys, linewidth=6, t_min=-5/T2GYR, alpha=1)
-	scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=:black)
 
+	if lmc_visible
+		plot_traj_lmc!(t_min=t_min)
+		scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=:black)
+	end
+	
 	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
-	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(12, 0), fontsize=0.8*theme(:fontsize)[])
-	lines!(o[2, :], o[3, :])
 
+	
+	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(12, 0), fontsize=0.8*theme(:fontsize)[])
+
+	if act_visible
+		lines!(o[2, :], o[3, :])
+	end
+
+	poly!(yz_iso_v24..., color=COLORS[8])
+	Utils.plot_sun!()
 	
 	hideydecorations!(ax, ticks=false, minorticks=false)
 
@@ -486,6 +433,18 @@ end
 	axislegend(ax, merge=true, unique=true, position=:lb, margin=theme(:Legend).margin[])
 	fig
 end
+
+# ╔═╡ 96f1e8aa-2880-4b0a-a82e-0f5ba8e33a90
+@savefig "scl_nonolmc_mc_orbits_xy" plot_orbits_w_lmc(Dict("MW only" => traj_nolmc))
+
+# ╔═╡ 9a98cd77-b5e6-4343-8aaf-40fc51016fc8
+@savefig "scl_nolmc_mc_orbits_xy" plot_orbits_w_lmc(Dict("MW only" => traj_nolmc), lmc_visible=true)
+
+# ╔═╡ 7a22a547-90e5-4097-866f-fefbf6e6c724
+@savefig "scl_lmc_mc_orbits_xy" plot_orbits_w_lmc(trajectories, lmc_visible=true)
+
+# ╔═╡ 4d051eb4-5885-42b3-b715-80adeda41fb8
+@savefig "scl_lmc_mc_orbits_xy_w_act" plot_orbits_w_lmc(trajectories, lmc_visible=true, act_visible=true)
 
 # ╔═╡ 34e480a6-8e9e-4278-80a2-c788ccb01327
 function subtract_lmc(traj, traj_lmc)
@@ -634,6 +593,19 @@ LilGuys.break_radius(0.130/T2GYR, obs_props["sigma_v"] / V2KMS)
 # ╠═70c6eab7-0f69-41b9-8c09-11ab0aa2de46
 # ╠═93ca6a6b-5f41-40d1-8661-31d0b3c5aa58
 # ╠═bc7f29c3-0368-48e9-b74d-728ed072df44
+# ╠═23b191a9-7c84-4b23-8874-b36f9f55ad35
+# ╠═84ade841-db6a-4f0f-a95c-b68dd0e862f0
+# ╠═c2289a2a-a38d-45bf-8f66-b53452338462
+# ╠═4f8d2437-52e0-4dc1-8811-b675a6b87ca0
+# ╠═c5df8f81-6bde-408c-9f6f-e6b40cdb3613
+# ╠═19c03f54-c138-475f-80bd-377c2a3f6cfd
+# ╠═4fa6fa97-207a-4763-ba68-8b72cfbc90ff
+# ╠═e9027fba-d651-4675-b4bb-665a9fb0931e
+# ╠═58f6abe8-95ea-471b-8dda-ad03305bafce
+# ╠═8663d658-dc06-434f-9c84-3d33755ba6c2
+# ╠═a1f2dcb2-6d66-4547-8314-828affeba047
+# ╠═876d9817-d84a-4ad8-9a43-9cd4b09058a9
+# ╠═77dcd0eb-9c81-474c-ae18-2754e547eca9
 # ╠═efae8808-1768-40c1-a11d-253402cdfe43
 # ╠═088dceb9-fd77-4c95-9040-5f30f3fe1a53
 # ╠═70d81f4a-8e01-45b1-a695-234d0249cca9
@@ -644,18 +616,22 @@ LilGuys.break_radius(0.130/T2GYR, obs_props["sigma_v"] / V2KMS)
 # ╠═a5360a34-42d9-4f43-bf25-a1012e3636e4
 # ╠═33a9f4c7-11a4-4edb-b40d-22d65eec59ea
 # ╠═9596578a-1c53-4164-874c-0d47bb4a539e
+# ╠═fcbe859a-e5e8-48b5-bcbf-a5575196acb1
 # ╠═fb3f61f2-f425-40b4-9983-dfc7528df6ab
 # ╠═08a9c431-5ea8-4a8d-b4ba-db0b1d687c94
 # ╠═c792d2ce-c929-489a-9745-286094d53dd8
 # ╠═29d44461-c80e-468d-958b-d14e6010cdd8
 # ╠═066ccb4d-3ccd-4d20-8d11-5022a8585d8f
 # ╠═0272f30a-49f5-405c-9bcb-4c03f32d697d
+# ╠═aa88f83d-366e-438e-83b9-98cf414664f8
 # ╠═497ffefb-7c8d-481b-be73-56178240e3aa
 # ╠═b11faada-9f5b-4e4c-a52a-7ae729765c52
-# ╠═5f73d865-7241-4e7e-9aba-7801e51e5372
-# ╠═71f9123a-838f-4677-acc3-138eeaf5daa2
+# ╠═96f1e8aa-2880-4b0a-a82e-0f5ba8e33a90
+# ╠═9a98cd77-b5e6-4343-8aaf-40fc51016fc8
+# ╠═7a22a547-90e5-4097-866f-fefbf6e6c724
+# ╠═4d051eb4-5885-42b3-b715-80adeda41fb8
+# ╠═639997a6-1faa-43c8-afe6-ff219aeab3b7
 # ╠═0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
-# ╠═46932557-e958-48ae-9343-dbdc3f18d34d
 # ╠═bb635c9c-facf-4fbf-b9c9-2445d017c046
 # ╠═34e480a6-8e9e-4278-80a2-c788ccb01327
 # ╠═0f3018a2-42e2-4140-8e9e-f094276b76f2

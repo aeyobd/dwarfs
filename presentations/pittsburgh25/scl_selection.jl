@@ -83,7 +83,11 @@ end
 filt_params = GaiaFilterParams(observed_properties, filename=datafile)
 
 # ╔═╡ ec227641-86e6-46b7-8019-9b02072ed9f7
-all_stars = read_gaia_stars(filt_params)
+all_stars = let
+	df = read_gaia_stars(filt_params) 
+	Utils.correct_extinction!(df)
+	df
+end
 
 # ╔═╡ 082a06dd-eeb5-4761-a233-1ee89e8cb819
 best_stars = all_stars[all_stars.F_BEST .== 1.0, :]
@@ -101,7 +105,7 @@ rv_file = Dict(
 )[galaxyname]
 
 # ╔═╡ bc87bc28-167d-493d-9553-e90afeaee2ee
-rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/velocities/processed/$rv_file")
+rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/velocities/processed/$rv_file") |> Utils.correct_extinction!
 
 # ╔═╡ 766ea9d3-d1e1-4a4d-b6ef-5a3528cb1579
 R_h = observed_properties["R_h"]
@@ -115,6 +119,13 @@ end
 
 # ╔═╡ b7244cfb-7326-4e81-b751-0121f202f2b3
 rv_distant.R_ell ./ R_h
+
+# ╔═╡ 8fed3781-f05a-4f52-b3f5-1a8e18decff0
+if galaxyname == "sculptor"
+	rv_sestito = rv_distant[.!ismissing.(rv_distant.RV_gmos), :]
+elseif galaxyname == "ursa_minor"
+	rv_sestito = rv_distant[.!ismissing.(rv_distant.RV_graces), :]
+end
 
 # ╔═╡ 5a9b5529-50f1-4cb5-b716-42180ea77d5f
 md"""
@@ -133,7 +144,6 @@ grey = colorant"#808080"
 samples = OrderedDict(
 	:best => best_stars,
 	:members => members,
-	:distant => rv_distant
 )
 
 # ╔═╡ 5af9ddf6-7d14-4120-9d20-bcd20e756a09
@@ -157,8 +167,16 @@ styles = Dict(
 		alpha=1,
 	),
 	:distant => (;
-		 markersize=36,
+		 markersize=24,
 		 label = "distant RV members", 
+		 marker = :star5,
+		 color = COLORS[4],
+		 alpha=1, 
+		 strokecolor=:black, 
+		 strokewidth = 0.0
+	),
+	:fed => (;
+		 markersize=36,
 		 marker = :star5,
 		 color = COLORS[4],
 		 alpha=1, 
@@ -167,104 +185,16 @@ styles = Dict(
 	)
 )
 
-# ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-# @savefig "$(galaxyname)_selection_w_rv" let
-# 	fig = Utils.compare_j24_samples(
-# 		samples, styles,
-# 		observed_properties
-# 	)
-
-# 	Makie.resize_to_layout!(fig)
-# 	fig
-
-# end
-
-# ╔═╡ 650f211d-ad9f-4e83-8920-caf0a3bb7dce
-extrema(log10.(members.L_CMD_SAT))
-
-# ╔═╡ 0ef75901-9182-4bed-9aa2-c9c1bc574c69
-@savefig "$(galaxyname)_selection_gradient" let
-	fig = Figure(size=(1720, 800))
-	colorrange=(-5, 0)
-	age = 12
-	kwargs_bg = styles[:best]
-
-	dθ = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
-	ax = Axis(fig[1,1],
-		xlabel=Utils.plot_labels[:xi_am], 
-		ylabel=Utils.plot_labels[:eta_am], 
-		#aspect=1, 
-		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false,
-		xreversed = true
+# ╔═╡ 4c2b0976-d3bd-4cd2-bac5-f70490067a45
+@savefig "$(galaxyname)_best_selection" let
+	fig = Utils.compare_j24_samples(
+		Dict(:best => best_stars), styles,
+		observed_properties
 	)
-	scatter!(best_stars.xi, best_stars.eta; kwargs_bg... )
-	scatter!(members.xi, members.eta, color=log10.(members.L_S_SAT), label="members", colorrange=colorrange)
-	
-	Utils.ellipse!(6observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
-	
-	b = 6observed_properties["R_h"] * sqrt(1 - observed_properties["ellipticity"])
-    θ = observed_properties["position_angle"]
-	
-    text!(b*cosd(θ), -b*sind(θ), text=L"6R_h", rotation=deg2rad(θ-90), 
-          align = (:center, :bottom), color=:black, fontsize=0.8*theme(:fontsize)[])
-
-	# CMD
-
-	isochrone = Utils.get_isochrone(observed_properties["metallicity"], age)
-    G_iso = isochrone.Gmag .+ observed_properties["distance_modulus"]
-    BP_RP_iso = isochrone.G_BPftmag .- isochrone.G_RPmag
-
-	Gmin = minimum(best_stars.G) - 0.2
-    Gmax = 21
-	ax_cmd =  Axis(fig[1,2], 
-		yreversed=true,
-		xlabel=Utils.plot_labels[:bp_rp],
-		ylabel=Utils.plot_labels[:G],
-		limits=(-0.5, 2.5, Gmin, Gmax),
-		xticks = 0:2,
-		xgridvisible=false,
-		ygridvisible=false,
-		#aspect = 1,
-	)
-
-	Ag, Ab, Ar = Utils.get_extinction(best_stars.ra, best_stars.dec, best_stars.bp_rp)
-	scatter!(best_stars.bp_rp .- Ab .+ Ar, best_stars.phot_g_mean_mag .- Ag; kwargs_bg...)
-
-	Ag, Ab, Ar = Utils.get_extinction(members.ra, members.dec, members.bp_rp)
-
-	scatter!(members.bp_rp .- Ab .+ Ar, members.G .- Ag, color=log10.(members.L_CMD_SAT), colorrange=colorrange)
-
-	lines!(BP_RP_iso, G_iso, color=:black)
-
-
-	# PM
-	 ax_pm = Axis(fig[1,3],
-		xlabel = Utils.plot_labels[:pmra],
-		ylabel = Utils.plot_labels[:pmdec],
-		#aspect=DataAspect(),
-		limits=(-10, 10, -10, 10),
-		xgridvisible=false,
-		ygridvisible=false,
-		)
-	
-	scatter!(best_stars.pmra, best_stars.pmdec; kwargs_bg... )
-	p = scatter!(members.pmra, members.pmdec, color=log10.(members.L_PM_SAT), colorrange=colorrange)
-	
-	scatter!([observed_properties["pmra"]], [observed_properties["pmdec"]],
-		 color=:black
-   )
-
-
-	Colorbar(fig[1,4], p, width=theme(:fontsize), label="log likelihood (component)")
-
-	
-	rowsize!(fig.layout, 1, Aspect(1, 1))
-	Legend(fig[2, 2], ax, tellwidth=false, tellheight=true, nbanks=3)
 
 	Makie.resize_to_layout!(fig)
-
 	fig
+
 end
 
 # ╔═╡ b4cef660-5ec1-429d-972b-fb50dd0b155c
@@ -279,17 +209,30 @@ end
 
 end
 
+# ╔═╡ 97c855d2-50ad-4143-ae43-8e0f3e31270f
+smallersize = (668/Arya.HW_RATIO, 668) 
+
 # ╔═╡ 04073727-7f96-4d6b-a0d4-0b3975955461
 @savefig "$(galaxyname)_rv_stars" let
-	fig = Figure()
+	fig = Figure(size=smallersize)
 	
 	Utils.plot_tangent!(fig[1,1],
 		samples, styles,
 		observed_properties
 	)
 
-	fig.content[1].aspect = DataAspect()
+	Utils.plot_R_h_ell!(observed_properties, 12)
+	scatter!(rv_distant.xi, rv_distant.eta; styles[:distant]...)
+	scatter!(rv_sestito.xi, rv_sestito.eta; styles[:fed]...)
 	
+
+
+	if galaxyname == "sculptor"
+		axislegend(position=:lt, margin=theme(:Legend).padding, labelsize=0.6*theme(:fontsize)[])
+	end
+
+	colsize!(fig.layout, 1, Aspect(1, 1.0))
+	resize_to_layout!(fig)
 	fig
 
 end
@@ -311,6 +254,9 @@ prof = LilGuys.Exp2D()
 # ╔═╡ d7c254be-6030-451b-a947-d74a17ee62f7
 (1 - LilGuys.mass_2D(prof, 6α)) *  sum(best_stars.PSAT)
 
+# ╔═╡ 9e0a0cc0-4c32-4293-ad52-1b572811a8d9
+(1 - LilGuys.mass_2D(LilGuys.Plummer(), 6)) *  sum(best_stars.PSAT)
+
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
@@ -331,26 +277,27 @@ prof = LilGuys.Exp2D()
 # ╠═90cec348-1947-4091-a5dd-ae67cf80fddb
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
 # ╠═731ea468-5003-44e9-95b8-7fa7ef4b475b
-# ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
+# ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
 # ╠═29d16d4e-a6b8-4945-860e-cc8690426d49
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
 # ╠═766ea9d3-d1e1-4a4d-b6ef-5a3528cb1579
 # ╠═a04a394e-4d4b-4d95-baab-9886e151ec44
 # ╠═b7244cfb-7326-4e81-b751-0121f202f2b3
+# ╠═8fed3781-f05a-4f52-b3f5-1a8e18decff0
 # ╟─5a9b5529-50f1-4cb5-b716-42180ea77d5f
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
 # ╠═dc0fa286-0dbb-4da5-bfae-ebe3655f7d8a
 # ╠═74a3920c-f93d-4a7c-932a-2938cd6bb020
 # ╠═5af9ddf6-7d14-4120-9d20-bcd20e756a09
 # ╠═31bac4e9-4f19-4391-8a2a-4408c746a753
-# ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
-# ╠═650f211d-ad9f-4e83-8920-caf0a3bb7dce
-# ╠═0ef75901-9182-4bed-9aa2-c9c1bc574c69
+# ╠═4c2b0976-d3bd-4cd2-bac5-f70490067a45
 # ╠═b4cef660-5ec1-429d-972b-fb50dd0b155c
+# ╠═97c855d2-50ad-4143-ae43-8e0f3e31270f
 # ╠═04073727-7f96-4d6b-a0d4-0b3975955461
 # ╟─889cc1ea-f453-42a3-8036-8ee12191be7f
 # ╠═26574dbe-b201-4ea4-aa37-239c4d38b271
 # ╠═0363e1b8-c9be-4059-a2a5-166f01d7fe56
 # ╠═e52ae552-1221-4871-8877-65cf33eb5a4c
 # ╠═d7c254be-6030-451b-a947-d74a17ee62f7
+# ╠═9e0a0cc0-4c32-4293-ad52-1b572811a8d9

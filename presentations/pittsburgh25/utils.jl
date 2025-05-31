@@ -5,6 +5,7 @@ using OrderedCollections
 using CSV, DataFrames
 using LilGuys
 using Arya
+import Agama
 
 
 SELECTION_COLORS = [colorant"#808080"; to_colormap(:YlGnBu_5)[end-2:end]]
@@ -78,34 +79,32 @@ end
 
 
 
-function plot_tangent!(gs, datasets, scatter_kwargs, observed_properties)
+function plot_tangent!(gs, datasets, scatter_kwargs, observed_properties; R_ell=[6])
     all_stars = first(datasets)[2]
-	# tangent
-    dθ = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
-	ax = Axis(gs,
-		xlabel=plot_labels[:xi_am], 
-		ylabel=plot_labels[:eta_am], 
-		#aspect=1, 
-		limits=(-dθ, dθ, -dθ, dθ), 
-		xgridvisible=false, ygridvisible=false,
-		xreversed = true
-	)
+	ax = TangentAxis(gs, all_stars)
 
 
 	for (label, df) in datasets
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
         if label == :members
-            ellipse!(6observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
         end
 	end
 
-    b = 6observed_properties["R_h"] * sqrt(1 - observed_properties["ellipticity"])
-    θ = observed_properties["position_angle"]
-    text!(b*cosd(θ), -b*sind(θ), text=L"6R_h", rotation=deg2rad(θ-90), 
-          align = (:center, :bottom), color=:black, fontsize=0.8*theme(:fontsize)[])
-
+    for R in R_ell
+        plot_R_h_ell!(observed_properties, R)
+    end
 
     return ax
+end
+
+
+function plot_R_h_ell!(observed_properties, R=6)
+    b = R* observed_properties["R_h"] * sqrt(1 - observed_properties["ellipticity"])
+    θ = observed_properties["position_angle"]
+    text!(b*cosd(θ), -b*sind(θ), text=L"%$(R)R_h", rotation=deg2rad(θ-90), 
+          align = (:center, :top), color=:black, fontsize=0.8*theme(:fontsize)[])
+
+    ellipse!(R * observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=:black)
 end
 
 
@@ -117,24 +116,60 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 
     ax = plot_tangent!(fig[1,1], datasets, scatter_kwargs, observed_properties)
 
-	# cmd
-    df_best = datasets[(collect∘keys)(datasets)[1]]
-    Gmin = minimum(df_best.G) - 0.2
-    Gmax = 21
+    ax_cmd =  CMDAxis(fig[1,2], first(datasets)[2])
 
-    G_errorbar = Gmin + (Gmax - Gmin) / 8
-	df = datasets[:members]
-    #errorscatter!([-0.125], [G_errorbar], xerror=[median(df.dBP .+ df.dRP)], yerror=[median(df.dG)], color=:black, markersize=0)
+	for (label, df) in datasets
+        scatter!(df.bp_rp_corrected, df.G_corrected; scatter_kwargs[label]...)
+	end
+    plot_isochrone!(observed_properties, age)
 
-    isochrone = get_isochrone(observed_properties["metallicity"], age)
+
+	# proper motions
+    ax_pm = PMAxis(fig[1,3])
+	
+	for (label, df) in datasets
+		scatter!(df.pmra, df.pmdec; scatter_kwargs[label]...)
+	end
+
+    plot_obs_pm!(observed_properties)
+
+
+    # styling
+	rowsize!(fig.layout, 1, Aspect(1, 1))
+    Legend(fig[2, 2], ax, tellwidth=false, tellheight=true, nbanks=3)
+	#resize_to_layout!(fig)
+	fig
+end
+
+
+function plot_isochrone!(observed_properties, age)
+	isochrone = Utils.get_isochrone(observed_properties["metallicity"], age)
     G_iso = isochrone.Gmag .+ observed_properties["distance_modulus"]
     BP_RP_iso = isochrone.G_BPftmag .- isochrone.G_RPmag
+	lines!(BP_RP_iso, G_iso, color=:black)
+end
 
 
-	ax_cmd =  Axis(fig[1,2], 
+function TangentAxis(gs, all_stars)
+	dθ = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
+
+	ax = Axis(gs,
+		xlabel=Utils.plot_labels[:xi_am], 
+		ylabel=Utils.plot_labels[:eta_am], 
+		#aspect=1, 
+		limits=(-dθ, dθ, -dθ, dθ), 
+		xgridvisible=false, ygridvisible=false,
+		xreversed = true
+	)
+end
+
+function CMDAxis(gs, all_stars)
+	Gmin = minimum(all_stars.G) - 0.2
+    Gmax = 21
+	ax_cmd =  Axis(gs, 
 		yreversed=true,
-		xlabel=plot_labels[:bp_rp],
-		ylabel=plot_labels[:G],
+		xlabel=Utils.plot_labels[:bp_rp],
+		ylabel=Utils.plot_labels[:G],
 		limits=(-0.5, 2.5, Gmin, Gmax),
 		xticks = 0:2,
 		xgridvisible=false,
@@ -142,19 +177,10 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 		#aspect = 1,
 	)
 
-	for (label, df) in datasets
-        Ag, Ab, Ar = get_extinction(df.ra, df.dec, df.bp_rp)
-		scatter!(df.bp_rp .- Ab .+ Ar, df.phot_g_mean_mag .- Ag; scatter_kwargs[label]...)
+end
 
-        if label == :members
-            lines!(BP_RP_iso, G_iso, color=:black)
-        end
-	end
-
-
-
-	# proper motions
-	ax_pm = Axis(fig[1,3],
+function PMAxis(gs)
+	ax_pm = Axis(gs,
 		xlabel = plot_labels[:pmra],
 		ylabel = plot_labels[:pmdec],
 		#aspect=DataAspect(),
@@ -162,29 +188,26 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 		xgridvisible=false,
 		ygridvisible=false,
 		)
-	
-	for (label, df) in datasets
-		scatter!(df.pmra, df.pmdec; scatter_kwargs[label]...)
-	end
+end
 
-	df = datasets[:members]
-    #errorscatter!([-7.5], [7.5], xerror=[median(df.pmra_error)], yerror=[median(df.pmdec_error)], color=:black, markersize=0)
 
+
+function correct_extinction!(df)
+    Ag, Ab, Ar = get_extinction(df.ra, df.dec, df.bp_rp)
+    df[!, :bp_rp_corrected] = df.bp_rp .- Ab .+ Ar 
+    df[!, :G_corrected] = df.phot_g_mean_mag .- Ag
+    return df
+end
+
+
+function plot_obs_pm!(observed_properties)
     obs = LilGuys.collapse_errors(observed_properties)
     xe = maximum(error_interval(obs["pmra"]))
     ye = maximum(error_interval(obs["pmra"]))
     scatter!([observed_properties["pmra"]], [observed_properties["pmdec"]],
              color=:black
        )
-
-
-	rowsize!(fig.layout, 1, Aspect(1, 1))
-
-    Legend(fig[2, 2], ax, tellwidth=false, tellheight=true, nbanks=3)
-	#resize_to_layout!(fig)
-	fig
 end
-
 
 
 function get_isochrone(M_H, age=12)
@@ -208,11 +231,12 @@ function get_isochrone(M_H, age=12)
     isochrone
 end
 
+X_SUN = [-LilGuys.GalactocentricFrame().d, 0, 0]
 
 
-function integrate_isodensity(pot, x0=[8., 0.]; x_direction=2, y_direction=3, s_factor=0.01, h_factor=0.01, h0=0.0001)
-	x = x0[1]
-	y = x0[2]
+function integrate_isodensity(pot, initial=[-X_SUN[1], 0.]; x_direction=2, y_direction=3, s_scale=0.01, h_scale=0.01, h0=0.0001)
+	x = initial[1]
+	y = initial[2]
 
 	xs = [x]
 	ys = [y]
@@ -226,9 +250,12 @@ function integrate_isodensity(pot, x0=[8., 0.]; x_direction=2, y_direction=3, s_
 	y_vec = zeros(3)
 	y_vec[y_direction] = 1
 	ρ(x) = Agama.density(pot, x)
-	ρ_0 = ρ(x_vec * x0[1] .+ y_vec * x0[2])
+    ρ_0 = ρ(x_vec * x .+ y_vec * y)
     dlρ_max = 0
-	
+
+    x0 = zeros(3)
+    x0[x_direction] = x
+    x0[y_direction] = y
     dx = (ρ(x0 .+ x_vec * h) - ρ(x0))/h
     dy = (ρ(x0 .+ y_vec * h) - ρ(x0))/h
 
@@ -241,8 +268,8 @@ function integrate_isodensity(pot, x0=[8., 0.]; x_direction=2, y_direction=3, s_
 		x0[y_direction] = y
 		dx = (ρ(x0 .+ x_vec * h) - ρ(x0))/h
 		dy = (ρ(x0 .+ y_vec * h) - ρ(x0))/h
-		x += ds .* dy
-		y += -ds .* dx
+		x += s .* dy
+		y += -s .* dx
 
 		push!(xs, x)
 		push!(ys, y)
@@ -251,7 +278,7 @@ function integrate_isodensity(pot, x0=[8., 0.]; x_direction=2, y_direction=3, s_
         h = h_scale * s
 
 		θ_new = atan(y, x)
-        dlρ_max = max(dlρ_max, abs(log10(ρ(x0) - ρ_0)))
+        dlρ_max = max(dlρ_max, abs(log10(ρ(x0)) - log10(ρ_0)))
 
 		if θ_new > 0 && (θ < 0)
 			break
@@ -265,8 +292,7 @@ function integrate_isodensity(pot, x0=[8., 0.]; x_direction=2, y_direction=3, s_
 end
 
 
-X_SUN = [-LilGuys.GalactocentricFrame().d, 0, 0]
 function plot_sun!(; x_direction=2, y_direction=3)
-	scatter!(X_SUN[x_direction], X_SUN[y_direction], marker=:star5, color=COLORS[9])
+    scatter!(X_SUN[x_direction], X_SUN[y_direction], marker=:star5, color=COLORS[9], strokewidth=theme(:linewidth)[]/4, strokecolor=:black)
 end
 		

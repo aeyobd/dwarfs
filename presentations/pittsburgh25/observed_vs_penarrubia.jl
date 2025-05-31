@@ -122,10 +122,10 @@ begin
 end
 
 # ╔═╡ 940f98f7-d1a2-4a37-9da5-aab82968561e
-log_r_label = L"log radius / $R_h$"
+log_r_label = L"log Radius / $R_h$"
 
 # ╔═╡ c00be232-10ad-4905-a924-1e80b4da345b
-log_sigma_label = L"log surface density / $\Sigma_{\star}(R_h)$"
+log_sigma_label = L"log surface density / $\Sigma_h$"
 
 # ╔═╡ 57d7cd00-9d14-43d9-86d4-2be8d03cfcba
 let
@@ -192,6 +192,35 @@ prof_ana = LilGuys.Exp2D(R_s = 1/LilGuys.R_h(LilGuys.Exp2D()))
 	@savefig "scl_umi_vs_exp" fig
 end
 
+# ╔═╡ 25061a48-e00b-431c-bb24-2357272e4d68
+let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1],
+		limits = (-1.9, 1.2, -4.5, 1.5),
+		xlabel = log_r_label,
+		ylabel =log_sigma_label,
+	)
+
+
+
+	for i in eachindex(galaxies)
+		galaxy = galaxies[i]
+		prof = obs_profs[i]
+
+		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
+					  label=Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")[galaxy], 
+					  color=[COLORS[4], COLORS[2], COLORS[1]][i])
+	end
+
+
+	lines!(prof_i.log_R, prof_i.log_Sigma, label="no tides", linestyle=:dot, color=:black)
+
+	axislegend(position=:lb, margin=(19,19,19,19))
+
+	@savefig "scl_umi_vs_penarrubia_i" fig
+end
+
 # ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
 let
 	fig = Figure()
@@ -247,4 +276,5 @@ end
 # ╠═57d7cd00-9d14-43d9-86d4-2be8d03cfcba
 # ╠═d0c1d099-f07b-440e-8192-573b95c9354b
 # ╠═2ab5af72-4667-42e5-8e3c-20a68952d2e6
+# ╠═25061a48-e00b-431c-bb24-2357272e4d68
 # ╠═21ace95e-ba98-4728-a8f7-8303f0eac247

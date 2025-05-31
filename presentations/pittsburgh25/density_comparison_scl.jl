@@ -36,23 +36,35 @@ function load_profile(haloname, orbitname, starsname)
 end
 
 # ╔═╡ b9e03109-9f49-4897-b26c-e31698a5fe49
-function get_r_b(haloname, orbitname, starsname)
+function get_r_b(haloname, orbitname, starsname; lmc=false)
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/$haloname/$orbitname/stars/$starsname/")
 
 	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml")
 
 	σv = prof_f.annotations["sigma_v"]
-	props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
+	if lmc
+		props = TOML.parsefile(model_dir * "../../orbital_properties_lmc.toml")
+	else
+		props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
+	end
+
+	dist_f =  TOML.parsefile(model_dir * "../../orbital_properties.toml")["distance_f"]
+
+	
 	dt = props["t_last_peri"]
 	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
-	return LilGuys.kpc2arcmin(r_b, props["distance_f"])	
+	return LilGuys.kpc2arcmin(r_b, dist_f)	
 end
 
 # ╔═╡ fe3bc6ee-14ed-4006-b3ec-f068d2492da4
-function get_r_j(haloname, orbitname)
+function get_r_j(haloname, orbitname; lmc=false)
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/$haloname/$orbitname/")
 
-	props = TOML.parsefile(model_dir * "jacobi.toml")
+	if lmc
+		props = TOML.parsefile(model_dir * "jacobi_lmc.toml")
+	else
+		props = TOML.parsefile(model_dir * "jacobi.toml")
+	end
 	return props["r_J"]
 end
 
@@ -71,10 +83,10 @@ end
 theme(:size)
 
 # ╔═╡ 89cc7dd4-6643-463d-9fa3-bfc2859476f2
-function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing) 
+function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing, plot_final=true) 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel="log radius / arcmin",
+		xlabel="log Radius / arcmin",
 		ylabel = "log surface density",
 		limits=((-0.3, 2.5), (-10, 0.5)),
 	)
@@ -93,9 +105,11 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, color=COLORS[2], linestyle=:dot,
 			label="initial")
 
-	lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
-			label="final")
-
+	if plot_final
+		lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
+				label="final")
+	end
+	
 	if !isnothing(break_height)
 		arrows!([log10(r_b) ], [break_height], [0], [-2], color=COLORS[2], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
 		text!([log10(r_b) ], [break_height],text="break", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
@@ -111,23 +125,32 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 end
 
 # ╔═╡ 6e17334f-86a8-470b-a9aa-30c382b0e5ae
-function compare_profiles(halo::String, orbit::String, star; kwargs...)
+function compare_profiles(halo::String, orbit::String, star; lmc=false, kwargs...)
 	prof_i, prof_f = load_profile(halo, orbit, star)
-	r_b = get_r_b(halo, orbit, star)
+	r_b = get_r_b(halo, orbit, star, lmc=lmc)
 	compare_profiles(prof_i, prof_f, r_b; kwargs...)
 end
+
+# ╔═╡ 7d7ba92c-bb6e-471e-85b5-fbfcbdeee664
+@savefig "scl_smallperi_i_f_b" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=nothing)
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
 @savefig "scl_smallperi_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=-4.5, r_j=get_r_j("1e7_V31_r3.2", "orbit_smallperi"))
 
+# ╔═╡ 21150e87-f3dd-4965-b4c8-1cca022db114
+@savefig "scl_smallperi_i" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=nothing, plot_final=false)
+
 # ╔═╡ f053b7f9-f934-4cd4-ae46-32a0a373ff7e
-@savefig "scl_mean_i_f" compare_profiles("1e7_V31_r3.2", "orbit_mean", "exp2d_rs0.10", norm_shift=0.15, break_height=-5, r_j=get_r_j("1e7_V31_r3.2", "orbit_smallperi"))
+@savefig "scl_mean_i_f" compare_profiles("1e7_V31_r3.2", "orbit_mean", "exp2d_rs0.10", norm_shift=0.15, break_height=-5, r_j=get_r_j("1e7_V31_r3.2", "orbit_mean"))
+
+# ╔═╡ 4f02015a-dfc0-4c7c-935d-9992b0690576
+@savefig "scl_plummer_i" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "plummer_rs0.20", norm_shift=0.0, plot_final=false, break_height=nothing)
 
 # ╔═╡ fc45829c-bf28-4d7b-9bea-e223e4b29e7d
-@savefig "scl_plummer_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "plummer_rs0.20", norm_shift=0.0, break_height=-1.5)
+@savefig "scl_plummer_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "plummer_rs0.20", norm_shift=0.0, break_height=-1.5, r_j=get_r_j("1e7_V31_r3.2", "orbit_smallperi"))
 
 # ╔═╡ 5f989e91-8870-462e-a363-767be64dac5c
-@savefig "scl_lmc_i_f" compare_profiles("1e7_V31_r4.2", "vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.10", break_height=nothing, norm_shift=0.1)
+@savefig "scl_lmc_i_f" compare_profiles("1e7_V31_r4.2", "vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.10", norm_shift=0.1, break_height=-7.5, lmc=true, r_j=get_r_j("1e7_V31_r4.2", "vasiliev24_L3M11_2x_smallperilmc", lmc=true))
 
 # ╔═╡ fab0c970-7d9a-4ed6-9632-72a7b0d52c5b
 LilGuys.Plummer(r_s=0.3)
@@ -147,8 +170,11 @@ LilGuys.Plummer(r_s=0.3)
 # ╠═56da34d4-7ccd-41f0-98b4-31bb1afc8a49
 # ╠═89cc7dd4-6643-463d-9fa3-bfc2859476f2
 # ╠═6e17334f-86a8-470b-a9aa-30c382b0e5ae
+# ╠═7d7ba92c-bb6e-471e-85b5-fbfcbdeee664
 # ╠═3317cfec-be70-418c-944a-0a6741f03cf3
+# ╠═21150e87-f3dd-4965-b4c8-1cca022db114
 # ╠═f053b7f9-f934-4cd4-ae46-32a0a373ff7e
+# ╠═4f02015a-dfc0-4c7c-935d-9992b0690576
 # ╠═fc45829c-bf28-4d7b-9bea-e223e4b29e7d
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
 # ╠═fab0c970-7d9a-4ed6-9632-72a7b0d52c5b

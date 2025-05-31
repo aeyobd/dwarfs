@@ -25,30 +25,15 @@ using OrderedCollections
 # ╔═╡ 2d94b40a-2a38-48d5-9b7e-6b493d504aec
 using CSV, DataFrames
 
-# ╔═╡ 60c30dac-1831-4ee7-ac8f-a797ed6bcbf8
-using ForwardDiff
-
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./style.jl")
-
-# ╔═╡ 08c7e69b-2c64-48fa-a12f-4d1c8d60a0d2
-include("./utils.jl")
 
 # ╔═╡ 15ef3ea9-fe17-44d1-924e-c18722ddf35a
 import TOML
 
-# ╔═╡ 7f77b542-8f03-4474-8e7f-f6353f97128b
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-	x = sind.(0:1.05:360)
-	y = cosd.(0:1.05:360)
-	lines!(x, y)
-	xlims!(-30, 30)
-	ylims!(-30, 30)
-
-	fig
-
+# ╔═╡ 08c7e69b-2c64-48fa-a12f-4d1c8d60a0d2
+module Utils
+	include("./utils.jl")
 end
 
 # ╔═╡ b9b99de2-1c01-4562-8295-75b770e232dc
@@ -154,14 +139,28 @@ trajectories = OrderedDict(
 # ╔═╡ 859df394-8b33-410a-9979-ef5fdac72369
 CairoMakie.activate!(type=:png)
 
-# ╔═╡ 07d86e69-6c9f-4b0a-a1da-a63aad3f9b0f
+# ╔═╡ 7461aeb2-c584-42b0-9d22-42004bbb5013
 import Agama
 
-# ╔═╡ 0e02e7b9-294d-4849-a16c-d4719c07b626
+# ╔═╡ 70852db1-db81-4ca0-ab18-86483b31e1f5
 pot = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama", "potentials", "EP2020.ini"))
 
-# ╔═╡ fc35faac-7df4-42ef-8ff2-6455ae99c340
+# ╔═╡ e8e87732-dfe0-42e3-b319-0bdc9b48f699
+pot_v24 = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama", "potentials/vasiliev24/L3M11/potential_stars.ini"))
+
+# ╔═╡ d7af9e4e-f696-4156-b41f-a07e62d899ba
 pot_stars = Agama.Potential(pot._py[0] + pot._py[1] + pot._py[2])
+
+# ╔═╡ c438e459-8ff3-4a0c-8fbd-326a49d83c83
+md"""
+# Isodensity
+"""
+
+# ╔═╡ 426f53d5-c5b2-49b4-9b4a-361ab0b1c87b
+xz_iso = Utils.integrate_isodensity(pot_stars, x_direction=1, s_scale=3e-4, h_scale=1e-4)
+
+# ╔═╡ f3565bbe-6ad9-4f8d-864e-0df1c8129a4f
+yz_iso = Utils.integrate_isodensity(pot_stars, s_scale=3e-4)
 
 # ╔═╡ efae8808-1768-40c1-a11d-253402cdfe43
 function compare_x_y_traj(trajectories; r_max=300, kwargs...)
@@ -174,9 +173,8 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
     for (i, (label, traj)) in enumerate(trajectories)
         plot_x_y_traj!(traj, x_direction=1, label=label=>(; alpha=0.5), color=COLORS[i]; kwargs...)
     end
-
-	plot_isodensity!(pot_stars, color=:black, x_direction=1)
-	plot_sun!(x_direction=1)
+	poly!(xz_iso..., color=COLORS[8])
+	Utils.plot_sun!(x_direction=1)
 
 	
     ax = Axis(fig[1, 2], xlabel="y / kpc", ylabel="z / kpc",
@@ -190,8 +188,8 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
     end
 	hideydecorations!(ticks=false, minorticks=false)
 
-	plot_isodensity!(pot_stars, color=:black)
-	plot_sun!()
+	poly!(yz_iso..., color=COLORS[8])
+	Utils.plot_sun!()
 	
 	colsize!(fig.layout, 1, Aspect(1, 1.0))
 	colsize!(fig.layout, 2, Aspect(1, 1.0))
@@ -203,27 +201,31 @@ function compare_x_y_traj(trajectories; r_max=300, kwargs...)
     fig
 end
 
+# ╔═╡ e5860169-1978-4063-a0be-e63c7363698d
+xy_iso = Utils.integrate_isodensity(pot_stars, x_direction=1, y_direction=2, s_scale=3e-4)
+
+# ╔═╡ c9d10116-df26-4fc2-8276-5017f881ead1
+xz_iso_v24 = Utils.integrate_isodensity(pot_v24, s_scale=3e-4, x_direction=1)
+
+# ╔═╡ edbef3ae-9c7c-4628-92ee-3e64acb19464
+yz_iso_v24 = Utils.integrate_isodensity(pot_v24, s_scale=3e-4)
+
 # ╔═╡ 044b353c-6d00-47f3-9def-7f9fa9e361fa
 let
 	fig = Figure()
 
-	ax = Axis(fig[1,1], aspect=DataAspect())
-	plot_isodensity!(pot_stars, plot_reflection=true)
-	xlims!(-15, 15)
 
+	ax = Axis(fig[1,1])
+	poly!(yz_iso_v24...)
 
+	poly!(xz_iso..., color=COLORS[8])
+	#lines!(xz_iso[1], -xz_iso[2], color=COLORS[2])
+	xlims!(-100, 100)
+	ylims!(-100, 100)
+
+	Utils.plot_sun!(x_direction=1)
 	fig
-end
 
-# ╔═╡ 9d64514b-0f59-4cd3-9f17-5dfabaacb707
-let
-	fig = Figure()
-
-	ax = Axis(fig[1,1], aspect=DataAspect())
-	plot_isodensity!(pot_stars, x_direction=1, y_direction=2, plot_reflection=true)
-
-plot_sun!(x_direction=1, y_direction=2)
-	fig
 end
 
 # ╔═╡ a1c44523-e31e-4b50-bb00-db80ab080004
@@ -284,11 +286,23 @@ let
 	fig
 end
 
+# ╔═╡ 28d06245-97e7-4585-8d25-95119fa920a7
+function plot_traj_lmc!(; x_direction = 2, t_min=-5/T2GYR)
+	times = Vector(traj_lmc[3])
+	times = times[times .> t_min]
+	plot_x_y_traj!(traj_lmc, label="LMC", color=-times, colormap=:greys, linewidth=6, t_min=t_min, alpha=1, x_direction=x_direction)
+end
+
+
+# ╔═╡ e3b3e6ca-829c-4c8a-a661-a1f7eda2c7d4
+pos_0_lmc = traj_lmc[1][:, 1, 1]
+
 # ╔═╡ 0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
 @savefig "umi_mc_orbits_w_lmc_yz" let
 	fig = Figure()
 
 	r_max=150
+	t_min=-5/T2GYR
 	
     ax = Axis(fig[1, 1], xlabel="y / kpc", ylabel="z / kpc",
         xgridvisible=false, ygridvisible=false, 
@@ -297,12 +311,19 @@ end
     )
     
 	  for (i, (label, traj)) in enumerate(trajectories)
-        plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i], t_min=-5/T2GYR)
+        plot_x_y_traj!(traj, label=label=>(; alpha=0.5), color=COLORS[i], t_min=t_min)
     end
+	scatter!(pos_0[2], pos_0[3], markersize=20, color=:black)
 
-	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, t_min=-5/T2GYR)
+	scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=:black)
+	plot_traj_lmc!(t_min=t_min)
+
+
+	
 	axislegend(position=:lb, merge=true, unique=true, margin=(19,19,19,19))
-	plot_isodensity!(pot_stars)
+	poly!(yz_iso..., color=COLORS[8])
+	Utils.plot_sun!()
+
 	plot_sun!()
 
 
@@ -358,12 +379,60 @@ let
 	fig
 end
 
+# ╔═╡ dc5925ba-411b-4e71-893c-de7f7d57a9d1
+traj_w_lmc2 = read_traj("vasiliev24_reproduced")
+
+# ╔═╡ b61539cf-a67c-4bfe-b7de-7848e7d8847e
+trajectories2 = OrderedDict(
+	#"fiducial" => traj_fiducial,
+	# "nolmc" => traj_nolmc,
+	"no LMC" => traj_nolmc,
+	 "w/ LMC" => traj_w_lmc2,
+)
+
+# ╔═╡ a9245cf5-4735-46af-bec3-fdae04b8017d
+@savefig "umi_mc_orbits_w_lmc2" let
+	fig = compare_x_y_traj(trajectories2, t_min=-10/T2GYR, thin=2 )
+	
+	#ax.xticks = collect(-100:100:100)
+	ax = fig.content[1]
+
+	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, t_min=-10/T2GYR)
+	axislegend(position=:rb, merge=true, unique=true, margin=(19,19,19,19))
+
+	CairoMakie.current_axis!(fig.content[1])
+
+	plot_x_y_traj!(traj_lmc, label="LMC", alpha=1, x_direction=1, t_min=-10/T2GYR)
+
+
+	resize_to_layout!(fig)
+
+	fig
+end
+
+# ╔═╡ 7620794a-13ea-4f0b-a0d8-f9274f4371b4
+traj_w_lmc[1]
+
+# ╔═╡ c7647807-670b-4116-9351-fab888441596
+sum(radii(traj_w_lmc[1][:, :, end]) .> 300)
+
+# ╔═╡ d4f04c29-757e-4314-8cb2-41f17cb2d6ab
+sum(radii(traj_w_lmc2[1][:, :, end]) .> 200)
+
+# ╔═╡ 0488bd9b-165d-4b60-aeac-e55531594741
+let 
+	fig = compare_r_t_traj(trajectories2, limits=(-10, 0, 0, 300), colors=[COLORS[1], COLORS[2], :black], thin=2)
+
+	axislegend(position=:rt, merge=true, unique=true)
+	
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═15ef3ea9-fe17-44d1-924e-c18722ddf35a
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═08c7e69b-2c64-48fa-a12f-4d1c8d60a0d2
-# ╠═7f77b542-8f03-4474-8e7f-f6353f97128b
 # ╠═c2c320b8-3b14-4e49-9048-92a546a6b275
 # ╠═a1606881-5138-4c90-b66f-34bcffd563eb
 # ╠═2d94b40a-2a38-48d5-9b7e-6b493d504aec
@@ -384,20 +453,34 @@ end
 # ╠═1014f681-8014-4df2-bd07-bce4f3348056
 # ╠═ff89d7db-c954-48b8-b87a-446ccfb2d79b
 # ╠═859df394-8b33-410a-9979-ef5fdac72369
-# ╠═07d86e69-6c9f-4b0a-a1da-a63aad3f9b0f
-# ╠═0e02e7b9-294d-4849-a16c-d4719c07b626
-# ╠═60c30dac-1831-4ee7-ac8f-a797ed6bcbf8
-# ╠═fc35faac-7df4-42ef-8ff2-6455ae99c340
+# ╠═7461aeb2-c584-42b0-9d22-42004bbb5013
+# ╠═70852db1-db81-4ca0-ab18-86483b31e1f5
+# ╠═e8e87732-dfe0-42e3-b319-0bdc9b48f699
+# ╠═d7af9e4e-f696-4156-b41f-a07e62d899ba
+# ╠═c438e459-8ff3-4a0c-8fbd-326a49d83c83
+# ╠═426f53d5-c5b2-49b4-9b4a-361ab0b1c87b
+# ╠═f3565bbe-6ad9-4f8d-864e-0df1c8129a4f
+# ╠═e5860169-1978-4063-a0be-e63c7363698d
+# ╠═c9d10116-df26-4fc2-8276-5017f881ead1
+# ╠═edbef3ae-9c7c-4628-92ee-3e64acb19464
 # ╠═044b353c-6d00-47f3-9def-7f9fa9e361fa
-# ╠═9d64514b-0f59-4cd3-9f17-5dfabaacb707
 # ╟─a1c44523-e31e-4b50-bb00-db80ab080004
 # ╠═ce0314a1-a07e-4608-9ee4-a2db61dc6043
 # ╠═61e3ae56-873c-48a4-8058-34f792660df8
 # ╠═43ef72f8-7d7e-4976-82ce-74831bf0cbeb
 # ╠═1d3f999b-b25d-49dc-b1ca-7dfdbf1d3d59
+# ╠═28d06245-97e7-4585-8d25-95119fa920a7
+# ╠═e3b3e6ca-829c-4c8a-a661-a1f7eda2c7d4
 # ╠═0c9eb9da-16c2-4d49-a798-7cd3faa5ec09
 # ╠═515bbb85-29e6-4fd9-a031-98fc45e0f426
 # ╠═c1062412-37ff-488e-a423-67c5adaa8e66
 # ╠═34e480a6-8e9e-4278-80a2-c788ccb01327
 # ╠═081e6a08-92e3-4f9d-bc8e-7ff80ca74693
 # ╠═a876edb6-d0c4-4420-95b2-09c90f33a4b5
+# ╠═b61539cf-a67c-4bfe-b7de-7848e7d8847e
+# ╟─dc5925ba-411b-4e71-893c-de7f7d57a9d1
+# ╠═a9245cf5-4735-46af-bec3-fdae04b8017d
+# ╠═7620794a-13ea-4f0b-a0d8-f9274f4371b4
+# ╠═c7647807-670b-4116-9351-fab888441596
+# ╠═d4f04c29-757e-4314-8cb2-41f17cb2d6ab
+# ╠═0488bd9b-165d-4b60-aeac-e55531594741
