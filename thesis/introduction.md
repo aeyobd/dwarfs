@@ -15,26 +15,36 @@ The classical dwarfs are some of the earliest discovered systems, begining with 
 - @sanchez-salcedo+hernandez2007: mond in dsph
 - @mayer+2001 theory of tidal stripping
 - @IH1995 structural parameters
-
-## Cosmological context
-
-![Cosmological Power Spectrum](figures/power_spectrum.png){#fig:cosmological_power_spectrum width=100% }
-
-Figure: The matter power spectrum under different assumptions for dark matter. Dwarf galaxies occupy the middle and low end of the blue region (10^10 - 10^8 solar masses), enabling a unique window into properties of dark matter on small scales. The smaller scales we can understand dark matter, the better we are able to test different models of dark matter. figure 1 from @bechtol+2022. 
+- @mateo1998, @simon2019 ARAA on ultrafaints.
+- @walker+penarrubia2011: measuring cores and cusps
+- @battaglia+nipoti2022: dynamics and dwarf galaxies review 
+- @dsouza+bell2022, @santistevan+2024. challenges to backwards time integration
 
 
 
-Figure: Density profiles of comological simulated halos, matching approximantly the NFW formula. 
+![Picture of Sculptor](/Users/daniel/thesis/figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}
+
+Figure: Image of the Sculptor dwarf spheroidal galaxy from Dark Energy Survey Data Release 2 [@abbott+2021; image created with HiPS2FITS]. Sculptor appears as a fairly prominent, extended over density of predominantly faint, red stars. 0.5 degree field of view centred on Sculptor. **TODO: combine with UMi, maybe add LMC and Fornax?**
+
+
+
+![Picture of Ursa Minor](figures/umi_DSS2_0.75deg.png){#fig:umi_image width=390pt height=390pt}
+
+Figure: Image of Ursa Minor dwarf galaxy from the Digitized Sky Survey 2 (0.75 deg field of view tangent plane). UMi appears as a diagonal/elliptical haze of faint, reddish stars from the top left to the bottom right.  Even as classical dwarf, Ursa minor is fairly diffuse and does not stand obviously out from the background.
 
 
 
 
 
-![Picture of Sculptor](/Users/daniel/thesis/figures/scl_des_dr2.png){#fig:scl_image width=390pt height=390pt}Figure: Image of the Sculptor dwarf spheroidal galaxy from Dark Energy Survey Data Release 2 [@abbott+2021; image created with HiPS2FITS]. Sculptor appears as a fairly prominent, extended over density of predominantly faint, red stars. 0.5 degree field of view centred on Sculptor.
+![Dwarf galaxies sky position](figures/mw_satellites_ongaia.pdf)
+
+Figure: The location of MW dwarf galaxies on the sky. Dwarf galaxies are taken as confirmed dwarfs with MW or LMC hosts from the @pace2024 catalogue (version 1.0.3. We label all classical dwarfs and the Magellanic clouds, changing symbols based on the relevance to this work (classical dwarfs, Magellanic clouds REF, and the systems in question or comparison).
 
 
 
-![Picture of Ursa Minor](figures/umi_DSS2_0.75deg.png){#fig:umi_image width=390pt height=390pt}Figure: Image of Ursa Minor dwarf galaxy from the Digitized Sky Survey 2 (0.75 deg field of view tangent plane). UMi appears as a diagonal/elliptical haze of faint, reddish stars from the top left to the bottom right.  Even as classical dwarf, Ursa minor is fairly diffuse and does not stand obviously out from the background.
+## Motivation 
+
+- Sculptor and Ursa Minor are possibly unusual.
 
 
 
@@ -46,7 +56,21 @@ Figure: Sculptor and UMi's profiles are well-matched to @PNM2008.
 
 
 
-## Theoretical Background
+# Cosmological context
+
+![Cosmological Power Spectrum](figures/power_spectrum.png){#fig:cosmological_power_spectrum width=100% }
+
+Figure: The matter power spectrum under different assumptions for dark matter. Dwarf galaxies occupy the middle and low end of the blue region (10^10 - 10^8 solar masses), enabling a unique window into properties of dark matter on small scales. The smaller scales we can understand dark matter, the better we are able to test different models of dark matter. figure 1 from @bechtol+2022. 
+
+
+
+Figure: Density profiles of comological simulated halos, matching approximantly the NFW formula. 
+
+Origin of NFW profiles
+
+
+
+# Theoretical Background
 
 - Cosmology foundations
   - power spectrum plot
@@ -97,6 +121,24 @@ In this section, we will cover
 - How are dark matter simulations conducted
 - Interpretations and uncertainties 
 - Methods
+
+### Background
+
+### The N-body method
+
+- Nbody as a solution to the collisionless boltzman equation
+- limitations and interpretation (MC sampling of phase space)
+- Tree approximations and the BH method
+
+
+
+
+
+## Tidal effects on dark matter halos
+
+- EN2020 tidal tracks
+- peñarrubia2009/etc.
+- assumtions and limitations
 
 
 

@@ -37,9 +37,37 @@ Theoretical work
 
 
 
+## Derived properties
+
+| parameter            | value             | reference |
+| -------------------- | ----------------- | --------- |
+| $L_\star$            |                   |           |
+| $M_\star$            | $$                |           |
+| $M_{200}$            |                   |           |
+| $c_{\rm NFW}$        | $$                |           |
+| $v_{\rm circ, max}$  | $\,\kms$          |           |
+| $r_{\rm circ, max}$  | $$ kpc            |           |
+| $r_{\rm break, obs}$ | $30 \pm 5$ arcmin |           |
+| $t_{\rm break, obs}$ | $120\pm30$ Myr    |           |
+
 ## Permissable
 
 ## Selected Orbits
+
+| Orbit    | Mean |      | smallperi |      |      |      |      |      |
+| -------- | ---- | ---- | --------- | ---- | ---- | ---- | ---- | ---- |
+| ra       |      |      |           |      |      |      |      |      |
+| dec      |      |      |           |      |      |      |      |      |
+| distance |      |      |           |      |      |      |      |      |
+| pmra     |      |      |           |      |      |      |      |      |
+| pmdec    |      |      |           |      |      |      |      |      |
+| rv       |      |      |           |      |      |      |      |      |
+| x        |      |      |           |      |      |      |      |      |
+| y        |      |      |           |      |      |      |      |      |
+| z        |      |      |           |      |      |      |      |      |
+| vx       |      |      |           |      |      |      |      |      |
+| vy       |      |      |           |      |      |      |      |      |
+| vz       |      |      |           |      |      |      |      |      |
 
 ## Results
 

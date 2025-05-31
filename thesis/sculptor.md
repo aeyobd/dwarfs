@@ -54,6 +54,19 @@ Future ideas:
 
 - @evslin2016: measuring ellipticities of halos w TMT.
 
+## Derived properties
+
+| parameter            | value                                         | reference |
+| -------------------- | --------------------------------------------- | --------- |
+| $L_\star$            | $1.82_{-0.22}^{+0.25}\times10^6\ L_\odot$     |           |
+| $M_\star$            | $2.7_{-0.6}^{+0.7} \times10^6\ {\rm M}_\odot$ |           |
+| $M_{200}$            | $0.48_{-0.25}^{+0.52}\ M_0$                   |           |
+| $c_{\rm NFW}$        | $13.1_{-2.8}^{+3.6}$                          |           |
+| $v_{\rm circ, max}$  | $31\pm8\,\kms$                                |           |
+| $r_{\rm circ, max}$  | $5.9 \pm 2.9$ kpc                             |           |
+| $r_{\rm break, obs}$ | $25 \pm 5$ arcmin                             |           |
+| $t_{\rm break, obs}$ | $110\pm30$ Myr                                |           |
+
 
 
 # Sculptor (MW only)

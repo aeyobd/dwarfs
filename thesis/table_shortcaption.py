@@ -79,31 +79,31 @@ def process_table(element, doc):
     if isinstance(element, pf.Table) and element.caption:
         caption = element.caption
         if caption.content:
-            pf.debug("table caption: ")
+            #pf.debug("table caption: ")
             # Get first paragraph of caption
             if isinstance(caption.content[0], pf.Plain):
                 inlines = caption.content[0].content
             
-                pf.debug(caption)
+                #pf.debug(caption)
                 # Extract attributes from inlines
                 id_str, attrs, new_inlines = extract_attributes(inlines)
-                pf.debug("attributes", attrs)
-                pf.debug("new inlines", pf.stringify(new_inlines))
+                #pf.debug("attributes", attrs)
+                #pf.debug("new inlines", pf.stringify(new_inlines))
 
                 if attrs:
                     # Set short caption
                     if 'short' in attrs.keys():
                         short_text = attrs['short']
-                        pf.debug("short caption", short_text)
+                        #pf.debug("short caption", short_text)
                     
                         element.caption = pf.Caption(pf.Plain(*new_inlines),
                                    short_caption=[pf.Str(short_text)],
                                                      )
                         element.identifier = id_str
-                        pf.debug(id_str)
-                        pf.debug("final : ", (element.caption))
-                        pf.debug("id : ", (element.identifier))
-                pf.debug()
+                        #pf.debug(id_str)
+                        #pf.debug("final : ", (element.caption))
+                        #pf.debug("id : ", (element.identifier))
+                #pf.debug()
 
     return element
 

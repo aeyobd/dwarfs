@@ -1,101 +1,45 @@
 \section{Abstract}\label{abstract}
 
 To provide an empirical benchmark for simulations in the next chapters,
-we would like to understand and determine the observed properties of
-Sculptor and Ursa Minor. In this section, we first review past
-measurements of each galaxy and the observed properties of each dwarf
-galaxy. We describe the \citet{jensen+2024} Bayesian methodology to
-select high probability member stars from \emph{Gaia}. We test the
-derived density profiles for Sculptor, Ursa Minor, and Fornax, finding
-that \citet{jensen+2024}'s methodology successfully reduces the
-background and produces similar results to a simple
-background-subtracted density model. We show that Fornax is
-approximately represented by a 2-D exponential profile. Instead,
-Sculptor and Ursa Minor show an excess of stars relative to an 2-D
-exponential in the outer regions. A Plummer profile provides a better
-fit instead. Finally, we combine various radial velocity samples with
-\citet{jensen+2024}'s members to derive systemic velocities and
-dispersions for Sculptor and Ursa Minor.
+we aim to understand the observed properties of Sculptor and Ursa Minor.
+In this section, we first compile past measurements of each galaxy. We
+describe the \citet{jensen+2024} Bayesian methodology to select high
+probability member stars from \emph{Gaia}. The derived density profiles
+are robust to changes in assumptions. Fornax is well represented by a 2D
+exponential profile. Instead, Sculptor and Ursa Minor show an excess of
+stars relative to an 2D exponential in the outer regions, better
+described my a Plummer profile. Finally, we combine various radial
+velocity samples with \citet{jensen+2024}'s members to derive systemic
+velocities and dispersions for Sculptor and Ursa Minor.
 
 \section{Introduction}\label{introduction}
 
-The determination of basic properties of astronomical objects is an
-ongoing and challenging endeavour.
+Since the discovery of dwarf galaxies around the Milky Way,
+observational work has attempted to measure and refine the basic
+properties of these objects. While the Milky Way's satellites are close
+(by extragalactic standards), their low numbers of stars and large areas
+on the sky present challenges for observational work. The classical
+systems discussed here each extend about 1-2 degrees across the sky
+(figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection}).
 
-\subsection{Gaia}\label{gaia}
+In particular, \emph{Gaia} has provided a wealth of high quality data,
+including the distances to nearby stars and proper motions. This allows
+for some of the first measurements on the motions for many local group
+dwarf galaxies {[}e.g.; \citet{MV2020}{]}. Accurate distances and
+velocities are invaluable for understanding the orbital history of
+satellites.
 
-Some of the most fundamental properties of astronomical objects are
-their position and velocity. Unfortunately, determining positions to
-stars is nontrivial, . Additionally, while line-of-sight or radial
-velocities (RVs) are easily determined from spectroscopy, the tangental
-velocities, perpendicular to RV, are only measurable through proper
-motions, typically requiring precise astrometry as well. \emph{Gaia}'s
-mission is to produce extremely precise astrometry enabling measurements
-of unprecedented accuracy and scale for proper motions, parallaxes, and
-magnitudes.
-
-\emph{Gaia} was designed to revolutionize proper motion and parallax
-measurements. \emph{Gaia} is a space-based, all-sky survey telescope
-with two primary 1.3x0.75m mirrors situated at the Sun-Earth L2 lagrange
-point \citep{gaiacollaboration+2016}. \emph{Gaia} was launched in XXX,
-completing its mission in 2025 (but with two more data releases
-planned). By imagining two patches of sky on the same focal plane,
-separated by a fixed angle of 106.5degrees, Gaia is able to measure
-absolute proper motions by comparing the apparent shifts of stars in
-different regions of the sky. In addition to precise astrometric
-information, \emph{Gaia} measures the magnitude of stars in the very
-wide \emph{G} band (330-1050nm), blue and red colours using the blue and
-red photometers (BP and RP), and takes low resolution BP-RP spectra and
-radial velocity measurements of bright stars (magnitudes \textgreater{}
-16?).
-
-\emph{Gaia} has revolutionized many astronomical disciplines, the least
-of which is local group and Milky Way science. While proper motions of a
-dwarf galaxies has been measured in a case by case basis by the Hubble
-Space Telescope, a full systematic determination of proper motions for
-most dwarf galaxies was unavailable until \emph{Gaia}
-\citep{MV2020a, battaglia+2022}. \emph{Gaia} has furthermore allowed for
-the detection of many substructures of the halo, streams,
-
-While \emph{Gaia} has performed excellently, a few limitations and
-systematic uncertainties could become problematic. Gaia does show
-systematic variations in its derived proper motions and parallaxes, as
-measured by background quasars \citep{lindegren+2021}. These errors
-limit the ability to determine absolute proper motions to some degree,
-but since we would like to measure if a star is \emph{consistent} with a
-dwarf galaxy, these only factor into the uncertainty budget for orbital
-motion and are included in J+24. Additionally, while \emph{Gaia} was
-designed to be complete down to about a magnitude of \(G=20\),
-overcrowding or dense fields can limit this. \emph{Gaia} can only
-successfully separate stars at a distance of about \textbf{X} (a few
-times the pixel length of \ldots; pixel width is in scanning direction).
-For the galaxies Ursa Minor, Fornax, and Sculptor, the highest density
-(in FOrnax), is only \textbf{xxx} which appears to not significantly
-affect \emph{Gaia}'s survey completeness. We test for brightness affects
-in \textbf{REF}.
-
-For our purposes, \emph{Gaia}
-
-\citet[hereafter J+24]{jensen+2024} utilize \emph{Gaia} data with a
-Bayesian framework to determine samples of high-probability members for
-many Milky Way group dwarf galaxies.
-
-Here, we breifly describe J+24's membership estimation and discuss how
-this informs our observational knoledge of each galaxies density
-profile. In general, J+24 use a Bayesian framework incorporating proper
-motion (PM), colour-magnitude diagram (CMD), and spatial information to
-determine the probability that a given star belongs to the satellite.
-J+24 extends \citet{MV2020a}; \citet{MV2020b}. \citep[See also similar
-work by][]{pace+li2019, battaglia+2022, pace+erkal+li2022, qi+2022}
-
-\subsection{Summary of properties}\label{summary-of-properties}
+High-quality large spectroscopic samples combined with \emph{Gaia} has
+opened new windows into understanding the internal kinematics and
+history of dwarf galaxies. \textless Discuss battaglia, pace, etc. and
+conclusions about dwarf galaxies.\textgreater{}
 
 In tbls.~\ref{tbl:scl_obs_props}, \ref{tbl:umi_obs_props} we present
 adopted observed properties for each galaxy.
 
 \begin{table*}[t]
 \centering
-\caption[Observed Properties of Sculptor]{\label{tbl:scl_obs_props}Observed properties of Sculptor. References are: 1. Ricardo R. Muñoz et al. (2018), 2. Tran et al. (2022), 3. McConnachie and Venn (2020b), 4 McConnachie and Venn (2020a). }
+\caption[Observed Properties of Sculptor]{Observed properties of Sculptor. References are: 1. Ricardo R. Muñoz et al. (2018), 2. Tran et al. (2022), 3. McConnachie and Venn (2020b), 4 McConnachie and Venn (2020a). }
 \label{tbl:scl_obs_props}
 \begin{tabular}{lll}
 \toprule
@@ -107,10 +51,10 @@ distance modulus & $19.60 \pm 0.05$ (RR lyrae) & 2\\
 distance & $83.2 \pm 2$ kpc & 2\\
 $\mu_{\alpha*}$ & $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$ & 3\\
 $\mu_\delta$ & $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ & 3\\
-radial velocity & $111.18 \pm 0.23\ {\rm km\,s^{-1}}$ & sec. \ref{sec:rv_results}\\
-$\sigma_v$ & $9.71\pm0.17\ {\rm km\,s^{-1}}$ & sec. \ref{sec:rv_results}\\
-$R_h$ & $12.33 \pm 0.05$ arcmin & 4\\
-$R_{h,inner}$ & $8.69 \pm 0.2$ arcmin & XREF\\
+radial velocity & $111.3 \pm 0.2\ {\rm km\,s^{-1}}$ & sec. \ref{sec:rv_results}\\
+$\sigma_v$ & $9.64\pm0.16\ {\rm km\,s^{-1}}$ & sec. \ref{sec:rv_results}\\
+$R_h$ & $9.79 \pm 0.04$ arcmin & 4\\
+$R_{h,inner}$ & $9.46 \pm 0.26$ arcmin & XREF\\
 ellipticity & $0.36 \pm 0.01$ & 1\\
 position angle & $92\pm1^\circ$ & 1\\
 $M_V$ & $-10.82\pm0.14$ & 1\\
@@ -120,7 +64,7 @@ $M_V$ & $-10.82\pm0.14$ & 1\\
 
 \begin{table*}[t]
 \centering
-\caption[Observed Properties of Ursa Minor]{\label{tbl:umi_obs_props}Observed properties of Ursa Minor. References are: (1) Ricardo R. Muñoz et al. (2018), (2) Garofalo et al. (2025), (3) McConnachie and Venn (2020a), (4) average of Pace et al. (2020) and Spencer et al. (2018). }
+\caption[Observed Properties of Ursa Minor]{Observed properties of Ursa Minor. References are: (1) Ricardo R. Muñoz et al. (2018), (2) Garofalo et al. (2025), (3) McConnachie and Venn (2020a), (4) average of Pace et al. (2020) and Spencer et al. (2018). }
 \label{tbl:umi_obs_props}
 \begin{tabular}{lll}
 \toprule
@@ -132,9 +76,10 @@ distance modulus & $19.23 \pm 0.11$ (RR lyrae) & 2\\
 distance & $70.1 \pm 3.6$ kpc & 2\\
 $\mu_\alpha*$ & $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$ & 3\\
 $\mu_\delta$ & $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ & 3\\
-radial velocity & $-245.9 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$ & sec. \ref{sec:rv_results}\\
+radial velocity & $-245.8 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$ & sec. \ref{sec:rv_results}\\
 $\sigma_v$ & $8.8 \pm 0.2$ & sec. \ref{sec:rv_results}\\
-$r_h$ & $18.2 \pm 0.1$ arcmin & 1\\
+$R_h$ & $11.62 \pm 0.1$ arcmin & 1\\
+$R_{h, \rm inner}$ & $11.7\pm0.5$ & \\
 ellipticity & $0.55 \pm 0.01$ & 1\\
 position angle & $50 \pm 1^\circ$ & 1\\
 $M_V$ & $-9.03 \pm 0.05$ & 1\\
@@ -142,81 +87,135 @@ $M_V$ & $-9.03 \pm 0.05$ & 1\\
 \end{tabular}
 \end{table*}
 
+\subsection{\texorpdfstring{The \emph{Gaia}
+mission}{The Gaia mission}}\label{the-gaia-mission}
+
+Some of the most fundamental properties of astronomical objects are
+their position and velocity. Unfortunately, determining distances to
+stars is nontrivial. Additionally, while line-of-sight or radial
+velocities (RVs) are easily determined from spectroscopy, the tangental
+velocities, perpendicular to RV, are only measurable through proper
+motions, typically requiring precise astrometry as well. \emph{Gaia}'s
+mission is to produce extremely precise astrometry enabling measurements
+of unprecedented accuracy and scale for proper motions, parallaxes, and
+magnitudes.
+
+\emph{Gaia} was designed to revolutionize proper motion and parallax
+measurements. \emph{Gaia} is a space-based, all-sky survey telescope
+with two primary 1.45x0.5m mirrors situated at the Sun-Earth L2 lagrange
+point \citep{gaiacollaboration+2016}. \emph{Gaia} was launched in XXX,
+completing its mission in 2025 (but with two more data releases
+planned). By imagining two patches of sky on the same focal plane,
+separated by a fixed angle of 106.5degrees, \emph{Gaia} is able to
+measure absolute proper motions by comparing the apparent shifts of
+stars in different regions of the sky. In addition to precise
+astrometric information, \emph{Gaia} measures the magnitude of stars in
+the very wide \emph{G} band (330-1050nm), blue and red colours using the
+blue and red photometers (BP and RP, 330-680, 640-1050 respectively),
+and takes low resolution BP-RP spectra and radial velocity measurements
+of bright stars (magnitudes \textless16?).
+
+\emph{Gaia} has revolutionized many astronomical disciplines, the least
+of which is local group and Milky Way science. While proper motions of a
+dwarf galaxies has been measured in a case by case basis by the Hubble
+Space Telescope, a full systematic determination of proper motions for
+most dwarf galaxies was unavailable until \emph{Gaia}
+\citep{MV2020a, battaglia+2022}. \emph{Gaia} has furthermore allowed for
+the detection of many substructures of the halo, streams,
+
 \section{Gaia Membership Selection}\label{gaia-membership-selection}
 
-\subsection{Data}\label{data}
+Here, we briefly describe J+24's membership estimation method. J+24 use
+a Bayesian framework incorporating proper motion (PM), colour-magnitude
+diagram (CMD), and spatial information to determine the probability that
+a given star belongs to the satellite. By accounting for PM in
+particular, J+24 produces low contamination samples of candidate member
+stars. J+24 extends the algorithm presented in \citet{MV2020a};
+\citet{MV2020b} but additionally includes an optional secondary,
+extended spatial component to find possible members as far as
+\textasciitilde10 half-light radii \(R_h\) from some dwarf galaxies. See
+also similar work by \citet{pace+li2019}; \citet{battaglia+2022};
+\citet{pace+erkal+li2022}; \citet{qi+2022}.
 
-J+24 select stars initially from Gaia within a 2--4 degree circular
-region centred on the dwarf. J+24 only consider stars with:
+To create a high-quality sample, J+24 select stars initially from Gaia
+within a 2--4 degree circular region centred on the dwarf satisfying:
 
 \begin{itemize}
 \tightlist
 \item
   Solved astrometry, magnitude, and colour.
 \item
-  Renormalized unit weight error, \({\rm ruwe} \leq 1.3\), so astrometry
-  is high quality.
+  Renormalized unit weight error, \({\rm ruwe} \leq 1.3\), ensuring high
+  quality astrometry. \texttt{ruwe} is a measure of the excess
+  astrometric noise on fitting a consistent parallax-proper motion
+  solution \citep[see][]{lindegrenXXX}.
 \item
-  3\(\sigma\) consistency of measured parallax with dwarf distance
-  (typically near zero; with \citet{lindegren+2021} zero-point
+  3\(\sigma\) consistency of measured parallax with dwarf's distance
+  (dwarf parallax is very small; with \citet{lindegren+2021} zero-point
   correction).
 \item
-  Absolute RA and Dec proper motions, \(\mu_{\alpha*}\), \(\mu_\delta\),
-  less than 10\(\,{\rm mas\ yr^{-1}}\). (Corresponds to tangental
-  velocities of \(\gtrsim 500\) km/s at distances larger than 10 kpc.)
+  Absolute proper motions, \(\mu_{\alpha*}\), \(\mu_\delta\), less than
+  10\(\,{\rm mas\ yr^{-1}}\). (Corresponds to tangental velocities of
+  \(\gtrsim 500\) km/s at distances larger than 10 kpc.)
 \item
   Corrected colour excess is within expectations:
   \(|C^*| \leq 3\,\sigma_{C^*}(G)\), with \(C^*\) and \(\sigma_{C^*}\)
   from \citet{riello+2021}. Removes stars with unreliable photometry.
 \item
-  \(G\) magnitude is between \(22 > G > G_{\rm TRGB} - 5\delta\rm {DM}\)
-  (dereddened magnitudes). Removes very faint stars and stars
-  significantly brighter than the tip of the red giant branch (TRGB)
-  magnitude plus the distance modulus uncertainty \(\delta {\rm DM}\).
+  De-reddened \(G\) magnitude is between
+  \(22 > G > G_{\rm TRGB} - 5\delta\rm {DM}\). Removes very faint stars
+  and stars significantly brighter than the tip of the red giant branch
+  (TRGB) magnitude plus the distance modulus uncertainty
+  \(\delta {\rm DM}\).
 \item
   Colour is between \(-0.5 < {\rm BP - RP} <  2.5\) (dereddened).
 \end{itemize}
 
-Photometry is dereddened using \citet{schlegel+finkbeiner+davis1998}
+Photometry is dereddened with \citet{schlegel+finkbeiner+davis1998}
 extinction maps.
 
-J+24 calculate the probability that any star belongs to either the
-satellite or the MW background with \begin{equation}
-P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}}
-\end{equation}
-
-where \(f_{\rm sat}\) is the fraction of candidate members in the field,
-and \({\cal L}_{\rm sat}\) and \({\cal L}_{\rm bg}\) are the satellite
-(sat) and background (bg) likelihoods respectively. The likelihoods are
-the product of a spatial, proper motion, and CMD term: \begin{equation}
+J+24 define likelihoods \({\cal L}\) representing the probability
+density that a star is consistent with either the MW stellar background
+(\({\cal L}_{\rm bg}\)) or the satellite galaxy
+(\({\cal L}_{\rm sat}\)). In either case, the likelihoods are the
+product of a spatial, PM, and CMD term: \begin{equation}
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}.
 \end{equation}
 
-Each likelihood map is normalized over the respective 2D parameter
-space. \(f_{\rm sat}\) scales the likelihoods by the abundance of stars
-in the satellite compared to the background.
+Each likelihoods is normalized over their respective 2D parameter space
+for both the satellite. Since the likelihoods are normalized,
+\(f_{\rm sat}\), representing the fraction of member stars in the field,
+controls the relative scaling between the satellite and background
+likelihoods. The total likelihood for any star in this model is then
+\begin{equation}\protect\phantomsection\label{eq:Ltot}{
+{\cal L}_{\rm tot} = f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}
+}\end{equation} The probability that any star belongs to the satellite
+is then given by \begin{equation}
+P_{\rm sat} = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}}.
+\end{equation}
 
-J+24 consider both a one-component and a two-component spatial
-likelihood. The one component model is constructed as a single
-exponential profile (\(\Sigma \propto e^{R_{\rm ell} / R_s}\)), with
-\(R_s\) fixed to the value in the table in \citet{MV2020a}.
+For the satellite's spatial likelihood, J+24 consider both one-component
+and a two-component cases. The one component model is constructed as a
+single exponential profile (\(\Sigma \propto e^{R_{\rm ell} / R_s}\)),
+with \(R_s\) fixed to the value in the table in \citet{MV2020a}.
 Additionally, structural uncertainties (for position angle, ellipticity,
 and scale radius) are sampled over to construct the final likelihood
 map. The two-component model instead adds a second exponential,
 \(\Sigma_\star \propto e^{-R/R_s} + B\,e^{-R/R_{\rm outer}}\). The inner
 scale radius is fixed, and the outer scale radius and magnitude of the
 second component \(R_{\rm outer}\), \(B\) are solved for. Structural
-properties are not accounted for. The PM likelihood is a bivariate
-gaussian with variance and covariance equal to each star's proper
-motions. (The stellar PM uncertainties is assumed and typically is the
-dominant PM uncertainty.)
+properties are not accounted for.
+
+The PM likelihood is a bivariate gaussian with variance and covariance
+equal to each star's proper motions. J+24 assume the stellar PM errors
+are the main source of uncertainty.
 
 The satellite's CMD likelihood is based on a Padova isochrone
 \citep{girardi+2002}. The isochrone has a matching metallicity and 12
 Gyr age. The (gaussian) colour width is assumed to be 0.1 mag plus the
 Gaia colour uncertainty at each magnitude. The HB is modelled as a
-constant magnitude extending blue of the CMD (mean magnitude of
-isochone's HB stars and a 0.1 mag width plus the mean colour error). A
+constant magnitude extending blue of the CMD (mean magnitude of -2.2, 12
+Gyr HB stars and a 0.1 mag width plus the mean colour error). A
 likelihood map is constructed by sampling the distance modulus in
 addition to the CMD width, taking the maximum of RGB and HB likelihoods.
 
@@ -227,25 +226,24 @@ bivariate gaussians with variances based on Gaia uncertainties (and
 covariance for proper motions). The spatial background likelihood is
 assumed to be constant.
 
-In J+24, a MCMC simulation is ran using the above total likelihood to
-solve \(\mu_{\alpha*}\), \(\mu_\delta\), and \(f_{\rm sat}\). For the
-two component models, the amplitude and scale radius of the excented
-compopnet is also solved for. The proper motion single component prior
-is same as \citet{MV2020a}: a normal distribution with mean 0 and
-standard deviation 100 km/s. If 2-component spatial, instead is a
-uniform distribution spanning 5\(\sigma\) of single component case w/
-systematic uncertainties. Priors on \(f_{\rm sat}\) and \(B\) (if 2
-component) are uniform from 0--1. \(R_{\rm outer}\) has a uniform prior
-only restricting \(R_{\rm outer} > R_s\). The mode of each parameter
-from the MCMC are then used to calculate the final \(P_{\rm sat}\)
-values we use here.
+J+24 derive \(\mu_{\alpha*}\), \(\mu_\delta\), \(f_{\rm sat}\) (and
+\(B\), \(R_{\rm outer}\) for two-component) through an MCMC simulation
+with likelihood from Eq.~\ref{eq:Ltot}. Priors are weakly informative or
+uniform. The proper motion single component prior is same as
+\citet{MV2020a}: a normal distribution with mean 0 and standard
+deviation \(100\,\kms\). If 2-component spatial, instead is a uniform
+distribution spanning 5\(\sigma\) of single component case w/ systematic
+uncertainties. \(f_{\rm sat}\) (and \(B\)) has a uniform prior 0--1.
+\(R_{\rm outer}\) has a uniform prior only restricting
+\(R_{\rm outer} > R_s\). The mode of each parameter from the MCMC are
+then reported and used to calculate the final \(P_{\rm sat}\) values.
 
 We adopt a probability cut of \(P_{\rm sat} = 0.2\) as our fiducial
 sample. Most stars are assigned probabilities close to either 0 or 1, so
 the choice of probability threshold is only marginally significant.
 Additionally, even for a probability cut of 0.2, the purity of the
 resulting sample with RV measurements is very high (\textasciitilde90\%,
-J+24). Note there is likely a systematic bias in using stars with RV
+J+24). Note there is likely a systematic bias in using stars with RV
 measurements to measure purity. Fainter stars are less likely to have
 been targeted and have poorer astrometry and colour information. We find
 no difference in the resulting density distributions when restricting
@@ -253,55 +251,89 @@ stars to be brighter than a specific magnitude.
 
 \subsection{Selected samples}\label{selected-samples}
 
-In Figs.~\ref{fig:sculptor_selection}, \ref{fig:umi_selection}, we
-illustrate the resulting samples from the algorithm in the tangent plane
-(\(\xi\), \(\eta\), \emph{does this need defined?}), CMD, and proper
-motion space. For both galaxies, each criteria plays a commensurate role
-in sifting out nonmembers. Proper motions are clustered around the dwarf
-systemic motion, the CMD is well defined including the horizontal
-branch, and stars only within a few \(R_h\) are included. We also mark
-stars with consistent radial velocities (RVs) (see below), which trace
-each feature albeit more cautiously. We additionally mark the furthest
-confirmed RV members of each galaxy, illustrating the large extent of
-each galaxy past \(R_h\).
+In
+Figs.~\ref{fig:sculptor_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection},
+we illustrate the resulting samples from the algorithm in the tangent
+plane (\(\xi\), \(\eta\), \emph{does this need defined?}), CMD, and
+proper motion space. For all galaxies, each criteria plays a
+commensurate role in sifting out nonmembers. The CMD is well defined and
+probable members only extend a few times the colour uncertainty from the
+CMD. In proper motion space, selected stars are within \(\masyr\) from
+the systematic proper motion. The stars furthest away in proper motion
+space typically have large uncertainties \(\sim 1\masyr\), so most
+members are reasonably consistent. In any case, the algorithm does
+enable removing many stars which do not have consistent proper motions
+with the dwarf. Finally, the spatial likelihood reduces the
+probabilities of stars distant from the dwarfs centres. Member stars are
+rare outside of \(\sim5R_h\), resulting from both the likelihood
+specification and the lower density of background stars consistent with
+the CMD and PM of the satellite.
 
-Figs.~\ref{fig:sculptor_selection}, \ref{fig:umi_selection} also
-illustrates the distribution of stars selected without a spatial
-criterion. We define the CMD+PM selection as stars satisfying
-\begin{equation}
+One limitation of the J+24 method is that it assumes a spatial form of
+the dwarf galaxy, possibly limiting the detection of very distant stars
+or features. Figs.~\ref{fig:sculptor_selection}, \ref{fig:umi_selection}
+also illustrates the distribution of stars selected without a spatial
+criterion. We define the \emph{CMD+PM} selection as
+\begin{equation}\protect\phantomsection\label{eq:sel_cmd_pm}{
 {\cal L}_{\rm CMD,\ sat}\ {\cal L}_{\rm PM,\ sat} > {\cal L}_{\rm CMD,\ bg}\ {\cal L}_{\rm PM,\ bg}
-\end{equation} These stars are distributed similar to the fiducial
-(probable members) sample but with a fainter uniform distribution across
-the entire field. This illustrates the approximate background of stars
-which may be confused as members. Additionally, since there is no clear
-spatial structure in the CMD+PM sample outside several \(R_h\), it is
+}\end{equation} with the likelihoods from J+24 as described above. These
+stars are distributed similar to the fiducial (probable members) sample
+but with a fainter uniform distribution across the entire field. This
+illustrates the approximate background of stars which may be confused as
+members. Additionally, since there is no clear spatial structure in the
+\emph{CMD+PM} (or \emph{all}) sample outside several \(R_h\), it is
 unlikely that there are additional faint, tidal features detectable with
-Gaia. Not shown here, we also try a variety of simpler, absolute cuts
-and thresholds, finding no extended structure beyond what is detected in
-J+24. (\emph{Is it worth using this to calculate an OOM upper limit on
-the density of tidal tails?}).
+\emph{Gaia}. Not shown here, we also try a variety of simpler, absolute
+cuts and thresholds, finding no evidence of other structure in both
+\emph{Gaia} and DELVE/UNIONS data.
+
+Finally, we illustrate the location of RV-confirmed members from
+sec.~\ref{sec:rv_obs} in each panel. Because RV targets tend to be
+brighter than a typical \emph{Gaia} candidate, RV members typically have
+more precise PMs. However, the RV members fill about the same area on
+the CMD down to the magnitude limit. Additionally, while the number of
+stars with RV measurements decreases at large radii, there are still
+confirmed RV members as far as \(\sim 10R_h\) for both galaxies. These
+stars illustrate the extended profiles of each galaxy. Note that for an
+exponential profile, 99.95\% of stars should be within \(6R_h\), so the
+discovery of any stars beyond \(6R_h\) hints at a deviation from an
+exponential profile. These \emph{extratidal} stars hint at something
+tidal in nature, and our goal is to explore possible interpretations.
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_selection.pdf}}
-\caption[Sculptor selection criteria]{The selection criteria for Scl
-members. Field stars (satesfying quality criteria) are light grey,
-CMD+PM selected stars are blue, probable members (2-component) are
-orange, and RV confirmed members are red. \textbf{Top:} Tangent plane
-\(\xi, \eta\). We outline in star symbols the two stars from
-\citet{sestito+2023a}. \textbf{Bottom left:} Colour magnitude diagram in
-Gaia G versus BP - RP. \textbf{Bottom right:} Proper motion in
-declination \(\mu_\delta\) vs RA \(\mu_{\alpha*}\)
-(corrected).}\label{fig:sculptor_selection}
+\caption[Sculptor sample selection]{The selection criteria for Scl
+members. Field stars (satisfying quality criteria) are light grey,
+CMD+PM selected stars are turqoise (eq.~\ref{eq:sel_cmd_pm}, probable
+members (2-component) are blue diamonds, and RV confirmed members are
+indigo crosses. We mark the two stars from \citet{sestito+2023a} with
+orange-outlined indigo stars. \textbf{Top:} Tangent plane \(\xi, \eta\).
+The ellipse represents 3 half-light radii. \textbf{Bottom left:} Colour
+magnitude diagram in Gaia G versus BP - RP. We plot the Padova 12Gyr
+MH=-1.68 isochone in orange. The black bar in the top left represents
+the median colour error. \textbf{Bottom right:} Proper motion in
+declination \(\mu_\delta\) vs RA \(\mu_{\alpha*}\) (corrected) the
+orange circle represents the \citet{MV2020b} proper motion. The black
+cross represents the median proper motion
+error.}\label{fig:sculptor_selection}
 \end{figure}
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/umi_selection.pdf}}
-\caption[Ursa Minor Selection]{Similar to
+\caption[Ursa Minor sample selection]{Similar to
 Fig.~\ref{fig:sculptor_selection} except for Ursa Minor. We outline RV
-members outside of \(3R_h\) in black stars (from \citet{sestito+2023b},
+members outside of \(6R_h\) in black stars (from \citet{sestito+2023b},
 \citet{pace+2020} and \citet{spencer+2018}).}\label{fig:umi_selection}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fornax_selection.pdf}}
+\caption[Fornax sample selection]{Similar to
+Fig.~\ref{fig:sculptor_selection} except for
+Fornax.}\label{fig:fornax_selection}
 \end{figure}
 
 \subsection{Density Profiles}\label{density-profiles}
@@ -347,34 +379,18 @@ UMi, this would possibly only affect 1-2 bins due to its compact size.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_density_methods.pdf}}
-\caption[Sculptor density profiles]{The density profile of Sculptor for
-different selection criteria, ploted as log surface dencity versus log
-elliptical radius. Residuals are with respect to th interpolated
-\emph{probable members} density. \emph{Probable members} selects stars
-with PSAT \textgreater{} 0.2 considering PM, CMD, and spatial,
-\emph{CMD+PM} select stars more likely to be members according to CMD
-and PM only, \emph{all} selects any high quality star, and \emph{BG
-subtracted} is the background-subtracted density derived from
-high-quality stars. We mark the half-light radius ( vertical dashed
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_fnx_density_methods.pdf}}
+\caption[Sculptor density profiles]{The density profile of Sculptor,
+Ursa Minor, and Fornax for different selection criteria, ploted as log
+surface dencity versus log elliptical radius. Residuals are with respect
+to th interpolated \emph{probable members} density. \emph{Probable
+members} selects stars with PSAT \textgreater{} 0.2 considering PM, CMD,
+and spatial, \emph{CMD+PM} select stars more likely to be members
+according to CMD and PM only, \emph{all} selects any high quality star,
+and \emph{BG subtracted} is the background-subtracted density derived
+from high-quality stars. We mark the half-light radius ( vertical dashed
 line) and the break radius (black arrow,
 REF).}\label{fig:scl_observed_profiles}
-\end{figure}
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_density_methods.pdf}}
-\caption[Ursa Minor density profiles]{Similar to
-fig.~\ref{fig:scl_observed_profiles} except for Ursa
-Minor.}\label{fig:umi_observed_profiles}
-\end{figure}
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/fornax_density_methods.pdf}}
-\caption[Fornax density profiles]{Similar to
-fig.~\ref{fig:scl_observed_profiles} except for
-Fornax.}\label{fig:fornax_observed_profiles}
 \end{figure}
 
 \subsection{Caveats}\label{caveats}
@@ -411,7 +427,44 @@ more self consistent model would fit the density profile to the entire
 field at once, eliminating possible misrepresentation of the
 uncertainties.
 
-\section{Radial velocity modeling}\label{radial-velocity-modeling}
+While \emph{Gaia} has shown excellent performance, some notable
+limitations may introduce problems in our interpretation and reliability
+of density profiles.
+
+Gaia systematics in proper motions and parallaxes are typically smaller
+than the values for sources of magnitudes \(G\in[18,20]\). Since we use
+proper motions and parallaxes as general consistency with the dwarf, and
+factor in systematic uncertainties in each case, these effects should
+not be too significant. However, the systematic proper motion
+uncertainties becomes the dominant source of uncertainty in the derived
+systemic proper motions of each galaxy (see
+tbls.~\ref{tbl:scl_obs_props}, \ref{tbl:umi_obs_props}).
+
+\emph{Gaia} shows high but imperfect completeness, particularly showing
+limitations in crowded fields and for faint sources (\(G\gtrapprox20\)).
+As discussed in \citet{fabricius+2021}, fir the high stellar densities
+in globular clusters, the completeness relative to HST varies
+significantly with the stellar density. However, the typical stellar
+densities of dwarf galaxies are much lower, at about 20 stars/arcmin =
+90,000 stars / degree, lower than the lowest globular cluster densities
+and safely below the crowding limit of 750,000 objects/degree for BP/RP
+photometry. , where the completeness down to \(G\approx 20\) is
+\(\sim 80\%\). Closely separated stars pose problems for Gaia's on-board
+processing, as the pixel size is 59x177 mas on the sky. This results in
+a reduction of stars separated by less than 1.5'' and especially for
+stars separated by less than 0.6 arcseconds. The astrometric parameters
+of closely separated stars furthermore tends to be of lower quality
+\citep{fabricius+2021}. However, even for the denser field of Fornax,
+only about 3\% of stars have a neighbour within 2 arc seconds, so
+multiplicity should not affect completeness too much (except for
+unresolved binaries). One potential issue is that the previous analysis
+do not account for our cuts on quality and number of astrometric
+parameters. These could worsen completeness, particularly since the
+BP-RP spectra are more sensitive to dense fields. In \textbf{REF}, we
+test if magnitude cuts impact the resulting density profiles, finding
+that this is likely not an issue.
+
+\section{Radial velocity modeling}\label{sec:rv_obs}
 
 \subsection{Data selection}\label{data-selection}
 
@@ -505,14 +558,13 @@ crossmatched stars between catalogues. After crossmatching to high
 quality Gaia stars and excluding significant stellar velocity
 dispersions, we have a sample of 1918 members.
 
-We derive a systemic velocity for Sculptor of
-\(111.18\pm0.23\,\kms\)with velocity dispersion \(9.71\pm0.17\,\kms\).
-Our values are very consistent with previous work
-\citep[e.g.][\citet{arroyo-polonio+2024},
+We derive a systemic velocity for Sculptor of \(111.3\pm0.2\,\kms\)with
+velocity dispersion \(9.64\pm0.16\,\kms\). Our values are very
+consistent with previous work \citep[e.g.][\citet{arroyo-polonio+2024},
 \citet{battaglia+2008}]{walker+2009}. See appendix REF for a more
 detailed comparison between different samples and additional tests.
 
-We detect a moderately significant gradient of \(4.3\pm1.4\,\kmsdeg\) at
+We detect a moderately significant gradient of \(4.3\pm1.3\,\kmsdeg\) at
 a position angle of \(-149_{-13}^{+17}\) degrees (see appendix REF).
 Several past work has attempted to detect a gradient in Sculptor, but no
 consensus has been reached. \citet{arroyo-polonio+2024} detect a
@@ -538,8 +590,8 @@ the median difference in velocities in this crossmatch is about 2.2
 km/s, we adopt 1 km/s as the approximate systematic error here. Our
 final sample includes 831 members.
 
-We derive a mean \(-245.9\pm0.3_{\rm stat}\,\kms\) and velocity
-dispersion of \(8.76\pm0.24\,\kms\) for UMi. This is consistent with
+We derive a mean \(-245.8\pm0.3_{\rm stat}\,\kms\) and velocity
+dispersion of \(8.8\pm0.2\,\kms\) for UMi. This is consistent with
 \citet{pace+2020} and to a lesser extent with \citet{spencer+2018}. We
 do not find evidence for a velocity gradient, consistent with past work
 \citep{pace+2020, martinez-garcia+2023}.
@@ -623,4 +675,138 @@ stars in the outer regions (past \(\log R/R_h \sim 0.3\)) compared with
 Sculptor. Sculptor and Ursa Minor's density profiles are created with
 the 2-component J+24 model, but the excess does not change significantly
 for the 1-component model.}\label{fig:classical_dwarfs_densities}
+\end{figure}
+
+\section{Appendix}\label{appendix}
+
+\subsection{Density profile tests}\label{density-profile-tests}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{/Users/daniel/thesis/figures/scl_density_methods_extra.pdf}}
+\caption[Density profiles]{Density profiles for various assumptions for
+Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a
+2-component bayesian model assuming circular radii, simple is the series
+of simple cuts described, bright is the sample of the brightest half of
+stars (scaled by 2), DELVE is a sample of RGB stars (background
+subtracted and rescaled to match). \textbf{TODO} plot exponential fit
+and add better labels}\label{fig:sculptor_observed_profiles}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_density_methods_extra.pdf}}
+\caption[UMi Density profiles]{Similar to
+fig.~\ref{fig:sculptor_observed_profiles} except for Ursa
+Minor}\label{fig:umi_observed_profiles}
+\end{figure}
+
+Note that a full rigorous statistical analysis would require a
+simulation study of injecting dwarfs into Gaia and assessing the
+reliability of various methods of membership and density profiles. This
+is beyond the scope of this thesis.
+
+\begin{verbatim}
+SELECT TOP 1000
+       *
+FROM delve_dr2.objects
+WHERE 11 < ra
+and ra < 19
+and -37.7 < dec
+and dec < -29.7
+\end{verbatim}
+
+\section{Velocity modelling and
+comparisons}\label{velocity-modelling-and-comparisons}
+
+Here, we describe in additional detail, our methods and comparisons for
+RV modelling between studies.
+
+Savage-Dickey calculated Bayes factor using Silverman-bandwidth KDE
+smoothed samples from posterior/prior.
+
+\begin{table*}[t]
+\centering
+\caption{Summary of velocity measurements and derived properties.}
+\begin{tabular}{lllllllll}
+\toprule
+ & Study & Instrument & Nspec & Nstar & Ngood & Nmemb & $\delta v_{\rm med}$ & $R_{\rm xmatch}$/arcmin\\
+\midrule
+Scl & combined &  & 8945 & 2280 & 2096 & 1981 & 0.9 & \\
+ & tolstoy+23 & FLAMES & 3311 & 1701 & 1522 & 1482 & 0.65 & –\\
+ & sestito+23a & GMOS & 2 & 2 & 2 & 2 & 13 & –\\
+ & walker+09 & MMFS & 1818 & 1522 & 1417 & 1328 & 1.8 & 3\\
+ & APOGEE & APOGEE & 5082 & 253 & 170 & 164 & 0.5 & –\\
+UMi & combined &  & 4714 & 1225 & 1148 & 863 & 2.1 & \\
+ & sestito+23b & GRACES & 5 & 5 & 5 & 5 & 1.8 & –\\
+ & pace+20 & DEIMOS & 1716 & 1538 & 829 & 678 & 2.5 & 1\\
+ & spencer+18 & Hectoshell & 1407 & 970 & 596 & 406 & 0.9 & 2\\
+ & APOGEE & APOGEE & 9500 & 279 & 37 & 67 & 0.6 & –\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption[Sculptor RV fits]{MCMC fits for different RV datasets for Sculptor among 3 different models. }
+\label{tbl:scl_rv_mcmc}
+\begin{tabular}{lllllll}
+\toprule
+study & mean & sigma & $\partial \log\sigma / \partial \log R$ & $\partial v_z / \partial x$ (km/s/deg) & $\theta_{\rm grad} / ^{\circ}$ & $\log B_2/B_1$\\
+\midrule
+all &  &  &  &  &  & \\
+ & $111.3\pm0.2$ & $9.64\pm0.16$ & - & - & - & 0\\
+ & $111.3 \pm 0.2$ & $9.61 \pm0.16$ & - & $4.3\pm1.3$ & $-147_{-13}^{+17}$ & -1.9\\
+ & $111.2\pm0.2$ & $9.66\pm0.16$ & $0.07\pm0.02$ & - & - & -3.4\\
+tolstoy+23 &  &  &  &  &  & \\
+ & $111.3 \pm 0.3$ & $9.79 \pm 0.18$ & - & - & - & 0\\
+ & $111.3\pm0.3$ & $9.77\pm0.19$ & – & $4.3\pm1.4$ & $-154_{-13}^{+19}$ & -1.3\\
+ & $111.2 \pm 0.3$ & $9.73\pm0.19$ & $0.085 \pm 0.023$ & – & – & -4.6\\
+walker+09 &  &  &  &  &  & \\
+ & $111.1\pm0.3$ & $9.5\pm0.2$ & – & – & – & 0\\
+ & $111.1\pm0.3$ & $9.5\pm0.2$ & - & $5.2_{-1.6}^{+1.7}$ & $-134_{-16}^{+22}$ & -1.9\\
+ & $111.1\pm0.3$ & $9.6\pm0.2$ & $0.06\pm0.03$ & – & – & +0.3\\
+apogee &  &  &  &  &  & \\
+ & $111.2\pm0.7$ & $8.6\pm0.5$ & – & – & – & –\\
+ & $111.2\pm0.7$ & $8.5\pm0.5$ & – & $6\pm3$ & $-126_{-33}^{+45}$ & +0.1\\
+ & $111.1\pm0.7$ & $8.5\pm0.5$ & $0.07\pm0.06$ & – & – & +0.9\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption[Ursa Minor RV fits]{MCMC fits for UMi velocity dispersion. }
+\label{tbl:umi_rv_mcmc}
+\begin{tabular}{lllll}
+\toprule
+study & mean & sigma & $\log bf_{\rm sigma}$ & $\log bf_{\rm grad}$\\
+\midrule
+all & $-245.8\pm0.3$ & $8.8\pm0.2$ & +1.3 & +0.9\\
+pace & $-244.6\pm0.4$ & $9.0\pm0.3$ & +0.3 & +0.5\\
+spencer & $-246.9\pm0.4$ & $8.8\pm0.3$ & +1.8 & -0.06\\
+apogee & $-245.6\pm1.2$ & $10.0_{-0.8}^{+1.0}$ & +1.0 & +0.5\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_rv_scatter.pdf}}
+\caption[Scl velocity sample]{RV members of Sculptor plotted in the
+tangent plane coloured by corrected velocity difference from mean
+\(v_z - \bar v_z\) . The black ellipse marks the half-light radius in
+fig.~\ref{fig:scl_selection}. The black and green arrows mark the proper
+motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to
+scale).}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{/Users/daniel/thesis/figures/scl_vel_gradient_scatter.pdf}}
+\caption[Scl velocity gradient]{The corrected LOS velocity along the
+best fit rotational axis. RV members are black points, the systematic
+\(v_z\) is the horizontal grey line, blue lines represent the
+(projected) gradient from MCMC samples, and the orange line is a rolling
+median (with a window size of 50).}
 \end{figure}

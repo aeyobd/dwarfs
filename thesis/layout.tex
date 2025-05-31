@@ -9,12 +9,16 @@
 \usepackage[single]{accents}
 
 % useful commands
+\usepackage{geometry}
+\newgeometry{noheadfoot=true}
 % below are for statement
 \newcommand{\schwa}{ə}
 \newcommand{\eng}{\ng{}}
 %\newcommand{\overcomma}[1]{${\rm \accentset{\mbox{\normalfont ,}}{#1}}$}
 \newcommand{\Lekwnen}{L\schwa{}\overcomma{k}\textsuperscript{w}\schwa{}\ng{}\schwa{}n}
 \newcommand{\skipline}{\vspace{\baselineskip}}
+
+\usepackage{layout}
 
 \def\overcomma#1{%
   \setbox0=\hbox{#1}% Save the base letter in box0.
@@ -26,16 +30,11 @@
   }%
 }
 
-% for pandoc
-\newcommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
 
 
-\newcommand{\about}[1]{${\sim} #1$}
 
-
-\title{%Timid tides or tall tails? \\
+\title{Timid tides or tall tails? \\
     Investigating the outer reaches of the Sculptor and Ursa Minor dwarf galaxies
 }
 \author{Daniel A. Boyea}
@@ -45,6 +44,7 @@
 
 
 \begin{document}
+\pagestyle{plain}
 % \linespread{1.25}
 
 \pagenumbering{roman}
@@ -118,7 +118,6 @@ Outside Department
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 % context
-\input{abstract.tex}
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
@@ -144,9 +143,6 @@ This research made use of hips2fits,\footnote{https://alasky.cds.unistra.fr/hips
 
 %% Lists
 
-\tableofcontents
-\listoffigures
-\listoftables
 
 %\chapter*{Symbols}
 %
@@ -172,50 +168,8 @@ This research made use of hips2fits,\footnote{https://alasky.cds.unistra.fr/hips
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%% BODY OF PAPER %%%%%%%%%%%%%%%%%%
-
-\chapter{Introduction}
-\input{introduction}
+\layout
 
 
-\chapter{Observed Properties}
-\input{data}
-
-\chapter{Methods}
-\input{methods}
-
-\chapter{Sculptor}
-\input{sculptor}
-
-
-\chapter{Discussion and Conclusions}
-
-%%%%%%%%%%%%%%%%%%%% REFERENCES %%%%%%%%%%%%%%%%%%
-
-\newpage
-\bibliographystyle{aasjournal}
-\addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{main} 
-
-
-%%%%%%%%%%%%%%%%% APPENDICES %%%%%%%%%%%%%%%%%%%%%
-
-\appendix
-\chapter*{Appendix}
-\addcontentsline{toc}{chapter}{Appendix}
-\renewcommand{\thesection}{A.\arabic{section}}
-\renewcommand\thefigure{A.\arabic{figure}}    
-\renewcommand\theequation{A.\arabic{equation}}    
-\setcounter{figure}{0}
-\setcounter{equation}{0}
-
-\renewcommand*{\theHsection}{A.\arabic{section}}%
-\renewcommand*{\theHsubsection}{A.\arabic{subsection}}%
-\renewcommand*{\theHfigure}{A.\arabic{figure}}%
-\renewcommand*{\theHequation}{A.\arabic{equation}}%
-
-\input{appendix}
 
 ⁄\end{document}

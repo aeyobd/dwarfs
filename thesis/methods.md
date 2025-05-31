@@ -58,15 +58,15 @@ While we assume that the galaxy can be described as a point particle, not subjec
 
 ## Initial conditions
 
-We use Agama [@agama] to generate initial conditions. We initially assume galaxies are described by an NFW dark matter potential (REF) and the stars are merely collisionless tracers embedded in this potential (added on in post-processing). The density is exponentially truncated with a profile
+We use Agama [@agama] to generate initial conditions. We initially assume galaxies are described by an NFW dark matter potential (REF) and the stars are merely collisionless tracers embedded in this potential (added on in post-processing). The density is a cubic-exponentially truncated with a profile
 $$
-\rho_{\rm tNFW} = e^{-r/r_t}\ \rho_{\rm NFW}(t)
+\rho_{\rm tNFW} = e^{-(r/r_t)^3}\ \rho_{\rm NFW}(t)
 $$ {#eq:trunc_nfw}
-where we adopt $r_t = 100 r_s$ or approximately 10 times $r_{200}$. 
+where we adopt $r_t = 20 r_s$ or approximately $r_{200}$ for our Sculptor-like fiducial halo. (Using $r_{200}$ depends on the chosen scale of the halo, we chose to be scale free here.) This truncation causes the density to drop quickly past $20 r_s$ but retails > 90 $\%$ agreement with an NFW within $18r_s$. This choice is purely for numerical convenience, however it is unlikely that the outer density profile of loosely bound particles past $20$ kpc affects the evolution of the halo. A more detailed cosmological consideration would be ideal.
 
 ## Isolation runs and simulation parameters
 
-To ensure that the initial conditionss of the simulation are dynamically relaxed and well-converged, we run the simulation in isolation (no external potential) for 5 Gyr (or approximately the crossing timescale). Our fiducial isolation halo uses $r_s=2.76$ kpc and $M_s = 0.29 \times 10^{10}$ Msun, but can be easily rescaled for any length or mass scale. 
+To ensure that the initial conditionss of the simulation are dynamically relaxed and well-converged, we run the simulation in isolation (no external potential) for 5 Gyr (or about 3 times the crossing timescale at the virial radius). Our fiducial isolation halo uses $r_s=2.76$ kpc and $M_s = 0.29 \times 10^{10}$ Msun, but can be easily rescaled for any length or mass scale. 
 
 We adopt a softening length of 
 $$
@@ -148,11 +148,11 @@ We consider both a Plummer and 2-dimensional exponential (Exp2D) stellar models:
 
 ### Exp2D
 
-The 2D exponential stellar profile is given  by 
+Perhaps the simplest in form, the 2D exponential is commonly used to describe dwarf galaxy's density profiles as well as stellar disks. The stellar profile is given by 
 $$
 \Sigma_\star(R) = A e^{-R / R_s}
 $$
-where $A$ is some normalization and $R_s$ is the exponential scale radius. The 3D deprojected profile is found through abel inversion (e.g. Rapha...), i.e.
+where $A$ is the normalization and $R_s$ is the exponential scale radius. The 3D deprojected profile is found through Abel inversion [e.g. @errani+2024]:
 $$
 \rho_\star (r) =- \frac{1}{\pi}\int_r^\infty \frac{d\Sigma}{dR} \frac{1}{\sqrt{R^2 - r^2}} dR  = \frac{\Sigma_0}{\pi R_s^2}\,K_0(r/R_s)
 $$
@@ -160,11 +160,11 @@ where $K_0$ is the 0th order modified Bessel function of the second type.
 
 ### Plummer
 
-A Plummer profile is defined by
+The Plummer density profile is generally considered to be a reasonable empirical fit to Globular Clusters, where it was first proposed [@sadfjk]. Plummer profiles are also sometimes used to describe dwarf spheroidal galaxies REFS and galactic bulges REF. A Plummer profile is defined by
 $$
 \Sigma(R) = \frac{M}{4\pi R_s^2} \left(1 + \frac{R^2}{R_s^2}\right)^{-2} ,
 $$
-where $M$ is the total mass and $R_s$ is the characteristic scale radius. The density is 
+where $M$ is the total mass and $R_s$ is the characteristic scale radius. The 3D density is 
 $$
 \rho(r) = \frac{3M}{4\pi\,R_s^3} \left(1 + \frac{r^2}{R_s^2}\right)^{-5/2}.
 $$
@@ -178,6 +178,139 @@ $$
 - Because our dwarfs are assumed to be spherical/isotropic, we retain this assumption when calculating predicted density profiles. 
 
 
+
+
+
+
+
+# Appendix: Numerical convergence and parameters
+
+Here, we describe some convergence tests to ensure our methods and results are minimally impacted by numerical limitations and assumptions. See @power+2003 for a detailed discussion of various assumptions and parameters used in N-body simulations. 
+
+### Softening
+
+@power+2003 suggest the empirical rule that the ideal softening (balancing integration time and only compromising resolution in collisional regime) is 
+$$
+h_{grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}}
+$$
+
+For our isolation halo ($M_s=2.7$, $r_s=2.76$) and with $10^7$ particles, this works out to be $0.044\,{\rm kpc}$.We adpoted the slightly smaller softening which was reduced by a factor of $\sqrt{10}$ which appears to improve agreement slightly in the innermost regions. However, this choice likely unnecessarily increases computation time for the relative gain in accuracy.
+
+![Softening convergence](/Users/daniel/thesis/figures/iso_converg_softening.png){#fig:softening_convergence}
+
+### Timestepping and force accuracy
+
+In general, we use adaptive timestepping and relative opening criteria for gravitational force computations. To verify that these choices and associated accuracy parameters minimally impact convergence or speed, we show a few more isolation runs (using only 1e5 particles)
+
+- constant timestep (...), approximantly half of minimum timestep with adaptive timestepping
+- geometric opening, with $\theta = 0.5$.
+- strict integration accuracy, (facc = ....)
+
+### Alternative methods
+
+- FMM
+- PMM-tree
+- Gadget2
+- etc.
+
+![Isolation method convergence](/Users/daniel/thesis/figures/iso_converg_methods.png){#fig:methods_convergence}
+
+### Fiducial Parameters
+
+Note that we use code units which assume that $G=1$ for convenience and numerical stability. The conversion between code units to physical units is (for our convention):
+
+- 1 length = 1 kpc
+- 1 mass unit = $10^{10}$ Msun
+- 1 velocity unit = 207.4 km/s
+- 1 time unit = 4.715 Myr
+
+Most parameters below are not too relevant or have been discussed or are merely dealing with cpu and IO details. The changes between simulation runs primarily affect the integration time, output frequency, and softening. Otherwise, we leave all other parameters fixed. 
+
+ ```
+#======IO parameters======
+
+#---Filenames
+InitCondFile                initial
+OutputDir                   ./out
+SnapshotFileBase            snapshot
+OutputListFilename          outputs.txt
+
+#---File formats 
+ICFormat                    3       # use HDF5
+SnapFormat                  3 
+
+#---Mem & CPU limits
+TimeLimitCPU                86400
+CpuTimeBetRestartFile       7200
+MaxMemSize                  2400
+
+#---Time
+TimeBegin                   0
+TimeMax	                   2120      # 10 Gyr
+
+#---Output frequency
+OutputListOn                0
+TimeBetSnapshot             10
+TimeOfFirstSnapshot         0 
+TimeBetStatistics           10
+NumFilesPerSnapshot         1
+MaxFilesWithConcurrentIO    1 
+
+
+#=======Gravity======
+
+
+#---Timestep accuracy
+ErrTolIntAccuracy           0.01
+CourantFac                  0.1     # ignored; for SPH
+MaxSizeTimestep             0.5
+MinSizeTimestep             0.0 
+
+#---Tree algorithm
+TypeOfOpeningCriterion      1       # Relative
+ErrTolTheta                 0.5     # mostly used for Barnes-Hut
+ErrTolThetaMax              1.0     # (used only for relative)
+ErrTolForceAcc              0.005   # (used only for relative)
+
+#---Domain decomposition: should only affect performance
+TopNodeFactor                       3.0
+ActivePartFracForNewDomainDecomp    0.02
+
+#---Gravitational Softening
+SofteningComovingClass0      0.044  # HALO dependent
+SofteningMaxPhysClass0       0      # ignored; for cosmological
+SofteningClassOfPartType0    0
+SofteningClassOfPartType1    0
+
+
+#=======Miscellanius=======
+
+# probably do not need to change the options below 
+
+#---Unit System
+UnitLength_in_cm            1 
+UnitMass_in_g               1
+UnitVelocity_in_cm_per_s    1 
+GravityConstantInternal     1
+
+#---Cosmological Parameters 
+ComovingIntegrationOn	   0 # no cosmology
+Omega0	                   0
+OmegaLambda                 0 
+OmegaBaryon                 0
+HubbleParam                 1
+Hubble                      100
+BoxSize                     0
+
+#---SPH
+ArtBulkViscConst             0.8
+MinEgySpec                   0
+InitGasTemp                  100
+
+#---Initial density estimate (SPH)
+DesNumNgb                   64
+MaxNumNgbDeviation          1
+ ```
 
 
 
