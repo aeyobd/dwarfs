@@ -76,23 +76,6 @@ Instructions to get an account: https://www.dur.ac.uk/resources/icc/cosma/gettin
 
 I typically ssh into cosma to edit any files or run scripts.
 
-### System
-
-Cosma has several serves. Personally, i only have access to cosma5/cosma. This means it is best practice to also login to cosma5 so that compiled software works properly, as each system has a different architecture. My cosma ssh config looks like
-
-```
-Host cosma
-  User dc-boye1
-  IgnoreUnknown UseKeychain
-  UseKeychain yes
-  IdentityFile ~/.ssh/id_ed25519_cosma
-  HostName login5b.cosma.dur.ac.uk
-  ForwardX11 yes
-  ForwardX11Trusted yes
-```
-
-
-
 ### Jupyter
 
 See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/. 
@@ -100,12 +83,10 @@ See https://www.dur.ac.uk/icc/cosma/support/jupyterhub/.
 to launch a jupyter session, 
 
 ``` bash
-ssh -i .ssh/id_ed25519_cosma -N -L 8443:login5c.cosma.dur.ac.uk:443 dc-boye1@login5c.cosma.dur.ac.uk
+ssh -i .ssh/id_ed25519_cosma -N -L 8443:login8b.cosma.dur.ac.uk:443 dc-boye1@login8b.cosma.dur.ac.uk
 ```
 
 then open https://localhost:8443
-
-- TODO: julia does not seem to behave in jupyter on cosma. 
 
 ### Modules/Dependencies
 
@@ -356,15 +337,3 @@ $$
 
 
 In practice the right term is zero as $\Psi \to 0$ as $r\to\infty$, and if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$. 
-
-
-
-## Action orbit corrections
-
-In ordinary evolution around the Milky Way, mass loss and tidal forces cause deviations from a point orbit. Predominantly, angular momentum will be lost, however ther positions and velocities may shift phase as well. To adjust the initial conditions to retain agreement with the desired present-day kinematics, we developed the following method to iteratively correct the initial positions. 
-
-1. Choice of final position. Likely, the orbi
-
-
-
-
