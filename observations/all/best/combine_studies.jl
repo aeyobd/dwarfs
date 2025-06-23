@@ -25,6 +25,8 @@ function main(ARGS)
         end
 
         properties = combine_properties(properties, pace)
+        properties = replace_rh(properties)
+        println(keys(properties))
         update_derived!(properties)
         properties = reorder_keys(properties)
 
@@ -110,6 +112,14 @@ function update_derived!(properties)
     properties["radial_velocity_gsr"] = gsr.radial_velocity
     properties["theta_pm_gsr"] = -39.64 # atand(pmra_gsr, pmdec_gsr)
 
+    if "r_h" ∈ keys(properties)
+        properties["R_h"] = properties["r_h"] * sqrt( 1 - properties["ellipticity"])
+        properties["R_h_em"] = properties["r_h_em"] * sqrt( 1 - properties["ellipticity"])
+        properties["R_h_ep"] = properties["r_h_ep"] * sqrt( 1 - properties["ellipticity"])
+        properties["R_h_ref"] = properties["r_h_ref"]
+    end
+
+    properties
 end
 
 """
@@ -119,6 +129,23 @@ Converts a distance modulus (magnitudes) to a distance in kpc.
 """
 function dm_to_distance(dm)
     return 10^(dm / 5 + 1 - 3)
+end
+
+
+function replace_rh(best)
+    new_properties = OrderedDict()
+    
+    for key in keys(best)
+        if startswith(key, "rh")
+            lkey = replace(key, "rh" => "r_h")
+            println(lkey)
+            new_properties[lkey] = best[key]
+        else
+            new_properties[key] = best[key]
+        end
+    end
+
+    return new_properties
 end
 
 
@@ -142,5 +169,5 @@ end
 
 
 
-const keys_order = ["ra", "ra_em", "ra_ep", "ra_ref", "dec", "dec_em", "dec_ep", "dec_ref", "distance", "distance_em", "distance_ep", "distance_modulus", "distance_modulus_em", "distance_modulus_ep", "distance_ref", "pmra", "pmra_em", "pmra_ep", "pmra_ref", "pmdec", "pmdec_em", "pmdec_ep", "pmdec_ref", "radial_velocity", "radial_velocity_em", "radial_velocity_ep", "radial_velocity_ref", "sigma_v", "sigma_v_em", "sigma_v_ep", "sigma_v_ref", "position_angle", "position_angle_em", "position_angle_ep", "postiion_angle_ref", "ellipticity", "ellipticity_em", "ellipticity_ep", "ellipticity_ref", "Mv", "Mv_em", "Mv_ep", "mv", "mv_em", "mv_ep", "mv_ref", "rh", "rh_em", "rh_ep", "rh_ref", "metallicity", "metallicity_em", "metallicity_ep", "metallicity_ref", "pmra_gsr", "pmdec_gsr", "radial_velocity_gsr", "theta_pm_gsr", "MV2020_references"]
+const keys_order = ["ra", "ra_em", "ra_ep", "ra_ref", "dec", "dec_em", "dec_ep", "dec_ref", "distance", "distance_em", "distance_ep", "distance_modulus", "distance_modulus_em", "distance_modulus_ep", "distance_ref", "pmra", "pmra_em", "pmra_ep", "pmra_ref", "pmdec", "pmdec_em", "pmdec_ep", "pmdec_ref", "radial_velocity", "radial_velocity_em", "radial_velocity_ep", "radial_velocity_ref", "sigma_v", "sigma_v_em", "sigma_v_ep", "sigma_v_ref", "position_angle", "position_angle_em", "position_angle_ep", "postiion_angle_ref", "ellipticity", "ellipticity_em", "ellipticity_ep", "ellipticity_ref", "Mv", "Mv_em", "Mv_ep", "mv", "mv_em", "mv_ep", "mv_ref", "r_h", "r_h_em", "r_h_ep", "r_h_ref", "R_h", "R_h_em", "R_h_ep", "R_h_ref", "metallicity", "metallicity_em", "metallicity_ep", "metallicity_ref", "pmra_gsr", "pmdec_gsr", "radial_velocity_gsr", "theta_pm_gsr", "MV2020_references"]
 @main

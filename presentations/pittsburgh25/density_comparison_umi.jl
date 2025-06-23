@@ -25,14 +25,28 @@ import TOML
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ 50da71b7-a898-4a6c-a2d8-964f651b097d
+R_h = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/observed_properties.toml"))["R_h_inner"]
+
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
-prof_expected = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
+prof_expected = let
+	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
+
+	
+	prof = LilGuys.scale(prof, 1/R_h, 1)
+	prof
+end
 
 # ╔═╡ 8d90a98b-09df-4834-ab9d-0aed44d6206b
 function load_profile(haloname, orbitname, starsname)
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/ursa_minor/$haloname/$orbitname/stars/$starsname/")
 
-	return SurfaceDensityProfile(model_dir * "initial_profile.toml"), SurfaceDensityProfile(model_dir * "final_profile.toml")
+	prof_i = SurfaceDensityProfile(model_dir * "initial_profile.toml")
+	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml")
+
+	prof_i = LilGuys.scale(prof_i, 1/R_h, 1)
+	prof_f = LilGuys.scale(prof_f, 1/R_h, 1)
+	return prof_i,  prof_f
 end
 
 # ╔═╡ dd8a0445-8c94-4f43-b22a-1146a7f55d63
@@ -45,7 +59,7 @@ function get_r_b(haloname, orbitname, starsname)
 	props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
 	dt = props["t_last_peri"]
 	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
-	return LilGuys.kpc2arcmin(r_b, props["distance_f"])	
+	return LilGuys.kpc2arcmin(r_b, props["distance_f"])	 / R_h
 end
 
 # ╔═╡ 43c973e6-ad30-4bf8-93b3-4924bc498927
@@ -60,19 +74,19 @@ end
 function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_j=nothing, plot_final=true) 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-		xlabel="log Radius / arcmin",
+		xlabel=L"log Radius / $R_h$",
 		ylabel = "log surface density",
-		limits=((-0.3, 2.5), (-10, 0.5)),
+		limits=((-1.3, 1.5), (-6.5, 3.5)),
 	)
 
-	errorscatter!(prof_expected.log_R, prof_expected.log_Sigma .+ get_normalization(prof_expected),
+	errorscatter!(prof_expected.log_R, prof_expected.log_Sigma,
 				  yerror = error_interval.(prof_expected.log_Sigma),
 		label="observed",
 		color=:black
 	)
 
 
-	dy = get_normalization(prof) + norm_shift
+	dy = get_normalization(prof) + norm_shift .- get_normalization(prof_expected)
 	
 	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, color=COLORS[2], linestyle=:dot,
 			label="initial")
@@ -102,7 +116,7 @@ function get_r_j(haloname, orbitname)
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/ursa_minor/$haloname/$orbitname/")
 
 	props = TOML.parsefile(model_dir * "jacobi.toml")
-	return props["r_J"]
+	return props["r_J"] /R_h
 end
 
 # ╔═╡ 4851087d-2679-4409-b44f-cb22f778974e
@@ -119,19 +133,20 @@ end
 @savefig "umi_i_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=nothing, plot_final=false)
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-@savefig "umi_i_f_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=-4, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
+@savefig "umi_i_f_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=-1, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
 
 # ╔═╡ 7eb32f5b-2765-488a-a7aa-cea11a63315e
 @savefig "umi_i_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=nothing, plot_final=false)
 
 # ╔═╡ 302bbb9f-6eb8-4b32-a375-8a86f2f5c8d1
-@savefig "umi_i_f_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=-2, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
+@savefig "umi_i_f_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=1, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═b1002c1c-4f9e-4962-b5b4-ecab6ddf098c
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
+# ╠═50da71b7-a898-4a6c-a2d8-964f651b097d
 # ╠═65d3653d-5734-40ec-a057-aaa1e509968a
 # ╠═8d90a98b-09df-4834-ab9d-0aed44d6206b
 # ╠═dd8a0445-8c94-4f43-b22a-1146a7f55d63

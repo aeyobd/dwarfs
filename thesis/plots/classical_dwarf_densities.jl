@@ -32,6 +32,9 @@ function get_R_h(galaxyname)
 	return R_h
 end
 
+# ╔═╡ c869bbaa-bed3-48aa-8e8f-5dcfc833e2ac
+get_R_h("leo1")
+
 # ╔═╡ be13884c-fe1b-4b30-95a0-983ff73eaa0c
 get_R_h("fornax")
 
@@ -43,15 +46,19 @@ function get_R_h_inner(galaxyname)
 end
 
 # ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
-function load_profile(galaxyname; algname="jax")
+function load_profile(galaxyname; algname="jax", inner=false)
 	@info galaxyname
 	
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
 		"density_profiles/$(algname)_eqw_profile.toml")
 	
     prof = LilGuys.SurfaceDensityProfile(filename) |> LilGuys.filter_empty_bins
-	
-	R_h = get_R_h_inner(galaxyname)
+
+	if inner
+		R_h = get_R_h_inner(galaxyname)
+	else
+		R_h = get_R_h(galaxyname)
+	end
 	
 	@info "R_h = $R_h arcmin"
 	@info "counts = $(sum(prof.counts))"
@@ -114,11 +121,11 @@ galaxies = OrderedDict(
 # ╔═╡ 552e9438-862f-4710-a7d4-c8d798b5f1aa
 galaxynames = [
 	"fornax",
-	# "leo1",
-	# "leo2",
-	# "carina",
-	# "sextans1",
-	# "draco",	
+	"leo1",
+	 "leo2",
+	 "carina",
+	 "sextans1",
+	 "draco",	
 ]
 
 # ╔═╡ f4e8b66c-5f18-45fd-8859-32479d7227bc
@@ -135,7 +142,7 @@ let
 	ax = Axis(fig[1,1], 
 		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
 				xticks = -2:1:1,
-		limits=(-1, nothing, -4.2, 1.1)
+		limits=(-1.5, nothing, -4.2, 1.1)
 
 	)
 
@@ -153,8 +160,8 @@ let
 	end
 
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", linewidth=1, markersize=3)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", linewidth=1, markersize=3)
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", )
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", )
 
 	axislegend(position=:lb, merge=true, unique=true)
 
@@ -165,7 +172,7 @@ let
 		ylabel = L"\delta \log\,\Sigma",
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
-		limits=(-1, 1.0, -1.2, 1.2)
+		limits=(-1.5, 1.1, -1.2, 3)
 	)
 
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
@@ -182,8 +189,8 @@ let
 		lines!(prof.log_R, prof.log_Sigma .- f(prof.log_R), color=COLORS[1], alpha=0.5)
 	end
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], linewidth=1, markersize=3)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3], linewidth=1, markersize=3)
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2])
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3])
 
 
 	linkxaxes!(ax, ax_res)
@@ -425,6 +432,7 @@ end
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═67dd3488-79e1-4ba2-b9ac-f417765d55de
 # ╠═9f06a5c4-a8ae-49d2-991e-1c1576361700
+# ╠═c869bbaa-bed3-48aa-8e8f-5dcfc833e2ac
 # ╠═be13884c-fe1b-4b30-95a0-983ff73eaa0c
 # ╠═0d5d8a0f-97df-4a46-876e-3f11f52ceecf
 # ╠═40ef5263-bf52-4ad7-8c39-ed1e11c45fc4

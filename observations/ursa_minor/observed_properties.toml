@@ -36,10 +36,10 @@ metallicity_ref = "MV2020a"
 
 ellipticity = 0.55
 ellipticity_err = 0.01
-ellipticity_ref = "Munoz+2018"
+ellipticity_ref = "munoz+2018"
 position_angle = 50
 position_angle_err = 1
-position_angle_ref = "Munoz+2018"
+position_angle_ref = "munoz+2018"
 
 theta_pm_gsr = 55.97 # atand(pmra_gsr, pmdec_gsr)
 

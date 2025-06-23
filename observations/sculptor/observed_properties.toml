@@ -27,11 +27,11 @@ sigma_v = 9.7
 sigma_v_err = 0.2
 sigma_v_ref = "arroyo-polonio+2024"
 
-ellipticity = 0.36
+ellipticity = 0.37
 ellipticity_err = 0.01
 ellipticity_ref = "munoz+2018"
 
-position_angle = 92.0
+position_angle = 94.0
 position_angle_err = 1
 position_angle_ref = "munoz+2018"
 
@@ -41,12 +41,12 @@ metallicity_ref = "MV2020a"
 
 r_h = 12.33
 r_h_err = 0.05
-r_h_ref = "MV2020"
+r_h_ref = "munoz+2018"
 
 R_h = 9.79
 R_h_err = 0.04
-R_h_ref = "MV2020"
-R_h_note = "also measured in munoz+2018"
+R_h_ref = "munoz+2018"
+R_h_note = "sersic fits"
 
 R_h_inner = 9.46
 R_h_inner_em = 0.26
