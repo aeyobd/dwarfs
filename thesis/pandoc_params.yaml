@@ -1,0 +1,34 @@
+bibliography: main.bib
+cite-method: natbib
+top-level-division: section
+number-sections: true
+
+filters:
+  - type: json
+    path: ./table_shortcaption.py
+
+  - pandoc-crossref
+
+  - citeproc
+
+  - type: json
+    path: ./table.py
+
+  - type: json
+    path: ./md_figure.py
+
+  - type: json
+    path: ./equation.py
+
+
+
+metadata:
+  # pandoc-crossref options 
+  autoSectionLabels: false
+  autoEqnLabels: true
+  figPrefix: ["Fig.", "Figs."]
+  eqnPrefix: ["Eq.", "Eqs."]
+  tblPrefix: ["Table", "Tables"]
+    #lstPrefix: ["List", "Lists"]
+  secPrefix: ["Section", "Sections"]
+

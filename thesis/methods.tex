@@ -7,7 +7,7 @@ matter simulations (with a custom patch to integrate with Agama).
 
 \section{Milky Way Potential}\label{milky-way-potential}
 
-fig.~\ref{fig:v_circ_potential} plots the circular velocity profiles of
+Fig.~\ref{fig:v_circ_potential} plots the circular velocity profiles of
 each component of our fiducially potential. We adopt the potential
 described in \citet{EP2020}, an analytic approximation of
 \citet{mcmillan2011}. The potential consisting of a stellar Bulge, a
@@ -19,15 +19,15 @@ bulge are less important.
 The galactic bulge is described by a \citet{hernquist1990} potential.
 The potential is
 
-\begin{equation}
+\begin{equation}{
 \Phi(r) = - \frac{GM}{r + a}
-\end{equation} where \(a=1.3\,{\rm kpc}\) is the scale radius and
+}\end{equation} where \(a=1.3\,{\rm kpc}\) is the scale radius and
 \(M=2.1 \times 10^{10}\,\Mo\) is the total mass.
 
 The thin and thick disks are represented with the
-\citet{miyamoto+nagai1975} cylindrical potential: \begin{equation}
+\citet{miyamoto+nagai1975} cylindrical potential: \begin{equation}{
 \Phi(R, z) = \frac{-GM}{\left(R^2 + \left[a + \sqrt{z^2 + b^2}\right]^{2}\right)^{1/2}}
-\end{equation}
+}\end{equation}
 
 where \(a\) is the disc radial scale length, \(b\) is the scale height,
 and \(M\) is the total mass of the disk. For the thin disk,
@@ -46,10 +46,10 @@ be fairly significant (factor of \(\sim 2\)in MW mass, REF) but since we
 want to determine the upper limit of tidal effects, it is safe to
 neglect this.
 
-Finally, in chapter REF, we consider the influence of the large Milky
-Cloud on the orbits and evolution of Scl. We adopt the
-\citet{vasiliev2024} multipole approximation of an N-body simulation of
-the LMC and MW. Their initial conditions are
+Finally, we also consider the influence of the large Milky Cloud on the
+orbits and evolution of Scl. We adopt the \citet{vasiliev2024} multipole
+approximation of an N-body simulation of the LMC and MW. Their initial
+conditions are
 
 \begin{itemize}
 \tightlist
@@ -121,26 +121,33 @@ more accurately model the N-body trajectory.
 We use Agama \citep{agama} to generate initial conditions. We initially
 assume galaxies are described by an NFW dark matter potential (REF) and
 the stars are merely collisionless tracers embedded in this potential
-(added on in post-processing). The density is exponentially truncated
-with a profile
+(added on in post-processing). The density is a cubic-exponentially
+truncated with a profile
 \begin{equation}\protect\phantomsection\label{eq:trunc_nfw}{
-\rho_{\rm tNFW} = e^{-r/r_t}\ \rho_{\rm NFW}(t)
-}\end{equation} where we adopt \(r_t = 100 r_s\) or approximately 10
-times \(r_{200}\).
+\rho_{\rm tNFW} = e^{-(r/r_t)^3}\ \rho_{\rm NFW}(t)
+}\end{equation} where we adopt \(r_t = 20 r_s\) or approximately
+\(r_{200}\) for our Sculptor-like fiducial halo. (Using \(r_{200}\)
+depends on the chosen scale of the halo, we chose to be scale free
+here.) This truncation causes the density to drop quickly past
+\(20 r_s\) but retails \textgreater{} 90 \(\%\) agreement with an NFW
+within \(18r_s\). This choice is purely for numerical convenience,
+however it is unlikely that the outer density profile of loosely bound
+particles past \(20\) kpc affects the evolution of the halo. A more
+detailed cosmological consideration would be ideal.
 
 \subsection{Isolation runs and simulation
 parameters}\label{isolation-runs-and-simulation-parameters}
 
 To ensure that the initial conditionss of the simulation are dynamically
 relaxed and well-converged, we run the simulation in isolation (no
-external potential) for 5 Gyr (or approximately the crossing timescale).
-Our fiducial isolation halo uses \(r_s=2.76\) kpc and
-\(M_s = 0.29 \times 10^{10}\) Msun, but can be easily rescaled for any
-length or mass scale.
+external potential) for 5 Gyr (or about 3 times the crossing timescale
+at the virial radius). Our fiducial isolation halo uses \(r_s=2.76\) kpc
+and \(M_s = 0.29 \times 10^{10}\) Msun, but can be easily rescaled for
+any length or mass scale.
 
-We adopt a softening length of \begin{equation}
+We adopt a softening length of \begin{equation}{
 h_{\rm grav} = 0.014 \left(\frac{r_s}{2.76\,{\rm kpc}}\right)\left(\frac{N}{10^7}\right)^{-1/2}.
-\end{equation} See appendix REF for a discussion of this choice, which
+}\end{equation} See appendix REF for a discussion of this choice, which
 is similar to the \citet{power+2003} suggested softening.
 
 We use the relative tree opening criterion with the accuracy parameter
@@ -154,10 +161,10 @@ converged is related to the region which becomes collisionally relaxed
 over the time of the universe (so about 5-10 Gyr). (i.e.~where the
 collisionless assumption breaks down). The relaxation timescale is given
 by \(t_{\rm relax} = t_{\rm circ} N(r) / 8\ln N(r)\) or otherwise,
-\begin{equation}
+\begin{equation}{
 t_{\rm relax}(r) := t_{\rm circ}(r) \frac{N(r)}{8\,\ln N(r)}
 = {t_{\rm circ}(r_{200})} \frac{\sqrt{200}}{8} \frac{N(r)}{\ln N(r)} \left(\frac{\bar \rho (r)}{\rho_{\textrm crit}}\right)^{-1/2}
-\end{equation} This works out to be about 6-10 times (increasing with
+}\end{equation} This works out to be about 6-10 times (increasing with
 particle number) our adopted softening length for NFW halos given our
 assumptions. As such, at full resolution, we can only trust density
 profiles down to \(\sim10\epsilon\), just enough to resolve stellar
@@ -221,9 +228,9 @@ than the numerically converged radius scale.
   shown for every 200th particle (ranked from the centre outwards)
 \end{itemize}
 
-\begin{equation}
+\begin{equation}{
 v_{\rm circ}(r) = \sqrt{\frac{GM(r)}{r}}
-\end{equation}
+}\end{equation}
 
 \begin{itemize}
 \tightlist
@@ -244,16 +251,16 @@ Let \(\Psi\) be the potential (normalized to vanish at infinity) and
 \({\cal E}\) is the binding energy \({\cal E} = \Psi - 1/2 v^2\). If we
 know \(f({\cal E})\), the distribution function (phase-space density in
 energy), then we assign the stellar weight for a given particle with
-energy \({\cal E}\) is \begin{equation}
+energy \({\cal E}\) is \begin{equation}{
 P_\star({\cal E}) = \frac{f_\star({\cal E})}{f_{\rm halo}({\cal E})}.
-\end{equation} While \(f({\cal E})\) is a phase-space density, the
+}\end{equation} While \(f({\cal E})\) is a phase-space density, the
 differential energy distribution includes an additional \(g({\cal E})\)
 occupation term (BTXXX).
 
 We use Eddington inversion to find the distribution function, (eq.
-4-140b in BT87) \begin{equation}
+4-140b in BT87) \begin{equation}{
 f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
-\end{equation}
+}\end{equation}
 
 In practice the right, boundary term is zero as \(\Psi \to 0\) as
 \(r\to\infty\), and if \(\rho \propto r^{-n}\) at large \(r\) and
@@ -271,13 +278,13 @@ models:
 
 Perhaps the simplest in form, the 2D exponential is commonly used to
 describe dwarf galaxy's density profiles as well as stellar disks. The
-stellar profile is given by \begin{equation}
+stellar profile is given by \begin{equation}{
 \Sigma_\star(R) = A e^{-R / R_s}
-\end{equation} where \(A\) is the normalization and \(R_s\) is the
+}\end{equation} where \(A\) is the normalization and \(R_s\) is the
 exponential scale radius. The 3D deprojected profile is found through
-Abel inversion \citep[e.g.][]{errani+2024}: \begin{equation}
+Abel inversion \citep[e.g.][]{errani+2024}: \begin{equation}{
 \rho_\star (r) =- \frac{1}{\pi}\int_r^\infty \frac{d\Sigma}{dR} \frac{1}{\sqrt{R^2 - r^2}} dR  = \frac{\Sigma_0}{\pi R_s^2}\,K_0(r/R_s)
-\end{equation} where \(K_0\) is the 0th order modified Bessel function
+}\end{equation} where \(K_0\) is the 0th order modified Bessel function
 of the second type.
 
 \subsubsection{Plummer}\label{plummer}
@@ -286,12 +293,12 @@ The Plummer density profile is generally considered to be a reasonable
 empirical fit to Globular Clusters, where it was first proposed
 \citep{sadfjk}. Plummer profiles are also sometimes used to describe
 dwarf spheroidal galaxies REFS and galactic bulges REF. A Plummer
-profile is defined by \begin{equation}
+profile is defined by \begin{equation}{
 \Sigma(R) = \frac{M}{4\pi R_s^2} \left(1 + \frac{R^2}{R_s^2}\right)^{-2} ,
-\end{equation} where \(M\) is the total mass and \(R_s\) is the
-characteristic scale radius. The 3D density is \begin{equation}
+}\end{equation} where \(M\) is the total mass and \(R_s\) is the
+characteristic scale radius. The 3D density is \begin{equation}{
 \rho(r) = \frac{3M}{4\pi\,R_s^3} \left(1 + \frac{r^2}{R_s^2}\right)^{-5/2}.
-\end{equation}
+}\end{equation}
 
 \subsection{Stellar density profiles and velocity
 dispersion}\label{stellar-density-profiles-and-velocity-dispersion}
@@ -326,9 +333,9 @@ and parameters used in N-body simulations.
 
 \citet{power+2003} suggest the empirical rule that the ideal softening
 (balancing integration time and only compromising resolution in
-collisional regime) is \begin{equation}
+collisional regime) is \begin{equation}{
 h_{grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}}
-\end{equation}
+}\end{equation}
 
 For our isolation halo (\(M_s=2.7\), \(r_s=2.76\)) and with \(10^7\)
 particles, this works out to be \(0.044\,{\rm kpc}\).We adpoted the

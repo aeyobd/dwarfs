@@ -36,9 +36,9 @@ Figure: Image of Ursa Minor dwarf galaxy from the Digitized Sky Survey 2 (0.75 d
 
 
 
-![Dwarf galaxies sky position](figures/mw_satellites_ongaia.pdf)
+![Dwarf galaxies sky position](figures/mw_satellites_onsky_scl_umi_for_1.png){#fig:mw_satellite_system width=390pt weight=219.375pt}
 
-Figure: The location of MW dwarf galaxies on the sky. Dwarf galaxies are taken as confirmed dwarfs with MW or LMC hosts from the @pace2024 catalogue (version 1.0.3. We label all classical dwarfs and the Magellanic clouds, changing symbols based on the relevance to this work (classical dwarfs, Magellanic clouds REF, and the systems in question or comparison).
+Figure: The location of MW dwarf galaxies on the sky. Dwarf galaxies are taken as confirmed dwarfs with MW or LMC hosts from the @pace2024 catalogue (version 1.0.3. We label all classical dwarfs and the Magellanic clouds, changing symbols based on the relevance to this work (classical dwarfs, Magellanic clouds REF, and the systems in question or comparison). The background image is from ESA/Gaia/DPAC (https://www.esa.int/ESA_Multimedia/Images/2018/04/Gaia_s_sky_in_colour2). 
 
 
 
@@ -110,8 +110,6 @@ R_b = C\,\sigma_{v}\,\Delta t
 $$
 where $\sigma_v$ is the present line of sight velocity dispersion , $\delta t$ is the time since pericentre, and $C \approx 0.55$ is a fit. The idea motivating this equation is stars in the inner regions will have dynamically equilibriated to the new potential (phase mixed), however the outer regions are no longer in steady state, so we have to wait until the crossing time reaches them as well.
 
-
-
 As illustrated in @fig:toy_profiles, the density profile initially stars off exponential. At increasing times since the first pericentric passage, the break radius, appearing as an apparent separation between the slopes of the inner and outer profile, increases. 
 
 ## Introduction to Dark Matter simulations
@@ -157,7 +155,9 @@ From this argument, we note that the following properties must be approximately 
 
 ## Potentials
 
-From the @nfw1996 paper, eqns. 3 & 4
+### NFW
+
+From @nfw1996, eqns. 3 & 4
 $$
 \frac{\rho}{\rho_c} = \frac{\delta_c}{(r/r_s)(1+r/r_s)^2}
 $$
@@ -187,36 +187,6 @@ $$
 r_{200} = c\,r_s
 $$
 
-
-Another useful definition is
-$$
-A(x) \equiv \log (1+x) - \frac{x}{1+x}.
-$$
-
-
-We will also define a dimensionless radius
-$$
-x \equiv r/r_s.
-$$
-
-A simple substitution to the definition gives
-
-
-$$
-\rho(x) =  \frac{\rho_s/3}{x\ (1+x)^2}
-$$
-where
-$$
-\rho_s = \frac{c^3}{A(c)} \rho_{200}
-$$
-and $A(c)$ is as above. The characteristic density can also be written in terms of scale mass,  $M_s = M_{200}/{A(c)}$  (see below), giving
-$$
-\rho_s = \frac{c^3}{A(c)} \frac{M_{200}}{(4\pi/3)\ r_{200}^3}  = \frac{3M_s}{4\pi\, {r_s}^3}
-$$
-Note that the NFW density profile is the same as an alpha-beta-gamma profile where $\alpha=\gamma=1$ and $\beta =3$.
-
-### Circular velocity
-
 The circular velocity in terms of $v_{200} = \sqrt{G M_{200} / R_{200}}$ is
 $$
 \left(v_{\rm circ}/v_{200}\right)^2 = \frac{A(x)/x}{A(c)/c},
@@ -232,3 +202,4 @@ r_{\rm circ}^{\rm max} = \alpha\ r_s
 $$
 
 where $\alpha\approx2.16258$, and $v_{\rm circ}^{\rm max}$ can be found from either of the equations above.
+
