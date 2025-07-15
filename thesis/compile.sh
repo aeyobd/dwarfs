@@ -9,9 +9,12 @@ pandoc $pandocoptions -o introduction.tex introduction.md
 pandoc $pandocoptions -o data.tex data.md
 pandoc $pandocoptions -o methods.tex methods.md
 pandoc $pandocoptions -o sculptor.tex sculptor.md
+pandoc $pandocoptions -o discussion.tex discussion.md
 
-# pandoc $pandocoptions -o ursa_minor.tex ursa_minor.md
-# pandoc $pandocoptions -o conclusion.tex conclusion.md
+pandoc $pandocoptions -o ursa_minor.tex ursa_minor.md
+pandoc $pandocoptions -o conclusion.tex conclusion.md
 
-# pandoc $pandocoptions -o appendix.tex appendix.md --top-level-division=chapter
+pandoc $pandocoptions -o appendix.tex appendix.md --top-level-division=chapter
+pandoc $pandocoptions -o rv_models.tex rv_models.md --top-level-division=chapter
+pandoc $pandocoptions -o numerical_convergence.tex numerical_convergence.md --top-level-division=chapter
 

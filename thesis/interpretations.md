@@ -45,3 +45,8 @@ Observational evidence:
 
 ## preprocessing
 
+
+
+# Limitations of simulations
+
+Variations to the potential of the inner disk (exclusion of a bar, spiral arms) should minimally affect our results as no orbit we consider reaches less than ~15 kpc of the MW centre. We exclude the mass evolution of the halo from this analysis. Over $10\,$Gyr, this would be fairly significant (factor of $\sim 2$in MW mass, REF) but since we want to determine the upper limit of tidal effects, it is safe to neglect this. 

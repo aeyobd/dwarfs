@@ -10,11 +10,11 @@ def rename_url(blocks, i):
                 if isinstance(con2, Image):
                     url = con2.url
                     print("Found image at ", url, file=sys.stderr)
-                    if url.startswith("figures"):
-                        url_new = path.splitext(url)[0] + ".pdf"
-                        if path.isfile(url_new):
-                            con2.url = url_new
-                            print("Renaming ", url,"=>", con2.url, file=sys.stderr)
+                    # if url.startswith("figures"):
+                    #     url_new = path.splitext(url)[0] + ".pdf"
+                    #     if path.isfile(url_new):
+                    #         con2.url = url_new
+                    #         print("Renaming ", url,"=>", con2.url, file=sys.stderr)
 
 
 def process_figures(doc):

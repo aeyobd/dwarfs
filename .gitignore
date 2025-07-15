@@ -18,6 +18,7 @@ core.*
 *.mp4
 *.gif
 *.png
+*.jpg
 .coverage
 
 
