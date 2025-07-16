@@ -23,6 +23,8 @@ filename_axi      = 'MWPotentialHunter24_axi.ini'
 filename_spiral   = 'MWPotentialHunter24_spiral.ini'
 filename_rotating = 'MWPotentialHunter24_rotating.ini'
 filename_rotspiral= 'MWPotentialHunter24_rotspiral.ini'
+filename_bary     = 'MWPotentialHunter24_bary.ini'
+filename_bar     = 'MWPotentialHunter24_bar.ini'
 Omega_bar         = -37.5
 Omega_spiral      = -22.5
 angle_bar         = -25.0 * numpy.pi/180
@@ -95,6 +97,11 @@ def makePotentialModel():
         density=agama.Density(params_dark, params_BH, params_NSC, *params_NSD),
         lmax=12, gridSizeR=36, rmin=1e-4, rmax=1000)
 
+    # for my usage, export baryonic only minus bar / spiral
+    pot_bary_spheroid = agama.Potential(type='Multipole',
+        density=agama.Density(params_BH, params_NSC, *params_NSD),
+        lmax=12, gridSizeR=36, rmin=1e-4, rmax=1000)
+
     # all remaining components (except spirals) are represented by a CylSpline potential
     # in two variants: axisymmetric (suitable for plotting the circular velocity profile)
     # and triaxial (for all other purposes)
@@ -103,6 +110,19 @@ def makePotentialModel():
         gridSizeR=30, gridSizez=32, Rmin=0.1, Rmax=200, zmin=0.05, zmax=200)
     pot_cyl_axi  = agama.Potential(mmax=0, **params_cylspline)
     pot_cyl_full = agama.Potential(mmax=8, **params_cylspline)
+
+
+    # export bar component only
+    params_bar = dict(type='CylSpline',
+        density=agama.Density(dens_bar),
+        gridSizeR=30, gridSizez=32, Rmin=0.1, Rmax=200, zmin=0.05, zmax=200)
+    pot_bar = agama.Potential(mmax=8, **params_bar)
+    params_disk_pot = dict(type='CylSpline',
+        density=agama.Density(*(params_disk + params_gas)),
+        gridSizeR=30, gridSizez=32, Rmin=0.1, Rmax=200, zmin=0.05, zmax=200)
+    pot_disk = agama.Potential(mmax=8, **params_disk_pot)
+    pot_bary = agama.Potential(pot_disk, pot_bary_spheroid)
+    pot_bar = agama.Potential(pot_bar)
 
     # spiral arms go into a separate CylSpline potential, which has zero amplitude in the m=0 term,
     # so does not contribute to the axisymmetrized version of the total potential
@@ -129,8 +149,11 @@ def makePotentialModel():
         Rmin=0.2, Rmax=40, gridSizeR=80, zmin=0.1, zmax=10, gridSizeZ=20, mmax=8, symmetry='b')
 
     # now export these potentials into several files
+    print("exporting bar")
     agama.Potential(pot_mul, pot_cyl_full).export(filename_full)
     agama.Potential(pot_mul, pot_cyl_axi ).export(filename_axi)
+    pot_bary.export(filename_bary)
+    pot_bar.export(filename_bar)
     pot_spiral.export(filename_spiral)
 
     # the remaining two files with rotation are created "manually", since the Potential.export() method
