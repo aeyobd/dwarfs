@@ -6,6 +6,8 @@ using InteractiveUtils
 
 # ╔═╡ 53f06974-1fcc-4c90-86a0-5dd0cec4e4b8
 begin
+	import Pkg; Pkg.activate()
+	
 	using Arya
 	using CairoMakie
 
@@ -28,6 +30,9 @@ A quick collection of past literature observations and measurments of the Sculpt
 
 # ╔═╡ 722bd144-d047-4abf-b82f-f733134d3eb7
 dm_to_d(dm) = 10 * 10^(dm / 5) / 1e3
+
+# ╔═╡ ebad5a99-cd48-46c8-b4cb-6a7517f75a68
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 23022242-98d6-4509-bb60-b992c56a3bb0
 md"""
@@ -57,6 +62,26 @@ myobs = Dict(
 	:pm_dec => -0.148202 ± 0.00586,
 	:σ_v => (9.61 ± 0.16)*u"km/s",
 	:radial_velocity => (111.03 ± 0.23)*u"km/s",
+)
+
+# ╔═╡ 3cf2fb39-fda1-434e-8011-862d0bd7de5a
+import TOML
+
+# ╔═╡ e0c7e1d2-9801-458e-ab0a-36f79d372503
+obs_props = TOML.parsefile("observed_properties.toml")
+
+# ╔═╡ 5cd5a7af-7644-45dd-a29e-964fbc31afb9
+adopted = Dict(
+	:study => "adopted",
+	:ra =>(obs_props["ra"] ± obs_props["ra_err"] ),
+	:dec =>(obs_props["dec"] ± obs_props["dec_err"] ),
+	:pm_ra =>(obs_props["pmra"] ± obs_props["pmra_err"] ),
+	:pm_dec => (obs_props["pmdec"] ± obs_props["pmdec_err"] ),
+	:σ_v => (obs_props["sigma_v"] ± obs_props["sigma_v_err"] )*u"km/s",
+	:radial_velocity => (obs_props["radial_velocity"] ± obs_props["radial_velocity_err"] )*u"km/s",
+	:distance =>(obs_props["distance"] ± obs_props["distance_err"] ),
+	:r_h =>(obs_props["r_h"] ± obs_props["r_h_err"] ),
+
 )
 
 # ╔═╡ 39880bc6-3e37-46df-b0d8-742afe684075
@@ -220,7 +245,7 @@ tully2013 = Dict(
 # ╔═╡ 351731df-8d84-41ba-83e7-793898b9a148
 md"""
 ## McChonnachie 2012
-For sculptor distance: Pietrzy´nski 2008, Walker + 2009 for RV. 
+For sculptor distance: Pietrzyński 2008, Walker + 2009 for RV. 
 """
 
 # ╔═╡ 0e1d8bc0-103a-4623-8546-aa7a32ee4504
@@ -488,6 +513,10 @@ function compare_measurements(key, label; units=1, kwargs...)
 	y = y / units
 	println(y)
 
+	if length(y) == 0
+		return fig
+	end
+
 	xt = collect(1:N)
 	
 	ax = Axis(fig[1,1],
@@ -500,8 +529,15 @@ function compare_measurements(key, label; units=1, kwargs...)
 
 	tight_xticklabel_spacing!(ax)
 
-	errscatter!(xt, Arya.value.(y), yerr=Arya.err.(y))
+	errorscatter!(xt, Arya.value.(y), yerror=Arya.err.(y))
 
+
+	if key ∈ keys(adopted)
+		x0 = Arya.value.(adopted[key] / units)
+		xe = Arya.err.(adopted[key] / units)
+		hlines!(x0, color=:black)
+		hspan!(x0-xe, x0+xe, color=(:black, 0.3))
+	end
 	
 	fig
 
@@ -509,7 +545,7 @@ end
 
 # ╔═╡ bc848e9f-db31-457c-80d5-65cf5397e906
 let
-	fig = Figure()
+	fig = Figure(size=(4, 3) .* 72)
  
 	ax = Axis(fig[1,1], 
 		xlabel="RA / degrees", ylabel="Dec / degrees",
@@ -523,18 +559,18 @@ let
 	for i in 1:N
 		x = [ra[i]]
 		y = [dec[i]]
-		errscatter!(ax, x, y, 
-			yerr=Arya.err.(y), xerr=Arya.err.(x),
-			color=Arya.COLORS[i], label=study[i])
+		errorscatter!(ax, x, y, 
+			yerror=Arya.err.(y), xerror=Arya.err.(x),
+			label=study[i])
 	end
 
-	axislegend(ax, position=:lt)
+	Legend(fig[1,2], ax)
 	fig
 end
 
 # ╔═╡ 5f28c6a9-0efd-4afd-9881-a3eaefc98f35
 let
-	fig = Figure()
+	fig = Figure(size=(4, 3) .* 72)
  
 	ax = Axis(fig[1,1], 
 		xlabel=L"\mu_{\alpha*}\;/\;\textrm{mas\,yr^{-1}}", ylabel=L"\mu_\delta\;/\;\textrm{mas\,yr^{-1}}"
@@ -547,11 +583,12 @@ let
 	for i in 1:N
 		x = [pmra[i]]
 		y = [pmdec[i]]
-		errscatter!(ax, x, y, 
-			yerr=Arya.err.(y), xerr=Arya.err.(x),
-			color=Arya.COLORS[i % 7 + 1], label=study[i])
+		errorscatter!(ax, x, y, 
+			yerror=Arya.err.(y), xerror=Arya.err.(x),
+			label=study[i])
 	end
 
+	scatter!(Arya.value.(adopted[:pm_ra]), Arya.value.(adopted[:pm_dec]), color=:black)
 	axislegend(ax)
 	fig
 end
@@ -583,12 +620,16 @@ compare_measurements(:r_h, "rh")
 # ╠═de046588-5a2b-41d4-a8cc-90dac36318e6
 # ╠═3d32bef6-de64-4d1e-93a8-46c921c86011
 # ╠═722bd144-d047-4abf-b82f-f733134d3eb7
+# ╠═ebad5a99-cd48-46c8-b4cb-6a7517f75a68
 # ╟─23022242-98d6-4509-bb60-b992c56a3bb0
 # ╠═777ec196-e193-456d-8d44-cba200a366dd
 # ╠═ff2a1d65-c80f-4eb4-939f-f52e0e29db56
 # ╟─26ae0d94-698c-4e9d-bac6-3e91d0d197ab
 # ╠═fef51bf1-0022-478c-ac62-0ffd127c1bd0
 # ╠═d13c99eb-2cb2-4093-85bb-19a3dd18675d
+# ╠═3cf2fb39-fda1-434e-8011-862d0bd7de5a
+# ╠═e0c7e1d2-9801-458e-ab0a-36f79d372503
+# ╠═5cd5a7af-7644-45dd-a29e-964fbc31afb9
 # ╟─39880bc6-3e37-46df-b0d8-742afe684075
 # ╠═3e9a4212-8735-4483-b1fd-97e5d5196546
 # ╠═2392b8d8-a763-4efd-b0df-735466731001
@@ -606,9 +647,9 @@ compare_measurements(:r_h, "rh")
 # ╠═750dd472-05e4-4c4b-b347-4f0581ec6f55
 # ╟─7fa4817f-246d-4956-aee2-42ea577412f2
 # ╠═47e8e035-f0a0-4f68-9296-12b7939d83b2
-# ╠═d90a79bc-0f53-4e70-aba5-0253624f6049
+# ╟─d90a79bc-0f53-4e70-aba5-0253624f6049
 # ╠═1833bf84-f05d-461a-a84e-2f28efaffd17
-# ╠═0ea649d4-c260-450f-a51c-7598da5bfe2e
+# ╟─0ea649d4-c260-450f-a51c-7598da5bfe2e
 # ╠═6eed53c4-7798-4ced-ae58-59679f4cb380
 # ╟─e71ff05c-bbad-4e1c-995c-1196bb5fb462
 # ╠═d570bb54-e2d6-4eda-ae2e-f1c97cf5f401
@@ -649,8 +690,8 @@ compare_measurements(:r_h, "rh")
 # ╠═30dd27e2-fe7b-4695-99d3-0ad0b769628f
 # ╠═5928daad-d96d-4228-8ec3-0315c1c3cf2d
 # ╠═684841fb-4da5-4e9a-89e9-01b425feae5e
-# ╟─bc848e9f-db31-457c-80d5-65cf5397e906
-# ╟─5f28c6a9-0efd-4afd-9881-a3eaefc98f35
+# ╠═bc848e9f-db31-457c-80d5-65cf5397e906
+# ╠═5f28c6a9-0efd-4afd-9881-a3eaefc98f35
 # ╠═4ba652e8-2d24-4859-9305-06d9db40c40c
 # ╠═60639986-1ffc-400f-9fcd-e44ad33cb033
 # ╠═a3c6615c-fb23-4692-a04b-f4e327faf9cb

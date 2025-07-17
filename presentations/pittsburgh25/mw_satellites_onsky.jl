@@ -384,31 +384,6 @@ function plot_labels!(ax; highlight=[], yasone=false)
 
 end
 
-# ╔═╡ 15e5e568-560d-4a70-8ca3-b084d6d9c832
-theme(:fontsize)
-
-# ╔═╡ 3f44fb3f-865a-4acb-9101-283c7918e11b
-function acknowledgment!(ax)
-	text!(ax, 0, 0, text="Daniel Boyea, 2025\nBackground image: ESA/Gaia/DPAC\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(theme(:Legend).margin[][1], 0))
-end
-
-# ╔═╡ 6931654b-55a9-45f6-b17f-092ec506bccf
-theme(:Legend).labelsize[]
-
-# ╔═╡ a9d10018-c329-4731-9f25-7726e6acdd66
-theme(:fontsize)[] * 0.8
-
-# ╔═╡ 91493d9c-c7ff-442f-b51a-395532a69d38
-size(img)
-
-# ╔═╡ 2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
-function plot_gaia_image!(gs)
-	ax2 = Axis(gs, aspect=DataAspect(), backgroundcolor=:transparent,)
-	image!(ax2, rotr90(img), interpolate=true)
-	hidespines!(ax2)
-	hidedecorations!(ax2)
-end
-
 # ╔═╡ 3051cdfb-63fb-44e4-a75d-37a51fd40508
 @savefig "mw_satellites_onsky" let
 	fig = clear_figure(backgroundcolor=:black)
@@ -428,6 +403,14 @@ end
 	fig
 end
 
+# ╔═╡ 15e5e568-560d-4a70-8ca3-b084d6d9c832
+theme(:fontsize)
+
+# ╔═╡ 3f44fb3f-865a-4acb-9101-283c7918e11b
+function acknowledgment!(ax)
+	text!(ax, 0, 0, text="Daniel Boyea, 2025\nBackground image: ESA/Gaia/DPAC\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(theme(:Legend).margin[][1], 0))
+end
+
 # ╔═╡ 58ea3ff0-40ab-4967-aa97-80d4aa903183
 @savefig "mw_satellites_onsky_cb" let
 	fig = clear_figure(backgroundcolor=:black)
@@ -440,6 +423,23 @@ end
 	plot_labels!(ax)
 	acknowledgment!(ax)
 	fig
+end
+
+# ╔═╡ 6931654b-55a9-45f6-b17f-092ec506bccf
+theme(:Legend).labelsize[]
+
+# ╔═╡ a9d10018-c329-4731-9f25-7726e6acdd66
+theme(:fontsize)[] * 0.8
+
+# ╔═╡ 91493d9c-c7ff-442f-b51a-395532a69d38
+size(img)
+
+# ╔═╡ 2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
+function plot_gaia_image!(gs)
+	ax2 = Axis(gs, aspect=DataAspect(), backgroundcolor=:transparent,)
+	image!(ax2, rotr90(img), interpolate=true)
+	hidespines!(ax2)
+	hidedecorations!(ax2)
 end
 
 # ╔═╡ c04cab38-6e6e-4097-a82f-91cc8a3864f1
