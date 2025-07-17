@@ -77,7 +77,7 @@ end
 function plot_peris(orbits::Pair...)
 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "pericentre")
+	ax = Axis(fig[1,1], xlabel = "pericentre / kpc")
 	
 	for (i, (label, orbit)) in enumerate(orbits)
 		peris = minimum.(radii.(LilGuys.positions.(orbit)))
@@ -88,6 +88,25 @@ function plot_peris(orbits::Pair...)
 
 	fig
 end
+
+# ╔═╡ 545976f9-c846-46f4-b762-ea54af1985f6
+function plot_apos(orbits::Pair...)
+
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel = "apocentre / kpc")
+	
+	for (i, (label, orbit)) in enumerate(orbits)
+		peris = maximum.(radii.(LilGuys.positions.(orbit)))
+		stephist!(peris,  label=label)
+	end
+
+	Legend(fig[1,2], ax, tellwidth=false, merge=true, unique=true)
+
+	fig
+end
+
+# ╔═╡ b1ee881c-3f3e-4a1c-8fcf-96a46cf779ce
+
 
 # ╔═╡ e42de723-34c2-4a50-8e8c-6b0ee3d198a9
 CairoMakie.activate!(type=:png)
@@ -256,6 +275,12 @@ pot_sormani = get_potential("sormani+2022/portali+2017")
 # ╔═╡ eb61c6a2-889e-490f-9949-7e6564e00d73
 pot_sormani_no = get_potential("sormani+2022/portali+2017_axi")
 
+# ╔═╡ 54e36834-5121-452c-bfd4-3bbcfcac0a62
+# ╠═╡ disabled = true
+#=╠═╡
+orbits_bar = orbits(pot_sormani, agama_units=portali_units)
+  ╠═╡ =#
+
 # ╔═╡ de475606-25cd-425e-baad-605902bb332e
 orbits_nobar = orbits(pot_sormani_no, agama_units=portali_units)
 
@@ -284,6 +309,9 @@ orbits_spiral = orbits(pot_spiral, agama_units=portali_units)
 
 # ╔═╡ b3a3ed2c-7676-4c69-a24c-c5f8457435b6
 orbits_nospiral = orbits(pot_nospiral, agama_units=portali_units)
+
+# ╔═╡ 01596c58-082e-4d8b-a7ef-d3a85288f631
+orbits_bar = orbits(pot_bar, agama_units=portali_units)
 
 # ╔═╡ 375566f1-4c5c-470e-b84d-7f0be18a4ff4
 plot_radii(orbits_nobar, orbits_bar)
@@ -350,14 +378,50 @@ plot_orbits("mw only" => orbits_L3, "mw+bar+spiral" => orbits_spiral,  "mw+lmc" 
 # ╔═╡ d39f73ca-bca5-4dc4-a52d-97b12d1d261b
 plot_peris("mw only" => orbits_L3, "mw+bar+spiral" => orbits_spiral,  "mw+lmc" => orbits_L3M11, "bar+spiral+lmc" => orbits_spiral_lmc,)
 
-# ╔═╡ 01596c58-082e-4d8b-a7ef-d3a85288f631
-orbits_bar = orbits(pot_bar, agama_units=portali_units)
+# ╔═╡ b12291ea-2090-4474-bf15-51f08788676b
+plot_apos("mw only" => orbits_L3, "mw+bar+spiral" => orbits_spiral,  "mw+lmc" => orbits_L3M11, "bar+spiral+lmc" => orbits_spiral_lmc,)
 
-# ╔═╡ 54e36834-5121-452c-bfd4-3bbcfcac0a62
-# ╠═╡ disabled = true
-#=╠═╡
-orbits_bar = orbits(pot_sormani, agama_units=portali_units)
-  ╠═╡ =#
+# ╔═╡ 4c3be5af-5278-4c6f-9125-1de8f5494445
+md"""
+# Energies
+"""
+
+# ╔═╡ bd234d79-e8c9-4297-84e0-7997fb007d9b
+function get_energies(pot, orbits; agama_units=Agama.current_units())
+
+	Es = zeros(length(orbits))
+	for (i, orbit) in enumerate(orbits)
+		Φ = Agama.potential(pot, orbit.positions[:, 1], agama_units)
+		V = LilGuys.radii(orbit.velocities[:, 1])
+
+		Es[i] =  1/2 *V^2 + Φ
+	end
+	return Es
+end
+
+# ╔═╡ a17634af-c5fa-4cf5-8c8a-605336729c0f
+function get_L(orbits; agama_units=Agama.current_units())
+
+	Lz = zeros(3, length(orbits))
+	for (i, orbit) in enumerate(orbits)
+		Lz[:, i] = LilGuys.angular_momenta(orbit.positions[:, 1], orbit.velocities[:, 1])
+	end
+	return Lz
+end
+
+# ╔═╡ 3aff5898-4a6d-458e-abb1-fc576d95369e
+orbits_ep2020[1].positions[1, :]
+
+# ╔═╡ 0010c2cc-a7ed-4206-baf1-9e26b1f7f8e8
+hist(get_energies(pot_ep2020, orbits_ep2020) * V2KMS^2 / 1e5)
+
+# ╔═╡ 981b742c-75f4-45e6-99dc-8f74d1552fcf
+hist(get_energies(v24_L3M11, orbits_L3M11, agama_units=vasiliev_units) * V2KMS^2 / 1e5, 
+	axis=(; xlabel = "E / km^2 / s^2"))
+
+# ╔═╡ f38a7281-d11e-4d4e-a48d-d7b54fad5d5c
+hist(get_L(orbits_ep2020, agama_units=vasiliev_units)[3, :] * V2KMS^2, 
+	axis=(; xlabel = "Lz / km^2 / s^2"))
 
 # ╔═╡ Cell order:
 # ╠═a4fc4b04-a211-4744-ba2e-a1da88a11e52
@@ -371,6 +435,8 @@ orbits_bar = orbits(pot_sormani, agama_units=portali_units)
 # ╠═0345c9a9-20ad-499f-9715-158ba7817415
 # ╠═04152ab7-a6e3-4763-a464-533d68f7d8ac
 # ╠═9a768080-29cf-4bd4-b040-7e58d448a041
+# ╠═545976f9-c846-46f4-b762-ea54af1985f6
+# ╠═b1ee881c-3f3e-4a1c-8fcf-96a46cf779ce
 # ╠═e42de723-34c2-4a50-8e8c-6b0ee3d198a9
 # ╠═fb7a5392-21cb-41f0-b32f-c61b00b72b82
 # ╠═f5455167-36d9-4560-a11a-cd957cb6e2be
@@ -443,3 +509,11 @@ orbits_bar = orbits(pot_sormani, agama_units=portali_units)
 # ╠═998d2699-bf50-48b2-819f-ad63d49ebcf7
 # ╠═590f4166-aad1-4ecc-b8b8-05b9e056df87
 # ╠═d39f73ca-bca5-4dc4-a52d-97b12d1d261b
+# ╠═b12291ea-2090-4474-bf15-51f08788676b
+# ╠═4c3be5af-5278-4c6f-9125-1de8f5494445
+# ╠═bd234d79-e8c9-4297-84e0-7997fb007d9b
+# ╠═a17634af-c5fa-4cf5-8c8a-605336729c0f
+# ╠═3aff5898-4a6d-458e-abb1-fc576d95369e
+# ╠═0010c2cc-a7ed-4206-baf1-9e26b1f7f8e8
+# ╠═981b742c-75f4-45e6-99dc-8f74d1552fcf
+# ╠═f38a7281-d11e-4d4e-a48d-d7b54fad5d5c
