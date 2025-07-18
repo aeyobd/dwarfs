@@ -47,8 +47,9 @@ Mv = -9.03
 Mv_err = 0.03
 Mv_ref = "munoz+2018"
 
-M_L_s = 1.4 
-M_L_s_err = 0.3
+M_L_s = 1.9
+M_L_s_err = 0.7437349850370768
+M_L_s_ref = "woo+2009"
 
 r_h = 17.32
 r_h_em = 0.11

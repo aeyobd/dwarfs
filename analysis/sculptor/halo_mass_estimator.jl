@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -83,7 +83,7 @@ FIGDIR = "./figures/"
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 24b4184d-7f69-47fc-a758-50f21840283a
-obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml")
+obs_props = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
 
 # ╔═╡ 67e892f1-3969-484f-9671-e0ac018babf2
 md"""
@@ -102,7 +102,7 @@ MV_sol = 4.83 # solar magnitude
 begin
 	# mass to lig
 	M_L_star = obs_props["M_L_s"]
-	M_L_star_err = obs_props["M_L_s_err"]
+	log_M_L_star_err = obs_props["M_L_s_err"] / M_L_star / log(10)
 	MV = obs_props["Mv"]
 	MV_err = obs_props["Mv_err"]
 	# M_s_0 = 2.56e5 # crater ii
@@ -131,6 +131,9 @@ function M_s_from_vel(v_max)
 	m_0 = 3e-2 # 1e10 Msun
 	return m_0 * ν^α * exp(-ν^γ)
 end
+
+# ╔═╡ b24586f7-d889-413c-9e9b-c07557bb0576
+
 
 # ╔═╡ 2ec0b911-6338-4364-a250-90664e90f1a6
 lMs_to_lVc_err = 0.1
@@ -300,6 +303,7 @@ let
 		xscale=log10,
 		limits=((10, 100), (1e-8, 1e0)),
 		xticks=[10, 100],
+		yticks = Makie.automatic,
 		xminorticks=IntervalsBetween(9),
 		aspect=1
 	)
@@ -412,7 +416,7 @@ function sample_halo(;
     # Sample a single halo and return a dictionary of the results
     MV = MV + MV_err * randn()
     L = mag_to_L(MV, MV_sol)
-    Y = M_L_star + M_L_star_err * randn()
+    Y = M_L_star * 10^(log_M_L_star_err * randn())
     Ms = L * Y / M2MSUN
 	
     log_v_circ_max = lMs_to_lVc(log10(Ms)) + lMs_to_lVc_err * randn()
@@ -487,20 +491,32 @@ function describe(x::Array; p=0.16)
 	p2 = quantile(x, 1-p)
 	m = median(x)
 
-	return p1-m, m, p2-m
+	return m, p1-m, p2-m
 end
 
 # ╔═╡ 4c0c93ad-5471-45d4-b44a-2d15a782491b
-describe(samples.L)
+describe(samples.L) ./ 1e6
+
+# ╔═╡ 991646b9-c0e6-4543-88e3-401f64c71ce6
+mag_to_L(LilGuys.Measurement(MV, MV_err), MV_sol) / 1e5
 
 # ╔═╡ 10aac004-8c52-4c91-944a-0002bdffa99d
-describe(samples.Ms) .* M2MSUN ./ 1e6
+describe(samples.Ms)  ./ 1e5
+
+# ╔═╡ f780a0a9-77ee-4133-a311-b04885c11102
+M_L_star * 10^(LilGuys.Measurement(0, log_M_L_star_err)) * mag_to_L(LilGuys.Measurement(MV, MV_err), MV_sol) / 1e5
 
 # ╔═╡ 0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
 describe(samples.M200)
 
 # ╔═╡ ecade01b-f703-4780-bc5d-ccc4c448b676
 describe(samples.c)
+
+# ╔═╡ 7c362562-cfad-43b8-8a8a-bb2580cf936e
+describe(samples.v_circ_max)
+
+# ╔═╡ 356409b8-e5bf-47b0-bde2-f6b90d2c05ff
+describe(samples.r_circ_max)
 
 # ╔═╡ b85256a1-786f-4dee-a6f1-f55406c3b18e
 md"""
@@ -562,7 +578,8 @@ log10(1 + 3.726 / r_max_exp)
 
 # ╔═╡ 8196e6b2-8355-438c-abc1-ffce2e29b8f2
 let
-	fig, ax = FigAxis(
+	fig = Figure(size=(5, 3) .* 72)
+	ax = Axis(fig[1,1],
 		ylabel=L"$\log\,v_\textrm{circ, max}$ / km\,s$^{-1}$",
 		xlabel=L"$\log\,r_\textrm{circ, max}$ / kpc",
 		limits=(0.2, 1.5, 1.2, 1.9)
@@ -595,7 +612,7 @@ let
 	contour!(k)
 
 	
-	axislegend(position=:lt, title="halo")
+	axislegend(position=:rt, title="halo")
 
 	fig
 end
@@ -784,6 +801,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╟─bdd43353-da4c-48fb-bb67-b2aec628dd71
 # ╟─ca65b2b1-8414-48dc-badb-09c2d50879ad
 # ╠═18a20162-1b0f-4da8-931d-5ff95da22f54
+# ╠═b24586f7-d889-413c-9e9b-c07557bb0576
 # ╠═6213f5b6-0465-482d-a530-727f49220d79
 # ╠═2ec0b911-6338-4364-a250-90664e90f1a6
 # ╟─d9cb3699-6a0f-4d32-b3f8-410cf2c92019
@@ -834,9 +852,13 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═7d1ba57d-4332-4d6e-872b-42925c14ecfb
 # ╠═d2616939-fba8-42ff-921a-8b0bcaf7acb9
 # ╠═4c0c93ad-5471-45d4-b44a-2d15a782491b
+# ╠═991646b9-c0e6-4543-88e3-401f64c71ce6
 # ╠═10aac004-8c52-4c91-944a-0002bdffa99d
+# ╠═f780a0a9-77ee-4133-a311-b04885c11102
 # ╠═0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
+# ╠═7c362562-cfad-43b8-8a8a-bb2580cf936e
+# ╠═356409b8-e5bf-47b0-bde2-f6b90d2c05ff
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
 # ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
