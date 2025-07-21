@@ -40,7 +40,7 @@ where $\sigma_{\rm halo} = 100\,{\rm km\,s^{-1}}$ is the velocity dispersion of 
 
 
 
-![LOS velocity fit to Scl.](/Users/daniel/thesis/figures/scl_umi_rv_fits.pdf)
+![LOS velocity fit to Scl.](figures/scl_umi_rv_fits.pdf)
 
 Figure: Velocity histogram of Scl and UMi in terms of $v_z$ (REF). Orange points are from our crossmatched RV membership sample.
 
@@ -129,12 +129,12 @@ Table: MCMC fits for UMi velocity dispersion. {#tbl:umi_rv_mcmc short="Ursa Mino
 
 
 
-![Scl velocity sample](/Users/daniel/thesis/figures/scl_rv_scatter.pdf)
+![Scl velocity sample](figures/scl_rv_scatter.pdf)
 
 Figure: RV members of Sculptor plotted in the tangent plane coloured by corrected velocity difference from mean $v_z - \bar v_z$ . The black ellipse marks the half-light radius in @fig:scl_selection. The black and green arrows mark the proper motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to scale).
 
 
 
-![Scl velocity gradient](/Users/daniel/thesis/figures/scl_vel_gradient_scatter.pdf) 
+![Scl velocity gradient](figures/scl_vel_gradient_scatter.pdf) 
 
 Figure: The corrected LOS velocity along the best fit rotational axis. RV members are black points, the systematic $v_z$ is the horizontal grey line, blue lines represent the (projected) gradient from MCMC samples, and the orange line is a rolling median (with a window size of 50).

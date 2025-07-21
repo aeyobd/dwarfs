@@ -17,7 +17,7 @@ where $h_{\rm grav}$ is the softening length, and $N_{200}$ is the number of par
 
 For our isolation halo ($M_s=2.7$, $r_s=2.76$) and with $10^7$ particles, this works out to be $0.044\,{\rm kpc}$.We adpoted the slightly smaller softening which was reduced by a factor of $\sqrt{10}$ which appears to improve agreement slightly in the innermost regions. 
 
-![Softening convergence](/Users/daniel/thesis/figures/iso_converg_softening.png){#fig:softening_convergence}
+![Softening convergence](figures/iso_converg_softening.png){#fig:softening_convergence}
 
 ## Time stepping and force accuracy
 
@@ -27,7 +27,7 @@ In general, we use adaptive timestepping and relative opening criteria for gravi
 - geometric opening, with $\theta = 0.5$.
 - strict integration accuracy, (facc = ....)
 
-![Isolation method convergence](/Users/daniel/thesis/figures/iso_converg_methods.png){#fig:methods_convergence}
+![Isolation method convergence](figures/iso_converg_methods.png){#fig:methods_convergence}
 
 ## Fiducial parameters
 

@@ -1,21 +1,68 @@
 Dwarf galaxies host, in many ways, the most extreme galactic environments in the universe. These little galaxies are typically defined to fainter than the LMC or SMC [$M_V \gtrsim -18$, e.g. @mcconnachie2012, @hodge1971]. As the smallest class of galaxies, dwarfs are the most numerous galaxies. Dwarf galaxies are highly *dark-matter dominated*, with mass to light ratios sometimes exceeding 100 to 1000 $M_\odot/ L_\odot$.  Because of their small total masses, many dwarf galaxies are *quenched*, with little to no recent star formation. Their stellar populations are *relics* from the early universe, consisting of many of the oldest and most metal poor stars. Understanding the properties of dwarf galaxies thus has implications across astronomy, from cosmological structure formation on the smallest scale to extremely metal-poor stellar populations to chemical evolution to galactic dynamics. Of the classical dwarfs, the Sculptor and Ursa Minor dwarf spheroidal galaxies stand out with a more extended density profile relative to an exponential, hinting at tidal effects. As a case study in tidal effects and our understanding of dwarf galaxy formation and evolution, we aim to understand the dynamical history of these galaxies. 
 
-In this section, we first describe the observational history of dwarf galaxies, what *Gaia* is and how this telescope has changed our understanding of the local group, the present state of dwarf galaxy knowledge, and why Sculptor and Ursa Minor stand out. We then describe the role of dwarf galaxies in cosmology, their formation and our current theory of hierarchical structure formation. We later discuss idealized simulations, tidal effects, break radii, and recent developments in tidal simulations. Finally, we provide a roadmap to the thesis as a whole at the end of this section.
+In this section, we first describe cosmological structure formation and the role of dwarf galaxies. Then, we explore the observational history of dwarf galaxies, the *Gaia* telescope, open questions, and why Sculptor and Ursa Minor stand out. We  discuss idealized simulations, tidal effects, break radii, and recent developments in tidal simulations. Finally, we provide a roadmap to the thesis as a whole at the end of this section.
+
+# Cosmological context
+
+We only understand a tiny fraction of the composition of the universe. The leading theory of cosmology, $\Lambda$CDM (cold dark matter), posits that the universe is composed of about 68% dark energy ($\Lambda$), 27% dark matter (DM), and 5% regular baryons[^baryons]  [@planckcollaboration+2020]. While the composition of dark matter and dark energy remains elusive, we know their general properties. Dark energy causes the acceleration of the expansion of the universe on large scales. We do not discuss dark energy here—it does not substantially affect the local group today. Dark matter, instead, makes up the vast majority of mass in galaxies. Typically, galaxies have baryonic to dark matter ratios of between 1:5 to beyond 1:1000 for faint dwarf galaxies. In $\Lambda$CMD, dark matter is assumed to only interact gravitationally, passing through matter without effect (transparent to light, or *dark*). Dark matter is also *cold*, i.e. typical velocities much smaller than the speed of light in the early universe. Implications of dark matter properties range from cosmological structural formation, galaxy structure, and galaxy interactions. 
+
+[^baryons]: Astronomers like to change definitions of words. *Baryons* here means baryons+leptons, i.e. any standard model massive fermion. The photon energy density is negligible today
+
+## Structure formation and dwarf galaxies
+
+The very early universe was almost featureless. Our earliest observations of the universe stem from the cosmic microwave background (CMB)---revealing a uniform, isotropic, near-perfect blackbody emission. But tiny perturbations in the CMB, temperature fluctuations of 1 part in 10,000, became the seeds of large-scale cosmological structure. Governed by cosmological expansion, gravitational collapse, and baryonic physics, each perturbation grows into larger structures. Initially, baryonic matter was coupled to radiation and resisted collapse. Dark matter, only influenced by gravity instead, freely collapsed into the first structures. Each self-gravitating overdensity of dark matter is known as a *halo*. After recombination, where electrons combined with atomic nuclei to form atoms, baryons decoupled from radiation and fell into the dark matter halos. The densest pockets of baryons later formed the first stars and galaxies.
+
+Dark matter halos, and their associated galaxies, rarely evolve in isolation. Instead, structure formation is *hierarchical*. Small dark matter halos collapse first and hierarchically merge into progressively larger halos [e.g. @blumenthal+1984, @blumenthal+1986, @white+rees1978, @white+frenk1991, @somerville+dave2015]. Structure formation happens on a wide range of scales. The largest structures become the cosmic web—composed of voids, filaments, and clusters—and the smallest structures directly observable host dwarf galaxies. Hierarchical assembly is evident through the large scale structure of the universe, remnants of past mergers within the milky way, and tidal disruption of dwarf galaxies and their streams around nearby galaxies.
+
+Small-scale structure formation is sensitive to deviations from $\Lambda$CDM cosmology [e.g. @bechtol+2022]. Many alternative models, such as warm dark matter or self-interacting dark matter, may smooth out small-scale features and reduce the abundance of small halos or change their structure [e.g. @lovell+2014]. Dwarf galaxies, occupying the smallest dark matter halos, are promising windows into small-scale cosmological features. Alternative dark matter properties can influence dwarf galaxy structure, formation, and tidal evolution. The nearby dwarf galaxies of the local group, with detailed observations, present a promising opportunity to understand the evolution of these objects and test our understanding of cosmology. To understand the evolution of these objects, we need to understand the general predictions from $\Lambda$CDM for the properties of dwarf galaxies. 
+
+## Typical structure of dwarf galaxies
+
+In $\Lambda$CDM cosmological simulations, dark matter halos are remarkably self-similar. In @NFW1996;@NFW1997, hereafter NFW, the authors observe that the spherical radial density profiles $\rho(r)$ are well described by a two-parameter law: 
+$$
+\rho/\rho_s= \frac{1}{(r/r_s)(1+r/r_s)^2},
+$$
+where $r_s$ is a scale radius and  $\rho_s$ a scale density . This profile has shown remarkable success in describing $\Lambda$CMD halos across several orders of magnitude in mass. NFW profiles are *cuspy*, where the density continuously rises like $\rho \sim 1/r$ at small radii $r \ll r_s$. The steepness of the density profile increases at $r \sim r_s$ and at large radii, the density  falls off like $\rho \sim 1/r^3$. @fig:nfw_density shows an example of a NFW halo and a cored dark matter halo. 
+
+The total mass of an NFW profile diverges, so halos are commonly characterized by an overdensity criterion. The virial mass, $M_{200}$, is defined as the mass within a region $r_{200}$ containing a mean enclosed density 200 times[^200] the critical density of the universe:
+$$
+M_{200} =(4\pi/3) \ r_{200}^3\ 200\rho_{\rm crit}, \qquad {\rm where} \quad \rho_{\rm crit}(z) = 3H(z) / 8\pi G
+$$
+A standard second parameter is the halo concentration, $c=r_{200} / r_s$ describing how the characteristic size of the halo compares to its virial radius.  In this case, the scale density is a function of $c$ alone, $\rho_s = (200/3)\,\rho_{\rm crit} c^3 / [\log(1+c) - c/(1+c)]$ [@NFW1996]. However, we characterize halos by their circular velocity profiles. The circular velocity, $v_{\rm circ}(r) = \sqrt{G M(r) / r}$, reaches a maximum of $v_{\rm max}$ at radius  $r_{\rm max} = \alpha\,r_s$ where $\alpha\approx2.16258$. $v_{\rm max}$ is related to both the total halo mass and the observed line of sight velocity disperion, and $r_{\rm max}$ relates to the scale radius. 
+
+While two free parameters characterize a NFW halo, $M_{200}$ and $c$, these parameters are not independent. Smaller dark matter halos often collapse earlier, when the universe was denser. As a result, small subhalos tend to be more concentrated [e.g. @NFW1997]. The relationship between $M_{200}$ and c, or the mass-concentration relation, how more massive halos become less concentrated in a predictable way [e.g. @bullock+2001, @ludlow+2016]. While there is a general trend in concentration with mass, the concentration values still have substantial scatter. Other parameters such as the halo spin or shape or slight changes in the halo density profile add additional variability to the present-day distribution of halos [see e.g. @navarro+2010, @dutton+maccio2014, darkEXP, ect. ].
 
 
+
+[^200]: 200 smells like an arbitrary value. From approximate analytic arguments about the mean density of a self-gravitating spherical collapse halo in an expanding universe, the expected virial overdensity is XXX, rounding up to 200 (REFS).
+
+![Example density profiles](figures/example_density_profiles.pdf){#fig:nfw_density}
+
+Figure: Example stellar and dark matter density profiles for a Sculptor-like galaxy. The dark matter is more extended and massive than the star across the entire galaxy. **TODO: add plummer & cored DM**
+
+
+
+Both cosmology and observations find fundamental relationships between properties of galaxies, particularly for the total mass and luminosity. A key prediction of $\Lambda$CDM is the stellar mass halo mass relation, describing the amount of stellar mass forms in a (sub)halo of a given size. In particular, the SMHM relation grows especially steep in the dwarf galaxy regime---many dwarf galaxies are formed in halos of similar masses. @Fig:smhm shows the stellar mass versus $v_{\rm max}$ maximum circular velocity (proxy for halo mass) for apostle dwarfs from @fattahi+2018. While there is some scatter, the range of possible $v_{\rm max}$ is fairly narrow across $\sim 5$ decades in stellar mass. Thus, if we know the initial stellar mass of a dwarf galaxy, we also know, at some level, its dark matter mass.
+
+Several challenges complicate a simple SMHM trend including environment, assembly history, and tidal effects. By being closer to a massive host, most dwarfs quench earlier, resulting in lower stellar masses [e.g. @christensen+2024]. Additionally, the time of formation  (relative to reionization) can influence the resulting stellar content [@kim+2024]. Finally, tides influence both the dark matter and stellar mass but in different amounts [e.g. @PNM2008]. Consequently, tides may reduce the halo mass more than the stellar mass, adding additional scatter to the SMHM trend, particularly for Milky Way satellites [@.e.g fattahi+2018]. Understanding the effects of tides on local group dwarf galaxies is essential to determining where and how these galaxies formed in a cosmological context. 
+
+![Stellar-mass halo-mass relation](/Users/daniel/Library/Application Support/typora-user-images/image-20250715100059332.png){#fig:smhm width=100%}
+
+Figure: The stellar mass halo mass relation, where $v_{\rm max}$ is related to the halo mass. Right: the mass-concentration relation for NFW halos, but parameterized in terms of $r_{\rm max}$ and $v_{\rm max}$. Together, these plots represent the cosmologically expected properties of underlying dark matter halos in any dwarf galaxy. The velocity dispersion directly constrains the mass  contained within a half-light radius, so the underlying halo in $\Lambda$CDM is well-constrained. Adapted from figure 1 of @fattahi+2018, stellar mass and $v_{\rm max}$ of APOSTLE satellites at peak $v_{\rm max}$.  
 
 # Observational context
 
 ## Early observations
 
-The Magellanic clouds are the most prominent of the Milky Way satellites and were likely always known to humans in the southern hemisphere. However, the first discovered dwarf galaxies in 1938, Sculptor and Fornax, heralds i n an era of discovery and investigation into a novel astronomical system. @shapley1938 present Sculptor and Fornax as some kind of *stellar system* resembling the Magellanic clouds and globular clusters. The first direct hints that these stellar systems are galaxies originates from early spectroscopic work [e.g., @aaronson1983, @gallagher+wyse1994, @mateo1994, @pryor1994, @pryor1996, @gerhard1994, and @olszewski1998.]. Based on their velocity dispersions given their physical sizes, the mass to light ratios of these dwarf galaxies is far larger than expected for star clusters without dark matter. In general, these objects have reached a consensus that they have high velocity dispersion, old spheroidal stellar populations, and low stellar masses. While we now know the basic properties of dwarf galaxies, tremendous progress has been made in the past 10-20 years with large area deep photometric surveys, multi-object spectrographs, high resolution chemistry, and theoretical work, unveiling that dwarf galaxies are each unique systems with different formation pathways [e.g. @simon2019].
+Dwarf galaxies have often puzzled astronomers and our understanding of the universe. While we now generally understand how dwarf galaxies fit into the universe, this was not always the case. The first discovered dwarf galaxies in 1938[^lmc_discovery], Sculptor and Fornax, heralds an era of discovery and investigation into these astronomical system. @shapley1938 present Sculptor and Fornax as a new type of *stellar system* resembling the Magellanic clouds and globular clusters, but do not attempt to speculate on the exact nature. The first direct hints that these systems are galaxies originates from early spectroscopic work deriving the first velocity dispersions [e.g., @aaronson1983, @gallagher+wyse1994, @mateo1994, @pryor1994, @pryor1996, @gerhard1994, and @olszewski1998.]. Based on the physical size and velocity dispersions, the mass to light ratios of these dwarf galaxies is far larger than expected for star clusters without dark matter. In general, these objects have reached a consensus that they have high velocity dispersion, old spheroidal stellar populations, and low stellar masses. 
 
-Dwarf galaxies span a large range of size and morphology. @fig:galaxy_images displays several images of dwarf galaxies. The largest in the local group but not always considered a dwarf galaxy, the Large Magellanic Cloud (LMC), to classical systems Sculptor and Ursa Minor dwarf spheroidal, to an ultra-faint dwarf galaxy, Boötes V. From this figure, we notice that while large LMC-like dwarf galaxies exhibit complex structure such as a bar, young blue stars, and irregular shapes, the classical and faint dwarf galaxies are composed mostly of very old, faint, red stars, very diffuse and often large on the sky if local. These galaxies are typically classified as dwarf spheroidals (dSph), however we typically omit the dSph designation and refer to these galaxies by their constellation hereafter.
+Dwarf galaxies span a large range of size and morphology. @fig:galaxy_images displays several images of dwarf galaxies. The largest in the local group but not always considered a dwarf galaxy, the Large Magellanic Cloud (LMC), to classical systems Sculptor and Ursa Minor dwarf spheroidal, to an ultra-faint dwarf galaxy, Boötes V. Large LMC-like dwarf galaxies exhibit complex structure such as a bar, young blue stars, and irregular shapes. On the other hand, the classical and faint dwarf galaxies are composed mostly of old, faint, and red stars. These galaxies are typically classified as dwarf spheroidals (dSph) (although we typically omit the dSph designation and refer to these galaxies by their constellation alone).
 
 Since the discovery of dwarf galaxies around the Milky Way, observational work has attempted to measure and refine their basic properties [e.g. @mateo1998]. While the Milky Way's satellites are close (by extragalactic standards), their low numbers of stars and large apparent sizes present challenges for observational work. In particular, the properties of the faintest dwarf galaxy systems and especially *ambiguous* systems remains a pressing challenge as a unique probe into the nature of the early universe and dark matter. 
 
-**Classical systems**, the brightest of the local group (non-Magellanic) dwarf galaxies, are perhaps the systems best studied and with the most stringently derived properties. Defined[^classical] as the first six discovered dwarf spheroidal galaxies, (Sculptor, Ursa Minor, Fornax, Draco, Leo I, Leo II, and Carina), classical systems are typically old, spheroidal, and gas-poor. While extending 1-2 degrees across the sky (e.g. [@fig:scl_selection; @fig:umi_selection; @fig:fornax_selection]), these dwarfs contain large numbers of bright (giant) stars, allowing thousands of stars to be observed with deep photometry and spectroscopy [e.g. @tolstoy+2023, @pace+2020]. As a result, the determination of fundamental properties such as the position, size, orientation, distance [from 100s of RRL stars, e.g. @tran+2022; @garofalo+2025], proper motions (from *Gaia*, e.g. @battaglia+2022, @MV2020a), line-of-sight (LOS) velocity and dispersion $\sigma_v$, are all relatively well constrained today and show excellent convergence among different works. However, ongoing research continues to redefine our understanding of the detailed structure of Milky Way satellites, hinting that these objects may be more complex than at first glance. 
+*Classical systems*, the brightest of the local group (non-Magellanic) dwarf galaxies, are perhaps the systems best studied and with the most stringently derived properties. Defined as the first six discovered dwarf spheroidal galaxies,[^classical] (Sculptor, Ursa Minor, Fornax, Draco, Leo I, Leo II, and Carina), classical systems are typically old, spheroidal, and gas-poor. While extending 1-2 degrees across the sky (e.g. [@fig:scl_selection; @fig:umi_selection; @fig:fornax_selection]), these dwarfs contain large numbers of bright (giant) stars, allowing thousands of stars to be observed with deep photometry and spectroscopy [e.g. @tolstoy+2023, @pace+2020]. As a result, the determination of fundamental properties such as the position, size, orientation, distance [from 100s of RRL stars, e.g. @tran+2022; @garofalo+2025], proper motions (from *Gaia*, e.g. @battaglia+2022, @MV2020a), line-of-sight (LOS) velocity and dispersion $\sigma_v$, are all relatively well constrained today and show excellent convergence among different works. However, ongoing research continues to redefine our understanding of the detailed structure of Milky Way satellites, hinting that these objects may be more complex than at first glance. 
 
+[^lmc_discovery]: technically, the LMC and SMC may be classified as dwarf galaxies, but these were likely always known to humans at southern latitudes. 
 [^classical]: Note that some work like @simon2019 instead define classical dwarfs based on luminosity as compared to ultra faint dwarfs. This may include galaxies such as Antlia I, Crater II, Canes Venatici I, and Sagittarius. We stick with the historical definition for simplicity and since the Gaia observations are most numerous for the historical classicals.
 
 
@@ -44,7 +91,7 @@ Some of the most fundamental properties of astronomical objects are their positi
 
 *Gaia* has revolutionized many astronomical disciplines, the least of which is local group and Milky Way science. While proper motions of a dwarf galaxies has been measured in a case by case basis by the Hubble Space Telescope, a full systematic determination of proper motions for most dwarf galaxies was unavailable until *Gaia* [@MV2020a; @battaglia+2022]. *Gaia* has furthermore allowed for the detection and improved measurements of halo substructures and streams [@bonaca+price-whelan2025], Milky Way structure and kinematics [@hunt+vasiliev2025].
 
-For Local group dwarf spheroidals, *Gaia* has allowed for many of the first proper motion measurements. While the proper motion uncertainty on a typical dwarf member star is often with large uncertainties, by combining the proper motions for 100s to 1000s of stars in *Gaia*, incredibly precise proper motion measurements can be determined [e.g. @MV2020a], sometimes only limited by *Gaia*'s systematic error floor. Proper motions have ushered in a new dynamical era for MW satellites studies, where we often have precise determinations of the dwarf galaxy's (short term) orbit under a given MW potential.
+For Local group dwarf spheroidal, *Gaia* has allowed for many of the first proper motion measurements. While the proper motion uncertainty on a typical dwarf member star is often with large uncertainties, by combining the proper motions for 100s to 1000s of stars in *Gaia*, incredibly precise proper motion measurements can be determined [e.g. @MV2020a], sometimes only limited by *Gaia*'s systematic error floor. Proper motions have ushered in a new dynamical era for MW satellites studies, where we often have precise determinations of the dwarf galaxy's (short term) orbit under a given MW potential.
 
 
 
@@ -52,15 +99,26 @@ For Local group dwarf spheroidals, *Gaia* has allowed for many of the first prop
 
 
 
-### Dwarf galaxies today
+## Dwarf galaxies today
 
 With the help of *Gaia*, high resolution spectroscopy, high-quality photometry, and large aperture multi-object spectroscopic instruments, we can observe dwarf galaxies in unprecedented detail. Today, dwarf galaxies are used to search for dark matter cores (REFS), test our understanding of early nucleosynthesis (REFS), the details of galaxy formation (REFS), and ....
 
+While we now know the basic properties of dwarf galaxies, tremendous progress has been made in the past 10-20 years with large area deep photometric surveys, multi-object spectrographs, high resolution chemistry, and theoretical work, unveiling that dwarf galaxies are each unique systems with different formation pathways [e.g. @simon2019].
 
+@battaglia+nipoti2022
+
+
+
+One of the open questions in dwarf galaxy evolution is the formation of dark matter *cores* where the density becomes constant instead $\rho \sim 1$. A leading theory is cores form through of baryonic effects and feedback. If dark matter deviates from $\Lambda$CDM, then the NFW density profile may not describe halos anymore. *Warm* dark matter, relativistic in the early universe but cooler now, smooths out small-scale features and softens the cusps of dark matter halos. *Self-interacting* dark matter instead can form cores but also the cores can collapse into a density peak.
+
+- @walker+penarrubia2011: measuring cores and cusps
+- @dicintio+2013, @navarro+2010, NFW profiles may actually be more Einasto like
 
 ## Stellar density profiles
 
-Given star counts for a local group dwarf, one of the main quantities of interest is the surface density profile. Long used to characterize and understand larger galaxies, these profiles can provide hints as to the formation of dwarf galaxies, determine the physical extent of the stellar component, and the total stellar mass. Previous works tend to focus on fitting 3 different surface brightness profiles: an Exponential, a Plummer, or a King profile. 
+Surface density profiles efficiently characterize the shape of a galaxy. At the most basic, fitting stellar densities provide properties such as the shape, location, size, and orientation of a dwarf galaxy. However, the details of a stellar density profile are essential for interpreting the total mass of dwarf galaxies, their assembly and dynamical history, and understanding correlations between dwarf galaxies (REFS).
+
+Typically, three different surface density profiles are applied to dwarf galaxies: Exponential, Plummer, or a King profile.  We describe each profile briefly:
 
 The exponential profile is perhaps the simplest, as a 1-parameter profile
 $$
@@ -69,30 +127,28 @@ $$
 
 For a long time, exponential surface density profiles have been used as an description for spiral galaxies [REFS].
 
-@plummer1911 proposed a 1-parameter solution for a polytropic potential to fit globular cluster density profiles:
+To fit globular cluster density profiles, @plummer1911 proposed a 1-parameter solution for a density polytrope^[where density and pressure are assumed to be correlated],
 
 $$
-\Sigma_{\rm Plummer} = \frac{M}{\pi R_h^2}\frac{1}{(1 + (R/R_h)^2)^2}
+\Sigma_{\rm Plummer} = \frac{M}{\pi R_h^2}\frac{1}{(1 + (R/R_h)^2)^2},
 $$
 
+where $M$ is the total mass and $R_h$ is the 2D (and 3D) half-light radius. Now superceded by the King profile for globular clusters, the Plummer model is still a good fit to dwarf spheroidals and XXX.
 
-
-The @king1962 profile, originating as an empirical fit to globular clusters, also sometimes reasonably fits dwarf galaxies. This density profile includes an additional parameter $R_t$, a truncation radius where the density sharply drops to 0.
+The @king1962 profile, also an empirical fit to globular clusters, is also commonly applied to . This density profile includes an additional parameter $R_t$, a truncation radius where the density sharply drops to 0.
 $$
 \Sigma_{\rm King} = \Sigma_0\left(\frac{1}{\sqrt{1 + (R/R_c)^2}} - \frac{1}{\sqrt{1+(R_t/R_c)^2}}\right)
 $$
 
+Where $R_c$ is the characteristic "core" radius and $\Sigma_0$ is a characteristic density related to the total mass.
 
-
-Finally, the Sérsic profile represents an extension of the exponential. Typically parameterized in terms of a half-light radius $R_h$, the density at half-light radius $\Sigma_h$ and a Sérsic index $n$, the profile's equation is
+Finally, the Sérsic profile represents a generalization of an exponential profile, and describes galaxies of many kinds well. Typically parameterized in terms of a half-light radius $R_h$, the density at half-light radius $\Sigma_h$ and a Sérsic index $n$, the profile's equation is
 $$
 \Sigma_{\rm Sérsic} = \Sigma_0 \exp\left[-b_n \,  \left((R/R_h)^{1/n} - 1\right)\right]
 $$
 where $b_n$ is a constant depending on $n$. Less commonly used in studies of dwarf galaxies, @munoz+2018 advocate for using the Sérsic profile since the added flexibility allows for more profiles to be fit. 
 
-
-
-While there are not clear theoretical explanations why any profile is best, the Exponential stellar density profile is commonly assumed as a single parameter density profile which fits many dwarf galaxies well [e.g. @MV2020, @eskridge1988a, @hodge1991a, @hodge1991b, @IH1995, etc.] @faber+lin1983 demonstrated that an Exponential density profile is a reasonable empirical  fit to dwarf galaxies, theorizing that dwarf spheroidal evolve from exponential disks, maintaining a similar light profile. 
+While there are not clear theoretical explanations why any profile is best, the Exponential stellar density profile is commonly assumed as a single parameter density profile which fits many dwarf galaxies well [e.g. @MV2020a, @eskridge1988a, @hodge1971a, @hodge1991b, @IH1995, etc.] @faber+lin1983 demonstrated that an Exponential density profile is a reasonable empirical  fit to dwarf galaxies, theorizing that dwarf spheroidal evolve from exponential disks, maintaining a similar light profile. 
 
  in addition to Sérsic, King and other profiles. @lelli+2014 (example of using exponential.) @wang+2019 for fornax, @mcconnachie+irwin2006 for Exp, Plummer, King in other galaxies. 
 
@@ -121,205 +177,121 @@ Figure: A plot of the surface density profiles of Sculptor, Ursa Minor, and Forn
 | parameter        | value                                                        | Source |
 | ---------------- | ------------------------------------------------------------ | ------ |
 | $\alpha$         | $15.0183 \pm 0.0012^\circ$                                   | 1      |
-| $\delta$         | $-33.7186 \pm 0.0007^\circ$                                  | --     |
+| $\delta$         | $-33.7186 \pm 0.0007^\circ$                                  | "      |
 | distance modulus | $19.60 \pm 0.05$                                             | 2      |
-| distance         | $83.2 \pm 2$ kpc                                             | --     |
+| distance         | $83.2 \pm 2$ kpc                                             | "      |
 | $\mu_{\alpha*}$  | $0.099 \pm 0.002 \pm 0.017$ mas yr$^{-1}$                    | 3      |
-| $\mu_\delta$     | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | --     |
+| $\mu_\delta$     | $-0.160 \pm 0.002_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | "      |
 | LOS velocity     | $111.2 \pm 0.3\ {\rm km\,s^{-1}}$                            | 4      |
-| $\sigma_v$       | $9.7\pm0.2\ {\rm km\,s^{-1}}$                                | --     |
+| $\sigma_v$       | $9.7\pm0.2\ {\rm km\,s^{-1}}$                                | "      |
 | $R_h$            | $9.79 \pm 0.04$ arcmin                                       | 1      |
-| ellipticity      | $0.37 \pm 0.01$                                              | --     |
-| position angle   | $94\pm1^\circ$                                               | --     |
-| $M_V$            | $-10.82\pm0.14$                                              | --     |
+| ellipticity      | $0.37 \pm 0.01$                                              | "      |
+| position angle   | $94\pm1^\circ$                                               | "      |
+| $M_V$            | $-10.82\pm0.14$                                              | "      |
 
-Table: Observed properties of Sculptor. References are: 1. @munoz+2018 Sérsic fits, 2. @tran+2022 RR lyrae distance, 3. @MV2020b, 4. @arroyo-polonio+2024. {#tbl:scl_obs_props  short="Observed Properties of Sculptor"}. 
+Table: Observed properties of Sculptor. References are: 1. @munoz+2018 Sérsic fits, 2. @tran+2022 RR lyrae distance, 3. @MV2020b, 4. @arroyo-polonio+2024. {#tbl:scl_obs_props  short="Observed Properties of Sculptor"}
 
 
 
 | parameter        | value                                                        | Source |
 | ---------------- | ------------------------------------------------------------ | ------ |
 | $\alpha$         | $ 227.2420 \pm 0.0045$˚                                      | 1      |
-| $\delta$         | $67.2221 \pm 0.0016$˚                                        | --     |
+| $\delta$         | $67.2221 \pm 0.0016$˚                                        | "      |
 | distance modulus | $19.23 \pm 0.11$                                             | 2      |
-| distance         | $70.1 \pm 3.6$ kpc                                           | --     |
+| distance         | $70.1 \pm 3.6$ kpc                                           | "      |
 | $\mu_\alpha*$    | $-0.124 \pm 0.004 \pm 0.017$ mas yr$^{-1}$                   | 3      |
-| $\mu_\delta$     | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | --     |
+| $\mu_\delta$     | $0.078 \pm 0.004_{\rm stat} \pm 0.017_{\rm sys}$ mas yr$^{-1}$ | "      |
 | LOS velocity     | $-245.9 \pm 0.3_{\rm stat} \pm 1_{\rm sys}$ km s$^{-1}$      | 4      |
-| $\sigma_v$       | $8.6 \pm 0.3$                                                | --     |
+| $\sigma_v$       | $8.6 \pm 0.3$                                                | "      |
 | $R_h$            | $11.62 \pm 0.1$ arcmin                                       | 1      |
-| ellipticity      | $0.55 \pm 0.01$                                              | --     |
-| position angle   | $50 \pm 1^\circ$                                             | --     |
-| $M_V$            | $-9.03 \pm 0.05$                                             | --     |
+| ellipticity      | $0.55 \pm 0.01$                                              | "      |
+| position angle   | $50 \pm 1^\circ$                                             | "      |
+| $M_V$            | $-9.03 \pm 0.05$                                             | "      |
 
 Table: Observed properties of Ursa Minor. References are: (1) @munoz+2018 Sérsic fits, (2) @garofalo+2025 RR lyrae distance, (3) @MV2020a, (4) @pace+2020, average of MMT and Keck results.  {#tbl:umi_obs_props  short="Observed Properties of Ursa Minor"}
 
 
 
-
-
-# Cosmological context
-
-The leading theory of cosmology, $\Lambda$CMD (cold dark matter) holds that the universe is composed of about 68% dark energy ($\Lambda$), 27% dark matter (DM), and 5% regular baryons [@planckcollaboration+2020]. While baryonic matter is the only matter we can directly understand or observe, we still know the general properties of dark matter and dark energy. Dark energy causes the acceleration of the expansion of the universe on large scales. We do not discuss dark energy here as it does not substantially affect the local group today. Dark matter makes up the vast majority of mass in galaxies. Typically, galaxies have baryonic to dark matter ratios of between 1:5 to beyond 1:100. The faintest dwarf galaxies harbouring the largest proportion of dark matter. In $\Lambda$CMD, dark matter is assumed to only interact gravitationally with itself and other matter (transparent to light, or *dark*). Dark matter is also created *cold*, i.e. typical velocities much smaller than the speed of light in the early universe. Dark matter is a key ingredient in cosmological structural formation, dynamical galaxy structure, and galaxy-galaxy interactions. 
-
-## Formation of dwarf galaxies
-
-The very early universe was almost featureless. As observed from the cosmic microwave background created at redshift $z\sim 1100$, the temperature is a near perfect blackbody with fluctuations only at 1 part in 10,000.  These tiny perturbations began to grow as the universe ages and expands. Initially hot and dense, baryonic matter was prevented from collapsing by thermal / radiation pressure. However, dark matter was uninhibited, freely passing through the universe and collapsing into denser regions. Each self-gravitating overdensity of dark matter is known as a *halo*. As the universe continued to expand and cool down, baryonic matter began to collapse into dark matter halos. Eventually, the densest regions of baryons situated near the centres of halos would become the first stars of the first galaxies. 
-
-Halos rarely evolve as isolated systems. Instead, structure formation is *hierarchical*, where smaller *subhalos* are accreted into larger halos which may accrete into yet larger halos.  The most massive halos are made up of thousands of subhalos (verify),  with each subhalo becoming entire galaxies making up a galaxy cluster. But, even the smallest galaxies reside in a *halo*, with the dwarf galaxies representing entities with simpler *assembly histories*.
-
-
-
-## Cosmological dark matter density profiles
-
-From cosmological simulations, we know that across many orders of magnitude, dark matter halos appear self-similar. In @NFW1996;@NFW1997, hereafter NFW, the authors observe that the radial density profiles $\rho(r)$ follow a two-parameter law: 
-$$
-\rho/\rho_s= \frac{1}{(r/r_s)(1+r/r_s)^2}
-$$
-where $r_s$ and $\rho_s$ are the scale radius and density (see below). This density profile has shown remarkable success as a description of $\Lambda$CMD halos [REFS, but see also @navarro2010, darkEXP, ect. ]. This density profile is *cuspy*, where the density continuously rises like $\rho \sim 1/r$ at the centre. Also note that the total mass of the NFW profile logarithmically diverges. Typically, the virial mass of NFW halos is discussed instead, defined as $M_{200}$, the mass within a region $r_{200}$ containing a mean density 200 times the critical density of the universe $\rho_{\rm crit}$, so $M_{200} = M(r<r_{200}) = 200\ (4\pi/3) \ r_{200}^3\ \rho_{\rm crit}$.
-
-There are several parameterizations of the NFW profile. @NFW1996 initially write the halo in terms of $r_s$ and a concentration $c= r_{200} / r_s$ relating the virial radius $r_{200}$ to $r_s$. . In this case, $\rho_s = \rho_{\rm crit} c^3 / [\log(1+c) - c/(1+c)]$. However, we chose to discuss halos in terms of velocity space. The circular velocity of the NFW halo, $v_{\rm circ}(r) = \sqrt{G M(r) / r}$  related to the enclosed mass $M(r)$, reaches a maximum of $v_{\rm max}$ at $r_{\rm max} = \alpha\,r_s$ where $\alpha\approx2.16258$. Thus $r_{\rm max}$ is directly related to the scale radius and $v_{\rm max}$ is related to the total mass. 
-
-
-
-![The NFW density profile](/Users/daniel/Library/Application Support/typora-user-images/image-20250715095831443.png)
-
-Figure: Example stellar and dark matter density profiles for a Sculptor like galaxy. The dark matter is more extended and massive than the star across the entire galaxy. 
-
-## Typical properties
-
-A key prediction of $\Lambda$CDM is the stellar mass halo mass relation, describing the amount of stellar mass forms in a (sub)halo of a given size. In particular, the SMHM relation grows especially steep in the dwarf galaxy regime---many dwarf galaxies are formed in halos of similar masses. @fattahi+2013, @fattahi+2018
-
-- @battaglia+nipoti2022
-
-
-
-![stellar mass halo mass relation](/Users/daniel/Library/Application Support/typora-user-images/image-20250715100059332.png)
-
-Figure: The stellar mass halo mass relation, where $v_{\rm max}$ is related to the halo mass. Taken from @fattahi2018. Right: the mass-concentration relation for NFW halos, but parameterized in terms of $r_{\rm max}$ and $v_{\rm max}$. Together, these plots represent the cosmologically expected properties of underlying dark matter halos in any dwarf galaxy. The velocity dispersion directly constrains the mass  contained within a half-light radius, so the underlying halo in $\Lambda$CDM is well-constrained. 
-
-
-
-## Challenges to cosmology or modelling limitations?
-
-One of the open questions in dwarf galaxy evolution is the formation of dark matter *cores* where the density becomes constant instead $\rho \sim 1$. A leading theory is cores form through of baryonic effects and feedback. If dark matter deviates from $\Lambda$CDM, then the NFW density profile may not describe halos anymore. *Warm* dark matter, relativistic in the early universe but cooler now, smooths out small-scale features and softens the cusps of dark matter halos. *Self-interacting* dark matter instead can form cores but also the cores can collapse into a density peak.
-
-- @walker+penarrubia2011: measuring cores and cusps
-- @dicintio+2013, @navarro+2010, NFW profiles may actually be more Einasto like
-
 # Simulating tidal effects
 
-Since the discovery of dwarf galaxies, a large body of work has speculated, considered, or simulated tidal effects. However, before *Gaia*, the orbits of most systems were essentially unconstrained. The theory developed still relates to today's work. 
+Since the discovery of dwarf galaxies, a large body of work has speculated, considered, or simulated tidal effects. While pre-*Gaia* work often did not know the specific orbits of dwarf galaxies, the theory for satellites serves as an excellent framework for understanding specific systems. 
 
-Because we only have finite compute resources, major assumptions or limitations are common in simulations. Cosmological simulations, starting from the very early universe, create a realistic environment, structure formation, and merger history. But, cosmological simulations typically barely resolve dwarf galaxies [REFS], leading to numerical artifacts and artificial disruption. On the other hand, idealized simulations are able to reach high resolution and numerical convergence for a single dwarf galaxy. But, idealization may not be the most realistic environment, neglecting mergers, assembly history, and often baryonic physics. We use idealized simulations here which are more powerful in accurately assessing tidal effects, given that the idealizations do not impact these galaxies's recent history too much.
+While cosmological simulations predict that mergers and satellite-galaxy interactions are common [e.g., @riley+2024], they struggle to understand the evolution of individual dwarf galaxies. In particular, dwarf galaxies are often barely resolved. The highest resolution simulation of a Milky Way dark matter halo, the Aquarius project [@springel+2008], acchieved a DM resolution of $1.712 \times10^3 \Mo$, enough to barely resolve Sculptor like halos (see methods).  On the other hand, idealized simulations are able to reach high resolution and numerical convergence for a single dwarf galaxy. But, idealization may not be the most realistic environment, neglecting mergers, assembly history, and often baryonic physics. We use idealized simulations here which are more powerful in accurately assessing tidal effects, given that the idealizations do not impact these galaxies's recent history too much. As such, a long history of work has resolved to understand the tidal evolution of dwarf galaxies using these *idealized* simulations. 
 
+Some of the earliest theory work on tidal stripping of dwarf galaxies originate from [@allen+richstone1988, @moore+davis1994, @johnston+spergel+hernquist1995, @oh+lin+aarseth1995, @piatek+pryor1995, @velazquez+white1995, @kroupa1997, @pryor1996]. Many of these works used similar techniques as we continue to use today, setting up a dark matter halo in a static Milky Way potential and predicting the evolution of quantities of interest. 
 
+More recent works include @read+2006, @bullock+johnston2005, @PNM2008, @penarrubia+2009, @klimentowski+2009, @errani+2023a, @fattahi+2018, @stucker+2023, @wang+2017.
+
+With precise orbits and a better understanding of the Milky Way potential and system, more recent work began to directly probe the dynamical histories of individual dwarf galaxies. Examples include @iorio+2019 for Sculptor, @borukhovetskaya+2022; @dicintio+2024 for Fornax, @borukhovetskaya+2022a for Antlia II. Our goal is to apply a similar framework to Sculptor and Ursa Minor.
 
 ## Simulating large gravitational systems: The N-body method
 
-While the dominant force on large scales in the universe, calculating the gravitational interaction between a large number of objects becomes computationally prohibitive. So, how do we manage to create simulations with billions of particles across vast volumes of the universe? Perhaps the simplest method to compute the evolution of dark matter is through *N-body simulations*. A dark matter halo is represented as a large number of dark matter particles (bodies).
+Modelling gravitational evolution is essential for understanding properties of galaxies. Perhaps the simplest method to compute the evolution of dark matter is through *N-body simulations*. A dark matter halo is represented as a large number of dark matter particles (bodies). Each body represents a monte-carlo sample from the underlying matter distribution. However, galaxies are often assumed to be *collisionless*—particles are not strongly affected by small-scale gravitational encounters. In contrast, star clusters evolve differently as star-star gravitational collisions changes the dynamics of the system. While we use individual gravitating bodies in N-body simulations, the Newtonian gravitational force is softened to be a Plummer sphere, so encounters closer than a softening length do not substantially impact the dynamical evolution.
 
 Naively, the newtonian gravitational force requires adding together the forces from each particle at each particle, causing a computational cost that scales quadratically with the number of particles, or $O(N^2)$. With this method, simulating a large number of particles, such as 10^6, would require about 10^12 force evaluations at each time step, making cosmological and high-resolution studies unfeasible. However, only long-range gravitational interactions tend to be important for CMD, so we can utilize the *tree method* to compute the gravitational force vastly more efficiently.
 
-The first gravitational tree code was introduced in @barnes+hut1986, and is still in use today. We utilize the massively parallel code *Gadget 4* [@gadget4].  Particles are spatially split into an *octotree*. The tree construction stars with one large node, a box containing all of the particles. If there is more than one particle in a box/node , the box is then divided into 8 more nodes (halving the side length in each dimension) and this step is repeated until each node only contains 1 particle. With this heirarchichal organization, if a particle is sufficiently far away from a node, then the force is well approximated by the force from the centre of mass of the node. As such, each force calculation only requires a walk through the tree, only descending farther into the tree as necessary to retain accuracy. The total force calculations reduce from $N^2$ to $O(N\,\log N)$, representing orders of magnitude speedup. Modern codes such as *Gadget* utilize many other performance tricks, such as splitting particles across many supercomputer nodes, efficient memory storage, adaptive time stepping, and parallel file writing to retain fast performance for large scale simulations, forming the foundation for many cosmological simulation codes. 
+The first gravitational tree code was introduced in @barnes+hut1986, and is still in use today. We utilize the massively parallel code *Gadget 4* [@gadget4].  Particles are spatially split into an *octotree*. The tree construction stars with one large node, a box containing all of the particles. If there is more than one particle in a box/node , the box is then divided into 8 more nodes (halving the side length in each dimension) and this step is repeated until each node only contains 1 particle. With this heirarchichal organization, if a particle is sufficiently far away from a node, then the force is well approximated by the force from the centre of mass of the node. As such, each force calculation only requires a walk through the tree, only descending farther into the tree as necessary to retain accuracy. The total force calculations reduce from $O(N^2)$ to $O(N\,\log N)$, representing orders of magnitude speedup. Modern codes such as *Gadget* utilize other performance tricks, such as splitting particles across many supercomputer nodes, efficient memory storage, adaptive time stepping, and parallel file writing to retain fast performance for large scale simulations, forming the foundation for many cosmological simulation codes. 
 
 
 
-## Galactic tides and idealized simulations
+## Break and tidal radii
 
-Despite the power of cosmological simulations for understanding large scale structure, a fundamental limitation is their ability to resolve small scales such as dwarf galaxies. Dwarf galaxies, without sufficient resolution, are likely to artificially disrupt as a result of numerical noise. For understanding the tidal evolution of a dwarf galaxy, this tool has limited accuracy then. 
+Analytic approximations are powerful tools to generally determine the influence of tides given a dwarf galaxy and a host. A variety of "tidal radii" exist in the literature, we focus on two simple forms, the Jacobi radius and the break radius. 
 
-Idealized simulations take a different approach. Instead of starting from the universe as a whole, just a single subhalo is simulating, allowing resolution several orders of magnitude than cosmological simulations. For instance, the highest resolution dark matter only simulation, the *Aquarious Project* only reached a mass resolution of XXX. In constrast, our dark matter mass resolution in later chapters is of order 1000s of solar masses. 
-
-As such, a long history of work has resolved to understand the tidal evolution of dwarf galaxies using these *idealized* simulations. 
-
-Some of the earliest theory work on tidal stripping of dwarf galaxies originate from [@allen+richstone1988, @moore+davis1994, @johnston+spergel+hernquist1995, @oh+lin+aarseth1995, @piatek+pryor1995, @velazquez+white1995, @kroupa1997]. Many of these works used similar techniques as we continue to use today.
-
-More recently, @PNM2008 run idealized simulations of a local group dwarf galaxy in a milky way halo.
-
-- @mayer+2001 theory of tidal stripping
-
-
-
-### Break and tidal radii
-
-Analytic approximations are powerful tools to generally determine the influence of tides given a dwarf galaxy and a host. 
-
-The Jacobi radius represents the approximate radius where stars become unbound for a galaxy in a circular orbit around a host galaxy. Calculated from an approximation of the location of the L1 and L2 lagrange points, the Jacobi radius is where the mean density of the dwarf galaxy is three times the mean interior density of the host galaxy at pericentre, or
+The **Jacobi radius** represents the approximate radius where stars become unbound for a galaxy in a circular orbit around a host galaxy. Calculated from an approximation of the location of the L1 and L2 lagrange points, the Jacobi radius is where the mean density of the dwarf galaxy is three times the mean interior density of the host galaxy at pericentre, or
 $$
 3\bar \rho_{\rm MW}(r_{\rm peri}) = \bar \rho_{\rm dwarf}(r_J).
 $$
 If $r_J$ occurs within the visible extent of a galaxy, we should expect to find unbound, *extratidal* stars. While most valid for circular orbits, assuming $r_{\rm peri}$ for the host-dwarf distance works as most stars are lost near pericentre. 
 
-We use the break radius as defined in @penarrubia+2009, marking where the galaxy is still in disequilibrium. The break radius $r_{\rm break}$ is proportional to the velocity dispersion $\sigma_v$ and time since pericentre $\Delta t$, 
+We use the **break radius** as defined in @penarrubia+2009, marking where the galaxy is still in disequilibrium. The break radius $r_{\rm break}$ is proportional to the velocity dispersion $\sigma_v$ and time since pericentre $\Delta t$, 
 $$
 r_{\rm break} = C\,\sigma_{v}\,\Delta t
 $$
 where the scaling constant $C \approx 0.55$ is a fit. $r_{\rm break}$ describes where the dynamical timescale is longer than the time since the perturbation, i.e. the radius within which the galaxy should have dynamically relaxed.  As illustrated in @fig:toy_profiles, for an idealized model with exponential stars in a NFW halo, after some time past pericentre, the stellar component is smooth but contains a change in slope around $r_{\rm break}$, where the radial velocities of the stars becomes positive as they still readjust to a new equilibrium.
 
-From this argument, we note that the following properties must be approximately true for tides to occur:
+From this argument, we note that the following properties must be approximately true to interpret a break is 
 
-- Close enough pericentre. The other break radius $r_J$ implies that if the host density is 3x the satellite, stars will be lost
+- *Small pericentre*. If the pericentre is too large and $r_J \gg R_h$, then few stars will be lost.
 - Corresponding time since last pericentre: If the time since last pericentre is not $\sim$ consistent with an observed break in the density profile, then tides 
 - Halo evolution. As found in @EN2021, galaxies evolve along well defined tidal tracks (assuming spherical, isotropic, NFW halo, which may not be true, see ...). These tracks tend to "puff up" the stellar component while also removing dark matter mass, leaving a smaller, compacter DM halo with a more extended stellar component.
-  - This information is mostly related to the statistical initial distribution of satellites from cosmology [ludlow+2016; @fattahi+2018]
+- This information is mostly related to the statistical initial distribution of satellites from cosmology [ludlow+2016; @fattahi+2018]
 
 
 
-![Break radius validation](/Users/daniel/thesis/figures/idealized_break_radius.png){#fig:idealized_break_radius}
+![Break radius validation](figures/idealized_break_radius.pdf){#fig:idealized_break_radius}
 
-Figure: The break radius of the simulations is set by the time since pericentre.  The initial conditions are Sculptor-like, exponential stars embedded in NFW, evolved in @EP2020 potential with a pericentre of 15 kpc and apocentre of 100 kpc. See @sec:methods for a description of our simulation setup. **TODO:** mark $r_J$, plot initial, make sure 1st pericentre, simplify models.
+Figure: The break radius of the simulations is set by the time since pericentre.  The initial conditions are Sculptor-like, exponential stars embedded in NFW, evolved in @EP2020 potential with a pericentre of 15 kpc and apocentre of 100 kpc. In this model, the jacobi radius is close to the break radius. See @sec:methods for a description of our simulation setup.
 
-### Tidal evolution
+## Tidal evolution
 
 While the break and jacobi radii help with understanding when tidal effects matter, we still need to know what these effects do and how a galaxy evolves. 
 
 As a galaxy evolves in a tidal field, several changes happen. 
 
 1. *Mass is lost*. In particular, particles and stars on weakly bound orbits are most likely to be removed by tides. 
-2. *Steams form*. If tides are strong enough, mass lost from the galaxy becomes part of tidal tails, evolving along a similar orbit but leading or trailing the galaxy.
-3. *The galaxy reshapes*. Bound mass of the galaxy redistributes. As mentioned in the last section, this is visible as a wave of outward moving material, with the outermost material reaching equilibrium last. 
+2. *Steams form*. If tides are strong enough, unbound mass becomes part of tidal tails, evolving along a similar orbit but leading or trailing the galaxy.
+3. *Mass redistributes*. Bound mass of the galaxy redistributes. As mentioned in the last section, this is visible as a wave of outward moving material, with the outermost material reaching equilibrium last. 
 4. *A new equilibrium*. With mass loss, the gravitational potential decreases, resulting in a more compact dark matter halo and stars which adiobadically expand to a larger scale radius.
 
-Assuming that galaxies are spherical, isotropic, and evolve in a constant tidal field, most dwarf galaxies should evolve along similar tidal tracks. 
+Assuming that galaxies are spherical, isotropic, and evolve in a constant tidal field, most dwarf galaxies should evolve along similar tidal tracks. @EN2021 derive tidal tracks for dwarf galaxies, showing that NFW halos all evolve along a similar trajectory in terms of $r_{\rm max}$ and $v_{\rm max}$. 
 
-@EN2021 derive tidal tracks for dwarf galaxies, showing that NFW halos all evolve along a similar trajectory in terms of $r_{\rm max}$ and $v_{\rm max}$. 
 $$
 \frac{v_{\rm max}}{v_{\rm max, 0}} = 
 2^\alpha 
 \left(\frac{r_{\rm max}}{r_{\rm max, 0}}\right)^{\beta}\left[1 + \left(r_{\rm max} / r_{\rm max, 0}\right)^2\right]^{-\beta}
-$$ {eq:tidal_track}
+$$
 where $\alpha=0.4$, $\beta=0.65$ are empirical fits. As illustrated in @fig:tidal_tracks, this formula works for both circular and elliptical orbits and is independent of the initial subhalo size or distance to the host. 
 
-![Tidal tracks of dwarf galaxies](/Users/daniel/Library/Application Support/typora-user-images/image-20250715095615423.png){#fig:tidal_tracks}
+![Tidal tracks of dwarf galaxies](/Users/daniel/Library/Application Support/typora-user-images/image-20250715095615423.png){#fig:tidal_tracks width=80%}
 
-Figure: Tidal tracks of dwarf galaxies. Fig. 6 from @EN2021.
-
-
-
-## Notable related works
-
-Case studies:
-
-- @dicintio+2024
-- @iorio+2019
-
-Dynamical
-
-- @read+2006 
-- @bullock+johnston+2005
-- @PNM2008
-- @borukhovetskaya+2022a, @borukhovetskaya+2022
-- @errani+2023a, @fattahi+2018
-- @wang+2017, 
-- @pryor1996
-- @klimentowski+2009
+Figure: Tidal tracks of dwarf galaxies, the logarithm of maximum circular velocity and radius of relative to the initial conditions for satellites on a variety of orbits. Almost all satellites follow the tidal track suggested by @EN2021. Adapted from fig. 6 of @EN2021.
 
 # Thesis Outline
 
 In this thesis, our goal is to review the evidence for an extended density profile in Ursa Minor and Sculptor, to assess the impact of tidal effects on each galaxy, and to discuss possible interpretations for the structure of these galaxies. 
 
-In chapter 2, we describe how we compute observational density profiles from @jensen+202. In chapter 3, we review our simulation methods. Next, we present our results for the tidal stripping of Sculptor and Ursa Minor in Chapter 4. We discuss our results, limitations, and implications in Chapter 5. Finally, in Chapter 6, we summarize this work and discuss future directions for similar work and the field of dwarf galaxies. 
+In chapter 2, we describe how we compute observational density profiles from @jensen+2024. In chapter 3, we review our simulation methods. Next, we present our results for the tidal stripping of Sculptor and Ursa Minor in Chapter 4. We discuss our results, limitations, and implications in Chapter 5. Finally, in Chapter 6, we summarize this work and discuss future directions for similar work and the field of dwarf galaxies. 
 
 
 

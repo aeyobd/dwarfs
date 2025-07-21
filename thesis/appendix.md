@@ -52,25 +52,25 @@ Discuss selection criteria for DELVE and UNIONS samples, literature comparison, 
 
 
 
-![Scl density comparison](/Users/daniel/thesis_2/figures/scl_density_methods_extra.pdf){#fig:scl_density_extras}
+![Scl density comparison](figures/scl_density_methods_extra.pdf){#fig:scl_density_extras}
 
 Figure: Density profiles for various assumptions for Sculptor. PSAT is our fiducial 2-component J+24 sample, circ is a 2-component bayesian model assuming circular radii, simple is the series of simple cuts described, bright is the sample of the brightest half of stars (scaled by 2), DELVE is a sample of  RGB  stars (background subtracted and rescaled to match).
 
 
 
-![Scl density methods](/Users/daniel/thesis_2/figures/scl_density_methods_j24.pdf){#fig:scl_density_j24_methods} 
+![Scl density methods](figures/scl_density_methods_j24.pdf){#fig:scl_density_j24_methods} 
 
 Figure: Comparison of density profiles for each J+24 method. The fiducial is a 2-component elliptical model. However, the 1-component is still elliptical but only contains 1 component and the circular model assumes a circular outer density profile and bins in circular bins instead of elliptical bins. 
 
 
 
-![UMi density comparison](/Users/daniel/thesis_2/figures/umi_density_methods_extra.pdf){#fig:umi_density_extras}
+![UMi density comparison](figures/umi_density_methods_extra.pdf){#fig:umi_density_extras}
 
 Figure: Similar to [@fig:scl_observed_profiles] except for Ursa Minor
 
 
 
-![UMi density methods](/Users/daniel/thesis_2/figures/umi_density_methods_j24.pdf){#fig:umi_density_j24_methods} 
+![UMi density methods](figures/umi_density_methods_j24.pdf){#fig:umi_density_j24_methods} 
 
 Figure: Similar to [@fig:scl_density_j24_methods] except for Ursa Minor. 
 
