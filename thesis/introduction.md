@@ -1,4 +1,4 @@
-Dwarf galaxies host, in many ways, the most extreme galactic environments in the universe. These little galaxies are typically defined to fainter than the LMC or SMC [$M_V \gtrsim -18$, e.g. @mcconnachie2012, @hodge1971]. As the smallest class of galaxies, dwarfs are the most numerous galaxies. Dwarf galaxies are highly *dark-matter dominated*, with mass to light ratios sometimes exceeding 100 to 1000 $M_\odot/ L_\odot$.  Because of their small total masses, many dwarf galaxies are *quenched*, with little to no recent star formation. Their stellar populations are *relics* from the early universe, consisting of many of the oldest and most metal poor stars. Understanding the properties of dwarf galaxies thus has implications across astronomy, from cosmological structure formation on the smallest scale to extremely metal-poor stellar populations to chemical evolution to galactic dynamics. Of the classical dwarfs, the Sculptor and Ursa Minor dwarf spheroidal galaxies stand out with a more extended density profile relative to an exponential, hinting at tidal effects. As a case study in tidal effects and our understanding of dwarf galaxy formation and evolution, we aim to understand the dynamical history of these galaxies. 
+Dwarf galaxies host, in many ways, the most extreme galactic environments in the universe. These little galaxies are typically defined to fainter than the LMC or SMC [$M_V \gtrsim -18$ , e.g. @hodge1971; @mcconnachie2012]. As the smallest class of galaxies, dwarfs are the most numerous galaxies. Dwarf galaxies are highly *dark-matter dominated*, with mass to light ratios sometimes exceeding 100 to 1000 $M_\odot/ L_\odot$.  Because of their small total masses, many dwarf galaxies are *quenched*, with little to no recent star formation. Their stellar populations are *relics* from the early universe, consisting of many of the oldest and most metal poor stars. Understanding the properties of dwarf galaxies thus has implications across astronomy, from cosmological structure formation on the smallest scale to extremely metal-poor stellar populations to chemical evolution to galactic dynamics. Of the classical dwarfs, the Sculptor and Ursa Minor dwarf spheroidal galaxies stand out with a more extended density profile relative to an exponential, hinting at tidal effects. As a case study in tidal effects and our understanding of dwarf galaxy formation and evolution, we aim to understand the dynamical history of these galaxies. 
 
 In this section, we first describe cosmological structure formation and the role of dwarf galaxies. Then, we explore the observational history of dwarf galaxies, the *Gaia* telescope, open questions, and why Sculptor and Ursa Minor stand out. We  discuss idealized simulations, tidal effects, break radii, and recent developments in tidal simulations. Finally, we provide a roadmap to the thesis as a whole at the end of this section.
 
@@ -16,7 +16,7 @@ Dark matter halos, and their associated galaxies, rarely evolve in isolation. In
 
 Small-scale structure formation is sensitive to deviations from $\Lambda$CDM cosmology [e.g. @bechtol+2022]. Many alternative models, such as warm dark matter or self-interacting dark matter, may smooth out small-scale features and reduce the abundance of small halos or change their structure [e.g. @lovell+2014]. Dwarf galaxies, occupying the smallest dark matter halos, are promising windows into small-scale cosmological features. Alternative dark matter properties can influence dwarf galaxy structure, formation, and tidal evolution. The nearby dwarf galaxies of the local group, with detailed observations, present a promising opportunity to understand the evolution of these objects and test our understanding of cosmology. To understand the evolution of these objects, we need to understand the general predictions from $\Lambda$CDM for the properties of dwarf galaxies. 
 
-## Typical structure of dwarf galaxies
+## Typical structure of dark matter halos
 
 In $\Lambda$CDM cosmological simulations, dark matter halos are remarkably self-similar. In @NFW1996;@NFW1997, hereafter NFW, the authors observe that the spherical radial density profiles $\rho(r)$ are well described by a two-parameter law: 
 $$
@@ -38,9 +38,9 @@ While two free parameters characterize a NFW halo, $M_{200}$ and $c$, these para
 
 ![Example density profiles](figures/example_density_profiles.pdf){#fig:nfw_density}
 
-Figure: Example stellar and dark matter density profiles for a Sculptor-like galaxy. The dark matter is more extended and massive than the star across the entire galaxy. **TODO: add plummer & cored DM**
+Figure: Example stellar and dark matter density profiles for a Sculptor-like galaxy. The dark matter is more extended and massive than the star across the entire galaxy.
 
-
+## Connecting dark matter to stars
 
 Both cosmology and observations find fundamental relationships between properties of galaxies, particularly for the total mass and luminosity. A key prediction of $\Lambda$CDM is the stellar mass halo mass relation, describing the amount of stellar mass forms in a (sub)halo of a given size. In particular, the SMHM relation grows especially steep in the dwarf galaxy regime---many dwarf galaxies are formed in halos of similar masses. @Fig:smhm shows the stellar mass versus $v_{\rm max}$ maximum circular velocity (proxy for halo mass) for apostle dwarfs from @fattahi+2018. While there is some scatter, the range of possible $v_{\rm max}$ is fairly narrow across $\sim 5$ decades in stellar mass. Thus, if we know the initial stellar mass of a dwarf galaxy, we also know, at some level, its dark matter mass.
 
@@ -56,7 +56,7 @@ Figure: The stellar mass halo mass relation, where $v_{\rm max}$ is related to t
 
 Dwarf galaxies have often puzzled astronomers and our understanding of the universe. While we now generally understand how dwarf galaxies fit into the universe, this was not always the case. The first discovered dwarf galaxies in 1938[^lmc_discovery], Sculptor and Fornax, heralds an era of discovery and investigation into these astronomical system. @shapley1938 present Sculptor and Fornax as a new type of *stellar system* resembling the Magellanic clouds and globular clusters, but do not attempt to speculate on the exact nature. The first direct hints that these systems are galaxies originates from early spectroscopic work deriving the first velocity dispersions [e.g., @aaronson1983, @gallagher+wyse1994, @mateo1994, @pryor1994, @pryor1996, @gerhard1994, and @olszewski1998.]. Based on the physical size and velocity dispersions, the mass to light ratios of these dwarf galaxies is far larger than expected for star clusters without dark matter. In general, these objects have reached a consensus that they have high velocity dispersion, old spheroidal stellar populations, and low stellar masses. 
 
-Dwarf galaxies span a large range of size and morphology. @fig:galaxy_images displays several images of dwarf galaxies. The largest in the local group but not always considered a dwarf galaxy, the Large Magellanic Cloud (LMC), to classical systems Sculptor and Ursa Minor dwarf spheroidal, to an ultra-faint dwarf galaxy, Boötes V. Large LMC-like dwarf galaxies exhibit complex structure such as a bar, young blue stars, and irregular shapes. On the other hand, the classical and faint dwarf galaxies are composed mostly of old, faint, and red stars. These galaxies are typically classified as dwarf spheroidals (dSph) (although we typically omit the dSph designation and refer to these galaxies by their constellation alone).
+Dwarf galaxies span a large range of size and morphology. @fig:galaxy_images displays images of dwarf galaxies of several classes. The largest in the local group but not always considered a dwarf galaxy, the dwarf Irregular Large Magellanic Cloud (LMC), to classical systems Sculptor and Ursa Minor dwarf spheroidal, to an ultra-faint dwarf galaxy, Boötes V. Large LMC-like dwarf galaxies exhibit complex structure such as a bar, young blue stars, and irregular shapes. On the other hand, the classical and faint dwarf galaxies are composed mostly of old, faint, and red stars. These galaxies are typically classified as dwarf spheroidals (dSph) (although we typically omit the dSph designation and refer to these galaxies by their constellation alone).
 
 Since the discovery of dwarf galaxies around the Milky Way, observational work has attempted to measure and refine their basic properties [e.g. @mateo1998]. While the Milky Way's satellites are close (by extragalactic standards), their low numbers of stars and large apparent sizes present challenges for observational work. In particular, the properties of the faintest dwarf galaxy systems and especially *ambiguous* systems remains a pressing challenge as a unique probe into the nature of the early universe and dark matter. 
 
@@ -91,7 +91,7 @@ Some of the most fundamental properties of astronomical objects are their positi
 
 *Gaia* has revolutionized many astronomical disciplines, the least of which is local group and Milky Way science. While proper motions of a dwarf galaxies has been measured in a case by case basis by the Hubble Space Telescope, a full systematic determination of proper motions for most dwarf galaxies was unavailable until *Gaia* [@MV2020a; @battaglia+2022]. *Gaia* has furthermore allowed for the detection and improved measurements of halo substructures and streams [@bonaca+price-whelan2025], Milky Way structure and kinematics [@hunt+vasiliev2025].
 
-For Local group dwarf spheroidal, *Gaia* has allowed for many of the first proper motion measurements. While the proper motion uncertainty on a typical dwarf member star is often with large uncertainties, by combining the proper motions for 100s to 1000s of stars in *Gaia*, incredibly precise proper motion measurements can be determined [e.g. @MV2020a], sometimes only limited by *Gaia*'s systematic error floor. Proper motions have ushered in a new dynamical era for MW satellites studies, where we often have precise determinations of the dwarf galaxy's (short term) orbit under a given MW potential.
+For local group dwarf galaxies, *Gaia* has enabled many of the first proper motion measurements. While the proper motion uncertainty on a typical dwarf member star is often with large uncertainties, by combining the proper motions for 100s to 1000s of stars in *Gaia*, incredibly precise proper motion measurements can be determined [e.g. @MV2020a], sometimes only limited by *Gaia*'s systematic error floor. Proper motions have ushered in a new dynamical era for MW satellites studies, where we often have precise determinations of the dwarf galaxy's (short term) orbit under a given MW potential. In addition, *Gaia* helps seperate out contaiminating MW foreground stars. By measuring parallaxes or proper motions significantly different from the dwarf galaxy, many stars can be immediately removed as non-members [e.g. @jensen2024].
 
 
 
@@ -101,39 +101,34 @@ For Local group dwarf spheroidal, *Gaia* has allowed for many of the first prope
 
 ## Dwarf galaxies today
 
-With the help of *Gaia*, high resolution spectroscopy, high-quality photometry, and large aperture multi-object spectroscopic instruments, we can observe dwarf galaxies in unprecedented detail. Today, dwarf galaxies are used to search for dark matter cores (REFS), test our understanding of early nucleosynthesis (REFS), the details of galaxy formation (REFS), and ....
-
-While we now know the basic properties of dwarf galaxies, tremendous progress has been made in the past 10-20 years with large area deep photometric surveys, multi-object spectrographs, high resolution chemistry, and theoretical work, unveiling that dwarf galaxies are each unique systems with different formation pathways [e.g. @simon2019].
-
-@battaglia+nipoti2022
-
-
+Advances in telescopes and observations has accelerated progress on the nature of dwarf galaxy. Deep digital photometric surveys have enabled a significant increase in the number of known dwarf galaxies [e.g. @simon2019]. Upcoming and ongoing surveys like the Vera Rubin Observatories Legacy Survey for Space and Time will continue to probe fainter and fainter dwarf galaxies. In addition, large aperture multi-object spectrographs have revealed the inner structure of dwarf galaxies like never before. Beyond precise structural and kinematic properties of dwarf galaxies, modern observations allow for the seperation of multiple chemodynamical stellar populations [], detailed constraints on the dark matter density profiles, and hints of tidal disruptions.
 
 One of the open questions in dwarf galaxy evolution is the formation of dark matter *cores* where the density becomes constant instead $\rho \sim 1$. A leading theory is cores form through of baryonic effects and feedback. If dark matter deviates from $\Lambda$CDM, then the NFW density profile may not describe halos anymore. *Warm* dark matter, relativistic in the early universe but cooler now, smooths out small-scale features and softens the cusps of dark matter halos. *Self-interacting* dark matter instead can form cores but also the cores can collapse into a density peak.
 
 - @walker+penarrubia2011: measuring cores and cusps
 - @dicintio+2013, @navarro+2010, NFW profiles may actually be more Einasto like
 
+@oh+2011 survey of cusyp / cored dwarf galaxies.
+
 ## Stellar density profiles
 
-Surface density profiles efficiently characterize the shape of a galaxy. At the most basic, fitting stellar densities provide properties such as the shape, location, size, and orientation of a dwarf galaxy. However, the details of a stellar density profile are essential for interpreting the total mass of dwarf galaxies, their assembly and dynamical history, and understanding correlations between dwarf galaxies (REFS).
+Surface density profiles efficiently characterize the shape of a galaxy. At the most basic, fitting stellar densities provide properties such as the shape, location, size, and orientation of a dwarf galaxy. However, the details of a stellar density profile are essential for interpreting the total mass of dwarf galaxies, their assembly and dynamical history, and understanding correlations between dwarf galaxies (REFS). 
 
-Typically, three different surface density profiles are applied to dwarf galaxies: Exponential, Plummer, or a King profile.  We describe each profile briefly:
 
-The exponential profile is perhaps the simplest, as a 1-parameter profile
+
+Typically, three different surface density profiles are applied to dwarf galaxies: Exponential, Plummer, or a King profile [e.g. @munoz+18, @cicuendez+2018]. The exponential profile is perhaps the simplest, as a 1-parameter profile
 $$
 \Sigma_{\rm exp} = \Sigma_0\exp(-R / R_s)
 $$
 
-For a long time, exponential surface density profiles have been used as an description for spiral galaxies [REFS].
+For a long time, exponential surface density profiles have been used as an description for spiral galaxies (see discussion before). 
 
 To fit globular cluster density profiles, @plummer1911 proposed a 1-parameter solution for a density polytrope^[where density and pressure are assumed to be correlated],
-
 $$
 \Sigma_{\rm Plummer} = \frac{M}{\pi R_h^2}\frac{1}{(1 + (R/R_h)^2)^2},
 $$
 
-where $M$ is the total mass and $R_h$ is the 2D (and 3D) half-light radius. Now superceded by the King profile for globular clusters, the Plummer model is still a good fit to dwarf spheroidals and XXX.
+where $M$ is the total mass and $R_h$ is the 2D half-light radius. Now superceded by the King profile for globular clusters, the Plummer model is still a good fit to dwarf spheroidals and XXX.
 
 The @king1962 profile, also an empirical fit to globular clusters, is also commonly applied to . This density profile includes an additional parameter $R_t$, a truncation radius where the density sharply drops to 0.
 $$
@@ -148,21 +143,31 @@ $$
 $$
 where $b_n$ is a constant depending on $n$. Less commonly used in studies of dwarf galaxies, @munoz+2018 advocate for using the Sérsic profile since the added flexibility allows for more profiles to be fit. 
 
-While there are not clear theoretical explanations why any profile is best, the Exponential stellar density profile is commonly assumed as a single parameter density profile which fits many dwarf galaxies well [e.g. @MV2020a, @eskridge1988a, @hodge1971a, @hodge1991b, @IH1995, etc.] @faber+lin1983 demonstrated that an Exponential density profile is a reasonable empirical  fit to dwarf galaxies, theorizing that dwarf spheroidal evolve from exponential disks, maintaining a similar light profile. 
+While there are not clear theoretical explanations why any profile is best, the Exponential stellar density profile is commonly assumed as a single parameter density profile which fits many dwarf galaxies well [e.g. @eskridge1988a, @hodge1971a, @hodge1991b, @IH1995, @binggeli+cameron1991 but with nuclear regions and only for Mb < -16 virgo, @caldwell+bothun1987, @simon+2005]. 
 
- in addition to Sérsic, King and other profiles. @lelli+2014 (example of using exponential.) @wang+2019 for fornax, @mcconnachie+irwin2006 for Exp, Plummer, King in other galaxies. 
+@faber+lin1983 demonstrated that an Exponential density profile is a reasonable empirical  fit to dwarf galaxies, theorizing that dwarf spheroidal evolve from exponential disks, maintaining a similar light profile. 
 
-However, an exponential profile was often noted to not fit every dwarf galaxy. Even starting from @aparicio1997, some people have noted deviations from this simple empirical rule. Additionally, @herrmann+hunter+elmegreen2013, @herrmann+hunter+elmegreen2016 note that at least in a photometric sample of more distant dwarf disky/Irr/blue compact dwarfs, that many dwarfs show deviations from exponential profiles. 
+As a result, many studies assume an exponential density profile in theoretical or observational modelling [e.g. @MV2020a, @kowalczyk+2013].
+
+@lelli+2014 (example of using exponential.) 
+
+However, an exponential profile was often noted to not fit every dwarf galaxy. Even starting from @aparicio1997,  and [@graham+guzman2003  for coma cluster dE), some people have noted deviations from this simple empirical rule. Additionally, @hunter+elmegreen, @herrmann+hunter+elmegreen2013, @herrmann+hunter+elmegreen2016 note that at least in a photometric sample of more distant dwarf disky/Irr/blue compact dwarfs, that many or most dwarfs show deviations from exponential profiles. Irr do represent a substantially different class though so it is unclear if these conclusions apply.
+
+Interestingly, many works also show that differences between the different density profiles remain barely significant for some galaxies [e.g. @cicuendez+2018, ] @wang+2019 for Fornax showing similar performance but favour Sérsic, @mcconnachie+irwin2006 for Exp, Plummer, King in other galaxies. 
 
 - @makarov+2012 isolated local volume dwarf galaxy with central deprivation compared to exponential, spheroidal
+
 - @martin+2016, exponential fits to many pandas dwarf galaxies
+
 - @moskowitz+walker2020, generalized plummer fits. 
 
+  
 
+Irregardless of if all dwarf galaxies are indeed exponential, there is nevertheless diversity requiring interpretation in the density profiles of dwarf galaxies. 
 
 ## Sculptor and Ursa Minor: Hints of tidal signatures?
 
-Sculptor and Ursa Minor may appear to be typical dwarf galaxies at first glance. [@tbl:scl_obs_props, @tbl:umi_obs_props]. describe the present-day properties of each galaxy. Indeed, Sculptor as the first discovered dwarf galaxy, is often described as a "prototypical" dSph. However, both galaxies have a long history of speculation that they may be influenced by the Milky Way's gravity (see discussion). Only recently, with *Gaia* data and spectroscopic followup, has the detection of a density excess become more unmistakable. Using @jensen+2024's algorithm (described briefly below), @sestito+2023a, @sestito+2023b report that a "kink" in the density profile, beginning around 30 arcmin for both Sculptor and Ursa Minor.  They spectroscopically followup some of the most distant stars, finding multiple members between 6-12 half-light radii from the centre of each dwarf (REF fig. XXX). If dwarfs initially begin with exponential profiles like Fornax, then these stars should be much rarer. 
+Sculptor and Ursa Minor may appear to be typical dwarf galaxies at first glance. [@tbl:scl_obs_props, @tbl:umi_obs_props]. describe the present-day properties of each galaxy. Indeed, Sculptor as the first discovered dwarf galaxy, is often described as a "prototypical" dSph. However, both galaxies have a long history of speculation that they may be influenced by the Milky Way's gravity (see discussion). With *Gaia* data and spectroscopic followup, the detection of a density excess has become more unmistakable. Using @jensen+2024's algorithm (described briefly below), @sestito+2023a, @sestito+2023b report that a "kink" in the density profile, beginning around 30 arcmin for both Sculptor and Ursa Minor.  They spectroscopically followup some of the most distant stars, finding multiple members between 6-12 half-light radii from the centre of each dwarf (REF fig. XXX). If dwarfs initially begin with exponential profiles like Fornax, then these stars should be much rarer. 
 
 Perhaps the most straighforward explanation for the density profiles of Sculptor and Ursa Minor are tidal interactions. @sestito+2023a, @sestito+2023b conclude that tides are likely the explanation. @Fig:scl_umi_fnx_vs_penarrubia reproduces their comparison, showing that Sculptor and Ursa Minor's density profiles deviate substantially from fornax's in the outskirts, and are well-described by the tidal model from @PNM2008. Our goal is to determine, assuming $\Lambda$CMD, if the effects of the Milky Way (or other satellites) may indeed create observable tidal signatures in these galaxies. If tides cannot explain these features, Sculptor and Ursa Minor may instead contain a extended stellar "halo" or second component of the galaxy—illustrating evidence of complex history or formation in each galaxy and forcing formation models to confront a diversity of density profiles in the local group.
 
@@ -267,7 +272,7 @@ Figure: The break radius of the simulations is set by the time since pericentre.
 
 While the break and jacobi radii help with understanding when tidal effects matter, we still need to know what these effects do and how a galaxy evolves. 
 
-As a galaxy evolves in a tidal field, several changes happen. 
+As a galaxy evolves in a tidal field, several changes happen:
 
 1. *Mass is lost*. In particular, particles and stars on weakly bound orbits are most likely to be removed by tides. 
 2. *Steams form*. If tides are strong enough, unbound mass becomes part of tidal tails, evolving along a similar orbit but leading or trailing the galaxy.

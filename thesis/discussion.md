@@ -142,6 +142,7 @@ Given that dwarf galaxies were noticed to be exponential like above, @faber+lin1
 @reed+gilmore2005 propsed that exponential dSph form through impusive mass loss, redistributing the stellar component into an exponential like profile. 
 
 - disk galaxy formation @fall+efstathiou1980, @mestel1963
+- valcke+derijcke+dejonghe2008 with early idealized hydro simulations show Sérsic values from simulations between 0.8 and 1 for dSph, indicating a natural formation of Exponential or slightly steeper density profiles. 
 
 One possible explanation is that @mayer+2001a
 
@@ -150,6 +151,10 @@ Other explanations range from the effects of mass loss, feedback, angular moment
 @klimentowski2007, @klimentowski2009. 
 
 In summary, while there is some theoretical reasons why exponential spheroidal stellar profiles may form, the emperical sucess of an exponential law still requires explanations. Deviations from this exponential thus test wether this exponential law is indeed near-universal or if other ingredients in the formation and history of dwarf galaxies may be responsible for changes from the empirical expectation.
+
+## Alternatives to exponential profiles
+
+- elmegreen+hunter2006: Discuss the formation of double exponentials in disk galaxies. While a simpler idealized / Semi-analytic model of star formation, show that assuming exponentail gas and KS-relation with SF threshhold, that reduction of turbulance (driven by a number of processes) in outer disk leads to a steeper decline in SFR as crossing the critical SF threshold becomes less likely. 
 
 # Understanding the extended density profiles of dwarf galaxies
 
@@ -180,12 +185,14 @@ A related note is that several dwarf galaxies show evidence for multiple chemody
 - @mercado+2021: formation of metallicity gradients from SFH 
 - @revaz+jablonka2018 natural formation of multi-component and gradients from cosmological simulations of dwarf galaxies. Originate from dynamical heating of metal rich population and outside in star formation?
 - @el-badry+2016. Feedback drives fluctuations in size + radial migration => population gradients.
+- 
 
 Observational evidence:
 
 - @arronyo-polonio+2024
 - @pace+2020
 - @fabrizio+2016, @kordopatis+2016 (multi-component in Carina)
+- @battaglia+2006, @amorisco+evans2012 for fornax
 
 ## Past mergers and accretion
 
