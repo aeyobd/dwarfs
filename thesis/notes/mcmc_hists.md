@@ -104,14 +104,14 @@ Note we skip the following galaxies mentioned in J+24
 
 | Galaxy            | Category      | Notes      | # J+24 memb | R_h           | st   |
 | ----------------- | ------------- | ---------- | ----------- | ------------- | ---- |
-| Antlia 2          | faint         |            | 649         | 76.2pm7.2     | yy   |
+| Antlia 2          | ***faint***   |            | 649         | 76.2pm7.2     | yy   |
 | Aquarius 2        | -             | few stars  | 15          |               |      |
 | Bootes 1          | faint         |            | 252         | 11.26\pm0.27  | yy   |
 | *Bootes 2*        | -             |            | 24          | 3.05\pm0.45   |      |
 | Bootes 3          | faint         |            | 123         | 33\pm2.5      | yy   |
 | *Bootes 4* *      | -             | unreliable | 5           |               |      |
 | *Bootes 5*        | -             | few stars  | 6           |               |      |
-| Canes Venatici I  | faint         |            | 156         | 8.9           | y    |
+| Canes Venatici I  | ***faint***   |            | 156         | 8.9           | y    |
 | Canes Venatici II | -             | few stars  | 15          |               |      |
 | Carina            | **classical** |            | 2,389       |               |      |
 | Carina 2          | faint         |            | 69          | 8.68          | y    |
@@ -121,7 +121,7 @@ Note we skip the following galaxies mentioned in J+24
 | Cetus 3*          | -             | unreliable | 1           |               |      |
 | Columba 1         | -             | few stars  | 9           |               |      |
 | Coma Berenices    | faint         |            | 44          | 5.63          | n    |
-| Crater 2          | faint         |            | 507         | 31.2          | n    |
+| Crater 2          | ***faint***   |            | 507         | 31.2          | n    |
 | DELVE 2           | x             | few stars  | 9           |               |      |
 | DESJ0225+0304*    | x             | unreliable | 2           |               |      |
 | Draco             | **classical** |            | 1,781       | 9.93\pm0.09   |      |
