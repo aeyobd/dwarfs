@@ -7,6 +7,9 @@ using OrderedCollections
 function main(ARGS)
     df = CSV.read("pace_all.csv", DataFrame)
 
+    df2 = CSV.read("gc_mw_new.csv", DataFrame)
+
+    df = vcat(df, df2)
     for galaxyname in readdir("../../")
         try
             extract_galaxy(galaxyname, df)

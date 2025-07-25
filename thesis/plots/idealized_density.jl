@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -19,9 +19,6 @@ include("./paper_style.jl")
 
 # ╔═╡ 4b9e4fb8-f257-47c5-b1fa-0b4e9bdd042c
 modelname = "1e6_v31_r3.2/orbit_15_100"
-
-# ╔═╡ 75c691d6-77ab-4715-a645-88352879313c
-starsname = "exp2d_rs0.10"
 
 # ╔═╡ 6feb26d5-8b1a-4913-95a2-d57c237fdadb
 idx_f = 98
@@ -63,15 +60,13 @@ end
 model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "idealized", modelname)
 
 # ╔═╡ 76fdb3ab-60a6-42ea-bb71-0204d37284ce
+#=╠═╡
 stars_dir_in = joinpath(model_dir, "../stars/$starsname")
+  ╠═╡ =#
 
 # ╔═╡ b1edbdfc-298b-40e2-b6c0-687a866fe180
-stars_dir_out = joinpath(model_dir, "stars/$starsname")
-
-# ╔═╡ e6d91c8b-648d-416a-ab2e-5e6439f7d5b7
-# ╠═╡ disabled = true
 #=╠═╡
-starsname = inputs.starsname
+stars_dir_out = joinpath(model_dir, "stars/$starsname")
   ╠═╡ =#
 
 # ╔═╡ b51a4ddd-90fd-415f-8a48-e4f35aeee801
@@ -127,19 +122,29 @@ orbit_props["idx_peris"]
 orbit_props["idx_apos"]
 
 # ╔═╡ 025a0ed4-90f9-469e-80ca-bb5258100eb9
+#=╠═╡
 df_probs = LilGuys.read_hdf5_table(stars_dir_in * "/probabilities_stars.hdf5")
+  ╠═╡ =#
 
 # ╔═╡ 6f8aea0a-91e6-40f4-863f-33a8cca3aee4
+#=╠═╡
 p_idx = df_probs.index; probabilities = df_probs.probability
+  ╠═╡ =#
 
 # ╔═╡ 932fd989-6856-42cf-a6e8-d5453af07c64
+#=╠═╡
 @assert isperm(p_idx)
+  ╠═╡ =#
 
 # ╔═╡ 5ea02b02-1ab2-4ed3-92d6-214a1772c01e
+#=╠═╡
 out = Output(model_dir, weights=probabilities)
+  ╠═╡ =#
 
 # ╔═╡ cc1607f9-083a-49d3-bc73-b274b55c4899
+#=╠═╡
 out.times[idx_f] * T2GYR
+  ╠═╡ =#
 
 # ╔═╡ abe2deee-32e3-43d5-8232-10aeb797bac1
 md"""
@@ -147,27 +152,42 @@ md"""
 """
 
 # ╔═╡ 9f09fb80-333d-4327-a8c6-fa74ffaa4e5d
+#=╠═╡
 σv = LilGuys.calc_σv_1d(out[idx_f])
+  ╠═╡ =#
 
 # ╔═╡ 52943af9-b6c5-4864-8aac-7c65dc2f056d
+#=╠═╡
 σv * V2KMS
+  ╠═╡ =#
 
 # ╔═╡ b30c5830-5bc0-479b-9d53-e614af04c6b4
+#=╠═╡
 Δt = out.times[idx_f] - filter(x->x < out.times[idx_f], orbit_props["t_peris"])[end]
+  ╠═╡ =#
 
 # ╔═╡ cfd02c43-1d4b-4651-9705-31068a0cc7a0
+#=╠═╡
 Δt * T2GYR
+  ╠═╡ =#
 
 # ╔═╡ ef5fa6b6-5111-4a2e-ab84-8452714ebb4a
+#=╠═╡
 r_b_kpc = LilGuys.calc_break_radius(σv, Δt)
+  ╠═╡ =#
 
 # ╔═╡ f4828aa8-011c-4c37-9437-0ecd95adaa68
+#=╠═╡
 prof_f = LilGuys.StellarProfile(out[idx_f])
+  ╠═╡ =#
 
 # ╔═╡ 73522902-8e61-427f-921f-1ef161ea9664
+#=╠═╡
 prof_i = LilGuys.StellarProfile(out[idx_i])
+  ╠═╡ =#
 
 # ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
+#=╠═╡
 let
 	fig = Figure()
 	
@@ -198,6 +218,18 @@ let
 
 	@savefig "scl_umi_vs_idealized" fig
 end
+  ╠═╡ =#
+
+# ╔═╡ e6d91c8b-648d-416a-ab2e-5e6439f7d5b7
+# ╠═╡ disabled = true
+#=╠═╡
+starsname = inputs.starsname
+  ╠═╡ =#
+
+# ╔═╡ 75c691d6-77ab-4715-a645-88352879313c
+#=╠═╡
+starsname = "exp2d_rs0.10"
+  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╠═4b9e4fb8-f257-47c5-b1fa-0b4e9bdd042c

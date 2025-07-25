@@ -1,0 +1,50 @@
+note = "fit multi-component models to dwarf galaxies stellar density profiles"
+
+properties = [
+    "density profiles",
+    "structural parameters",
+    ]
+
+- bootes_1
+- bootes_2
+- bootes_3
+- coma_berenices
+- crater_2
+- canes_venatici_1
+- canes_venatici_2
+- draco
+- draco_2
+- hercules
+- leo_1
+- leo_2
+- loe_4
+- leo_5
+- pisces_2
+- sagittarius_2
+- segue_1
+- segue_2
+- sextans_1
+- triangulum_2
+- ursa_major_1
+- ursa_major_2
+- ursa_minor
+- willman_1
+- cetus_2
+- columba_1
+- eridanus_3
+- fornax
+- grus_1
+- grus_2
+- horologium_1
+- horologium_2
+- phoenix_2
+- pictor_1
+- reticulum_2
+- reticulum_3
+- tucana_2
+- tucana_3
+- tucana_4
+- tucana_5
+
+
+

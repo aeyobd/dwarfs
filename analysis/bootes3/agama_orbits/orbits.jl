@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.8
 
 using Markdown
 using InteractiveUtils
@@ -127,6 +127,21 @@ md"""
 ## EP2020
 """
 
+# ╔═╡ 8cc8db0a-a126-4a7a-9191-48e4c80a8f4a
+import LinearAlgebra
+
+# ╔═╡ 7be90896-9b51-4ba0-b51c-31fd12c8831e
+to_sym_mat(x) = [x[1] x[4] x[6] 
+				x[4] x[2] x[5]
+				x[6] x[5] x[3]
+]
+
+# ╔═╡ f3c28010-649d-4bcf-8bba-f8a24b8532a8
+function max_tidal_force(pot, positions)
+	T = Agama.stress(pot, positions)
+	return  maximum.(LinearAlgebra.eigvals.(to_sym_mat.(eachcol(T))))
+end
+
 # ╔═╡ 5c612348-aef7-4a47-bf41-e33d21820150
 pot_ep2020 = get_potential("EP2020")
 
@@ -164,6 +179,34 @@ function plot_radii(orbitss...; kwargs...)
 		Legend(fig[1,2], ax, merge=true, unique=true)
 	end
 	
+	fig
+end
+
+# ╔═╡ 50331fc2-1e1e-48ca-8dce-3e4bf6f8c0d7
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+		
+	
+	for i in 1:100
+		T = max_tidal_force(pot_ep2020, orbits_ep2020[i].positions)
+		lines!(radii(orbits_ep2020[i]), T, alpha=0.1, color=COLORS[1])
+	end
+
+	fig
+end
+
+# ╔═╡ 073023eb-c70e-4b40-aa1a-649a9dbd5c0a
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+		
+	
+	for i in 1:100
+		T = max_tidal_force(pot_ep2020, orbits_ep2020[i].positions)
+		scatter!(minimum(radii(orbits_ep2020[i])), maximum(T), alpha=1, color=COLORS[1])
+	end
+
 	fig
 end
 
@@ -275,12 +318,6 @@ pot_sormani = get_potential("sormani+2022/portali+2017")
 # ╔═╡ eb61c6a2-889e-490f-9949-7e6564e00d73
 pot_sormani_no = get_potential("sormani+2022/portali+2017_axi")
 
-# ╔═╡ 54e36834-5121-452c-bfd4-3bbcfcac0a62
-# ╠═╡ disabled = true
-#=╠═╡
-orbits_bar = orbits(pot_sormani, agama_units=portali_units)
-  ╠═╡ =#
-
 # ╔═╡ de475606-25cd-425e-baad-605902bb332e
 orbits_nobar = orbits(pot_sormani_no, agama_units=portali_units)
 
@@ -310,17 +347,20 @@ orbits_spiral = orbits(pot_spiral, agama_units=portali_units)
 # ╔═╡ b3a3ed2c-7676-4c69-a24c-c5f8457435b6
 orbits_nospiral = orbits(pot_nospiral, agama_units=portali_units)
 
-# ╔═╡ 01596c58-082e-4d8b-a7ef-d3a85288f631
-orbits_bar = orbits(pot_bar, agama_units=portali_units)
-
 # ╔═╡ 375566f1-4c5c-470e-b84d-7f0be18a4ff4
+#=╠═╡
 plot_radii(orbits_nobar, orbits_bar)
+  ╠═╡ =#
 
 # ╔═╡ f423d31e-282c-4610-8ba0-bbc56f10f544
+#=╠═╡
 plot_orbits("axisym" => orbits_nospiral, "bar" => orbits_bar, "bar+spiral" => orbits_spiral, )
+  ╠═╡ =#
 
 # ╔═╡ fd726be8-9053-4d44-b8c8-1d185e70e3e7
+#=╠═╡
 plot_radii("axisym" => orbits_nospiral, "bar" => orbits_bar, "bar+spiral" => orbits_spiral,)
+  ╠═╡ =#
 
 # ╔═╡ 9348378d-1712-4ba0-b583-1aca6f7784be
 Agama.enclosed_mass(pot_spiral, 200)
@@ -423,6 +463,17 @@ hist(get_energies(v24_L3M11, orbits_L3M11, agama_units=vasiliev_units) * V2KMS^2
 hist(get_L(orbits_ep2020, agama_units=vasiliev_units)[3, :] * V2KMS^2, 
 	axis=(; xlabel = "Lz / km^2 / s^2"))
 
+# ╔═╡ 54e36834-5121-452c-bfd4-3bbcfcac0a62
+# ╠═╡ disabled = true
+#=╠═╡
+orbits_bar = orbits(pot_sormani, agama_units=portali_units)
+  ╠═╡ =#
+
+# ╔═╡ 01596c58-082e-4d8b-a7ef-d3a85288f631
+#=╠═╡
+orbits_bar = orbits(pot_bar, agama_units=portali_units)
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
 # ╠═a4fc4b04-a211-4744-ba2e-a1da88a11e52
 # ╠═f8d52cf1-d6dc-4290-8434-fc9385e2b1ad
@@ -443,6 +494,11 @@ hist(get_L(orbits_ep2020, agama_units=vasiliev_units)[3, :] * V2KMS^2,
 # ╠═cedd460e-fe60-46ab-b6c6-47ae9494b0ea
 # ╠═5cc6bfee-ef97-4749-8417-990ca3e17df0
 # ╠═c6ed2e5b-da5e-4206-9ad6-aeef24f5d64e
+# ╠═8cc8db0a-a126-4a7a-9191-48e4c80a8f4a
+# ╠═7be90896-9b51-4ba0-b51c-31fd12c8831e
+# ╠═f3c28010-649d-4bcf-8bba-f8a24b8532a8
+# ╠═50331fc2-1e1e-48ca-8dce-3e4bf6f8c0d7
+# ╠═073023eb-c70e-4b40-aa1a-649a9dbd5c0a
 # ╠═5c612348-aef7-4a47-bf41-e33d21820150
 # ╠═742d3997-528f-4da1-8d26-68e879dedb00
 # ╠═4fe32d31-d088-46d0-9d34-b53945f1af10

@@ -1,0 +1,13 @@
+# report circularized values
+# from their 1-component plummer fit (best model by bayes factor
+# also cored inner profile!
+
+R_h = 12.85
+R_h_em = 0.18
+R_h_ep = 0.19
+position_angle = 52
+position_angle_em = -0.68
+position_angle_ep = 0.70
+ellipticity = 0.53
+ellipticity_em = 0.01
+ellipticity_ep = 0.01

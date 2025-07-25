@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -29,7 +29,7 @@ import SkyCoords
 import FileIO
 
 # ╔═╡ 02df901a-cbae-454c-a907-32aaf07bf3e1
-img = FileIO.load(("Gaia_s_sky_in_colour.png"))
+#img = FileIO.load(("Gaia_s_sky_in_colour.png"))
 
 # ╔═╡ 97993507-1ab6-4aae-8363-f439fb98c2e5
 FIGDIR = "./figures"

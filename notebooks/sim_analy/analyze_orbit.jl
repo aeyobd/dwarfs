@@ -153,7 +153,7 @@ md"""
 """
 
 # ╔═╡ 96a57df5-a7b7-447a-a4a6-2b05e391a5c6
-begin 
+obs_today = let 
 	obs_today = TOML.parsefile(properties_file)
 	if isdefined(@__MODULE__, :ic)
 		println("updating")
@@ -270,7 +270,11 @@ t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
 length(χ2)
 
 # ╔═╡ d9df3376-6ca1-4701-afb5-2df994bb3442
-idx_f = searchsortedfirst(times, t_end)
+idx_f = if isdefined(@__MODULE__, :obs_today)
+	searchsortedfirst(times, t_end)
+else
+	length(times)
+end
 
 # ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 let 
@@ -312,6 +316,9 @@ end
 
 # ╔═╡ cb601d4f-0fd6-4d1d-8bf0-910471c729c6
 χ2[idx_f]
+
+# ╔═╡ 3297c4d0-92f9-4f1b-80e6-84c8d787c37c
+
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = radii(x_cen)
@@ -750,6 +757,7 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
 # ╠═7646ea5b-f1b1-4934-be68-330139f7f838
 # ╠═d9df3376-6ca1-4701-afb5-2df994bb3442
+# ╠═3297c4d0-92f9-4f1b-80e6-84c8d787c37c
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
 # ╠═7a30bd90-946e-418c-8339-be64c37cda76
 # ╠═0c69519c-9650-46b9-89f9-cc37227f5b1a

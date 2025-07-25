@@ -22,13 +22,13 @@ using PythonCall
 using OrderedCollections
 
 # ╔═╡ 26886e5c-546f-45ca-a882-2b354a962f07
-galaxy = "sculptor"
+galaxy = "idealized"
 
 # ╔═╡ cc2c7b51-5483-4693-bda6-40563ffb7289
-modelname = "1e7_V31_r3.2"
+modelname = "1e6_v31_r3.2"
 
 # ╔═╡ d9849d12-43fe-4788-aa26-145ed0d7db19
-orbitname = "orbit_mean"
+orbitname = "orbit_15_100"
 
 # ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
 vasiliev_units = false
@@ -299,16 +299,24 @@ md"""
 """
 
 # ╔═╡ b77e000c-c66e-4bd6-8716-26216e6f7bb4
-df_summary = OrderedDict(
-	"r_J" => r_J_arcmin,
-	"r_J_kpc" => r_J,
-	"peri" => peri,
-	"r_break" => r_break_obs_arcmin,
-	"r_break_kpc" => r_break_obs,
-	"peri_required" => r_peri_req,
-	"rho_mean_host_peri" => ρ_host,
-	"rho_mean_host_required" => calc_ρ_mean(mw_halo, r_peri_req),
-)
+df_summary = try 
+	OrderedDict(
+		"r_J" => r_J_arcmin,
+		"r_J_kpc" => r_J,
+		"peri" => peri,
+		"r_break" => r_break_obs_arcmin,
+		"r_break_kpc" => r_break_obs,
+		"peri_required" => r_peri_req,
+		"rho_mean_host_peri" => ρ_host,
+		"rho_mean_host_required" => calc_ρ_mean(mw_halo, r_peri_req),
+	)
+	catch 
+OrderedDict(
+		"r_J_kpc" => r_J,
+		"peri" => peri,
+		"rho_mean_host_peri" => ρ_host,
+	)
+end
 
 # ╔═╡ 6021e71d-01fd-4a2e-bc3d-af45db173a5b
 if lmc
