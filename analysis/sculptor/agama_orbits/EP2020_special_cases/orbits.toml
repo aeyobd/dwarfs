@@ -1,0 +1,16 @@
+[mean]
+ra = 15.018
+dec = -33.719
+distance = 83.158
+pmra = 0.099
+pmdec = -0.160
+radial_velocity = 111.202
+
+
+
+[smallperi]
+distance = 82.654
+pmra = 0.131
+pmdec = -0.200
+radial_velocity = 111.234
+
