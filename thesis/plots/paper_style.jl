@@ -4,7 +4,7 @@ Arya.update_figsize!(390 / 72.27)
 Arya.update_fontsize!(12)
 
 CairoMakie.update_theme!(
-    linewidth=2,
+    linewidth=3,
     markersize=6,
     arrowsize=12,
     Arrows = (;
@@ -18,3 +18,10 @@ CairoMakie.update_theme!(
         linewidth=1,
    )
 )
+
+
+function scale_theme_element!(key, scale)
+    @info "old $key value = $(theme(key)[])"
+    update_theme!(; (; key => scale*theme(key)[])...)
+    @info "new $key value = $(theme(key)[])"
+end

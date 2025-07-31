@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -139,7 +139,7 @@ function M_s_from_vel(v_max)
 end
 
 # ╔═╡ 2ec0b911-6338-4364-a250-90664e90f1a6
-lMs_to_lVc_err = 0.1
+lMs_to_lVc_err = 0.036
 
 # ╔═╡ 40694bea-0b6e-4235-ac1b-6b25dd91ac38
 md"""
@@ -208,6 +208,7 @@ let
 		limits=((1, 100), (1e-8, 1e0)),
 		xticks=[1, 10, 100],
 		xminorticks=IntervalsBetween(9),
+		yticks = Makie.automatic,
 		aspect=1
 	)
 	lines!(v_1 * V2KMS,  M_s_from_vel.(v_1))
@@ -307,6 +308,7 @@ let
 		limits=((10, 100), (1e-8, 1e0)),
 		xticks=[10, 100],
 		xminorticks=IntervalsBetween(9),
+		yticks = Makie.automatic,
 		aspect=1
 	)
 
@@ -314,6 +316,32 @@ let
 	lines!(v_1 * V2KMS, M_s_from_vel.(v_1))
 
 	lines!(Vc_mean * V2KMS, Ms_mean)
+	fig
+
+end
+
+# ╔═╡ 0007ba22-204d-4a30-bae3-2722484a279a
+let
+	v_1 = LinRange(18, 100, 1000) ./ V2KMS
+
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "M200",
+		ylabel = L"M_\star",
+		yscale=log10,
+		xscale=log10,
+		limits=((nothing, 100), (1e-8, 1e0)),
+		#xticks=[10, 100],
+		xminorticks=IntervalsBetween(9),
+		yticks = Makie.automatic,
+		xticks = Makie.automatic,
+		aspect=1
+	)
+	
+
+	scatter!(M200_samples, Ms_samples, alpha=0.05, color=:black, markersize=5)
+
+	lines!(M200_mean, Ms_mean)
 	fig
 
 end
@@ -327,7 +355,8 @@ let
 		xlabel = L"r_\textrm{max}",
 		yscale=log10, 
 		xscale=log10,
-		limits=(nothing, (1e-8, 1))
+		yticks = Makie.automatic,
+		limits=(nothing, (1e-8, 1)),
 	)
 
 	scatter!(Rc_samples, Ms_samples,  color=:black, alpha=0.1, markersize=3)
@@ -528,8 +557,8 @@ md"""
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = OrderedDict(
 	:heavy => NFW(v_circ_max = 37 / V2KMS, r_circ_max = 5.0),
-	:heavier => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.0),
-	:compact => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 2),
+	# :heavier => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.0),
+	# :compact => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 2),
 	:both => NFW(v_circ_max = 38 / V2KMS, r_circ_max = 4.0),
 	:mean => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 5.0),
 )
@@ -643,6 +672,12 @@ let
 	fig
 end
 
+# ╔═╡ a8351924-4859-406d-a0ec-5aa90961158e
+10^1.5
+
+# ╔═╡ a41af9c8-5cb7-4339-8e82-1e4c2ff10f12
+10^0.45
+
 # ╔═╡ 6cc2372a-208b-4839-b5c6-6f625fcc483c
 let
 	fig, ax = FigAxis(
@@ -683,6 +718,13 @@ let
 
 	axislegend(position=:lt, title="halo")
 
+		for (label, halo) in halos_ex
+		y = LilGuys.v_circ_max(halo) * V2KMS
+		x = LilGuys.r_circ_max(halo) 
+		scatter!(log10(x), log10(y), label=string(label))
+	end
+
+	
 	Colorbar(fig[1,2], h, label="sigma v / kms")
 	fig
 end
@@ -929,6 +971,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═4f971234-565a-43a4-a4bf-94a9415e6d7e
 # ╠═4bb1dcef-04e2-4aa5-aa8f-d76a21502e01
 # ╠═023f12d0-317a-46db-b5c5-81a7d2216c55
+# ╠═0007ba22-204d-4a30-bae3-2722484a279a
 # ╠═be32e183-a0c4-4261-a3a8-3486db0734b7
 # ╠═e6995206-ebf2-40aa-ae7e-cc101e07f8ac
 # ╠═8109003b-60cf-458a-a43d-9cd084d27344
@@ -987,6 +1030,8 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═db89cc22-f770-4f10-b3c0-3bc3298fb6a3
 # ╠═21acda7b-a116-4bc1-af7d-e715e2b32b86
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
+# ╠═a8351924-4859-406d-a0ec-5aa90961158e
+# ╠═a41af9c8-5cb7-4339-8e82-1e4c2ff10f12
 # ╠═6cc2372a-208b-4839-b5c6-6f625fcc483c
 # ╠═8f5a2253-18da-49c6-b1ee-94e9e7ababb2
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455

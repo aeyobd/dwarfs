@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -136,7 +136,7 @@ end
 
 
 # ╔═╡ 2ec0b911-6338-4364-a250-90664e90f1a6
-lMs_to_lVc_err = 0.1
+lMs_to_lVc_err = 0.035
 
 # ╔═╡ 40694bea-0b6e-4235-ac1b-6b25dd91ac38
 md"""
@@ -205,6 +205,7 @@ let
 		limits=((1, 100), (1e-8, 1e0)),
 		xticks=[1, 10, 100],
 		xminorticks=IntervalsBetween(9),
+		yticks=Makie.automatic,
 		aspect=1
 	)
 	lines!(v_1 * V2KMS,  M_s_from_vel.(v_1))
@@ -325,7 +326,9 @@ let
 		xlabel = L"r_\textrm{max}",
 		yscale=log10, 
 		xscale=log10,
-		limits=(nothing, (1e-8, 1))
+		limits=(nothing, (1e-8, 1)),
+				yticks=Makie.automatic,
+				xticks=Makie.automatic
 	)
 
 	scatter!(Rc_samples, Ms_samples,  color=:black, alpha=0.1, markersize=3)

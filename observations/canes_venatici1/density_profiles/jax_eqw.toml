@@ -1,0 +1,4 @@
+inherits = "bins_eqw.toml"
+filename = "../data/j24_1c.fits"
+
+PSAT_min = 0.2

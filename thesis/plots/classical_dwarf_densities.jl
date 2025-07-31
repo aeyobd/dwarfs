@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -122,10 +122,13 @@ galaxies = OrderedDict(
 galaxynames = [
 	"fornax",
 	"leo1",
+	# "antlia2", this one is unreliable...
 	 "leo2",
 	 "carina",
-	 "sextans1",
 	 "draco",	
+	"canes_venatici1",
+	 "sextans1",
+	"crater2",
 ]
 
 # ╔═╡ f4e8b66c-5f18-45fd-8859-32479d7227bc
@@ -367,6 +370,12 @@ plot_fit(prof_umi, "Ursa Minor")
 # ╔═╡ c20eb47f-e042-49f2-90a5-39056f5f5284
 plot_fit(profiles["draco"], "Draco")
 
+# ╔═╡ dece1fde-c036-4b37-814b-e63b55bb9b4f
+plot_fit(profiles["crater2"], "Crater II")
+
+# ╔═╡ 13de9235-2abb-4ba5-8e5b-87111191722c
+plot_fit(profiles["canes_venatici1"], "CVn I")
+
 # ╔═╡ f706fc01-fade-4d4f-97d3-ce08264ec680
 let
 	fig = Figure()
@@ -459,4 +468,6 @@ end
 # ╠═8286e2a4-2bd0-47a0-badc-b55697e2a8fa
 # ╠═4514e8fe-abd6-4b0b-9e64-a9cb7f2c782d
 # ╠═c20eb47f-e042-49f2-90a5-39056f5f5284
+# ╠═dece1fde-c036-4b37-814b-e63b55bb9b4f
+# ╠═13de9235-2abb-4ba5-8e5b-87111191722c
 # ╠═f706fc01-fade-4d4f-97d3-ce08264ec680

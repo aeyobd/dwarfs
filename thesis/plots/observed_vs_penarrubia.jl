@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -53,7 +53,7 @@ p08_tides = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/data", "pena
 
 # ╔═╡ 81805051-a10d-40f8-b128-612a6dec304f
 begin 
-	obs_profs = LilGuys.StellarDensityProfile[]
+	obs_profs = LilGuys.SurfaceDensityProfile[]
 	
 	for galaxy in galaxies
 		dir = joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "density_profiles")
@@ -66,7 +66,7 @@ begin
 		end
 		
 
-		prof = LilGuys.StellarDensityProfile(filepath) |> LilGuys.filter_empty_bins
+		prof = LilGuys.SurfaceDensityProfile(filepath) |> LilGuys.filter_empty_bins
 		@assert prof.log_R_scale == 0.0
 		
 		density_fit = TOML.parsefile(filepath * "_inner_fits.toml")
@@ -99,14 +99,14 @@ m_scale = 5 * r_scale
 
 # ╔═╡ 0732a179-aca0-4bf4-8be7-be1e713ee18e
 begin 
-	prof_i = LilGuys.StellarDensityProfile(
+	prof_i = LilGuys.SurfaceDensityProfile(
 		log_R=p08_notides.x,
 		log_Sigma=p08_notides." y",
 		R_units="", 
 		log_R_bins=[]
 	) 
 	
-	prof_f = LilGuys.StellarDensityProfile(
+	prof_f = LilGuys.SurfaceDensityProfile(
 		log_R=p08_tides.x,
 		log_Sigma=p08_tides." y",
 		R_units="", 
@@ -119,12 +119,17 @@ begin
 
 end
 
+# ╔═╡ 3b5d2ad4-9cf8-4032-8d9f-6ca10f6b6f1b
+theme(:size)
+
+# ╔═╡ 567e9206-4dfc-48a1-a130-5b146f3bb67a
+388.5429638854297 / 72
+
 # ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
 let
-	fig = Figure()
+	fig = Figure(size=(5.39*72, 3*72))
 	
 	ax = Axis(fig[1,1],
-		limits = (-2.2, nothing, nothing, nothing),
 		xlabel = L"log $R$ / $R_h$",
 		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
 	)
@@ -140,11 +145,33 @@ let
 					  color=COLORS[i+2])
 	end
 
+	axislegend(position=:lb)
+
+
+	ax2 = Axis(fig[1,2],
+		xlabel = L"log $R$ / $R_h$",
+		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
+	)
+
+
+
+	for i in eachindex(galaxies)
+		galaxy = galaxies[i]
+		prof = obs_profs[i]
+
+		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
+					  color=COLORS[i+2])
+	end
+
 
 	lines!(prof_i.log_R, prof_i.log_Sigma, label="P+08 no tides", linestyle=:dot)
 	lines!(prof_f.log_R, prof_f.log_Sigma, label="P+08 tides")
 
 	axislegend(position=:lb)
+	hideydecorations!(ticks=false, minorticks=false)
+
+	linkaxes!(ax, ax2)
+	colgap!(fig.layout, 0)
 
 	@savefig "scl_umi_vs_penarrubia" fig
 end
@@ -168,4 +195,6 @@ end
 # ╠═940c75b5-e19b-474f-8913-a489d770372a
 # ╠═b0e33ee3-ae02-400a-b468-33de44a44c06
 # ╠═0732a179-aca0-4bf4-8be7-be1e713ee18e
+# ╠═3b5d2ad4-9cf8-4032-8d9f-6ca10f6b6f1b
+# ╠═567e9206-4dfc-48a1-a130-5b146f3bb67a
 # ╠═21ace95e-ba98-4728-a8f7-8303f0eac247

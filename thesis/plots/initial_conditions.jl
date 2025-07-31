@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -58,9 +58,6 @@ prof_stars = DensityProfile(snap, snap.weights * Mstar)
 # ╔═╡ f6d51dd1-91df-4a6b-85a8-cd9b26d2c9c9
 sum(densities(prof_stars) .* diff(π*LilGuys.radius_bins(prof_stars) .^3)) 
 
-# ╔═╡ 546e88aa-c3c5-41b6-84a7-ce733e8f309f
-COLORS
-
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "initial_conditions" let
 	fig = Figure()
@@ -91,8 +88,8 @@ end
 	x = LinRange(-2, 2, 1000)
 	r = 10 .^ x
 	
-	lines!(x, log10.(LilGuys.density.(prof_dm_ana, r)), label="dark matter (NFW)", linestyle=:dot, color=COLORS[5])
-	lines!(x, log10.(Mstar * LilGuys.density.(prof_stars_ana, r)), label="exponential stars", color=COLORS[9])
+	lines!(x, log10.(LilGuys.density.(prof_dm_ana, r)), label="NFW dark matter", linestyle=:solid, color=COLORS[1])
+	lines!(x, log10.(Mstar * LilGuys.density.(prof_stars_ana, r)), label="exponential stars", color=COLORS[2], linestyle=:dot)
 
 
 	axislegend(margin=(19,19,19,19), position=:rt)
@@ -115,6 +112,5 @@ end
 # ╠═5743880e-567f-4af5-acb5-e2ec420110aa
 # ╠═ee96c7dd-56a3-47c7-b6d8-fdff3f598f3d
 # ╠═098e33d5-22a5-496b-943b-b8c194cdcc62
-# ╠═546e88aa-c3c5-41b6-84a7-ce733e8f309f
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═c1d328a6-a05f-4231-9494-58502c0f7942

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -163,11 +163,11 @@ let
 
 	)
 
-	prof = LilGuys.StellarDensityProfile(members.R_ell, bins=log10.(bins))
+	prof = LilGuys.SurfaceDensityProfile(members.R_ell, bins=log10.(bins))
 	prof.log_Sigma[.!isfinite.(prof.log_Sigma)] .= minimum(prof.log_Sigma[isfinite.(prof.log_Sigma)]) .- 1
 	LilGuys.plot_log_Σ!(ax, prof)
 
-	prof = LilGuys.StellarDensityProfile(best_stars.R_ell, bins=log10.(bins))
+	prof = LilGuys.SurfaceDensityProfile(best_stars.R_ell, bins=log10.(bins))
 	prof.log_Sigma[.!isfinite.(prof.log_Sigma)] .= minimum(prof.log_Sigma[isfinite.(prof.log_Sigma)]) .- 1
 	LilGuys.plot_log_Σ!(ax, prof)
 	vlines!(log10(obs_props["r_h"]))

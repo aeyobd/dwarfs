@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -129,6 +129,9 @@ end
 profiles = [LilGuys.SurfaceDensityProfile(out[i]) for i in idxs]
 
 
+# ╔═╡ 1cc6563a-5945-4cdf-9cf9-ae54bfb24499
+(profiles[1])
+
 # ╔═╡ eb1df5f9-46b7-409c-a052-9d3ae8a01db8
 labels = ["initial", "final"]
 
@@ -136,59 +139,168 @@ labels = ["initial", "final"]
 r_bs = [get_r_b(i) for i in idxs]
 
 # ╔═╡ 325c0885-9f69-4ed1-b787-303a3fcdda11
-colors = [COLORS[1], COLORS[2]]
+colors = [COLORS[1], COLORS[2], COLORS[3]]
+
+# ╔═╡ 7af97b96-2bf5-47d7-973b-dc7ad8c46840
+snap_f = out[idx_f]
+
+# ╔═╡ 5d32c845-5cce-430a-945a-957cd7400559
+Mtot = 3e6
+
+# ╔═╡ f80faf4b-5740-44d7-9160-a40028922b55
+sum(snap_f.weights)
+
+# ╔═╡ 90ff0dc7-2169-4af5-9ea6-d9fbde4cce45
+sum(LilGuys.surface_density(profiles[1]) .* diff(π .* LilGuys.radii_bins(profiles[1]) .^ 2 ))
+
+# ╔═╡ 697e034a-bf10-4afa-b95c-37dcdc3b6cb5
+arrowcolor = :grey
+
+# ╔═╡ 957b8d3f-03ca-4efa-b774-555b1ef203a6
+import DensityEstimators
+
+# ╔═╡ 57e7cd2b-e936-4a04-b4ed-0032a5c6b4df
+let
+	dx = snap_f.positions[1, :] .- snap_f.x_cen[1]
+	dy = snap_f.positions[2, :] .- snap_f.x_cen[2]
+	w = snap_f.weights
+
+	Rmax = 0.1
+
+	filt = @. dx^2 + dy^2 < Rmax^2
+
+	M = sum(w[filt])
+
+	@info log10(M / (π*Rmax^2) * Mtot)
+
+	h = DensityEstimators.histogram2d(dx, dy, [-Rmax, 0, Rmax], weights=w * Mtot, normalization=:density)
+	h.values
+end
 
 # ╔═╡ 5dbbd046-8764-484e-89b4-37dee5fb0555
 @savefig "idealized_break_radius" let
 	fig = Figure()
 	ax = Axis(fig[1,1],
-		limits = (-1.5, 1.0, -6, 2),
-		xlabel = L"log $r$ / kpc",
-		ylabel = L"log $\Sigma_\star$",
+		limits = (-1.5, 1.0, 0, 8),
+		xlabel = L"log $R$ / kpc",
+		ylabel = L"log $\Sigma_\star$ / M$_\odot$ kpc$^{-2}$",
+		# yticks = -4:2:2
 	)
 
 	t_f = 0
 	
 	for (i, prof) in enumerate(profiles)
-		lines!(LilGuys.log_radii(prof), LilGuys.log_surface_density(prof), color=colors[i], label = labels[i])
+		lines!(LilGuys.log_radii(prof), LilGuys.log_surface_density(prof) .+ log10(Mtot),  color=colors[1], linestyle=[:dot, :solid][i], label = labels[i])
 
 
-		x = log10(r_bs[i])
-		y = LilGuys.lerp(LilGuys.log_radii(prof), middle.(LilGuys.log_surface_density(prof)))(x)
-		dy = 0.5
-		h = 1
-		t = round(times[i] * T2GYR * 1e3, digits=0)
-		#arrows!([x], [y+h+dy], [0], [-h],  color=colors[i],)
-		
+		if i == 2
+			x = log10(r_bs[i])
+			y = LilGuys.lerp(LilGuys.log_radii(prof), middle.(LilGuys.log_surface_density(prof)))(x) .+ log10(Mtot)
+			dy = 1
+			h = 0.2 * 8
+			t = round(times[i] * T2GYR * 1e3, digits=0)
+			arrows2d!([x], [y+h], [0], [-h],  color=colors[3], align=0.5, minshaftlength = 0)
+			text!([x], [y+h * 1.5],color=colors[3], text=L"r_\textrm{break}", align=(:left, :bottom), fontsize=14)
+		end
 
 	end
-	arrows!([log10(r_J_kpc)], [-1], [0], [-1],  color=:black)
 
 	axislegend(position=:lb)
 
 
 	
 	ax_v = Axis(fig[2,1],
-		xlabel=L"log $r$ / kpc",
+		xlabel=L"log $R$ / kpc",
 		ylabel=L"\langle v_\textrm{rad}\rangle\ / \ \textrm{km\ s}^{-1}",
-		limits=((-1.5, 1.0), (-10, 10))
+		limits=((-1.5, 0.8), (-10, 10))
 	)
 
 	for i in eachindex(idxs)
 		snap = out[idxs[i]]
-		
 		x, y, ye = v_rad_hist(snap)
-		lines!(midpoints(x), y * V2KMS, color=colors[i])
-		arrows!([log10(r_bs[i])], [-5], [0], [3],  color=colors[i])
+		lines!(midpoints(x), y * V2KMS, color=colors[1], linestyle=[:dot, :solid][i])
+		if i == 2
+			
+
+			h = 0.2 * 20 
+
+			arrows2d!([log10(r_bs[i])], [-h], [0], [h],  color=colors[3], align=0.5, minshaftlength = 0)
+		end
 	end
 
-	hlines!(0, color=:black)
+	hlines!(0, color=:black, linewidth=theme(:linewidth)[]/2)
 
 
 	linkxaxes!(ax, ax_v)
-	hidexdecorations!(ax, ticks=false, minorticks=false)
+
+
+	ax3 = Axis(fig[1, 2],
+			   xlabel = L"$\Delta x$ / kpc",
+			   ylabel = L"$\Delta y$ / kpc",
+
+			  )
+	bins = (LinRange(-2.5, 2.5, 100), LinRange(-2.5, 2.5, 100))
+
+	dx = snap_f.positions[1, :] .- snap_f.x_cen[1]
+	dy = snap_f.positions[2, :] .- snap_f.x_cen[2]
+	w = snap_f.weights
+	v = LilGuys.radial_velocities(snap_f)
+
+	h = DensityEstimators.histogram2d(dx, dy, bins, weights=w.*Mtot, normalization=:density)
+	#p = hist2d!(dx, dy, weights=w .* Mtot, bins=bins, colorscale=log10, colorrange=(3, nothing), normalization=:density)
+	p = heatmap!(h, colorscale=log10, colorrange=(1e3, 1e8),)
+
+	mw_hat = -snap_f.x_cen[1:2] ./ radii(snap_f.x_cen)
+	
+	arrows2d!([0], [0], mw_hat[1:1], mw_hat[2:2], align=-1.5, minshaftlength=0, color=arrowcolor)
+	text!(mw_hat[1]*2.5, mw_hat[2]*2.5, text="MW", color=arrowcolor, align=(:left, :top))
+
+
+	arc!((0,0), r_bs[2], 0, 2π, color=COLORS[3])
+
+
+	Colorbar(fig[1, 3], p, label=L"$\Sigma_\star$ / M$_\odot$\,kpc$^{-2}$", ticks=Makie.automatic,)
+
+
+	
+
+
+	ax_rv2d = Axis(fig[2, 2],
+			   xlabel = L"$\Delta x$ / kpc",
+			   ylabel = L"$\Delta y$ / kpc",)
+
+
+	R = 2.5
+	h_sum = DensityEstimators.histogram2d(dx, dy, bins, weights=w .* v .* V2KMS,)
+	h_norm = DensityEstimators.histogram2d(dx, dy, bins, weights=w )
+
+	h_ave = h_sum 
+	h_ave.values ./= h_norm.values
+
+	p = heatmap!(h_ave, colorrange=(-10, 10), colormap=:bluesreds)
+	arc!((0,0), r_bs[2], 0, 2π, color=COLORS[3])
+
+
+
+	v_hat = snap_f.v_cen[1:2] ./ radii(snap_f.v_cen)
+
+	arrows2d!([0], [0], v_hat[1:1], v_hat[2:2], align=-1.5, minshaftlength=0, color=arrowcolor)
+	text!(v_hat[1]*2.5, v_hat[2]*2.5, text="orbit", color=arrowcolor)
+
+
+	colsize!(fig.layout, 1, Aspect(1,1))
+	colsize!(fig.layout, 2, Aspect(1,1))
+	Colorbar(fig[2, 3], p,  label=L"\langle v_\textrm{rad}\rangle\ / \ \textrm{km\ s}^{-1}",
+)
+	
 	fig
 end
+
+# ╔═╡ d3c68651-4f68-4f59-b410-91c877275e92
+snap_f.v_cen
+
+# ╔═╡ bccf2ecd-325b-4ac7-a930-d33c7b07b0d1
+snap_f.x_cen
 
 # ╔═╡ Cell order:
 # ╠═4b9e4fb8-f257-47c5-b1fa-0b4e9bdd042c
@@ -222,7 +334,17 @@ end
 # ╠═a2e625a6-8a9d-4ce1-b6a4-4b64c6e445b7
 # ╠═fedadc2b-2ea7-4bf0-9d47-e8f2875d974d
 # ╠═37bf0c8d-9ef3-4cf8-b818-ff37f2d856eb
+# ╠═1cc6563a-5945-4cdf-9cf9-ae54bfb24499
 # ╠═eb1df5f9-46b7-409c-a052-9d3ae8a01db8
 # ╠═7f2cf5d2-aa67-428e-83b9-09b04cb28082
 # ╠═325c0885-9f69-4ed1-b787-303a3fcdda11
+# ╠═7af97b96-2bf5-47d7-973b-dc7ad8c46840
+# ╠═5d32c845-5cce-430a-945a-957cd7400559
+# ╠═f80faf4b-5740-44d7-9160-a40028922b55
+# ╠═90ff0dc7-2169-4af5-9ea6-d9fbde4cce45
+# ╠═57e7cd2b-e936-4a04-b4ed-0032a5c6b4df
+# ╠═697e034a-bf10-4afa-b95c-37dcdc3b6cb5
 # ╠═5dbbd046-8764-484e-89b4-37dee5fb0555
+# ╠═957b8d3f-03ca-4efa-b774-555b1ef203a6
+# ╠═d3c68651-4f68-4f59-b410-91c877275e92
+# ╠═bccf2ecd-325b-4ac7-a930-d33c7b07b0d1

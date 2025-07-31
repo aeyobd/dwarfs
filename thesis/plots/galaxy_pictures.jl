@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.6
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -35,7 +35,7 @@ scl = FileIO.load("./Scl_1deg_DES-DR2_ColorIRG.jpg")
 umi = FileIO.load("./umi_2deg_unwise_plus_gaia.png")
 
 # ╔═╡ 67f24990-55fd-412d-aa99-aa69b9c774a2
-boo5 = FileIO.load("./Boo_V_0.15deg_P_SDSS9_color.jpg")
+fornax = FileIO.load("./For_1deg_DES-DR2_ColorIRG.jpg")
 
 # ╔═╡ 00c8ab2a-08e8-467e-a9ba-1793d9af8ea5
 function plot_scalebar!(width_degrees, bar_degrees, bar_label)
@@ -46,50 +46,57 @@ end
 
 # ╔═╡ 2188831f-d8ed-4a37-ad92-bc1f0d90ebbc
 function plot_label!(galaxy, fov)
-	text!(0.9, 0.1, align=(:right, :bottom), text="$galaxy, $fov",
+	text!(0.5, 0.9, align=(:center, :center),  text="$galaxy",
+		 space=:relative, fontsize=12, font="TeX Gyre Heros Makie", color=:white )
+	
+	text!(0.9, 0.1, align=(:right, :bottom), text="$fov",
 		 space=:relative, fontsize=10, font="TeX Gyre Heros Makie", color=:white)
 end
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "galaxy_pictures" let
-	fig = Figure()
+	scalebar = 200
+    fig = Figure()
 
 	ax_lmc = Axis(fig[1,1], )
 	hidedecorations!()
 	image!(rotr90(lmc))
 	d_lmc = 49.59
 	@info LilGuys.arcmin2kpc(0.5*60, d_lmc)
-	plot_scalebar!(4, LilGuys.kpc2arcmin(0.1, d_lmc) / 60, "100 pc")
-	plot_label!("LMC", "4x4 deg")
+	plot_scalebar!(4, LilGuys.kpc2arcmin(scalebar / 1e3, d_lmc) / 60, "$scalebar pc")
+	plot_label!("LMC", L"1.5\times 10^9\ {L}_\odot")
 
-	ax_scl = Axis(fig[1,2], )
+
+	ax_boov = Axis(fig[1,2], )
+	hidedecorations!()
+	image!(rotr90(fornax))
+	d_fornax = 142.56
+	@info LilGuys.arcmin2kpc(0.03*60, d_fornax)
+
+	plot_scalebar!(1, LilGuys.kpc2arcmin(scalebar/1e3, d_fornax) / 60, "$scalebar pc")
+	plot_label!("Fornax",  L"2\times 10^7\ {L}_\odot")
+
+	
+
+	ax_scl = Axis(fig[2,1], )
 	hidedecorations!()
 	d_scl = 83.2
 	image!(rotr90(scl))
 	@info LilGuys.arcmin2kpc(0.25*60, d_scl)
 
-	plot_scalebar!(1, LilGuys.kpc2arcmin(0.1, d_scl) / 60, "100 pc")
-	plot_label!("Sculptor", "1x1 deg")
+	plot_scalebar!(1, LilGuys.kpc2arcmin(scalebar/1e3, d_scl) / 60, "$scalebar pc")
+	plot_label!("Sculptor",  L"2\times 10^6\ {L}_\odot")
 
 
-	ax_umi = Axis(fig[2,1], )
+	ax_umi = Axis(fig[2,2], )
 	hidedecorations!()
 	image!(rotr90(umi))
 	d_umi = 70.1
 	@info LilGuys.arcmin2kpc(0.25*60, d_umi)
 
-	plot_scalebar!(2, LilGuys.kpc2arcmin(0.1, d_umi) / 60, "100 pc")
-	plot_label!("Ursa Minor", "2x2 deg")
+	plot_scalebar!(2, LilGuys.kpc2arcmin(scalebar/1e3, d_umi) / 60, "$scalebar pc")
+	plot_label!("Ursa Minor",  L"3.5\times 10^5\ {L}_\odot")
 
-
-	ax_boov = Axis(fig[2,2], )
-	hidedecorations!()
-	image!(rotr90(boo5))
-	d_boo5 = 101.86
-	@info LilGuys.arcmin2kpc(0.03*60, d_boo5)
-
-	plot_scalebar!(0.15, LilGuys.kpc2arcmin(0.1, d_umi) / 60, "100 pc")
-	plot_label!("Boötes V", "9x9 arcmin")
 
 
 

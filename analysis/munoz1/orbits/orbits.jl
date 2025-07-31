@@ -67,6 +67,64 @@ function plot_orbits(orbits::AbstractVector{<:Orbit}...; t_max=tmax, N=100)
 	fig
 end
 
+# ╔═╡ 752b5999-f69e-48cd-a5c9-ef2e00d58def
+function plot_sky(orbits::Pair...; t_max=-0.1/T2GYR, N=100)
+	N = min(length(orbits[1].second), N)
+
+	fig = Figure()
+	axes = Axis(fig[1,1], xlabel=L"$\alpha$ / degrees", ylabel=L"$\delta$ / degrees", xreversed=true)
+	legend = false
+	
+	for (i, (label, orbitss)) in enumerate(orbits)
+		for orbit in orbitss[1:N]
+			times = LilGuys.times(orbit)
+
+			pos = LilGuys.positions(orbit)[:, times .> t_max]
+			vels = LilGuys.positions(orbit)[:, times .> t_max]
+
+			Nt = size(pos, 2)
+			galcens = [LilGuys.Galactocentric(pos[:, j], vels[:, j] * V2KMS) for j in 1:Nt]
+
+			icrs = LilGuys.transform.(ICRS, galcens)
+			x = [coord.ra for coord in icrs]
+			y = [coord.dec for coord in icrs]
+			
+			lines!(axes, x, y, alpha=0.1, color=COLORS[i], label=label => (; alpha=0.5))
+		end
+	end
+
+	fig
+end
+
+# ╔═╡ 14a2a658-aad4-4f2b-b77e-09409b568e22
+function plot_sky_dist(orbits::Pair...; t_max=-0.1/T2GYR, N=100)
+	N = min(length(orbits[1].second), N)
+
+	fig = Figure()
+	axes = Axis(fig[1,1], xlabel=L"$\alpha$ / degrees", ylabel="distance / kpc", xreversed=true)
+	legend = false
+	
+	for (i, (label, orbitss)) in enumerate(orbits)
+		for orbit in orbitss[1:N]
+			times = LilGuys.times(orbit)
+
+			pos = LilGuys.positions(orbit)[:, times .> t_max]
+			vels = LilGuys.positions(orbit)[:, times .> t_max]
+
+			Nt = size(pos, 2)
+			galcens = [LilGuys.Galactocentric(pos[:, j], vels[:, j] * V2KMS) for j in 1:Nt]
+
+			icrs = LilGuys.transform.(ICRS, galcens)
+			x = [coord.ra for coord in icrs]
+			y = [coord.distance for coord in icrs]
+			
+			lines!(axes, x, y, alpha=0.1, color=COLORS[i], label=label => (; alpha=0.5))
+		end
+	end
+
+	fig
+end
+
 # ╔═╡ 04152ab7-a6e3-4763-a464-533d68f7d8ac
 function plot_orbits(orbits::Pair...; N=100, t_max=tmax)
 	N = min(length(orbits[1].second), N)
@@ -233,6 +291,34 @@ orbits_ep2020_diff = orbits_ep2020 .- orbits_ep2020_umi
 
 # ╔═╡ 4fe32d31-d088-46d0-9d34-b53945f1af10
 plot_orbits("Ursa Minor" => orbits_ep2020_umi, "Muñoz 1" => orbits_ep2020, t_max=-0.5/T2GYR)
+
+# ╔═╡ 045f020b-53aa-4e4c-97c3-7dc33f7e0490
+let
+	fig = plot_sky("UMi" => orbits_ep2020_umi, "Muñoz 1" => orbits_ep2020, t_max=-0.05/T2GYR)
+
+	axislegend(position=:lb, merge=true, unique=true)
+	fig
+end
+
+# ╔═╡ 1a9890bf-abfe-42f3-ab8f-dc0c40d3eb60
+0.05*1e3
+
+# ╔═╡ 826b9f7e-492c-4b10-a173-b3b1a0397156
+let
+	fig = plot_sky_dist("UMi" => orbits_ep2020_umi, "Muñoz 1" => orbits_ep2020, t_max=-0.1/T2GYR)
+
+	axislegend(position=:lb, merge=true, unique=true)
+	fig
+end
+
+# ╔═╡ bbb0076d-d8d6-4e4e-824b-c6ada5d5d4c4
+coords_gsr = LilGuys.transform.(GSR, coords_i)
+
+# ╔═╡ 08fcf661-9c17-4f08-92a1-70daacdd35c6
+LilGuys.mean([c.pmra for c in coords_gsr])
+
+# ╔═╡ 2baa7732-1687-4c67-b974-0d63d21c30dc
+LilGuys.mean([c.pmdec for c in coords_gsr])
 
 # ╔═╡ fa8e3f44-a536-47f1-9060-f42e56aef920
 plot_radii(orbits_ep2020_diff, ylabel="UMi - Muñoz 1 distance")
@@ -516,6 +602,8 @@ end
 # ╠═9e22d2b8-9764-40ef-a93d-d34ec8793297
 # ╠═ae7f9bca-fa3d-463c-ab13-49f0cb00e565
 # ╠═0345c9a9-20ad-499f-9715-158ba7817415
+# ╠═752b5999-f69e-48cd-a5c9-ef2e00d58def
+# ╠═14a2a658-aad4-4f2b-b77e-09409b568e22
 # ╠═04152ab7-a6e3-4763-a464-533d68f7d8ac
 # ╠═9a768080-29cf-4bd4-b040-7e58d448a041
 # ╠═545976f9-c846-46f4-b762-ea54af1985f6
@@ -536,6 +624,12 @@ end
 # ╠═840b4b24-d321-4524-b981-45c4aae61d36
 # ╠═68c2e6a6-505b-4485-bf9d-f9fb9a2a3907
 # ╠═4fe32d31-d088-46d0-9d34-b53945f1af10
+# ╠═045f020b-53aa-4e4c-97c3-7dc33f7e0490
+# ╠═1a9890bf-abfe-42f3-ab8f-dc0c40d3eb60
+# ╠═826b9f7e-492c-4b10-a173-b3b1a0397156
+# ╠═bbb0076d-d8d6-4e4e-824b-c6ada5d5d4c4
+# ╠═08fcf661-9c17-4f08-92a1-70daacdd35c6
+# ╠═2baa7732-1687-4c67-b974-0d63d21c30dc
 # ╠═fa8e3f44-a536-47f1-9060-f42e56aef920
 # ╠═c6f666e8-2009-45cd-a70b-168cbcc0a4d1
 # ╠═59c83d03-1c45-45db-bc13-27bf377d76d6
