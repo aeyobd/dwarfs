@@ -25,25 +25,6 @@ Given a dictionary of observed properties
 samples N random coordinate, with the velocities backwards in time
 Returns a snapshot of massless particles.
 """
-function sample(obs_props::AbstractDict, N::Integer = 10_000)
-    mc_obs = lguys.rand_coords(obs_props, N)
-
-    mc_phase = lguys.transform.(lguys.Galactocentric, mc_obs)
-    pos = hcat([lguys.position(p) for p in mc_phase]...)
-    vel = hcat([lguys.velocity(p) for p in mc_phase]...)
-
-    pos ./= lguys.R2KPC
-    vel ./= lguys.V2KMS
-    vel .*= -1 # reverse velocities to go backwards in time
-
-    m = 0
-    snap = lguys.Snapshot(pos, vel, fill(m, N))
-
-    return snap
-end
-
-
-
 function sample(obs_props::AbstractDict, frames_df::AbstractDict{<:Symbol, <:Distribution}, N::Integer=10_000)
     mc_obs = lguys.rand_coords(obs_props, N)
     frames = Vector{lguys.GalactocentricFrame}(undef, N)
@@ -81,14 +62,7 @@ function sample(obs_props::AbstractDict, frames_df::AbstractDict{<:Symbol, <:Dis
     pos = hcat([lguys.position(p) for p in mc_phase]...)
     vel = hcat([lguys.velocity(p) for p in mc_phase]...)
 
-    pos ./= lguys.R2KPC
-    vel ./= lguys.V2KMS
-    vel .*= -1 # reverse velocities to go backwards in time
-
-    m = 0
-    snap = lguys.Snapshot(pos, vel, fill(m, N))
-
-    return snap, frames_df
+    return mc_phase
 end
 
 
@@ -122,33 +96,3 @@ function frame_from_params(params)
 
     return frame
 end
-
-
-function sample_special_cases(filename="initial_conditions.toml")
-    df = TOML.parsefile(filename)
-
-    obs_special = lguys.ICRS[]
-    mc_phase = lguys.Galactocentric[]
-
-    for orbit in df["orbits"]
-        @info(orbit)
-        icrs = lguys.ICRS(orbit)
-        frame = frame_from_params(orbit)
-
-        gc = lguys.transform(lguys.Galactocentric, icrs, frame=frame)
-        push!(mc_phase, gc)
-    end
-
-    pos = hcat([lguys.position(p) for p in mc_phase]...)
-    vel = hcat([lguys.velocity(p) for p in mc_phase]...)
-
-    pos ./= lguys.R2KPC
-    vel ./= lguys.V2KMS
-    vel .*= -1 # reverse velocities to go backwards in time
-
-    m = 0.
-    snap = lguys.Snapshot(pos, vel, m)
-
-    return snap#, frames_df_special
-end
-

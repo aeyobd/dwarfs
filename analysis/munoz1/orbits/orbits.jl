@@ -538,6 +538,9 @@ orbit_umi = orbits(pot_ep2020, coords_umi[rand(1:length(coords_umi))])
 # ╔═╡ f0e0fc82-9f24-41b1-9de5-a9726bc180a8
 orbit_umi_mean = orbits(pot_ep2020, ICRS(obs_props_umi))
 
+# ╔═╡ 9eb94211-d9fe-4c5b-88d8-28cad9aaf87a
+plot_orbits([orbit_umi_mean])
+
 # ╔═╡ a3f498cc-95fd-4b3c-91ab-de4a4b34b50b
 rand(1:length(coords_umi))
 
@@ -588,7 +591,7 @@ plot_orbits(orbits_both, orbits_ep2020)
 
 # ╔═╡ 40d737fd-8585-42c7-8989-fa3f480bfa20
 let
-	f = plot_radii(orbits_both .- orbits_ep2020, ylabel="deviation due to UMi")
+	f = plot_radii(orbits_both .- orbits_ep2020, ylabel=L"$|\Delta\vec{x}(t)|$ change in orbit with UMi")
 	ylims!(0, 20)
 
 	f
@@ -696,6 +699,7 @@ end
 # ╠═236f1b68-871f-4b0d-87be-832d05ec8bbb
 # ╠═a58cd4e0-f445-4892-94fc-e8feeef18ba9
 # ╠═30818c48-517c-4ab9-9a5c-3cad7368fe16
+# ╠═9eb94211-d9fe-4c5b-88d8-28cad9aaf87a
 # ╠═47c2bd5a-0a05-44aa-b6bb-41fdaebaa34a
 # ╠═4e8d47f5-2de8-4945-8fc4-146892ffc4e2
 # ╠═d2ae04f7-d461-4238-88fc-b9ab79576d99

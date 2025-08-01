@@ -1,11 +1,7 @@
-#!/bin/env julia
-
-import Random
 import TOML
 import LinearAlgebra
 
 using DataFrames
-using ArgParse
 
 import Agama
 using LilGuys
@@ -14,49 +10,6 @@ using PyFITS
 
 Base.Broadcast.broadcastable(p::Agama.Potential) = Ref(p)
 Base.Broadcast.broadcastable(p::Agama.AgamaUnits) = Ref(p)
-
-
-
-function get_args()
-    s = ArgParseSettings(
-        description="""Calculates the orbits
-        returing essential information.
-""",
-    )
-
-    @add_arg_table s begin
-        "input"
-            help="input directory, should contain agama_potential.ini"
-        "output"
-            help="output file. defaults to orbital_properties.fits"
-        "-N", "--num-orbits"
-            help = "number of orbits to compute"
-            default = 10_000
-            arg_type=Int
-        "--seed"
-            help = "Random number seed. If set to -1, random seed"
-            default = -1
-            arg_type=Int
-        "--galaxy"
-            help = "name of default galaxy properties"
-            default = "sculptor"
-        "--time-max"
-            help = "maximum time to integrate for in code units"
-            default = -10 / T2GYR
-        "--num-timesteps"
-            help = "number of timesteps to record for peri / apo"
-            default = 10_000
-    end
-
-    args = parse_args(s)
-
-
-    if isnothing(args["output"])
-        args["output"] = joinpath(dirname(args["input"]), "orbital_properties.fits")
-    end
-
-    return args
-end
 
 
 function get_obs_props(input, galaxy)
@@ -71,39 +24,11 @@ function get_obs_props(input, galaxy)
 end
 
 
-function main(args)
-    if isfile(args["output"])
-        rm(args["output"])
-    end
-
-    if args["seed"] != -1
-        Random.seed!(args["seed"])
-    end
-
-    units = get_units(args["input"])
-    pot = get_potential(args["input"])
-    obs_props = get_obs_props(args["input"], args["galaxy"])
-    coords = LilGuys.rand_coords(obs_props, args["num-orbits"])
-
-    orbits = LilGuys.agama_orbit(pot, coords; timerange=(0, args["time-max"]), N=args["num-timesteps"], agama_units=units)
-    df_props = orbital_properties(pot, orbits, agama_units=units)
-
-    df_icrs = LilGuys.to_frame(coords)
-
-    gcs = LilGuys.transform.(Galactocentric, coords)
-    df_galcen = LilGuys.to_frame(gcs)
-
-    df_all = hcat(df_props, df_icrs, df_galcen)
-
-    write_fits(args["output"], df_all)
-end
-
-
 function get_units(input)
     filename = joinpath(input, "agama_units.toml")
     if isfile(filename)
-        unit_kwargs = TOML.parsefile(filename)
-        return Agama.AgamaUnits(; units_kwargs...)
+        unit_kwargs = TOML.parsefile(filename) |> LilGuys.dict_to_tuple
+        return Agama.AgamaUnits(; unit_kwargs...)
     else
         return Agama.AgamaUnits()
     end
@@ -119,13 +44,18 @@ function calc_orbits(pot, coords_i; tmax=-10/T2GYR, N=10001, kwargs...)
 end
 
 
-function orbital_properties(pot, orbits; agama_units)
+function orbital_properties(pot, orbits; agama_units, actions=false)
     @info "calculating peris and apos"
     peris = minimum.(radii.(orbits))
     apos = maximum.(radii.(orbits))
     
     @info "calculating orbit timescales"
-    periods = orbit_period.(orbits)
+    periods_errs = orbit_period.(orbits)
+    periods = first.(periods_errs)
+    errs = last.(periods_errs)
+    max_err = maximum(errs)
+    @info "max pericentre err: $max_err"
+
     t_last = t_last_peri.(orbits)
 
     @info "calculating energies"
@@ -135,8 +65,10 @@ function orbital_properties(pot, orbits; agama_units)
     L = LilGuys.angular_momenta(pos, vel)
     E = energy_initial(pot, pos, vel, agama_units=agama_units)
 
-    @info "calculating actions"
-    J = actions_initial(pot, pos, vel, agama_units=agama_units)
+    if actions
+        @info "calculating actions"
+        J = actions_initial(pot, pos, vel, agama_units=agama_units)
+    end
 
 
     dt = LilGuys.mean.(LilGuys.times.(orbits))
@@ -144,16 +76,22 @@ function orbital_properties(pot, orbits; agama_units)
         "pericentre" => peris,
         "apocentre" => apos,
         "time_last_peri" => t_last,
-        "Jr_i" => J[1, :],
-        "Jz_i" => J[2, :],
-        "Jphi_i" => J[3, :],
         "Lx_i" => L[1, :],
         "Ly_i" => L[2, :],
         "Lz_i" => L[3, :],
         "E_i" => E, 
         "period" => periods,
         "dt" => dt,
+        "peri_apo_max_err" => errs,
    )
+
+    if actions
+        properties[!, "Jr_i"] = J[1, :]
+        properties[!, "Jz_i"] = J[2, :]
+        properties[!, "Jphi_i"] = J[3, :]
+    end
+
+    properties
 end
 
 
@@ -163,9 +101,9 @@ end
 
 
 function orbit_period(orbit)
-    _, idxs, _, _ = LilGuys.all_peris_apos(orbit)
+    _, idxs, _, _, err = LilGuys.all_peris_apos(orbit)
     period = LilGuys.mean(diff(orbit.times[idxs]))
-    return period
+    return period, err
 end
 
 to_sym_mat(x) = [x[1] x[4] x[6] 
@@ -180,7 +118,7 @@ end
 
 
 function max_tidal_force(pot::Agama.Potential, orbit::LilGuys.Orbit; agama_units)
-    return maximum(scalar_tidal_forces(pot, orbit.positions, agama_units))
+    return maximum(scalar_tidal_forces(pot, orbit.positions; agama_units=agama_units))
 end
 
 
@@ -203,7 +141,17 @@ function energy_initial(pot::Agama.Potential, pos, vel; agama_units)
     return Φ .+ T
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    args = get_args()
-    main(args)
+
+"""
+    write_orbits(output, orbits; N_max)
+
+Write the first `N_max` orbits to a file "orbits.hdf5" in `output`.
+"""
+function write_orbits(output, orbits; N_max=1000)
+    filename = joinpath(output, "orbits.hdf5")
+
+    N_max = min(length(orbits), N_max)
+    structs = [(string(i) => orbit) for (i, orbit) in enumerate(orbits[1:N_max])]
+
+    LilGuys.write_structs_to_hdf5(filename, structs)
 end

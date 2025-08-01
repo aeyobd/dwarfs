@@ -1,0 +1,20 @@
+[[orbits]]
+name = "mean"
+ra = 15.0183
+dec = -33.7186
+distance = 83.2
+pmra = 0.099
+pmdec = -0.160
+radial_velocity = 111.2
+
+
+
+[[orbits]]
+name = "smallperi"
+ra = 15.0183
+dec = -33.7186
+distance = 82.7
+pmra = 0.134
+pmdec = -0.196
+radial_velocity = 111.4
+
