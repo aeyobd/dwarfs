@@ -447,6 +447,12 @@ pot_nospiral = get_potential("hunter+2024/MWPotentialHunter24_axi")
 # ╔═╡ aab2cda3-b66c-4c79-8789-b3da7382c64c
 pot_bar = get_potential("hunter+2024/MWPotentialHunter24_rotating")
 
+# ╔═╡ e3258321-669e-4c0d-89fb-27f5d182ecae
+portali_units = Agama.AgamaUnits(velocity_scale=1/V2KMS)
+
+# ╔═╡ 615ab87a-a033-4cc0-a998-fd7cb5b423c0
+vasiliev_units
+
 # ╔═╡ 21c9d9b7-2009-45dd-b66c-06896d1a91ca
 orbits_spiral = orbits(pot_spiral, agama_units=portali_units)
 
@@ -527,19 +533,36 @@ md"""
 """
 
 # ╔═╡ 0f78c8fa-4b4a-4454-bb3b-e3052b98de93
-orbit_umi = orbits(pot_ep2020, coords_umi[1])
+orbit_umi = orbits(pot_ep2020, coords_umi[rand(1:length(coords_umi))])
+
+# ╔═╡ f0e0fc82-9f24-41b1-9de5-a9726bc180a8
+orbit_umi_mean = orbits(pot_ep2020, ICRS(obs_props_umi))
+
+# ╔═╡ a3f498cc-95fd-4b3c-91ab-de4a4b34b50b
+rand(1:length(coords_umi))
+
+# ╔═╡ 57b4166d-83e0-4bd3-a184-3a4facf24a1f
+pot_umi2 = Agama.Potential(file="potential_ursa_minor.ini")
+
+# ╔═╡ 3227d5be-a68e-4b85-8fe0-8f01dc12de46
+pot_both2 =Agama.Potential(file="potential_mw_umi.ini")
+
+# ╔═╡ 304d23e1-62b7-4812-b3c8-b1b941f92a21
+orbits_both2 = orbits(pot_both2, )
 
 # ╔═╡ ea09e372-061b-4dda-9e16-33d3508848fe
 orbit_umi.positions
 
 # ╔═╡ 076232c4-8255-4754-92ee-db879f7f1f31
-function make_umi_potential(pot, coord_umi; v_circ_max=0.095*2, r_circ_max=0.95)
+function make_umi_potential(pot, coord_umi; v_circ_max=27/V2KMS, r_circ_max=5)
 	orbit_umi = orbits(pot_ep2020, coord_umi)
 
 	pot_nfw = LilGuys.NFW(v_circ_max=v_circ_max, r_circ_max=r_circ_max)
 
 
 	rho_s = pot_nfw.M_s / (4π * pot_nfw.r_s^3)
+	@info rho_s
+	@info pot_nfw.r_s
 
 	center = Agama.mat2py(vcat(orbit_umi.times[end:-1:1]', orbit_umi.positions[:, end:-1:1], orbit_umi.velocities[:, end:-1:1]))
 	
@@ -548,7 +571,7 @@ function make_umi_potential(pot, coord_umi; v_circ_max=0.095*2, r_circ_max=0.95)
 end
 
 # ╔═╡ 6ff769a4-8c99-413d-bfc8-a3898a655082
-pot_umi = make_umi_potential(pot_ep2020, coords_umi[1])
+pot_umi = make_umi_potential(pot_ep2020, ICRS(obs_props_umi))
 
 # ╔═╡ c78cc9d6-aeeb-4214-9813-2b1e49d1b37e
 pot_both = pot_ep2020 + pot_umi
@@ -556,11 +579,26 @@ pot_both = pot_ep2020 + pot_umi
 # ╔═╡ d24ae129-df2f-482a-a2bf-372769dab977
 orbits_both = orbits(pot_both, )
 
+# ╔═╡ 9597ed84-9312-4119-b629-3355a890095e
+LilGuys.radii.(LilGuys.positions.(orbits_both .- orbits_both2))
+
+
 # ╔═╡ 9d30c4d5-5dba-4d3f-a1d1-157d3f98323c
 plot_orbits(orbits_both, orbits_ep2020)
 
 # ╔═╡ 40d737fd-8585-42c7-8989-fa3f480bfa20
-plot_radii(orbits_both .- orbits_ep2020)
+let
+	f = plot_radii(orbits_both .- orbits_ep2020, ylabel="deviation due to UMi")
+	ylims!(0, 20)
+
+	f
+end
+
+# ╔═╡ 16097674-bbbf-47ca-9e41-33e8bbb2bfc6
+0.095 * V2KMS
+
+# ╔═╡ 9fd28168-63b0-44e3-b293-58dd7abcd795
+write("ursa_minor_orbit.csv", reverse(orbit_umi_mean))
 
 # ╔═╡ 15d34e47-01c6-4438-adaa-d6a746be1170
 md"""
@@ -669,6 +707,8 @@ end
 # ╠═47e9180e-3ad0-4040-9ceb-95e002717e1b
 # ╠═a1c10775-52f3-4dfb-9d53-348c8bed9690
 # ╠═aab2cda3-b66c-4c79-8789-b3da7382c64c
+# ╠═e3258321-669e-4c0d-89fb-27f5d182ecae
+# ╠═615ab87a-a033-4cc0-a998-fd7cb5b423c0
 # ╠═21c9d9b7-2009-45dd-b66c-06896d1a91ca
 # ╠═b3a3ed2c-7676-4c69-a24c-c5f8457435b6
 # ╠═01596c58-082e-4d8b-a7ef-d3a85288f631
@@ -695,13 +735,21 @@ end
 # ╠═b12291ea-2090-4474-bf15-51f08788676b
 # ╠═cbcd7cda-377a-4d9d-9aeb-8561d3849faa
 # ╠═0f78c8fa-4b4a-4454-bb3b-e3052b98de93
+# ╠═f0e0fc82-9f24-41b1-9de5-a9726bc180a8
+# ╠═a3f498cc-95fd-4b3c-91ab-de4a4b34b50b
 # ╠═6ff769a4-8c99-413d-bfc8-a3898a655082
+# ╠═57b4166d-83e0-4bd3-a184-3a4facf24a1f
 # ╠═c78cc9d6-aeeb-4214-9813-2b1e49d1b37e
+# ╠═3227d5be-a68e-4b85-8fe0-8f01dc12de46
 # ╠═d24ae129-df2f-482a-a2bf-372769dab977
+# ╠═304d23e1-62b7-4812-b3c8-b1b941f92a21
+# ╠═9597ed84-9312-4119-b629-3355a890095e
 # ╠═9d30c4d5-5dba-4d3f-a1d1-157d3f98323c
 # ╠═40d737fd-8585-42c7-8989-fa3f480bfa20
 # ╠═ea09e372-061b-4dda-9e16-33d3508848fe
 # ╠═076232c4-8255-4754-92ee-db879f7f1f31
+# ╠═16097674-bbbf-47ca-9e41-33e8bbb2bfc6
+# ╠═9fd28168-63b0-44e3-b293-58dd7abcd795
 # ╠═15d34e47-01c6-4438-adaa-d6a746be1170
 # ╠═5fd8a5ac-4f86-4e95-b3f7-63e6ccaa3c44
 # ╠═25692985-d984-4603-a383-9801e1b83025
