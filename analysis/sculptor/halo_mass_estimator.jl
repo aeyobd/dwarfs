@@ -119,22 +119,6 @@ md"""
 Fattahi2018 analyzes a sample of dwarfs from apostle simulations. Their fit is described in the caption of Figure 1 and is without uncertainties. The fit is to the maximum values of circular velocity and stellar mass during the evolution of the satalite. There is maybe a 20% uncertainty in the circular velocity at a given stellar mass
 """
 
-# ╔═╡ 18a20162-1b0f-4da8-931d-5ff95da22f54
-"""
-Given the maximum circular velocity (in km/s), returns the stellar mass (in Msun).
-Uses the fit from @fattahi2018.
-"""
-function M_s_from_vel(v_max)
-	ν = v_max * V2KMS / 50 # km/s
-	α = 3.36
-	γ = -2.4
-	m_0 = 3e-2 # 1e10 Msun
-	return m_0 * ν^α * exp(-ν^γ)
-end
-
-# ╔═╡ b24586f7-d889-413c-9e9b-c07557bb0576
-
-
 # ╔═╡ 2ec0b911-6338-4364-a250-90664e90f1a6
 lMs_to_lVc_err = 0.035
 
@@ -186,7 +170,7 @@ begin
 	halo_mean = [NFW(M200=M200_mean[i], c=c_mean2[i]) for i in eachindex(M200_mean)]
 	Vc_mean = v_circ_max.(halo_mean)
 	Rc_mean = r_circ_max.(halo_mean)
-	Ms_mean = M_s_from_vel.(Vc_mean)
+	Ms_mean = LilGuys.M_s_from_vel_fattahi.(Vc_mean)
 end
 
 # ╔═╡ 6213f5b6-0465-482d-a530-727f49220d79
@@ -208,7 +192,7 @@ let
 		yticks=Makie.automatic,
 		aspect=1
 	)
-	lines!(v_1 * V2KMS,  M_s_from_vel.(v_1))
+	lines!(v_1 * V2KMS,  LilGuys.M_s_from_vel_fattahi.(v_1))
 
 	x = 10 .^ LinRange(0, -8, 1000) 
 	y = 10 .^ lMs_to_lVc.(log10.(x))
@@ -224,7 +208,7 @@ end
 lVc_to_lM200 = LilGuys.lerp(log10.(Vc_mean), log10.(M200_mean))
 
 # ╔═╡ 8681ae51-7b55-4c6a-9fac-4f62f01af755
-N_samples = 10000
+N_samples = 100000
 
 # ╔═╡ aeebdad1-552e-44f3-9b25-37b752ee5e69
 begin 
@@ -245,7 +229,7 @@ Rc_samples = LilGuys.r_circ_max.(halo_samples)
 
 # ╔═╡ d8c978f3-57e9-48cb-b20a-6f441a241f7e
 begin 
-	Ms_samples = M_s_from_vel.(
+	Ms_samples = LilGuys.M_s_from_vel_fattahi.(
 		Vc_samples .* 10 .^ (lMs_to_lVc_err * randn(N_samples))
 	)
 end
@@ -310,7 +294,7 @@ let
 	)
 
 	scatter!(Vc_samples * V2KMS, Ms_samples, alpha=0.05, color=:black, markersize=5)
-	lines!(v_1 * V2KMS, M_s_from_vel.(v_1))
+	lines!(v_1 * V2KMS, LilGuys.M_s_from_vel_fattahi.(v_1))
 
 	lines!(Vc_mean * V2KMS, Ms_mean)
 	fig
@@ -407,6 +391,9 @@ end
 
 # ╔═╡ 0ad2bc38-9145-4e3a-8a07-2db6dad4404d
 0.04 * LilGuys.V2KMS
+
+# ╔═╡ 2f47ecdf-5962-4724-807b-c99a06cb1c51
+
 
 # ╔═╡ 9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
 lc_err = 0.10
@@ -518,6 +505,9 @@ describe(samples.c)
 # ╔═╡ 7c362562-cfad-43b8-8a8a-bb2580cf936e
 describe(samples.v_circ_max)
 
+# ╔═╡ b335191b-6301-4386-ac41-e7f935bb3e21
+describe(log10.(samples.v_circ_max))
+
 # ╔═╡ 356409b8-e5bf-47b0-bde2-f6b90d2c05ff
 describe(samples.r_circ_max)
 
@@ -532,13 +522,14 @@ halos_ex = Dict(
 	:heavy => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.9),
 	:compact => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
 	:middle => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 4.2),
+	:smol => NFW(v_circ_max=25/V2KMS, r_circ_max=2.5)
 )
 
 # ╔═╡ 9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
-
+10^0.4
 
 # ╔═╡ 8a06c0ad-2b48-48ba-a542-85926e164712
-labels_ex = [:mean, :heavy, :compact, :middle]
+labels_ex = [:mean, :heavy, :compact, :middle, :smol]
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
@@ -576,48 +567,35 @@ r_max_exp, (LilGuys.Ludlow.solve_rmax.(V_max_in, 0.1), LilGuys.Ludlow.solve_rmax
 # ╔═╡ b5a53e42-ef26-47b0-82f9-d404a4d3a544
 log10(1 + 3.726 / r_max_exp)
 
-# ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
+# ╔═╡ 2a86dad2-2cfa-43e7-b1df-84d274ee7e72
+import LinearAlgebra: diagm
 
+# ╔═╡ 533b1042-e90e-47a2-b89e-14f645f43c56
+import StatsBase: cov
 
-# ╔═╡ 8196e6b2-8355-438c-abc1-ffce2e29b8f2
-let
-	fig = Figure(size=(5, 3) .* 72)
-	ax = Axis(fig[1,1],
-		ylabel=L"$\log\,v_\textrm{circ, max}$ / km\,s$^{-1}$",
-		xlabel=L"$\log\,r_\textrm{circ, max}$ / kpc",
-		limits=(0.2, 1.5, 1.2, 1.9)
-	)
+# ╔═╡ 72f044cd-c1c3-470d-b1ee-1442bcd7291e
+Σ_r_v = cov([log10.(samples.r_circ_max) samples.log_v_circ_max])
 
-	for label in labels_ex
-		y = LilGuys.v_circ_max(halos_ex[label]) * V2KMS
-		x = LilGuys.r_circ_max(halos_ex[label]) 
-		scatter!(log10(x), log10(y), label=string(label))
-	end
+# ╔═╡ 933b8206-2e20-4ca9-8257-8200d76bc799
+println(Σ_r_v)
 
+# ╔═╡ 32ae2f63-d40d-4320-9e71-44ee4314aa96
+μ = LilGuys.mean.([log10.(samples.r_circ_max), samples.log_v_circ_max])
 
-	
-	v = log10.(Vc_mean * V2KMS)
-	lines!(log10.(Rc_mean), v, color=:grey, label="Ludlow+16")
-	
-	xl = log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, 0.1))
-	xh =  log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, -0.1))
-	x = [xl; reverse(xh)]
-	y = [v; reverse(v)]
-	poly!(x, y, color=(:grey, 0.2))
+# ╔═╡ 03b0ba09-d571-44f0-86ce-b25e23d989e7
+import LinearAlgebra: eigen
 
-	hspan!(1.49 - 0.1, 1.49+0.1, color=(COLORS[2], 0.1))
-	hlines!(1.49, color=(COLORS[2], 0.5), label="Fattahi+18")
+# ╔═╡ 68a00d2d-9b2b-44e2-a86a-9d5b519e91e3
+Σc, Σv = eigen(Σ_r_v)
 
-	x = log10.(samples.r_circ_max )
-	y = log10.(samples.v_circ_max)
-	k = kde([x y])
+# ╔═╡ 8dc73d60-8744-4d7c-9def-6e94d384e7df
+function ellipse!(sigma; kwargs...)
+	t = LinRange(0, 2π, 10000)
 
-	contour!(k)
+	Λ = diagm(Σc)
+	xy = [μ .+ Σv * sqrt.(sigma * Λ) * [cos(tt), sin(tt)] for tt in t]
 
-	
-	axislegend(position=:rt, title="halo")
-
-	fig
+	lines!(10 .^ first.(xy), 10 .^ last.(xy); kwargs...)
 end
 
 # ╔═╡ bbee444e-079b-4208-9faf-0a7fe5f81455
@@ -658,7 +636,129 @@ calc_σv_star_mean(LilGuys.TruncNFW(r_circ_max=4.9, v_circ_max= 30/V2KMS, trunc=
 (median(samples.v_circ_max))
 
 # ╔═╡ 34ef3a12-c2f9-4220-944d-f348efab86df
-10 ^ 0.5
+10^1.45
+
+# ╔═╡ 62fa36d2-8262-4e74-8423-ac1016b6cc19
+function plot_2d_bands!(x, y; p=[0.683, 0.954, 0.997], kwargs...)
+	k = kde((x, y))
+	densities = sort(vec(k.density), rev=true)
+	tot = cumsum(densities)  / sum(densities)
+	levels = [densities[findfirst(tot .> p1)] for p1 in p]
+
+	@info [sum(densities[densities .> level]) / sum(densities) for level in levels]
+	contour!(k.x, k.y, k.density; levels=levels, kwargs...)
+end
+
+# ╔═╡ 8196e6b2-8355-438c-abc1-ffce2e29b8f2
+let
+	fig = Figure(size=(5, 3) .* 72)
+	ax = Axis(fig[1,1],
+		ylabel=L"$\log\,v_\textrm{circ, max}$ / km\,s$^{-1}$",
+		xlabel=L"$\log\,r_\textrm{circ, max}$ / kpc",
+		limits=(0.2, 1.5, 1.2, 1.9)
+	)
+
+	for label in labels_ex
+		y = LilGuys.v_circ_max(halos_ex[label]) * V2KMS
+		x = LilGuys.r_circ_max(halos_ex[label]) 
+		scatter!(log10(x), log10(y), label=string(label))
+	end
+
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max)
+	plot_2d_bands!(x, y, color=:black)
+	
+	v = log10.(Vc_mean * V2KMS)
+	lines!(log10.(Rc_mean), v, color=:grey, label="Ludlow+16")
+	
+	xl = log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, 0.1))
+	xh =  log10.(LilGuys.Ludlow.solve_rmax.(Vc_mean, -0.1))
+	x = [xl; reverse(xh)]
+	y = [v; reverse(v)]
+	poly!(x, y, color=(:grey, 0.2))
+
+	hspan!(1.49 - 0.04, 1.49+0.04, color=(COLORS[2], 0.1))
+	hlines!(1.49, color=(COLORS[2], 0.5), label="Fattahi+18")
+
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max)
+	k = kde([x y])
+
+	contour!(k)
+
+	
+	axislegend(position=:rt, title="halo")
+
+	fig
+end
+
+# ╔═╡ 6a57cc5e-a794-4f5a-a7fd-ff9372ba1381
+function plot_2d_bands_log!(x, y; p=[0.683, 0.954, 0.997], kwargs...)
+	k = kde((x, y))
+	densities = sort(vec(k.density), rev=true)
+	tot = cumsum(densities)  / sum(densities)
+	levels = [densities[findfirst(tot .> p1)] for p1 in p]
+
+	@info [sum(densities[densities .> level]) / sum(densities) for level in levels]
+	contour!(10 .^ k.x, 10 .^k.y, k.density; levels=levels, kwargs...)
+end
+
+# ╔═╡ 6350d46d-5c6f-44a1-b30f-9d5e085e7d3b
+let
+	fig = Figure(size=(5, 3) .* 72)
+	ax = Axis(fig[1,1],
+		ylabel=L"$v_\textrm{circ, max}$ / km\,s$^{-1}$",
+		xlabel=L"$r_\textrm{circ, max}$ / kpc",
+		xscale=log10, 
+		yscale=log10
+	)
+	x = (samples.r_circ_max )
+	y = (samples.v_circ_max )
+	z = samples.σv
+
+	σ_thresh = 9.0
+
+	#c = contour!(k, linewidth=6)
+	filt = z .>= σ_thresh
+	h = scatter!(x[filt], y[filt],  color=RGBf(0.9, 0.9, 0.9))
+
+
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max)
+	plot_2d_bands_log!(x, y, )
+	
+
+	ellipse!(2.3, color=:green)
+	ellipse!(6.17, color=:green)
+	ellipse!(11.8, color=:green)
+
+	for label in labels_ex
+		y = LilGuys.v_circ_max(halos_ex[label]) * V2KMS
+		x = LilGuys.r_circ_max(halos_ex[label]) 
+		scatter!((x), (y), label=string(label), markersize=10)
+	end
+
+
+
+
+
+
+	
+	fig
+end
+
+# ╔═╡ 3e2acadd-7c80-4671-a5a9-fbb4470cd0f2
+[KernelDensity.pdf(k, x, y) for (x, y) in zip( log10.(samples.r_circ_max)[1:10000], samples.log_v_circ_max[1:10000])]
+
+# ╔═╡ 37b73ce2-0822-4a4b-b4a6-092baba747f6
+function plot_2d_bands_quick!(x, y; Nmax=10000, p=[0.683, 0.954, 0.997], kwargs...)
+	k = kde((x, y))
+	densities = KernelDensity.pdf.(Ref(k), x[1:Nmax], y[1:Nmax])
+
+	levels = quantile(densities, 1 .- p)
+
+	contour!(k; levels=levels, kwargs...)
+end
 
 # ╔═╡ 7b3777cc-e2f7-4032-86a9-774b03a8a141
 let
@@ -680,6 +780,13 @@ let
 
 	lines!(log10.(Rc_mean), log10.(Vc_mean * V2KMS))
 
+	x = log10.(samples.r_circ_max )
+	y = log10.(samples.v_circ_max)
+	k = kde([x y])
+
+	plot_2d_bands!(x, y, color=:black)
+	plot_2d_bands_quick!(x, y, color=COLORS[3])
+	
 
 	Colorbar(fig[1, 2], h, label=L"$\sigma_v$ / km\,s$^{-1}$")
 
@@ -711,7 +818,7 @@ let
 	c = contour!(k)
 	
 	
-	lines!(v_1 * V2KMS, M_s_from_vel.(v_1))
+	lines!(v_1 * V2KMS, LilGuys.M_s_from_vel_fattahi.(v_1))
 
 	lines!(Vc_mean * V2KMS, Ms_mean)
 
@@ -785,6 +892,15 @@ LilGuys.R200(halo_in)
 # ╔═╡ b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
 LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 
+# ╔═╡ bd4095bf-9e3f-4d04-895d-3567b24f99e6
+k = kde((log10.(samples.r_circ_max), samples.log_v_circ_max))
+
+# ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
+# ╠═╡ disabled = true
+#=╠═╡
+k = kde((randn(100), randn(100)))
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
 # ╟─07a710d8-0ae4-4d9f-9759-002750730010
 # ╟─33f433ec-e94e-41fd-a808-6254bf4d34ce
@@ -803,8 +919,6 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═aec3d9a7-d447-4e9f-aa83-fa5b20541b5c
 # ╟─bdd43353-da4c-48fb-bb67-b2aec628dd71
 # ╟─ca65b2b1-8414-48dc-badb-09c2d50879ad
-# ╠═18a20162-1b0f-4da8-931d-5ff95da22f54
-# ╠═b24586f7-d889-413c-9e9b-c07557bb0576
 # ╠═6213f5b6-0465-482d-a530-727f49220d79
 # ╠═2ec0b911-6338-4364-a250-90664e90f1a6
 # ╟─d9cb3699-6a0f-4d32-b3f8-410cf2c92019
@@ -850,6 +964,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═0af29495-0d78-4e32-bbf9-69587e8ae222
 # ╠═0ad2bc38-9145-4e3a-8a07-2db6dad4404d
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
+# ╠═2f47ecdf-5962-4724-807b-c99a06cb1c51
 # ╠═4e1290b5-171e-4715-a87b-28a2cfcb4325
 # ╠═9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
 # ╠═7d1ba57d-4332-4d6e-872b-42925c14ecfb
@@ -861,6 +976,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═0ba3f10c-46ad-48d5-9b15-eb67e9e505ed
 # ╠═ecade01b-f703-4780-bc5d-ccc4c448b676
 # ╠═7c362562-cfad-43b8-8a8a-bb2580cf936e
+# ╠═b335191b-6301-4386-ac41-e7f935bb3e21
 # ╠═356409b8-e5bf-47b0-bde2-f6b90d2c05ff
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
@@ -879,12 +995,26 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═5e71b022-bd95-4c3c-8930-51100fb9ab1c
 # ╠═db89cc22-f770-4f10-b3c0-3bc3298fb6a3
 # ╠═21acda7b-a116-4bc1-af7d-e715e2b32b86
+# ╠═2a86dad2-2cfa-43e7-b1df-84d274ee7e72
+# ╠═533b1042-e90e-47a2-b89e-14f645f43c56
+# ╠═72f044cd-c1c3-470d-b1ee-1442bcd7291e
+# ╠═933b8206-2e20-4ca9-8257-8200d76bc799
+# ╠═32ae2f63-d40d-4320-9e71-44ee4314aa96
+# ╠═03b0ba09-d571-44f0-86ce-b25e23d989e7
+# ╠═68a00d2d-9b2b-44e2-a86a-9d5b519e91e3
+# ╠═8dc73d60-8744-4d7c-9def-6e94d384e7df
+# ╠═6350d46d-5c6f-44a1-b30f-9d5e085e7d3b
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455
 # ╠═41283b0b-6563-4b2b-b978-4e65f32c8240
 # ╠═fb835e20-957e-4866-8ba6-2e64df38f68e
 # ╠═c33fd86a-ec88-4dc0-a883-519755f675c3
 # ╠═34ef3a12-c2f9-4220-944d-f348efab86df
+# ╠═62fa36d2-8262-4e74-8423-ac1016b6cc19
+# ╠═6a57cc5e-a794-4f5a-a7fd-ff9372ba1381
+# ╠═bd4095bf-9e3f-4d04-895d-3567b24f99e6
+# ╠═3e2acadd-7c80-4671-a5a9-fbb4470cd0f2
+# ╠═37b73ce2-0822-4a4b-b4a6-092baba747f6
 # ╠═7b3777cc-e2f7-4032-86a9-774b03a8a141
 # ╠═6baff9d8-a96d-4d1b-898f-089003459c19
 # ╠═2b1d7ec9-b3f7-4230-9f5a-80ece86f709d

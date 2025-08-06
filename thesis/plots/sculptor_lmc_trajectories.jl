@@ -28,6 +28,9 @@ include("paper_style.jl")
 # ╔═╡ ff577282-1d04-4f6a-bb4e-74cf5a8d51e3
 include("orbit_utils.jl")
 
+# ╔═╡ 49cca906-53e3-4531-a936-119d8b372c61
+include(joinpath(ENV["DWARFS_ROOT"], "orbits/orbit_utils.jl"))
+
 # ╔═╡ 7450144e-5464-4036-a215-b6e2cd270405
 md"""
 This notebook analyzes the result of the MC samples of orbits in the same potential to determine the plausable range of pericentres and apocentres.
@@ -41,14 +44,11 @@ md"""
 The most important variable is to set the modelname to the appropriate directory.
 """
 
-# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-modelname = "EP2020"
-
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 FIGDIR = "./figures"
 
 # ╔═╡ 43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
-t_max = -5/T2GYR
+t_max = -2/T2GYR
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -73,7 +73,10 @@ md"""
 Nmax = 100 # number of orbits to plot
 
 # ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
-modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", modelname)
+modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev24_L3M11")
+
+# ╔═╡ 9efc0091-ea97-439a-bbf4-5c8b5f1127fc
+modeldir_no = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev24_M11")
 
 # ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
 idx, orbits = let
@@ -83,20 +86,16 @@ idx, orbits = let
 	first.(structs)[filt], last.(structs)[filt]
 end
 
-# ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
-best_orbit = LilGuys.Orbit(modeldir * "_special_cases/orbit_smallperi.csv" )
+# ╔═╡ e96f758a-1cb9-436e-b351-cfa311520faa
+idx_no, orbits_no = let
+	structs = LilGuys.read_ordered_structs(joinpath(modeldir_no, "orbits.hdf5"), LilGuys.Orbit)
 
-# ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
-velocities = LilGuys.velocities.(orbits)
+	filt = 1:min(Nmax, length(structs))
+	first.(structs)[filt], last.(structs)[filt]
+end
 
-# ╔═╡ 1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
-times = orbits[1].times
-
-# ╔═╡ 58231f52-16cd-4529-b9e2-437af28efd19
-time_filt = times .> t_max
-
-# ╔═╡ 3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
-positions = [LilGuys.positions(orbit)[:, time_filt] for orbit in orbits]
+# ╔═╡ ff6522d0-84cb-4521-8400-61c02973d535
+lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11"))
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -108,45 +107,62 @@ md"""
 The plots below are designed to show the special orbits in a variety of frames.
 """
 
+# ╔═╡ 59bb1f11-987d-4e2f-bb07-6905cd09a3f2
+t_min = -2 / T2GYR
+
+# ╔═╡ 587e90ea-8597-445a-a1e9-8ec020469c35
+pos_lmc_resampled = LilGuys.resample(lmc_orbit, orbits[1].times)
+
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
-@savefig "umi_xyz_orbits" let 
-	fig = lguys.plot_xyz(positions..., color=COLORS[1], alpha=0.05, linewidth=theme(:linewidth)[] / 2, linestyle=:solid)
-
-	lguys.plot_xyz!(fig.content, best_orbit.positions[:, 1:end-10], color=:black, linewidth=theme(:linewidth)[] / 2)
-
-	plot_present_position!(fig.content, best_orbit.positions[:, end], best_orbit.velocities[:, end])
-
-	fig
-end
-
-# ╔═╡ beab2cfe-b57a-4673-86f3-4af9227a2a36
 let
 	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="Galactocentric distance / kpc"
-	)
+	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
 
-	for i in eachindex(orbits)
-		lines!(orbits[i].times * lguys.T2GYR, radii(orbits[i]), alpha=0.1, color=COLORS[1], linewidth=theme(:linewidth)[]/2)
-	end
+	ax_xyz = axes_xyz_flat(fig, limits)
 
-	lines!(best_orbit.times * T2GYR, radii(best_orbit), color=:black, linewidth=theme(:linewidth)[] / 2)
+	plot_xyz!(ax_xyz, orbits, color=COLORS[1], alpha=0.05, time_min=t_min, linestyle=:solid)
+	plot_xyz!(ax_xyz, orbits_no, color=COLORS[2], alpha=0.05, time_min=t_min, linestyle=:solid)
+	plot_xyz!(ax_xyz, lmc_orbit, color=lmc_orbit.times[lmc_orbit.times .> t_min], time_min=t_min, linestyle=:solid, colorrange=(-10/T2GYR, 0), colormap=Reverse(:greys))
+	# plot_xyz!(ax_xyz, best_orbit, color=:black, time_min=-5/T2GYR)
+	# plot_xyz_today!(ax_xyz, best_orbit, length(best_orbit))
 
-	@savefig "umi_r_vs_time_samples"
+	gs = GridLayout(fig[2, 1:3])
+	ax_rt = Axis(gs[1,1 ],
+				xlabel = "time / Gyr", ylabel = "MW distance / kpc")
+	
+	plot_rt!(ax_rt, orbits, color=COLORS[1], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, orbits_no, color=COLORS[2], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, lmc_orbit, color=lmc_orbit.times, linestyle=:solid, colorrange=(-10/T2GYR, 0), colormap=Reverse(:greys))
+
+
+	# labels
+	lines!([NaN], [NaN], color=COLORS[2], alpha=0.5, label="Sculptor")
+	lines!([NaN], [NaN], color=COLORS[1], alpha=0.5, label="+LMC")
+	lines!([NaN], [NaN], color=:black, label="LMC")
+
+	axislegend(position=:lt)
+	
+	# plot_rt!(ax_rt, best_orbit, color=:black)
+	xlims!(-10, 0)
+	ylims!(0, 400)
+	# plot_rt_today!(ax_rt, best_orbit, length(best_orbit))
+
+
+	ax_rt2 = Axis(gs[1,2 ],
+				xlabel = "time / Gyr", ylabel = "LMC distance / kpc")
+	
+	plot_rt!(ax_rt2, orbits .- [pos_lmc_resampled], color=COLORS[3], alpha=0.05, linestyle=:solid)
+
+	rowsize!(fig.layout, 2, Relative(0.5))
+
+	@savefig "scl_lmc_xyzr_orbits"
 	fig
+
 end
-
-# ╔═╡ d209e21c-ad6e-4e6a-babb-44947163701b
-best_orbit2 = LilGuys.Orbit(modeldir * "/../../../analysis/ursa_minor/mc_orbits/EP2020_special_cases/orbit_smallperi.csv")
-
-# ╔═╡ a5aaab7f-5d4c-4186-93dc-5f502515bb9f
-lguys.plot_xyz(best_orbit.positions, best_orbit2.positions)
 
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
-# ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
@@ -160,15 +176,13 @@ lguys.plot_xyz(best_orbit.positions, best_orbit2.positions)
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
+# ╠═9efc0091-ea97-439a-bbf4-5c8b5f1127fc
+# ╠═49cca906-53e3-4531-a936-119d8b372c61
+# ╠═ff6522d0-84cb-4521-8400-61c02973d535
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
-# ╠═127a988e-74ab-41f4-8979-6800622f3ff4
-# ╠═58231f52-16cd-4529-b9e2-437af28efd19
-# ╠═3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
-# ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
-# ╠═1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
+# ╠═e96f758a-1cb9-436e-b351-cfa311520faa
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
+# ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2
+# ╠═587e90ea-8597-445a-a1e9-8ec020469c35
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
-# ╠═beab2cfe-b57a-4673-86f3-4af9227a2a36
-# ╠═a5aaab7f-5d4c-4186-93dc-5f502515bb9f
-# ╠═d209e21c-ad6e-4e6a-babb-44947163701b

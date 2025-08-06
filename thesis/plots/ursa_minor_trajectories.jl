@@ -75,6 +75,9 @@ Nmax = 100 # number of orbits to plot
 # ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
 modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", modelname)
 
+# ╔═╡ 3e4f0aa7-22d4-4a19-aafd-cf86c380ade3
+scale_theme_element!(:linewidth, 0.5)
+
 # ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
 idx, orbits = let
 	structs = LilGuys.read_ordered_structs(joinpath(modeldir, "orbits.hdf5"), LilGuys.Orbit)
@@ -86,130 +89,37 @@ end
 # ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
 best_orbit = LilGuys.Orbit(modeldir * "_special_cases/orbit_smallperi.csv" )
 
-# ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
-velocities = LilGuys.velocities.(orbits)
-
-# ╔═╡ 1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
-times = orbits[1].times
-
-# ╔═╡ 58231f52-16cd-4529-b9e2-437af28efd19
-time_filt = times .> t_max
-
-# ╔═╡ 3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
-positions = [LilGuys.positions(orbit)[:, time_filt] for orbit in orbits]
-
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
 # Plots
 """
 
-# ╔═╡ 14c36202-66ca-46b3-b282-3895b72311fe
-md"""
-The plots below are designed to show the special orbits in a variety of frames.
-"""
-
-# ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
-@savefig "umi_xyz_orbits" let 
-	fig = lguys.plot_xyz(positions..., color=COLORS[1], alpha=0.05, linewidth=theme(:linewidth)[] / 2, linestyle=:solid)
-
-	lguys.plot_xyz!(fig.content, best_orbit.positions[:, 1:end-10], color=:black, linewidth=theme(:linewidth)[] / 2)
-
-	plot_present_position!(fig.content, best_orbit.positions[:, end], best_orbit.velocities[:, end])
-
-	fig
-end
-
-# ╔═╡ beab2cfe-b57a-4673-86f3-4af9227a2a36
+# ╔═╡ d236732c-10da-49b8-804c-e69268221a19
 let
 	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="Galactocentric distance / kpc"
-	)
-
-	for i in eachindex(orbits)
-		lines!(orbits[i].times * lguys.T2GYR, radii(orbits[i]), alpha=0.1, color=COLORS[1], linewidth=theme(:linewidth)[]/2)
-	end
-
-	lines!(best_orbit.times * T2GYR, radii(best_orbit), color=:black, linewidth=theme(:linewidth)[] / 2)
-
-	@savefig "umi_r_vs_time_samples"
-	fig
-end
-
-# ╔═╡ 12cdf166-72f8-4e6b-89f4-7a993d224528
-let
-	fig = Figure()
-
-
-	kwargs = (; alpha=0.05, color=COLORS[1], linewidth=theme(:linewidth)[]/2, rasterize=true, linestyle=:solid)
-
 	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
+
+	ax_xyz = axes_xyz_flat(fig, limits)
+
+	plot_xyz!(ax_xyz, orbits, color=COLORS[1], alpha=0.05, time_min=-5/T2GYR, linestyle=:solid)
+	plot_xyz!(ax_xyz, best_orbit, color=:black, time_min=-5/T2GYR)
+	plot_xyz_today!(ax_xyz, best_orbit, length(best_orbit))
+
+	ax_rt = Axis(fig[2, 1:3],
+				xlabel = "time / Gyr", ylabel = "galactocentric distance / kpc")
 	
-	ax = Axis(fig[1,1],
-		xlabel="x / kpc",
-		ylabel="y / kpc",
-		limits = limits[[1, 2]]
-	)
+	plot_rt!(ax_rt, orbits, color=COLORS[1], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, best_orbit, color=:black)
+	xlims!(-10, 0)
+	ylims!(0, 100)
+	plot_rt_today!(ax_rt, best_orbit, length(best_orbit))
 
-	for i in eachindex(orbits)
-		lines!(orbits[i].positions[1, time_filt], orbits[i].positions[2, time_filt]; kwargs...)
-		lines!(best_orbit.positions[1, :], best_orbit.positions[2, :]; kwargs...)
-
-		arrowhead!(ax, best_orbit.positions[1, end], best_orbit.positions[2, end], best_orbit.velocities[1, end], best_orbit.velocities[2, end])
-	end
-
-	
-	ax = Axis(fig[1,2],
-		xlabel="y / kpc",
-		ylabel="z / kpc",
-		limits = limits[[2, 3]]
-	)
-
-	for i in eachindex(orbits)
-		lines!(orbits[i].positions[2, time_filt], orbits[i].positions[3, time_filt]; kwargs...)
-
-		arrowhead!(ax, best_orbit.positions[2, end], best_orbit.positions[3, end], best_orbit.velocities[2, end], best_orbit.velocities[3, end])
-
-	end
-
-
-	ax = Axis(fig[1,3],
-		xlabel="z / kpc",
-		ylabel="x / kpc",
-		limits = limits[[3, 1]]
-	)
-
-	for i in eachindex(orbits)
-		lines!(orbits[i].positions[3, time_filt], orbits[i].positions[1, time_filt]; kwargs...)
-
-		arrowhead!(ax, best_orbit.positions[3, end], best_orbit.positions[1, end], best_orbit.velocities[3, end], best_orbit.velocities[1, end])
-
-	end
-
-
-
-	ax = Axis(fig[2, 1:3], xlabel = "time / Gyr", ylabel = "galactocentric distance")
-
-	for i in eachindex(orbits)
-		lines!(orbits[i].times * lguys.T2GYR, radii(orbits[i]); kwargs...)
-	end
-	
-	lines!(best_orbit.times * T2GYR, radii(best_orbit), color=:black, linewidth=theme(:linewidth)[] / 2)
-
-	rowsize!(fig.layout, 1, Aspect(1, 1))
 	rowsize!(fig.layout, 2, Relative(0.5))
 
-	
-	@savefig "umi_r_vs_time_samples"
+	@savefig "umi_xyzr_orbits"
 	fig
+
 end
-
-# ╔═╡ d209e21c-ad6e-4e6a-babb-44947163701b
-best_orbit2 = LilGuys.Orbit(modeldir * "/../../../analysis/ursa_minor/mc_orbits/EP2020_special_cases/orbit_smallperi.csv")
-
-# ╔═╡ a5aaab7f-5d4c-4186-93dc-5f502515bb9f
-lguys.plot_xyz(best_orbit.positions, best_orbit2.positions)
 
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
@@ -228,16 +138,8 @@ lguys.plot_xyz(best_orbit.positions, best_orbit2.positions)
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
+# ╠═3e4f0aa7-22d4-4a19-aafd-cf86c380ade3
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═127a988e-74ab-41f4-8979-6800622f3ff4
-# ╠═58231f52-16cd-4529-b9e2-437af28efd19
-# ╠═3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
-# ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
-# ╠═1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
-# ╟─14c36202-66ca-46b3-b282-3895b72311fe
-# ╠═130fca42-cee8-4d88-a764-cdded04a636e
-# ╠═beab2cfe-b57a-4673-86f3-4af9227a2a36
-# ╠═12cdf166-72f8-4e6b-89f4-7a993d224528
-# ╠═a5aaab7f-5d4c-4186-93dc-5f502515bb9f
-# ╠═d209e21c-ad6e-4e6a-babb-44947163701b
+# ╠═d236732c-10da-49b8-804c-e69268221a19

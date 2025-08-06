@@ -24,11 +24,11 @@ function get_args()
             default = "sculptor"
         "--time-max"
             help = "maximum time to integrate for in code units"
-            default = -10 / T2GYR
+            default = -2120.0
             arg_type = Float64
         "--num-timesteps"
             help = "number of timesteps to record for peri / apo"
-            default = 10_000
+            default = 2048
             arg_type = Int
     end
 
@@ -87,7 +87,11 @@ function main(args)
 
         @assert issorted(orbit.times, rev=true)
         _, _, apos, idx_apos, _ = LilGuys.all_peris_apos(orbit)
-        idx_i = idx_apos[end]
+        if length(idx_apos) > 0
+            idx_i = idx_apos[end]
+        else
+            idx_i = length(orbit.times)
+        end
 
         orbit_out = LilGuys.reverse(orbit[1:idx_i])
 

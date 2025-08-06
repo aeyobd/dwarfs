@@ -1,0 +1,8 @@
+r_a_om = +inf
+beta0 = 0.0
+
+[profile.TruncNFW]
+r_s = 1
+trunc = 100.0
+xi = 1.0
+M_s = 1

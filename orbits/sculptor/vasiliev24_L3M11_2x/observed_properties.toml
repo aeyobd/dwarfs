@@ -1,0 +1,25 @@
+ra = 15.0183
+ra_err = 0.0024
+ra_ref = "munoz+2018"
+dec = -33.7186
+dec_err = 0.0014
+dec_ref = "munoz+2018"
+
+distance = 83.2 
+distance_err = 4
+distance_modulus = 19.60
+distance_modulus_err = 0.1
+distance_ref = "tran+22"
+
+pmra = 0.099 
+pmra_err = 0.034
+pmra_ref = "MV2020a"
+pmdec = -0.160 
+pmdec_err = 0.034 
+pmdec_ref = "MV2020a"
+pmra_note = "0.002 uncertainty but adds gaia systematics"
+
+radial_velocity = 111.2
+radial_velocity_err = 0.6
+radial_velocity_ref = "arroyo-polonio+2024"
+

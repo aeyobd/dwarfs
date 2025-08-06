@@ -59,11 +59,22 @@ The most important variable is to set the modelname to the appropriate directory
 # ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
 @bind modelname TextField(24, default="example") |> confirm
 
+# ╔═╡ c4890c9f-8409-4a58-bd01-670d278088c0
+@bind galaxyname TextField(24, default="sculptor") |> confirm
+
+# ╔═╡ 5ca2096b-6eb9-4325-9c74-421f3e0fdea2
+module OrbitUtils
+	include("orbit_utils.jl")
+end
+
+# ╔═╡ f311c4d6-88a4-48a4-a0a0-8a6a6013897c
+agama_units = OrbitUtils.get_units(joinpath(galaxyname, modelname))
+
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
-FIGDIR = "./$modelname/figures"
+FIGDIR = "./$galaxyname/$modelname/figures"
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
-p_value = 0.0014 # 3sigma
+p_value =cdf(Normal(), -3)# 3sigma
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -93,7 +104,7 @@ coord_labels = Dict(
 kms_label = L" / km\,s$^{-1}$"
 
 # ╔═╡ 18d6d521-1abf-4085-b9b0-6f45c0eb2feb
-obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observed_properties.toml"))
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
 
 # ╔═╡ 8f70add4-effe-437d-a10a-4e15228f9fec
 md"""
@@ -110,7 +121,7 @@ This is primarily used for tests later.
 obs = lguys.ICRS(obs_props)
 
 # ╔═╡ eff58c52-a32b-4faa-9b98-c8234d9b21fc
-err = get_coord_err(obs_props)
+err = lguys.ICRS(;(prop => LilGuys.get_uncertainty(obs_props, string(prop)) for prop in propertynames(obs) if prop != :coord)...)
 
 # ╔═╡ 88536e86-cf2a-4dff-ae64-514821957d40
 md"""
@@ -128,7 +139,7 @@ function sort_snap(snap)
 end
 
 # ╔═╡ da6e5566-f2df-4feb-9188-53eca9a1a0d5
-df_props = read_fits(joinpath(modelname, "orbital_properties.fits"))
+df_props = read_fits(joinpath(galaxyname, modelname, "orbital_properties.fits"))
 
 # ╔═╡ 384be6a6-f9d9-47e0-9792-aef6689dcbdb
 apos = df_props.apocentre
@@ -180,8 +191,10 @@ Since these values are (likely) not in the random samples, I simply run new orbi
 function median_residual(df_props)
 	for sym in [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
 		x = obs_props[string(sym)]
-		md = median(x)
-		res = (md - x ) / err[string(sym)]
+		err = lguys.get_uncertainty(obs_props, string(sym))
+		xs = df_props[!, sym]
+		md = median(xs)
+		res = (md - x ) / err
 		@printf "Δ ln %-15s  = %6.2f \t \n"  sym res
 	end
 end
@@ -207,15 +220,19 @@ function median_percen(df_props)
 
 		md = median(x)
 		err = std(x) / sqrt(length(x))
-		@printf "%s = %0.3f\n"  sym md
+		@printf "%s = %0.4f\n"  sym md
 	end
 end
 
+# ╔═╡ 5247f333-a123-4a60-b6fd-393aa333f896
+ICRS(obs_props).radial_velocity
+
 # ╔═╡ 4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 let 
-	idx_s =  peris .< quantile(peris, 2*p_value)
+	idx_s =  peris .< quantile(peris, 2p_value)
+	@info sum(idx_s)
 
-	#median_residual(df_props[idx_s, :])
+ 	median_residual(df_props[idx_s, :])
 	median_percen(df_props[idx_s, :])
 
 	@printf "median peri = %0.3f\n" median(df_props.pericentre[idx_s])
@@ -223,9 +240,10 @@ end
 
 # ╔═╡ 34104429-05e0-40a6-83e5-078dbe346504
 let
-	idx_s =  peris .> quantile(peris, 1-2*p_value)
+	idx_s = peris .> quantile(peris, 1 - 2p_value)
 
-	#median_residual(df_props[idx_s, :])
+	@info sum(idx_s)
+	median_residual(df_props[idx_s, :])
 	median_percen(df_props[idx_s, :])
 
 end
@@ -256,6 +274,20 @@ let
 	)
 
 	bins, counts, err = lguys.histogram(peris)
+	scatter!(lguys.midpoints(bins), counts)
+
+	fig
+end
+
+# ╔═╡ d54bfa19-850d-4061-a7f6-ec94f19cfd73
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+		xlabel = "LMC pericentre / kpc",
+		ylabel = "count"
+	)
+
+	bins, counts, err = lguys.histogram(df_props.pericentre_lmc)
 	scatter!(lguys.midpoints(bins), counts)
 
 	fig
@@ -300,7 +332,7 @@ hist(lguys.radii(hcat(df_props.x, df_props.y, df_props.z)'),
 )
 
 # ╔═╡ 68b0383a-3d5a-4b94-967c-f0e31e8a0ce1
-hist(lguys.radii(hcat(df_props.v_x, df_props.v_y, df_props.v_z)') * lguys.V2KMS,
+hist(lguys.radii(hcat(df_props.v_x, df_props.v_y, df_props.v_z)'),
 	axis=(; xlabel="initial galactocentric velocity / km/s",
 		ylabel="count"
 	)
@@ -376,6 +408,57 @@ let
 	fig
 end
 
+# ╔═╡ 7262f63a-6b1c-4c8d-a81a-e4f407d3b9fe
+let
+	fig = Figure(size=(5*72, 5*72))
+	plot_kwargs = Dict(
+		:color => :black,
+		:alpha => 0.1,
+		:markersize => 1,
+	)
+
+	
+	orbit_points_kwargs = [Dict(
+		:color => COLORS[i],
+		:alpha => 1,
+		:markersize => 10,
+		:label => orbit_labels[i]
+	) for i in eachindex(idx)
+		]
+	
+	ax_kwargs = Dict(
+		:xgridvisible => false,
+		:ygridvisible => false,
+		:ylabel => "pericentre / kpc",
+	)
+
+	ax_idx = Dict(
+		:pmra => [1, 1],
+		:pmdec => [1, 2],
+		:distance => [2, 1],
+		:radial_velocity => [2, 2],
+	)
+
+	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+		ax = Axis(fig[ax_idx[sym]...],
+			xlabel=coord_labels[sym];
+			ax_kwargs...
+		)
+	    x = df_props[!, sym]
+		scatter!(x, df_props.pericentre_lmc; plot_kwargs...)
+		for i in eachindex(idx)
+			scatter!(x[idx[i]], df_props.pericentre_lmc[idx[i]]; orbit_points_kwargs[i]...)
+		end
+	end
+
+
+	linkyaxes!(fig.content...)
+
+
+	@savefig "peri_mc_orbits_corr"
+	fig
+end
+
 # ╔═╡ 43d43f63-4c13-4b23-950e-ada59aa86bc9
 let
 	
@@ -429,7 +512,7 @@ let
 			ax_kwargs...
 		)
 	    x = df_props[!, sym]
-		scatter!(x, df_props.time_last_peri * lguys.T2GYR .+ 0.001 .* randn(length(snap)); plot_kwargs...)
+		scatter!(x, df_props.time_last_peri * lguys.T2GYR .+ 0.001 .* randn(length(df_props.time_last_peri)); plot_kwargs...)
 		for i in eachindex(idx)
 			scatter!(x[idx[i]], df_props.time_last_peri[idx[i]]* lguys.T2GYR; orbit_points_kwargs[i]...)
 		end
@@ -487,7 +570,7 @@ let
 		x_mod = LinRange(minimum(x), maximum(x), 1000)
 
 		mu_exp = getproperty(obs, sym)
-		err_exp = err[string(sym)]
+		err_exp = getproperty(err, sym)
 		y_mod = normal_dist.(x_mod, mu_exp, err_exp)
 		lines!(x_mod, y_mod, label="expected gaussian")
 			
@@ -518,7 +601,7 @@ let
 
 
 		μ = getproperty(obs, sym)
-		σ = err[string(sym)]
+		σ = LilGuys.get_uncertainty(obs_props, string(sym))
 		x_mod = LinRange(μ - 3σ, μ + 3σ, 10_000)
 		y_mod = normal_dist.(x_mod, μ, σ) 
 		lines!(x_mod, y_mod, label="expected")
@@ -539,16 +622,19 @@ md"""
 icrs0 = LilGuys.coords_from_df(df_props[idx, :])
 
 # ╔═╡ 61c5e886-4c54-4080-8111-122765405ffe
-pot = Agama.Potential(file=joinpath(modelname, "agama_potential.ini"))
+pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"))
 
 # ╔═╡ 6fcf3685-3a60-4997-aa41-cc4cf4891797
-orbits = LilGuys.agama_orbit(pot, icrs0, timerange=(0, -10/T2GYR))
+orbits = LilGuys.agama_orbit(pot, icrs0, agama_units=agama_units, timerange=(0, -10/T2GYR))
 
 # ╔═╡ 3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
 positions = LilGuys.positions.(orbits)
 
 # ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
 velocities = LilGuys.velocities.(orbits)
+
+# ╔═╡ 1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
+times = orbits[1].times
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 begin
@@ -626,7 +712,7 @@ let
 	)
 
 	for i in eachindex(idx)
-		scatter!(rs[i], vs[i], color=out.times)
+		scatter!(rs[i], vs[i], color=times)
 	end
 
 	fig
@@ -646,22 +732,8 @@ begin
 	phi_exp(r) = -M_b / (r+r_b)
 end
 
-# ╔═╡ fa4e7992-1ac6-4d71-a923-8b3cf81d0030
-let 
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = "time / Gyr",
-		ylabel = "relative residual acceleration",
-	)
-	
-	for i in 1:length(idx)
-		res = (accs[i] .- a_exp.(rs[i])) ./ a_exp.(rs[i])
-		scatter!(-out.times * lguys.T2GYR, res, 
-			label = orbit_labels[i]
-		)
-	end
-	fig
-end 
+# ╔═╡ ec00c319-284f-4b83-a670-fb49dd6dedc4
+Φs_ext = [Agama.potential(pot, orbit.positions, agama_units) for orbit in orbits]
 
 # ╔═╡ 35f0ea14-a945-4745-910c-365b730676c5
 let 
@@ -674,7 +746,7 @@ let
 	
 	for i in 1:length(idx)
 		res =  (Φs_ext[i] .- phi_exp.(rs[i])) ./ phi_exp.(rs[i])
-		scatter!(-out.times * lguys.T2GYR, res,
+		scatter!(-times * lguys.T2GYR, res,
 			label = orbit_labels[i]
 		)
 	end
@@ -697,7 +769,7 @@ let
 		zlabel = L"$z$ / kpc",
 	)
 	
-	scatter!(snap.positions,
+	scatter!(df_props.x, df_props.y, df_props.z,
 )
 	fig
 end
@@ -711,7 +783,7 @@ let
 		zlabel = L"$v_z$ %$kms_label",
 	)
 	
-	scatter!(-snap.velocities .* lguys.V2KMS,
+	scatter!(df_props.v_x * V2KMS, df_props.v_y * V2KMS, df_props.v_z * V2KMS,
 )
 	fig
 end
@@ -750,14 +822,14 @@ begin
 		@printf "pericentre:\t %0.1f\n" peris[idx[i]]
 		@printf "apocentre: \t %0.1f\n" apos[idx[i]]
 
-		@printf "time of first apocentre: %f \n" out.times[end] - out.times[t]
+		@printf "time of first apocentre: %f \n" times[end] - times[t]
 		@printf "radius of first apocentre: %f\n" rs[i][t]
 		@printf "intial position: [%f, %f, %f]\n" positions[i][:, t]...
 		@printf "intial velocity: [%f, %f, %f]\n" -1* velocities[i][:, t]...
 		@printf "final position: [%f, %f, %f]\n" positions[i][:, 1]...
 		@printf "final velocity: [%f, %f, %f]\n" -lguys.V2KMS * velocities[i][:, 1]...
 
-		o = observations[idx[i]]
+		o = icrs0[i]
 		@printf "ra: \t %f\n" o.ra
 		@printf "dec: \t %f\n" o.dec
 		@printf "pmra: \t %f\n" o.pmra
@@ -773,6 +845,9 @@ end
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
 # ╠═6ca3fe17-3f13-43fe-967b-881078135ead
+# ╠═c4890c9f-8409-4a58-bd01-670d278088c0
+# ╠═5ca2096b-6eb9-4325-9c74-421f3e0fdea2
+# ╠═f311c4d6-88a4-48a4-a0a0-8a6a6013897c
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
@@ -796,7 +871,7 @@ end
 # ╠═da6e5566-f2df-4feb-9188-53eca9a1a0d5
 # ╠═384be6a6-f9d9-47e0-9792-aef6689dcbdb
 # ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f
-# ╠═392315ee-72d2-4a14-9afc-5fd6424b3e83
+# ╟─392315ee-72d2-4a14-9afc-5fd6424b3e83
 # ╟─950e0210-e4fe-4bad-b82f-69247fd0edd8
 # ╠═4a4b8b73-92c3-4e1f-93d8-e44369b8f148
 # ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
@@ -806,6 +881,7 @@ end
 # ╟─d54733e9-7552-4d9c-b8e8-670433469385
 # ╠═de2f3380-90df-48f5-ba60-8417e91f4818
 # ╠═c8aec4f8-975f-4bbc-b874-bf0172d35868
+# ╠═5247f333-a123-4a60-b6fd-393aa333f896
 # ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
 # ╠═34104429-05e0-40a6-83e5-078dbe346504
 # ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
@@ -813,6 +889,7 @@ end
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╟─50baf5a6-fb5b-494e-95f3-53414a9f1cc0
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
+# ╠═d54bfa19-850d-4061-a7f6-ec94f19cfd73
 # ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
 # ╠═5a903509-e2cc-4bac-9c59-d1689ccc408e
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
@@ -821,6 +898,7 @@ end
 # ╠═44660b2f-6220-473b-bb2f-07e23b176491
 # ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
 # ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
+# ╠═7262f63a-6b1c-4c8d-a81a-e4f407d3b9fe
 # ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
 # ╠═8b6f95f7-284f-4133-b6f1-a22dd9c405f0
 # ╟─69e77193-29cc-4304-98a1-44828eaedf9f
@@ -834,6 +912,7 @@ end
 # ╠═6fcf3685-3a60-4997-aa41-cc4cf4891797
 # ╠═3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
+# ╠═1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
@@ -844,7 +923,7 @@ end
 # ╠═ad078920-225d-436e-835b-d87a9db53c49
 # ╟─0fb21216-3faf-4a40-9a8e-67ee5f31f933
 # ╠═09bbae0d-ca3e-426d-b77c-69dd68ca42cc
-# ╠═fa4e7992-1ac6-4d71-a923-8b3cf81d0030
+# ╠═ec00c319-284f-4b83-a670-fb49dd6dedc4
 # ╟─35f0ea14-a945-4745-910c-365b730676c5
 # ╟─0c90dc59-6641-4094-b283-fcef68271019
 # ╟─f6b27164-ee7c-428b-aefb-75e89d178f3e

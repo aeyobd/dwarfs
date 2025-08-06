@@ -1,7 +1,7 @@
 import TOML
 import LinearAlgebra
 
-using DataFrames
+using DataFrames, CSV
 
 import Agama
 using LilGuys
@@ -15,6 +15,7 @@ Base.Broadcast.broadcastable(p::Agama.AgamaUnits) = Ref(p)
 function get_obs_props(input, galaxy)
     filename = joinpath(input, "observed_properties.toml")
     if isfile(filename)
+        @info "loading $filename"
         return TOML.parsefile(filename)
     else
         filename = joinpath(ENV["DWARFS_ROOT"], "observations/$(galaxy)/observed_properties.toml")
@@ -154,4 +155,21 @@ function write_orbits(output, orbits; N_max=1000)
     structs = [(string(i) => orbit) for (i, orbit) in enumerate(orbits[1:N_max])]
 
     LilGuys.write_structs_to_hdf5(filename, structs)
+end
+
+
+
+
+function get_lmc_orbit(input)
+    lmc_file = joinpath(input, "trajlmc.txt")
+    df_lmc = lmc_traj = CSV.read(lmc_file, DataFrame, delim=" ", header = [:time, :x, :y, :z, :v_x, :v_y, :v_z], ignorerepeated=true)
+
+    pos = hcat(df_lmc.x, df_lmc.y, df_lmc.z)'
+    vel = hcat(df_lmc.v_x, df_lmc.v_y, df_lmc.v_z)'
+
+    # convert to code units
+    t = df_lmc.time .* Agama.time_scale(Agama.VASILIEV_UNITS) 
+    vel .*= Agama.velocity_scale(Agama.VASILIEV_UNITS) 
+
+    orbit_lmc = Orbit(times=t, positions=pos, velocities=vel)
 end

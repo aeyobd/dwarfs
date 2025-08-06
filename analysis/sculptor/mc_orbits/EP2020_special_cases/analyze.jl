@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -573,6 +573,15 @@ end
 # ╔═╡ 2dfe9a85-6553-4632-81e0-33c148fd1102
 reverse(out.times)
 
+# ╔═╡ 5e5de31c-afc8-45fe-a37c-5c8683f5d0c8
+reverse(rs[2])[114-4:114+4], reverse(rs[2])[114]
+
+# ╔═╡ 393e4571-61a2-4056-be83-0f85b1ead183
+rs[2][2004:2012] .- rs[2][2008]
+
+# ╔═╡ 3105fc1c-e1f6-4992-9412-ec5e51f16be3
+out_special.times[268] * T2GYR
+
 # ╔═╡ aeb3c2ca-5caf-4b75-a6a9-4699e29240f6
 
 
@@ -619,6 +628,9 @@ function get_initial_t(rs)
 	return t_ini
 end
 	
+
+# ╔═╡ 1ded7dc2-3bc3-44c9-b735-aeaa29fa1ef2
+get_initial_t(rs[2])
 
 # ╔═╡ 5f45e7c7-e447-48bf-ade4-38f516df2dad
 for i in 1:length(orbit_labels)
@@ -683,11 +695,28 @@ for i in 1:length(orbit_labels)
 	end
 end
 
+# ╔═╡ ee016780-3d10-4d25-b6e5-a33a2bd0b2e6
+function get_initial_t_2(rs)
+	N = length(rs)
+	t_ini = -1
+	for t in N-1:-1:2
+		if (rs[t+1] < rs[t]) && (rs[t-1] < rs[t])
+			t_ini = t
+			break
+		end
+	end
+	return t_ini
+end
+	
+
+# ╔═╡ 542f3211-db6c-4384-9f7e-f6b011225c15
+get_initial_t_2(rs[2])
+
 # ╔═╡ 5316884b-3971-4ca7-9106-f638241d3388
 get_initial_t(rs[1])
 
 # ╔═╡ 9bb4eba3-e6f1-43a7-a202-7dc9375661b9
-rs[1][1853:1856]
+rs[1][1850:1858]
 
 # ╔═╡ a88df07c-d6d0-49be-8bc9-d9adc5647838
 rs[1][1854]
@@ -798,12 +827,18 @@ end
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
 # ╟─5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
 # ╠═2dfe9a85-6553-4632-81e0-33c148fd1102
+# ╠═5e5de31c-afc8-45fe-a37c-5c8683f5d0c8
+# ╠═1ded7dc2-3bc3-44c9-b735-aeaa29fa1ef2
+# ╠═542f3211-db6c-4384-9f7e-f6b011225c15
+# ╠═393e4571-61a2-4056-be83-0f85b1ead183
+# ╠═3105fc1c-e1f6-4992-9412-ec5e51f16be3
 # ╠═5f45e7c7-e447-48bf-ade4-38f516df2dad
 # ╠═aeb3c2ca-5caf-4b75-a6a9-4699e29240f6
 # ╠═b8c9823f-ca6b-48bf-9140-40440562dac0
 # ╠═1be546d7-8b11-4dc5-9295-393d39f65123
 # ╠═1152cd63-baab-426a-b464-b10857eed4ec
 # ╠═519a88f0-8e2d-4c09-83e0-3cc2ee147e35
+# ╠═ee016780-3d10-4d25-b6e5-a33a2bd0b2e6
 # ╠═5316884b-3971-4ca7-9106-f638241d3388
 # ╠═9bb4eba3-e6f1-43a7-a202-7dc9375661b9
 # ╠═a88df07c-d6d0-49be-8bc9-d9adc5647838

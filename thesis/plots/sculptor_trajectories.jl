@@ -64,6 +64,9 @@ import TOML
 # ╔═╡ a7111062-b025-43a9-bdb1-aee08deb60e9
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ 75e9df93-6fea-4977-b4bc-535220e955c7
+scale_theme_element!(:linewidth, 1/2)
+
 # ╔═╡ 16f4ac20-d8cf-4218-8c01-c15e04e567fb
 md"""
 # The example orbits
@@ -86,20 +89,8 @@ end
 # ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
 best_orbit = LilGuys.Orbit(modeldir * "_special_cases/orbit_smallperi.csv" )
 
-# ╔═╡ c4bd3b49-cb3b-45c3-8122-d623490e593a
-best_orbit2 = LilGuys.Orbit(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/mc_orbits/EP2020_special_cases/orbit_smallperi.csv"))
+# ╔═╡ 45734dfc-8b1c-42f2-a351-30c6ed11bb15
 
-# ╔═╡ d31f91e8-6db6-4771-9544-8e54a816ecc1
-velocities = LilGuys.velocities.(orbits)
-
-# ╔═╡ 1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
-times = orbits[1].times
-
-# ╔═╡ 58231f52-16cd-4529-b9e2-437af28efd19
-time_filt = times .> t_max
-
-# ╔═╡ 3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
-positions = [LilGuys.positions(orbit)[:, time_filt] for orbit in orbits]
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -112,18 +103,31 @@ The plots below are designed to show the special orbits in a variety of frames.
 """
 
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
-@savefig "xyz_samples" let 
-	fig = lguys.plot_xyz(positions..., color=COLORS[1], alpha=0.05, linewidth=theme(:linewidth)[] / 2, linestyle=:solid)
+let
+	fig = Figure()
+	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
 
-	lguys.plot_xyz!(fig.content, best_orbit2.positions, color=:black, linewidth=theme(:linewidth)[] / 2)
+	ax_xyz = axes_xyz_flat(fig, limits)
 
-	plot_present_position!(fig.content, positions, velocities)
+	plot_xyz!(ax_xyz, orbits, color=COLORS[1], alpha=0.05, time_min=-5/T2GYR, linestyle=:solid)
+	plot_xyz!(ax_xyz, best_orbit, color=:black, time_min=-5/T2GYR)
+	plot_xyz_today!(ax_xyz, best_orbit, length(best_orbit))
 
+	ax_rt = Axis(fig[2, 1:3],
+				xlabel = "time / Gyr", ylabel = "galactocentric distance / kpc")
+	
+	plot_rt!(ax_rt, orbits, color=COLORS[1], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, best_orbit, color=:black)
+	xlims!(-10, 0)
+	ylims!(0, 120)
+	plot_rt_today!(ax_rt, best_orbit, length(best_orbit))
+
+	rowsize!(fig.layout, 2, Relative(0.5))
+
+	@savefig "scl_xyzr_orbits"
 	fig
-end
 
-# ╔═╡ a5aaab7f-5d4c-4186-93dc-5f502515bb9f
-LilGuys.plot_xyz(best_orbit.positions, best_orbit2.positions, labels=["hi", "yes"], linewidth=theme(:linewidth)[]/2)
+end
 
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
@@ -139,17 +143,13 @@ LilGuys.plot_xyz(best_orbit.positions, best_orbit2.positions, labels=["hi", "yes
 # ╠═f823e80a-f6db-440f-8d25-56860618c82f
 # ╠═00ba3075-c3e2-4965-acf3-00cda0ef320f
 # ╠═a7111062-b025-43a9-bdb1-aee08deb60e9
+# ╠═75e9df93-6fea-4977-b4bc-535220e955c7
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═127a988e-74ab-41f4-8979-6800622f3ff4
-# ╠═c4bd3b49-cb3b-45c3-8122-d623490e593a
-# ╠═58231f52-16cd-4529-b9e2-437af28efd19
-# ╠═3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
-# ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
-# ╠═1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
+# ╠═45734dfc-8b1c-42f2-a351-30c6ed11bb15
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
-# ╠═a5aaab7f-5d4c-4186-93dc-5f502515bb9f

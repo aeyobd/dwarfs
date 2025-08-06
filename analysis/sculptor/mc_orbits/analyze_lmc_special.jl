@@ -1,8 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
+
+# ╔═╡ b912f0dc-39fc-4c3e-a513-197011ec26bb
+using PyFITS
 
 # ╔═╡ 1be546d7-8b11-4dc5-9295-393d39f65123
 using OrderedCollections
@@ -120,7 +123,7 @@ snap
 begin 
 	out_special = lguys.Output(special_orbits_dir);
 
-	df_peris_apos_special = lguys.read_fits("$special_orbits_dir/peris_apos.fits")
+	df_peris_apos_special = read_fits("$special_orbits_dir/peris_apos.fits")
 	snap_special = out_special[1] |> sort_snap
 
 	@assert all(snap_special.index  .== df_peris_apos_special.index) "snapshot and peri apo index must match"
@@ -521,15 +524,15 @@ begin
 	
 	positions = [lguys.extract_vector(out_special, :positions, i) for i in eachindex(orbit_labels)]
 	velocities = [lguys.extract_vector(out_special, :velocities, i) for i in eachindex(orbit_labels)]
-	accelerations = [lguys.extract_vector(out_special, :accelerations, i) for i in eachindex(orbit_labels)]
-	Φs_ext = [lguys.extract(out_special, :Φs_ext, i) for i in eachindex(orbit_labels)]
+	# accelerations = [lguys.extract_vector(out_special, :accelerations, i) for i in eachindex(orbit_labels)]
+	# Φs_ext = [lguys.extract(out_special, :Φs_ext, i) for i in eachindex(orbit_labels)]
 
 end
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 begin
-	rs = lguys.calc_r.(positions)
-	vs = lguys.calc_r.(velocities)
+	rs = lguys.radii.(positions)
+	vs = lguys.radii.(velocities)
 end
 
 # ╔═╡ 40cd8af5-70cd-45eb-9841-a9fce83e9f9d
@@ -545,7 +548,7 @@ pos_lmc = [traj_lmc.x traj_lmc.y traj_lmc.z]'
 positions_scl_lmc = [pos .- pos_lmc for pos in positions]
 
 # ╔═╡ cf4e92a9-80a3-4ef8-9404-0ee6707a3401
-rs_scl_lmc = lguys.calc_r.(positions_scl_lmc)
+rs_scl_lmc = lguys.radii.(positions_scl_lmc)
 
 # ╔═╡ 43b8d382-6226-46bb-9cbe-6463eb0415d0
 vel_lmc = [traj_lmc.v_x traj_lmc.v_y traj_lmc.v_z]'
@@ -814,6 +817,7 @@ end
 # ╠═cfcb9873-dd62-4a49-af01-7cc0668abe15
 # ╟─3be492fa-0cb9-40f1-a39e-e25bf485fd3e
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═b912f0dc-39fc-4c3e-a513-197011ec26bb
 # ╠═0f1eadfc-bff3-42b8-beee-2765589671ac
 # ╠═b8c9823f-ca6b-48bf-9140-40440562dac0
 # ╠═1be546d7-8b11-4dc5-9295-393d39f65123
