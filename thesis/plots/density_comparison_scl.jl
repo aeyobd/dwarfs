@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -17,7 +17,7 @@ begin
 end
 
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
-include("./style.jl")
+include("./paper_style.jl")
 
 # ╔═╡ 3a8954e9-0f5b-4f2c-8a9e-6e66f0f20ccc
 import TOML
@@ -129,16 +129,16 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 	end
 	
 	if !isnothing(break_height)
-		arrows!([log10(r_b) ], [break_height], [0], [-2], color=COLORS[2], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
-		text!([log10(r_b) ], [break_height],text="break", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
+		annotation!(0, 40, log10(r_b), break_height, color=COLORS[2], 
+		text="break",  )
 	end
 
 	if !isnothing(r_j)
-		arrows!([log10(r_j) ], [break_height], [0], [-2], color=COLORS[1], linewidth=theme(:linewidth)[], arrowsize=1.5*theme(:markersize)[])
-		text!([log10(r_j) ], [break_height],text="jacobi", rotation=π/2, fontsize=0.8theme(:fontsize)[], align=(:right, :bottom))
+		annotation!(0, 40, log10(r_j), break_height,color=COLORS[1],
+		text="jacobi", )
 	end
 
-	axislegend(position=:lb, margin=theme(:Legend).padding, patchsize=(36*1.5, 36/2))
+	axislegend(position=:lb, margin=theme(:Legend).padding, patchsize=(36, 24/2))
 	fig
 end
 
@@ -159,7 +159,7 @@ end
 @savefig "scl_smallperi_i_f_b" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=nothing)
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-@savefig "scl_smallperi_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=-1.0, r_j=true)
+@savefig "scl_smallperi_i_f" compare_profiles("1e7_V31_r3.2", "orbit_smallperi", "exp2d_rs0.10",  r_j=true, norm_shift=0.2)
 
 # ╔═╡ f053b7f9-f934-4cd4-ae46-32a0a373ff7e
 # @savefig "scl_mean_i_f" compare_profiles("1e7_V31_r3.2", "orbit_mean", "exp2d_rs0.10", norm_shift=0.15, break_height=-5, r_j=get_r_j("1e7_V31_r3.2", "orbit_mean"))

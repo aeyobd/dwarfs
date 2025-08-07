@@ -107,6 +107,9 @@ function main(args)
         orbit_props["v_z_i"] = orbit_out.velocities[3, 1]
         orbit_props["idx_i"] = length(orbit) - idx_i + 1
         orbit_props["t_i"] = orbit_out.times[1]
+        for key in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"]
+            orbit_props["$(key)_err"] = LilGuys.get_uncertainty(obs_props, key)
+        end
 
         open(joinpath(args["input"], "orbit_$(labels[i]).toml"), "w") do f
             TOML.print(f, orbit_props)

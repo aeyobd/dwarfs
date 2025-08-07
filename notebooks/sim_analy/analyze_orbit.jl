@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -33,11 +33,11 @@ using OrderedCollections
 # ╔═╡ cd43d649-1d52-46a7-a621-68c8122fce6d
 using PyFITS
 
-# ╔═╡ 6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
-using PlutoUI
-
 # ╔═╡ 2c702eb7-ebb6-44c9-8e01-ca52d011c014
 using HDF5
+
+# ╔═╡ 6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
+using PlutoUI
 
 # ╔═╡ 9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
 using Printf
@@ -61,12 +61,6 @@ import LinearAlgebra: dot
 
 # ╔═╡ ab57edae-2292-4aef-9c1f-53802dbc0600
 import TOML
-
-# ╔═╡ 7bf1a839-b24e-4478-bdd3-200989779f68
-save = Makie.save
-
-# ╔═╡ 7834415a-b479-495b-998a-1d12f42f0dc6
-Slider = PlutoUI.Slider
 
 # ╔═╡ 56d15948-4fd8-4541-9925-99837d9584f5
 CairoMakie.activate!(type=:png)
@@ -251,7 +245,7 @@ function calc_χ2s(obs_c, obs_today)
 	for name in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
 		μ = obs_today[name]
 		x = obs_c[:, name]
-		σ = obs_today[name * "_err"]
+		σ = LilGuys.get_uncertainty(obs_today, name)
 		χ2 .+= @. (x -μ)^2/(σ)^2
 	end
 	return χ2 ./ 6
@@ -528,8 +522,10 @@ let
 	t_best = ts[idx_best]
 	println(minimum(χ2s_new))
 
-	lines(ts, log10.(χ2s_new))
+	f = lines(ts, log10.(χ2s_new))
+	hlines!(0)
 
+	f
 end
 
 # ╔═╡ 225a8adb-82ee-4479-806e-15796e2b08e2
@@ -708,9 +704,8 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═cd43d649-1d52-46a7-a621-68c8122fce6d
 # ╠═882d4fc5-07ae-4b06-8da5-67f0894595db
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
-# ╠═7bf1a839-b24e-4478-bdd3-200989779f68
+# ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
 # ╠═6b3df4f3-de5b-40b1-8aec-1cfce9aa843a
-# ╠═7834415a-b479-495b-998a-1d12f42f0dc6
 # ╠═56d15948-4fd8-4541-9925-99837d9584f5
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
 # ╠═0e2e7f93-09d1-4902-ad24-223df50d37cb
@@ -732,7 +727,6 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═96a57df5-a7b7-447a-a4a6-2b05e391a5c6
 # ╠═3112cdf4-5971-4e24-b1d3-aeffaf566056
 # ╠═3fa82743-7bc5-4e7a-8ec5-69de1ef647e9
-# ╠═2c702eb7-ebb6-44c9-8e01-ca52d011c014
 # ╠═b250bf10-c228-4b14-938a-35561ae871d7
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f

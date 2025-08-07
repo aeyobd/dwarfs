@@ -1,0 +1,132 @@
+### A Pluto.jl notebook ###
+# v0.20.13
+
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ 0125bdd2-f9db-11ef-3d22-63d25909a69a
+begin
+	using Pkg; Pkg.activate()
+
+	FIGDIR = "figures"
+
+	using LilGuys
+	using CairoMakie
+	using Arya
+
+end
+
+# ╔═╡ 3d50a77e-7365-41c1-a306-131d9672ca6d
+using PyFITS
+
+# ╔═╡ c79a6966-e559-487c-a378-2e258c1fdbfa
+using OrderedCollections
+
+# ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
+include("./paper_style.jl")
+
+# ╔═╡ 7845f35d-1112-4c85-bdab-7a6a9f11cb1d
+import TOML
+
+# ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ 1c5f3f6b-57c2-4f56-90e0-3fc874b86e9f
+md"""
+# Utilities
+"""
+
+# ╔═╡ 45ea911c-b082-483e-b7f5-902088544ede
+function starsdir(galaxyname, modelname, starsname)
+	return joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname, "stars", starsname)
+end
+
+# ╔═╡ e08d6905-318e-490c-ad80-a5d9ed8a6a6a
+function get_obs_props(galaxyname)
+	return TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml"))
+end
+
+# ╔═╡ a04583f2-fd84-4640-8c48-719c59f717cb
+function get_scalars(args...)
+	file = joinpath(starsdir(args...), "stellar_profiles_3d_scalars.fits")
+
+	idx_f = TOML.parsefile(joinpath(starsdir(args...), "../../orbital_properties.toml"))["idx_f"]
+	df = read_fits(file)
+
+	#df.time .-= df.time[idx_f]
+	df
+end
+
+# ╔═╡ 70b55c06-3e81-4e27-a313-69d7e4028ece
+function compare_sigma_v_time(orbits, obs_props)
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+		xlabel = "time / Gyr",
+		ylabel = L"velocity disperison / km\,s$^{-1}$"
+	)
+
+	hlines!(obs_props["sigma_v"], color=:black)
+
+	hspan!(obs_props["sigma_v"] - obs_props["sigma_v_err"], obs_props["sigma_v"] +obs_props["sigma_v_err"], alpha=0.1, color=:black)
+
+
+	for (label, df) in orbits
+		lines!(df.time * T2GYR, df.sigma_v * V2KMS, label=label)
+	end
+
+
+	axislegend(position=:rt)
+
+	fig
+end
+
+# ╔═╡ 82bc10ae-cbf9-4f1f-8167-04eabc136b0b
+md"""
+# Comparison
+"""
+
+# ╔═╡ 55027866-d309-4557-b8a9-9f73a20b7785
+scl_orbits = OrderedDict(
+	"mean" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_mean", "exp2d_rs0.13"),
+	"smallperi" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_smallperi", "exp2d_rs0.13"),
+	"lmc" => get_scalars("sculptor", "1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.13"),
+)
+	
+	
+
+# ╔═╡ 80d2464d-8a1a-4da5-bb62-4b28e843e7fe
+scl_obs = get_obs_props("sculptor")
+
+# ╔═╡ 17eef1aa-9fce-43d8-bd24-bd8613f93ded
+@savefig "scl_sigma_v_time" compare_sigma_v_time(scl_orbits, scl_obs)
+
+# ╔═╡ 9cb7699d-e390-4dd5-b051-a5a48d2316bc
+umi_orbits = OrderedDict(
+	"smallperi" => get_scalars("ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "exp2d_rs0.10"),
+)
+
+# ╔═╡ 28c9b087-0101-4710-9940-81138fbf7cef
+umi_obs = get_obs_props("ursa_minor")
+
+# ╔═╡ 9d7d5739-4172-4eb8-9a04-dc2a727d9dd4
+@savefig "umi_sigma_v_time" compare_sigma_v_time(umi_orbits, umi_obs)
+
+# ╔═╡ Cell order:
+# ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═3d50a77e-7365-41c1-a306-131d9672ca6d
+# ╠═7845f35d-1112-4c85-bdab-7a6a9f11cb1d
+# ╠═c79a6966-e559-487c-a378-2e258c1fdbfa
+# ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
+# ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
+# ╠═1c5f3f6b-57c2-4f56-90e0-3fc874b86e9f
+# ╠═45ea911c-b082-483e-b7f5-902088544ede
+# ╠═e08d6905-318e-490c-ad80-a5d9ed8a6a6a
+# ╠═a04583f2-fd84-4640-8c48-719c59f717cb
+# ╠═70b55c06-3e81-4e27-a313-69d7e4028ece
+# ╟─82bc10ae-cbf9-4f1f-8167-04eabc136b0b
+# ╠═55027866-d309-4557-b8a9-9f73a20b7785
+# ╠═80d2464d-8a1a-4da5-bb62-4b28e843e7fe
+# ╠═17eef1aa-9fce-43d8-bd24-bd8613f93ded
+# ╠═9cb7699d-e390-4dd5-b051-a5a48d2316bc
+# ╠═28c9b087-0101-4710-9940-81138fbf7cef
+# ╠═9d7d5739-4172-4eb8-9a04-dc2a727d9dd4

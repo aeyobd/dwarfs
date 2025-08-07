@@ -130,8 +130,16 @@ let
 	
 	axislegend(position=:lt, title="halo")
 
+	@savefig "sculptor_initial_halos"
+	
 	fig
 end
+
+# ╔═╡ 679a471a-da30-4ef4-b8f7-60a69c8d8d94
+R_h = 0.15
+
+# ╔═╡ 0ca4187b-d63c-48e4-947c-c9a48973323d
+[LilGuys.v_circ(halo, R_h) * V2KMS / sqrt(2) for (label, halo) in halos]
 
 # ╔═╡ b01d7319-2f22-49a5-9303-2ef28b24b798
 stars = LilGuys.Exp2D(R_s=0.15)
@@ -180,7 +188,7 @@ end
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═f653a17a-8062-4898-9d0c-168a13dfbf6f
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-# ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╟─3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═b7a4e67b-a3c9-44c2-acf3-b61f60d387ad
 # ╠═48289b64-08a8-4b26-9506-1843b3c69009
 # ╠═7587767d-b2f7-4a18-b4a3-8ca410078dd8
@@ -194,6 +202,8 @@ end
 # ╠═1c0b9737-217a-4870-bc70-1a5959fe2b01
 # ╠═f0e7895a-e7c5-4db2-bfdc-716121211612
 # ╠═a15dbc88-8dbf-48d4-8a72-1881151c8e26
+# ╠═679a471a-da30-4ef4-b8f7-60a69c8d8d94
+# ╠═0ca4187b-d63c-48e4-947c-c9a48973323d
 # ╠═b01d7319-2f22-49a5-9303-2ef28b24b798
 # ╠═e0e418d2-16f2-4bbe-92db-ccdc6e89669e
 # ╠═a085b24c-9ac6-41c8-811e-8e972eef0efb

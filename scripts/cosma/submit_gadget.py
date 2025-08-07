@@ -28,7 +28,7 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Submit a job to SLURM with default or specified parameters.')
-    parser.add_argument('--tasks', type=int, 
+    parser.add_argument('-t', '--tasks', type=int, 
                         help='number of tasks to run')
     parser.add_argument('--mem', type=str, default=None, 
                         help='Memory per job (default: from param.txt)')
@@ -71,8 +71,10 @@ def create_sbatch_script(args, scriptname="run.sh"):
 #SBATCH --time              {args.time}
 #SBATCH --nodes             1
 #SBATCH --tasks-per-node    {args.tasks}
-#SBATCH --partition         cosma8
+#SBATCH --partition         cosma5
 #SBATCH --account           durham
+#SBATCH --cpus-per-task     1
+#SBATCH --mem-per-cpu       {args.mem}
 
 source {script_dir}/slurm_header.sh
 bash {scriptname}
