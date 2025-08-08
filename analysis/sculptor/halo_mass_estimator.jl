@@ -748,7 +748,9 @@ let
 end
 
 # ╔═╡ 3e2acadd-7c80-4671-a5a9-fbb4470cd0f2
+#=╠═╡
 [KernelDensity.pdf(k, x, y) for (x, y) in zip( log10.(samples.r_circ_max)[1:10000], samples.log_v_circ_max[1:10000])]
+  ╠═╡ =#
 
 # ╔═╡ 37b73ce2-0822-4a4b-b4a6-092baba747f6
 function plot_2d_bands_quick!(x, y; Nmax=10000, p=[0.683, 0.954, 0.997], kwargs...)
@@ -893,7 +895,9 @@ LilGuys.R200(halo_in)
 LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 
 # ╔═╡ bd4095bf-9e3f-4d04-895d-3567b24f99e6
+#=╠═╡
 k = kde((log10.(samples.r_circ_max), samples.log_v_circ_max))
+  ╠═╡ =#
 
 # ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
 # ╠═╡ disabled = true

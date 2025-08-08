@@ -56,14 +56,8 @@ md"""
 The most important variable is to set the modelname to the appropriate directory.
 """
 
-# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-@bind modelname TextField(24, default="example") |> confirm
+# ╔═╡ 1c211fe0-c3cc-47a3-9255-814404257e3d
 
-# ╔═╡ c4890c9f-8409-4a58-bd01-670d278088c0
-@bind galaxyname TextField(24, default="sculptor") |> confirm
-
-# ╔═╡ d835db43-73aa-4082-b0f5-7cea0f8be682
-random_examples = false
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -88,6 +82,49 @@ end
 module OrbitUtils
 	include("orbit_utils.jl")
 end
+
+# ╔═╡ c863152e-b67d-4e8a-a09f-29c60fc24ebe
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 425ca5e9-364f-437c-9986-3a09eb60affc
+@bind inputs confirm(notebook_inputs(;
+	modelname = TextField(24, default="example"),
+	galaxyname = TextField(24, default="sculptor"),
+	t_min = NumberField(-10.0:10, -10.0),
+	Nmax = NumberField(0:1e6, 1e4),
+	random_examples = CheckBox(),
+))
+
+# ╔═╡ c9eae5d6-ea64-4a81-80fb-950a33913824
+modelname = inputs.modelname
+
+# ╔═╡ 94f73107-6934-4e13-828e-b289bb0190ba
+galaxyname = inputs.galaxyname
+
+# ╔═╡ d6fab584-059b-41df-9981-530865ec48ae
+Nmax = round(Int, inputs.Nmax)
+
+# ╔═╡ 1ee918a2-0189-412c-af9a-0f435a9ecff9
+t_min = inputs.t_min
+
+# ╔═╡ d1409cf5-6faa-40a6-abf6-fa62d5fa6839
+random_examples = inputs.random_examples
 
 # ╔═╡ f311c4d6-88a4-48a4-a0a0-8a6a6013897c
 agama_units = OrbitUtils.get_units(joinpath(galaxyname, modelname))
@@ -187,13 +224,15 @@ else
 end
 
 # ╔═╡ 2d7b23d0-600e-439f-b547-91df46802252
-lmc_orbit = LilGuys.resample(OrbitUtils.get_lmc_orbit(joinpath(galaxyname, modelname)), orbits[1].times)
+lmc_orbit = OrbitUtils.get_lmc_orbit(joinpath(galaxyname, modelname))
 
 # ╔═╡ 4132f73b-e037-45f9-b94e-0e0dfe0be3c6
 begin 
 	props_special = hcat(OrbitUtils.orbital_properties(pot, reverse.(orbits); agama_units=agama_units), LilGuys.to_frame(icrs0), DataFrame("label" => orbit_labels))
 
-	df_special_lmc = OrbitUtils.orbital_properties(pot, reverse.(orbits .- [lmc_orbit]), agama_units=agama_units)
+	df_special_lmc = OrbitUtils.orbital_properties(pot, [
+		reverse(orbit - LilGuys.resample(lmc_orbit, orbit.times)) for orbit in orbits]
+												   , agama_units=agama_units)
 
 
 	for key in [:pericentre, :apocentre, :time_last_peri]
@@ -203,6 +242,9 @@ end
 
 # ╔═╡ e4dac06c-aadc-475d-8066-31ced204b6d0
 df_special_lmc.pericentre
+
+# ╔═╡ 1c987b44-b43b-4ad3-8045-2bf159314216
+
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -323,7 +365,7 @@ let
 	)
 
 	for i in eachindex(orbits)
-		lines!(orbits[i].times * lguys.T2GYR, radii(orbits[i] - lmc_orbit), label=orbit_labels[i])
+		lines!(orbits[i].times * lguys.T2GYR, radii(orbits[i] - LilGuys.resample(lmc_orbit, orbits[i].times)), label=orbit_labels[i])
 	
 		scatter!(props_special.time_last_peri_lmc[i] .* lguys.T2GYR, props_special.pericentre_lmc[i], color=COLORS[i])
 
@@ -422,9 +464,13 @@ end
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
-# ╠═6ca3fe17-3f13-43fe-967b-881078135ead
-# ╠═c4890c9f-8409-4a58-bd01-670d278088c0
-# ╠═d835db43-73aa-4082-b0f5-7cea0f8be682
+# ╠═1c211fe0-c3cc-47a3-9255-814404257e3d
+# ╠═425ca5e9-364f-437c-9986-3a09eb60affc
+# ╠═c9eae5d6-ea64-4a81-80fb-950a33913824
+# ╠═94f73107-6934-4e13-828e-b289bb0190ba
+# ╠═d6fab584-059b-41df-9981-530865ec48ae
+# ╠═1ee918a2-0189-412c-af9a-0f435a9ecff9
+# ╠═d1409cf5-6faa-40a6-abf6-fa62d5fa6839
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 # ╠═2b01d8f5-272e-4aa2-9825-58bb052acd10
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
@@ -436,6 +482,7 @@ end
 # ╠═d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 # ╠═6fe44ded-579b-4d7c-8f5f-0cc5382b59a3
 # ╠═5ca2096b-6eb9-4325-9c74-421f3e0fdea2
+# ╠═c863152e-b67d-4e8a-a09f-29c60fc24ebe
 # ╠═f311c4d6-88a4-48a4-a0a0-8a6a6013897c
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
@@ -460,6 +507,7 @@ end
 # ╠═61c5e886-4c54-4080-8111-122765405ffe
 # ╠═2d7b23d0-600e-439f-b547-91df46802252
 # ╠═4132f73b-e037-45f9-b94e-0e0dfe0be3c6
+# ╠═1c987b44-b43b-4ad3-8045-2bf159314216
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╟─50baf5a6-fb5b-494e-95f3-53414a9f1cc0
 # ╠═049ef8a5-fe4d-4c18-95d0-a361e1abdf30

@@ -11,16 +11,16 @@ radial_velocity = 111.2
 name = "smallperilmc"
 ra               =  15.0183
 dec              = -33.7186
-distance         =  73.1
-pmra             =   0.137
-pmdec            =  -0.156
+distance         =  84.6
+pmra             =   0.099
+pmdec            =  -0.124
 radial_velocity  = 111.2
 
 [[orbits]]
 name = "smallperi"
 ra               =   15.0183
 dec              =  -33.7186
-distance         =   84.0
-pmra             =    0.166
-pmdec            =   -0.237
+distance         =   83.9
+pmra             =    0.112
+pmdec            =   -0.155
 radial_velocity  =  111.2

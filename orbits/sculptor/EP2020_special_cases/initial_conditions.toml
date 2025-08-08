@@ -20,8 +20,8 @@ radial_velocity = 111.2
 
 [[orbits]]
 name = "largeperi"
-ra = 15.0185
-dec = -33.7187
+ra = 15.0183
+dec = -33.7186
 distance = 85.3
 pmra = 0.063
 pmdec = -0.126

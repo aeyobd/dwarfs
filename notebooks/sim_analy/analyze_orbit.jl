@@ -182,7 +182,6 @@ begin
 	orbit_expected = CSV.read(orbit_file, DataFrame)
 	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
 	v_cen_exp = transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
-	orbit_expected.t .-= orbit_expected.t[1]
 end
 
 # ╔═╡ 08c3df42-738b-47c4-aa6b-fc39a9cfc02f

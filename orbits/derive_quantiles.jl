@@ -6,7 +6,6 @@ using ArgParse
 using OrderedCollections
 
 
-P_VALUE = cdf(Normal(), -3)# 3sigma
 COLUMN_NAMES = ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"]
 
 
@@ -29,6 +28,10 @@ function get_args()
         "--key"
             help = "the key in orbital_properties to take quantile filters of"
             default = "pericentre"
+        "--p-value"
+            help = "probability value for quantiles"
+            default = cdf(Normal(), -3)
+            arg_type = Float64
     end
 
     args = parse_args(s)
@@ -86,7 +89,8 @@ function (@main)(ARGS)
     modelname = args["input"]
     df_props = read_fits(joinpath(modelname, "orbital_properties.fits"))
     obs_props = get_obs_props(args["input"], args["galaxy"])
-    quantiles = [0.5, P_VALUE, 1-P_VALUE]
+    p_value = args["p-value"]
+    quantiles = [0.5, p_value, 1-p_value]
 
     orbit_labels = ["mean", "smallperi", "largeperi"]
 

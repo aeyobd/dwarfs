@@ -59,31 +59,10 @@ md"""
 The most important variable is to set the modelname to the appropriate directory.
 """
 
-# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-@bind modelname TextField(24, default="example") |> confirm
-
-# ╔═╡ c4890c9f-8409-4a58-bd01-670d278088c0
-@bind galaxyname TextField(24, default="sculptor") |> confirm
-
-# ╔═╡ 0af580dd-1871-4f4c-9716-c8b1e62a36d4
-Nmax = 10_000
-
-# ╔═╡ 66cdb8fe-300e-4edf-8f5f-16eadb1f58cc
-t_min = -2
-
-# ╔═╡ 2bbade40-97ef-4f12-9056-523eafb4bc73
-random_examples = false
-
 # ╔═╡ 5ca2096b-6eb9-4325-9c74-421f3e0fdea2
 module OrbitUtils
 	include("orbit_utils.jl")
 end
-
-# ╔═╡ f311c4d6-88a4-48a4-a0a0-8a6a6013897c
-agama_units = OrbitUtils.get_units(joinpath(galaxyname, modelname))
-
-# ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
-FIGDIR = "./$galaxyname/$modelname/figures"
 
 # ╔═╡ b9f469ed-6e4e-41ee-ac75-1b5bfa0a114a
 p_value =cdf(Normal(), -3)# 3sigma
@@ -115,8 +94,57 @@ coord_labels = Dict(
 # ╔═╡ 8b818798-69fb-481d-ade1-9fd436b1f281
 kms_label = L" / km\,s$^{-1}$"
 
+# ╔═╡ 4032c024-66dd-4a9f-b403-9714132806c9
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ b3bb1902-70f7-4720-a125-cca9ee36c3c2
+@bind inputs confirm(notebook_inputs(;
+	modelname = TextField(24, default="example"),
+	galaxyname = TextField(24, default="sculptor"),
+	t_min = NumberField(-10.0:10, -10.0),
+	Nmax = NumberField(0:1e6, 1e4),
+	random_examples = CheckBox(),
+))
+
+# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
+modelname = inputs.modelname
+
+# ╔═╡ c4890c9f-8409-4a58-bd01-670d278088c0
+galaxyname = inputs.galaxyname
+
+# ╔═╡ f311c4d6-88a4-48a4-a0a0-8a6a6013897c
+agama_units = OrbitUtils.get_units(joinpath(galaxyname, modelname))
+
+# ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
+FIGDIR = "./$galaxyname/$modelname/figures"
+
 # ╔═╡ 18d6d521-1abf-4085-b9b0-6f45c0eb2feb
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
+
+# ╔═╡ 0af580dd-1871-4f4c-9716-c8b1e62a36d4
+Nmax = round(Int, inputs.Nmax)
+
+# ╔═╡ 66cdb8fe-300e-4edf-8f5f-16eadb1f58cc
+t_min = inputs.t_min
+
+# ╔═╡ 2bbade40-97ef-4f12-9056-523eafb4bc73
+random_examples = inputs.random_examples
 
 # ╔═╡ 8f70add4-effe-437d-a10a-4e15228f9fec
 md"""
@@ -181,6 +209,9 @@ peri_qs = lguys.quantile(peris, quantiles)
 
 # ╔═╡ 17a63cc8-84f4-4248-a7b0-c8378454b1f7
 idx_example = [argmin(abs.(p .- peris)) for p in peri_qs]
+
+# ╔═╡ 9569839c-51be-4318-bcbc-c24fca221446
+9 / T2GYR
 
 # ╔═╡ 61c5e886-4c54-4080-8111-122765405ffe
 pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"))
@@ -594,7 +625,7 @@ end
 begin 
 	# orbit info
 	for i in 1:length(orbits)
-		t = 1
+		t = length(orbits[i])
 		@printf "orbit: \t\t %i\n" i
 		#@printf "index: \t\t %i\n" idx[i]
 		
@@ -623,6 +654,7 @@ end
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
+# ╠═b3bb1902-70f7-4720-a125-cca9ee36c3c2
 # ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═c4890c9f-8409-4a58-bd01-670d278088c0
 # ╠═0af580dd-1871-4f4c-9716-c8b1e62a36d4
@@ -644,6 +676,7 @@ end
 # ╠═3b83205d-91c1-481e-9305-0d59bc692135
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
 # ╠═18d6d521-1abf-4085-b9b0-6f45c0eb2feb
+# ╠═4032c024-66dd-4a9f-b403-9714132806c9
 # ╟─8f70add4-effe-437d-a10a-4e15228f9fec
 # ╟─b15fb3ac-2219-419a-854a-31a783acf891
 # ╠═fa790a4d-e74f-479b-8ff6-aa2f23cb573d
@@ -659,6 +692,7 @@ end
 # ╠═413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 # ╠═5c65e513-8895-4c6d-8588-b6f5bbf174d5
 # ╠═17a63cc8-84f4-4248-a7b0-c8378454b1f7
+# ╠═9569839c-51be-4318-bcbc-c24fca221446
 # ╠═61c5e886-4c54-4080-8111-122765405ffe
 # ╠═4d60e861-f315-4c62-90f0-73dda8f6c4d4
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
