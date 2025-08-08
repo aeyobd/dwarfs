@@ -21,7 +21,6 @@ function get_args()
             help="output file. defaults to orbital_properties.fits"
         "--galaxy"
             help = "name of default galaxy properties"
-            default = "sculptor"
         "--time-max"
             help = "maximum time to integrate for in code units"
             default = -2120.0

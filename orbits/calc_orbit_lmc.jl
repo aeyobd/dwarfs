@@ -29,10 +29,9 @@ function get_args()
             arg_type=Int
         "--galaxy"
             help = "name of default galaxy properties"
-            default = "sculptor"
         "--time-max"
             help = "maximum time to integrate for in code units"
-            default = -10 / T2GYR
+            default = -9 / T2GYR
             arg_type = Float64
         "--num-timesteps"
             help = "number of timesteps to record for peri / apo"

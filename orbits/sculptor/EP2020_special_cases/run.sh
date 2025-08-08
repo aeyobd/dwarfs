@@ -1,1 +1,1 @@
-../../calc_orbits_special.jl .
+../../calc_orbit_special.jl --galaxy sculptor .

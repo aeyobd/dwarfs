@@ -89,9 +89,6 @@ end
 # ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
 best_orbit = LilGuys.Orbit(modeldir * "_special_cases/orbit_smallperi.csv" )
 
-# ╔═╡ 45734dfc-8b1c-42f2-a351-30c6ed11bb15
-
-
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
 # Plots
@@ -109,16 +106,16 @@ let
 
 	ax_xyz = axes_xyz_flat(fig, limits)
 
-	plot_xyz!(ax_xyz, orbits, color=COLORS[1], alpha=0.05, time_min=-5/T2GYR, linestyle=:solid)
+	plot_xyz!(ax_xyz, orbits, color=COLORS[3], alpha=0.05, time_min=-5/T2GYR, linestyle=:solid)
 	plot_xyz!(ax_xyz, best_orbit, color=:black, time_min=-5/T2GYR)
 	plot_xyz_today!(ax_xyz, best_orbit, length(best_orbit))
 
 	ax_rt = Axis(fig[2, 1:3],
 				xlabel = "time / Gyr", ylabel = "galactocentric distance / kpc")
 	
-	plot_rt!(ax_rt, orbits, color=COLORS[1], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, orbits, color=COLORS[3], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, best_orbit, color=:black)
-	xlims!(-10, 0)
+	xlims!(-10, 0.1)
 	ylims!(0, 120)
 	plot_rt_today!(ax_rt, best_orbit, length(best_orbit))
 
@@ -149,7 +146,6 @@ end
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═127a988e-74ab-41f4-8979-6800622f3ff4
-# ╠═45734dfc-8b1c-42f2-a351-30c6ed11bb15
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e

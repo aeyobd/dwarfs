@@ -25,6 +25,9 @@ using OrderedCollections
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
 
+# ╔═╡ e0815f0a-0955-4899-9688-c6c70071f510
+import HDF5
+
 # ╔═╡ 7845f35d-1112-4c85-bdab-7a6a9f11cb1d
 import TOML
 
@@ -44,17 +47,6 @@ end
 # ╔═╡ e08d6905-318e-490c-ad80-a5d9ed8a6a6a
 function get_obs_props(galaxyname)
 	return TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml"))
-end
-
-# ╔═╡ a04583f2-fd84-4640-8c48-719c59f717cb
-function get_scalars(args...)
-	file = joinpath(starsdir(args...), "stellar_profiles_3d_scalars.fits")
-
-	idx_f = TOML.parsefile(joinpath(starsdir(args...), "../../orbital_properties.toml"))["idx_f"]
-	df = read_fits(file)
-
-	#df.time .-= df.time[idx_f]
-	df
 end
 
 # ╔═╡ 70b55c06-3e81-4e27-a313-69d7e4028ece
@@ -80,6 +72,30 @@ function compare_sigma_v_time(orbits, obs_props)
 	fig
 end
 
+# ╔═╡ c2ec04cb-d7c8-4abd-8bae-94b2e5c6af0c
+function get_t_f(galaxyname, modelname, _)
+	name = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname)
+	
+    df = TOML.parsefile("$name/orbital_properties.toml")
+    idx_f = df["idx_f"]
+    times = HDF5.h5open("$name/centres.hdf5") do f
+        return f["times"][:]
+    end
+    
+    return times[idx_f]
+end
+
+# ╔═╡ a04583f2-fd84-4640-8c48-719c59f717cb
+function get_scalars(args...)
+	file = joinpath(starsdir(args...), "stellar_profiles_3d_scalars.fits")
+
+	idx_f = TOML.parsefile(joinpath(starsdir(args...), "../../orbital_properties.toml"))["idx_f"]
+	df = read_fits(file)
+
+	df.time .-= get_t_f(args...)
+	df
+end
+
 # ╔═╡ 82bc10ae-cbf9-4f1f-8167-04eabc136b0b
 md"""
 # Comparison
@@ -87,9 +103,9 @@ md"""
 
 # ╔═╡ 55027866-d309-4557-b8a9-9f73a20b7785
 scl_orbits = OrderedDict(
-	"mean" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_mean", "exp2d_rs0.13"),
-	"smallperi" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_smallperi", "exp2d_rs0.13"),
-	"lmc" => get_scalars("sculptor", "1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.13"),
+	"mean" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_mean", "exp2d_rs0.10"),
+	"smallperi" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_smallperi", "exp2d_rs0.10"),
+	"lmc" => get_scalars("sculptor", "1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.10"),
 )
 	
 	
@@ -113,6 +129,7 @@ umi_obs = get_obs_props("ursa_minor")
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═e0815f0a-0955-4899-9688-c6c70071f510
 # ╠═3d50a77e-7365-41c1-a306-131d9672ca6d
 # ╠═7845f35d-1112-4c85-bdab-7a6a9f11cb1d
 # ╠═c79a6966-e559-487c-a378-2e258c1fdbfa
@@ -123,6 +140,7 @@ umi_obs = get_obs_props("ursa_minor")
 # ╠═e08d6905-318e-490c-ad80-a5d9ed8a6a6a
 # ╠═a04583f2-fd84-4640-8c48-719c59f717cb
 # ╠═70b55c06-3e81-4e27-a313-69d7e4028ece
+# ╠═c2ec04cb-d7c8-4abd-8bae-94b2e5c6af0c
 # ╟─82bc10ae-cbf9-4f1f-8167-04eabc136b0b
 # ╠═55027866-d309-4557-b8a9-9f73a20b7785
 # ╠═80d2464d-8a1a-4da5-bb62-4b28e843e7fe

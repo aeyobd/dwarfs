@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -14,8 +14,28 @@ begin
 	using LilGuys, Arya
 end
 
-# ╔═╡ 726c1519-d147-4c7c-9901-55c0d4fab221
-include("./paper_style.jl")
+# ╔═╡ 222f3946-abd7-4e06-91fb-f83a4cb3239a
+let
+	include("./paper_style.jl")
+
+	width  = 1920 / 72
+    set_theme!(theme_arya(width=width, fontsize=40, px_per_unit=1))
+
+    scale_theme_element!(:linewidth, 2)
+    legend_attr = theme(:Legend)
+    legend_attr.margin = legend_attr.padding
+    update_theme!(Legend = legend_attr, figure_padding=theme(:fontsize)[])
+
+	update_theme!(
+	fonts = (; regular = "TeX Gyre Heros Makie",
+			bold = "TeX Gyre Heros Makie Bold"
+			)
+)
+
+	Arya.update_figsize!(width, 1080/1920 * width)
+
+	CairoMakie.activate!(type=:png, px_per_unit=4)
+end
 
 # ╔═╡ 7216773a-bf24-49bb-a4ab-4afb35ce2a2b
 md"""
@@ -29,7 +49,7 @@ import SkyCoords
 import FileIO
 
 # ╔═╡ 02df901a-cbae-454c-a907-32aaf07bf3e1
-img = FileIO.load(("Gaia_s_sky_in_colour.png"))
+img = FileIO.load(("resources/Gaia_s_sky_in_colour.png"))
 
 # ╔═╡ 97993507-1ab6-4aae-8363-f439fb98c2e5
 FIGDIR = "./figures"
@@ -85,26 +105,6 @@ function to_galcoords(ra, dec)
 	return l, b
 end
 
-# ╔═╡ c3442639-f5ad-4b60-b1a6-c9321c5a38c6
-yasone_table = let
-	df = CSV.read(
-		Vector{UInt8}("""name,ra,dec
-		Yasone 1,265.52019,13.17146
-		Yasone 2,262.34921,6.42302
-		Yasone 3,292.96258,-26.44994
-		Yasone 4,225.68761,-0.91947
-		"""),
-			DataFrame
-		)
-
-	df[!, :key] = lowercase.(replace.(df.name, " "=>"_"))
-
-	df[!, "ll"], df[!, "bb"] = to_galcoords(df.ra, df.dec)
-
-	df
-
-end
-
 # ╔═╡ bce24033-3bca-42d4-9224-b40378cdedab
 allcluster = vcat(read_pace("gc_harris"), read_pace("gc_mw_new"))
 
@@ -132,7 +132,7 @@ baumgardt = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/baumgardt_23
 
 # ╔═╡ 58f03667-5903-48d7-a962-9fbbf5d72620
 let
-	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080), pad = 0)
+	fig = Figure(backgroundcolor=:transparent, pad = 0)
 	
 	ax = GeoAxis(fig[1,1];
 		dest = "+proj=hammer",
@@ -205,13 +205,10 @@ key_dwarfs = dwarfs[dwarfs.key .∈ [["sculptor_1", "ursa_minor_1", "fornax_1"]]
 magellanic[:, [:key, :ll, :bb]]
 
 # ╔═╡ 89ae71c5-08eb-4c92-9301-ad2e630bf943
-labels = vcat(confirmed_faint_dwarfs.key, "ursa_major_3", "lmc", "smc", classical_systems, yasone_table.key, andromida.key)
-
-# ╔═╡ 0ee0aa61-3046-4dae-92e9-bd6b124d8f5f
-CairoMakie.activate!(type=:png)
+labels = vcat(confirmed_faint_dwarfs.key, "ursa_major_3", "lmc", "smc", classical_systems,  andromida.key)
 
 # ╔═╡ 594fbbef-40c8-4cb8-9d56-14c39c65a914
-allsatalites = vcat(dwarfs, allcluster, ambiguous_table, andromida, yasone_table, cols=:union)
+allsatalites = vcat(dwarfs, allcluster, ambiguous_table, andromida, cols=:union)
 
 # ╔═╡ 095ed289-8086-4da3-aaeb-36dec2b4d349
 md"""
@@ -225,7 +222,7 @@ fg_color = (:white, 0.8)
 grid_color = (:white, 0.3)
 
 # ╔═╡ bddcd6bb-5dba-4b6e-ba07-e21df433f812
-ms = theme(:markersize)[] * 3/2
+ms = theme(:markersize)[] * 1.5
 
 # ╔═╡ d415fac3-d155-44fc-86af-35e6ead45734
 COLORS
@@ -258,12 +255,12 @@ end
 
 # ╔═╡ 21f0d8c8-76a2-41f0-a390-390c5b539ed3
 function clear_figure(;backgroundcolor=:transparent, padding=0)
-	fig = Figure(backgroundcolor=backgroundcolor, size=(1920, 1080), figure_padding = padding)
+	fig = Figure(backgroundcolor=backgroundcolor, figure_padding = padding)
 end
 
 # ╔═╡ 8ea50ebf-87d3-4810-9699-89617463d9b4
 function dark_axis()
-	fig = Figure(backgroundcolor=:transparent, size=(1920, 1080), figure_padding = 0)
+	fig = Figure(backgroundcolor=:transparent, figure_padding = 0)
 	
 	ax = GeoAxis(fig[1,1];
 		dest = "+proj=hammer",
@@ -292,7 +289,7 @@ end
 allcluster[!, :M_V]
 
 # ╔═╡ 5a537690-3c29-4a0b-9a31-15d19e456db6
-function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red, yasone=false)
+function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red)
 
 	if xreverse
 		xfactor = -1
@@ -313,9 +310,6 @@ function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red, yasone=false)
 	scatter!(ax, xfactor * classicals[!, x], classicals[!, y], label="classical",
 		markersize=5/4*ms, color=COLORS[3], marker=:diamond, )
 
-	if yasone
-		scatter!(ax, xfactor*yasone_table[!, x], yasone_table[!, y], markersize=ms*3/2, color=COLORS[5], marker=:hexagon)
-	end
 
 end
 
@@ -323,7 +317,7 @@ end
 abbreviations
 
 # ╔═╡ 756bb316-6afa-4217-b52b-eff39e5c02d6
-function plot_labels!(ax; highlight=[], yasone=false)
+function plot_labels!(ax; highlight=[])
 	for key in labels
 		row = allsatalites[allsatalites.key .== key, :]
 		if size(row, 1) != 1
@@ -343,13 +337,12 @@ function plot_labels!(ax; highlight=[], yasone=false)
 			color = COLORS[9]
 			fontsize=48
 			offset = (24., 0.)
-		elseif startswith(key, "yasone") & !yasone
-			continue
+
 		elseif key ∈ ["ursa_major_1", "leo_1", "leo_2", "pegasus_3", "pisces_2", "horologium_1"]
 			align = (:left, :top)
 		elseif key ∈ ["leo_5",]
 			align = (:left, 0.25)
-		elseif key ∈ ["tucana_2",  "columba_1", "yasone_1"]
+		elseif key ∈ ["tucana_2",  "columba_1"]
 			align = (:left, :bottom)
 			offset = (0, 8.)
 		elseif key ∈ ["smc"]
@@ -363,52 +356,17 @@ function plot_labels!(ax; highlight=[], yasone=false)
 			text = ""
 		elseif text == "Boo II"
 			text = "Boo I & II"
-		elseif key ∈ ["grus_1", "yasone_4"]
+		elseif key ∈ ["grus_1"]
 			align = (:right, :center)
 			offset = (-offset[1], 0.)
 		elseif key ∈ classical_systems
 			offset = (18., 0.)
-		elseif key == "yasone_1"
-			
 		end
 
-		if startswith(key, "yasone")
-			fonts = :bold
-			fontsize=28
-		end
 
 		text!(ax, -row.ll, row.bb, text=text, fontsize=fontsize, align=align, offset=offset,  color=color, font=fonts)
 	end
 
-end
-
-# ╔═╡ c04cab38-6e6e-4097-a82f-91cc8a3864f1
-CairoMakie.activate!(type=:png, px_per_unit=4)
-
-# ╔═╡ 602f9f99-987b-4557-9709-b42025e4f54e
-function scale_theme_element!(key, scale)
-    @info "old $key value = $(theme(key)[])"
-    update_theme!(; (; key => scale*theme(key)[])...)
-    @info "new $key value = $(theme(key)[])"
-end
-
-# ╔═╡ 222f3946-abd7-4e06-91fb-f83a4cb3239a
-let
-
-    set_theme!(theme_arya(width=800/72 / Arya.HW_RATIO, fontsize=40, px_per_unit=1))
-    CairoMakie.activate!(type=:svg, px_per_unit=1, pt_per_unit=1)
-
-    scale_theme_element!(:linewidth, 2)
-    legend_attr = theme(:Legend)
-    legend_attr.margin = legend_attr.padding
-    update_theme!(Legend = legend_attr, figure_padding=theme(:fontsize)[])
-
-	update_theme!(
-	fonts = (; regular = "TeX Gyre Heros Makie",
-			bold = "TeX Gyre Heros Makie Bold"
-			)
-)
-	
 end
 
 # ╔═╡ 15e5e568-560d-4a70-8ca3-b084d6d9c832
@@ -435,20 +393,43 @@ end
 	fig = clear_figure(backgroundcolor=:black, padding=20)
 	plot_gaia_image!(fig[1,1])
 	ax = Makie.current_axis()
-	ax.width = 1800
 	ax.valign = :top
 
 	
 	ax = clear_axis!(fig[1,1])
 
 	
-	plot_points!(ax, yasone=false, red=COLORS[4])
+	plot_points!(ax, red=COLORS[4])
 	clear_legend(fig, ax)
 
 
 	#acknowledgment!(ax)
 
-	plot_labels!(ax, yasone=false, highlight=["sculptor_1", "ursa_minor_1"])
+	plot_labels!(ax, highlight=["sculptor_1", "ursa_minor_1"])
+
+	resize_to_layout!(fig)
+
+	fig
+end
+
+# ╔═╡ 4541aa9d-867f-4dca-a456-5dd8fc4fba9b
+@savefig "mw_satellites_all" let
+	fig = clear_figure(backgroundcolor=:black)
+	plot_gaia_image!(fig[1,1])
+	ax = Makie.current_axis()
+	ax.valign = :top
+
+	
+	ax = clear_axis!(fig[1,1])
+
+	
+	plot_points!(ax, red=COLORS[4])
+	clear_legend(fig, ax)
+
+	acknowledgment!(ax)
+
+
+	plot_labels!(ax)
 
 	resize_to_layout!(fig)
 
@@ -460,7 +441,7 @@ end
 
 # ╔═╡ 25514746-3762-4cb0-8b03-0e3e38d82a69
 let 
-	fig = Figure( size=(1920, 1080))
+	fig = Figure( )
 	
 
 	ax = Axis(fig[1,1], xscale = log10, xticks=Makie.automatic,
@@ -553,7 +534,7 @@ end
 
 # ╔═╡ ebc0bd82-2b1e-4653-8aa2-46fbb56952ed
 let 
-	fig = Figure(size=(1920, 1080))
+	fig = Figure()
 	
 
 	ax = Axis(fig[1,1], xscale = log10, xticks=Makie.automatic,
@@ -620,18 +601,16 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═222f3946-abd7-4e06-91fb-f83a4cb3239a
 # ╠═02df901a-cbae-454c-a907-32aaf07bf3e1
 # ╠═97993507-1ab6-4aae-8363-f439fb98c2e5
-# ╠═726c1519-d147-4c7c-9901-55c0d4fab221
 # ╟─5c124928-d05d-467a-93f9-dc4e9e3b1d04
 # ╠═f3881abc-9fb3-4b9a-89f6-3790c21fc6ed
 # ╠═9179b4ed-eb7f-4a27-8719-fc028078a8c6
-# ╠═483e5816-7f41-476f-9696-096ce83d4340
+# ╟─483e5816-7f41-476f-9696-096ce83d4340
 # ╠═11d8d92e-9ba7-48a4-8c38-69e0f4b5d14a
 # ╠═2f76352c-fc02-4274-8350-e99ce3b7ccdc
 # ╠═516eb72e-44e6-4637-ba75-8b0c5ce6f12a
 # ╠═70477210-9891-4225-a544-b0030feb7af2
 # ╠═a232715d-a27f-499b-8123-9adf5257acf5
 # ╠═45499b5b-2c79-4a0e-8cc8-930581a8dec7
-# ╠═c3442639-f5ad-4b60-b1a6-c9321c5a38c6
 # ╠═71e21c9d-95c0-4397-929d-b415b0720dbf
 # ╠═bce24033-3bca-42d4-9224-b40378cdedab
 # ╠═88d507e8-98cb-42ca-be20-16580f5beb4b
@@ -653,7 +632,6 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═42c02a3d-5d7d-4559-8911-b197408343f1
 # ╠═17236ffc-dbe5-4dbc-8b1d-fe490c3b50f4
 # ╠═89ae71c5-08eb-4c92-9301-ad2e630bf943
-# ╠═0ee0aa61-3046-4dae-92e9-bd6b124d8f5f
 # ╠═594fbbef-40c8-4cb8-9d56-14c39c65a914
 # ╠═095ed289-8086-4da3-aaeb-36dec2b4d349
 # ╠═a7b54b66-9d44-46ab-a4c2-d9326acccda5
@@ -670,9 +648,8 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═5a537690-3c29-4a0b-9a31-15d19e456db6
 # ╠═3b31bf9e-1d07-460a-80d9-75625d06bf41
 # ╠═756bb316-6afa-4217-b52b-eff39e5c02d6
-# ╠═c04cab38-6e6e-4097-a82f-91cc8a3864f1
-# ╠═602f9f99-987b-4557-9709-b42025e4f54e
 # ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
+# ╠═4541aa9d-867f-4dca-a456-5dd8fc4fba9b
 # ╠═15e5e568-560d-4a70-8ca3-b084d6d9c832
 # ╠═3f44fb3f-865a-4acb-9101-283c7918e11b
 # ╠═58ea3ff0-40ab-4967-aa97-80d4aa903183

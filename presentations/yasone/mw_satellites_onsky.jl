@@ -439,6 +439,31 @@ end
 	fig
 end
 
+# ╔═╡ e25f11e3-e3b2-4820-b667-54503169c0c5
+@savefig "mw_satellites" let
+	fig = clear_figure(backgroundcolor=:black)
+	plot_gaia_image!(fig[1,1])
+	ax = Makie.current_axis()
+	ax.width = 1800
+	ax.valign = :top
+
+	
+	ax = clear_axis!(fig[1,1])
+
+	
+	plot_points!(ax, yasone=true, red=COLORS[4])
+	clear_legend(fig, ax)
+
+
+	acknowledgment!(ax)
+
+	plot_labels!(ax, yasone=true)
+
+	resize_to_layout!(fig)
+
+	fig
+end
+
 # ╔═╡ 82e8db20-91cc-43b4-8183-7e302ce74041
 
 
@@ -657,6 +682,7 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═c04cab38-6e6e-4097-a82f-91cc8a3864f1
 # ╠═602f9f99-987b-4557-9709-b42025e4f54e
 # ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
+# ╠═e25f11e3-e3b2-4820-b667-54503169c0c5
 # ╠═15e5e568-560d-4a70-8ca3-b084d6d9c832
 # ╠═3f44fb3f-865a-4acb-9101-283c7918e11b
 # ╠═58ea3ff0-40ab-4967-aa97-80d4aa903183

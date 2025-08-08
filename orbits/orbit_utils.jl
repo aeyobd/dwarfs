@@ -112,14 +112,19 @@ to_sym_mat(x) = [x[1] x[4] x[6]
 				x[6] x[5] x[3]
 ]
 
-function scalar_tidal_forces(pot::Agama.Potential, positions::AbstractMatrix{<:Real}; agama_units)
-	T = Agama.stress(pot, positions, agama_units)
+function scalar_tidal_forces(pot::Agama.Potential, positions::AbstractMatrix{<:Real}; agama_units, t=0)
+	T = Agama.stress(pot, positions, agama_units, t=t)
 	return  maximum.(LinearAlgebra.eigvals.(to_sym_mat.(eachcol(T))))
 end
 
 
+function scalar_tidal_forces(pot::Agama.Potential, orbit::LilGuys.Orbit; agama_units)
+    return scalar_tidal_forces(pot, orbit.positions; agama_units=agama_units, t=orbit.times)
+end
+
+
 function max_tidal_force(pot::Agama.Potential, orbit::LilGuys.Orbit; agama_units)
-    return maximum(scalar_tidal_forces(pot, orbit.positions; agama_units=agama_units))
+    return maximum(scalar_tidal_forces(pot, orbit; agama_units=agama_units))
 end
 
 

@@ -61,6 +61,8 @@ function main(args)
     end
 
     if args["seed"] != -1
+        @info "setting seed to " * string(args["seed"])
+
         Random.seed!(args["seed"])
     end
 

@@ -43,6 +43,9 @@ using PyFITS
 # ╔═╡ d975d00c-fd69-4dd0-90d4-c4cbe73d9754
 using Statistics, Distributions
 
+# ╔═╡ 90a4f731-1fac-43b1-aba5-be917016d100
+include("plot_utils.jl")
+
 # ╔═╡ 7450144e-5464-4036-a215-b6e2cd270405
 md"""
 This notebook analyzes the result of the MC samples of orbits in the same potential to determine the plausable range of pericentres and apocentres.
@@ -62,13 +65,22 @@ The most important variable is to set the modelname to the appropriate directory
 # ╔═╡ c4890c9f-8409-4a58-bd01-670d278088c0
 @bind galaxyname TextField(24, default="sculptor") |> confirm
 
+# ╔═╡ 0af580dd-1871-4f4c-9716-c8b1e62a36d4
+Nmax = 10_000
+
+# ╔═╡ 66cdb8fe-300e-4edf-8f5f-16eadb1f58cc
+t_min = -2
+
+# ╔═╡ 2bbade40-97ef-4f12-9056-523eafb4bc73
+random_examples = false
+
 # ╔═╡ 5ca2096b-6eb9-4325-9c74-421f3e0fdea2
 module OrbitUtils
 	include("orbit_utils.jl")
 end
 
 # ╔═╡ f311c4d6-88a4-48a4-a0a0-8a6a6013897c
-agama_units = OrbitUtils.get_units(modelname)
+agama_units = OrbitUtils.get_units(joinpath(galaxyname, modelname))
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 FIGDIR = "./$galaxyname/$modelname/figures"
@@ -149,7 +161,7 @@ peris = df_props.pericentre
 
 # ╔═╡ 392315ee-72d2-4a14-9afc-5fd6424b3e83
 md"""
-## quantile properties & orbit selection
+# Orbit selection
 """
 
 # ╔═╡ 950e0210-e4fe-4bad-b82f-69247fd0edd8
@@ -164,95 +176,49 @@ median values in some percentile rage, such that the orbit tends to be closer to
 # ╔═╡ 4a4b8b73-92c3-4e1f-93d8-e44369b8f148
 quantiles = [0.5, p_value, 1-p_value]
 
-# ╔═╡ e5f728b8-8412-4f57-ad38-a0a35bb08a48
-orbit_labels = ["mean", "smallperi", "largeperi"]
-
 # ╔═╡ 413d4e5d-c9cd-4aca-be1e-d132b2bd616d
 peri_qs = lguys.quantile(peris, quantiles)
 
 # ╔═╡ 17a63cc8-84f4-4248-a7b0-c8378454b1f7
-idx = [argmin(abs.(p .- peris)) for p in peri_qs]
+idx_example = [argmin(abs.(p .- peris)) for p in peri_qs]
+
+# ╔═╡ 61c5e886-4c54-4080-8111-122765405ffe
+pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"))
+
+# ╔═╡ 4d60e861-f315-4c62-90f0-73dda8f6c4d4
+if random_examples
+	icrs0 = LilGuys.coords_from_df(df_props[idx_example, :])
+	
+	orbits = reverse(LilGuys.agama_orbit(pot, icrs0, agama_units=agama_units, timerange=(0, t_min/T2GYR)))
+	orbit_labels = ["mean", "smallperi", "largeperi"]
+		
+else
+	@assert isdir(joinpath(galaxyname, modelname * "_special_cases"))
+	orbit_ics = TOML.parsefile(joinpath(galaxyname, modelname * "_special_cases", "initial_conditions.toml"))
+	orbit_labels = [o["name"] for o in orbit_ics["orbits"]]
+	
+	orbits = [Orbit(joinpath(galaxyname, modelname * "_special_cases", "orbit_" * name * ".csv")) for name in orbit_labels]
+
+	icrs0 = [LilGuys.ICRS(o) for o in orbit_ics["orbits"]]
+end
 
 # ╔═╡ bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
-peris[idx]
+peris_special = LilGuys.pericenter.(orbits)
 
-# ╔═╡ d54733e9-7552-4d9c-b8e8-670433469385
-md"""
-The below functions are for my method of selecting the orbits.
-The pericentres are filtered to have quantiles between 0.5 and 1.5 times the p\_value
-(between $(round(0.5p_value, digits=5)) and $(round(1.5p_value, digits=5)) for current setting)
-and then the adopted values are those printed out by median_percen.
-I typically just use the default ra and dec values since the uncertanties are negligable.
+# ╔═╡ 5c65e513-8895-4c6d-8588-b6f5bbf174d5
+peris_special
 
-Since these values are (likely) not in the random samples, I simply run new orbits for a few selected orbits. These models are named modelname_special_cases and the associated `analyze_with_special_cases.jl` makes similar plots to this notebook except shows these special case orbits and their actual trajectories.
-"""
+# ╔═╡ 66b320d8-cefb-470b-9ea1-a10080f0c2b8
+props_special = hcat(OrbitUtils.orbital_properties(pot, reverse.(orbits); agama_units=agama_units), LilGuys.to_frame(icrs0), DataFrame("label" => orbit_labels))
 
-# ╔═╡ de2f3380-90df-48f5-ba60-8417e91f4818
-function median_residual(df_props)
-	for sym in [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
-		x = obs_props[string(sym)]
-		err = lguys.get_uncertainty(obs_props, string(sym))
-		xs = df_props[!, sym]
-		md = median(xs)
-		res = (md - x ) / err
-		@printf "Δ ln %-15s  = %6.2f \t \n"  sym res
-	end
-end
+# ╔═╡ 8a73ae22-fecf-4c07-a333-3e5159c8b570
+@assert isapprox(props_special.pericentre, peris_special)
 
-# ╔═╡ c8aec4f8-975f-4bbc-b874-bf0172d35868
-function median_percen(df_props)
+# ╔═╡ 24290bc9-4596-41af-becc-bf1487f763a7
+Norb = length(orbits)
 
-	@printf "median peri = %0.3f\n\n" median(df_props.pericentre)
-
-	for sym in [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
-
-		x = df_props[!, sym]
-
-		md = median(x)
-		err = std(x) / sqrt(length(x))
-		@printf "     %-15s  = %8.3f ± %8.3f \n"  sym md err
-	end
-	println()
-
-	for sym in [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
-
-		x = df_props[!, sym]
-
-		md = median(x)
-		err = std(x) / sqrt(length(x))
-		@printf "%s = %0.4f\n"  sym md
-	end
-end
-
-# ╔═╡ 5247f333-a123-4a60-b6fd-393aa333f896
-ICRS(obs_props).radial_velocity
-
-# ╔═╡ 4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
-let 
-	idx_s =  peris .< quantile(peris, 2p_value)
-	@info sum(idx_s)
-
- 	median_residual(df_props[idx_s, :])
-	median_percen(df_props[idx_s, :])
-
-	@printf "median peri = %0.3f\n" median(df_props.pericentre[idx_s])
-end
-
-# ╔═╡ 34104429-05e0-40a6-83e5-078dbe346504
-let
-	idx_s = peris .> quantile(peris, 1 - 2p_value)
-
-	@info sum(idx_s)
-	median_residual(df_props[idx_s, :])
-	median_percen(df_props[idx_s, :])
-
-end
-
-# ╔═╡ e5825c4a-b446-44a3-8fd5-d94664965aca
-median_residual(df_props)
-
-# ╔═╡ ef57611c-2986-4b03-aa5a-ab45003edd72
-median_percen(df_props)
+# ╔═╡ 39d35e5a-abc2-4c84-9308-b84c6c1ff5a5
+orbit_colors = COLORS[1:Norb]
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -265,6 +231,9 @@ md"""
 I have some histograms of orbital properties below, to get a sense of the overal distribution.
 """
 
+# ╔═╡ 56ad8584-37bc-4c06-a1a4-6044fe1b1a2b
+ms_special = @lift 2*$(theme(:markersize))
+
 # ╔═╡ ca1c236e-795a-408b-845b-9c13bc838619
 let
 	fig = Figure()
@@ -276,6 +245,12 @@ let
 	bins, counts, err = lguys.histogram(peris)
 	scatter!(lguys.midpoints(bins), counts)
 
+
+	for i in eachindex(orbits)
+		scatter!(peris_special[i], 0, color=orbit_colors[i], label=orbit_labels[i], markersize=ms_special, marker=:star5)
+	end
+	
+	axislegend()
 	fig
 end
 
@@ -289,6 +264,8 @@ let
 
 	bins, counts, err = lguys.histogram(apos)
 	scatter!(lguys.midpoints(bins), counts)
+
+	scatter!(props_special.apocentre, zeros(Norb), color=orbit_colors, strokewidth=1)
 
 	fig
 end
@@ -304,6 +281,8 @@ let
 	bins = midpoints(sort(unique(df_props.time_last_peri))) .* T2GYR
 	bins, counts, err = lguys.histogram(df_props.time_last_peri .* lguys.T2GYR, bins)
 	scatter!(lguys.midpoints(bins), counts)
+	
+	scatter!(props_special.time_last_peri * T2GYR, zeros(Norb), color=orbit_colors, strokewidth=1)
 
 	fig
 end
@@ -327,139 +306,14 @@ hist(lguys.radii(hcat(df_props.v_x, df_props.v_y, df_props.v_z)'),
 # ╔═╡ 44660b2f-6220-473b-bb2f-07e23b176491
 columns = [:ra, :dec, :distance, :pmra, :pmdec, :radial_velocity]
 
-# ╔═╡ d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
-let
-	
-	for sym in columns[1:2]
-	    x = df_props[!, sym]
-	    y = peris
+# ╔═╡ c1c76d09-febd-459d-8a9c-6adf92d5163e
+plot_correlations(df_props, props_special, Nmax=Nmax)
 
-		
-	    p = scatter(x, y, alpha=0.1,
-			axis=(; xlabel=coord_labels[sym], ylabel="pericentre / kpc")
-		)
-	    @info p 
-	end
+# ╔═╡ 1944f355-7e9b-4c56-84b8-56479c4aefb9
+plot_correlations(df_props, props_special, "apocentre", Nmax=Nmax)
 
-end
-
-# ╔═╡ c48b4e73-480e-4a50-b5fc-db5f6c5b040e
-let
-	fig = Figure(size=(5*72, 5*72))
-	plot_kwargs = Dict(
-		:color => :black,
-		:alpha => 0.1,
-		:markersize => 1,
-	)
-
-	
-	orbit_points_kwargs = [Dict(
-		:color => COLORS[i],
-		:alpha => 1,
-		:markersize => 10,
-		:label => orbit_labels[i]
-	) for i in eachindex(idx)
-		]
-	
-	ax_kwargs = Dict(
-		:xgridvisible => false,
-		:ygridvisible => false,
-		:ylabel => "pericentre / kpc",
-	)
-
-	ax_idx = Dict(
-		:pmra => [1, 1],
-		:pmdec => [1, 2],
-		:distance => [2, 1],
-		:radial_velocity => [2, 2],
-	)
-
-	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
-		ax = Axis(fig[ax_idx[sym]...],
-			xlabel=coord_labels[sym];
-			ax_kwargs...
-		)
-	    x = df_props[!, sym]
-		scatter!(x, peris; plot_kwargs...)
-		for i in eachindex(idx)
-			scatter!(x[idx[i]], peris[idx[i]]; orbit_points_kwargs[i]...)
-		end
-	end
-
-
-	linkyaxes!(fig.content...)
-
-
-	@savefig "peri_mc_orbits_corr"
-	fig
-end
-
-# ╔═╡ 43d43f63-4c13-4b23-950e-ada59aa86bc9
-let
-	
-	for sym in columns
-	    x = df_props[!, sym]
-	    y = peris
-
-		
-	    p = scatter(x, y, alpha=0.1, 
-			axis=(; xlabel=String(sym), ylabel="apocentre / kpc")
-		)
-	    @info p 
-	end
-
-end
-
-# ╔═╡ 8b6f95f7-284f-4133-b6f1-a22dd9c405f0
-let
-	fig = Figure(size=(5*72, 5*72))
-	plot_kwargs = Dict(
-		:color => :black,
-		:alpha => 0.1,
-		:markersize => 1,
-	)
-
-	
-	orbit_points_kwargs = [Dict(
-		:color => COLORS[i],
-		:alpha => 1,
-		:markersize => 10,
-		:label => orbit_labels[i]
-	) for i in eachindex(idx)
-		]
-	
-	ax_kwargs = Dict(
-		:xgridvisible => false,
-		:ygridvisible => false,
-		:ylabel => "time of last pericentre / Gyr",
-	)
-
-	ax_idx = Dict(
-		:pmra => [1, 1],
-		:pmdec => [1, 2],
-		:distance => [2, 1],
-		:radial_velocity => [2, 2],
-	)
-
-	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
-		ax = Axis(fig[ax_idx[sym]...],
-			xlabel=coord_labels[sym];
-			ax_kwargs...
-		)
-	    x = df_props[!, sym]
-		scatter!(x, df_props.time_last_peri * lguys.T2GYR .+ 0.001 .* randn(length(df_props.time_last_peri)); plot_kwargs...)
-		for i in eachindex(idx)
-			scatter!(x[idx[i]], df_props.time_last_peri[idx[i]]* lguys.T2GYR; orbit_points_kwargs[i]...)
-		end
-	end
-
-
-	linkyaxes!(fig.content...)
-
-
-	@savefig "t_last_peri"
-	fig
-end
+# ╔═╡ 120bcc8b-76f7-4ae5-8880-dd480a6e802e
+plot_correlations(df_props, props_special, "period", Nmax=Nmax)
 
 # ╔═╡ 69e77193-29cc-4304-98a1-44828eaedf9f
 md"""
@@ -477,12 +331,14 @@ normal_dist(x, μ, σ) = 1/√(2π) * 1/σ * exp(-(x-μ)^2/2σ^2)
 
 # ╔═╡ 6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
 let
-	fig = Figure(size=(600, 600))
+	fig = Figure()
 
 	ax_kwargs = Dict(
 		:xgridvisible => false,
 		:ygridvisible => false,
 		:ylabel => "density",
+		:width => 2*72, 
+		:height => 2*72,
 	)
 
 	ax_idx = Dict(
@@ -490,9 +346,11 @@ let
 		:pmdec => [1, 2],
 		:distance => [2, 1],
 		:radial_velocity => [2, 2],
+		:ra => [3, 1],
+		:dec => [3,2]
 	)
 
-	for sym in [:pmra, :pmdec, :distance, :radial_velocity]
+	for sym in keys(ax_idx)
 		ax = Axis(fig[ax_idx[sym]...],
 			xlabel=coord_labels[sym];
 			ax_kwargs...
@@ -508,59 +366,27 @@ let
 		err_exp = getproperty(err, sym)
 		y_mod = normal_dist.(x_mod, mu_exp, err_exp)
 		lines!(x_mod, y_mod, label="expected gaussian")
-			
-		axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
+
+		for i in eachindex(orbits)
+			scatter!(props_special[i, sym], 0, color=COLORS[i])
+		end
+
+		if sym == :ra
+			axislegend(labelsize=10, padding=(6, 6, 6, 6), patchlabelgap=1, patchsize=(6, 6))
+		end
 	end
 
+
+	resize_to_layout!(fig)
 	
 
-	@savefig "peri_mc_orbits_corr"
 	fig
 end
 
-# ╔═╡ ac81acd8-4a78-4230-bc70-3b78a861b618
-let
-
-	for sym in [:ra, :dec]
-		
-		fig = Figure()
-		ax = Axis(fig[1,1], 
-			xlabel=String(sym),
-			ylabel="density",
-			#limits=((μ - 5σ, μ + 5σ), nothing),
-		)
-		
-	    x = df_props[!, sym]
-		
-	    stephist!(x, bins=50, normalization=:pdf, label="MC samples", color=:black)
-
-
-		μ = getproperty(obs, sym)
-		σ = LilGuys.get_uncertainty(obs_props, string(sym))
-		x_mod = LinRange(μ - 3σ, μ + 3σ, 10_000)
-		y_mod = normal_dist.(x_mod, μ, σ) 
-		lines!(x_mod, y_mod, label="expected")
-			
-		axislegend()
-
-		@info fig
-	end
-
-end
-
-# ╔═╡ 16f4ac20-d8cf-4218-8c01-c15e04e567fb
+# ╔═╡ 8a2f7379-5aa2-4a1d-b289-112880c8baca
 md"""
-# The example orbits
+# Example orbits
 """
-
-# ╔═╡ 7cfec8fe-2b5a-4939-a04c-a0cdcc0292ca
-icrs0 = LilGuys.coords_from_df(df_props[idx, :])
-
-# ╔═╡ 61c5e886-4c54-4080-8111-122765405ffe
-pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"))
-
-# ╔═╡ 6fcf3685-3a60-4997-aa41-cc4cf4891797
-orbits = LilGuys.agama_orbit(pot, icrs0, agama_units=agama_units, timerange=(0, -10/T2GYR))
 
 # ╔═╡ 3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
 positions = LilGuys.positions.(orbits)
@@ -569,7 +395,7 @@ positions = LilGuys.positions.(orbits)
 velocities = LilGuys.velocities.(orbits)
 
 # ╔═╡ 1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
-times = orbits[1].times
+times = LilGuys.times.(orbits)
 
 # ╔═╡ 5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 begin
@@ -590,16 +416,15 @@ let
 		ylabel="Scl–MW distance / kpc"
 	)
 
-	for i in eachindex(idx)
+	for i in eachindex(orbits)
 		lines!(orbits[i].times * lguys.T2GYR, rs[i], label=orbit_labels[i])
 	
-		hlines!([peris[idx[i]], apos[idx[i]]], linestyle=:solid, alpha=0.1, color=:black)
-		scatter!(df_props.time_last_peri[idx[i]] .* lguys.T2GYR, peris[idx[i]], color=COLORS[i])
+		hlines!([orbits[i].pericenter, orbits[i].apocenter], linestyle=:solid, alpha=0.1, color=:black)
+		scatter!(props_special.time_last_peri[i] .* lguys.T2GYR, peris_special[i], color=COLORS[i])
 
 	end
 
 	scatter!([NaN], [NaN], color=:black, label="pericentre")
-	scatter!([NaN], [NaN], color=:black, label="apocentre", marker=:utriangle)
 	hlines!([NaN], linestyle=:solid, alpha=0.1, color=:black, label="extrema")
 	
 	Legend(fig[1, 2], ax)
@@ -627,7 +452,7 @@ let
 		z = positions[i][3, :]
 		R = @. sqrt(x^2 + y^2)
 	
-		plot!(R, z, 
+		lines!(R, z, 
 			
 		)
 	end
@@ -646,8 +471,8 @@ let
 		ylabel = L"$v$ %$kms_label"
 	)
 
-	for i in eachindex(idx)
-		scatter!(rs[i], vs[i], color=times)
+	for i in eachindex(orbits)
+		scatter!(rs[i], vs[i], color=times[i])
 	end
 
 	fig
@@ -670,6 +495,25 @@ end
 # ╔═╡ ec00c319-284f-4b83-a670-fb49dd6dedc4
 Φs_ext = [Agama.potential(pot, orbit.positions, agama_units) for orbit in orbits]
 
+# ╔═╡ 0fd66124-278e-40a0-a77b-28198c3a48e8
+tides = OrbitUtils.scalar_tidal_forces.(pot, orbits, agama_units=agama_units)
+
+# ╔═╡ df1d3b14-0703-4675-a3c4-bcdae79a55c0
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = "time / Gyr",
+		ylabel = "tidal strain"
+	)
+
+
+	for i in eachindex(orbits)
+		lines!(orbits[i].times * T2GYR, tides[i])
+	end
+
+	fig
+end
+
 # ╔═╡ 35f0ea14-a945-4745-910c-365b730676c5
 let 
 	fig = Figure()
@@ -679,9 +523,9 @@ let
 		
 	)
 	
-	for i in 1:length(idx)
+	for i in 1:length(orbits)
 		res =  (Φs_ext[i] .- phi_exp.(rs[i])) ./ phi_exp.(rs[i])
-		scatter!(-times * lguys.T2GYR, res,
+		lines!(times[i] * lguys.T2GYR, res,
 			label = orbit_labels[i]
 		)
 	end
@@ -749,16 +593,16 @@ end
 # ╔═╡ de1e5245-0946-47cd-8e2c-ba1914cfeb74
 begin 
 	# orbit info
-	for i in 1:length(idx)
-		t = get_initial_t(i)
+	for i in 1:length(orbits)
+		t = 1
 		@printf "orbit: \t\t %i\n" i
-		@printf "index: \t\t %i\n" idx[i]
+		#@printf "index: \t\t %i\n" idx[i]
 		
-		@printf "pericentre:\t %0.1f\n" peris[idx[i]]
-		@printf "apocentre: \t %0.1f\n" apos[idx[i]]
+		@printf "pericentre:\t %0.1f\n" peris_special[i]
+		@printf "apocentre: \t %0.1f\n" props_special.apocentre[i]
 
-		@printf "time of first apocentre: %f \n" times[end] - times[t]
-		@printf "radius of first apocentre: %f\n" rs[i][t]
+		@printf "time initial\t%f \n" times[i][end] - times[1][t]
+		@printf "radius initial\t%f\n" rs[i][t]
 		@printf "intial position: [%f, %f, %f]\n" positions[i][:, t]...
 		@printf "intial velocity: [%f, %f, %f]\n" -1* velocities[i][:, t]...
 		@printf "final position: [%f, %f, %f]\n" positions[i][:, 1]...
@@ -781,6 +625,9 @@ end
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
 # ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═c4890c9f-8409-4a58-bd01-670d278088c0
+# ╠═0af580dd-1871-4f4c-9716-c8b1e62a36d4
+# ╠═66cdb8fe-300e-4edf-8f5f-16eadb1f58cc
+# ╠═2bbade40-97ef-4f12-9056-523eafb4bc73
 # ╠═5ca2096b-6eb9-4325-9c74-421f3e0fdea2
 # ╠═f311c4d6-88a4-48a4-a0a0-8a6a6013897c
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
@@ -798,7 +645,7 @@ end
 # ╠═8b818798-69fb-481d-ade1-9fd436b1f281
 # ╠═18d6d521-1abf-4085-b9b0-6f45c0eb2feb
 # ╟─8f70add4-effe-437d-a10a-4e15228f9fec
-# ╠═b15fb3ac-2219-419a-854a-31a783acf891
+# ╟─b15fb3ac-2219-419a-854a-31a783acf891
 # ╠═fa790a4d-e74f-479b-8ff6-aa2f23cb573d
 # ╠═eff58c52-a32b-4faa-9b98-c8234d9b21fc
 # ╟─88536e86-cf2a-4dff-ae64-514821957d40
@@ -809,40 +656,35 @@ end
 # ╟─392315ee-72d2-4a14-9afc-5fd6424b3e83
 # ╟─950e0210-e4fe-4bad-b82f-69247fd0edd8
 # ╠═4a4b8b73-92c3-4e1f-93d8-e44369b8f148
-# ╠═e5f728b8-8412-4f57-ad38-a0a35bb08a48
 # ╠═413d4e5d-c9cd-4aca-be1e-d132b2bd616d
+# ╠═5c65e513-8895-4c6d-8588-b6f5bbf174d5
 # ╠═17a63cc8-84f4-4248-a7b0-c8378454b1f7
+# ╠═61c5e886-4c54-4080-8111-122765405ffe
+# ╠═4d60e861-f315-4c62-90f0-73dda8f6c4d4
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
-# ╟─d54733e9-7552-4d9c-b8e8-670433469385
-# ╠═de2f3380-90df-48f5-ba60-8417e91f4818
-# ╠═c8aec4f8-975f-4bbc-b874-bf0172d35868
-# ╠═5247f333-a123-4a60-b6fd-393aa333f896
-# ╠═4ee33ce2-c00a-4fcf-b7fc-b78c1677c9e4
-# ╠═34104429-05e0-40a6-83e5-078dbe346504
-# ╠═e5825c4a-b446-44a3-8fd5-d94664965aca
-# ╠═ef57611c-2986-4b03-aa5a-ab45003edd72
+# ╠═66b320d8-cefb-470b-9ea1-a10080f0c2b8
+# ╠═8a73ae22-fecf-4c07-a333-3e5159c8b570
+# ╠═24290bc9-4596-41af-becc-bf1487f763a7
+# ╠═39d35e5a-abc2-4c84-9308-b84c6c1ff5a5
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╟─50baf5a6-fb5b-494e-95f3-53414a9f1cc0
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
-# ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
-# ╠═5a903509-e2cc-4bac-9c59-d1689ccc408e
+# ╠═56ad8584-37bc-4c06-a1a4-6044fe1b1a2b
+# ╟─46b4242b-8af7-4233-8ecf-d86740b4c884
+# ╟─5a903509-e2cc-4bac-9c59-d1689ccc408e
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═471a5501-bc7b-4114-be1a-9088b4e674cd
 # ╠═68b0383a-3d5a-4b94-967c-f0e31e8a0ce1
 # ╠═44660b2f-6220-473b-bb2f-07e23b176491
-# ╠═d3063e30-2cb3-4f1b-8546-0d5e81d90d9f
-# ╠═c48b4e73-480e-4a50-b5fc-db5f6c5b040e
-# ╠═43d43f63-4c13-4b23-950e-ada59aa86bc9
-# ╠═8b6f95f7-284f-4133-b6f1-a22dd9c405f0
+# ╠═90a4f731-1fac-43b1-aba5-be917016d100
+# ╠═c1c76d09-febd-459d-8a9c-6adf92d5163e
+# ╠═1944f355-7e9b-4c56-84b8-56479c4aefb9
+# ╠═120bcc8b-76f7-4ae5-8880-dd480a6e802e
 # ╟─69e77193-29cc-4304-98a1-44828eaedf9f
 # ╟─89b81ed0-82a1-4a81-a7fd-b6be0644a79d
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878
 # ╟─6b95d3b2-38db-4376-83b5-8c6e6f1fdfa2
-# ╟─ac81acd8-4a78-4230-bc70-3b78a861b618
-# ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
-# ╠═7cfec8fe-2b5a-4939-a04c-a0cdcc0292ca
-# ╠═61c5e886-4c54-4080-8111-122765405ffe
-# ╠═6fcf3685-3a60-4997-aa41-cc4cf4891797
+# ╠═8a2f7379-5aa2-4a1d-b289-112880c8baca
 # ╠═3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
 # ╠═d31f91e8-6db6-4771-9544-8e54a816ecc1
 # ╠═1ce6663b-1435-4887-a6aa-7a5e9f6c5cde
@@ -857,6 +699,8 @@ end
 # ╟─0fb21216-3faf-4a40-9a8e-67ee5f31f933
 # ╠═09bbae0d-ca3e-426d-b77c-69dd68ca42cc
 # ╠═ec00c319-284f-4b83-a670-fb49dd6dedc4
+# ╠═0fd66124-278e-40a0-a77b-28198c3a48e8
+# ╟─df1d3b14-0703-4675-a3c4-bcdae79a55c0
 # ╟─35f0ea14-a945-4745-910c-365b730676c5
 # ╟─0c90dc59-6641-4094-b283-fcef68271019
 # ╟─f6b27164-ee7c-428b-aefb-75e89d178f3e

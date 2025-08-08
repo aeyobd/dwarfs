@@ -20,7 +20,7 @@ end
 include("./paper_style.jl")
 
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
-galaxyname = "ursa_minor"
+galaxyname = "sculptor"
 
 # ╔═╡ bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 import TOML
@@ -30,7 +30,7 @@ CairoMakie.activate!(type=:png)
 
 # ╔═╡ b9600d93-5946-4380-a2ae-9b5f673bbaf5
 modelname = if galaxyname == "sculptor"
-	"sculptor/1e6_V31_r3.2/orbit_smallperi"
+	"sculptor/1e7_V31_r3.2/orbit_smallperi"
 elseif galaxyname == "ursa_minor"
 	"ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5"
 end
