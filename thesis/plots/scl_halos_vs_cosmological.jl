@@ -23,7 +23,7 @@ using OrderedCollections
 include("./paper_style.jl")
 
 # ╔═╡ eb4a5051-43b6-4afa-bf42-5a74125cf60a
-galaxy = "sculptor"
+galaxy = "ursa_minor"
 
 # ╔═╡ ed8867fb-ca90-4577-905d-0ad93ec37097
 import TOML
@@ -164,7 +164,7 @@ solve_v_from_dispersion(10)
 galaxy_short = Dict(
 	"sculptor" => "scl",
 	"ursa_minor" => "umi",
-)
+)[galaxy]
 
 # ╔═╡ a15dbc88-8dbf-48d4-8a72-1881151c8e26
 let

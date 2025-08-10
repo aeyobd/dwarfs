@@ -1,6 +1,7 @@
 using CairoMakie
 using LilGuys: mean
 using LilGuys
+using Arya
 
 import LinearAlgebra: ⋅
 
@@ -106,10 +107,8 @@ end
 
 function plot_xyz!(axes, orbits::AbstractVector{<:Orbit}; kwargs...)
     for orbit in orbits
-        plot_xyz!(axes, orbit; kwargs...)
+        plot_xyz!(axes, orbit; rasterize=true, kwargs...)
     end
-
-    plot_xyz_today!(axes, orbits)
 end
 
 
@@ -126,10 +125,8 @@ end
 
 function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; kwargs...)
     for orbit in orbits
-        plot_rt!(axes, orbit; kwargs...)
+        plot_rt!(axes, orbit; rasterize=true, kwargs...)
     end
-
-    plot_rt_today!(axes, orbits)
 end
 
 
@@ -152,6 +149,7 @@ function plot_xyz_today!(axes, orbits, index=1; kwargs...)
     return plot_xyz_today!(axes, xyz_mean; kwargs...)
 
 end
+
 
 
 function plot_xyz_today!(axes, x0::AbstractVector{<:Real}; strokewidth=strokewidth, kwargs...)
@@ -193,4 +191,13 @@ end
 function plot_rt_today!(ax_rt, t0::Real, r0::Real; strokewidth=strokewidth, kwargs...)
     scatter!(ax_rt, t0, r0; strokewidth=strokewidth, kwargs...)
 end
+
+
+
+function plot_xyz_sun!(axes; kwargs...)
+    X_SUN = [-8.1219733661223, 0.0, 0.0208]
+
+    plot_xyz_today!(axes, X_SUN; marker=:star5, color=COLORS[9], kwargs...)
+end
+
 

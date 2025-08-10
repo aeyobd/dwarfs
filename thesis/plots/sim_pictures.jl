@@ -16,14 +16,23 @@ begin
 
 end
 
+# ╔═╡ b0a0dddc-fb5a-4bb2-b048-a54859d0b703
+using DataFrames, CSV
+
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
 
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
-galaxyname = "sculptor"
+galaxyname = "ursa_minor"
 
 # ╔═╡ bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 import TOML
+
+# ╔═╡ 4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
+xy_iso = CSV.read("resources/EP2020_iso_xy.csv", DataFrame)
+
+# ╔═╡ 53cdcc20-96d4-4bd5-8028-df9a38af71ae
+xz_iso = CSV.read("resources/EP2020_iso_xz.csv", DataFrame)
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
@@ -75,6 +84,18 @@ orbit_props["idx_apos"], orbit_props["idx_peris"]
 # ╔═╡ 962d5024-6afa-452c-bb04-85046971ee2a
 idxs = [1, 40, 78, 115, 152, orbit_props["idx_f"]]
 
+# ╔═╡ 772b9b42-8652-414b-bb5f-909911aa3fbb
+COLORS
+
+# ╔═╡ c689f2b1-eded-4284-9b40-67c72016de8c
+function plot_scalebar!(scale_length=50)
+	length_relative = scale_length / (bins[end] - bins[1])
+
+	x0, y0 = 0.05, 0.05
+	lines!([x0, x0 + length_relative], [y0, y0], color=:white, space=:relative, linewidth=theme(:linewidth)[] / 2)
+	text!(x0, y0, text="$scale_length kpc", color=:white, space=:relative, fontsize=0.8 * theme(:fontsize)[], )
+end
+
 # ╔═╡ 5e48acfc-085f-43c8-a4ae-d0aaabcae4ee
 let
 	fig = Figure()
@@ -83,6 +104,10 @@ let
 		ii, jj = (i-1) ÷ 3 , (i-1) % 3 
 		axis = Axis(fig[ii, jj])
 		plot_xy_density!(out[idx])
+		poly!(xz_iso.x, xz_iso.z, color=COLORS[9])
+		if i == 1
+			plot_scalebar!()
+		end
 
 		hidexdecorations!()
 		hideydecorations!()
@@ -104,8 +129,11 @@ end
 # ╔═╡ Cell order:
 # ╠═913e0316-a04b-4270-ba31-0ba0f7fdd705
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═b0a0dddc-fb5a-4bb2-b048-a54859d0b703
 # ╠═bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
+# ╠═4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
+# ╠═53cdcc20-96d4-4bd5-8028-df9a38af71ae
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═b9600d93-5946-4380-a2ae-9b5f673bbaf5
 # ╠═32db23d9-7959-41ac-aff4-b63df5e4b94a
@@ -118,4 +146,6 @@ end
 # ╠═a9e6cdcc-d31b-404a-bb32-4ceb83b90efa
 # ╠═4ae004da-7e17-4f7c-a11d-6ad97dcbe6dd
 # ╠═962d5024-6afa-452c-bb04-85046971ee2a
+# ╠═772b9b42-8652-414b-bb5f-909911aa3fbb
+# ╠═c689f2b1-eded-4284-9b40-67c72016de8c
 # ╠═5e48acfc-085f-43c8-a4ae-d0aaabcae4ee

@@ -47,14 +47,14 @@ module OrbitUtils
 	include("orbit_utils.jl")
 end
 
-# ╔═╡ 4c70700e-a8dd-4585-b31d-598f05d615e8
-import .OrbitUtils: axes_xyz_flat, plot_xyz!, plot_rt!, plot_rt_today!
-
 # ╔═╡ a7111062-b025-43a9-bdb1-aee08deb60e9
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 6b0b6c8f-eef9-4c45-8227-d1906fe6b80b
 scale_theme_element!(:linewidth, 1/2)
+
+# ╔═╡ 4c70700e-a8dd-4585-b31d-598f05d615e8
+import .OrbitUtils: axes_xyz_flat, plot_xyz!, plot_rt!, plot_rt_today!
 
 # ╔═╡ 16f4ac20-d8cf-4218-8c01-c15e04e567fb
 md"""
@@ -65,16 +65,13 @@ md"""
 Nmax = 100 # number of orbits to plot
 
 # ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
-modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev24_L3M11_9Gyr")
-
-# ╔═╡ fd7246ec-212c-4255-a658-61bd82b9b7e0
-modeldir_best = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev24_L3M11_2x_special_cases")
+modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", "vasiliev24_L3M11")
 
 # ╔═╡ 9efc0091-ea97-439a-bbf4-5c8b5f1127fc
-modeldir_no = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev24_M11")
+modeldir_no = joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", "vasiliev24_M11")
 
 # ╔═╡ ff6522d0-84cb-4521-8400-61c02973d535
-lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11")) |> reverse
+lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor/vasiliev24_L3M11")) |> reverse
 
 # ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
 idx, orbits = let
@@ -91,15 +88,6 @@ idx_no, orbits_no = let
 	filt = 1:min(Nmax, length(structs))
 	first.(structs)[filt], last.(structs)[filt]
 end
-
-# ╔═╡ c63a1c4c-6171-4853-906a-54ba74fb0766
-best_orbit = reverse(LilGuys.Orbit(joinpath(modeldir_best, "orbit_smallperilmc.csv")))
-
-# ╔═╡ 540dba2d-a1bb-4436-80bc-aba6d8779a55
-readdir(modeldir_best)
-
-# ╔═╡ 782e9dae-b15f-40fd-9d75-9a334810aa81
-best_m_lmc = best_orbit - LilGuys.resample(lmc_orbit, best_orbit.times)
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -123,9 +111,13 @@ sw = @lift $(theme(:linewidth)) / 2
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
 let
 	fig = Figure(figsize=(388, 2*388))
-	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
+	limits = tuple(fill((-150., 150.), 3)...)
 
 	ax_xyz = axes_xyz_flat(fig, limits)
+	for ax in ax_xyz
+		ax.xticks = -100:100:100
+		ax.yticks = -100:100:100
+	end
 
 	plot_xyz!(ax_xyz, orbits, color=COLORS[2], alpha=0.05, time_min=t_min, linestyle=:solid)
 
@@ -133,10 +125,8 @@ let
 
 	plot_xyz!(ax_xyz, lmc_orbit, time_min=t_min, linestyle=:solid, color=COLORS[1])
 
-
-	plot_xyz!(ax_xyz, best_orbit, time_min=t_min, linestyle=:solid, color=:black)
-	OrbitUtils.plot_xyz_today!(ax_xyz, best_orbit, strokewidth=sw, color=:black)
 	OrbitUtils.plot_xyz_today!(ax_xyz, lmc_orbit, strokewidth=sw, color=COLORS[1])
+	OrbitUtils.plot_xyz_today!(ax_xyz, orbits, strokewidth=sw, color=COLORS[2])
 	
 	OrbitUtils.plot_xyz_sun!(ax_xyz, strokewidth=sw)
 
@@ -149,35 +139,28 @@ let
 	plot_rt!(ax_rt, orbits_no, color=COLORS[3], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, lmc_orbit, color=COLORS[1])
 
-	plot_rt!(ax_rt, best_orbit, linestyle=:solid, color=:black)
-	plot_rt_today!(ax_rt, best_orbit, strokewidth=sw, color=:black)
 	plot_rt_today!(ax_rt, lmc_orbit, strokewidth=sw, color=COLORS[1])
-	hidexdecorations!(ticks=false, minorticks=false)
+	plot_rt_today!(ax_rt, orbits, strokewidth=sw, color=COLORS[2])
 
+	hidexdecorations!(ticks=false, minorticks=false)
 	
 
 	
 	xlims!(-9, 0.2)
 	ylims!(0, 400)
 
-	
-
 	# LMC distance
 	ax_rt2 = Axis(fig[3, 1:3 ],
-				xlabel = "time / Gyr", ylabel = L"$r_\textrm{Scl-LMC}$ / kpc")
+				xlabel = "time / Gyr", ylabel = L"$r_\textrm{UMi-LMC}$ / kpc")
 	
 	plot_rt!(ax_rt2, orbits .- [pos_lmc_resampled], color=COLORS[2], alpha=0.05, linestyle=:solid)
 	xlims!(-9, 0.2)
-
-	plot_rt!(ax_rt2, best_m_lmc, linestyle=:solid, color=:black)
-	plot_rt_today!(ax_rt2, best_m_lmc, strokewidth=sw, color=:black)
+	plot_rt_today!(ax_rt2, orbits .- [pos_lmc_resampled], strokewidth=sw, color=COLORS[2])
 
 
 	# labels
-	lines!([NaN], [NaN], color=COLORS[3], alpha=0.5, label="Scl, MW only")
-	lines!([NaN], [NaN], color=COLORS[2], alpha=0.5, label="Scl, MW+LMC")
-	lines!([NaN], [NaN], color=:black, label="Scl, selected")
-
+	lines!([NaN], [NaN], color=COLORS[3], alpha=0.5, label="UMi, MW only")
+	lines!([NaN], [NaN], color=COLORS[2], alpha=0.5, label="UMi, MW+LMC")
 	lines!([NaN], [NaN], color=COLORS[1], label="LMC")
 
 	axislegend(position=:lt, backgroundcolor=(:white, 0.8))
@@ -188,7 +171,7 @@ let
 	rowsize!(fig.layout, 3, Aspect(1, 1.0))
 
 	resize_to_layout!(fig)
-	@savefig "scl_lmc_xyzr_orbits"
+	@savefig "umi_lmc_xyzr_orbits"
 	fig
 
 end
@@ -201,22 +184,18 @@ end
 # ╠═f823e80a-f6db-440f-8d25-56860618c82f
 # ╠═00ba3075-c3e2-4965-acf3-00cda0ef320f
 # ╠═ff577282-1d04-4f6a-bb4e-74cf5a8d51e3
-# ╠═4c70700e-a8dd-4585-b31d-598f05d615e8
 # ╠═2bce531e-eaf1-4258-9ca7-9a05751cbd5b
 # ╠═a7111062-b025-43a9-bdb1-aee08deb60e9
 # ╠═6b0b6c8f-eef9-4c45-8227-d1906fe6b80b
+# ╠═4c70700e-a8dd-4585-b31d-598f05d615e8
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
-# ╠═fd7246ec-212c-4255-a658-61bd82b9b7e0
 # ╠═9efc0091-ea97-439a-bbf4-5c8b5f1127fc
 # ╠═49cca906-53e3-4531-a936-119d8b372c61
 # ╠═ff6522d0-84cb-4521-8400-61c02973d535
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═e96f758a-1cb9-436e-b351-cfa311520faa
-# ╠═c63a1c4c-6171-4853-906a-54ba74fb0766
-# ╠═540dba2d-a1bb-4436-80bc-aba6d8779a55
-# ╠═782e9dae-b15f-40fd-9d75-9a334810aa81
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2
