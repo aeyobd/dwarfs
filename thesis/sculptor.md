@@ -6,11 +6,11 @@
 | -------------------- | --------------------------------------------- | --------- |
 | $L_\star$            | $1.8\pm0.2\times10^6\ L_\odot$                |           |
 | $M_\star$            | $3.1_{-1.0}^{+1.6} \times10^6\ {\rm M}_\odot$ |           |
-| $M_\star / L_\star$  | 1.7, 0.17 dex uncertainties.                  | @woo+2009 |
-| $M_{200}$            | $0.5_{-0.3}^{+0.6} \times10^10\ M_0$          |           |
+| $M_\star / L_\star$  | $1.7\times 10^{\pm 0.17}$                     | @woo+2009 |
+| $M_{200}$            | $0.5 \pm 0.2\times10^{10}\ M_0$               |           |
 | $c_{\rm NFW}$        | $13.1_{-2.8}^{+3.6}$                          |           |
-| $v_{\rm circ, max}$  | $31_{-6}^{+8}\,\kms$                          |           |
-| $r_{\rm circ, max}$  | $6_{-2}^{+3}$ kpc                             |           |
+| $v_{\rm circ, max}$  | $31\pm 3\,\kms$                               |           |
+| $r_{\rm circ, max}$  | $6 \pm 2$ kpc                                 |           |
 | $r_{\rm break, obs}$ | $25 \pm 5$ arcmin                             |           |
 | $t_{\rm break, obs}$ | $110\pm30$ Myr                                |           |
 
