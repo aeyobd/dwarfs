@@ -1,3 +1,4 @@
+rm simulation
 rm *.hdf5
 rm *.csv
 rm *.fits

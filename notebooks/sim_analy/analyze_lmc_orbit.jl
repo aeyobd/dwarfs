@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ 061b1886-1878-11ef-3806-b91643300982
 begin 
@@ -14,6 +26,9 @@ begin
 
 	using Arya
 end
+
+# ╔═╡ ed814905-5acf-4430-b0c4-ef5f1013547e
+using PlutoUI
 
 # ╔═╡ 2c702eb7-ebb6-44c9-8e01-ca52d011c014
 using HDF5
@@ -38,11 +53,44 @@ md"""
 # inputs
 """
 
+# ╔═╡ 86734c56-948b-41e3-9cb6-82a25dadcd16
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ 27ecea4b-b413-44ca-a23a-92749c5dd080
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(default="ursa_minor"),
+	haloname = TextField(default="1e6_new_v38_r4.0"),
+	orbitname = TextField(default="orbit_"),
+	potname = TextField(default = "simulation/agama_potential.ini")
+))
+
 # ╔═╡ 597cd4fe-8e50-4ab9-b933-c7d0a2c0a156
-galaxyname = "sculptor"
+galaxyname = inputs.galaxyname
+
+# ╔═╡ 02f1fd27-72e2-498d-8abf-1f15d82a85fb
+orbitname = inputs.orbitname
+
+# ╔═╡ 5b1b2a0f-ccda-44a0-bbad-ff6850891492
+haloname = inputs.haloname
 
 # ╔═╡ 69d83e00-7eb6-4271-838f-80e4d1654dac
-modelname = "$galaxyname/1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc"
+modelname = "$galaxyname/$haloname/$orbitname"
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -331,11 +379,16 @@ let
 end
 
 # ╔═╡ Cell order:
+# ╠═27ecea4b-b413-44ca-a23a-92749c5dd080
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═061b1886-1878-11ef-3806-b91643300982
 # ╠═ab57edae-2292-4aef-9c1f-53802dbc0600
+# ╠═ed814905-5acf-4430-b0c4-ef5f1013547e
 # ╟─643cd0bf-77b3-4201-9ff7-09dd5aee277c
+# ╠═86734c56-948b-41e3-9cb6-82a25dadcd16
 # ╠═597cd4fe-8e50-4ab9-b933-c7d0a2c0a156
+# ╠═02f1fd27-72e2-498d-8abf-1f15d82a85fb
+# ╠═5b1b2a0f-ccda-44a0-bbad-ff6850891492
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
 # ╟─dd56b7ec-be11-447f-acc1-12750d82879b
 # ╠═ac2c7484-9acd-4fda-9699-fdf17da507c2

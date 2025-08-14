@@ -545,6 +545,22 @@ let
 	fig
 end
 
+# ╔═╡ 9451d681-fb96-4a67-bc72-d0ca78b6cc23
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = "time / Gyr",
+		ylabel = "log tidal strain"
+	)
+
+
+	for i in eachindex(orbits)
+		lines!(orbits[i].times * T2GYR, log10.(tides[i]))
+	end
+
+	fig
+end
+
 # ╔═╡ 35f0ea14-a945-4745-910c-365b730676c5
 let 
 	fig = Figure()
@@ -734,7 +750,8 @@ end
 # ╠═09bbae0d-ca3e-426d-b77c-69dd68ca42cc
 # ╠═ec00c319-284f-4b83-a670-fb49dd6dedc4
 # ╠═0fd66124-278e-40a0-a77b-28198c3a48e8
-# ╟─df1d3b14-0703-4675-a3c4-bcdae79a55c0
+# ╠═df1d3b14-0703-4675-a3c4-bcdae79a55c0
+# ╠═9451d681-fb96-4a67-bc72-d0ca78b6cc23
 # ╟─35f0ea14-a945-4745-910c-365b730676c5
 # ╟─0c90dc59-6641-4094-b283-fcef68271019
 # ╟─f6b27164-ee7c-428b-aefb-75e89d178f3e

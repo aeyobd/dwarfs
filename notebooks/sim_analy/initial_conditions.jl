@@ -44,6 +44,9 @@ import TOML
 # ╔═╡ d8998dd8-bac8-450d-9e9f-fa5d0b282e13
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ 4c9ccee1-d343-4768-8fae-d3b4626d1a4f
+24 * 3600
+
 # ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 md"""
 To make this both a cml utility and interactive, we take inputs in the following cells
@@ -75,7 +78,7 @@ end
 
 # ╔═╡ 21080ba9-d6df-4ba3-b4f9-e97f8d850dc6
 @bind inputs confirm(notebook_inputs(;
-	modelname = TextField(70, default="ursa_minor/1e6_v31_r4.0/orbitname"),
+	modelname = TextField(70, default="ursa_minor/1e6_new_v31_r4.0/orbitname"),
 ))
 
 # ╔═╡ 405c2a84-cfaf-469f-8eaa-0765f30a21de
@@ -272,6 +275,9 @@ let
 	fig
 end
 
+# ╔═╡ f2e33f7e-c083-48f8-a1f0-10abed7867b2
+
+
 # ╔═╡ fddeb921-468b-4f00-b4cb-a6fc4faec555
 if halo isa lguys.ExpCusp
 	R200 = 3halo.r_s
@@ -347,23 +353,39 @@ let
 end
 
 # ╔═╡ 233c5aca-4966-4ba5-b5ac-f5d0e0a727dc
-EXTRA_SOFTENING = 1/sqrt(10)
+EXTRA_SOFTENING = 1 / sqrt(10)
 
 # ╔═╡ da55fc43-69f7-4375-b8fc-c61dd606fb24
 N200 = sum(lguys.radii(snap) .< R200)
 
+# ╔═╡ 2029cfcc-caec-4600-bb26-a4a20eb8bb79
+log10(N200)
+
+# ╔═╡ 2f5c306f-b5aa-4bb2-8f46-098c0b6b4830
+R200
+
+# ╔═╡ 8e16f4d1-7b2d-427c-b458-d07dfa2c5058
+LilGuys.R200(LilGuys.NFW(r_s=halo.r_s, M_s=halo.M_s))
+
 # ╔═╡ d841539a-f755-460f-9994-16229aadca6a
-grav_softening = 4R200 / sqrt(N200) * EXTRA_SOFTENING
+grav_softening = 0.014 * (halo.r_s / 2.76) * (length(snap) / 1e7)^(-1/2)
 
 # ╔═╡ 5d5d72d6-8272-40c9-bce8-d7d90c670052
 md"""
 # Softening
 
-From @power2003, we can estimate the ideal softening length with 
+We adopt a softening length of 
 
+``
+h = 0.014\,{\rm kpc} \left(\frac{r_s}{2.76\,{\rm kpc}}\right) \left(\frac{N}{10^7}\right)^{-1/2}
+``
+
+This is based on the @power2003 softening length,
 ``
 h = \frac{4R_{200}}{\sqrt{N_{200}}}
 ``
+
+However, we write the softening length in terms of `r_s` because this is independent of halo concentration unlike `R200`. We also note that this is about 0.5 dex lower than the @powers+2003 value for our fiducial isolation halo, but we find better convergence with minimal additional compute time, at least for $10^6$ particles and fewer.
 
 In our case, 
 - R200 = $R200
@@ -371,8 +393,11 @@ In our case,
 - so h= $grav_softening kpc
 """
 
+# ╔═╡ 2c06ca90-21cc-4165-85e9-d9ccf773c718
+grav_softening_powers = 4R200 / sqrt(N200) * EXTRA_SOFTENING
+
 # ╔═╡ 3fc4f98e-1652-49af-ad00-ec9b634b0715
-4R200 / sqrt(length(snap)) * EXTRA_SOFTENING
+4R200 / sqrt(length(snap)) 
 
 # ╔═╡ b1a3577b-45dd-4a10-889d-1c05c2465433
 halo.r_s
@@ -421,6 +446,7 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═920546bd-4838-413c-b687-f891a7f5e985
 # ╠═9303ace1-bd7c-4391-bace-8a0a8eccd251
 # ╠═d8998dd8-bac8-450d-9e9f-fa5d0b282e13
+# ╠═4c9ccee1-d343-4768-8fae-d3b4626d1a4f
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═80da94f9-6fdd-4591-93e3-c98ea1479c65
@@ -461,10 +487,15 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═f01efc63-c4ac-45ae-8dac-209819a6249e
 # ╠═34d9fdea-8961-44ca-a92f-2f48a281f2cd
 # ╟─5d5d72d6-8272-40c9-bce8-d7d90c670052
+# ╠═f2e33f7e-c083-48f8-a1f0-10abed7867b2
 # ╠═fddeb921-468b-4f00-b4cb-a6fc4faec555
 # ╠═233c5aca-4966-4ba5-b5ac-f5d0e0a727dc
 # ╠═da55fc43-69f7-4375-b8fc-c61dd606fb24
+# ╠═2029cfcc-caec-4600-bb26-a4a20eb8bb79
+# ╠═2f5c306f-b5aa-4bb2-8f46-098c0b6b4830
+# ╠═8e16f4d1-7b2d-427c-b458-d07dfa2c5058
 # ╠═d841539a-f755-460f-9994-16229aadca6a
+# ╠═2c06ca90-21cc-4165-85e9-d9ccf773c718
 # ╠═3fc4f98e-1652-49af-ad00-ec9b634b0715
 # ╠═b1a3577b-45dd-4a10-889d-1c05c2465433
 # ╟─db034d78-f647-4382-b5e1-5e4623350d96

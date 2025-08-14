@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -87,6 +87,9 @@ Inputs
 # ╔═╡ 3db38875-fe22-4cfd-8c5a-47f4a0fa7f3a
 model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.galaxyname, inputs.modelname)
 
+# ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
+FIGDIR = joinpath(model_dir, "figures")
+
 # ╔═╡ c260ee35-7eed-43f4-b07a-df4371397195
 readdir(model_dir)
 
@@ -95,9 +98,6 @@ halo = LilGuys.load_profile(joinpath(model_dir, "../halo.toml"))
 
 # ╔═╡ 7094bc54-deb4-48a5-bf09-9ee6c684ac3c
 out =  Output(model_dir)
-
-# ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
-FIGDIR = joinpath(model_dir, "figures")
 
 # ╔═╡ 510706ac-ffbd-4996-af9e-67f1b910d51c
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
@@ -534,13 +534,13 @@ end
 # ╠═2b2a1cc7-d005-4bef-b2cf-5d26b8c203a0
 # ╠═987c3284-5a8f-463e-9c68-9011b348e076
 # ╠═a16571bd-d231-4d70-a077-3983ea847833
+# ╠═1b87d662-da3c-4438-98eb-72dc93e32f6a
 # ╠═5f2e646b-a7aa-453a-8afd-30b81ef07ff3
 # ╟─9c4d9492-64bc-4212-a99d-67cc507e99e0
 # ╠═3db38875-fe22-4cfd-8c5a-47f4a0fa7f3a
 # ╠═c260ee35-7eed-43f4-b07a-df4371397195
 # ╠═d010a230-7331-4afd-86dc-380da0e0f720
 # ╠═7094bc54-deb4-48a5-bf09-9ee6c684ac3c
-# ╠═1b87d662-da3c-4438-98eb-72dc93e32f6a
 # ╠═510706ac-ffbd-4996-af9e-67f1b910d51c
 # ╠═2470e05f-9215-45e4-88fc-daab0638272f
 # ╠═b0e336df-678a-4406-b294-0c353f3c0c38

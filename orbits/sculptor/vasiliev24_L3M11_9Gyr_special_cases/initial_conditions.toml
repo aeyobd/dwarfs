@@ -17,10 +17,20 @@ pmdec            =  -0.124
 radial_velocity  = 111.2
 
 [[orbits]]
-name = "smallperi"
+name = "slightlysmallperi"
 ra               =   15.0183
 dec              =  -33.7186
 distance         =   83.9
 pmra             =    0.112
 pmdec            =   -0.155
+radial_velocity  =  111.2
+
+
+[[orbits]]
+name = "smallperi"
+ra               =   15.0183
+dec              =  -33.7186
+distance         =   86.0
+pmra             =    0.140
+pmdec            =   -0.151
 radial_velocity  =  111.2

@@ -23,7 +23,7 @@ using DataFrames, CSV
 include("./paper_style.jl")
 
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
-galaxyname = "ursa_minor"
+galaxyname = "sculptor"
 
 # ╔═╡ bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 import TOML
@@ -39,7 +39,7 @@ CairoMakie.activate!(type=:png)
 
 # ╔═╡ b9600d93-5946-4380-a2ae-9b5f673bbaf5
 modelname = if galaxyname == "sculptor"
-	"sculptor/1e7_V31_r3.2/orbit_smallperi"
+	"sculptor/1e7_new_v31_r3.2/orbit_smallperi"
 elseif galaxyname == "ursa_minor"
 	"ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5"
 end
@@ -51,13 +51,13 @@ figname = Dict(
 )[galaxyname]
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname))
+out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname));
 
 # ╔═╡ a3be2d61-98eb-4037-afb4-4155ba24cc21
 orbit_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname, "orbital_properties.toml"))
 
 # ╔═╡ 5a40b893-021b-46e5-a115-0284e13ae7ae
-bins = LinRange(-150, 150, 100)
+bins = LinRange(-150, 150, 512)
 
 # ╔═╡ f9976cbe-ee5c-4c4b-95d7-94302bfbf7aa
 function get_xy(snap)
@@ -81,11 +81,15 @@ end
 # ╔═╡ 4ae004da-7e17-4f7c-a11d-6ad97dcbe6dd
 orbit_props["idx_apos"], orbit_props["idx_peris"]
 
-# ╔═╡ 962d5024-6afa-452c-bb04-85046971ee2a
-idxs = [1, 40, 78, 115, 152, orbit_props["idx_f"]]
+# ╔═╡ d57c2310-706f-4a0f-af6e-f4dae0cd8376
+orbit_props["idx_f"]
 
-# ╔═╡ 772b9b42-8652-414b-bb5f-909911aa3fbb
-COLORS
+# ╔═╡ 962d5024-6afa-452c-bb04-85046971ee2a
+idxs = if galaxyname == "sculptor"
+	[1, 87, 171, 254, 338, orbit_props["idx_f"]]
+elseif galaxyname == "ursa_minor"
+	[1, 28, 53, 103, 152, 206]
+end
 
 # ╔═╡ c689f2b1-eded-4284-9b40-67c72016de8c
 function plot_scalebar!(scale_length=50)
@@ -118,8 +122,8 @@ let
 	rowsize!(fig.layout, 1, Aspect(1, 1.0))
 	rowsize!(fig.layout, 0, Aspect(1, 1.0))
 
-	rowgap!(fig.layout, 12)
-	colgap!(fig.layout, 12)
+	rowgap!(fig.layout, 6)
+	colgap!(fig.layout, 6)
 
 	@savefig "$(figname)_sim_images"
 	fig
@@ -145,7 +149,7 @@ end
 # ╠═666eff06-c57a-4219-ac5e-e68e6b860882
 # ╠═a9e6cdcc-d31b-404a-bb32-4ceb83b90efa
 # ╠═4ae004da-7e17-4f7c-a11d-6ad97dcbe6dd
+# ╠═d57c2310-706f-4a0f-af6e-f4dae0cd8376
 # ╠═962d5024-6afa-452c-bb04-85046971ee2a
-# ╠═772b9b42-8652-414b-bb5f-909911aa3fbb
 # ╠═c689f2b1-eded-4284-9b40-67c72016de8c
 # ╠═5e48acfc-085f-43c8-a4ae-d0aaabcae4ee

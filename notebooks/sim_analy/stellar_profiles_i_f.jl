@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.13
 
 using Markdown
 using InteractiveUtils
@@ -67,7 +67,7 @@ end
 # ╔═╡ 2aba5629-9e59-489e-9831-45868365fbed
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="sculptor"),
-	haloname = TextField(default="1e7_V31_r3.2"),
+	haloname = TextField(default="1e7_new_v31_r3.2"),
 	orbitname = TextField(default="orbit_"),
 	starsname = TextField(default="exp2d_rs0.13"),
 ))
@@ -119,10 +119,24 @@ end
 orbital_props = TOML.parsefile(joinpath(model_stars_dir, "../../orbital_properties.toml"))
 
 # ╔═╡ 2226b7b1-fa78-4428-9cea-3f3a8b17db5f
-if lmc
-	r_J = TOML.parsefile(joinpath(model_stars_dir, "../../jacobi_lmc.toml"))["r_J"]
-else
-	r_J = TOML.parsefile(joinpath(model_stars_dir, "../../jacobi.toml"))["r_J"]
+r_J = let
+	r_J = nothing
+	if lmc
+		filename = joinpath(model_stars_dir, "../../jacobi_lmc.toml")
+		if isfile(filename)
+			r_J = TOML.parsefile(filename)["r_J"]
+		else
+			@info "jacobi radius not calculated"
+		end
+	else
+		filename = joinpath(model_stars_dir, "../../jacobi.toml")
+		if isfile(filename)
+			r_J = TOML.parsefile()["r_J"]
+		else
+			@info "jacobi radius not calculated"
+		end
+	end
+	r_J
 end
 	
 
@@ -170,7 +184,7 @@ ymin = -8
 @bind dy NumberField(-1:0.05:1, default=0)
 
 # ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
-norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]]) + dy
+norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]]) - dy
 
 # ╔═╡ 5876165d-6232-436b-aea2-a9636f1557b6
 
@@ -219,7 +233,7 @@ let
 		text!([log10(R_b)], [-7], text=L"R_b", fontsize=8)
 	end
 	
-	if @isdefined r_J
+	if !isnothing(r_J)
 		arrows!([log10(r_J)], [-7], [0], [-0.5], color=COLORS[1])
 		text!([log10(r_J)], [-7], text=L"R_j", fontsize=8, color=COLORS[1])
 	end
@@ -242,6 +256,8 @@ let
 
 	hlines!(middle(σ_obs), color=:black)
 	hspan!(σ_obs.middle - σ_obs.lower, σ_obs.middle + σ_obs.upper, alpha=0.2, color=:black)
+	hlines!(middle(σ_obs) - 1, color=:black, linestyle=:dash)
+
 
 	lines!(scalars.time * T2GYR .- time_f*T2GYR, scalars.sigma_v * V2KMS)
 

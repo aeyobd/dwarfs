@@ -29,6 +29,10 @@ function get_args()
             help = "number of timesteps to record for peri / apo"
             default = 2048
             arg_type = Int
+        "--no-truncation"
+            help = "do not truncate orbit to first apocentre"
+            action = :store_true
+
     end
 
     args = parse_args(s)
@@ -95,7 +99,7 @@ function main(args)
 
         @assert issorted(orbit.times, rev=true)
         _, _, apos, idx_apos, _ = LilGuys.all_peris_apos(orbit)
-        if length(idx_apos) > 0
+        if (length(idx_apos) > 0) && !args["no-truncation"]
             idx_i = idx_apos[end]
         else
             idx_i = length(orbit.times)

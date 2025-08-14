@@ -92,7 +92,7 @@ end
 # ╔═╡ d94663e8-b30e-4712-8a3e-6ef7f954f141
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	haloname = TextField(default="1e6_v38_r4.0"),
+	haloname = TextField(default="1e6_new_v38_r4.0"),
 	orbitname = TextField(default="orbit_"),
 	t_min = NumberField(-10:0.1:10),
 ))
@@ -196,6 +196,9 @@ let
 	fig
 end
 
+# ╔═╡ ad1782db-17a2-4385-ab7b-0ce038600a0d
+LilGuys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"], limits=((-200., 200.), (-200., 200.), (-200., 200.)))
+
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
 LilGuys.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
 
@@ -208,7 +211,7 @@ let
 	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
 	r = radii(x_cen)
 	lines!(t * T2GYR, r, label="n-body")
-	lines!(T2GYR*(orbit_expected.t), radii(x_cen_exp),
+	lines!(T2GYR*(orbit_expected.t .- orbit_expected.t[1] .+ t[1]), radii(x_cen_exp),
 		label="point particle"
 	)
 
@@ -358,7 +361,7 @@ idx_peris, idx_apos = find_all_peris(r)
 r[idx_apos]
 
 # ╔═╡ efcbae60-cf7c-4e74-aae4-39d19b74b6fa
-idx_peri = maximum(idx_peris[idx_peris .< idx_f])
+idx_peri = maximum(idx_peris[idx_peris .<= idx_f])
 
 # ╔═╡ d81c1455-728a-4023-ad65-e3cce37a69f9
 r[idx_peris[end]], minimum(r)
@@ -730,6 +733,7 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
+# ╠═ad1782db-17a2-4385-ab7b-0ce038600a0d
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
 # ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -61,7 +61,7 @@ I prefer the actions/angles framwork. For a test-particle orbit, the actions are
 """
 
 # ╔═╡ 9c404056-2980-4620-9e4f-459157533c77
-
+units = Agama.VASILIEV_UNITS
 
 # ╔═╡ 9dad1bb5-4d04-4dd8-88a9-335f87688044
 window = 10
@@ -108,8 +108,9 @@ end
 # ╔═╡ 5006f134-648a-4318-9dc3-5de383ac4d0e
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="ursa_minor"),
-	haloname = TextField(default="1e6_v38_r4.0"),
+	haloname = TextField(default="1e6_new_v38_r4.0"),
 	orbitname = TextField(default="orbit_"),
+	potname = TextField(default = "simulation/agama_potential.ini")
 ))
 
 # ╔═╡ fba1564a-c12d-4657-86fe-d4d771be1037
@@ -139,7 +140,7 @@ idx_f = TOML.parsefile(modeldir * "orbital_properties.toml")["idx_f"]
 out = Output(modeldir)
 
 # ╔═╡ de8bdfef-efca-4d2a-a9cd-a79ccc931b3f
-pot = Agama.Potential(file=modeldir * "simulation/agama_potential.ini")
+pot = Agama.Potential(file=joinpath(modeldir  * inputs.potname))
 
 # ╔═╡ 7bcdef79-7391-4f35-902b-62d2dda1d858
 Φ_in(x) = Agama.potential(pot, x)
@@ -200,11 +201,38 @@ md"""
 # New initial conditions
 """
 
+# ╔═╡ 6b2fa1a5-6031-4c37-92ac-6a6088570dba
+"""
+	shift_actions(Potential, pos_i, vel_i; dJ, dθ)
+
+Shifts the actions and angles of the initial conditions by the specified delta vectors
+"""
+function shift_actions(Φ, pos_i, vel_i; dJ, dθ)
+	act, ang = get_actions(Φ, pos_i, vel_i)
+
+	return Agama.from_actions(am, act .+ dJ, ang .+ dθ, units)
+end
+
 # ╔═╡ ec74d9e2-b2ae-447d-b9c6-5d55dd464d28
 pos_i_old = LilGuys.positions(orbit_old)[:, 1]
 
 # ╔═╡ fcb9b299-d660-48ba-afec-93c52a40d930
 vel_i_old = LilGuys.velocities(orbit_old)[:, 1]
+
+# ╔═╡ e30a0824-bf8f-4f1f-a8f8-9b9f3bb48a3e
+print(pos_i_old,", ", vel_i_old)
+
+# ╔═╡ 297aef42-be47-480d-9a07-0d7c7c6897e8
+Agama.length_scale(units) * Agama.velocity_scale(units)
+
+# ╔═╡ cb35d50e-bee5-4aa3-946f-f98954fb0c4e
+act_0, ang_0 = Agama.agama[].ActionFinder(pot._py)(vcat([16.13, 92.47, 39.63] ./ 5, [-2.49, -42.78, 86.10] ./ 5 / V2KMS / Agama.velocity_scale(units)), angles=true)
+
+# ╔═╡ 40f9a908-0b90-4657-9e21-11acb2afb93b
+ang_0
+
+# ╔═╡ e830b46c-5848-4cfa-8212-16ef88d5a6ed
+Agama.agama[].ActionMapper(pot._py, tol=1e-15)(vcat(py2vec(act_0), py2vec(ang_0)))
 
 # ╔═╡ 9c9a1dee-881d-4e7d-b9b3-321afde406da
 L_i_old = pos_i_old × vel_i_old
@@ -221,20 +249,23 @@ x_cen[:, 1], v_cen[:, 1]
 # ╔═╡ d84f975b-dcb6-4d6f-aaa9-497036cf7edf
 pos_i_old, vel_i_old
 
+# ╔═╡ b3fd0308-2056-4d16-8ff2-bb4d17aaa131
+vec.(shift_actions(pot, pos_i_old, vel_i_old, dJ=zeros(3), dθ=zeros(3)))
+
 # ╔═╡ 5bfc3f07-853e-45ea-984a-07a76c372a18
 md"""
 # Actions, Orbits, and validation
 """
 
 # ╔═╡ 95149181-b6c1-429e-be8e-f46d1a2616ef
-function get_actions(pot, pos, vel)
+function get_actions(pot, pos, vel; units=units)
 	af = Agama.ActionFinder(pot)
 
-	return Agama.actions_angles(af, pos, vel)[[1, 2]]
+	return Agama.actions_angles(af, pos, vel, units)[[1, 2]]
 end
 
 # ╔═╡ 2294328a-67a5-4d49-bae5-dee3c71e17bf
-function get_actions(af, pos, vel, pos_err, vel_err, N=1000)
+function get_actions(af, pos, vel, pos_err, vel_err; units=units, N=1000)
 
 	N = size(pos, 2)
 	actions = Matrix{Float64}(undef, 3, N)
@@ -246,7 +277,7 @@ function get_actions(af, pos, vel, pos_err, vel_err, N=1000)
 	for i in 1:size(pos, 2)
 		pos_samples = pos[:, i] .+ pos_err[i] * randn(3, N)
 		vel_samples = vel[:, i] .+ vel_err[i] * randn(3, N)
-		act, ang, freq_py = Agama.actions_angles(af, pos_samples, vel_samples)
+		act, ang, freq_py = Agama.actions_angles(af, pos_samples, vel_samples, units)
 		
 		act_m = LilGuys.mean.(eachrow(act))
 		act_err = LilGuys.std.(eachrow(act))
@@ -262,23 +293,20 @@ function get_actions(af, pos, vel, pos_err, vel_err, N=1000)
 	return actions, angles, actions_err, angles_err
 end
 
+# ╔═╡ 95255ae4-dc4c-43da-9f19-5fb8d9817e3f
+get_actions(pot, pos_i_old, vel_i_old)
+
+# ╔═╡ 4445f7b7-20a5-4a01-b5b2-ff82aa7929c4
+get_actions(pot, pos_i_old, vel_i_old)
+
 # ╔═╡ 3ab820ad-1e95-4533-aa70-ad56b11b549a
 am = Agama.ActionMapper(pot)
 
-# ╔═╡ 6b2fa1a5-6031-4c37-92ac-6a6088570dba
-"""
-	shift_actions(Potential, pos_i, vel_i; dJ, dθ)
+# ╔═╡ 68669a9d-625a-4b23-99ef-0f235f64454e
+Agama.from_actions(am, get_actions(pot, pos_i_old, vel_i_old)...)
 
-Shifts the actions and angles of the initial conditions by the specified delta vectors
-"""
-function shift_actions(Φ, pos_i, vel_i; dJ, dθ)
-	act, ang = get_actions(Φ, pos_i, vel_i)
-
-	return Agama.from_actions(am, act .+ dJ, ang .+ dθ)
-end
-
-# ╔═╡ b3fd0308-2056-4d16-8ff2-bb4d17aaa131
-vec.(shift_actions(pot, pos_i_old, vel_i_old, dJ=zeros(3), dθ=zeros(3)))
+# ╔═╡ 373cff92-1e12-4832-9427-47bc3922ba99
+Agama.from_actions(am, [2, 0, 0], [3.14, 1.85, 4.97], units)
 
 # ╔═╡ 0cc89288-a915-49a5-a7f3-10abbc02b184
 af = Agama.ActionFinder(pot)
@@ -359,6 +387,77 @@ Note: actions are more important to adjust on initial iterations. Angle evolutio
 # ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
 dθ_suggested = [Theta_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
 
+# ╔═╡ b8f2475a-3588-4611-99ac-de156f25b853
+@savefig "actions_adjustment" let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["r", "z", "ϕ"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"J_%$coord"
+		)
+
+		lines!(out.times .- out.times[idx_f], act_nbody[i, :], label="nbody")
+		band!(out.times .- out.times[idx_f], act_nbody[i, :] .- act_err_nbody[i, :], act_nbody[i, :] .+ act_err_nbody[i, :], alpha=0.5)
+
+		lines!(orbit_old.times .- orbit_old.times[end], J_exp[i, :], label="point orbit old")
+		if @isdefined orbit
+			lines!(orbit.times .- orbit.times[end], act_new[i, :], label="point orbit new")
+		end
+		plot_meas!(J_obs[i])
+		
+		
+		lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+	end
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
+# ╔═╡ b1439b38-6dad-487c-b78b-32736c8aa560
+@savefig "xyz_time" let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"J%$coord"
+		)
+
+		lines!(out.times .- out.times[idx_f], x_cen[i, :], label="nbody")
+
+		lines!(orbit_old.times .- orbit_old.times[end], orbit_old.positions[i, :], label="point orbit old")
+		if @isdefined orbit
+			lines!(orbit.times .- orbit.times[end], orbit.positions[i, :], label="point orbit new")
+		end
+		plot_meas!(J_obs[i])
+		
+		
+		#lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+	end
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
 # ╔═╡ 8ebf47fd-acd6-48d1-95df-d83a602e75f4
 J_f_mean = [LilGuys.mean((act_nbody .± act_err_nbody)[i, idx_f-window:idx_f]) for i in 1:3]
 
@@ -389,7 +488,7 @@ gc_new = LilGuys.Galactocentric(pos_new, vel_new*V2KMS)
 
 # ╔═╡ d5fda85b-45b8-442b-b604-4d45236301d4
 orbit = let
-	orbit_a = Agama.orbit(pot, pos_new, vel_new, timerange=(0, 10 / T2GYR))
+	orbit_a = Agama.orbit(pot, pos_new, vel_new, units, timerange=(0, 10 / T2GYR), )
 
 	orbit = Orbit(positions=orbit_a.positions, velocities=orbit_a.velocities, times=orbit_a.times)
 	orbit
@@ -406,40 +505,6 @@ act_new, ang_new = get_actions(pot, x_new, v_new)
 
 # ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
 get_actions(pot, pos_new, vel_new)
-
-# ╔═╡ b8f2475a-3588-4611-99ac-de156f25b853
-@savefig "actions_adjustment" let
-	fig = Figure(size=(6*72, 5*72))
-
-	local ax
-	for i in 1:3
-		coord = ["r", "z", "ϕ"][i]
-		
-		ax = Axis(fig[i, 1],
-			xlabel = "time",
-			ylabel = L"J_%$coord"
-		)
-
-		lines!(out.times .- out.times[idx_f], act_nbody[i, :], label="nbody")
-		band!(out.times .- out.times[idx_f], act_nbody[i, :] .- act_err_nbody[i, :], act_nbody[i, :] .+ act_err_nbody[i, :], alpha=0.5)
-
-		lines!(orbit_old.times .- orbit_old.times[end], J_exp[i, :], label="point orbit old")
-		lines!(orbit.times .- orbit.times[end], act_new[i, :], label="point orbit new")
-		plot_meas!(J_obs[i])
-		
-		
-		lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
-		
-		if i < 3
-			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
-		end
-
-	end
-
-	Legend(fig[2, 2], ax)
-	fig
-end
-
 
 # ╔═╡ d5be7108-a6c6-4e2a-98b9-562dbd0dc999
 ang_nbody_err[:, idx_f]
@@ -464,7 +529,9 @@ ang_nbody_err[:, idx_f]
 
 		
 		lines!(orbit_old.times .- orbit_old.times[end], Theta_exp[i, :], label="point orbit old")
-		lines!(orbit.times .- orbit.times[end], ang_new[i, :], label="point orbit new")
+		if @isdefined orbit
+			lines!(orbit.times .- orbit.times[end], ang_new[i, :], label="point orbit new")
+		end
 
 		xlims!(-50, 10)
 		if i < 3
@@ -523,7 +590,9 @@ let
 	lines!(out.times, radii(x_cen), label = "nbody")
 
 	lines!(orbit_old.times, radii(orbit_old), label="initial point")
-	lines!(orbit.times, radii(orbit), label="next test")
+	if @isdefined orbit
+		lines!(orbit.times, radii(orbit), label="next test")
+	end
 
 	Legend(fig[1, 2], ax)
 	fig
@@ -565,7 +634,10 @@ let
 	
 	lines!(out.times, E_nbody)
 	lines!(orbit_old.times, E_old)
-	lines!(orbit.times, E_new )
+	if @isdefined orbit
+		lines!(orbit.times, E_new )
+	end
+
 
 	lines!(out.times[idx_f-window:idx_f], fill(E_nbody_f, window+1), color=:black, linestyle=:solid, linewidth=2)
 
@@ -595,7 +667,9 @@ let
 
 		lines!(out.times, L_nbody[i, :])
 		lines!(orbit_old.times, L_old[i, :])
-		lines!(orbit.times, L_new[i, :])
+		if @isdefined orbit
+			lines!(orbit.times, L_new[i, :])
+		end
 		plot_meas!(L_obs[i])
 
 		if i < 3
@@ -701,6 +775,8 @@ end
 # ╠═17c59968-27bf-4ab6-ac27-26db28bdbcbc
 # ╟─acf9bb4c-c03f-455f-bd12-65766f55bfaa
 # ╠═f7659682-7f06-4618-aa70-4f2c7d3ee838
+# ╠═95255ae4-dc4c-43da-9f19-5fb8d9817e3f
+# ╠═e30a0824-bf8f-4f1f-a8f8-9b9f3bb48a3e
 # ╠═eee089cf-fa34-454d-afc6-b195cbb80ed9
 # ╠═5906da72-48ce-44f6-b4d7-2738c2df64b5
 # ╠═1cc54a8f-44df-4f35-aa01-3244bdeae52e
@@ -709,6 +785,13 @@ end
 # ╠═6b2fa1a5-6031-4c37-92ac-6a6088570dba
 # ╠═ec74d9e2-b2ae-447d-b9c6-5d55dd464d28
 # ╠═fcb9b299-d660-48ba-afec-93c52a40d930
+# ╠═68669a9d-625a-4b23-99ef-0f235f64454e
+# ╠═4445f7b7-20a5-4a01-b5b2-ff82aa7929c4
+# ╠═373cff92-1e12-4832-9427-47bc3922ba99
+# ╠═297aef42-be47-480d-9a07-0d7c7c6897e8
+# ╠═cb35d50e-bee5-4aa3-946f-f98954fb0c4e
+# ╠═40f9a908-0b90-4657-9e21-11acb2afb93b
+# ╠═e830b46c-5848-4cfa-8212-16ef88d5a6ed
 # ╠═9c9a1dee-881d-4e7d-b9b3-321afde406da
 # ╠═9facd961-6c18-4b4a-9e84-9a4db31600c1
 # ╟─a2c949eb-21e2-4647-a53f-b245b92ea2a7
@@ -744,6 +827,7 @@ end
 # ╠═571ae542-406c-4e62-9b8f-af34e777748f
 # ╠═ae8f7bbd-46ee-4fcb-900a-557e5bb11088
 # ╠═b8f2475a-3588-4611-99ac-de156f25b853
+# ╠═b1439b38-6dad-487c-b78b-32736c8aa560
 # ╠═8ebf47fd-acd6-48d1-95df-d83a602e75f4
 # ╠═d5be7108-a6c6-4e2a-98b9-562dbd0dc999
 # ╠═706a0753-018a-48f7-8c77-23af747141fd

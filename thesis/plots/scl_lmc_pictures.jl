@@ -54,13 +54,13 @@ figname = Dict(
 )[galaxyname]
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname))
+out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname));
 
 # ╔═╡ a3be2d61-98eb-4037-afb4-4155ba24cc21
 orbit_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname, "orbital_properties.toml"))
 
 # ╔═╡ 5a40b893-021b-46e5-a115-0284e13ae7ae
-bins = LinRange(-150, 150, 100)
+bins = LinRange(-150, 150, 512)
 
 # ╔═╡ f9976cbe-ee5c-4c4b-95d7-94302bfbf7aa
 function get_xy(snap)
@@ -94,10 +94,7 @@ t_scale = Agama.time_scale(Agama.VASILIEV_UNITS)
 projected_potential(pot, idx) = AgamaProjection.project_agama_potential(pot._py, (bins, bins), time=out.times[idx] / t_scale)
 
 # ╔═╡ 336bc60f-9cdc-4ad8-ab87-255654350c61
-transparant_cmap = to_colormap([(COLORS[3], ceil(i)) for i in LinRange(0, 1, 1000)])
 
-# ╔═╡ 653f3273-6c1f-49f9-a48b-bd395318a551
-transparant_scl = to_colormap([(COLORS[2], i) for i in LinRange(0, 1, 1000)])
 
 # ╔═╡ df6c58bd-385a-4f04-a652-c5de934916d8
 scl_norm_max = maximum(Arya.histogram2d(get_xy(out[1])..., bins).values)
@@ -159,9 +156,6 @@ end
 
 # ╔═╡ c5731120-b0e7-4cd5-aef1-4f3e9c86d50b
 colors = Animation.parse_colors.(["green", "purple"])  .|> Makie.to_color
-
-# ╔═╡ 7ee77dcd-ba58-4909-878b-a61de0820bac
-Γ = 0.5
 
 # ╔═╡ 5e48acfc-085f-43c8-a4ae-d0aaabcae4ee
 let
@@ -234,7 +228,7 @@ let
 	rowgap!(fig.layout, 12)
 	colgap!(fig.layout, 12)
 
-	@savefig "$(figname)_sim_images"
+	@savefig "$(figname)_lmc_sim_images"
 	fig
 end
 
@@ -263,7 +257,6 @@ end
 # ╠═147e195d-99f1-4c33-a65d-2ccfd7fa9bca
 # ╠═4078aa8f-4f2f-4f09-9706-4600838d9960
 # ╠═336bc60f-9cdc-4ad8-ab87-255654350c61
-# ╠═653f3273-6c1f-49f9-a48b-bd395318a551
 # ╠═781bd5dc-ae4b-4a11-87e4-01a7a8f5e804
 # ╠═8f864640-4880-4d40-b5dd-9441d110f0ca
 # ╠═df6c58bd-385a-4f04-a652-c5de934916d8
@@ -277,6 +270,5 @@ end
 # ╠═50d85a70-5a31-4d0a-b46e-0d2c7671f8d2
 # ╠═7197e7f9-0d05-45ad-9d52-849f566bba04
 # ╠═c5731120-b0e7-4cd5-aef1-4f3e9c86d50b
-# ╠═7ee77dcd-ba58-4909-878b-a61de0820bac
 # ╠═5e48acfc-085f-43c8-a4ae-d0aaabcae4ee
 # ╠═8e391b46-5bb6-4288-8750-82fe2ae8d0f7
