@@ -1,5 +1,4 @@
 set -e 
-rsync ../dwarfs_figures/thesis/plots/figures/ figures -av
 
 # pandocoptions="--filter ./table_shortcaption.py --filter pandoc-crossref --citeproc -M --top-level-division=section --bibliography=main.bib --natbib -M --autoSectionLabels=false -M --autoEqnLabels=true --filter ./table.py --filter ./md_figure.py --number-sections --filter equation.py"
 pandocoptions="--defaults=pandoc_params.yaml"

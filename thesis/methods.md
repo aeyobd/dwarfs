@@ -1,13 +1,13 @@
-In this section, we discuss our methods used for the following two chapters. We utilize a typical analytic, idealized Milky Way potential based on @mcmillan2011. Our simulations are collisionless cold dark matter N-body simulations integrated with Gadget-4. We check for numerical convergence and stability of initial conditions in isolation. 
+In this section, we discuss our methods used for the following two chapters. We utilize an analytic, static, axisymmetric Milky Way potential based on @mcmillan2011. Our N-body simulation assume collisionless, cold dark matter and are integrated with Gadget-4. We check for numerical convergence and stability of initial conditions in isolation. 
 
 # Milky Way potential 
 
-We adopt the Milky Way potential described in @EP2020, an analytic approximation of @mcmillan2011. @fig:v_circ_potential plots the circular velocity profiles of each component of our fiducially potential. The potential consisting of a stellar Bulge, a thin and thick disk, and a dark matter NFW halo. Especially in the regime where Sculptor and Ursa Minor orbit, the dark matter halo is the dominant component of the potential. The details of the stellar disk and bulge are less important. 
+We adopt the Milky Way potential described in @EP2020, an analytic approximation of @mcmillan2011. @fig:v_circ_potential plots the circular velocity profiles of each component and the total circular velocity profile for our fiducial profile. The potential consisting of a stellar bulge, a thin and thick disk, and a dark matter NFW halo. Among typical orbits for Sculptor and Ursa Minor, the dark matter halo dominates the potential.
 
-The potential is specified as follows. The galactic bulge is described by a @hernquist1990 potential. The potential is
+The potential is specified as follows. The galactic bulge is described by a @hernquist1990 potential,
 
 $$
-\Phi(r) = - \frac{GM}{r + a}
+\Phi(r) = - \frac{GM}{r + a},
 $$ {#eq:hernquist}
 where  $a=1.3\,{\rm kpc}$ is the scale radius and $M=2.1 \times 10^{10}\,\Mo$ is the total mass. The thin and thick disks are represented with the @miyamoto+nagai1975  cylindrical potential:
 
@@ -30,8 +30,6 @@ To estimate the possible orbits of a dwarf galaxy, we perform a Monte Carlo samp
 We assume the galaxy is represented as a point particle for this analysis. In detail, (self) dynamical friction likely influences the orbit, but a point particle is an adequate description. 
 
 To convert from Gaia to galactocentric coordinates, we use the Astropy v4 galactocentric frame [@astropycollaboration+2022]. This frame assumes the galactic centre appears at position $\alpha = {\rm 17h45m37.224s}$, $\delta = -28°56'10.23''$ with proper motions $\mu_{\alpha*}=-3.151\pm0.018\ \masyr$ , $\mu_\delta=-5.547\pm0.026 \masyr$ (from the appendix and Table 2 of @reid+brunthaler2004). The galactic centre distance is $8.122\pm0.033\,$kpc with a radial velocity = $11 + 1.9 \pm 3$ km/s.  from @gravitycollaboration+2018. Finally, adding that the sun is $20.8\pm0.3\,$pc above the disk from @bennett+bovy2019,  and using  the procedure outlined in @drimmel+poggio2018, the solar velocity relative to the galactic rest frame is 'v_sun' = $[-12.9 \pm 3.0, 245.6 \pm 1.4, 7.78 \pm 0.08]$ km/s. The uncertainties in the reference frame are typically smaller than the uncertainties on the dwarf galaxy's position and velocity. 
-
-
 
 # N-Body modelling
 
@@ -57,7 +55,7 @@ See appendix @sec:extra_convergence for a discussion of this choice, which is si
 
 As discussed in @power+2003, the region where density is converged is related to the region which becomes collisionally relaxed over the time of the universe (so about 5-10 Gyr). (i.e. where the collisionless assumption breaks down). The relaxation timescale is given by
 $$
-t_{\rm relax}(r) := t_{\rm circ}(r) \frac{N(r)}{8\,\ln N(r)}
+t_{\rm relax}(r) = t_{\rm circ}(r) \frac{N(r)}{8\,\ln N(r)}
 = {t_{\rm circ}(r_{200})} \frac{\sqrt{200}}{8} \frac{N(r)}{\ln N(r)} \left(\frac{\bar \rho (r)}{\rho_{\textrm crit}}\right)^{-1/2}
 $$ {#eq:t_relax}
 where $N(r)$ is the number of particles within $r$, $t_{\rm circ}$ is the circular velocity timescale, and $\bar \rho$ is the mean interior density [@power+2003]. The converged radius $r_{\rm relax}(t)$ is the radius above which $t_{\rm relax} > t$. Typically, $r_{\rm relax}(10\Gyr)$ is about 6-10 times our adopted softening length, increasing with particle number. As such, at full resolution, we can only trust density profiles down to $\sim10$ times our softening length, sufficient to resolve stellar density profiles. 
@@ -102,24 +100,7 @@ $$
 f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
 $$
 
-In practice the right, boundary term is zero as $\Psi \to 0$ as $r\to\infty$, and if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$. We take $\Psi$ from the underlying assumed analytic dark matter potential. $\rho_\star$ is pre-specified or calculated via Abel integration / deprojection.
-
-We consider both a Plummer and 2-dimensional exponential (Exp2D) stellar models:
-
-### Exp2D
-
-Perhaps the simplest in form, the 2D exponential is commonly used to describe dwarf galaxy's density profiles as well as stellar disks. The stellar profile is given by 
-$$
-\Sigma_\star(R) = A e^{-R / R_s}
-$$
-where $A$ is the normalization and $R_s$ is the exponential scale radius. 
-### Plummer
-
-The Plummer density profile is generally considered to be a reasonable empirical fit to Globular Clusters, where it was first proposed [@sadfjk]. Plummer profiles are also sometimes used to describe dwarf spheroidal galaxies REFS and galactic bulges REF. A Plummer profile is defined by
-$$
-\Sigma(R) = \frac{M}{4\pi R_s^2} \left(1 + \frac{R^2}{R_s^2}\right)^{-2} ,
-$$
-where $M$ is the total mass and $R_s$ is the characteristic scale radius. 
+In practice the right, boundary term is zero as $\Psi \to 0$ as $r\to\infty$, and if $\rho \propto r^{-n}$ at large $r$ and $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$ which goes to zero provided that $n > 1$. We take $\Psi$ from the underlying assumed analytic dark matter potential. $\rho_\star$ can be calculated from the surface density, $\Sigma_\star$, via the inverse Abel transform. In this work, we consider both Plummer and exponential profiles, as described in
 
 ## Stellar density profiles and velocity dispersion
 

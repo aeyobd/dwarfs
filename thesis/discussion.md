@@ -139,7 +139,7 @@ Disk galaxies have long been known to be exponential-like across a wide range of
 
 Given that dwarf galaxies were noticed to be exponential like above, @faber+lin1983 proposed that dwarf spheroidals formed from disky galaxies maintaining the typical exponential density profile
 
-@reed+gilmore2005 propsed that exponential dSph form through impusive mass loss, redistributing the stellar component into an exponential like profile. 
+@read+gilmore2005 propsed that exponential dSph form through impusive mass loss, redistributing the stellar component into an exponential like profile. 
 
 - disk galaxy formation @fall+efstathiou1980, @mestel1963
 - valcke+derijcke+dejonghe2008 with early idealized hydro simulations show Sérsic values from simulations between 0.8 and 1 for dSph, indicating a natural formation of Exponential or slightly steeper density profiles. 
@@ -148,7 +148,7 @@ One possible explanation is that @mayer+2001a
 
 Other explanations range from the effects of mass loss, feedback, angular momentum,  
 
-@klimentowski2007, @klimentowski2009. 
+@klimentowski+2007, @klimentowski+2009. 
 
 In summary, while there is some theoretical reasons why exponential spheroidal stellar profiles may form, the emperical sucess of an exponential law still requires explanations. Deviations from this exponential thus test wether this exponential law is indeed near-universal or if other ingredients in the formation and history of dwarf galaxies may be responsible for changes from the empirical expectation.
 
@@ -190,7 +190,7 @@ A related note is that several dwarf galaxies show evidence for multiple chemody
 
 Observational evidence:
 
-- @arronyo-polonio+2024
+- @arroyo-polonio+2024
 - @pace+2020
 - @fabrizio+2016, @kordopatis+2016 (multi-component in Carina)
 - @battaglia+2006, @amorisco+evans2012 for fornax
@@ -199,7 +199,7 @@ Observational evidence:
 
 - @deason+2014
 - @deason+2022
-- @ricotti+2022
+- @ricotti+polisensky+cleland2022
 - @querci+2025
 - @amorisco+evans+vandeven2014
 - @tarumi+yoshida+frebel2021: Shows cosmological simulations in context of Tuc II, merger of two galaxies in the early universe produces a more extended density profile and metallicity gradient.

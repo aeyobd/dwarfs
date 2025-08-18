@@ -84,7 +84,7 @@ md"""
 """
 
 # ╔═╡ 423f83f7-3530-4689-9aa9-0fbc50df0e54
-nfw = NFW(M200 = 1e5, c=17)
+nfw = NFW(M200 = 1e5, c=5)
 
 # ╔═╡ 6fa3783a-14b3-4943-a5d8-a04a48effd43
 scale_density(nfw), scale_point_density(nfw)
@@ -460,7 +460,7 @@ end
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-			  xlabel = "log radius / pkpc",
+			  xlabel = "log radius / kpc",
 			  ylabel = "log density"
 			 )
 
@@ -481,6 +481,42 @@ let
 		lines!(x, y, color=z, colorrange=extrema(zs))
 		#hlines!(log10(200ρ_c(z)), color=z, colorrange=(extrema(zs)))
 		scatter!(log10(h.r_s), log10(LilGuys.density(h, h.r_s)), color=z, colorrange=extrema(zs))
+
+	end
+
+	Colorbar(fig[1,2], colorrange=(extrema(zs)))
+
+	fig
+end
+
+# ╔═╡ 990c126b-83b4-4f3f-a2d6-d775d2174f1c
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+			  xlabel = "log radius / R200",
+			  ylabel = "log density"
+			 )
+
+
+
+
+	zs = 0:7
+
+	for z in zs
+		h = halo_at_z(z)
+
+		x = LinRange(-2, log10(R200(h, z)), 1000) 
+		r = 10 .^ x
+		
+		v = LilGuys.density.(h, r)
+
+		y = log10.(v)
+
+		scale = R200(h)
+		
+		lines!(x .- log10(scale), y .+ 3log10(scale), color=z, colorrange=extrema(zs))
+		#hlines!(log10(200ρ_c(z)), color=z, colorrange=(extrema(zs)))
+		#
 
 	end
 
@@ -649,6 +685,7 @@ end
 # ╠═0963eb03-2c6d-45b9-b34d-344a0bc5b545
 # ╠═e1dc5fee-600a-4a81-87cd-9db46ca223e0
 # ╠═faa9c7d6-2d5e-45d7-8cb0-3e47a025f080
+# ╠═990c126b-83b4-4f3f-a2d6-d775d2174f1c
 # ╠═9e1b080d-ec12-4345-b56c-5f9c0e233fdc
 # ╠═292b53c4-c1e2-4572-99ea-65842248852e
 # ╠═36e585f8-fee4-4d7e-aa40-ad808b3382f2

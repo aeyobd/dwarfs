@@ -1,5 +1,12 @@
 # Variables used in this work
 
+Terminology
+
+- local group
+- dwarf galaxy
+- halos, subhalos, LCDM
+- 
+
 | Variable                  | Definition                                                   | Sections discussed |
 | ------------------------- | ------------------------------------------------------------ | ------------------ |
 | $\xi$, $\eta$             | Tangent plane coordinates in RA and Dec. Defined to be in arcminutes and such that $\xi, \eta$ represent changes in RA and Dec from the adopted dwarf galaxy centre. |                    |

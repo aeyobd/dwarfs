@@ -48,17 +48,17 @@ Finally, we illustrate the location of RV-confirmed members from @sec:rv_obs in 
 
 
 
-![Sculptor sample selection](figures/scl_selection.pdf){#fig:scl_selection}
+![Sculptor sample selection](figures/scl_selection.png){#fig:scl_selection width=70%}
 
 Figure: The selection criteria for Scl members. Light grey points represent field stars (satisfying quality criteria), turquoise points CMD+PM selected stars ([@eq:sel_cmd_pm]), blue xs probable members (2-component), and RV confirmed members indigo diamonds. We mark the two stars from @sestito+2023a with rust-outlined indigo stars. **Top:** Tangent plane $\xi, \eta$. The orange ellipse represents 3 half-light radii. **Bottom left:** Colour magnitude diagram in Gaia $G$ magnitude versus $G_{\rm BP} - G_{\rm RP}$ colour. We plot the Padova 12Gyr [Fe/H]=-1.68 isochone in orange. The black bar in the top left represents the median colour error. **Bottom right:** Proper motion in declination $\mu_\delta$ vs RA $\mu_{\alpha*}$ (corrected) the orange circle represents the @MV2020b proper motion. The black cross represents the median proper motion error.
 
 
 
-![Ursa Minor sample selection](figures/umi_selection.pdf){#fig:umi_selection}
+![Ursa Minor sample selection](figures/umi_selection.png){#fig:umi_selection width=70%}
 
 Figure: Similar to @fig:scl_selection except for Ursa Minor. We outline RV members outside of $6R_h$ in black stars (from @sestito+2023b, @pace+2020 and @spencer+2018). 
 
-![Fornax sample selection](figures/fornax_selection.pdf){#fig:fornax_selection}
+![Fornax sample selection](figures/fornax_selection.png){#fig:fornax_selection width=70%}
 
 Figure: Similar to @fig:scl_selection except for Fornax. RV members are from @WMO2009. While possibly a limitation of RV sample selection, Fornax does not show the same extended outer halo of probable members as Sculptor or Ursa Minor despite having many more stars.
 
