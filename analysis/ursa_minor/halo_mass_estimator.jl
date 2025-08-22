@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -558,7 +558,7 @@ md"""
 halos_ex = OrderedDict(
 	:heavy => NFW(v_circ_max = 37 / V2KMS, r_circ_max = 5.0),
 	# :heavier => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.0),
-	# :compact => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 2),
+	:compact => NFW(v_circ_max = 29 / V2KMS, r_circ_max = 2),
 	:both => NFW(v_circ_max = 38 / V2KMS, r_circ_max = 4.0),
 	:mean => NFW(v_circ_max = 27 / V2KMS, r_circ_max = 5.0),
 )
@@ -585,11 +585,8 @@ for (label, halo) in halos_ex
 	println(label, "\t", vmax * V2KMS, "\t", vmax)
 end
 
-# ╔═╡ 9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
-32 / V2KMS
-
-# ╔═╡ 8a06c0ad-2b48-48ba-a542-85926e164712
-
+# ╔═╡ 198136d4-5df0-4bf7-ae48-4769c93be6db
+0.1398264223722276 * V2KMS
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
@@ -599,9 +596,6 @@ begin
 
 	V_max_in * V2KMS
 end
-
-# ╔═╡ afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
-31 / V2KMS
 
 # ╔═╡ 0df6a87c-74b0-4713-a5e8-d73efbcb0b26
 LilGuys.Ludlow.solve_rmax.(20 / V2KMS, 0.2)
@@ -677,6 +671,24 @@ end
 
 # ╔═╡ a41af9c8-5cb7-4339-8e82-1e4c2ff10f12
 10^0.45
+
+# ╔═╡ 8d63520d-ea5a-4188-842f-b49d4e8e98a6
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel=L"\sigma_\textrm{jeans}", ylabel=L"v_\textrm{circ}(r_h)", aspect=DataAspect())
+
+
+
+	x = samples.σv
+
+	halos = [NFW(M200 = s.M200 ./ M2MSUN, c=s.c) for s in eachrow(samples)]
+	y = LilGuys.v_circ.(halos, r_h)
+
+	scatter!(x, y .* V2KMS / sqrt(3), markersize=1)
+	lines!([4, 12], [4, 12], color=:black)
+
+	fig
+end
 
 # ╔═╡ 6cc2372a-208b-4839-b5c6-6f625fcc483c
 let
@@ -874,6 +886,8 @@ let
 		lines!(x, y, label = string(label))
 	end
 
+	errorscatter!([log10(r_h)], [log10(8.6 *√3)], 
+				  xerror=[3.6/70.1/log(10)], yerror=[3 * 0.3/8.6/log(10)], color=:black)
 	axislegend(position=:rb)
 	fig
 end
@@ -1015,10 +1029,8 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═d08cbd1a-7635-4679-aa95-6b17f34970ba
 # ╠═9d6d098b-c645-4f7c-987d-75744eb97714
 # ╠═19a05251-f257-4846-a04e-9f292dc8e6a2
-# ╠═9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
-# ╠═8a06c0ad-2b48-48ba-a542-85926e164712
+# ╠═198136d4-5df0-4bf7-ae48-4769c93be6db
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
-# ╠═afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
 # ╠═f335d286-04d3-4248-b9bd-4bb6d8e82e33
 # ╠═0df6a87c-74b0-4713-a5e8-d73efbcb0b26
 # ╠═d0173c19-507f-4a68-8a2a-a4f5d084a7e1
@@ -1032,6 +1044,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
 # ╠═a8351924-4859-406d-a0ec-5aa90961158e
 # ╠═a41af9c8-5cb7-4339-8e82-1e4c2ff10f12
+# ╠═8d63520d-ea5a-4188-842f-b49d4e8e98a6
 # ╠═6cc2372a-208b-4839-b5c6-6f625fcc483c
 # ╠═8f5a2253-18da-49c6-b1ee-94e9e7ababb2
 # ╠═bbee444e-079b-4208-9faf-0a7fe5f81455

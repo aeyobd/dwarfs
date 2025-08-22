@@ -106,7 +106,10 @@ def set_defaults(args, params):
 def _set_default_name(args):
     if args.name is None:
         pwd = os.getcwd()
-        args.name = _extract_path_after_substring(pwd, 'models/')
+        filename = _extract_path_after_substring(pwd, 'simulations/')
+        if len(filename) > 64:
+            filename = filename[-64:]
+        args.name = filename
 
     return args
 

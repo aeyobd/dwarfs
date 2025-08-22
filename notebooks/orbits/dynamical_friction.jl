@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -34,18 +34,15 @@ Dynamical friction is commonly approximated using the Chandrasekhar formalism
 The help for dynamical friction below describes the current implementation.
 """
 
-# ╔═╡ 7bccec4b-8987-42b6-99b5-d97d3096fd07
-[1,2,3] + [4,5,6]
-
 # ╔═╡ 058c1b2a-e461-4961-91fa-4ec0bfeb1b21
 help(LilGuys.a_dyn_friction)
 
 # ╔═╡ 88310aa2-a470-4a58-abb9-6d4b9530a15b
 begin 
-	galaxy = "bootes3"
-	M_tot = 0.42
-	r_s = 3.2
-	tmax = -5/T2GYR
+	galaxy = "sculptor"
+	M_tot = 0.15
+	r_s = 1.5
+	tmax = -10/T2GYR
 end
 
 # ╔═╡ 64695fe6-14b2-47f7-8c6f-1565f45ee34a
@@ -54,6 +51,9 @@ nfw = LilGuys.TruncNFW(M200=M_tot, r_s=r_s, trunc=20, xi=3)
 # ╔═╡ 35cc230d-0f7b-4e10-9270-4244f29945dc
 rhalf = LilGuys.r_h(nfw)
 
+# ╔═╡ a702afe0-9c8a-46b5-aef2-dc5c907fc862
+σv_0 = 150
+
 # ╔═╡ 307b1eed-15a8-4d25-980c-6e7390c49510
 md"""
 Examples for Mtot and r_s are
@@ -61,12 +61,6 @@ Examples for Mtot and r_s are
 - 0.29, 1.8 (ursa minor)
 - 0.42, 3.2 (boo III?)
 """
-
-# ╔═╡ 0deeeb48-a7a9-4f5b-8ff9-c0678c4383cb
-
-
-# ╔═╡ f1c1acb5-a1e3-4d34-8518-2f732986e582
-
 
 # ╔═╡ a6c4bed5-f274-43d5-a18c-3222c3cda537
 LilGuys.NFW(v_circ_max = 0.169, r_circ_max=6.9)
@@ -171,11 +165,6 @@ function radii_axis(gs)
 
 end
 
-# ╔═╡ 5cc6bfee-ef97-4749-8417-990ca3e17df0
-function orbits(pot; kwargs...)
-	LilGuys.agama_orbit(pot, coords_i; timerange=(0, tmax), N=1001, kwargs...)
-end
-
 # ╔═╡ 8cc8db0a-a126-4a7a-9191-48e4c80a8f4a
 import LinearAlgebra
 
@@ -184,12 +173,6 @@ to_sym_mat(x) = [x[1] x[4] x[6]
 				x[4] x[2] x[5]
 				x[6] x[5] x[3]
 ]
-
-# ╔═╡ f3c28010-649d-4bcf-8bba-f8a24b8532a8
-function max_tidal_force(pot, positions)
-	T = Agama.stress(pot, positions)
-	return  maximum.(LinearAlgebra.eigvals.(to_sym_mat.(eachcol(T))))
-end
 
 # ╔═╡ 2688df7b-075d-410a-b1ec-dc7c5a488d4b
 md"""
@@ -205,7 +188,24 @@ md"""
 """
 
 # ╔═╡ 5c612348-aef7-4a47-bf41-e33d21820150
-pot_ep2020 = get_potential("EP2020")
+pot_ep2020 = get_potential("vasiliev24/L3M11/potential")
+
+# ╔═╡ c54baa68-26d8-4890-a5eb-0bde94a26133
+pot_static = get_potential("vasiliev24/L3M11/potential_mw_init")
+
+# ╔═╡ 464af32a-56ea-4707-87f6-c04d58ea459c
+units = Agama.VASILIEV_UNITS
+
+# ╔═╡ 5cc6bfee-ef97-4749-8417-990ca3e17df0
+function orbits(pot; kwargs...)
+	LilGuys.agama_orbit(pot, coords_i; agama_units=units, timerange=(0, tmax), N=1001, kwargs...)
+end
+
+# ╔═╡ f3c28010-649d-4bcf-8bba-f8a24b8532a8
+function max_tidal_force(pot, positions)
+	T = Agama.stress(pot, positions, units)
+	return  maximum.(LinearAlgebra.eigvals.(to_sym_mat.(eachcol(T))))
+end
 
 # ╔═╡ 742d3997-528f-4da1-8d26-68e879dedb00
 orbits_ep2020 = orbits(pot_ep2020)
@@ -251,7 +251,7 @@ md"""
 
 # ╔═╡ 3035f9a1-84f3-4ef7-84d5-3cb05b7d1668
 function get_sigma_v(pot)
-	gm = Agama.GalaxyModel(pot_ep2020, Agama.DistributionFunction(pot_ep2020, type="QuasiSpherical"))
+	gm = Agama.GalaxyModel(pot, Agama.DistributionFunction(pot, type="QuasiSpherical"))
 
 
 	N = 100
@@ -262,26 +262,29 @@ function get_sigma_v(pot)
 	sigma3 = sigmas[1, :] .+ sigmas[2, :] + sigmas[3, :]
 
 	sigma1 = sigma3 ./ 3
-	return LilGuys.lerp(Rs, sigma1)
+	return LilGuys.lerp(Rs, sqrt.(sigma1) .* Agama.velocity_scale(units))
 end
 
 # ╔═╡ b0887636-ad6c-43cc-b5a1-a76f678e8703
-σv = get_sigma_v(pot_ep2020)
+σv = get_sigma_v(pot_static)
+
+# ╔═╡ 51ab5b01-ad58-42e1-b63c-3713bc2e8142
+σv.([8, 100, 300]) .* V2KMS
+
+# ╔═╡ c958051a-ae38-4284-8ecd-ce604ff5d23a
+dyn_fric = LilGuys.ChandrashakarDynamicalFriction(r_s=r_s, σv=x->σv(radii(x)), M=M_tot, ρ = x->Agama.density(pot_static, x, units), Λ = exp(4))
+
+# ╔═╡ 0c828c6d-76e3-42f8-9454-e787b3d8fac0
+dyn_fric_moving = LilGuys.ChandrashakarDynamicalFriction(r_s=r_s, σv=x->σv(radii(x)), M=M_tot, ρ = x->Agama.density(pot_static, x, units))
 
 # ╔═╡ 4b80bed0-65ef-46ff-b44b-086b0d563a81
 LilGuys.density(pot::Agama.Potential, x) = Agama.density(pot, x)
-
-# ╔═╡ c958051a-ae38-4284-8ecd-ce604ff5d23a
-dyn_fric = LilGuys.ChandrashakarDynamicalFriction(r_s=r_s, σv=x->σv(radii(x)), M=M_tot, ρ = x->LilGuys.density(pot_ep2020, x), Λ = exp(3))
-
-# ╔═╡ 0c828c6d-76e3-42f8-9454-e787b3d8fac0
-dyn_fric_moving = LilGuys.ChandrashakarDynamicalFriction(r_s=3, σv=x->σv(radii(x)), M=0.1, ρ = x->LilGuys.density(pot_ep2020, x))
 
 # ╔═╡ 50f3c97d-4385-4cff-930c-a9d0c6cbe0c4
 LilGuys.acceleration(pot::Agama.Potential, x) = Agama.acceleration(pot, x)
 
 # ╔═╡ 22f5f57e-dcf0-4fda-b701-fd04b65a8b9f
-f_tot = (pos, vel, t) -> (LilGuys.acceleration(dyn_fric, pos, vel) + LilGuys.acceleration(pot_ep2020, pos))
+f_tot = (pos, vel, t) -> (LilGuys.acceleration(dyn_fric, pos, vel) + Agama.acceleration(pot_ep2020, pos, units, t=t))
 
 # ╔═╡ 3b681ed0-d7d5-4aab-a5fe-986f4b395825
 orbits_dyn_fric = [LilGuys.leapfrog(f_tot, coord, timerange=(0, tmax)) for coord in coords_i]
@@ -290,10 +293,42 @@ orbits_dyn_fric = [LilGuys.leapfrog(f_tot, coord, timerange=(0, tmax)) for coord
 f_tot([100., 5, 0], [0., 0, 0.0000001], 0.0)
 
 # ╔═╡ 08332449-06c2-4ced-b060-f08e1ca00971
-f_tot_moving = (pos, vel, t) -> (LilGuys.acceleration(dyn_fric_moving, pos, vel) + LilGuys.acceleration(pot_ep2020, pos))
+f_tot_moving = (pos, vel, t) -> (LilGuys.acceleration(dyn_fric_moving, pos, vel) + Agama.acceleration(pot_ep2020, pos, units, t=t))
 
 # ╔═╡ 45449bd6-140d-4009-82d7-54e387265957
 orbits_dyn_fric_moving = [LilGuys.leapfrog(f_tot_moving, coord, timerange=(0, tmax)) for coord in coords_i]
+
+# ╔═╡ aaa1976b-2719-4a0d-b119-8f928b5a6003
+orbits_list = [
+	"no dyn fric" => orbits_ep2020[1:100], 
+	"dyn fric" => orbits_dyn_fric[1:100], 
+	"dyn fric moving" => orbits_dyn_fric_moving[1:100],
+	# "galpy" => [orbit_galpy], 
+	# "galpy_dyn_fric" => orbit_galpy_dyn_fric[1:1],
+	# "galpy_dyn_fric_const" => orbit_galpy_dyn_fric_const[1:1],
+]
+
+# ╔═╡ dbcc21e7-1b92-48b9-902e-e05b1436d5d6
+plot_orbits(orbits_list..., alpha=0.1, )
+
+# ╔═╡ 0632953f-c513-4e25-a14e-0e016ed180d3
+plot_radii(orbits_list..., alpha=0.1, )
+
+# ╔═╡ a6d1c4a2-3037-49e9-a209-e82f6eb734c4
+all_orbits_list = [
+	"no dyn fric" => orbits_ep2020, 
+	"dyn fric" => orbits_dyn_fric, 
+	"dyn fric moving" => orbits_dyn_fric_moving,
+	# "galpy" => [orbit_galpy], 
+	# "galpy_dyn_fric" => orbit_galpy_dyn_fric,
+	# "galpy_dyn_fric_const" => orbit_galpy_dyn_fric_const,
+]
+
+# ╔═╡ 5cb3e798-7d20-4ccc-a863-62d65b799224
+plot_peris(all_orbits_list..., )
+
+# ╔═╡ 86983878-13a7-4c2b-8f86-e767752cfde4
+plot_apos(all_orbits_list..., )
 
 # ╔═╡ 9d7306fb-eecf-4a58-8ab2-0e584eaf43e7
 md"""
@@ -391,49 +426,15 @@ orbit_galpy_dyn_fric = [galpy_orbit(pot_galpy + f_dyn_fric_galpy, coord) for coo
 # ╔═╡ f7e26d15-960b-4512-98ba-86340dff6faf
 orbit_galpy_dyn_fric_const = [galpy_orbit(pot_galpy + f_dyn_fric_galpy_const, coord) for coord in coords_i]
 
-# ╔═╡ aaa1976b-2719-4a0d-b119-8f928b5a6003
-orbits_list = [
-	"no dyn fric" => orbits_ep2020[1:1], 
-	"dyn fric" => orbits_dyn_fric[1:1], 
-	"dyn fric moving" => orbits_dyn_fric_moving[1:1],
-	"galpy" => [orbit_galpy], 
-	"galpy_dyn_fric" => orbit_galpy_dyn_fric[1:1],
-	"galpy_dyn_fric_const" => orbit_galpy_dyn_fric_const[1:1],
-]
-
-# ╔═╡ dbcc21e7-1b92-48b9-902e-e05b1436d5d6
-plot_orbits(orbits_list..., alpha=0.5, )
-
-# ╔═╡ 0632953f-c513-4e25-a14e-0e016ed180d3
-plot_radii(orbits_list..., alpha=0.5, )
-
-# ╔═╡ a6d1c4a2-3037-49e9-a209-e82f6eb734c4
-all_orbits_list = [
-	"no dyn fric" => orbits_ep2020, 
-	"dyn fric" => orbits_dyn_fric, 
-	"dyn fric moving" => orbits_dyn_fric_moving,
-	"galpy" => [orbit_galpy], 
-	"galpy_dyn_fric" => orbit_galpy_dyn_fric,
-	"galpy_dyn_fric_const" => orbit_galpy_dyn_fric_const,
-]
-
-# ╔═╡ 5cb3e798-7d20-4ccc-a863-62d65b799224
-plot_peris(all_orbits_list..., )
-
-# ╔═╡ 86983878-13a7-4c2b-8f86-e767752cfde4
-plot_apos(all_orbits_list..., )
-
 # ╔═╡ Cell order:
 # ╟─50edc139-077a-4e23-9c67-067fc133f16d
 # ╟─337d4229-53ff-4619-8a20-7f81cbd5fa4a
-# ╠═7bccec4b-8987-42b6-99b5-d97d3096fd07
 # ╠═058c1b2a-e461-4961-91fa-4ec0bfeb1b21
 # ╠═64695fe6-14b2-47f7-8c6f-1565f45ee34a
 # ╠═35cc230d-0f7b-4e10-9270-4244f29945dc
 # ╠═88310aa2-a470-4a58-abb9-6d4b9530a15b
+# ╠═a702afe0-9c8a-46b5-aef2-dc5c907fc862
 # ╠═307b1eed-15a8-4d25-980c-6e7390c49510
-# ╠═0deeeb48-a7a9-4f5b-8ff9-c0678c4383cb
-# ╠═f1c1acb5-a1e3-4d34-8518-2f732986e582
 # ╠═a6c4bed5-f274-43d5-a18c-3222c3cda537
 # ╠═a4fc4b04-a211-4744-ba2e-a1da88a11e52
 # ╠═f8d52cf1-d6dc-4290-8434-fc9385e2b1ad
@@ -465,15 +466,18 @@ plot_apos(all_orbits_list..., )
 # ╠═b654cddc-147c-4e21-8f94-af2c54c773e1
 # ╟─c6ed2e5b-da5e-4206-9ad6-aeef24f5d64e
 # ╠═5c612348-aef7-4a47-bf41-e33d21820150
+# ╠═c54baa68-26d8-4890-a5eb-0bde94a26133
+# ╠═464af32a-56ea-4707-87f6-c04d58ea459c
 # ╠═742d3997-528f-4da1-8d26-68e879dedb00
-# ╠═bb4c9727-b8af-467b-b900-9c2a14231035
+# ╟─bb4c9727-b8af-467b-b900-9c2a14231035
 # ╠═3035f9a1-84f3-4ef7-84d5-3cb05b7d1668
 # ╠═b0887636-ad6c-43cc-b5a1-a76f678e8703
+# ╠═51ab5b01-ad58-42e1-b63c-3713bc2e8142
 # ╠═c958051a-ae38-4284-8ecd-ce604ff5d23a
 # ╠═0c828c6d-76e3-42f8-9454-e787b3d8fac0
-# ╠═3b681ed0-d7d5-4aab-a5fe-986f4b395825
 # ╠═22f5f57e-dcf0-4fda-b701-fd04b65a8b9f
 # ╠═08332449-06c2-4ced-b060-f08e1ca00971
+# ╠═3b681ed0-d7d5-4aab-a5fe-986f4b395825
 # ╠═45449bd6-140d-4009-82d7-54e387265957
 # ╠═2f3b22c5-aff6-4c30-8c23-77554463a6db
 # ╠═4b80bed0-65ef-46ff-b44b-086b0d563a81

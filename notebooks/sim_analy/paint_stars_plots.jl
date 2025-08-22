@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -344,7 +344,7 @@ let
 
 	#scatter!(cen.position[1], cen.position[2])
 
-	Colorbar(fig[1, 2],h )
+	Colorbar(fig[1, 2],h , ticks=Makie.automatic)
 
 	fig
 end
@@ -366,12 +366,12 @@ let
 		lguys.x_position(snap)[filt], lguys.y_position(snap)[filt], 
 		weights=snap.weights[filt], bins=N_hist,
 		colorscale=log10,
-		colorrange=(1e-7, nothing)
+		colorrange=(1e-7, nothing),
 	)	
 
 	#scatter!(cen.position[1], cen.position[2])
 
-	Colorbar(fig[1, 2], h)
+	Colorbar(fig[1, 2], h, ticks=Makie.automatic)
 	fig
 end
 

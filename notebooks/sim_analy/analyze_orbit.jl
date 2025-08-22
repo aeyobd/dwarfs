@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -130,7 +130,11 @@ properties_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.t
 obs_file =  "$parentdir/observations/$galaxyname/observed_properties.toml"
 
 # ╔═╡ 0dd476fd-be53-4e9b-a686-a4462485c64c
-orbit_file = joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
+orbit_file = if isfile(joinpath(parentdir, "analysis", modelname, "orbit.csv"))
+	joinpath(parentdir, "analysis", modelname, "orbit.csv")
+else
+	joinpath(parentdir, "analysis", modelname, "simulation/orbit.csv")
+end
 
 # ╔═╡ 2bc762ad-e590-443e-b3c2-91dc42a8a4d9
 outfile = joinpath(parentdir, "analysis", modelname, "orbital_properties.toml")
