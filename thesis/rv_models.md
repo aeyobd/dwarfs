@@ -89,9 +89,9 @@ Savage-Dickey calculated Bayes factor using Silverman-bandwidth KDE smoothed sam
 |      | spencer+18  | Hectoshell | 1407  | 970   | 596   | 406   | 0.9                  | 2                       |
 |      | APOGEE      | APOGEE     | 9500  | 279   | 37    | 67    | 0.6                  | --                      |
 
-Table: Summary of velocity measurements and derived properties. 
+Table: Summary of velocity measurements and derived properties. {#tab:rv_measurements short="Spectroscopic LOS velocity measurements"}
 
-
+measurement 
 
 | study      | mean            | sigma           | $\partial \log\sigma / \partial \log R$ | $\partial v_z / \partial x$ (km/s/deg) | $\theta_{\rm grad} / ^{\circ}$ | $\log B_2/B_1$ |
 | ---------- | --------------- | --------------- | --------------------------------------- | -------------------------------------- | ------------------------------ | -------------- |
