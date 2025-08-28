@@ -200,6 +200,11 @@ let
 	fig
 end
 
+# ╔═╡ bb8211c1-367f-45d6-94f4-2c875a626f76
+md"""
+How far off are the final positions?
+"""
+
 # ╔═╡ ad1782db-17a2-4385-ab7b-0ce038600a0d
 LilGuys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"], limits=((-200., 200.), (-200., 200.), (-200., 200.)))
 
@@ -274,6 +279,31 @@ idx_f = if isdefined(@__MODULE__, :obs_today)
 	searchsortedfirst(times, t_end)
 else
 	length(times)
+end
+
+# ╔═╡ 72394525-e2c1-49ac-ad20-78fc83c18844
+x_cen[:, idx_f] .-  LilGuys.position(gc0)
+
+# ╔═╡ dbfb5900-ae3d-4d20-8ce2-adad0c0f8bb1
+v_cen[:, idx_f] * V2KMS .- LilGuys.velocity(gc0)
+
+# ╔═╡ 9325797a-ff8a-42d9-8c1e-ab233dfdd7c4
+let
+	f = LilGuys.plot_xyz(x_cen[:, idx_f], LilGuys.position(gc0), plot=:scatter)
+	LilGuys.plot_xyz!(f.content, x_cen[:, idx_f-10:idx_f])
+
+	f
+
+end
+
+# ╔═╡ e79a4d2d-14cb-4f0b-8a3d-6db0e2afde56
+let
+	f = LilGuys.plot_xyz(V2KMS*v_cen[:, idx_f], LilGuys.velocity(gc0), plot=:scatter, units="/km s⁻¹")
+
+	LilGuys.plot_xyz!(f.content, V2KMS*v_cen[:, idx_f-10:idx_f])
+
+	f
+
 end
 
 # ╔═╡ aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
@@ -431,6 +461,15 @@ end
 
 # ╔═╡ 73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
 t_f = t[idx_f] * T2GYR
+
+# ╔═╡ 8c28ac36-92c9-457e-8ccc-fb7551db883f
+t[idx_f] 
+
+# ╔═╡ 0031cce4-160b-4c02-9d14-94769901eaea
+diff(t)[idx_f]
+
+# ╔═╡ 15e35190-0430-40f1-a752-a968b9ea35f6
+-t_f / T2GYR + times[1]  / T2GYR
 
 # ╔═╡ 14eebce8-04f7-493b-824a-7808c7fa35dd
 md"""
@@ -675,7 +714,7 @@ let
 		"idx_peri" => idx_peri,
 		"t_last_peri" => t_f - t_peri,
 		# these three are for the final stream coordinate frame
-		"t_f_gyr" => t_f * T2GYR,
+		"t_f_gyr" => t_f,
 		"ra_f" => ra0,
 		"dec_f" => dec0,
 		"distance_f" => obs_c.distance[idx_f],
@@ -737,6 +776,11 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
 # ╟─08c3df42-738b-47c4-aa6b-fc39a9cfc02f
 # ╠═a1c992c6-ad12-4968-b105-adfa1f327e76
+# ╟─bb8211c1-367f-45d6-94f4-2c875a626f76
+# ╠═72394525-e2c1-49ac-ad20-78fc83c18844
+# ╠═dbfb5900-ae3d-4d20-8ce2-adad0c0f8bb1
+# ╠═9325797a-ff8a-42d9-8c1e-ab233dfdd7c4
+# ╠═e79a4d2d-14cb-4f0b-8a3d-6db0e2afde56
 # ╠═ad1782db-17a2-4385-ab7b-0ce038600a0d
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
@@ -773,6 +817,9 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
+# ╠═8c28ac36-92c9-457e-8ccc-fb7551db883f
+# ╠═0031cce4-160b-4c02-9d14-94769901eaea
+# ╠═15e35190-0430-40f1-a752-a968b9ea35f6
 # ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
 # ╠═9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
 # ╠═54cf5233-a955-4831-86ad-23b72f15789d

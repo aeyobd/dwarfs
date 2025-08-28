@@ -365,6 +365,38 @@ let
 	fig
 end
 
+# ╔═╡ 41b934aa-bff4-4a88-84b6-827dff39c2c7
+let
+	fig = Figure(size=(6, 4) .* Arya.UNITS_PER_INCH)
+	ax = Axis(fig[1,1],
+		xlabel = "time",
+		ylabel = "distance from mean orbit",
+	)
+
+	for (label, orbit) in orbits
+		lines!(orbit.times, radii(orbit.positions, orbits[1].second.positions), label="new $label")
+	end
+
+	Legend(fig[1, 2], ax)
+	fig
+end
+
+# ╔═╡ 14cd6367-1e69-4ab7-b744-dc1cbe5c138a
+let
+	fig = Figure(size=(6, 4) .* Arya.UNITS_PER_INCH)
+	ax = Axis(fig[1,1],
+		xlabel = "time",
+		ylabel = "velocity distance from mean orbit",
+	)
+
+	for (label, orbit) in orbits
+		lines!(orbit.times, V2KMS * radii(orbit.velocities, orbits[1].second.velocities), label="new $label")
+	end
+
+	Legend(fig[1, 2], ax)
+	fig
+end
+
 # ╔═╡ 5ced8710-8187-482c-b00c-29f21f6084d5
 md"""
 # Energy and Angular Momentum
@@ -573,6 +605,8 @@ end
 # ╠═a419c394-d597-4f6f-812f-cd0a0bc7ea0e
 # ╠═9ea9076a-2d51-41ca-ac10-c71a7e379c79
 # ╠═86c6ac08-2705-4b63-a711-207e636d504c
+# ╠═41b934aa-bff4-4a88-84b6-827dff39c2c7
+# ╠═14cd6367-1e69-4ab7-b744-dc1cbe5c138a
 # ╟─5ced8710-8187-482c-b00c-29f21f6084d5
 # ╠═4473d1b0-fea7-4d87-8837-1966124f1cf0
 # ╠═7c3d6c08-a345-4418-91a4-a14e401c50ea
