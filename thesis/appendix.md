@@ -22,7 +22,7 @@ $$
 Each likelihood is normalized over their respective 2D parameter space for both the satellite. To control the relative frequency of member and background stars, $f_{\rm sat}$ representing the fraction of member stars in the field. The total likelihood for any star in this model is the sum of the satellite and background likelihoods, weighted by their relative frequencies,
 $$
 {\cal L}_{\rm tot} = f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}.
-$$
+$$ {#eq:Ltot}
 The probability that any star belongs to the satellite is then given by 
 $$
 P_{\rm sat} = 

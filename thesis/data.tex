@@ -1,43 +1,64 @@
-To provide an empirical benchmark for simulations in the next chapters,
-we aim to understand the observed properties and density profiles of
-Sculptor and Ursa Minor. In this section, we first compile past
-measurements of each galaxy. We then describe the \citet{jensen+2024}
-Bayesian methodology to select high probability member stars from
-\emph{Gaia}. We show the derived density profiles are robust to changes
-in assumptions. While Fornax is well represented by a 2D exponential
-profile, Sculptor and Ursa Minor show an excess of stars relative to an
-2D exponential in the outer regions, better described by a Plummer
-profile. Future chapters assess possible explanations for these excess.
+An ongoing research question is whether local dwarf spheroidal galaxies
+contain substructure such as stellar halos. Some systems appear to be
+simple in structure, yet recent work has reported detection of stellar
+halos in several classical dwarfs. To provide an empirical benchmark for
+simulations in the next chapters, we examine the observed stellar
+structure of Sculptor and Ursa Minor. We describe the
+\citet{jensen+2024} Bayesian methodology to select high-probability
+member stars from \emph{Gaia}. The derived density profiles are robust
+to alternative selection criteria. While Fornax is well represented by
+an exponential density profile, we find that Sculptor and Ursa Minor
+exhibit an excess of stars in their outer regions relative to an
+exponential, with a Plummer profile providing a better fit. In following
+chapters, we consider possible physical explanations for these extended
+profiles.
 
-\section{\texorpdfstring{\emph{Gaia} data}{Gaia data}}\label{gaia-data}
+\section{\texorpdfstring{\emph{Gaia} sample
+selection}{Gaia sample selection}}\label{gaia-sample-selection}
 
-Here, we briefly describe \citet{jensen+2024}'s (hereafter J+24)
-membership estimation method. J+24 use a Bayesian framework
-incorporating proper motion (PM), colour-magnitude diagram (CMD), and
-spatial information to determine the probability that a given star
-belongs to the satellite. By accounting for PM in particular, J+24
-produces low contamination samples of candidate member stars out to
-large distances from a dwarf galaxy. J+24 extends the algorithm
-presented in \citet{MV2020a}; \citet{MV2020b} but additionally includes
-an optional secondary, extended spatial component to find possible
-members as far as \textasciitilde10 half-light radii \(R_h\) from
-several dwarf galaxies. See also similar work by \citet{pace+li2019};
+The detection of faint features in resolved stellar systems requires
+careful consideration of whether a given star belongs to the system.
+Without removing contamination from foreground/background features,
+faint features may be lost in the noise or be of dubious association
+with the system. Historically, background discrimination was performed
+by the colour-magnitude diagram alone. Now with \emph{Gaia} data,
+stellar parallax and proper motion areavailable as additional membership
+indicators. Here, we use the \citet{jensen+2024}'s (hereafter J+24)
+membership probabilities for \emph{Gaia} observations. J+24 use a
+Bayesian framework incorporating proper motion (PM), colour-magnitude
+diagram (CMD), and spatial information to determine the probability that
+a given star belongs to the satellite or background. By accounting for
+PM in particular, J+24 produces low contamination samples of candidate
+member stars out to large distances from a dwarf galaxy. J+24 extends
+the algorithm presented in \citet{MV2020a}; \citet{MV2020b} by
+additionally includes a secondary, extended spatial component. J+24 are
+able to find candidate members out to \textasciitilde10 half-light radii
+(\(R_h\)). Similar recent work has also included \citet{pace+li2019};
 \citet{battaglia+2022}; \citet{pace+erkal+li2022}; \citet{qi+2022}.
 
-J+24 define likelihoods \({\cal L}\) representing the probability
-density that a star is consistent with either the MW stellar background
-(\({\cal L}_{\rm bg}\)) or the satellite galaxy
-(\({\cal L}_{\rm sat}\)). In either case, the likelihoods are the
-product of a spatial, PM, and CMD term: \begin{equation}{
+J+24 construct likelihoods, \({\cal L}\), representing the probability
+density that a star is consistent with either the stellar
+foreground/background, \({\cal L}_{\rm bg}\), or the satellite galaxy,
+\({\cal L}_{\rm sat}\). In either case, the likelihoods are the product
+of a spatial, PM, and CMD components, \begin{equation}{
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}.
 }\end{equation}
 
-Each likelihood is normalized over their respective 2D parameter space
-for both the satellite. To control the relative frequency of member and
-background stars, \(f_{\rm sat}\) representing the fraction of member
-stars in the field. The total likelihood for any star in this model is
-the sum of the satellite and background likelihoods, weighted by their
-relative frequencies, \begin{equation}{
+The spatial likelihood is specified either as a 1 or 2 component
+elliptical exponential density profile (with the 2 component used when
+shown to be detected). The proper motion likelihood specifies if a
+star's proper motion is consistent with the dwarf galaxy's systemic
+motion, accounting for observational uncertainties. Finally, the CMD
+likelihood is based on the consistency of a star with theoretical
+isochrones in \emph{Gaia} \(G\) versus \(G_{\rm BP}- G_{\rm RP}\) for
+the galaxy. The background likelihood is a uniform distribution over the
+field, and the background CMD and PM likelihoods are constructed
+empirically from the stars in an annulus surrounding the dwarf galaxy.
+Each likelihood is normalized over the respective parameter space.
+
+The total likelihood is the sum of the background and satellite
+likelihoods, weighted by the fraction of stars in the field belonging to
+the satellite \(f_{\rm sat}\): \begin{equation}{
 {\cal L}_{\rm tot} = f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}.
 }\end{equation} The probability that any star belongs to the satellite
 is then given by \begin{equation}{
@@ -46,18 +67,11 @@ P_{\rm sat} =
 = \frac{f_{\rm sat}{\cal L}_{\rm sat}}{f_{\rm sat}{\cal L}_{\rm sat} + (1-f_{\rm sat}){\cal L}_{\rm bg}}.
 }\end{equation}
 
-\section{Selected stars}\label{selected-stars}
-
-In
-Figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection},
-we illustrate the resulting samples from the algorithm in the tangent
-plane, CMD, and proper motion space. The tangent plane coordinates
-\(\xi\) and \(\eta\) are the distances in RA and declination as measured
-on a plane tangent to the dwarf galaxies centre. \(R_{\rm ell}\) is
-defined as the circularized elliptical radius, so
-\(R_{\rm ell}^2 = a\,b\,({\xi'}^2 / a^2 + {\eta'}^2 / b^2)\) where
-\(\xi'\) and \(\eta'\) are rotated to align with the position angle
-direction \(\theta\).
+J+24 run MCMC simulations to solve for the proper motions,
+\(f_{\rm sat}\), and structural properties of the second exponential
+density profile (if included). The median parameter are then used to
+calculate \(P_{\rm sat}\) which we use to select our samples of likely
+member stars.
 
 For our fiducial sample, we adopt a probability cut of
 \(P_{\rm sat} = 0.2\). Most stars are assigned probabilities close to
@@ -70,6 +84,20 @@ less likely to have been targeted and have poorer astrometry and colour
 information. We find no difference in the resulting density
 distributions when restricting stars to be brighter than a specific
 magnitude.
+
+\section{Observed stellar
+distributions}\label{observed-stellar-distributions}
+
+In
+Figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection},
+we illustrate the resulting samples from the algorithm in the tangent
+plane, CMD, and proper motion space. The tangent plane coordinates
+\(\xi\) and \(\eta\) are the distances in RA and declination as measured
+on a plane tangent to the dwarf galaxies centre. \(R_{\rm ell}\) is
+defined as the circularized elliptical radius, so
+\(R_{\rm ell}^2 = a\,b\,({\xi'}^2 / a^2 + {\eta'}^2 / b^2)\) where
+\(\xi'\) and \(\eta'\) are rotated to align with the position angle
+direction \(\theta\).
 
 For all galaxies, each criteria is commensurate in sifting out
 nonmembers. The CMD is well defined, and probable members only extend a
@@ -98,22 +126,14 @@ illustrates the approximate background of stars which may be confused as
 members. Additionally, since there is no clear spatial structure in the
 \emph{CMD+PM} (or \emph{all}) sample outside several \(R_h\), it is
 unlikely that there are additional faint, tidal features detectable with
-\emph{Gaia}. Not shown here, we also try a variety of simpler, absolute
-cuts and thresholds, finding no evidence of other structure in both
-\emph{Gaia} and DELVE/UNIONS data.
+\emph{Gaia}.
 
-Finally, we illustrate the location of RV-confirmed members from
-Section~\ref{sec:rv_obs} in each panel. Because RV targets tend to be
-brighter than a typical \emph{Gaia} candidate, RV members typically have
-more precise PMs. However, the RV members fill about the same area on
-the CMD down to the magnitude limit. Additionally, while the number of
-stars with RV measurements decreases at large radii, there are still
-confirmed RV members as far as \(\sim 10R_h\) for both galaxies. These
-stars illustrate the extended profiles of each galaxy. Note that for an
-exponential profile, 99.95\% of stars should be within \(6R_h\), so the
-discovery of any stars beyond \(6R_h\) hints at a deviation from an
-exponential profile. These \emph{extratidal} stars hint at something
-tidal in nature, and our goal is to explore possible interpretations.
+Finally, we illustrate the location of distant, RV-confirmed members
+from Section~\ref{sec:rv_obs} in each panel. These stars illustrate the
+extended profiles of each galaxy. Note that for an exponential profile,
+99.95\% of stars should be within \(6R_h\), so the discovery of any
+stars beyond \(6R_h\) hints at a deviation from an exponential profile.
+Distant member stars beg for an explanation as to their origin.
 
 \begin{figure}
 \centering

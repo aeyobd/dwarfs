@@ -2,39 +2,41 @@ In this chapter, we present our results from our simulations of Sculptor and Urs
 
 # Sculptor
 
-Before running N-body simulations, we need to understand both the typical halos which could host a sculptor like galaxy and the possible orbits Sculptor.
-
-
-
-
-
-@fig:scl_halos presents approximate constraints based on 
-
-
-
-
-
 ### Derived properties and setup
+
+From the observed properties of Sculptor, we can infer reasonable $\Lambda$CMD dark matter halo hosts. [@tbl:scl_derived_props] reports our inferred halo and kinematic properties of Sculptor. First, taking the absolute magnitude from @munoz+2018 with the mass-to-light ratio from @woo+courteau+dekel2008 (1.7 with $\sim$ 0.17 dex uncertainty), the total current stellar mass of Sculptor is $M_\star \sim 3.1 \times 10^6 \Mo$. Based on the stellar mass-$v_{\rm max}$ relation [from @fattahi+2018; see also @fig:SMHM], the halo should have $v_{\rm max} \sim 31 \pm 3 \,\kms$. Finally, using the @ludlow+2016 $z=0$ mass-concentration relation, this constraint translates into a $r_{\rm max} \sim 6 \pm 2\,{\rm kpc}$, or alternatively $M_{200} = 5\times10^9$ with $c=13$. 
+
+@fig:scl_halos illustrates these estimates visually. The stellar-mass $v_{\rm max}$ constraint translates to an estimate of $v_{\rm max}$ only (horizontal band). The mass-concentration relation describes the relationship between $v_{\rm max}$ and $r_{\rm max}$, an approximately diagonal linear band. And finally, we include a curved line which illustrates where the initial velocity dispersion is approximantly larger than the present-day observed dispersion $v_{\rm circ}(R_h) / \sqrt{3} \sim \sigma_v \gtrsim 9\,\kms$. 
+
+The intersection of the constraints on the halo leads us to select an initial halo, `compact`, which is more compact than the mean but with a observationally consistent initial velocity dispersion. We also have the `light` halo which occupies the intersection between 3$\sigma$ lowest mass and the velocity dispersion constraints, which we come back to in @sec:scl_lmc. 
+
+
+
+While there is some range in the choice of initial halo, reasonable changes to the initial halo do not substantially affect the tidal evolution for Sculptor. The velocity dispersion, in particular, translates to an estimate of the mass within $r_h$. As a result, halos with the same velocity dispersion only differ in total mass, but the density slope and circular velocity near the stellar component is similar. These halos will have a similarly affected stellar component. 
+
+
+
+
 
 | parameter            | value                                         | reference                                                    |
 | -------------------- | --------------------------------------------- | ------------------------------------------------------------ |
 | $L_\star$            | $1.8\pm0.2\times10^6\ L_\odot$                |                                                              |
 | $M_\star$            | $3.1_{-1.0}^{+1.6} \times10^6\ {\rm M}_\odot$ |                                                              |
 | $M_\star / L_\star$  | $1.7\times 10^{\pm 0.17}$                     | @woo+courteau+dekel2008                                      |
-| $M_{200}$            | $0.5 \pm 0.2\times10^{10}\ M_0$               |                                                              |
-| $c_{\rm NFW}$        | $13.1_{-2.8}^{+3.6}$                          |                                                              |
 | $v_{\rm circ, max}$  | $31\pm 3\,\kms$                               | relation from @fattahi+2018                                  |
 | $r_{\rm circ, max}$  | $6 \pm 2$ kpc                                 | $v_{\rm circ}$ with @ludlow+2016 mass-concentration relation |
+| $M_{200}$            | $0.5 \pm 0.2\times10^{10}\ M_0$               |                                                              |
+| $c_{\rm NFW}$        | $13.1_{-2.8}^{+3.6}$                          |                                                              |
 | $r_{\rm break, obs}$ | $25 \pm 5$ arcmin                             | @sestito+2024a                                               |
 | $t_{\rm break, obs}$ | $110\pm30$ Myr                                | $\sigma_v$, $r_{\rm break}$ with @                           |
 
 Table: To derive total mass, we use the absolute magnitude from @munoz+2018 (see also [@tbl:scl_obs_props]) along with the stellar mass to light ratio (1.7 with 0.17 dex uncertainty) from @woo+courteau+dekel2008. Sculptor's total stellar mass is then $M_\star \sim 3.1_{-1.0}^{1.6} \times 10^6\,\Mo$. From the stellar mass to dark matter halo's characteristic velocity $v_{\rm circ}$ in @fattahi+2018, we expect Sculptor to have $v_{\rm circ} \approx 31 \pm 3 \kms$. {#tbl:scl_derived_props  short="Derived Properties of Sculptor"}
 
-For the mass-to-light ratio, we use the values from @woo+courteau+dekel2008. Note that we assume a scatter of 0.17 dex for the mass-to-light ratios as reported for mass uncertainties. @delosreyes+2024 also indicate that other methods for stellar mass-to-light ratios result in similar scatters and systematic biases. However these values are just approximate. 
+
 
 ![Sculptor initial halos](figures/scl_initial_halos.pdf){#fig:scl_halos}
 
-Figure: The suggested halos of Sculptor compared to cosmological predictions.
+Figure: The suggested halos of Sculptor compared to cosmological predictions. **TODO: simplify $\sigma_v$ calculation**.
 
 
 
@@ -46,17 +48,27 @@ Figure: The suggested halos of Sculptor compared to cosmological predictions.
 
 Table: The parameters for our initial Sculptor halos. {#tbl:scl_ini_halos  short="Initial halos of Sculptor"}
 
+
+
 ## Milky Way tides
 
 ### Orbital properties
 
+Next, we calculate the range of possible orbits of Sculptor in our fiducial Milky Way potential. @fig:scl_orbits illustrates point particle orbits for 100 samples of Sculptor's observed kinematics integrated backwards 5 Gyr in both galactocentric coordinate slices (x, y, z) and in galactocentric radius with time. In terms of the x, y, z planes, note that all sampled orbits of Sculptor have nearly the same morphology---they each orbit mostly in the y-z plane, passing through the same number of pericentres and maintaining similar orbits across 5Gyr. Sculptor's orbital history is relatively well-constrained. 
+
+We select an orbit with the $\sim 3\sigma$ smallest pericentre among all possible orbits. We achieve this by taking the median parameters of all orbits with a pericentre less than the 0.0027th quantile pericentre, yielding a pericentre of 43 kpc.^[only slightly smaller than the 0.00135th quantile pericentre] It is unlikely given the current observations that Sculptor has a smaller pericentre. Since tidal effects depend most strongly on the pericentre of an orbit, this orbit should maximize the tidal force from the Milky Way. 
+
+We take the first apocentre after a lookback time of 10 Gyr, or at 9.43 Gyr, as the initial conditions for our model of Sculptor. @tbl:scl_orbits notes the initial conditions for our simulation.
+
+
+
+
+
 ![Sculptor Orbits](figures/scl_xyzr_orbits.pdf){#fig:scl_orbits}
 
-Figure: The orbits of Sculptor in a static Milky Way potential in galactocentric $x$, $y$, and $z$ coordinates. The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected `smallperi` orbit is plotted in black and light blue transparent orbits represent the past 5Gyr orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of sculptor is well-constrained in this potential and it is unlikely to achieve a smaller pericentre than our selected orbit.  \the\textwidth
+Figure: The orbits of Sculptor in a static Milky Way potential in galactocentric $x$, $y$, and $z$ coordinates. The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected `smallperi` orbit is plotted in black and light blue transparent orbits represent the past 5Gyr orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of sculptor is well-constrained in this potential and it is unlikely to achieve a smaller pericentre than our selected orbit.
 
 
-
-To select an orbit with ~ maximum possible observationally-consistent tidal forces, we take the median parameters for orbits with a pericentre less than 2x the 3$\sigma$ minimum pericentre and derive the following orbit. The initial conditions are from the 
 
 
 
@@ -80,17 +92,21 @@ Table: Properties of selected orbits for Sculptor. The mean orbit represents the
 
 ## Tidal effects
 
-- dark matter loss
-- little influence to stars
-- smallest pericentre does not help
+The Milky Way tides indeed affect Sculptor's dark matter halo. @fig:scl_sim_images shows projected dark matter distribution of our N-body simulation for Sculptor in the $y$-$z$ plane for 5 previous pericentres. This simulation uses the `compact` initial halo on the `smallperi` orbit. The dark matter forms large streams which orbit the Milky Way several times. However, note that the central dark matter cusp is similar in appearance across all simulation snapshots. 
 
-![Sculptor simulation snapshots](figures/scl_sim_images.png)
+More quantitatively, the halo loses about 99% of its initial dark matter mass. This corresponds in a reduction from the initial $v_{\rm max} = 31\,\kms$ to $v_{\rm max} = 22\,\kms$.  However, the stellar component of Sculptor is relatively unaffected. 
+
+While mass loss leads to adiabatic expansion of the stellar component, no features of tidal disruption or disequilibrium are currently observable. @fig:scl_smallperi_i_f shows the final projected density of stars on the sky, and the initial and final radially averaged density profiles. No non-spherical density features are apparent, even at 5 decades fainter in surface density than the central density. In addition, the initial and final density profiles look identical up to some scale, with a tidally-induced excess of stars only appearing $\sim 3$ orders of magnitude fainter than the faintest our density profile measures. 
+
+The analytically motivated break and tidal radii corroborate a weak tidal effect on stars. In both cases, these radii work out to be $\gtrsim 100$ arcminutes, outside where we can measure the density profile. In particular, because we have chosen the most extreme observationally permissible orbit, it is unlikely, for similar $\Lambda$CDM motivated initial conditions, that these radii would ever approach where the break in Sculptor's density profile appears. 
+
+![Sculptor simulation snapshots](figures/scl_sim_images.png){#fig:scl_sim_images}
 
 Figure: Images of the dark matter evolution over a selection of past apocentres and the present day position. Limits range from -150 to 150 kpc in the $y$-$z$ (approximately orbital) plane and the colourscale is logarithmic spanning 5 orders of magnitude between the maximum and minimum values. In this image, stars occupy only ever a few pixels so are not plotted. 
 
 
 
-![Sculptor Tidal Tracks](figures/scl_tidal_track.pdf)
+![Sculptor Tidal Tracks](figures/scl_tidal_track.pdf){#fig:scl_tidal_track}
 
 Figure: The tidal tracks for the smallperi orbit. Todo: add velocity dispersion plot to RHS
 
@@ -98,13 +114,13 @@ Figure: The tidal tracks for the smallperi orbit. Todo: add velocity dispersion 
 
 ![Sculptor velocity dispersion evolution](figures/scl_sigma_v_time.pdf)
 
-Figure: Evolution of stellar velocity dispersion within 1 kpc for different Scl models. In all cases, the evolution is mild. Note that binarity may reduce the inflate the observed velocity dispersion by  ~ 1 km/s, so the conservative lower limit is around 8 km/s.
+Figure: Evolution of stellar velocity dispersion within 1 kpc for different Scl models. In all cases, the evolution is mild. Note that binarity may reduce the inflate the observed velocity dispersion by  ~ 1 km/s, so the conservative lower limit is around 8 km/s. **TODO**, add bound mass with time. Maybe combine with tidal tracks and radius / time orbit.
 
 
 
 
 
-![Sculptor initial and final density profiles](figures/scl_smallperi_i_f.pdf)
+![Sculptor initial and final density profiles](figures/scl_smallperi_i_f.pdf){#fig:scl_smallperi_i_f}
 
 Figure: Effects on exponential initial stars. TODO: plot 2D sky proj. stars
 
@@ -112,28 +128,25 @@ Figure: Effects on exponential initial stars. TODO: plot 2D sky proj. stars
 
 
 
-![Sculptor Plummer initial and final density profiles](figures/scl_plummer_i_f.pdf)
+![Sculptor Plummer initial and final density profiles](figures/scl_plummer_i_f.pdf){#fig:scl_smallperi_plummer_i_f}
 
 Figure: effects on Plummer initial stars.
 
 ## Effects of the LMC
 
-
+The Milky Way isn't the only galaxy in town. Becoming more apparent, the infall of the LMC substantially affects the Milky Way system. The mass of the LMC may be as high as 1/5 of the Milky Way mass, so including an LMC in the Milky Way potential may change conclusions about properties and orbits of the Milky Way satellite system. 
 
 ### Orbital effects
 
-As discussed in @battaglia+2022, Sculptor's orbit is strongly influenced by the presence of an LMC. Figure @fig:scl_lmc_orbit_effect, the addition of an LMC reduces Scl's pericentre with the MW and implies that Scl may be on its first infall with the MW, in contrast to the discussion above. Thus, the LMC has a critical impact on the evolution of Scl. Additionally, Scl passes rapidly but relatively close to the LMC in the past 100 Myr. 
+As discussed in @battaglia+2022, Sculptor's orbit is strongly influenced by the presence of an LMC. 
+
+To explore the effects of the LMC on Sculptor, we use the publically available L3M11 model from @vasiliev2024. This model stars with a lighter Milky Way than our fiducial @EP2020, @mcmillan2011 like model. The L3M11 potential is an evolving multipole approximation of an N-body simulation with both a live MW and LMC dark matter halo. The MW intital conditions were an NFW with $r_s=16.5\,$kpc and mass $M_{\rm 100}= 11\times10^{11}\Mo$, and the LMC was a NFW halo with $r_s=11.7$ and $M_{100} = 2.76 \times 10^{11} \Mo$. This model had a previous LMC pericentre at about 6 Gyr ago.
+
+@fig:scl_lmc_orbit_effect displays the effect of including an LMC in the potential.   The green samples are in the initial MW-only potential in the `L3M11` model, and the orange samples are integrated in the evolving MW and LMC `L3M11` model. The past 1 Gyr is similar in both cases, but the orbits diverge significantly afterwards. The recent passage of Sculptor with the LMC around 0.1 Gyr ago allows for Sculptor to begin as far as 300 kpc from the Milky Way centre. The evolving potential also adds significant long term variability in the possible orbits of Sculptor. Sculptor, however, is orbiting in the opposite direction of the LMC so is likely not associated with the LMC system. 
+
+Given the large uncertainties of the LMC model, we conservatively double all of the observational parameters of Sculptor. This has a similar effect to including LMC mass and orbital uncertainties but is considerably simpler. From this larger range of orbits, we once again select the orbit with the median final observables of all orbits with pericentres less than the 0.0027th quantile. This orbit, the `smallperilmc` orbit is plotted in black and is only integrated up to 2 Gyr ago, to isolate recent tidal effects. 
 
 
-
-Finally, we also consider the influence of the large Milky Cloud on the orbits and evolution of Scl. We adopt the @vasiliev2024 multipole approximation of an N-body simulation of the LMC and MW. Their initial conditions are
-
-- MW halo:
-- MW bulge (static):
-- MW disk (static):
-- LMC halo:
-
-We now consider 3 orbits under the L3M11 potential model from @vasiliev2024. We focus on this LMC potential as a lighter LMC or MW should only reduce tidal impacts and the recent orbit of Scl is minimally affected by the LMC potential. 
 
 ![Sculptor Orbits with LMC](figures/scl_lmc_xyzr_orbits.pdf){#fig:scl_lmc_orbit_effect}
 
@@ -157,27 +170,21 @@ Figure: This figure is similar to @fig:scl_orbits except that we are showing the
   x_i = [4.30 138.89 125.88]
   v_i = [6.89 -56.83 52.09]
 
-Smallperi
-
-- ra = 15.0183
-  dec = -33.7186
-  distance = 84.0
-  pmra = 0.166
-  pmdec = -0.237
-  radial_velocity = 111.2
-
-  t_i = -2.00
-  pericentre = 28.00
-  apocentre = 190.45
-  t last peri = -0.39
-  x_i = [12.79 168.76 87.33]
-  v_i = [0.37 -57.69 61.40]
-
 
 
 ### Tidal effects
 
-![Sculptor Simulation Snapshots with LMC](figures/scl_lmc_sim_images.pdf)
+Unlike the previous mdoel, this model only has one pericentre with the Milky Way. @fig:scl_lmc_sim_images shows snapshots of Sculptor over the past 2 Gyr while marking the position of the LMC. With only one pericentre, and a larger one than the `smallperi` orbit, Sculptor's dark matter is substantially less disrupted. And while, based on the tidal tensor values, the LMC induces a greater instantaneous tidal effect than the Milky Way, Sculptor's dark matter component does not show strong effects due to the LMC. 
+
+Finally, @fig:scl_lmc_i_f shows the projected on-sky final stellar distribution and the initial and final stellar density profile for this model with exponential stars. The stellar component does not change at all. While the break radius set by the time since the last LMC pericentre would agree with the location of the break in the observed density profile, no stellar effect would be observable. 
+
+
+
+The LMC flyby encounter is an approximately impulsive encounter, in contrast with more adiabadic mass loss due to the Milky Way. Impulsive encounters tend to inject energy into the stellar and dark matter distribution, and can initially cause the galaxy to contract. In addition, the tidal force is required to be far larger than for slower, adiabadic mass loss, because the galaxy experiences this tidal field for far less time. Even in models where Sculptor passes through the the LMC, tidal tails do not form immediately after this encounter. 
+
+A final note is that this model only considers the recent tidal effects .As illustrated in the range of possible orbits in @fig:scl_lmc_orbits_effect, there is a chance that Sculptor experienced an extremely small pericentre with the Milky Way. This pericentre has the potential to substantially rearrange the stellar component, drive large tidal mass loss, and create a Plummer-like stellar density profile. However, this encounter is highly dependent on the choice of the MW-LMC potential model, and may not occur at all. Long time integration in dynamic potentials amplifies uncertainties in the inputs and may not be reliable. **TODO: I would love to get this model to work...**
+
+![Sculptor Simulation Snapshots with LMC](figures/scl_lmc_sim_images.pdf){#fig:scl_lmc_sim_images}
 
 
 
