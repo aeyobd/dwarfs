@@ -155,8 +155,8 @@ lw_thick = @lift 2*$(theme(:linewidth))
 # ╔═╡ ff89d7db-c954-48b8-b87a-446ccfb2d79b
 trajectories = OrderedDict(
 
-	"no lmc" => orbits_no_lmc,
-	 "lmc" => orbits_w_lmc,
+	"Scl: MW only" => orbits_no_lmc,
+	 "Scl: MW & LMC" => orbits_w_lmc,
 )
 
 # ╔═╡ 92fb5b1f-5dc6-4766-b69d-f8644861d4cd
@@ -168,12 +168,7 @@ md"""
 orbits_m_lmc = orbits_w_lmc .- [orbit_lmc]
 
 # ╔═╡ 081e6a08-92e3-4f9d-bc8e-7ff80ca74693
-trajectories_radii = OrderedDict(
-	"no lmc" => orbits_no_lmc,
-	 "lmc" => orbits_w_lmc,
-	"scl - lmc" => orbits_m_lmc
 
-)
 
 # ╔═╡ 6f1a1958-708a-4aac-935d-0e5a87091a98
 function plot_traj_lmc!(; x_direction = 2, t_min=-5/T2GYR)
@@ -261,10 +256,10 @@ function plot_orbits_w_lmc(trajectories; lmc_visible=false, act_visible=false)
 end
 
 # ╔═╡ ed9ab01f-1906-4a2a-8f5d-6559f30a1c69
-@savefig "scl_nonolmc_mc_orbits_xy" plot_orbits_w_lmc(Dict("MW only" => orbits_no_lmc), lmc_visible=false)
+@savefig "scl_nonolmc_mc_orbits_xy" plot_orbits_w_lmc(Dict("Scl: MW only" => orbits_no_lmc), lmc_visible=false)
 
 # ╔═╡ 05af926b-9af5-4fc1-a2b0-0fa1a0502ed9
-@savefig "scl_nolmc_mc_orbits_xy" plot_orbits_w_lmc(Dict("MW only" => orbits_no_lmc), lmc_visible=true)
+@savefig "scl_nolmc_mc_orbits_xy" plot_orbits_w_lmc(Dict("Scl: MW only" => orbits_no_lmc), lmc_visible=true)
 
 # ╔═╡ 2683e73a-e9d9-4f79-a101-8f306d36e428
 @savefig "scl_lmc_mc_orbits_xy" plot_orbits_w_lmc(trajectories, lmc_visible=true)

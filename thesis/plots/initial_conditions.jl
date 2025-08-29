@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -23,13 +23,13 @@ include("./paper_style.jl")
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ caf046d9-e475-4810-844e-b65e9c08c832
-stars_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "sculptor/1e7_V31_r3.2/", "stars")
+stars_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "sculptor/1e7_new_v31_r3.2/", "stars")
 
 # ╔═╡ 7a6d6345-fefb-4017-8230-3ff5bea55c83
 snap = Snapshot(joinpath(stars_dir, "iso_paint.hdf5"))
 
 # ╔═╡ a3a3a875-d0cc-4594-86c2-b242e859efef
-df_probs = LilGuys.read_hdf5_table(joinpath(stars_dir, "exp2d_rs0.08", "probabilities_stars.hdf5"))
+df_probs = LilGuys.read_hdf5_table(joinpath(stars_dir, "exp2d_rs0.10", "probabilities_stars.hdf5"))
 
 # ╔═╡ 01e34341-e806-44ef-9591-d226b345dec6
 snap.weights = df_probs.probability[snap.index]
@@ -38,10 +38,10 @@ snap.weights = df_probs.probability[snap.index]
 prof_dm = DensityProfile(snap, bins=-2:0.1:2.1)
 
 # ╔═╡ 932473fc-535f-4dab-bb03-53c8a71aff16
-prof_dm_ana = LilGuys.load_profile(joinpath(ENV["DWARFS_ROOT"], "simulations/sculptor/1e7_V31_r3.2/halo.toml"))
+prof_dm_ana = NFW(r_circ_max=6, v_circ_max=31/V2KMS)
 
 # ╔═╡ a6fd5c3f-c9ae-40a0-a8b7-c09b9dd9d2af
-prof_stars_ana = LilGuys.load_profile(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/1e7_V31_r3.2/stars/exp2d_rs0.08/profile.toml"))
+prof_stars_ana = LilGuys.load_profile(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/1e7_new_v31_r3.2/stars/exp2d_rs0.10/profile.toml"))
 
 # ╔═╡ 3edb5998-a200-4e94-9598-5b73c29def33
 sum(densities(prof_dm) .* diff(π*LilGuys.radius_bins(prof_dm) .^3)) 
@@ -56,7 +56,7 @@ LilGuys.mass(prof_stars_ana)
 prof_stars = DensityProfile(snap, snap.weights * Mstar)
 
 # ╔═╡ f6d51dd1-91df-4a6b-85a8-cd9b26d2c9c9
-sum(densities(prof_stars) .* diff(π*LilGuys.radius_bins(prof_stars) .^3)) 
+sum(densities(prof_stars) .* diff(4π/3*LilGuys.radius_bins(prof_stars) .^3)) 
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "initial_conditions" let
@@ -65,7 +65,7 @@ sum(densities(prof_stars) .* diff(π*LilGuys.radius_bins(prof_stars) .^3))
 	ax = Axis(fig[1,1], 
 		xlabel = "log radius / kpc",
 		ylabel = L"log $\rho$ / $10^{10}\,\textrm{M}_\odot\,\textrm{kpc}^{-3}$",
-		limits = (-2, 2, -9.5, 0.5)
+		limits = (-2, 2, -9.5, 2.5)
 	)
 
 	lines!(log_radii(prof_dm), log_densities(prof_dm), label="DM", linestyle=:dot, color=COLORS[5])
@@ -89,7 +89,7 @@ end
 	r = 10 .^ x
 	
 	lines!(x, log10.(LilGuys.density.(prof_dm_ana, r)), label="NFW dark matter", linestyle=:solid, color=COLORS[1])
-	lines!(x, log10.(Mstar * LilGuys.density.(prof_stars_ana, r)), label="exponential stars", color=COLORS[2], linestyle=:dot)
+	lines!(x, log10.(Mstar * LilGuys.density.(prof_stars_ana, r)), label="exponential profile", color=COLORS[2], linestyle=:dot)
 
 
 	axislegend(margin=(19,19,19,19), position=:rt)

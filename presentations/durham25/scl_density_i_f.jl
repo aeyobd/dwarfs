@@ -185,7 +185,7 @@ end
 @savefig "scl_smallperi_i_f" compare_profiles("1e7_new_v31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=-1.0, r_j=true)
 
 # ╔═╡ f053b7f9-f934-4cd4-ae46-32a0a373ff7e
-# @savefig "scl_mean_i_f" compare_profiles("1e7_V31_r3.2", "orbit_mean", "exp2d_rs0.10", norm_shift=0.15, break_height=-5, r_j=get_r_j("1e7_V31_r3.2", "orbit_mean"))
+
 
 # ╔═╡ 4f02015a-dfc0-4c7c-935d-9992b0690576
 @savefig "scl_plummer_i" compare_profiles("1e7_new_v31_r3.2", "orbit_smallperi", "plummer_rs0.20", norm_shift=0.0, plot_final=false, break_height=nothing)
@@ -197,8 +197,13 @@ end
 @savefig "scl_lmc_i_f" compare_profiles("1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.13", 
 	norm_shift=0.1, break_height=-6, lmc=true, r_j=true)
 
+# ╔═╡ c3ae7b58-68b5-49ed-a874-611debd890bc
+@savefig "scl_lmc_smallperi_i_f" compare_profiles("1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi.3b", "exp2d_rs0.13", 
+	norm_shift=-0.1, break_height=-6)
+
 # ╔═╡ fab0c970-7d9a-4ed6-9632-72a7b0d52c5b
-LilGuys.Plummer(r_s=0.3)
+ compare_profiles("1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi", "exp2d_rs0.13", 
+	norm_shift=0.2, break_height=-6)
 
 # ╔═╡ 084e8e1d-daec-4859-bbe2-888d484d6123
 @savefig "scl_lmc_i_f_mw_break_radii" compare_profiles("1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.13", 
@@ -228,5 +233,6 @@ LilGuys.Plummer(r_s=0.3)
 # ╠═4f02015a-dfc0-4c7c-935d-9992b0690576
 # ╠═fc45829c-bf28-4d7b-9bea-e223e4b29e7d
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
+# ╠═c3ae7b58-68b5-49ed-a874-611debd890bc
 # ╠═fab0c970-7d9a-4ed6-9632-72a7b0d52c5b
 # ╠═084e8e1d-daec-4859-bbe2-888d484d6123

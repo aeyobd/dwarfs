@@ -708,7 +708,9 @@ let
 	
 	orbital_properties = OrderedDict(
 		"pericentre" => r_peri,
-		"apocentre" => r[idx_apos[idx_apos .< idx_f]],
+		"apocentre" => r[last(idx_apos[idx_apos .< idx_f])],
+		"pericentres" => r[idx_peris],
+		"apocentres" => r[idx_apos],
 		"period" => period,
 		"idx_f" => idx_f,
 		"idx_peri" => idx_peri,

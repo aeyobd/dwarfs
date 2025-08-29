@@ -29,7 +29,7 @@ stars_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "sculptor/1e7_new_v31_r3.2/
 snap = Snapshot(joinpath(stars_dir, "iso_paint.hdf5"))
 
 # ╔═╡ a3a3a875-d0cc-4594-86c2-b242e859efef
-df_probs = LilGuys.read_hdf5_table(joinpath(stars_dir, "exp2d_rs0.08", "probabilities_stars.hdf5"))
+df_probs = LilGuys.read_hdf5_table(joinpath(stars_dir, "exp2d_rs0.10", "probabilities_stars.hdf5"))
 
 # ╔═╡ 01e34341-e806-44ef-9591-d226b345dec6
 snap.weights = df_probs.probability[snap.index]
@@ -38,16 +38,22 @@ snap.weights = df_probs.probability[snap.index]
 prof_dm = DensityProfile(snap, bins=-2:0.1:2)
 
 # ╔═╡ 3edb5998-a200-4e94-9598-5b73c29def33
-sum(densities(prof_dm) .* diff(π*LilGuys.radius_bins(prof_dm) .^3)) 
+sum(densities(prof_dm) .* diff(4π/3*LilGuys.radius_bins(prof_dm) .^3)) 
+
+# ╔═╡ d76e4d60-f37a-4f27-8183-d5b2b3bda78d
+sum(snap.masses)
 
 # ╔═╡ 5743880e-567f-4af5-acb5-e2ec420110aa
-Mstar = 3e6 / M2MSUN
+Mstar =  3e6 / M2MSUN
+
+# ╔═╡ c635c9e5-582d-48f1-ae15-9e842e21cbac
+sum(snap.weights * Mstar)
 
 # ╔═╡ 098e33d5-22a5-496b-943b-b8c194cdcc62
 prof_stars = DensityProfile(snap, snap.weights * Mstar)
 
 # ╔═╡ f6d51dd1-91df-4a6b-85a8-cd9b26d2c9c9
-sum(densities(prof_stars) .* diff(π*LilGuys.radius_bins(prof_stars) .^3)) 
+sum(densities(prof_stars) .* diff(4π/3*LilGuys.radius_bins(prof_stars) .^3)) 
 
 # ╔═╡ 546e88aa-c3c5-41b6-84a7-ce733e8f309f
 COLORS
@@ -59,13 +65,15 @@ COLORS
 	ax = Axis(fig[1,1], 
 		xlabel = "log radius / kpc",
 		ylabel = L"log $\rho$ / $10^{10}\,\textrm{M}_\odot$",
-		limits = (-2, 2, -9.5, 0.5)
+		limits = (-2, 1.5, -9.5, 0.5),
+		xticks = -2:1:1,
 	)
 
 	lines!(log_radii(prof_dm), log_densities(prof_dm), label="DM", linestyle=:dot, color=COLORS[5])
 	lines!(log_radii(prof_stars), log_densities(prof_stars), label="stars", color=COLORS[9])
 
-	axislegend(margin=(19,19,19,19), position=:rt)
+	#axislegend(margin=(19,19,19,19), position=:rt)
+
 	fig
 end
 
@@ -79,8 +87,10 @@ end
 # ╠═01e34341-e806-44ef-9591-d226b345dec6
 # ╠═95f811eb-b7c0-48e9-8b88-716cd667db3d
 # ╠═3edb5998-a200-4e94-9598-5b73c29def33
+# ╠═d76e4d60-f37a-4f27-8183-d5b2b3bda78d
 # ╠═f6d51dd1-91df-4a6b-85a8-cd9b26d2c9c9
 # ╠═5743880e-567f-4af5-acb5-e2ec420110aa
+# ╠═c635c9e5-582d-48f1-ae15-9e842e21cbac
 # ╠═098e33d5-22a5-496b-943b-b8c194cdcc62
 # ╠═546e88aa-c3c5-41b6-84a7-ce733e8f309f
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

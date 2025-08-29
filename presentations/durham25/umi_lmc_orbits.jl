@@ -45,10 +45,10 @@ end
 galaxyname = "ursa_minor"
 
 # ╔═╡ 432dc7d3-c390-48cb-9e51-d4d0ff21620c
-Nmax = 1000
+Nmax = 100
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-CairoMakie.activate!(type=:png, px_per_unit=4)
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ b9b99de2-1c01-4562-8295-75b770e232dc
 md"""
@@ -69,7 +69,7 @@ function read_traj(modelname)
 end
 
 # ╔═╡ 70d81f4a-8e01-45b1-a695-234d0249cca9
-function plot_x_y_traj!(orbits; thin=1, x_direction=2, y_direction=3, alpha=0.01, color=:black, t_min = -2/T2GYR, kwargs...)
+function plot_x_y_traj!(orbits; thin=1, x_direction=2, y_direction=3, alpha=0.1, color=:black, t_min = -2/T2GYR, kwargs...)
 
     for i in 1:thin:length(orbits)
 		filt = orbits[i].times .> t_min 
