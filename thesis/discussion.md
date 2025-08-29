@@ -205,6 +205,7 @@ Observational evidence:
 - @tarumi+yoshida+frebel2021: Shows cosmological simulations in context of Tuc II, merger of two galaxies in the early universe produces a more extended density profile and metallicity gradient.
 - @lokas+2014: And II from merger, 
 - rotation from merger: @cardona-barrero+2021
+- @genina+2019: mergers & two-population formation
 
 
 

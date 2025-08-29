@@ -4,7 +4,7 @@
 
 For both Sculptor and Ursa Minor, we construct literature samples of radial velocity measurements. We combine these samples with J+24's members to produce RV consistent stars and to compute velocity dispersion, systematic velocities, and test for the appearance of velocity gradients. 
 
-First, we crossmatch all catalogues to J+24 Gaia stars. If a study did not report GaiaDR3 source ID's, we match to the nearest star within 1-3 arcseconds (see REF @tab:rv_measurements). We combine the mean RV measurement from each study using the inverse-variance weighted mean $\bar v$, standard uncertainty $\delta \bar v$, and (biased) variance $s^2$. We remove stars with significant velocity dispersions as measured between observations in a study or between studies. By using that $\chi^2=\frac{s^2}{\delta \bar v^2}$, we remove stars with a $\chi^2$ larger than the 99.9th percentile of the $\chi^2$ distribution with $N-1$ measurements. This cut typically removes stars with reduced chi-squared values $\tilde\chi^2  = \frac{s^2}{\nu\,\delta \bar v^2}\gtrsim 7$ (since the number of measurements is 1-3 typically). 
+First, we crossmatch all catalogues to J+24 Gaia stars. If a study did not report GaiaDR3 source ID's, we match to the nearest star within 1-3 arcseconds (see REF @tbl:rv_measurements). We combine the mean RV measurement from each study using the inverse-variance weighted mean $\bar v$, standard uncertainty $\delta \bar v$, and (biased) variance $s^2$. We remove stars with significant velocity dispersions as measured between observations in a study or between studies. By using that $\chi^2=\frac{s^2}{\delta \bar v^2}$, we remove stars with a $\chi^2$ larger than the 99.9th percentile of the $\chi^2$ distribution with $N-1$ measurements. This cut typically removes stars with reduced chi-squared values $\tilde\chi^2  = \frac{s^2}{\nu\,\delta \bar v^2}\gtrsim 7$ (since the number of measurements is 1-3 typically). 
 
 Next, we need to correct the coordinate frames for the solar motion and on-sky size of the galaxy. We transform the frame into the galactic standard of rest (GSR). The next step is to account for the slight differences in the direction of each radial velocity. Let the $\hat z$ be the direction from the sun to the dwarf galaxy. Then if $\phi$ is the angular distance between the centre of the galaxy and the individual star, the corrected radial velocity is then
 $$
@@ -89,7 +89,7 @@ Savage-Dickey calculated Bayes factor using Silverman-bandwidth KDE smoothed sam
 |      | spencer+18  | Hectoshell | 1407  | 970   | 596   | 406   | 0.9                  | 2                       |
 |      | APOGEE      | APOGEE     | 9500  | 279   | 37    | 67    | 0.6                  | --                      |
 
-Table: Summary of velocity measurements and derived properties. {#tab:rv_measurements short="Spectroscopic LOS velocity measurements"}
+Table: Summary of velocity measurements and derived properties. {#tbl:rv_measurements short="Spectroscopic LOS velocity measurements"}
 
 measurement 
 

@@ -10,9 +10,9 @@ velocity gradients.
 
 First, we crossmatch all catalogues to J+24 Gaia stars. If a study did
 not report GaiaDR3 source ID's, we match to the nearest star within 1-3
-arcseconds (see REF \citet{tab:rv_measurements}). We combine the mean RV
-measurement from each study using the inverse-variance weighted mean
-\(\bar v\), standard uncertainty \(\delta \bar v\), and (biased)
+arcseconds (see REF Table~\ref{tbl:rv_measurements}). We combine the
+mean RV measurement from each study using the inverse-variance weighted
+mean \(\bar v\), standard uncertainty \(\delta \bar v\), and (biased)
 variance \(s^2\). We remove stars with significant velocity dispersions
 as measured between observations in a study or between studies. By using
 that \(\chi^2=\frac{s^2}{\delta \bar v^2}\), we remove stars with a
@@ -186,7 +186,7 @@ smoothed samples from posterior/prior.
 \begin{table*}[t]
 \centering
 \caption[Spectroscopic LOS velocity measurements]{Summary of velocity measurements and derived properties. }
-\label{tab:rv_measurements}
+\label{tbl:rv_measurements}
 \begin{tabular}{lllllllll}
 \toprule
  & Study & Instrument & Nspec & Nstar & Ngood & Nmemb & $\delta v_{\rm med}$ & $R_{\rm xmatch}$/arcmin\\

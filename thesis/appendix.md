@@ -44,7 +44,7 @@ J+24 derive $\mu_{\alpha*}$, $\mu_\delta$, $f_{\rm sat}$ (and $B$, $R_{\rm outer
 
 
 
-## Additional density tests
+## Additional density tests {#sec:density_extra}
 
 In this section, we discuss additional tests and verification of the derived density profiles. In particular, we check that methodology (simpler cuts, circularized radii, algorithm version) do not substantially affect the density profile. We also compile density profiles presented in the literature as reference. In all cases, the density profiles appear to have excellent convergence out to $\log R_{\rm ell} / {\rm arcmin} \approx 1.8$, about the distance where the background dominates. 
 

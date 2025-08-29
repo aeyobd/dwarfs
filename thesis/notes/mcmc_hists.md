@@ -83,92 +83,101 @@ $$
 
 ## Results
 
-| galaxy     | R_h (exp inner) | # candidates |
-| ---------- | --------------- | ------------ |
-| Fornax     | $17.4\pm0.6$    | 23,154       |
-| Leo I      | $3.6\pm0.2$     | 1,242        |
-| Sculptor   | $9.3\pm0.2$     | 6,875        |
-| Leo II     | $3.0\pm0.4$     | 347          |
-| Carina     | $8.3\pm0.3$     | 2,389        |
-| Sextans I  | $20.0 \pm0.8$   | 1,830        |
-| Ursa Minor | $12.3 \pm 0.5$  | 2,122        |
-| Draco      | $7.7\pm0.3$     | 1,781        |
+Redo R_h using Sérsic fits...
+
+Try generalized Sérsic fit.
+
+
+
+| galaxy           | R_h (exp inner) | # candidates |
+| ---------------- | --------------- | ------------ |
+| Fornax           | $17.4\pm0.6$    | 23,154       |
+| Leo I            | $3.6\pm0.2$     | 1,242        |
+| Sculptor         | $9.3\pm0.2$     | 6,875        |
+| Antlia 2         | 76.2pm7.2       | 649?         |
+| Leo II           | $3.0\pm0.4$     | 347          |
+| Carina           | $8.3\pm0.3$     | 2,389        |
+| Draco            | $7.7\pm0.3$     | 1,781        |
+| Ursa Minor       | $12.3 \pm 0.5$  | 2,122        |
+| Canes Venatici I | 8.9?            | 156?         |
+| Sextans I        | $20.0 \pm0.8$   | 1,830        |
+| Crater 2         | 31.2?           | 507          |
 
 Table: For faint dwarf galaxies
-
-
 
 Note we skip the following galaxies mentioned in J+24
 
 
 
-| Galaxy            | Category      | Notes      | # J+24 memb | R_h           | st   |
-| ----------------- | ------------- | ---------- | ----------- | ------------- | ---- |
-| Antlia 2          | ***faint***   |            | 649         | 76.2pm7.2     | yy   |
-| Aquarius 2        | -             | few stars  | 15          |               |      |
-| Bootes 1          | faint         |            | 252         | 11.26\pm0.27  | yy   |
-| *Bootes 2*        | -             |            | 24          | 3.05\pm0.45   |      |
-| Bootes 3          | faint         |            | 123         | 33\pm2.5      | yy   |
-| *Bootes 4* *      | -             | unreliable | 5           |               |      |
-| *Bootes 5*        | -             | few stars  | 6           |               |      |
-| Canes Venatici I  | ***faint***   |            | 156         | 8.9           | y    |
-| Canes Venatici II | -             | few stars  | 15          |               |      |
-| Carina            | **classical** |            | 2,389       |               |      |
-| Carina 2          | faint         |            | 69          | 8.68          | y    |
-| Carina 3          | -             | few stars  | 12          |               |      |
-| Centaurus 1       | -             |            | 29          |               |      |
-| Cetus 2           | -             | few stars  | 8           |               |      |
-| Cetus 3*          | -             | unreliable | 1           |               |      |
-| Columba 1         | -             | few stars  | 9           |               |      |
-| Coma Berenices    | faint         |            | 44          | 5.63          | n    |
-| Crater 2          | ***faint***   |            | 507         | 31.2          | n    |
-| DELVE 2           | x             | few stars  | 9           |               |      |
-| DESJ0225+0304*    | x             | unreliable | 2           |               |      |
-| Draco             | **classical** |            | 1,781       | 9.93\pm0.09   |      |
-| Draco 2           | x             | ?          | 33          |               |      |
-| Eridanus 2        | x             | few stars  | 20          |               |      |
-| Eridanus 3        | x             | few stars  | 3           |               |      |
-| Eridanus 4        | faint         |            | 47          | 4.9           | n    |
-| Fornax            | **classical** |            | 23,154      | 18.4\pm0.2    |      |
-| Grus 1            | x             | few stars  | 12          |               |      |
-| Grus 2            | faint         |            | 53          | 6             | n    |
-| Hercules          | faint?        |            | 44          | 5.99\pm0.58   | n    |
-| Horologium 1      | x             | few stars  | 21          |               |      |
-| Horologium 2*     | x             | unreliable | 5           |               |      |
-| Hydra 2           | x             | few stars  | 21          |               |      |
-| Hydrus 1          | faint         |            | 132         | 7.42          | n    |
-| Indus 1*          | x             | unreliable | 3           |               |      |
-| Leo 1             | **classical** |            | 1242        | 3.29          |      |
-| Leo 2             | **classical** |            | 347         | 2.48\pm0.03   |      |
-| Leo 4             | x             | few stars  | 0           |               |      |
-| Leo 5             | x             | few stars  | 9           |               |      |
-| Leo Minor*        | x             | unreliable | 4           |               |      |
-| Leo T             | x             | few stars  | 8           |               |      |
-| Pegasus 3         | x             | few stars  | 2           |               |      |
-| Pegasus 4         | x             | few stars  | 23          |               |      |
-| Phoenix           | faint         |            | 207         | 2.3\pm0.07    | n    |
-| Phoenix 2         | x             | few stars  | 11          |               |      |
-| Pictor 2*         | x             | unreliable | 10          |               |      |
-| Pictoris 1        | x             | few stars  | 12          |               |      |
-| Pisces 2*         | x             | unreliable | 2           |               |      |
-| Reticulum 2       | faint         |            | 73          | 5.6\pm0.2     | n    |
-| Reticulum 3*      | x             | unreliable | 7           |               |      |
-| Sagittarius 2     | faint         |            | 72          | 1.7\pm0.05    | n    |
-| Sculptor          | **classical** |            | 6,875       | 12.33\pm0.05  |      |
-| Segue 1           | faint         |            | 37          | 3.95\pm0.48   | n    |
-| Segue 2           | x             | few stars  | 27          |               |      |
-| Sextans 1         | **classical** |            | 1,830       | 27.8\pm1.2    |      |
-| Triangulum 2      | x             | few stars  | 15          |               |      |
-| Tucana 2          | faint         |            | 50          | 9.89          | n    |
-| Tucana 3          | faint         |            | 83          | 6.0           | n    |
-| Tucana 4          | x             | few stars  | 14          |               |      |
-| Tucana 5*         | x             | unreliable | 6           |               |      |
-| Ursa Major 1      | faint         |            | 57          | 8.34 \pm 0.34 | n    |
-| Ursa Major 2      | faint         |            | 69          | 13.95\pm0.46  | n    |
-| Ursa Minor        | **classical** |            | 2,122       | 12.32\pm 0.05 |      |
-| Virgo 1*          | x             | unreliable | 2           |               |      |
-| Virgo 2*          | x             | unreliable | 2           |               |      |
-| Willman 1         | x             | few stars  | 13          |               |      |
+Faint dwarfs, onew which we could possibly rederive parameters for (>~ 30 stars)
+
+
+
+| Galaxy         | # J+24 memb | R_h           | status |
+| -------------- | ----------- | ------------- | ------ |
+| Bootes 1       | **252**     | 11.26\pm0.27  | yy     |
+| Bootes 3       | **123**     | 33\pm2.5      | yy     |
+| Carina 2       | 69          | 8.68          | y      |
+| Coma Berenices | 44          | 5.63          | n      |
+| Draco 2        | 33          |               |        |
+| Eridanus 4     | 47          | 4.9           | n      |
+| Grus 2         | 53          | 6             | n      |
+| Hercules       | 44          | 5.99\pm0.58   | n      |
+| Hydrus 1       | **132**     | 7.42          | n      |
+| Phoenix        | **207**     | 2.3\pm0.07    | n      |
+| Reticulum 2    | 73          | 5.6\pm0.2     | n      |
+| Sagittarius 2  | 72          | 1.7\pm0.05    | n      |
+| Segue 1        | 37          | 3.95\pm0.48   | n      |
+| Tucana 2       | 50          | 9.89          | n      |
+| Tucana 3       | 83          | 6.0           | n      |
+| Ursa Major 1   | 57          | 8.34 \pm 0.34 | n      |
+| Ursa Major 2   | 69          | 13.95\pm0.46  | n      |
+
+
+
+
+
+| Galaxy            | # J+24 memb |
+| ----------------- | ----------- |
+| Aquarius 2        | 15          |
+| *Bootes 2*        | 24          |
+| *Bootes 4* *      | 5           |
+| *Bootes 5*        | 6           |
+| Canes Venatici II | 15          |
+| Carina 3          | 12          |
+| Centaurus 1       | 29          |
+| Cetus 2           | 8           |
+| Cetus 3*          | 1           |
+| Columba 1         | 9           |
+| DELVE 2           | 9           |
+| DESJ0225+0304*    | 2           |
+| Eridanus 2        | 20          |
+| Eridanus 3        | 3           |
+| Grus 1            | 12          |
+| Horologium 1      | 21          |
+| Horologium 2*     | 5           |
+| Hydra 2           | 21          |
+| Indus 1*          | 3           |
+| Leo 4             | 0           |
+| Leo 5             | 9           |
+| Leo Minor*        | 4           |
+| Leo T             | 8           |
+| Pegasus 3         | 2           |
+| Pegasus 4         | 23          |
+| Phoenix 2         | 11          |
+| Pictor 2*         | 10          |
+| Pictoris 1        | 12          |
+| Pisces 2*         | 2           |
+| Reticulum 3*      | 7           |
+| Segue 2           | 27          |
+| Triangulum 2      | 15          |
+| Tucana 4          | 14          |
+| Tucana 5*         | 6           |
+| Virgo 1*          | 2           |
+| Virgo 2*          | 2           |
+| Willman 1         | 13          |
+
+*: marked unreliable in J+24
 
 Using the same methods above, we select members from J+24's stellar 
 
@@ -178,7 +187,7 @@ Using the same methods above, we select members from J+24's stellar
 
 ## Tests
 
-- Does incorperating uncertainties with the MCMC matter?
+- Does incorporating uncertainties with the MCMC matter?
 - MCMC convergence & resolution?
 - Recovery (long term project)
 
@@ -189,8 +198,6 @@ Using the same methods above, we select members from J+24's stellar
 In general, this method provides similar results to J+24. The primary differences are that the density profiles appear "smoother" and have larger, more representative uncertainties. The uncertainty quantification is critical for understanding limitations and the statistical significance of features in dwarf galaxies. However, the difference in uncertainties primary applies to either the innermost or regions where the density approaches the background density.
 
 While for simplicity, we retain absolute probability cuts of the main sample in the main text, we note that these profiles likely better represent the observational knowledge of density profiles. 
-
-
 
 In some cases, like Antlia 2, these methods produce substantially different density profiles. In a background dominated regime, the J+24 method can "hallucinate" a density profile. There is always some change that a foreground star will appear similar enough in Gaia to be associated with a galaxy. If the background density is much higher than the satellite density, then the resulting member density would be controlled primarly by the prior probability (given by the assumed density ratio at that region), however, it is likely that the stars being selected are just background stars which happened to stray into the satellite parameter space. This would result in a density profile exactly recovering the assumed spatial dependence.
 
