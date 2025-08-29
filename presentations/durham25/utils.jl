@@ -109,19 +109,27 @@ end
 
 
 function compare_j24_samples(datasets, scatter_kwargs, observed_properties; 
-        age=12)
+        age=12, Gmin=nothing, references=true)
 	fig = Figure(
 		size = (1720, 800),
 	)
 
-    ax = plot_tangent!(fig[1,1], datasets, scatter_kwargs, observed_properties)
+    if references
+        R_ell = [6]
+    else
+        R_ell  = []
+    end
+    ax = plot_tangent!(fig[1,1], datasets, scatter_kwargs, observed_properties, R_ell=R_ell)
 
-    ax_cmd =  CMDAxis(fig[1,2], first(datasets)[2])
+    ax_cmd =  CMDAxis(fig[1,2], first(datasets)[2], Gmin=Gmin)
 
 	for (label, df) in datasets
         scatter!(df.bp_rp_corrected, df.G_corrected; scatter_kwargs[label]...)
 	end
-    plot_isochrone!(observed_properties, age)
+
+    if references
+        plot_isochrone!(observed_properties, age)
+    end
 
 
 	# proper motions
@@ -131,7 +139,9 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 		scatter!(df.pmra, df.pmdec; scatter_kwargs[label]...)
 	end
 
-    plot_obs_pm!(observed_properties)
+    if references
+        plot_obs_pm!(observed_properties)
+    end
 
 
     # styling
@@ -163,8 +173,10 @@ function TangentAxis(gs, all_stars)
 	)
 end
 
-function CMDAxis(gs, all_stars)
-	Gmin = minimum(all_stars.G) - 0.2
+function CMDAxis(gs, all_stars; Gmin=nothing)
+    if isnothing(Gmin)
+        Gmin = minimum(all_stars.G) - 0.2
+    end
     Gmax = 21
 	ax_cmd =  Axis(gs, 
 		yreversed=true,

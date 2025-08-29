@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -160,7 +160,7 @@ md"""
 
 # ╔═╡ 6d8cfb4c-5602-4112-a691-92a319f5e224
 classical_systems = ["sculptor_1", "ursa_minor_1", "sextans_1", "draco_1", 
-		 "leo_1", "leo_2", "fornax_1", "carina_1", ]
+		 "leo_1", "leo_2", "fornax_1", "carina_1", "antlia_2", "sagittarius_1", "canes_venatici_1", "crater_2"]
 
 # ╔═╡ 6142560a-9cd1-491f-a108-b3b45b85df2e
 ambiguous = vcat(ambiguous_table, dwarfs[(dwarfs.confirmed_dwarf .!== 1), :])
@@ -369,16 +369,10 @@ function plot_labels!(ax; highlight=[])
 
 end
 
-# ╔═╡ 15e5e568-560d-4a70-8ca3-b084d6d9c832
-theme(:fontsize)
-
 # ╔═╡ 3f44fb3f-865a-4acb-9101-283c7918e11b
 function acknowledgment!(ax)
 	text!(ax, 0, 0, text="Daniel Boyea, 2025\nBackground image: ESA/Gaia/DPAC\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(theme(:Legend).margin[][1], 0))
 end
-
-# ╔═╡ 58ea3ff0-40ab-4967-aa97-80d4aa903183
-
 
 # ╔═╡ 2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
 function plot_gaia_image!(gs)
@@ -387,6 +381,11 @@ function plot_gaia_image!(gs)
 	hidespines!(ax2)
 	hidedecorations!(ax2)
 end
+
+# ╔═╡ 89e31154-62d6-4233-9a5f-a0480efd8a18
+md"""
+# The plots
+"""
 
 # ╔═╡ 3051cdfb-63fb-44e4-a75d-37a51fd40508
 @savefig "mw_satellites" let
@@ -412,9 +411,33 @@ end
 	fig
 end
 
+# ╔═╡ 784b840d-08b8-4276-8dd4-6916a7f155ce
+@savefig "mw_satellites_w_ack" let
+	fig = clear_figure(backgroundcolor=:black, padding=20)
+	plot_gaia_image!(fig[1,1])
+	ax = Makie.current_axis()
+	ax.valign = :top
+
+	
+	ax = clear_axis!(fig[1,1])
+
+	
+	plot_points!(ax, red=COLORS[4])
+	clear_legend(fig, ax)
+
+
+	acknowledgment!(ax)
+
+	plot_labels!(ax, highlight=["sculptor_1", "ursa_minor_1"])
+
+	resize_to_layout!(fig)
+
+	fig
+end
+
 # ╔═╡ 4541aa9d-867f-4dca-a456-5dd8fc4fba9b
 @savefig "mw_satellites_all" let
-	fig = clear_figure(backgroundcolor=:black)
+	fig = clear_figure(backgroundcolor=:black, padding=20)
 	plot_gaia_image!(fig[1,1])
 	ax = Makie.current_axis()
 	ax.valign = :top
@@ -436,8 +459,10 @@ end
 	fig
 end
 
-# ╔═╡ 82e8db20-91cc-43b4-8183-7e302ce74041
-
+# ╔═╡ 614dae8a-5027-441e-9286-358d7fb45586
+md"""
+# Extra
+"""
 
 # ╔═╡ 25514746-3762-4cb0-8b03-0e3e38d82a69
 let 
@@ -498,7 +523,7 @@ let
 		)
 
 
-	plot_points!(ax, :rhalf_physical, :M_V, xreverse=false, yasone=false)
+	plot_points!(ax, :rhalf_physical, :M_V, xreverse=false)
 
 	for key in labels
 		row = allsatalites[allsatalites.key .== key, :]
@@ -544,7 +569,7 @@ let
 		)
 
 
-	plot_points!(ax, :rhalf, :M_V, xreverse=false, yasone=false)
+	plot_points!(ax, :rhalf, :M_V, xreverse=false)
 
 	for key in labels
 		row = allsatalites[allsatalites.key .== key, :]
@@ -615,7 +640,7 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═bce24033-3bca-42d4-9224-b40378cdedab
 # ╠═88d507e8-98cb-42ca-be20-16580f5beb4b
 # ╟─7258550c-c49a-4f67-83f7-58c157d4b5de
-# ╠═357a7c6c-2d6a-40e5-ba85-7042ecc9bdda
+# ╟─357a7c6c-2d6a-40e5-ba85-7042ecc9bdda
 # ╠═58f03667-5903-48d7-a962-9fbbf5d72620
 # ╠═af7b55de-8ae6-4b19-80b8-dcfe5cae276f
 # ╠═9f623db7-32db-43ce-9ddd-98d5ee4248ba
@@ -648,13 +673,13 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═5a537690-3c29-4a0b-9a31-15d19e456db6
 # ╠═3b31bf9e-1d07-460a-80d9-75625d06bf41
 # ╠═756bb316-6afa-4217-b52b-eff39e5c02d6
-# ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
-# ╠═4541aa9d-867f-4dca-a456-5dd8fc4fba9b
-# ╠═15e5e568-560d-4a70-8ca3-b084d6d9c832
 # ╠═3f44fb3f-865a-4acb-9101-283c7918e11b
-# ╠═58ea3ff0-40ab-4967-aa97-80d4aa903183
 # ╠═2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
-# ╠═82e8db20-91cc-43b4-8183-7e302ce74041
+# ╟─89e31154-62d6-4233-9a5f-a0480efd8a18
+# ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
+# ╠═784b840d-08b8-4276-8dd4-6916a7f155ce
+# ╠═4541aa9d-867f-4dca-a456-5dd8fc4fba9b
+# ╟─614dae8a-5027-441e-9286-358d7fb45586
 # ╠═25514746-3762-4cb0-8b03-0e3e38d82a69
 # ╠═6fb045c9-fce3-4d24-8edc-8ddde135972a
 # ╠═ebc0bd82-2b1e-4653-8aa2-46fbb56952ed

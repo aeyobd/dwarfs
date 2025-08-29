@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -25,18 +25,6 @@ include("./paper_style.jl")
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
 
-# ╔═╡ 4bd376b1-0635-400c-ba8c-12f8e81f543c
-halos = OrderedDict(
-	"Sculptor" => NFW(r_circ_max=3.2, v_circ_max = 31 / V2KMS),
-	"Ursa Minor" => NFW(r_circ_max=5.0, v_circ_max=37 / V2KMS)
-)
-
-# ╔═╡ 8a38b83a-da38-4fde-ada0-7280b95c1696
-M_star = OrderedDict(
-	"Sculptor" => 6e6,
-	"Ursa Minor" => 4e5,
-)
-
 # ╔═╡ faa273be-4b1d-4be7-b5f1-d9c28eb25999
 begin 
 		x_apostle = [72.21239948189086, 68.33340453294927, 66.09580874985606, 64.80771777296665, 60.32454104334452, 58.5300735035407, 59.53860042490147, 59.86041212838948, 56.42632690572182, 55.90639578723533, 50.56894393067679, 52.480469626505794, 54.02182818619709, 50.47531172380339, 48.508874387708026, 47.05570345548141, 46.77147945694189, 45.59156128442093, 42.11514459623204, 38.07143120400983, 39.385482102398115, 39.79929050799496, 41.2501315784611, 40.81010291112119, 45.19059230233769, 46.05194166674531, 40.022691897506206, 39.30146341197004, 41.01679171912996, 37.17563599783272, 35.74279702367432, 35.87113925483914, 35.75961362425144, 36.246659787798635, 35.31530654494145, 35.663864871333, 35.663864871333, 37.81442759725814, 35.55264920419465, 34.75337097711321, 33.47839456985955, 33.30530590228312, 35.54228232924563, 34.24480619998118, 35.80943714703604, 31.606822312941635, 31.229974029248723, 29.30683564058644, 32.3985900905304, 31.76630205070842, 31.359513159998556, 30.881722824695508, 30.351762342773103, 30.572135989902776, 31.495811273828387, 32.052682176745314, 33.02419579929294, 33.20488123513651, 33.07954271848022, 31.026450342970247, 30.528163382049705, 30.606668624695022, 29.96224195791515, 29.283960961928628, 26.949924895844905, 28.133310373928435, 25.769970453733105, 25.45481131152501, 25.809517319795482, 26.08461417426665, 26.182709921759265, 27.07775437415755, 27.03066921650942, 25.29534829531027, 26.296260667345727, 28.42622211216449, 28.657676833030596, 30.12107348889818, 31.79141484738698, 31.669922024190747, 31.735237499191054, 30.238900297937207, 30.552297370285398, 30.158784774287458, 30.5893974342756, 30.02318819657994, 31.072309918672318, 28.909232084974587, 27.663004111156575, 26.752640995416794, 26.470000870528764, 23.887756259367904, 21.60533364609899, 24.479247627063963, 25.598416712680432, 26.61657903308779, 27.795523293639402, 27.4555922372893, 25.60202925156883, 24.214018813882998, 24.353602407805127, 24.263272583735652, 24.176006897654894, 24.13101618541782, 23.702183164746433, 23.87742111021739, 24.990225035803526, 20.875853768339578, 23.072094938718575, 23.375998897398464]
@@ -44,11 +32,101 @@ begin
 	y_apostle = [683932557.4550996, 767769204.4914602, 421122380.8033561, 259481778.9314102, 349009406.27065766, 322647655.97136855, 230007298.60785624, 148996256.92049992, 150744493.4670193, 170785519.92603207, 240929112.71912807, 130266730.54573216, 109827151.73465951, 96512986.14647993, 100634988.31306621, 95173441.3640448, 59525702.05220456, 53974834.7163169, 64840765.552721165, 32875355.550039075, 34130501.817000024, 30000979.653543543, 27121571.55352775, 24084817.966391765, 22883260.444613673, 25998092.755958695, 19165605.458477907, 16883889.27604679, 11918911.977797514, 22972000.709534023, 18005052.944939304, 14078706.562220342, 11968349.42792813, 9785954.772235595, 5879979.125380764, 5060773.320448851, 5060773.320448851, 5631864.936624793, 5443156.467047147, 4962176.653401888, 4425324.053968224, 4066508.6475584456, 3373966.5828275033, 3001186.7640596386, 2472466.5060517113, 4067601.79731432, 12988040.750472277, 8211987.94248251, 3147417.1002336424, 2368391.8388789515, 2902496.8890140057, 2604670.3424075306, 2474860.056827571, 1685645.6206533974, 1890340.8151726474, 1786213.415933944, 1782951.7082835936, 1680849.9073400903, 1284966.8887885155, 1407397.7234483128, 1295857.5722721752, 1192900.7542698188, 1193734.6831511394, 1193349.7204815703, 1898896.009776669, 2691930.9138063146, 2191855.198678493, 1294186.7972235726, 1294186.7972235726, 950124.1823219411, 923982.5260980234, 838089.9435297125, 735540.102535707, 643771.0348040046, 585655.6509373812, 622701.9292943229, 609750.1213391493, 949205.2736072907, 908956.7201306914, 863842.3080240043, 658294.2387849898, 648006.9352379118, 621965.9328746216, 607851.962202222, 455168.9054474544, 417162.48893976636, 365724.5000709698, 267516.10251720756, 325596.58243223414, 468575.3811547166, 397396.2301930482, 378871.9272219594, 568501.9489196407, 276092.16057094705, 246050.0364032241, 228580.56873516037, 167811.88498452932, 138359.91975271658, 178964.94413067662, 196660.43125544526, 207767.05182593715, 176746.8487628224, 156805.02184819797, 137699.54355248995, 107793.13990188515, 108624.95550969799, 108595.76303965911, 129187.563657096, 247589.13268870523, 187896.85647996215]
 end
 
-# ╔═╡ c761597f-f70a-4772-8037-4a7c20bce0c3
-10^0.036
-
 # ╔═╡ e83ec912-55a3-4b90-a3b4-5bb11b477954
 vel_from_M_s(ms) = LilGuys.find_zero(x->LilGuys.M_s_from_vel_fattahi(x) - ms, 0.1)
+
+# ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
+@savefig "cosmological_means" let
+	fig = Figure(figure_padding=10, size=( 5.4*72, 2.7*72,))
+
+	ax = Axis(fig[1,2], 
+		xlabel = L"$v_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
+		ylabel = L"stellar mass in $\textrm{M}_\odot$",
+		xscale = log10, 
+		yscale = log10,
+		limits = (10, 100, 1e5, 1e9),
+		xticks = [1, 10, 100],
+		yticks = [1e5, 1e6, 1e7, 1e8, 1e9, ],
+		ytickformat = x->[L"10^{%$(floor(Int, log10(xx)))}" for xx in x]
+	)
+
+	x = LinRange(10, 100, 1000)
+	ms = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN
+	lines!(x, ms, label="Fattahi+18 relation")
+	band!(ms, x ./ 1.09, x .* 1.09, alpha=0.5, direction=:y)
+	scatter!(x_apostle, y_apostle, color=:black, markersize=3, label="APOSTLE central galaxies")
+	text!(22, 1e6, text="Fattahi+18 fit", color=COLORS[1], rotation=π/2.6)
+	text!(0.05, 0.9, space=:relative, text="APOSTLE centrals", fontsize=10)
+
+	
+	
+
+	ax_ludlow = Axis(fig[1,1],
+			   yscale=log10, 
+			   xscale = log10,
+			   yticks = [10, 100],
+			xticks=[1, 10,],
+		ylabel = L"$v_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
+			   xlabel = L"$r_\textrm{max}$ / kpc",
+			   limits = (nothing, 40, 10, 100)
+			  )
+
+	vm = LinRange(10, 100, 100) ./ V2KMS
+
+
+
+	# lines!(vm .* V2KMS, rm)
+	lines!(LilGuys.Ludlow.solve_rmax.(vm), vm .* V2KMS, color=COLORS[2])
+	#lines!(LilGuys.Ludlow.solve_rmax.(vm, z=2), vm .* V2KMS, color=COLORS[3])
+
+	fill_between!(ax_ludlow, vm .* V2KMS, LilGuys.Ludlow.solve_rmax.(vm, -0.09), LilGuys.Ludlow.solve_rmax.(vm, +0.09), alpha=0.5, color=COLORS[2], direction=:y)
+
+	θ = π/3.25
+	text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, +0.09), 20, text=L"Ludlow\!+\!16 $z=0$", rotation=θ, align=(:left, :bottom), color=COLORS[2])
+	#text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, z=2), 20, text=L"z=2", rotation=θ, align=(:left, :bottom), color=COLORS[3])
+	
+	
+	fig
+end
+
+# ╔═╡ 49e82dff-d3d8-48fc-a2b5-5909495c811d
+md"""
+# Sanity checks
+"""
+
+# ╔═╡ 51b5dc87-2463-4aaf-9513-eb1c135969b0
+let
+	fig = Figure()
+
+	ax = Axis(fig[1,1], 
+		xlabel = L"maximum circular velocity ($v_\textrm{max}$) in $\textrm{km\,s}^{-1}$ ",
+		ylabel = L"M200",
+		xscale = log10, 
+		yscale = log10,
+		limits = (1e9, 3e11, 1e5, 1e9),
+		#xticks = [1, 10, 100],
+		yticks = [1e6, 1e7, 1e8, 1e9, ],
+		xticks = Makie.automatic,
+	)
+
+	x = LinRange(20, 100, 1000)
+	ms = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN
+
+	m200 = first.(LilGuys.Ludlow.solve_M200_c.(x ./ V2KMS))
+	lines!(m200 .* M2MSUN, ms)
+	ms_low = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN ./ 1.09
+
+	m200 = first.(LilGuys.Ludlow.solve_M200_c.(x ./ V2KMS, -0.09))
+	lines!(m200 .* M2MSUN, ms_low)
+
+	ms_high = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN .* 1.09
+
+	m200 = first.(LilGuys.Ludlow.solve_M200_c.(x ./ V2KMS, +0.09))
+	lines!(m200 .* M2MSUN, ms_high)
+	
+	
+	fig
+end
 
 # ╔═╡ 32073146-98cc-41a7-92b2-4815277ef41a
 let 
@@ -91,128 +169,14 @@ let
 
 end
 
-# ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-@savefig "cosmological_means" let
-	fig = Figure(figure_padding=10, size=( 5.4*72, 2.7*72,))
-
-	ax = Axis(fig[1,2], 
-		xlabel = L"$v_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
-		ylabel = L"stellar mass in $\textrm{M}_\odot$",
-		xscale = log10, 
-		yscale = log10,
-		limits = (10, 100, 1e5, 1e9),
-		xticks = [1, 10, 100],
-		yticks = [1e5, 1e6, 1e7, 1e8, 1e9, ],
-		ytickformat = x->[L"10^{%$(floor(Int, log10(xx)))}" for xx in x]
-	)
-
-	x = LinRange(10, 100, 1000)
-	ms = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN
-	lines!(x, ms, label="fattahi+18 relation")
-	band!(ms, x ./ 1.09, x .* 1.09, alpha=0.5, direction=:y)
-	scatter!(x_apostle, y_apostle, color=:black, markersize=3, label="APOSTLE central galaxies")
-	text!(22, 1e6, text="fattahi+18 fit", color=COLORS[1], rotation=π/2.6)
-	text!(0.05, 0.9, space=:relative, text="APOSTLE centrals", fontsize=10)
-
-	
-	# for galaxy in keys(halos)
-	# 	v_max = LilGuys.v_circ_max(halos[galaxy])
-	# 	Mstar = M_star[galaxy]
-	# 	scatter!(v_max * V2KMS, Mstar)
-	# end
-
-	ax_ludlow = Axis(fig[1,1],
-			   yscale=log10, 
-			   xscale = log10,
-			   yticks = [10, 100],
-			xticks=[1, 3,10,30],
-		ylabel = L"$v_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
-			   xlabel = L"$r_\textrm{max}$ / kpc",
-			   limits = (nothing, 40, 10, 100)
-			  )
-
-	# x = 10 .^ LinRange(-2, 2, 1000)
-	# y = LilGuys.Ludlow.c_ludlow.(x, 0)
-	# y_low = y .- 0.13
-	# y_high = y .+ 0.13
-	vm = LinRange(10, 100, 100) ./ V2KMS
-
-	# halos = [LilGuys.NFW(c=c, M200=m ) for (c, m) in zip(y, x)]
-	
-	# rm = LilGuys.r_circ_max.(halos)
-	# vm = LilGuys.v_circ_max.(halos)
-
-	# lines!(vm .* V2KMS, rm)
-	lines!(LilGuys.Ludlow.solve_rmax.(vm), vm .* V2KMS, color=COLORS[2])
-	lines!(LilGuys.Ludlow.solve_rmax.(vm, z=2), vm .* V2KMS, color=COLORS[3])
-
-	fill_between!(ax_ludlow, vm .* V2KMS, LilGuys.Ludlow.solve_rmax.(vm, -0.09), LilGuys.Ludlow.solve_rmax.(vm, +0.09), alpha=0.5, color=COLORS[2], direction=:y)
-
-	θ = π/3.25
-	text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, +0.09), 20, text=L"ludlow\!+\!16 $z=0$", rotation=θ, align=(:left, :bottom), color=COLORS[2])
-	text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, z=2), 20, text=L"z=2", rotation=θ, align=(:left, :bottom), color=COLORS[3])
-	# for galaxy in keys(halos)
-	# 	v_max = LilGuys.v_circ_max(halos[galaxy])
-	# 	r_max = LilGuys.r_circ_max(halos[galaxy])
-	# 	scatter!(v_max * V2KMS, r_max)
-	# end
-
-
-	
-	# formatting
-	# linkxaxes!(ax, ax_ludlow)
-	# hidexdecorations!(ax, ticks=false, minorticks=false)
-	# rowgap!(fig.layout, 0.0)
-
-	
-	
-	fig
-end
-
-# ╔═╡ 51b5dc87-2463-4aaf-9513-eb1c135969b0
-let
-	fig = Figure()
-
-	ax = Axis(fig[1,1], 
-		xlabel = L"maximum circular velocity ($v_\textrm{max}$) in $\textrm{km\,s}^{-1}$ ",
-		ylabel = L"M200",
-		xscale = log10, 
-		yscale = log10,
-		limits = (1e9, 3e11, 1e5, 1e9),
-		#xticks = [1, 10, 100],
-		yticks = [1e6, 1e7, 1e8, 1e9, ],
-		xticks = Makie.automatic,
-	)
-
-	x = LinRange(20, 100, 1000)
-	ms = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN
-
-	m200 = first.(LilGuys.Ludlow.solve_M200_c.(x ./ V2KMS))
-	lines!(m200 .* M2MSUN, ms)
-	ms_low = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN ./ 1.09
-
-	m200 = first.(LilGuys.Ludlow.solve_M200_c.(x ./ V2KMS, -0.09))
-	lines!(m200 .* M2MSUN, ms_low)
-
-	ms_high = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN .* 1.09
-
-	m200 = first.(LilGuys.Ludlow.solve_M200_c.(x ./ V2KMS, +0.09))
-	lines!(m200 .* M2MSUN, ms_high)
-	
-	
-	fig
-end
-
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═a70156fe-9180-4abc-8031-480f8964239b
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-# ╠═a70156fe-9180-4abc-8031-480f8964239b
-# ╠═4bd376b1-0635-400c-ba8c-12f8e81f543c
-# ╠═8a38b83a-da38-4fde-ada0-7280b95c1696
 # ╟─faa273be-4b1d-4be7-b5f1-d9c28eb25999
-# ╠═32073146-98cc-41a7-92b2-4815277ef41a
-# ╠═c761597f-f70a-4772-8037-4a7c20bce0c3
 # ╠═e83ec912-55a3-4b90-a3b4-5bb11b477954
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╟─49e82dff-d3d8-48fc-a2b5-5909495c811d
 # ╠═51b5dc87-2463-4aaf-9513-eb1c135969b0
+# ╠═32073146-98cc-41a7-92b2-4815277ef41a

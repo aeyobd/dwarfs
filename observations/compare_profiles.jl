@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.15
 
 using Markdown
 using InteractiveUtils
@@ -46,17 +46,16 @@ end
 function add_profile!(profiles, filename; label=filename)
 	filepath = joinpath(galaxyname, "density_profiles", filename)
 	if isfile(filepath)
-		prof = LilGuys.StellarDensityProfile(filepath)
-		if prof.log_m_scale != 0
-			prof.log_Sigma .-= prof.log_m_scale
+		@info "reading $filepath"
+		prof = LilGuys.SurfaceDensityProfile(filepath)
+		idxs = LilGuys.find_longest_consecutive_true(LilGuys.sym_error.(prof.log_Sigma) .< 1.0)
+		
+		if length(idxs) < length(prof.log_R)
+			prof =  LilGuys.filter_by_bin(prof, idxs)
 		end
-		filt = maximum.(error_interval.(prof.log_Sigma)) .< 1
-		prof.log_R = prof.log_R[filt]
-		prof.log_Sigma = prof.log_Sigma[filt]
-		if length(prof.Gamma) > 0
-			prof.Gamma = prof.Gamma[filt]
-		end
+
 		profiles[label] = prof
+		return prof
 	else
 		@info "$filepath not found, skipping"
 	end
@@ -101,7 +100,7 @@ markersize=3
 
 # ╔═╡ 21ee9c3c-6884-4240-8bd6-96a2bac74498
 function plot_profiles(profiles_eq; jitter=0.005, markersize=markersize)
-	fig = Figure(size=(4*72, 3*72))
+	fig = Figure(figsize=(6*72, 4*72))
 	
 	ax = Axis(fig[1,1],
 		xlabel = log_r_label,
@@ -116,7 +115,7 @@ function plot_profiles(profiles_eq; jitter=0.005, markersize=markersize)
 		y =  LilGuys.middle.(prof.log_Sigma)
 		ye = LilGuys.error_interval.(prof.log_Sigma)
 		errorscatter!(prof.log_R[filt] .+ jitter * LilGuys.randu(-1, 1), y[filt], 
-					  yerror=ye[filt], label=key, size=markersize
+					  yerror=ye[filt], label=key, markersize=markersize
 		 )	
 	end
 
@@ -139,7 +138,7 @@ function plot_profiles(profiles_eq; jitter=0.005, markersize=markersize)
 		y =  LilGuys.middle.(prof.log_Sigma) .- ym
 		ye = LilGuys.error_interval.(prof.log_Sigma)
 		errorscatter!(prof.log_R[filt].+ jitter * LilGuys.randu(-1, 1), y[filt], 
-					  yerror=ye[filt], size=markersize
+					  yerror=ye[filt], markersize=markersize
 					 )
 	end
 
@@ -154,8 +153,8 @@ end
 
 # ╔═╡ 5295c0da-f77f-45b9-84bf-e174e2d5a521
 begin
-	profiles = OrderedDict{String, LilGuys.StellarDensityProfile}()
-	add_profile!(profiles, "jax_profile.toml", label="fiducial")
+	profiles = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
+	add_profile!(profiles, "jax_eqw_profile.toml", label="fiducial")
 	add_profile!(profiles, "jax_2c_profile.toml", label="2exp")
 	add_profile!(profiles, "jax_LLR_0_sub_profile.toml", label="LL cut")
 	add_profile!(profiles, "simple_sub_profile.toml", label="simple")
@@ -184,7 +183,7 @@ let
 
 	for (key, prof) in profiles
 		if length(prof.Gamma) > 0
-			LilGuys.gammaplot!(ax, prof, label=key, size=3, cycle=[:color])
+			lines!(radii(prof), middle.(prof.Gamma), label=key)
 		end
 	end
 
@@ -200,12 +199,15 @@ end
 # ╔═╡ d2e1374d-978d-41b9-99fb-e1d025dc9bbc
 get_ylims(profiles)
 
+# ╔═╡ 02cf6a7d-f3fe-41bf-addf-32f9b9d13710
+profiles
+
 # ╔═╡ 27d95410-65dd-48b1-a9eb-e67f3e91cf18
 @savefig "log_Sigma" plot_profiles(profiles, jitter=jitter)
 
 # ╔═╡ 27164128-5562-48e0-ab4b-e13965287946
 begin
-	profiles_eq = OrderedDict{String, LilGuys.StellarDensityProfile}()
+	profiles_eq = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
 	add_profile!(profiles_eq, "jax_2c_eqw_profile.toml", label="2exp")
 	add_profile!(profiles_eq, "jax_eqw_profile.toml", label="1c")
 	add_profile!(profiles_eq, "jax_LLR_0_eqw_profile.toml", label="LL")
@@ -220,15 +222,27 @@ begin
 
 end
 
-# ╔═╡ 99732187-a038-424e-b31d-15aff4a2afaa
-profiles_eq["LL"]
-
 # ╔═╡ e6373852-3932-4d6f-9d1b-cde32a1f73f5
 @savefig "log_Sigma_eqw" plot_profiles(profiles_eq)
 
+# ╔═╡ a2c0af6d-e5b3-4bb8-a08d-a75ecbe9297d
+r_max = radii_bins(profiles_eq["best - bg"])[end]
+
+# ╔═╡ fa227864-2f8d-4a21-a100-5a2de349a54e
+radii_bins(profiles["MCMC"])[2:end][isfinite.(profiles["MCMC"].log_Sigma)][end]
+
+# ╔═╡ b71b338e-2180-4549-905b-99f7cc34ec4e
+log10(r_max)
+
+# ╔═╡ ffa002c7-7b36-46ba-8ab6-f7d3803f2eef
+bins_okay = filter(x->x <= r_max, radii_bins(profiles_eq["1c"]))
+
+# ╔═╡ 563d6e88-2a47-4353-883d-f0343f8841a5
+print(log10.(bins_okay))
+
 # ╔═╡ f8924d9d-6a88-4180-8222-3714ee4e0e37
 begin
-	profiles_methods = OrderedDict{String, LilGuys.StellarDensityProfile}()
+	profiles_methods = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
 	add_profile!(profiles_methods, "jax_eqw_profile.toml", label="fiducial")
 	add_profile!(profiles_methods, "jax_2c_eqw_profile.toml", label="2c")
 	add_profile!(profiles_methods, "jax_circ_eqw_profile.toml", label="circ")
@@ -276,7 +290,6 @@ end
 # ╠═161937ea-277c-49a8-8648-0793e52e7414
 # ╠═2f1a42a3-e100-4413-a039-a20244ada256
 # ╠═035abb97-067a-4b3b-abf3-d2713a2da8b6
-# ╠═99732187-a038-424e-b31d-15aff4a2afaa
 # ╠═2300f4f3-bb27-4f16-9001-a9c626759a6b
 # ╠═d2e1374d-978d-41b9-99fb-e1d025dc9bbc
 # ╠═21ee9c3c-6884-4240-8bd6-96a2bac74498
@@ -284,9 +297,15 @@ end
 # ╠═b6baf3ed-9929-4252-b88d-9819d78be35f
 # ╠═494cae7d-c78d-4680-b140-7441c0b8507b
 # ╠═5295c0da-f77f-45b9-84bf-e174e2d5a521
+# ╠═02cf6a7d-f3fe-41bf-addf-32f9b9d13710
 # ╠═27d95410-65dd-48b1-a9eb-e67f3e91cf18
 # ╠═27164128-5562-48e0-ab4b-e13965287946
 # ╠═e6373852-3932-4d6f-9d1b-cde32a1f73f5
+# ╠═a2c0af6d-e5b3-4bb8-a08d-a75ecbe9297d
+# ╠═fa227864-2f8d-4a21-a100-5a2de349a54e
+# ╠═b71b338e-2180-4549-905b-99f7cc34ec4e
+# ╠═ffa002c7-7b36-46ba-8ab6-f7d3803f2eef
+# ╠═563d6e88-2a47-4353-883d-f0343f8841a5
 # ╠═f8924d9d-6a88-4180-8222-3714ee4e0e37
 # ╠═e835372a-3ef6-4ede-82b0-0f2d24c798c5
 # ╠═9b5e2dae-cc92-4778-aa77-d79fc1c91008
