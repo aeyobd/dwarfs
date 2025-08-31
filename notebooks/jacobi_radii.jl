@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -22,16 +22,16 @@ using PythonCall
 using OrderedCollections
 
 # ╔═╡ 26886e5c-546f-45ca-a882-2b354a962f07
-galaxy = "sculptor"
+galaxy = "idealized"
 
 # ╔═╡ cc2c7b51-5483-4693-bda6-40563ffb7289
-modelname = "1e7_new_v25_r2.5"
+modelname = "1e6"
 
 # ╔═╡ d9849d12-43fe-4788-aa26-145ed0d7db19
-orbitname = "smallperilmc"
+orbitname = "orbit_10_100"
 
 # ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
-vasiliev_units = true
+vasiliev_units = false
 
 # ╔═╡ 620d4b82-d277-46d1-b01c-329a65ca3626
 r_break_obs_arcmin = 25
@@ -189,7 +189,7 @@ end
 ρ_host = calc_ρ_mean(mw_halo, [peri, peri])[1]
 
 # ╔═╡ 7784c958-e815-4f08-a255-ddd7cc2af8b0
-r_J = LilGuys.find_zero(r -> calc_ρ_mean(dwarf_halo, r) - 3*ρ_host, 1.)
+r_J = LilGuys.find_zero(r -> calc_ρ_mean(dwarf_halo, r) - 3*ρ_host, 0.1)
 
 # ╔═╡ 4e072f88-f319-4ae7-8220-3f8d5b0766b9
 r_J_arcmin = LilGuys.kpc2arcmin(r_J, orbital_props["distance_f"])
@@ -318,6 +318,9 @@ OrderedDict(
 	)
 end
 
+# ╔═╡ 8018b2dc-4570-4d5b-80dd-c1f19fb20d92
+0.5 / LilGuys.R_h(LilGuys.Exp2D()) 
+
 # ╔═╡ 6021e71d-01fd-4a2e-bc3d-af45db173a5b
 if lmc
 	outname = "jacobi_lmc.toml"
@@ -379,5 +382,6 @@ end
 # ╟─df8d55f3-1629-415b-9461-b66d8ef2c35c
 # ╠═aff88239-9b72-44df-b895-3d3e0b6430dc
 # ╠═b77e000c-c66e-4bd6-8716-26216e6f7bb4
+# ╠═8018b2dc-4570-4d5b-80dd-c1f19fb20d92
 # ╠═6021e71d-01fd-4a2e-bc3d-af45db173a5b
 # ╠═82f87cc8-6a2a-4cb3-ae79-941d6ed16fc5

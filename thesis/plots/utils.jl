@@ -56,7 +56,7 @@ function get_extinction(ra, dec, bp_rp)
 end
 
 
-function ellipse!(radius, ellipticity, position_angle; kwargs...)
+function ellipse!(radius, ellipticity, position_angle; x0=0, y0=0, kwargs...)
 	t = LinRange(0, 2π, 1000) 
 
 	h = 1/sqrt(1 - ellipticity)
@@ -67,10 +67,10 @@ function ellipse!(radius, ellipticity, position_angle; kwargs...)
 	y = @. b * sin(t)
 
 	θ = deg2rad(position_angle)
-	x1 = @. x * sin(θ) - y*cos(θ)
-	y1 = @. x * cos(θ) + y*sin(θ)
+	x1 = @. x * sin(θ) - y*cos(θ) + x0
+	y1 = @. x * cos(θ) + y*sin(θ) + y0
 
-	rs = LilGuys.calc_R_ell(x1, y1, ellipticity, position_angle)
+	rs = LilGuys.calc_R_ell(x1 .- x0, y1 .- y0, ellipticity, position_angle)
 
 	@assert all(rs .≈ radius)
 	lines!(x1, y1; kwargs...)
@@ -103,11 +103,8 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 		scatter!(df.xi, df.eta; scatter_kwargs[label]...)
 	end
 
-    ellipse!(3observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=COLORS[2], linewidth=1)
-    b = 3observed_properties["R_h"] * sqrt(1 - observed_properties["ellipticity"])
-    θ = observed_properties["position_angle"]
-    text!(b*cosd(θ), -b*sind(θ), text=L"3R_h", rotation=deg2rad(θ-90), 
-          align = (:center, :bottom), color=COLORS[2], fontsize=10)
+    plot_labeled_R_h_ellipse!(observed_properties, 3)
+    plot_labeled_R_h_ellipse!(observed_properties, 6)
 
 	
     axislegend(position=legend_position)
@@ -181,6 +178,13 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 end
 
 
+function plot_labeled_R_h_ellipse!(observed_properties, n=3)
+    ellipse!(n*observed_properties["R_h"], observed_properties["ellipticity"], observed_properties["position_angle"], color=COLORS[2], linewidth=1)
+    b = n * observed_properties["R_h"] * sqrt(1 - observed_properties["ellipticity"])
+    θ = observed_properties["position_angle"]
+    text!(b*cosd(θ), -b*sind(θ), text=L"%$(n)R_h", rotation=deg2rad(θ-90), 
+          align = (:center, :bottom), color=COLORS[2], fontsize=10)
+end
 
 function get_isochrone(M_H, age=12)
     iso_columns = string.(split("Zini     MH   logAge Mini        int_IMF         Mass   logL    logTe  logg  label   McoreTP C_O  period0 period1 pmode  Mloss  tau1m   X   Y   Xc  Xn  Xo  Cexcess  Z 	mbolmag  Gmag    G_BPbrmag  G_BPftmag  G_RPmag", 

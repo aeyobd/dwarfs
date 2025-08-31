@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -44,6 +44,9 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
 galaxyname = "ursa_minor"
+
+# ╔═╡ 3083e55a-05f9-45aa-96ba-8f817d97c19c
+CairoMakie.activate!(type=:png, px_per_unit=2)
 
 # ╔═╡ 9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
 module Utils 
@@ -105,7 +108,7 @@ The plots below show various subsamples of the dataset in different planes to ge
 R_h = observed_properties["R_h"]
 
 # ╔═╡ 96360af3-e877-4c83-88ef-464ea9eb7b14
-rv_distant = rv_members[rv_members.R_ell .> 5R_h, :]
+rv_distant = rv_members[rv_members.R_ell .> 6R_h, :]
 
 # ╔═╡ 9eaaf2be-936b-4d26-9e2e-c04f551c515c
 rv_distant[:, [:xi, :eta, :R_ell]]
@@ -124,57 +127,76 @@ import Random
 # ╔═╡ a47cbe4c-15ec-4bb0-8992-e7650e1b072f
 my_colors = Utils.SELECTION_COLORS
 
-# ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
-@savefig "umi_selection" Utils.compare_j24_samples(
-		OrderedDict(
-		:best => best_stars,
-		:members_nospace => members_nospace,
-		:members => members,
-		:rv => rv_members[Random.randperm(size(rv_members, 1)), :],
-		:rv_distant => rv_distant,
+# ╔═╡ 6fa9d3a7-3762-409c-8dc8-9219add216f9
+xi_m1, eta_m1 = -42.086475336200905, -14.6280146094025
+
+# ╔═╡ e0d3d3c9-57d6-42b5-ac38-42367560cf99
+styles = Dict(
+	:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
+		label="all" => (;markersize=2),
+		rasterize=2,
 	),
-	Dict(
-		:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
-			label="all" => (;markersize=2),
-			rasterize=10,
-		),
-		:members_nospace => (;
-			alpha=1, markersize=1,
-			label = "CMD + PM" =>(alpha=1, markersize=2),
-			color=my_colors[2],
-			strokecolor=my_colors[2],
-			strokewidth=0.3
-		),
-		:members => (;
-			markersize=3,
-			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
-			marker=:x,
-			#color=:transparent,
-			#strokewidth=0.3,
-			color = my_colors[3],
-			alpha=1,
-			strokecolor = my_colors[2],
-			strokewidth=0.0
-		),
-		:rv => (;
-			markersize=4,
-			marker=:diamond,
-			label = "RV members" =>(alpha=1, markersize=2.5*2),
-			color = my_colors[4],
-			strokecolor = :black,
-			strokewidth=0.0
-		),
-		:rv_distant => (;
-			markersize=8,
-			marker=:star5,
-			color = my_colors[4],
-			strokewidth=1,
-			strokecolor=COLORS[4]
-		),
+	:members_nospace => (;
+		alpha=1, markersize=1,
+		label = "CMD + PM" =>(alpha=1, markersize=2),
+		color=my_colors[2],
+		strokecolor=my_colors[2],
+		strokewidth=0.3
 	),
-	observed_properties,
-	legend_position=:rt
+	:members => (;
+		markersize=3,
+		label = L"fiducial ($P_\textrm{sat} > 0.2$)" =>(alpha=1, markersize=2*2),
+		marker=:rect,
+		#color=:transparent,
+		#strokewidth=0.3,
+		color = my_colors[3],
+		alpha=1,
+		strokecolor = my_colors[2],
+		strokewidth=0.0
+	),
+	:rv => (;
+		markersize=4,
+		marker=:diamond,
+		label = "RV members" =>(alpha=1, markersize=2.5*2),
+		color = my_colors[4],
+		strokecolor = :black,
+		strokewidth=0.0
+	),
+	:rv_distant => (;
+		markersize=8,
+		marker=:star5,
+		color = my_colors[4],
+		strokewidth=1,
+		strokecolor=COLORS[4]
+	)
 )
+
+# ╔═╡ da9ce4d1-0af1-417b-bb57-197bd101d189
+samples = OrderedDict(
+	:best => best_stars,
+	:members_nospace => members_nospace,
+	:members => members,
+	:rv => rv_members[Random.randperm(size(rv_members, 1)), :],
+	:rv_distant => rv_distant,
+)
+
+# ╔═╡ b94901b0-ecc7-480b-b24a-fc526c9491c8
+@savefig "umi_selection" let
+
+	fig = Utils.compare_j24_samples(samples, styles,
+		observed_properties,
+		legend_position=:rt,
+	)
+
+
+	ax = fig.content[1]
+
+	Makie.current_axis!(ax)
+	Utils.ellipse!(3*0.5, 0, 0, x0=xi_m1, y0=eta_m1, color=COLORS[5])
+	text!(ax, xi_m1, eta_m1, color=COLORS[5], text="Muñoz 1", fontsize = 0.8 * theme(:fontsize)[])
+
+	fig
+end
 
 # ╔═╡ 90436a7d-e357-4365-922a-42f61e3dfb22
 md"""
@@ -185,7 +207,8 @@ md"""
 rv_nonmemb = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined_x_2c_psat_0.2_nonmemb.fits")
 
 # ╔═╡ 0f5143a6-f892-4a3e-967d-5e6b04cb12f0
-Utils.compare_j24_samples(
+let 
+fig = Utils.compare_j24_samples(
 		OrderedDict(
 			:members => rv_members,
 		#	:nonmemb => rv_nonmemb,	
@@ -200,6 +223,28 @@ Utils.compare_j24_samples(
 	),
 	observed_properties
 )
+
+	ax = fig.content[1]
+
+	Utils.ellipse!(3*0.49, 0, 0, x0=xi_m1, y0=eta_m1, color=COLORS[5], linewidth=5)
+	text!(ax, xi_m1, eta_m1, color=COLORS[5], text="Muñoz 1", fontsize = 0.8 * theme(:fontsize)[])
+
+
+	Makie.current_axis!(ax)
+
+	fig
+end
+
+# ╔═╡ bcd7ee37-eae6-435e-a8cc-6b5b0a479999
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], limits=(-200, 200, -200, 200))
+
+		Utils.ellipse!(3*0.5, 0, 0, x0=xi_m1, y0=eta_m1, color=COLORS[5], linewidth=0.1)
+
+
+	fig
+end
 
 # ╔═╡ d22c7f3b-8d6c-4a96-9827-d2333a02b2f0
 Ag, Ab, Ar = Utils.get_extinction(best_stars.ra, best_stars.dec, best_stars.bp_rp)
@@ -246,6 +291,7 @@ median(members.R_ell)
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
+# ╠═3083e55a-05f9-45aa-96ba-8f817d97c19c
 # ╠═9c7a3d3b-d4a4-4e15-a183-d3b4a8cf39bc
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
@@ -272,10 +318,14 @@ median(members.R_ell)
 # ╠═52506697-0d8b-4242-97c0-1e1f56da18a1
 # ╠═43e9b9bd-b7ba-4d2c-b97e-2d28c1ba270d
 # ╠═a47cbe4c-15ec-4bb0-8992-e7650e1b072f
+# ╠═6fa9d3a7-3762-409c-8dc8-9219add216f9
+# ╠═e0d3d3c9-57d6-42b5-ac38-42367560cf99
+# ╠═da9ce4d1-0af1-417b-bb57-197bd101d189
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╠═90436a7d-e357-4365-922a-42f61e3dfb22
 # ╠═5d0a5768-85ba-4913-9108-9302cc63cf4b
 # ╠═0f5143a6-f892-4a3e-967d-5e6b04cb12f0
+# ╠═bcd7ee37-eae6-435e-a8cc-6b5b0a479999
 # ╠═d22c7f3b-8d6c-4a96-9827-d2333a02b2f0
 # ╠═36137254-95f3-4fd9-a364-064d3073e964
 # ╠═75d76095-fb9c-4951-a226-5298cae5e24e

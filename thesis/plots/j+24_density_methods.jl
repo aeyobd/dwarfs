@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -43,6 +43,11 @@ log_Σ_label = L"$\log\,\Sigma$\,/\,stars\ arcmin$^{-2}$"
 # ╔═╡ 389fefd6-60fd-4dd8-ba77-29e87b4ed846
 obs_props_scl = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
 
+# ╔═╡ 322e01f3-32d2-4408-91ef-ab7777f0f925
+module Utils
+	include("utils.jl")
+end
+
 # ╔═╡ fd74ebb7-625e-4396-a91a-37045a283a08
 obs_props_umi = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/observed_properties.toml")
 
@@ -54,28 +59,11 @@ obs_props_fornax = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/fornax/obs
 
 # ╔═╡ 9c594ea7-8670-4235-8bde-cb2d670fe2c3
 function get_R_h(obs_props)	
-	R_h = obs_props["R_h_inner"]
-end
-
-# ╔═╡ 9f963809-0082-4895-9c5c-6787b573d3e6
-function get_R_h_2(obs_props)	
 	R_h = obs_props["R_h"]
-	R_h2 = obs_props["r_h"] * sqrt(1 - obs_props["ellipticity"])
-	@info isapprox(R_h, R_h2, atol=4e-2)
-	R_h
 end
 
-# ╔═╡ 8b3ef072-1777-4c3a-bba6-d3aef1b9645a
-get_R_h_2(obs_props_scl)
-
-# ╔═╡ a95df76c-62b8-4949-ac0d-6b057568f591
-
-
-# ╔═╡ 4ef42723-abcb-427d-b8c8-d910da77ce64
-get_R_h_2(obs_props_fornax)
-
-# ╔═╡ 48e1c2c8-a5d3-4a45-b209-c927466ce2b8
-get_R_h_2(obs_props_umi)
+# ╔═╡ 933c2e0a-db49-46fd-b3ae-a40be190022d
+R_munoz_1 = 36.58
 
 # ╔═╡ f3b219b4-7cc7-48a0-9675-91de7f40bb6d
 function get_M_s(galaxyname)
@@ -184,11 +172,10 @@ function compare_densities!(ax, profiles;
 
 	# Plot annotations
 
-	dy = 2
 
 	if R_h !== nothing
 		x = log10(R_h)
-		y = y_l + 0.15*dy
+		y = y_l
 				vlines!(ax, x, color=:black, linestyle=:dot, linewidth=lw)
 		text!(ax, [x], [y], text=L"R_h")
 	end
@@ -198,11 +185,9 @@ function compare_densities!(ax, profiles;
 		if y_R_b === nothing
 			y_R_b = y_l
 		end
-		y_R_b += 0.15 * dy
 		
-		arrows!(ax, [x], [y_R_b], [0], [-0.15*dy], arrowsize=6)
+		annotation!(ax, 0, 36, x, y_R_b, text=L"R_b")
 		
-		text!(ax, [x], [y_R_b], text=L"R_b")
 	end
 
 end
@@ -374,8 +359,8 @@ md"""
 begin 
 	profiles_scl = OrderedDict(
 		"all" => load_profile("sculptor", "best_eqw") |> LilGuys.filter_empty_bins,
-		"CMD + PM" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("sculptor", "best_eqw_sub"),
+		"CMD + PM" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"probable members" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
 	)
 
@@ -387,28 +372,29 @@ end
 get_extrema(profiles_scl)
 
 # ╔═╡ ef3ad471-392d-435a-950b-1b34b2c3b469
-grey = RGBf(0.7, 0.7, 0.7)
+grey = Utils.SELECTION_COLORS[1]
 
 # ╔═╡ cc8c0231-d568-4ac8-a090-428fdea08696
 plot_kwargs = Dict(
 	"probable members" => (;
-		color=COLORS[4],
-		label = L"P_\textrm{sat} > 0.2"
+		color=Utils.SELECTION_COLORS[3],
+		label = L"fiducial ($P_\textrm{sat} > 0.2$)",
+		marker = :rect
 	),
 	"CMD + PM" => (;
-		color = COLORS[1],
+		color = Utils.SELECTION_COLORS[2],
 		marker = :utriangle,
 		label = "CMD + PM"
 	),
 	"all" => (;
 		color = grey,
-		marker = :rect,
+		marker = :circle,
 		label = "all",
 	),
 	"BG subtracted" => (;
-		color = COLORS[3],
-		marker = :diamond,
-		label = "BG-subtracted"
+		color = COLORS[2],
+		marker = :pentagon,
+		label = L"all $ – $ background"
 	)
 )
 
@@ -457,6 +443,18 @@ R_h_fornax = get_R_h(obs_props_fornax)
 # ╔═╡ 0b33dfaa-055a-44b2-a463-1233047d624b
 ana_fornax = LilGuys.Exp2D(R_s=R_h_fornax / α, M=get_M_s("fornax"))
 
+# ╔═╡ fba7941e-8175-47df-8801-7d1f91211376
+R_h_munoz1 = 0.49  # arcmin, munoz+2012
+
+# ╔═╡ 7c8f5d6e-d53f-49a2-8b3a-239117c7c533
+Utils.SELECTION_COLORS[[1, 2, 3]]
+
+# ╔═╡ 58346276-5061-4d9a-8781-c1aba26d2c42
+grey, COLORS[3], COLORS[1]
+
+# ╔═╡ 44c20584-db45-4137-a07f-f7697a53174d
+log10(R_munoz_1 / R_h_umi)
+
 # ╔═╡ dbeae6d9-1dd7-403b-80ac-82b20d047c3b
 @savefig "scl_density_methods" compare_densities(profiles_scl, styles=plot_kwargs, R_b_R_h=R_b_scl, R_h=R_h_scl)
 
@@ -467,8 +465,8 @@ propertynames(plot_kwargs["all"])
 begin 
 	profiles_umi = OrderedDict(
 		"all" => load_profile("ursa_minor", "best_eqw") |> LilGuys.filter_empty_bins,
-		"CMD + PM" => load_profile("ursa_minor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("ursa_minor", "best_eqw_sub"),
+		"CMD + PM" => load_profile("ursa_minor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"probable members" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
 	)
 
@@ -485,12 +483,15 @@ end
 begin 
 	profiles_fornax = OrderedDict(
 		"all" => load_profile("fornax", "best_eqw") |> LilGuys.filter_empty_bins,
-		"CMD + PM" => load_profile("fornax", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("fornax", "best_eqw_sub") ,
+		"CMD + PM" => load_profile("fornax", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
 		"probable members" => load_profile("fornax", "jax_eqw") |> LilGuys.filter_empty_bins,
 	)
 
 end
+
+# ╔═╡ 0459f053-b627-427e-a698-a49ea8e68b3d
+@savefig "for_density_methods_j24" compare_densities_residuals(profiles_fornax, R_h=R_h_fornax, prof_ana=ana_fornax)
 
 # ╔═╡ 19be0190-af5d-479b-b859-8f1c1e46bba1
 @savefig "scl_umi_fnx_density_methods" let
@@ -501,32 +502,43 @@ end
 	)
 	
 	hlines!(get_background("sculptor")[1], color=grey, linewidth=1)
-	compare_densities!(ax, profiles_scl, styles=plot_kwargs, R_b_R_h=R_b_scl, R_h=R_h_scl)
+	compare_densities!(ax, profiles_scl, styles=plot_kwargs, R_h=R_h_scl, y_R_b=-2)
 
 	text!(0.8, 0.8, text="Sculptor", space=:relative)
 
+
+	# Ursa Minor
 	ax_umi = Axis(fig[2,1],
 		#xlabel = log_r_ell_label,
 		ylabel = log_Σ_label,
 	)
 
 	hlines!(get_background("ursa_minor")[1], color=grey, linewidth=1)
-
-	text!(0.8, 0.8, text="Ursa Minor", space=:relative)
+	
 	compare_densities!(ax_umi, profiles_umi, 
-		styles=plot_kwargs, R_b_R_h=R_b_fornax, 
+		styles=plot_kwargs,
 		R_h=R_h_umi
 	)
+
+	text!(0.8, 0.8, text="Ursa Minor", space=:relative)
+
+	#munoz 1
+	lines!([log10(R_munoz_1 - 3R_h_munoz1), log10(R_munoz_1 + 3R_h_munoz1)], [-4.5, -4.5], color=COLORS[5])
+	text!(ax_umi, log10(R_munoz_1), -4.5, text="Muñoz 1", color=COLORS[5], align=(:center, :bottom))
+	
 	axislegend(position=:lb)
 
+
+	# Fornax
 	ax_fnx = Axis(fig[3, 1],
 		xlabel = log_r_ell_label,
 		ylabel = log_Σ_label,
 	)
+	
 	hlines!(get_background("fornax")[1], color=grey, linewidth=1)
 
 	compare_densities!(ax_fnx, profiles_fornax, styles=plot_kwargs, 	
-		R_b_R_h=R_b_fornax, R_h=R_h_fornax
+		 R_h=R_h_fornax
 	)
 	
 	text!(0.8, 0.8, text="Fornax", space=:relative)
@@ -552,15 +564,12 @@ get_R_break
 # ╠═b11f3588-9904-46ef-8f35-a7c1d623e020
 # ╠═d42a0cd3-cc8e-4a24-8887-7100f3927961
 # ╠═389fefd6-60fd-4dd8-ba77-29e87b4ed846
+# ╠═322e01f3-32d2-4408-91ef-ab7777f0f925
 # ╠═fd74ebb7-625e-4396-a91a-37045a283a08
 # ╠═d50cc41b-9465-4481-86d9-c8cf221e1978
 # ╠═9ab4431d-e64f-44c9-a641-f16a524f3c19
 # ╠═9c594ea7-8670-4235-8bde-cb2d670fe2c3
-# ╠═9f963809-0082-4895-9c5c-6787b573d3e6
-# ╠═8b3ef072-1777-4c3a-bba6-d3aef1b9645a
-# ╠═a95df76c-62b8-4949-ac0d-6b057568f591
-# ╠═4ef42723-abcb-427d-b8c8-d910da77ce64
-# ╠═48e1c2c8-a5d3-4a45-b209-c927466ce2b8
+# ╠═933c2e0a-db49-46fd-b3ae-a40be190022d
 # ╠═f3b219b4-7cc7-48a0-9675-91de7f40bb6d
 # ╠═5d005025-8d6e-4d06-8b38-8aedd6189dfe
 # ╠═4f854674-f062-4cb2-a026-f9bac6863990
@@ -590,6 +599,7 @@ get_R_break
 # ╠═8544dd0c-556f-45e2-b432-3258b257ad99
 # ╠═5fa49bc9-a34d-4ae9-9cd3-4051281bc68f
 # ╠═9002ba29-45ef-46dc-8632-e993c9ec2dc8
+# ╠═0459f053-b627-427e-a698-a49ea8e68b3d
 # ╟─e9f641fe-4ec6-495b-9634-a9be98395a4d
 # ╠═27abef4c-62cf-4c82-a76f-38b735569328
 # ╠═ef3ad471-392d-435a-950b-1b34b2c3b469
@@ -603,7 +613,11 @@ get_R_break
 # ╠═469acf5a-b7bf-4e53-bbef-6d57ab2988e9
 # ╠═a2a77ae2-3a6b-46b2-bc5d-34a0e82fcef9
 # ╠═0b33dfaa-055a-44b2-a463-1233047d624b
+# ╠═fba7941e-8175-47df-8801-7d1f91211376
+# ╠═7c8f5d6e-d53f-49a2-8b3a-239117c7c533
+# ╠═58346276-5061-4d9a-8781-c1aba26d2c42
 # ╠═19be0190-af5d-479b-b859-8f1c1e46bba1
+# ╠═44c20584-db45-4137-a07f-f7697a53174d
 # ╠═dbeae6d9-1dd7-403b-80ac-82b20d047c3b
 # ╠═6ca91232-1b62-4f1d-8162-dc84312404af
 # ╠═c070eb97-b7d8-45e8-ae95-0219da2cd3e6

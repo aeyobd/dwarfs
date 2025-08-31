@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -18,13 +18,13 @@ end
 include("./paper_style.jl")
 
 # ╔═╡ 4b9e4fb8-f257-47c5-b1fa-0b4e9bdd042c
-modelname = "1e6_v31_r3.2/orbit_15_100"
+modelname = "1e6/orbit_10_100"
 
 # ╔═╡ 75c691d6-77ab-4715-a645-88352879313c
-starsname = "exp2d_rs0.10"
+starsname = "exp2d_rs0.25"
 
 # ╔═╡ 6feb26d5-8b1a-4913-95a2-d57c237fdadb
-idx_f = 98
+idx_f = 47
 
 # ╔═╡ 258525e6-7fa1-46b3-95f6-950c2b82aafc
 idx_i = 1
@@ -68,23 +68,11 @@ stars_dir_in = joinpath(model_dir, "../stars/$starsname")
 # ╔═╡ b1edbdfc-298b-40e2-b6c0-687a866fe180
 stars_dir_out = joinpath(model_dir, "stars/$starsname")
 
-# ╔═╡ e6d91c8b-648d-416a-ab2e-5e6439f7d5b7
-# ╠═╡ disabled = true
-#=╠═╡
-starsname = inputs.starsname
-  ╠═╡ =#
-
 # ╔═╡ b51a4ddd-90fd-415f-8a48-e4f35aeee801
 FIGDIR = "figures"
 
 # ╔═╡ 81684bfc-3316-42c2-a2a9-d9db98858edd
 using LilGuys; FIGDIR
-
-# ╔═╡ 94f3bf4a-248a-466e-b2de-b90600ddfe2b
-
-
-# ╔═╡ 3e947f36-69e2-433b-aaa7-4c8c681fd532
-isdir("")
 
 # ╔═╡ b8d70c2e-30bc-43f6-965f-c68399ba54d1
 md"""
@@ -94,6 +82,12 @@ md"""
 # ╔═╡ a0af7cb2-5ed6-4bd4-afc4-7d4481111127
 α = LilGuys.R_h(LilGuys.Exp2D())
 
+# ╔═╡ 470165c2-c675-4ad6-89e6-ec43eaab2301
+function get_R_h(galaxy)
+	props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "observed_properties.toml"))
+	return props["R_h"]
+end
+
 # ╔═╡ 81805051-a10d-40f8-b128-612a6dec304f
 begin 
 	obs_profs = LilGuys.SurfaceDensityProfile[]
@@ -101,7 +95,7 @@ begin
 	for galaxy in galaxies
 		dir = joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "density_profiles")
 		filepath = ""
-		for filename in ["jax_eqw_profile.toml", "jax_eqw_profile.toml"]
+		for filename in ["jax_2c_eqw_profile.toml", "jax_eqw_profile.toml", "jax_eqw_profile.toml"]
 			if isfile(joinpath(dir, filename))
 				filepath = joinpath(dir, filename)
 				break
@@ -111,9 +105,10 @@ begin
 
 		prof = LilGuys.SurfaceDensityProfile(filepath) |> LilGuys.filter_empty_bins
 		@assert prof.log_R_scale == 0.0
+		R_h = get_R_h(galaxy)
 		
-		density_fit = TOML.parsefile(filepath * "_inner_fits.toml")
-		R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
+		# density_fit = TOML.parsefile(filepath * "_inner_fits.toml")
+		# R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
 
 		# filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "observed_properties.toml")
 		# obs_props = TOML.parsefile(filename)
@@ -153,6 +148,9 @@ out = Output(model_dir, weights=probabilities)
 # ╔═╡ cc1607f9-083a-49d3-bc73-b274b55c4899
 out.times[idx_f] * T2GYR
 
+# ╔═╡ 3263692b-d918-4926-850b-8b127df24f20
+T2GYR * (out.times[idx_f] - orbit_props["t_peris"][1])
+
 # ╔═╡ abe2deee-32e3-43d5-8232-10aeb797bac1
 md"""
 # Analysis
@@ -179,43 +177,6 @@ prof_f = LilGuys.SurfaceDensityProfile(out[idx_f])
 # ╔═╡ 73522902-8e61-427f-921f-1ef161ea9664
 prof_i = LilGuys.SurfaceDensityProfile(out[idx_i])
 
-# ╔═╡ d844a0e3-eea4-4e18-9e51-4d4ca9eaed7e
-
-
-# ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
-let
-	fig = Figure()
-	
-	ax = Axis(fig[1,1],
-		limits = (-1.5, 1.5, -5, 2),
-		xlabel = L"\log R / R_h",
-		ylabel = L"log $\Sigma_\star$",
-	)
-
-	sim_scale = -0.1
-	sim_R_scale = 0.6
-
-	lines!(LilGuys.log_radii(prof_i) .+ sim_R_scale, LilGuys.log_surface_density(prof_i) .+ sim_scale, label="initial", linestyle=:dot)
-	lines!(LilGuys.log_radii(prof_f)  .+ sim_R_scale, LilGuys.log_surface_density(prof_f) .+ sim_scale, label="final (illustrative)")
-
-
-	for i in eachindex(galaxies)
-		galaxy = galaxies[i]
-		prof = obs_profs[i]
-		
-		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
-					  label=Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")[galaxy], 
-					  color=COLORS[i+2])
-	end
-
-	LilGuys.hide_grid!(ax)
-
-	vlines!(log10(r_b_kpc) .+ sim_R_scale)
-	axislegend(position=:lb)
-
-	@savefig "scl_umi_vs_idealized" fig
-end
-
 # ╔═╡ 80bb56d3-37f0-49fc-a261-4965032326fc
 labels = Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")
 
@@ -225,72 +186,88 @@ colors = Dict("sculptor" => COLORS[2], "ursa_minor" => COLORS[4], "fornax" => CO
 # ╔═╡ 2e3c0c9c-d7de-4ef8-aad1-972ed5957810
 exp_profile = LilGuys.Sersic(n=1)
 
-# ╔═╡ e69dbe75-8a55-435c-9e1c-7666916b7d41
-@savefig "scl_umi_vs_idealized_2panel" let
-	fig = Figure(size=(5.39*72, 3*72))
-	
-	ax = Axis(fig[1,1],
+# ╔═╡ 00ed6c32-b602-4c8c-ae13-7b323c6232fd
+fig_limits = (-1.0, 1.2, -5, 1)
+
+# ╔═╡ 3c2d3aa7-9937-46ad-a393-32c120b670b9
+function DensityAxis(gs)
+	ax = Axis(gs,
 		xlabel = L"log $R$ / $R_h$",
 		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
-		#xticks=-2:0.5:1.0
+		limits = fig_limits
 	)
-	sim_scale = -0.4
-	sim_R_scale = 0.70
+end
 
+# ╔═╡ 8d3ecf85-afbf-4b53-8669-b8390e8419db
+function plot_exponential!(ax)
+	prof = LilGuys.Sersic(R_h=1, n=1)
 
+	x = LinRange(-1, 1, 1000)
+	y = log10.(LilGuys.surface_density.(prof, 10 .^ x)) .- log10(LilGuys.surface_density(prof, 1))
+	lines!(ax, x, y, color=:black, label="exponential")
+end
+
+# ╔═╡ 48b059bd-415e-47e5-b498-37e7b6ba21ad
+function plot_galaxy_densities!(ax)
 	for i in eachindex(galaxies)
 		galaxy = galaxies[i]
 		prof = obs_profs[i]
 
-		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
+		errorscatter!(ax, prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
 					  label=labels[galaxy], 
-					  color=colors[galaxy])
+					  color=colors[galaxy],  marker=[:rect, :utriangle, :circle][i])
 	end
+end
 
-	axislegend("observations", position=:lb)
-
-
-	ax2 = Axis(fig[1,2],
-		xlabel = L"log $R$ / $R_h$",
-		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
-			   limits = (-1.9, 1.0, -4, 1.5)
-
-	)
+# ╔═╡ 10a88d85-08b1-4401-bf9a-4873b9428676
+@savefig "scl_umi_vs_fornax" let
+	fig = Figure()
+	
+	ax = DensityAxis(fig[1,1])
 
 
+	plot_exponential!(ax)
 
-	for i in eachindex(galaxies)
-		galaxy = galaxies[i]
-		prof = obs_profs[i]
+	plot_galaxy_densities!(ax)
 
-		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
-					  color=colors[galaxy])
-	end
+	axislegend(position=:lb)
 
 
-	lines!(prof_i.log_R .+ sim_R_scale, prof_i.log_Sigma .+ sim_scale, label="initial", linestyle=:dot)
-	lines!(prof_f.log_R .+ sim_R_scale, prof_f.log_Sigma .+ sim_scale, label="final", color=:black)
+	fig
+end
 
-	x = log10(r_b_kpc)
-	y = LilGuys.lerp(LilGuys.log_radii(prof_f), middle.(LilGuys.log_surface_density(prof_f)))(x)
-	dy = 0.5
-	h = 0.75
-	arrows2d!([x  + sim_R_scale], [y + sim_scale + h], [0], [-h], align=0.5, minshaftlength=0)
+# ╔═╡ 1d54de8d-c9be-42b6-85a1-235f7d8a08d0
+@savefig "scl_umi_vs_idealized" let
+	fig = Figure()
+	
+	ax = DensityAxis(fig[1,1])
 
-	text!([x + sim_R_scale], [y + sim_scale + h * 1.5], text=L"r_\textrm{break}", align=(:left, :bottom), fontsize=14)
+	sim_scale = 0.45
+	sim_R_scale = 0.3
+
+	plot_galaxy_densities!(ax)
+
+
+
+	lines!(prof_i.log_R .+ sim_R_scale, prof_i.log_Sigma .+ sim_scale, label="simulation initial", linestyle=:dot)
+	lines!(prof_f.log_R .+ sim_R_scale, prof_f.log_Sigma .+ sim_scale, label="simulation final", color=:black)
+
+	x = log10(r_b_kpc) + sim_R_scale
+	y = LilGuys.lerp(LilGuys.log_radii(prof_f) .+ sim_R_scale, middle.(LilGuys.log_surface_density(prof_f)))(x) + sim_scale
+	# dy = 0.25
+	# h = 0.75
+	# arrows2d!([x  + sim_R_scale], [y + sim_scale + h], [0], [-h], align=0.5, minshaftlength=0)
+
+	annotation!(0, 50, x, y, text=L"r_\textrm{break}")
 
 
 	x = LinRange(-2, 1, 1000)
 	y = @. log10(LilGuys.surface_density.(exp_profile, 10^x))
 	#lines!(x, y)
 
-	axislegend("toy simulation", position=:lb)
-	hideydecorations!(ticks=false, minorticks=false)
+	axislegend(position=:lb)
 
-	linkaxes!(ax, ax2)
-	colgap!(fig.layout, 0)
-
-	@savefig "scl_umi_vs_penarrubia" fig
+	fig
 end
 
 # ╔═╡ Cell order:
@@ -301,6 +278,7 @@ end
 # ╠═c51a8cfd-f8a4-495e-8319-d0c362b9a3aa
 # ╠═74c6a109-7b1b-4a84-8744-feef39f6f2a6
 # ╠═cc1607f9-083a-49d3-bc73-b274b55c4899
+# ╠═3263692b-d918-4926-850b-8b127df24f20
 # ╟─ea3d8d00-11ee-4b60-9b6a-58a3e396a572
 # ╠═5fa9aec4-f876-11ef-1eed-bd8da0982d2b
 # ╠═221247cd-e447-400c-8491-b7248787f7a7
@@ -311,12 +289,10 @@ end
 # ╠═70ac654f-b45f-4b14-ad0f-01cf5f1e29e5
 # ╠═76fdb3ab-60a6-42ea-bb71-0204d37284ce
 # ╠═b1edbdfc-298b-40e2-b6c0-687a866fe180
-# ╠═e6d91c8b-648d-416a-ab2e-5e6439f7d5b7
 # ╠═b51a4ddd-90fd-415f-8a48-e4f35aeee801
-# ╠═94f3bf4a-248a-466e-b2de-b90600ddfe2b
-# ╠═3e947f36-69e2-433b-aaa7-4c8c681fd532
 # ╟─b8d70c2e-30bc-43f6-965f-c68399ba54d1
 # ╠═a0af7cb2-5ed6-4bd4-afc4-7d4481111127
+# ╠═470165c2-c675-4ad6-89e6-ec43eaab2301
 # ╠═81805051-a10d-40f8-b128-612a6dec304f
 # ╠═71089769-f037-4593-9d77-36c6cdf060ca
 # ╠═529fb229-e633-4c73-a994-86e1130b5c9e
@@ -332,9 +308,12 @@ end
 # ╠═ef5fa6b6-5111-4a2e-ab84-8452714ebb4a
 # ╠═f4828aa8-011c-4c37-9437-0ecd95adaa68
 # ╠═73522902-8e61-427f-921f-1ef161ea9664
-# ╠═d844a0e3-eea4-4e18-9e51-4d4ca9eaed7e
-# ╠═21ace95e-ba98-4728-a8f7-8303f0eac247
 # ╠═80bb56d3-37f0-49fc-a261-4965032326fc
 # ╠═b59b1601-a2fe-4481-a027-28b1e391c338
 # ╠═2e3c0c9c-d7de-4ef8-aad1-972ed5957810
-# ╠═e69dbe75-8a55-435c-9e1c-7666916b7d41
+# ╠═00ed6c32-b602-4c8c-ae13-7b323c6232fd
+# ╠═10a88d85-08b1-4401-bf9a-4873b9428676
+# ╠═3c2d3aa7-9937-46ad-a393-32c120b670b9
+# ╠═8d3ecf85-afbf-4b53-8669-b8390e8419db
+# ╠═48b059bd-415e-47e5-b498-37e7b6ba21ad
+# ╠═1d54de8d-c9be-42b6-85a1-235f7d8a08d0

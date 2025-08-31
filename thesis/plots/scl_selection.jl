@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -46,6 +46,9 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
 galaxyname = "sculptor"
 
+# ╔═╡ 60985df9-2423-4350-b2f9-4ce7c8e6589a
+CairoMakie.activate!(type=:png, px_per_unit=2)
+
 # ╔═╡ 0004f638-c57a-4dab-8b97-c77840cafbbf
 import TOML
 
@@ -88,6 +91,9 @@ members = best_stars[best_stars.PSAT .> 0.2, :]
 
 # ╔═╡ 731ea468-5003-44e9-95b8-7fa7ef4b475b
 Nmemb = size(members, 1)
+
+# ╔═╡ 7b635d02-617f-41df-9c7c-221c04c10e87
+size(members, 1) * 0.0005
 
 # ╔═╡ 60d0e593-88fd-4b4c-9009-cc24a597c6d5
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
@@ -143,7 +149,7 @@ rv_distant.PSAT
 	Dict(
 		:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
 			label="all" => (;markersize=2),
-			rasterize=10,
+			rasterize=2,
 		),
 		:members_nospace => (;
 			alpha=1, markersize=1,
@@ -154,8 +160,8 @@ rv_distant.PSAT
 		),
 		:members => (;
 			markersize=3,
-			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
-			marker=:x,
+			label = L"fiducial ($P_\textrm{sat} > 0.2$)" =>(alpha=1, markersize=2*2),
+			marker=:rect,
 			#color=:transparent,
 			#strokewidth=0.3,
 			color = my_colors[3],
@@ -190,18 +196,6 @@ rv_distant.R_ell ./ observed_properties["R_h"]
 
 # ╔═╡ 9376c4d1-4237-408f-a845-1decf183cf10
  12.33 .* sqrt(1-0.33)
-
-# ╔═╡ 51c1f61c-b2b1-4d51-bd02-51806217278a
-
-
-# ╔═╡ 065741fb-dd59-406c-b4f6-ac6413a652a7
-
-
-# ╔═╡ 885f8487-8f3c-4db8-ab05-ddacf1581491
-# ╠═╡ disabled = true
-#=╠═╡
-
-  ╠═╡ =#
 
 # ╔═╡ 13f558a3-a42e-4384-ac6e-2a036f6e634f
 LilGuys.mean(skipmissing(rv_members.RV_t23))
@@ -253,16 +247,16 @@ alpha_R = LilGuys.R_h(LilGuys.Exp2D())
 (1 - mass(LilGuys.Exp2D(), 9alpha_R)) * sum(best_stars.PSAT)
 
 # ╔═╡ 28fbacb4-8078-4af2-bf8f-23adab46669b
- to_colormap(:YlGnBu_4)[end-2:end]
+
 
 # ╔═╡ f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
- to_colormap(:seaborn_crest_gradient)[[1, 80, 170, 255]]
+
 
 # ╔═╡ 6b4f3e96-d525-4885-97fd-a3d35171ad76
-[colorant"black", COLORS[1], COLORS[3], COLORS[8]]
+
 
 # ╔═╡ 7f6ab558-627e-46c5-8f47-b1ec03fd2b63
- to_colormap(:seaborn_mako_gradient)[reverse([65, 129, 192, 255])]
+
 
 # ╔═╡ c3eef548-6678-46a3-96a1-01246f5f70e0
 Arya.get_arya_cmap()
@@ -302,12 +296,13 @@ let
 end
 
 # ╔═╡ 50d90ce5-99df-46af-b309-a8ccd0ccf921
-[colorant"#cecece", colorant"#84aa83", colorant"#207e95", colorant"#4c397c"]
+
 
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
+# ╠═60985df9-2423-4350-b2f9-4ce7c8e6589a
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═0004f638-c57a-4dab-8b97-c77840cafbbf
 # ╠═ae29bed0-6700-47f1-8952-35e867ce126b
@@ -325,6 +320,7 @@ end
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
 # ╠═731ea468-5003-44e9-95b8-7fa7ef4b475b
 # ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
+# ╠═7b635d02-617f-41df-9c7c-221c04c10e87
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
@@ -343,9 +339,6 @@ end
 # ╠═a373edbf-d441-46ce-bc0f-08ac0d693c44
 # ╠═9376c4d1-4237-408f-a845-1decf183cf10
 # ╠═508f8d47-f731-4a0a-a761-c1ef2403ec8b
-# ╠═51c1f61c-b2b1-4d51-bd02-51806217278a
-# ╠═065741fb-dd59-406c-b4f6-ac6413a652a7
-# ╠═885f8487-8f3c-4db8-ab05-ddacf1581491
 # ╠═13f558a3-a42e-4384-ac6e-2a036f6e634f
 # ╠═2d474904-ec96-41e7-bd17-8969ea5e3c40
 # ╠═4e06c085-3024-4c8a-ba1b-833e3f8630b1

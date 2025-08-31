@@ -57,29 +57,29 @@ end
 
 
 
-function axes_xyz_flat(fig, limits, units="kpc")
-    ax_xy = Axis(fig[1,1],
+function axes_xyz_flat(fig; row=1, limits, units="kpc", kwargs...)
+    ax_xy = Axis(fig[row,1];
         xlabel = "x / $units",
         ylabel = "y / $units",
         limits = limits[[1,2]],
-        aspect = DataAspect(),
+        kwargs...
     )
 
-    ax_yz = Axis(fig[1,2],
+    ax_yz = Axis(fig[row,2];
         xlabel = "y / $units",
         ylabel = "z / $units",
         limits = limits[[2,3]],
-        aspect = DataAspect(),
+        kwargs...
     )
 
-    ax_xz = Axis(fig[1,3],
+    ax_xz = Axis(fig[row,3];
         xlabel = "x / $units",
         ylabel = "z / $units",
         limits = limits[[1,3]],
-        aspect = DataAspect(),
+        kwargs...
     )
 
-    rowsize!(fig.layout, 1, Aspect(1,1))
+    rowsize!(fig.layout, row, Aspect(1,1))
 
     return [ax_xy, ax_yz, ax_xz]
 end

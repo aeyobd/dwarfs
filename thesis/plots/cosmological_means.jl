@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -35,12 +35,15 @@ end
 # ╔═╡ e83ec912-55a3-4b90-a3b4-5bb11b477954
 vel_from_M_s(ms) = LilGuys.find_zero(x->LilGuys.M_s_from_vel_fattahi(x) - ms, 0.1)
 
+# ╔═╡ 0c62103b-a589-4769-af7c-5eea551b7e65
+apostle = "ᴀᴘᴏꜱᴛʟᴇ"
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "cosmological_means" let
 	fig = Figure(figure_padding=10, size=( 5.4*72, 2.7*72,))
 
 	ax = Axis(fig[1,2], 
-		xlabel = L"$v_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
+		xlabel = L"$\textrm{v}_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
 		ylabel = L"stellar mass in $\textrm{M}_\odot$",
 		xscale = log10, 
 		yscale = log10,
@@ -54,9 +57,9 @@ vel_from_M_s(ms) = LilGuys.find_zero(x->LilGuys.M_s_from_vel_fattahi(x) - ms, 0.
 	ms = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN
 	lines!(x, ms, label="Fattahi+18 relation")
 	band!(ms, x ./ 1.09, x .* 1.09, alpha=0.5, direction=:y)
-	scatter!(x_apostle, y_apostle, color=:black, markersize=3, label="APOSTLE central galaxies")
+	scatter!(x_apostle, y_apostle, color=:black, markersize=3, label="$apostle central galaxies")
 	text!(22, 1e6, text="Fattahi+18 fit", color=COLORS[1], rotation=π/2.6)
-	text!(0.05, 0.9, space=:relative, text="APOSTLE centrals", fontsize=10)
+	text!(0.05, 0.9, space=:relative, text="$apostle centrals", fontsize=10)
 
 	
 	
@@ -64,26 +67,30 @@ vel_from_M_s(ms) = LilGuys.find_zero(x->LilGuys.M_s_from_vel_fattahi(x) - ms, 0.
 	ax_ludlow = Axis(fig[1,1],
 			   yscale=log10, 
 			   xscale = log10,
-			   yticks = [10, 100],
-			xticks=[1, 10,],
-		ylabel = L"$v_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
-			   xlabel = L"$r_\textrm{max}$ / kpc",
-			   limits = (nothing, 40, 10, 100)
+			   yticks = [10, 20, 30],
+				xticks=Makie.automatic, #[0.01, 0.1, 1, 10, 100],
+				ylabel = L"$c$",
+			   xlabel = L"$M_{200} / 10^{10}\, \textrm{M}_\odot$",
+			   limits = (0.01, 100, 5, 30),
+					 yminorticks=1:1:30
 			  )
 
-	vm = LinRange(10, 100, 100) ./ V2KMS
+	log_M200 = LinRange(-2, 2, 100) 
+	M200 = 10 .^ log_M200
 
 
 
 	# lines!(vm .* V2KMS, rm)
-	lines!(LilGuys.Ludlow.solve_rmax.(vm), vm .* V2KMS, color=COLORS[2])
-	#lines!(LilGuys.Ludlow.solve_rmax.(vm, z=2), vm .* V2KMS, color=COLORS[3])
+	c_0 =  LilGuys.Ludlow.c_ludlow.(M200, 0.0)
+	c_l = c_0 * 10^-0.09
+	c_h = c_0 * 10^0.09
+	lines!(M200, c_0, color=COLORS[2])
 
-	fill_between!(ax_ludlow, vm .* V2KMS, LilGuys.Ludlow.solve_rmax.(vm, -0.09), LilGuys.Ludlow.solve_rmax.(vm, +0.09), alpha=0.5, color=COLORS[2], direction=:y)
+	fill_between!(ax_ludlow, M200, c_l, c_h, alpha=0.5, color=COLORS[2])
 
-	θ = π/3.25
-	text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, +0.09), 20, text=L"Ludlow\!+\!16 $z=0$", rotation=θ, align=(:left, :bottom), color=COLORS[2])
-	#text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, z=2), 20, text=L"z=2", rotation=θ, align=(:left, :bottom), color=COLORS[3])
+	θ = -0.32
+	text!(1, LilGuys.Ludlow.c_ludlow(1, 0)*10^0.09, text=L"Ludlow\!+\!16 $z=0$", rotation=θ, align=(:center, :bottom), color=COLORS[2])
+	# #text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, z=2), 20, text=L"z=2", rotation=θ, align=(:left, :bottom), color=COLORS[3])
 	
 	
 	fig
@@ -176,6 +183,7 @@ end
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╟─faa273be-4b1d-4be7-b5f1-d9c28eb25999
 # ╠═e83ec912-55a3-4b90-a3b4-5bb11b477954
+# ╠═0c62103b-a589-4769-af7c-5eea551b7e65
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╟─49e82dff-d3d8-48fc-a2b5-5909495c811d
 # ╠═51b5dc87-2463-4aaf-9513-eb1c135969b0

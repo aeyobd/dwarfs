@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -99,7 +99,7 @@ end
 galaxies = OrderedDict(
 	"fornax" => (
 		color = COLORS[1],
-		marker = :dot,
+		marker = :circle,
 		label = "Fornax",
 		linewidth=2
 	),
@@ -115,6 +115,26 @@ galaxies = OrderedDict(
 		label = "Ursa Minor",
 		markersize=8,
 		linewidth=1.5
+	),
+)
+
+# ╔═╡ 07e1390f-2789-4e20-80d6-b2cb4631be5c
+galaxies_scatter = OrderedDict(
+	"fornax" => (
+		color = COLORS[1],
+		marker = :circle,
+		label = "Fornax",
+	),
+	"sculptor" => (
+		color = COLORS[2], 
+		marker=:rect,
+		label = "Sculptor",
+	),
+	"ursa_minor" => (
+		color = COLORS[3],
+		marker = :utriangle,
+		label = "Ursa Minor",
+		markersize=8,
 	),
 )
 
@@ -296,6 +316,37 @@ let
 	fig
 end
 
+# ╔═╡ 5b5c426e-ce27-48bd-a3ac-7f23e7663ed7
+let
+	fig = Figure()
+
+	ax = Axis(fig[1,1], 
+		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
+		xlabel = L"\log\,R\ / \ R_h",
+
+				xticks = -2:1:1,
+		limits=(-1.5, 1.2, -5, 1.1)
+
+	)
+
+    x = LinRange(-1.5, 1.2, 1000)
+    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
+    lines!(x, y, color=:black, label="Exp2D")
+    
+
+	for (galaxy, kwargs) in galaxies_scatter
+		prof = profiles[galaxy]
+			errorscatter!(ax, prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), ; kwargs...)
+	end
+
+	axislegend(position=:lb, merge=true, unique=true, patchsize=(24, 6))
+
+
+
+	@savefig "scl_umi_fornax_exp"
+	fig
+end
+
 # ╔═╡ 0599cad0-64b4-4d6d-9669-b660dc659313
 md"""
 # Extra
@@ -454,10 +505,12 @@ end
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═d34dfbe4-c80a-46e8-9082-30148cbcbd0b
 # ╠═8821d235-5622-48c6-ab49-587d0382e583
+# ╠═07e1390f-2789-4e20-80d6-b2cb4631be5c
 # ╠═552e9438-862f-4710-a7d4-c8d798b5f1aa
 # ╠═cf655228-1528-4e77-9629-07e99984951f
 # ╠═f4e8b66c-5f18-45fd-8859-32479d7227bc
 # ╠═ceb62c28-85b7-424e-a6e4-243905333a86
+# ╠═5b5c426e-ce27-48bd-a3ac-7f23e7663ed7
 # ╟─0599cad0-64b4-4d6d-9669-b660dc659313
 # ╠═45bb2bf2-66de-4834-adb2-725277fa6180
 # ╠═e16b1441-f184-4fd2-8b68-52801d0a0960
