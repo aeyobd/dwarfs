@@ -1,4 +1,4 @@
-In the previous chapters, we have seen that the Scl and UMi classical dSphs have outer density profiles that appear to deviate from the exponential law that approximates well all other classical dSphs. Our main intention is to assess whether such excesses result from the effects of Galactic tides. To this purpose, we intend to use N-body simulations of the evolution of CDM halos in a Galactic potential, constrained to have the orbital parameters consistent with a dwarf's present-day position and velocity. We shall assume that the Galactic potential is the static, analytic potential inferred by @mcmillan2011 from observations of kinematic tracers. We also assume the potential of each dwarf may be initially approximated by a cuspy NFW profile. Since the dwarfs in question are heavily dark matter dominated, we shall use a carefully selected sample of dark matter particles to mimic and track the evolution of an embedded tracer stellar component. In this Chapter, I describe the Galactic potential used, the orbital estimation method, the initial conditions setup, and the N-body method used. 
+In the previous chapters, we have seen that the Scl and UMi classical dSphs have outer density profiles that appear to deviate from the exponential law that approximates well all other classical dSphs. Our main intention is to assess whether such excesses result from the effects of Galactic tides. To this purpose, we use N-body simulations of the evolution of CDM halos in a Galactic potential, constrained to have the orbital parameters consistent with a dwarf's present-day position and velocity. We shall assume that the Galactic potential is the static, analytic potential inferred by @mcmillan2011 from observations of kinematic tracers. We also assume that the potential of each dwarf may be initially approximated by a cuspy NFW profile. Since the dwarfs in question are heavily dark matter dominated, we shall use a carefully selected sample of dark matter particles to mimic and track the evolution of an embedded tracer stellar component. In this Chapter, I describe the Galactic potential used, the orbital estimation method, the initial conditions setup, and the N-body method used. 
 
 
 
@@ -185,13 +185,13 @@ The statistical centring uncertainty for the full resolution ($10^7$ particle) i
 
 ## The stellar component {#sec:painting_stars}
 
-We "paint" stars onto dark matter particles using the particle-tagging method [e.g. @bullock+johnston2005], assuming spherical symmetry. We initially assume exponential stars with $R_s = 0.10\,,\kpc$ for both galaxies.  
+We "paint" stars onto dark matter particles using the particle-tagging method [e.g., @bullock+johnston2005], assuming spherical symmetry. We initially assume exponential stars with $R_s = 0.10\,,\kpc$ for both galaxies.  
 
 Let $\Psi$ be the potential (normalized to vanish at infinity) and  ${\cal E}$ the binding energy ${\cal E} = \Psi - 1/2 v^2$. If we know $f({\cal E})$, the distribution function (phase-space density in energy), then we assign a stellar weight to a given particle with energy ${\cal E}$ using
 $$
 P_\star({\cal E}) = \frac{f_\star({\cal E})}{f_{\rm halo}({\cal E})}.
 $$
-While $f({\cal E})$ is a phase-space density, the differential energy distribution includes an additional $g({\cal E})$ occupation term (BT87). We use Eddington inversion to find the distribution function, (eq. 4-140b in BT87)
+While $f({\cal E})$ is a phase-space density, the differential energy distribution includes an additional $g({\cal E})$ occupation term [@BT1987]. We use Eddington inversion to find the distribution function, [eq. 4-140b in @BT1987]
 $$
 f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
 $$
