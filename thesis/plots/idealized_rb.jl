@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -21,13 +21,13 @@ include("./paper_style.jl")
 include("./paper_style.jl")
 
 # ╔═╡ 4b9e4fb8-f257-47c5-b1fa-0b4e9bdd042c
-modelname = "1e6_v31_r3.2/orbit_15_100"
+modelname = "1e6/orbit_10_100"
 
 # ╔═╡ 75c691d6-77ab-4715-a645-88352879313c
-starsname = "exp2d_rs0.10"
+starsname = "exp2d_rs0.25"
 
 # ╔═╡ 6feb26d5-8b1a-4913-95a2-d57c237fdadb
-idx_f = 98
+idx_f = 47
 
 # ╔═╡ 258525e6-7fa1-46b3-95f6-950c2b82aafc
 idx_i = 1
@@ -50,7 +50,7 @@ stars_dir_in = joinpath(model_dir, "../stars/$starsname")
 stars_dir_out = joinpath(model_dir, "stars/$starsname")
 
 # ╔═╡ 01a46bcb-7d35-446e-8de8-656e1fec9a54
-	idxs = [1, 18]
+	idxs = [1, idx_f]
 
 # ╔═╡ b51a4ddd-90fd-415f-8a48-e4f35aeee801
 FIGDIR = "figures"
@@ -156,6 +156,44 @@ sum(LilGuys.surface_density(profiles[1]) .* diff(π .* LilGuys.radii_bins(profil
 # ╔═╡ 697e034a-bf10-4afa-b95c-37dcdc3b6cb5
 arrowcolor = :grey
 
+# ╔═╡ 7bab90ee-702e-4eda-9015-5b43fd47ae26
+log10(r_J_kpc)
+
+# ╔═╡ 93852850-104e-4359-bf2f-96b2ce4f69ef
+function plot_density_i_f!(ax, profiles)
+	
+	for (i, prof) in enumerate(profiles)
+		lines!(ax, LilGuys.log_radii(prof), LilGuys.log_surface_density(prof) .+ log10(Mtot),  color=colors[1], linestyle=[:dot, :solid][i], label = labels[i])
+
+
+		if i == 2
+			x = log10(r_bs[i])
+			y = LilGuys.lerp(LilGuys.log_radii(prof), middle.(LilGuys.log_surface_density(prof)))(x) .+ log10(Mtot)
+			annotation!(ax, 0, 36, x, y,  color=colors[3], )
+		end
+
+	end
+end
+
+# ╔═╡ dfab9f31-9a62-4740-b3a0-e5611b06ad6b
+function plot_v_rad_hist!(ax, snap_i, snap_f)
+	for i in 1:2
+		snap = [snap_i, snap_f][i]
+		x, y, ye = v_rad_hist(snap)
+		lines!(ax, midpoints(x), y * V2KMS, color=colors[1], linestyle=[:dot, :solid][i])
+		if i == 2
+			
+
+			h = 0.2 * 20 
+
+			annotation!(0, -40, log10(r_bs[i]), 0,  color=colors[3],  text=L"r_\textrm{break}")
+		end
+	end
+
+	hlines!(0, color=:black, linewidth=theme(:linewidth)[]/2)
+
+end
+
 # ╔═╡ 957b8d3f-03ca-4efa-b774-555b1ef203a6
 import DensityEstimators
 
@@ -177,69 +215,9 @@ let
 	h.values
 end
 
-# ╔═╡ 5dbbd046-8764-484e-89b4-37dee5fb0555
-@savefig "idealized_break_radius" let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		limits = (-1.5, 1.0, 0, 8),
-		xlabel = L"log $R$ / kpc",
-		ylabel = L"log $\Sigma_\star$ / M$_\odot$ kpc$^{-2}$",
-		# yticks = -4:2:2
-	)
-
-	t_f = 0
-	
-	for (i, prof) in enumerate(profiles)
-		lines!(LilGuys.log_radii(prof), LilGuys.log_surface_density(prof) .+ log10(Mtot),  color=colors[1], linestyle=[:dot, :solid][i], label = labels[i])
-
-
-		if i == 2
-			x = log10(r_bs[i])
-			y = LilGuys.lerp(LilGuys.log_radii(prof), middle.(LilGuys.log_surface_density(prof)))(x) .+ log10(Mtot)
-			dy = 1
-			h = 0.2 * 8
-			t = round(times[i] * T2GYR * 1e3, digits=0)
-			arrows2d!([x], [y+h], [0], [-h],  color=colors[3], align=0.5, minshaftlength = 0)
-			text!([x], [y+h * 1.5],color=colors[3], text=L"r_\textrm{break}", align=(:left, :bottom), fontsize=14)
-		end
-
-	end
-
-	axislegend(position=:lb)
-
-
-	
-	ax_v = Axis(fig[2,1],
-		xlabel=L"log $R$ / kpc",
-		ylabel=L"\langle v_\textrm{rad}\rangle\ / \ \textrm{km\ s}^{-1}",
-		limits=((-1.5, 0.8), (-10, 10))
-	)
-
-	for i in eachindex(idxs)
-		snap = out[idxs[i]]
-		x, y, ye = v_rad_hist(snap)
-		lines!(midpoints(x), y * V2KMS, color=colors[1], linestyle=[:dot, :solid][i])
-		if i == 2
-			
-
-			h = 0.2 * 20 
-
-			arrows2d!([log10(r_bs[i])], [-h], [0], [h],  color=colors[3], align=0.5, minshaftlength = 0)
-		end
-	end
-
-	hlines!(0, color=:black, linewidth=theme(:linewidth)[]/2)
-
-
-	linkxaxes!(ax, ax_v)
-
-
-	ax3 = Axis(fig[1, 2],
-			   xlabel = L"$\Delta x$ / kpc",
-			   ylabel = L"$\Delta y$ / kpc",
-
-			  )
-	bins = (LinRange(-2.5, 2.5, 100), LinRange(-2.5, 2.5, 100))
+# ╔═╡ 8fd72897-bcea-4f57-a00d-5b5fa7a995ba
+function plot_projected_stars!(ax, snap_f)
+	bins = (LinRange(-3, 3, 100), LinRange(-3, 3, 100))
 
 	dx = snap_f.positions[1, :] .- snap_f.x_cen[1]
 	dy = snap_f.positions[2, :] .- snap_f.x_cen[2]
@@ -248,51 +226,67 @@ end
 
 	h = DensityEstimators.histogram2d(dx, dy, bins, weights=w.*Mtot, normalization=:density)
 	#p = hist2d!(dx, dy, weights=w .* Mtot, bins=bins, colorscale=log10, colorrange=(3, nothing), normalization=:density)
-	p = heatmap!(h, colorscale=log10, colorrange=(1e3, 1e8),)
+	p = heatmap!(ax, h, colorscale=log10, colorrange=(1e3, 1e8),)
 
 	mw_hat = -snap_f.x_cen[1:2] ./ radii(snap_f.x_cen)
 	
-	arrows2d!([0], [0], mw_hat[1:1], mw_hat[2:2], align=-1.5, minshaftlength=0, color=arrowcolor)
-	text!(mw_hat[1]*2.5, mw_hat[2]*2.5, text="MW", color=arrowcolor, align=(:left, :top))
+	annotation!(mw_hat[1], mw_hat[2], 2.5*mw_hat[1], 2.5*mw_hat[2], color=arrowcolor, labelspace=:data)
+	text!(2.5*mw_hat[1], 2.5*mw_hat[2], color=arrowcolor, text="MW", align=(:left, :bottom))
 
 
 	arc!((0,0), r_bs[2], 0, 2π, color=COLORS[3])
 
+	p
+end
 
-	Colorbar(fig[1, 3], p, label=L"$\Sigma_\star$ / M$_\odot$\,kpc$^{-2}$", ticks=Makie.automatic,)
+# ╔═╡ 5dbbd046-8764-484e-89b4-37dee5fb0555
+@savefig "idealized_break_radius" let
+	fig = Figure(figure_padding=(12, 12, 24, 12))
+	gs_top = fig[1,1] = GridLayout()
+	gs_bottom = fig[1,2] = GridLayout(valign=4)
+	ax = Axis(gs_top[1,1],
+		limits = (-1.5, 1.0, 0, 8),
+		xlabel = L"log $R$ / kpc",
+		ylabel = L"log $\Sigma_\star$ / M$_\odot$ kpc$^{-2}$",
+		# yticks = -4:2:2
+	)
+
+	plot_density_i_f!(ax, profiles)
+	axislegend(position=:lb)
 
 
 	
+	ax_v = Axis(gs_top[2,1],
+		xlabel=L"log $R$ / kpc",
+		ylabel=L"\langle v_\textrm{rad}\rangle\ / \ \textrm{km\ s}^{-1}",
+		limits=((-1.5, 0.8), (-10, 10)),
+		ylabelpadding=-4
+	)
+	plot_v_rad_hist!(ax_v, out[1], snap_f)
+
+	
+	linkxaxes!(ax, ax_v)
+	hidexdecorations!(ax, ticks=false, minorticks=false)
 
 
-	ax_rv2d = Axis(fig[2, 2],
+	ax4 = Axis(gs_bottom[1, 1],
 			   xlabel = L"$\Delta x$ / kpc",
-			   ylabel = L"$\Delta y$ / kpc",)
-
-
-	R = 2.5
-	h_sum = DensityEstimators.histogram2d(dx, dy, bins, weights=w .* v .* V2KMS,)
-	h_norm = DensityEstimators.histogram2d(dx, dy, bins, weights=w )
-
-	h_ave = h_sum 
-	h_ave.values ./= h_norm.values
-
-	p = heatmap!(h_ave, colorrange=(-10, 10), colormap=:bluesreds)
-	arc!((0,0), r_bs[2], 0, 2π, color=COLORS[3])
-
-
-
-	v_hat = snap_f.v_cen[1:2] ./ radii(snap_f.v_cen)
-
-	arrows2d!([0], [0], v_hat[1:1], v_hat[2:2], align=-1.5, minshaftlength=0, color=arrowcolor)
-	text!(v_hat[1]*2.5, v_hat[2]*2.5, text="orbit", color=arrowcolor)
-
-
-	colsize!(fig.layout, 1, Aspect(1,1))
-	colsize!(fig.layout, 2, Aspect(1,1))
-	Colorbar(fig[2, 3], p,  label=L"\langle v_\textrm{rad}\rangle\ / \ \textrm{km\ s}^{-1}",
-)
+			   ylabel = L"$\Delta y$ / kpc",
+			   #aspect=DataAspect(),
+			  )
 	
+
+	p = plot_projected_stars!(ax4, snap_f)
+	Colorbar(gs_bottom[0, 1], p, label=L"final $\Sigma_\star$ / M$_\odot$\,kpc$^{-2}$", ticks=Makie.automatic, vertical=false)
+
+
+	rowsize!(gs_top, 1, Aspect(1,1))
+	rowsize!(gs_top, 2, Aspect(1,1))
+	rowsize!(gs_bottom, 1, Aspect(1,1))
+
+	colsize!(fig.layout, 2, Relative(0.6))
+	# rowgap!(fig.layout, 0)
+	resize_to_layout!()
 	fig
 end
 
@@ -344,7 +338,11 @@ snap_f.x_cen
 # ╠═90ff0dc7-2169-4af5-9ea6-d9fbde4cce45
 # ╠═57e7cd2b-e936-4a04-b4ed-0032a5c6b4df
 # ╠═697e034a-bf10-4afa-b95c-37dcdc3b6cb5
+# ╠═7bab90ee-702e-4eda-9015-5b43fd47ae26
 # ╠═5dbbd046-8764-484e-89b4-37dee5fb0555
+# ╠═93852850-104e-4359-bf2f-96b2ce4f69ef
+# ╠═dfab9f31-9a62-4740-b3a0-e5611b06ad6b
+# ╠═8fd72897-bcea-4f57-a00d-5b5fa7a995ba
 # ╠═957b8d3f-03ca-4efa-b774-555b1ef203a6
 # ╠═d3c68651-4f68-4f59-b410-91c877275e92
 # ╠═bccf2ecd-325b-4ac7-a930-d33c7b07b0d1

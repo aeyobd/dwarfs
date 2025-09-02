@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -125,6 +125,15 @@ theme(:size)
 # ╔═╡ 567e9206-4dfc-48a1-a130-5b146f3bb67a
 388.5429638854297 / 72
 
+# ╔═╡ 411dc796-d15b-45cb-8180-d8e1ba8e4fde
+colors = [COLORS[2], COLORS[4], COLORS[3]]
+
+# ╔═╡ 1011d118-6ada-41e7-a5da-7df868326112
+markers = [:rect, :utriangle, :circle]
+
+# ╔═╡ 8031f228-6515-42f7-915b-d437781c9875
+labels = Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")
+
 # ╔═╡ 21ace95e-ba98-4728-a8f7-8303f0eac247
 let
 	fig = Figure(size=(5.39*72, 3*72))
@@ -141,8 +150,8 @@ let
 		prof = obs_profs[i]
 
 		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
-					  label=Dict("sculptor"=> "Sculptor", "ursa_minor"=>"Ursa Minor", "fornax" => "Fornax")[galaxy], 
-					  color=COLORS[i+2])
+					  label=labels[galaxy], 
+					  color=colors[i], marker=markers[i])
 	end
 
 	axislegend(position=:lb)
@@ -151,6 +160,7 @@ let
 	ax2 = Axis(fig[1,2],
 		xlabel = L"log $R$ / $R_h$",
 		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
+		limits = (-1.5, 1, nothing, nothing)
 	)
 
 
@@ -164,7 +174,7 @@ let
 	end
 
 
-	lines!(prof_i.log_R, prof_i.log_Sigma, label="P+08 no tides", linestyle=:dot)
+	lines!(prof_i.log_R, prof_i.log_Sigma, label="P+08 no tides", linestyle=:dot, color=COLORS[1])
 	lines!(prof_f.log_R, prof_f.log_Sigma, label="P+08 tides")
 
 	axislegend(position=:lb)
@@ -172,6 +182,36 @@ let
 
 	linkaxes!(ax, ax2)
 	colgap!(fig.layout, 0)
+
+	@savefig "scl_umi_vs_penarrubia_2panel" fig
+end
+
+# ╔═╡ ba83e894-421a-4cab-8477-4777f34afb3c
+let
+	fig = Figure()
+	
+
+	ax2 = Axis(fig[1,1],
+		xlabel = L"log $R$ / $R_h$",
+		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
+		limits = (-1.5, 1, nothing, nothing)
+	)
+
+
+
+	for i in eachindex(galaxies)
+		galaxy = galaxies[i]
+		prof = obs_profs[i]
+
+		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
+					  color=colors[i], label=labels[galaxy], marker=markers[i])
+	end
+
+
+	lines!(prof_i.log_R, prof_i.log_Sigma, label="P+08 no tides", linestyle=:dot, color=COLORS[1])
+	lines!(prof_f.log_R, prof_f.log_Sigma, label="P+08 tides")
+
+	axislegend(position=:lb)
 
 	@savefig "scl_umi_vs_penarrubia" fig
 end
@@ -197,4 +237,8 @@ end
 # ╠═0732a179-aca0-4bf4-8be7-be1e713ee18e
 # ╠═3b5d2ad4-9cf8-4032-8d9f-6ca10f6b6f1b
 # ╠═567e9206-4dfc-48a1-a130-5b146f3bb67a
+# ╠═411dc796-d15b-45cb-8180-d8e1ba8e4fde
+# ╠═1011d118-6ada-41e7-a5da-7df868326112
+# ╠═8031f228-6515-42f7-915b-d437781c9875
 # ╠═21ace95e-ba98-4728-a8f7-8303f0eac247
+# ╠═ba83e894-421a-4cab-8477-4777f34afb3c

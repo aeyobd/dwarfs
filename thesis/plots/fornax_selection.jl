@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -47,6 +47,9 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 
 # ╔═╡ eca9c1c5-e984-42d4-8854-b227fdec0a8a
 galaxyname = "fornax"
+
+# ╔═╡ 0107ca79-9c8a-43cf-86af-b99c2560743f
+CairoMakie.activate!(type=:png, px_per_unit=2)
 
 # ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
 module Utils
@@ -121,7 +124,7 @@ import Random
 	Dict(
 		:best => (;	alpha=1, markersize=0.5, color=my_colors[1], 
 			label="all" => (;markersize=2),
-			rasterize=10,
+			rasterize=2,
 		),
 		:members_nospace => (;
 			alpha=1, markersize=1,
@@ -132,8 +135,8 @@ import Random
 		),
 		:members => (;
 			markersize=3,
-			label = L"P_\textrm{sat} > 0.2" =>(alpha=1, markersize=2*2),
-			marker=:x,
+			label = L"fiducial ($P_\textrm{sat} > 0.2$)" =>(alpha=1, markersize=2*2),
+			marker=:rect,
 			#color=:transparent,
 			#strokewidth=0.3,
 			color = my_colors[3],
@@ -200,6 +203,7 @@ Utils.compare_j24_samples(
 # ╠═eca9c1c5-e984-42d4-8854-b227fdec0a8a
 # ╠═c3af8de5-611a-457e-8ba0-636803c5a76c
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
+# ╠═0107ca79-9c8a-43cf-86af-b99c2560743f
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
 # ╠═a4848423-9be3-48d7-98c2-8d1096eb2560

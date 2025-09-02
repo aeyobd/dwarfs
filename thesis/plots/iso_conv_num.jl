@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -126,10 +126,10 @@ function plot_marks!(profiles, marks::Real, ylims; residual=false, kwargs...)
 	if residual
 		dy /= RES_SIZE
 		@info "marking ($x, $y)"
-		arrows!([x], [y] .+ 2*dy, [0], [-dy]; kwargs...)
+		arrows2d!([x], [y] .+ 2*dy, [0], [-dy]; kwargs...)
 	else
 		dy = (ylims[2] / ylims[1])^0.05
-		arrows!([x], [y * dy^2], [0], [y*dy-y*dy^2]; kwargs...)
+		arrows2d!([x], [y * dy^2], [0], [y*dy-y*dy^2]; kwargs...)
 
 	end
 
@@ -186,34 +186,8 @@ function plot_residual_profiles!(profiles; errskip=1)
     end
 end
 
-# ╔═╡ cc50d80b-78b8-4f39-8a41-18ae79bf7287
-function compare_vcirc(profiles; 
-					   errskip=1, xlims = (-2, 1.6), vlims=(3, 36), marks=Dict())
-	fig, ax, ax_res = vcirc_axes(xlims=xlims, ylims=vlims)
-	
-	Makie.current_axis!(ax)
-
-	plot_vcirc_profiles!(profiles)
-	plot_marks!(profiles, marks, vlims)
-	plot_analytic!(nfw, xlims)
-	
-
-    axislegend(position=:rb, patchsize=[24, 6])
-	li = lines!([NaN], [NaN], linestyle=:dot, label="initial", color=:grey)
-	lf = lines!([NaN], [NaN], linestyle=:solid, label="final", color=:grey)
-	axislegend(ax, [li, lf], ["initial", "final"], position=:lt, patchsize=[24, 6])
-
-    # residual
-	Makie.current_axis!(ax_res)
-	plot_residual_profiles!(profiles)
-
-	plot_marks!(profiles, marks, (-0.2, 0.2), residual=true)
-
-    hlines!(0, color=:black, linestyle=:dash)
-
-    
-    fig
-end
+# ╔═╡ 685c9c53-4c4e-4d1f-82da-a64488562662
+smalllinewidth = theme(:linewidth)[] /  2
 
 # ╔═╡ f7cee4fe-e8df-429b-9cb0-f508d60c9788
 load_profile("1e5/fiducial")
@@ -239,6 +213,37 @@ softening = Dict(
 	"10⁶" => 0.044,
 	"10⁷" => 0.014,
 )
+
+# ╔═╡ cc50d80b-78b8-4f39-8a41-18ae79bf7287
+function compare_vcirc(profiles; 
+					   errskip=1, xlims = (-2, 1.6), vlims=(3, 36), marks=Dict())
+	fig, ax, ax_res = vcirc_axes(xlims=xlims, ylims=vlims)
+	
+	Makie.current_axis!(ax)
+
+	plot_vcirc_profiles!(profiles)
+	plot_marks!(profiles, marks, vlims)
+	plot_marks!(profiles, softening, vlims, tiplength=0, shaftwidth=smalllinewidth)
+	plot_analytic!(nfw, xlims)
+	
+
+    axislegend(position=:rb, patchsize=[24, 6])
+	li = lines!([NaN], [NaN], linestyle=:dot, label="initial", color=:grey)
+	lf = lines!([NaN], [NaN], linestyle=:solid, label="final", color=:grey)
+	axislegend(ax, [li, lf], ["initial", "final"], position=:lt, patchsize=[24, 6])
+
+    # residual
+	Makie.current_axis!(ax_res)
+	plot_residual_profiles!(profiles)
+
+	plot_marks!(profiles, marks, (-0.2, 0.2), residual=true)
+	plot_marks!(profiles, softening, (-0.2, 0.2), residual=true, tiplength=0, shaftwidth=smalllinewidth)
+
+    hlines!(0, color=:black, linestyle=:dash)
+
+    
+    fig
+end
 
 # ╔═╡ 3aacc4eb-5e7b-4433-adac-dd83d41b62e8
 part_num = Dict(
@@ -377,6 +382,7 @@ t_circ(0.01)
 # ╠═9f1116ee-1fe2-4088-a242-f65a0f22f5f5
 # ╠═64efb625-9fed-4ec9-9546-79842e7e6b90
 # ╠═cc50d80b-78b8-4f39-8a41-18ae79bf7287
+# ╠═685c9c53-4c4e-4d1f-82da-a64488562662
 # ╠═f7cee4fe-e8df-429b-9cb0-f508d60c9788
 # ╠═a4b6b203-a42a-48dd-8944-ea150eee376b
 # ╠═265f7694-c4e9-4e19-8c48-7d9afc40c1ad
