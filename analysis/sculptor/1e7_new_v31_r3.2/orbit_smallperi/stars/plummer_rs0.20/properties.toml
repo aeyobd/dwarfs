@@ -1,0 +1,25 @@
+[initial]
+delta_t = nan
+r_break = nan
+sigma_v = 0.05152936755096214
+r_max_sigma = 1.0
+bound_mass = 1.0
+time = 0.0
+r_h = 0.26367182072548406
+R_h = 0.20153145375695566
+delta_t_Gyr = nan
+sigma_v_kms = 10.687190830069547
+r_break_arcmin = nan
+
+[final]
+delta_t = 100.1513671874999
+r_break = 2.4835456049580014
+sigma_v = 0.045087127518750394
+r_max_sigma = 1.0
+bound_mass = 0.9757038522905361
+time = 1944.0234375
+r_h = 0.29606084192918813
+R_h = 0.22705155571564806
+delta_t_Gyr = 0.472213696289062
+sigma_v_kms = 9.351070247388831
+r_break_arcmin = 104.65799683081246

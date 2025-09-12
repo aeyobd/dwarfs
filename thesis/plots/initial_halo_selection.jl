@@ -20,7 +20,7 @@ end
 using OrderedCollections
 
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
-include("./paper_style.jl")
+include("./paper_style.jl"); scale_theme_element!(:linewidth, 0.5)
 
 # ╔═╡ eb4a5051-43b6-4afa-bf42-5a74125cf60a
 galaxy = "ursa_minor"
@@ -35,10 +35,7 @@ import LinearAlgebra: eigen, diagm
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ b7a4e67b-a3c9-44c2-acf3-b61f60d387ad
-scale_theme_element!(:linewidth, 0.5)
 
-# ╔═╡ 48289b64-08a8-4b26-9506-1843b3c69009
-scale_theme_element!(:markersize, 2)
 
 # ╔═╡ be9e982a-904d-497c-949a-1fd265fcb67a
 """
@@ -63,13 +60,13 @@ md"""
 
 # ╔═╡ 22629f89-3d2a-457d-b80a-7df412b9c791
 halos_scl = OrderedDict(
-		"Scl: fiducial" => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
-		"Scl: small" => NFW(v_circ_max=25/V2KMS, r_circ_max=2.5),
+		"Sculptor" => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
+		#"Scl: small" => NFW(v_circ_max=25/V2KMS, r_circ_max=2.5),
 	)
 
 # ╔═╡ 61aa6484-ae3c-4478-a426-51e78ae02ed7
 halos_umi = OrderedDict(
-		"UMi: fiducial" =>  NFW(v_circ_max = 38 / V2KMS, r_circ_max=4.0)
+		"Ursa Minor" =>  NFW(v_circ_max = 38 / V2KMS, r_circ_max=4.0)
 	)
 
 # ╔═╡ f6178d1d-3687-4538-80e7-4f2efe93ab54
@@ -164,7 +161,7 @@ function plot_fattahi!(log_v_0, log_v_0_err; label="Fattahi+18")
 	
 	v_0 = V2KMS * 10^log_v_0
 	v_l, v_h = V2KMS .* 10 .^ ((log_v_0 - log_v_0_err), (log_v_0 + log_v_0_err))
-	color = COLORS[7]
+	color = COLORS[3]
 
 	hspan!(v_l, v_h, color=(color, 0.1))
 	hlines!(v_0, color=(color, 0.5))
@@ -224,6 +221,9 @@ md"""
 # Sanity checks
 """
 
+# ╔═╡ 1dcf3552-a488-4913-b9c8-9d4d37ad7590
+R_h=0.24
+
 # ╔═╡ 80005476-d236-4a62-bfc0-2e7d8ca914ff
 stars = LilGuys.Exp2D(R_s = R_h/α_exp)
 
@@ -245,7 +245,7 @@ solve_v_from_dispersion_simple(1, 2, 0.24)
 
 # ╔═╡ 5106a242-4fe5-47d8-94f7-45c12053c882
 function plot_sigma_v!(σv; R_h, x0=15, rf=1, vmax = solve_v_from_dispersion_simple, kwargs...)
-	color = COLORS[5]
+	color = COLORS[2]
 	
 	x = LinRange(1, 30, 100)
 	y = vmax.(x, σv, R_h) * V2KMS
@@ -352,7 +352,6 @@ These values are from the MCMC halo mass estimator notebook in `analysis/sculpto
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═b7a4e67b-a3c9-44c2-acf3-b61f60d387ad
-# ╠═48289b64-08a8-4b26-9506-1843b3c69009
 # ╟─be9e982a-904d-497c-949a-1fd265fcb67a
 # ╟─3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═c515f500-27c5-403d-b50f-f0f25c7850cd
@@ -380,6 +379,7 @@ These values are from the MCMC halo mass estimator notebook in `analysis/sculpto
 # ╠═7d36f094-70bc-4114-b920-3655f73dc75f
 # ╠═a15dbc88-8dbf-48d4-8a72-1881151c8e26
 # ╟─53967222-f243-4529-9544-caf2d68215c2
+# ╠═1dcf3552-a488-4913-b9c8-9d4d37ad7590
 # ╠═0ca4187b-d63c-48e4-947c-c9a48973323d
 # ╠═e0e418d2-16f2-4bbe-92db-ccdc6e89669e
 # ╠═80005476-d236-4a62-bfc0-2e7d8ca914ff

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -66,7 +66,7 @@ eilers19 = CSV.read("eilers+19.dat", DataFrame, delim=' ')
 	fig = Figure(figure_padding=12)
 
 	ax = Axis(fig[1,1], 
-		xlabel = "Radius / kpc",
+		xlabel = "radius / kpc",
 		ylabel = L"circular velocity / km\,s$^{-1}$",
 		limits=(0, 200, nothing, nothing)
 	)

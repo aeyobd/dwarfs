@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -26,6 +26,9 @@ begin
 
 	using Arya
 end
+
+# ╔═╡ a8691ea6-a672-4aa9-b058-9c6abc35bf31
+using OrderedCollections
 
 # ╔═╡ d401ec4b-048e-4aae-85a8-f7f0d8e44a79
 using LilGuys
@@ -464,6 +467,16 @@ function calc_σv(snap::lguys.Snapshot; r_max=1)
 	return σ * V2KMS / sqrt(3)
 end
 
+# ╔═╡ 69f350f0-854c-4316-a26f-f84e0153a8d3
+function calc_σv_unweighted(snap::lguys.Snapshot; r_max=1)
+	rs = lguys.radii(snap)
+	filt = rs .< r_max
+	vs = lguys.speeds(snap[filt])
+	σ = lguys.std(vs, mean=0) # zero mean
+
+	return σ * V2KMS / sqrt(3)
+end
+
 # ╔═╡ 422839f0-6da4-46b9-8689-2dd13b03188b
 function calc_σvx(snap::lguys.Snapshot; r_max=1)
 	rs = lguys.radii(snap)
@@ -800,7 +813,7 @@ let
 
 	colorrange = (prof_i.time .- t_f, prof_f.time .- t_f) .* T2GYR
 	for (_, prof) in profiles_3D
-		lines!(prof.log_r, log10.(prof.rho), color=(prof.time .- t_f)* T2GYR, colorrange=colorrange)
+		lines!(prof.log_r, log10.(prof.rho ), color=(prof.time .- t_f)* T2GYR, colorrange=colorrange)
 	end
 
 
@@ -811,10 +824,22 @@ let
 	fig
 end
 
+# ╔═╡ 0a6c94e8-7088-4b6b-bc43-be73ae96a1fd
+r_h_f = LilGuys.quantile(radii(snap_f), snap_f.weights, 0.5)
+
+# ╔═╡ 8c3323d9-61ac-4d45-83f4-5469ff597fcf
+r_h_i = LilGuys.quantile(radii(snap_i), snap_i.weights, 0.5)
+
 # ╔═╡ a955cee5-609e-46bd-8212-51e18c0d1e86
-properties = Dict(
+properties = OrderedDict(
 	"break_radius_kpc" => r_b_kpc,
 	"break_radius_arcmin" => r_b_arcmin,
+	"r_h_i" => r_h_i,
+	"r_h_f" => r_h_f,
+	"boundmass_i" => sum(snap_i.weights[LilGuys.bound_particles(snap_i)]),
+	"boundmass_f" => sum(snap_f.weights[LilGuys.bound_particles(snap_f)]),
+	"velocity_dispersion_f" => calc_σv(snap_f),
+	"velocity_dispersion_i" => calc_σv(snap_i),
 )
 
 # ╔═╡ a3311d9e-430b-49af-ac7c-460aa49e19bc
@@ -822,10 +847,137 @@ open(joinpath(stars_dir_out, "properties.toml"), "w") do f
 	TOML.print(f, properties)
 end
 
+# ╔═╡ 4d7ad6ad-190f-4b47-b15e-5ad9b7895754
+md"""
+# Velocity profile
+"""
+
+# ╔═╡ 94a7dfcd-95f9-4bd6-9d64-b87ea9fb9af5
+snap_f[1:2].weights
+
+# ╔═╡ df551f00-4e87-4fbb-81c1-f37a246c962f
+function σv_prof(snap; bins = 10 .^ (-2:0.05:3))
+	σv = []
+	for i in eachindex(bins)[1:end-1]
+		filt = (bins[i] .< radii(snap)) .& (radii(snap) .< bins[i+1])
+		@info sum(filt)
+		snap_f = snap[filt]
+		σ = calc_σv(snap_f, r_max=Inf)
+		push!(σv, σ)
+	end
+
+	return midpoints(bins), σv
+end
+
+# ╔═╡ e7f07865-76f1-470e-b6ed-0745fa139df2
+function σv_prof_2(snap; bins = 10 .^ (-2:0.05:3))
+	
+
+	σv = []
+	for i in eachindex(bins)[1:end-1]
+		filt = (bins[i] .< radii(snap)) .& (radii(snap) .< bins[i+1])
+		snap_f = snap[filt]
+		σ = LilGuys.std(snap.velocities[1, filt], snap.weights[filt])
+		push!(σv, σ)
+	end
+
+	return midpoints(bins), σv
+end
+
+# ╔═╡ ad558d71-d1a9-42c1-b5fc-78c4876c2d62
+function σv_prof_unweighted(snap; bins = 10 .^ (-2:0.05:3))
+
+	σv = []
+	for i in eachindex(bins)[1:end-1]
+		filt = (bins[i] .< radii(snap)) .& (radii(snap) .< bins[i+1])
+		snap_filt = snap[filt]
+		σ = calc_σv_unweighted(snap_filt, r_max=Inf)
+		push!(σv, σ)
+	end
+
+	return midpoints(bins), σv
+end
+
+# ╔═╡ b90f7f62-fa35-4f65-8078-8a705988f0ac
+rs_f, σs_f = σv_prof(snap_f)
+
+# ╔═╡ d3dce6d1-60a9-4f54-9857-e0c49758436b
+rs_f2, σs_f2 = σv_prof_2(snap_f)
+
+# ╔═╡ c5ba24ef-9180-414f-aef1-5eb724ffde86
+rs_f_uw, σs_f_uw = σv_prof_unweighted(snap_f)
+
+# ╔═╡ 998c85b9-46aa-4eb6-802e-a3e246cb959e
+rs_i, σs_i = σv_prof(snap_i)
+
+# ╔═╡ a3e616f1-50ac-4f44-9bc4-841f91c1908e
+rs_i
+
+# ╔═╡ 2381d86c-293f-4af4-b186-e3dc53866bfc
+prof_dm_f = LilGuys.DensityProfile(snap_f)
+
+# ╔═╡ 0a7f7d82-e091-4377-a81f-f73af30c29a1
+Mstar = 3e6 / M2MSUN
+
+# ╔═╡ 393543d0-c3d5-4ffe-940e-d2f49540ca1b
+let
+	fig = Figure(size=(4*72, 4*72))
+
+	ymax = maximum(middle.(log10.(prof_i.rho)))
+	ax = Axis(fig[1,1], xlabel=L"\log r / \textrm{kpc}", ylabel = L"\log\ \rho", 
+	limits=((-1.9, 1), (ymax - 15, ymax)))
+
+	lines!(prof_i.log_r, log10.(prof_i.rho) .+ log10(Mstar), label="stars initial")
+	lines!(prof_f.log_r, log10.(prof_f.rho).+ log10(Mstar), label="stars final")
+	lines!(prof_dm_f.log_r, log10.(prof_dm_f.rho), label="DM final")
+
+	axislegend(position=:lb)
+
+	hidexdecorations!(ticks=false, minorticks=false)
+	
+	ax_2 = Axis(fig[2,1], xlabel = L"$\log\ r$ / kpc", ylabel=L"$\log\ \sigma_{v, \textrm{1D}}$ / km\,s$^{-1}$")
+
+	x = log10.(rs_i)
+	y = log10.(σs_i)
+	
+	lines!(x, y, label="initial stars")
+
+
+	x = log10.(rs_f)
+	y = log10.(σs_f)
+	lines!(x, y, label="final stars")
+
+	
+	x = log10.(rs_f_uw)
+	y = log10.(σs_f_uw)
+	lines!(x, y, label = "final dark matter")
+	
+	xlims!(-2, 1.5)
+	ylims!(0, 2)
+
+	vlines!(log10(r_b_kpc))
+
+	lines!([1, 1.5], [1, 1.5], color=:black)
+
+	linkxaxes!(ax, ax_2)
+
+	fig
+end
+
+# ╔═╡ 5287727d-cbf4-4172-be3e-695bddd124a9
+σs_f_uw
+
+# ╔═╡ 206ac5ff-af8e-4e41-8f27-6cb5acf78d5d
+sum(snap_f.weights[radii(snap_f) .> 1])
+
+# ╔═╡ 194c13d5-0cec-495e-ba40-2604bc6a3c8c
+snap_f
+
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╟─ab06c999-3ff6-4580-a979-f0ddeb466569
 # ╟─30ba4458-f21b-4777-987c-e65ecfd34258
+# ╠═a8691ea6-a672-4aa9-b058-9c6abc35bf31
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═faeaf38d-8c06-4646-8179-57ffb05f720e
 # ╠═d401ec4b-048e-4aae-85a8-f7f0d8e44a79
@@ -888,6 +1040,7 @@ end
 # ╠═0dd09c1e-67c0-4f23-bd12-41cbef62e4de
 # ╠═d32757d2-dc08-488c-9ddd-d3eefefa2db7
 # ╠═b4f7cbb0-fb5b-4dc5-b66e-679a8e5b630d
+# ╠═69f350f0-854c-4316-a26f-f84e0153a8d3
 # ╠═422839f0-6da4-46b9-8689-2dd13b03188b
 # ╠═d664ab12-a2c1-4531-a4ff-250ffa3ce9eb
 # ╠═08b66f99-f81a-4495-a933-9291e986373a
@@ -913,5 +1066,23 @@ end
 # ╠═60ffd004-9770-4b96-8845-0d694cfbced8
 # ╠═0112797c-ecb8-4ea7-8a66-365f9fbe952e
 # ╠═b0b2948a-0299-4b90-83be-4bdcf2a75eaf
+# ╠═0a6c94e8-7088-4b6b-bc43-be73ae96a1fd
+# ╠═8c3323d9-61ac-4d45-83f4-5469ff597fcf
 # ╠═a955cee5-609e-46bd-8212-51e18c0d1e86
 # ╠═a3311d9e-430b-49af-ac7c-460aa49e19bc
+# ╠═4d7ad6ad-190f-4b47-b15e-5ad9b7895754
+# ╠═94a7dfcd-95f9-4bd6-9d64-b87ea9fb9af5
+# ╠═df551f00-4e87-4fbb-81c1-f37a246c962f
+# ╠═e7f07865-76f1-470e-b6ed-0745fa139df2
+# ╠═ad558d71-d1a9-42c1-b5fc-78c4876c2d62
+# ╠═b90f7f62-fa35-4f65-8078-8a705988f0ac
+# ╠═d3dce6d1-60a9-4f54-9857-e0c49758436b
+# ╠═c5ba24ef-9180-414f-aef1-5eb724ffde86
+# ╠═998c85b9-46aa-4eb6-802e-a3e246cb959e
+# ╠═a3e616f1-50ac-4f44-9bc4-841f91c1908e
+# ╠═2381d86c-293f-4af4-b186-e3dc53866bfc
+# ╠═0a7f7d82-e091-4377-a81f-f73af30c29a1
+# ╠═393543d0-c3d5-4ffe-940e-d2f49540ca1b
+# ╠═5287727d-cbf4-4172-be3e-695bddd124a9
+# ╠═206ac5ff-af8e-4e41-8f27-6cb5acf78d5d
+# ╠═194c13d5-0cec-495e-ba40-2604bc6a3c8c

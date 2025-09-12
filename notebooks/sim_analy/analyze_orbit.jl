@@ -183,7 +183,7 @@ end
 
 # ╔═╡ bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
 begin 
-	orbit_expected = CSV.read(orbit_file, DataFrame)
+	orbit_expected = CSV.read(orbit_file, DataFrame, tasks=1)
 	x_cen_exp = transpose(hcat(orbit_expected.x, orbit_expected.y, orbit_expected.z))
 	v_cen_exp = transpose(hcat(orbit_expected.v_x, orbit_expected.v_y, orbit_expected.v_z))
 end
@@ -548,6 +548,7 @@ lerps = Dict(c => LilGuys.lerp(times, obs_c[:, c]) for c in ["ra", "dec", "dista
 # ╔═╡ e96a9789-22b8-433a-8a3c-182d7ec4e82a
 let
 	global obs_c_new, t_best, idx_best
+	global χ2_best_interp
 
 	
 	ts = LinRange(times[idx_f-1], times[idx_max], 1000)
@@ -565,7 +566,8 @@ let
 
 	idx_best = argmin(χ2s_new)
 	t_best = ts[idx_best]
-	println(minimum(χ2s_new))
+	χ2_best_interp = minimum(χ2s_new)
+	println(χ2_best_interp)
 
 	f = lines(ts, log10.(χ2s_new))
 	hlines!(0)
@@ -727,7 +729,9 @@ let
 		"idx_peris" => idx_peris, 
 		"idx_apos" => idx_apos,
 		"t_peris" => t[idx_peris], 
-		"t_apos" => t[idx_apos]
+		"t_apos" => t[idx_apos],
+		"chi2_best" => χ2[idx_f],
+		"chi2_best_interp" => χ2[idx_f],
 	)
 
 

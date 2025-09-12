@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -593,10 +593,10 @@ end
 let
 
 	fig = Figure()
-	ax = Axis(fig[2, 1],
-		xlabel = "log r / arcmin",
-		ylabel=L"$\sigma_\textrm{v, los}$ / km s$^{-1}$",
-		limits=((0.8, 2.5), (0, 20))
+	ax = Axis(fig[1, 1],
+		xlabel = "log R / arcmin",
+		ylabel=L"$\log\,\sigma_\textrm{v, los}$ / km s$^{-1}$",
+		limits=((0.8, 2.5), (0, 2))
 	)
 
 	x = log10.(stars.r_ell)
@@ -611,11 +611,10 @@ let
 	prob = prob[filt]
 	v = v[filt]
 
-	bins = 20
+	bins = 80
 	
-	r_bins = DensityEstimators.make_bins(x, (-0.5, 2.3), DensityEstimators.bins_equal_number, n=bins)
+	r_bins = DensityEstimators.make_bins(x, (-0.5, 3), DensityEstimators.bins_equal_number, n=bins)
 
-	println(r_bins)
 	
 	σs = Vector{Float64}(undef, bins)
 	err = Vector{Float64}(undef, bins)
@@ -633,7 +632,7 @@ let
 		Ns[i] = N
 	end
 
-	errorscatter!(lguys.midpoints(r_bins), σs, yerror=err)
+	errorscatter!(lguys.midpoints(r_bins), log10.(σs), yerror=err ./ σs ./ log(10))
 
 	# ax2 = Axis(fig[1, 1], ylabel="count / bin")
 	# scatter!(ax2, lguys.midpoints(r_bins), Ns)

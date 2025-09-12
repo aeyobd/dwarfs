@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -114,45 +114,6 @@ hcat(to_galcoords(allcluster.ra, allcluster.dec)..., allcluster.ll, allcluster.b
 # ╔═╡ 88d507e8-98cb-42ca-be20-16580f5beb4b
 read_pace("gc_other")
 
-# ╔═╡ 7258550c-c49a-4f67-83f7-58c157d4b5de
-md"""
-## Checking against baumgardt
-"""
-
-# ╔═╡ 357a7c6c-2d6a-40e5-ba85-7042ecc9bdda
-md"""
-The pace catalogue includes a few more globular clusters than Baumgardt, but reassuring to know that most are in both.
-"""
-
-# ╔═╡ af7b55de-8ae6-4b19-80b8-dcfe5cae276f
-baumgardt_columns = string.(split("Cluster         RA        DEC      R_Sun  DRSun    R_GC   DRGC   N_RV   N_PM    Mass         DM        V  Delta_V  M/L_V  DM/L    rc     rh,l     rh,m     rt    rho_c  rho_h,m   sig_c   sig_h,m lg(Trh) lg(Mini) T_Diss  M_Low  M_High    MF  Delta_MF  sig0    vesc   etac   etah  A_Rot Delta_AR P_Rot", r"\s+"))
-
-# ╔═╡ 9f623db7-32db-43ce-9ddd-98d5ee4248ba
-baumgardt = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/baumgardt_23.txt"), DataFrame, comment="#", ignorerepeated=true, delim=' ', header=baumgardt_columns)
-
-# ╔═╡ 58f03667-5903-48d7-a962-9fbbf5d72620
-let
-	fig = Figure(backgroundcolor=:transparent, pad = 0)
-	
-	ax = GeoAxis(fig[1,1];
-		dest = "+proj=hammer",
-		#limits = (0., 360, -90, 90),
-		yticklabelsvisible=false,
-		xticklabelsvisible=false,
-		yticklabelsize=8,
-		xgridwidth=0.5,
-		ygridwidth=0.5,
-				 valign=:top,
-	
-	)
-
-	scatter!(baumgardt.RA, baumgardt.DEC, markersize=24)
-
-	scatter!(allcluster.ra, allcluster.dec)
-
-	fig
-end
-
 # ╔═╡ 0a1d1783-0c24-455e-84c1-027e168cfef7
 md"""
 # Filtering & classification
@@ -224,12 +185,6 @@ grid_color = (:white, 0.3)
 # ╔═╡ bddcd6bb-5dba-4b6e-ba07-e21df433f812
 ms = theme(:markersize)[] * 1.5
 
-# ╔═╡ d415fac3-d155-44fc-86af-35e6ead45734
-COLORS
-
-# ╔═╡ b27ae510-f567-4623-a2a8-d4f192d2f792
-red = colorant"#e41a1c"
-
 # ╔═╡ b7fd5546-ecc9-444b-9862-1954c3c762e1
 CairoMakie.activate!(type=:png)
 
@@ -237,7 +192,7 @@ CairoMakie.activate!(type=:png)
 function clear_axis!(gs)	
 	ax = GeoAxis(gs;
 		dest = "+proj=hammer",
-		#limits = (0., 360, -90, 90),
+		limits = (0., 360, -90, 90),
 		xgridcolor=grid_color,
 		ygridcolor=grid_color,
 		yticklabelsvisible=false,
@@ -282,14 +237,17 @@ end
 # ╔═╡ 21373373-2dec-4bd8-a178-6af90df0835a
 function clear_legend(fig, ax)
 	
-	Legend(fig[1, 1], ax, tellwidth=false, tellheight=false, halign=:right, valign=:bottom, nbanks=2, backgroundcolor=:transparent, labelcolor=fg_color, framecolor=fg_color, pad=0, margin=theme(:Legend).framewidth[] .* ones(4))
+	Legend(fig[1, 1], ax, tellwidth=false, tellheight=false, halign=:right, valign=:bottom, nbanks=2, backgroundcolor=:transparent, labelcolor=fg_color, framecolor=grid_color, pad=0, margin=theme(:Legend).framewidth[] .* ones(4))
 end
 
+# ╔═╡ 7359d341-46f2-43ab-9e95-49bc57e81183
+theme(:Legend)
+
 # ╔═╡ 51eea365-1dd0-4ebf-8a89-30928c51ab5f
-allcluster[!, :M_V]
+
 
 # ╔═╡ 5a537690-3c29-4a0b-9a31-15d19e456db6
-function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=red)
+function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=COLORS[4])
 
 	if xreverse
 		xfactor = -1
@@ -371,7 +329,7 @@ end
 
 # ╔═╡ 3f44fb3f-865a-4acb-9101-283c7918e11b
 function acknowledgment!(ax)
-	text!(ax, 0, 0, text="Daniel Boyea, 2025\nBackground image: ESA/Gaia/DPAC\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(theme(:Legend).margin[][1], 0))
+	text!(ax, 0, 0, text="Daniel Boyea, 2025\nBackground image: ESA/Gaia/DPAC\nData from Local Volume Database (A. Pace, 2024)", space=:relative, color=fg_color, fontsize=24, offset=(0, 0))
 end
 
 # ╔═╡ 2c2e54c6-4d2f-40b1-b012-5d21dc3bd4b9
@@ -425,9 +383,13 @@ end
 	plot_points!(ax, red=COLORS[4])
 	clear_legend(fig, ax)
 
+	ax3 = Axis(fig[1,1], backgroundcolor=:transparent)
+	hidespines!(ax3)
+	hidedecorations!(ax3)
+	acknowledgment!(ax3)
 
-	acknowledgment!(ax)
-
+	
+	
 	plot_labels!(ax, highlight=["sculptor_1", "ursa_minor_1"])
 
 	resize_to_layout!(fig)
@@ -639,11 +601,6 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═71e21c9d-95c0-4397-929d-b415b0720dbf
 # ╠═bce24033-3bca-42d4-9224-b40378cdedab
 # ╠═88d507e8-98cb-42ca-be20-16580f5beb4b
-# ╟─7258550c-c49a-4f67-83f7-58c157d4b5de
-# ╟─357a7c6c-2d6a-40e5-ba85-7042ecc9bdda
-# ╠═58f03667-5903-48d7-a962-9fbbf5d72620
-# ╠═af7b55de-8ae6-4b19-80b8-dcfe5cae276f
-# ╠═9f623db7-32db-43ce-9ddd-98d5ee4248ba
 # ╟─0a1d1783-0c24-455e-84c1-027e168cfef7
 # ╠═6d8cfb4c-5602-4112-a691-92a319f5e224
 # ╠═6142560a-9cd1-491f-a108-b3b45b85df2e
@@ -658,17 +615,16 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═17236ffc-dbe5-4dbc-8b1d-fe490c3b50f4
 # ╠═89ae71c5-08eb-4c92-9301-ad2e630bf943
 # ╠═594fbbef-40c8-4cb8-9d56-14c39c65a914
-# ╠═095ed289-8086-4da3-aaeb-36dec2b4d349
+# ╟─095ed289-8086-4da3-aaeb-36dec2b4d349
 # ╠═a7b54b66-9d44-46ab-a4c2-d9326acccda5
 # ╠═7564bd74-d182-4d89-bf57-2d0fe286bc7a
 # ╠═bddcd6bb-5dba-4b6e-ba07-e21df433f812
-# ╠═d415fac3-d155-44fc-86af-35e6ead45734
-# ╠═b27ae510-f567-4623-a2a8-d4f192d2f792
 # ╠═b7fd5546-ecc9-444b-9862-1954c3c762e1
 # ╠═c954772f-9e75-484e-bfdb-4455249b1f99
 # ╠═21f0d8c8-76a2-41f0-a390-390c5b539ed3
 # ╠═8ea50ebf-87d3-4810-9699-89617463d9b4
 # ╠═21373373-2dec-4bd8-a178-6af90df0835a
+# ╠═7359d341-46f2-43ab-9e95-49bc57e81183
 # ╠═51eea365-1dd0-4ebf-8a89-30928c51ab5f
 # ╠═5a537690-3c29-4a0b-9a31-15d19e456db6
 # ╠═3b31bf9e-1d07-460a-80d9-75625d06bf41

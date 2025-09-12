@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -61,7 +61,7 @@ I prefer the actions/angles framwork. For a test-particle orbit, the actions are
 """
 
 # ╔═╡ 9c404056-2980-4620-9e4f-459157533c77
-units = Agama.VASILIEV_UNITS
+units = Agama.AgamaUnits() #Agama.VASILIEV_UNITS
 
 # ╔═╡ 9dad1bb5-4d04-4dd8-88a9-335f87688044
 window = 10
@@ -145,9 +145,6 @@ pot = Agama.Potential(file=joinpath(modeldir  * inputs.potname))
 # ╔═╡ 7bcdef79-7391-4f35-902b-62d2dda1d858
 Φ_in(x) = Agama.potential(pot, x)
 
-# ╔═╡ 087ae8e4-47ea-4c16-8f70-b38168834268
-orbit_old = Orbit(modeldir * "simulation/orbit.csv")
-
 # ╔═╡ 17c59968-27bf-4ab6-ac27-26db28bdbcbc
 h5open(joinpath(modeldir, "centres.hdf5")) do centres
 	global x_cen, v_cen, x_cen_err, v_cen_err, times
@@ -157,6 +154,17 @@ h5open(joinpath(modeldir, "centres.hdf5")) do centres
 	x_cen_err = centres["position_errs"][:] .* pos_err_scale
 	v_cen_err = centres["velocity_errs"][:] .* vel_err_scale
 	times = centres["times"][:]
+end
+
+# ╔═╡ 087ae8e4-47ea-4c16-8f70-b38168834268
+orbit_old = let
+	o = Orbit(modeldir * "simulation/orbit.csv")
+
+	@info "time shift = $(times[1] .- o.times[1])"
+	o.times .+= times[1] .- o.times[1]
+	
+	o
+	
 end
 
 # ╔═╡ acf9bb4c-c03f-455f-bd12-65766f55bfaa

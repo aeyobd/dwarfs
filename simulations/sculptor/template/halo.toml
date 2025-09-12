@@ -1,4 +1,5 @@
 [TruncNFW]
 v_circ_max = 
 r_circ_max = 
-trunc=100
+trunc = 20
+xi = 3

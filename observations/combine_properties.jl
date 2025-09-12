@@ -22,6 +22,10 @@ function combine_properties()
         dir = galaxyname
         file = dir * "/observed_properties.toml"
 
+        if !isdir(dir)
+            continue
+        end
+
         if !isfile(file)
             println("Skipping $dir")
             continue
@@ -50,6 +54,8 @@ function combine_properties()
 
             append!(df_all, row)
 
+        else
+            println("incomplete info for $dir")
         end
     end
 

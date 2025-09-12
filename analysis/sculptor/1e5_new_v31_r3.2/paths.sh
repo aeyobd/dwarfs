@@ -1,4 +1,4 @@
-export haloname="HALONAME"
+export haloname="1e5_new"
 export iso_path="$DWARFS_ROOT/analysis/isolation/$haloname/fiducial/"
 export iso_halo="$DWARFS_SIMS/isolation/$haloname/fiducial/halo.toml"
 
