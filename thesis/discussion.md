@@ -40,7 +40,7 @@ Variations to the potential of the inner disk (exclusion of a bar, spiral arms) 
 
 
 
-## Long term orbital history
+
 
 @dsouza+bell2022, @santistevan+2024. challenges to backwards time integration
 
@@ -48,7 +48,9 @@ Variations to the potential of the inner disk (exclusion of a bar, spiral arms) 
 
 - @dicintio+2013
 
-# Comparison to other work
+# Comparison to previous work
+
+For both Sculptor and Ursa minor, these galaxies have been studied extensively in both a theoretical and observational context. 
 
 ## Sculptor
 
@@ -90,10 +92,6 @@ Observational work on Scl
 - @grebel1996
 - @barbosa+2025: Using DECam to derive narrowband photometric metallicity gradient and search for metal poor stars in Scl. 
 
-Future ideas:
-
-- @evslin2016: measuring ellipticities of halos w TMT.
-
 
 
 ## Ursa Minor
@@ -129,15 +127,13 @@ Theoretical work
 - @gomez-flechoso+martinez-delgado2003: MLR of UMi
 - @lynden-bell1976 early discussion of orbits and LMC plane.
 
-# Are Sculptor and Ursa Minor typical?
 
-## The formation of Exponential profiles
 
-As mentioned earlier, many dwarf galaxies appear to have exponential stellar density profiles. 
+# Should we expect exponential profiles?
+
+As discussed in @sec:exponential_profile, the exponential profile has long been used for dwarf galaxies.
 
 Disk galaxies have long been known to be exponential-like across a wide range of scales. As such, several theoretical works have aimed to undertsand the formation of exponential stellar disks. One prevailing theory posits that scattering of stars in a disk naturally forms an exponential [@elmegreen+struck2013, @wu+2022], or that the disk is due to conservation of angular momentum during spherical collapse. 
-
-Given that dwarf galaxies were noticed to be exponential like above, @faber+lin1983 proposed that dwarf spheroidals formed from disky galaxies maintaining the typical exponential density profile
 
 @read+gilmore2005 propsed that exponential dSph form through impusive mass loss, redistributing the stellar component into an exponential like profile. 
 
@@ -150,15 +146,9 @@ Other explanations range from the effects of mass loss, feedback, angular moment
 
 @klimentowski+2007, @klimentowski+2009. 
 
-In summary, while there is some theoretical reasons why exponential spheroidal stellar profiles may form, the emperical sucess of an exponential law still requires explanations. Deviations from this exponential thus test wether this exponential law is indeed near-universal or if other ingredients in the formation and history of dwarf galaxies may be responsible for changes from the empirical expectation.
-
-## Alternatives to exponential profiles
-
-- elmegreen+hunter2006: Discuss the formation of double exponentials in disk galaxies. While a simpler idealized / Semi-analytic model of star formation, show that assuming exponentail gas and KS-relation with SF threshhold, that reduction of turbulance (driven by a number of processes) in outer disk leads to a steeper decline in SFR as crossing the critical SF threshold becomes less likely. 
+elmegreen+hunter2006: Discuss the formation of double exponentials in disk galaxies. While a simpler idealized / Semi-analytic model of star formation, show that assuming exponentail gas and KS-relation with SF threshhold, that reduction of turbulance (driven by a number of processes) in outer disk leads to a steeper decline in SFR as crossing the critical SF threshold becomes less likely. 
 
 # Understanding the extended density profiles of dwarf galaxies
-
-Are dwarf galaxies indeed expected to be one-component exponential-like density profiles? The suggestion of exponential density profiles dates back to @faber+lin1983. Expand...
 
 A number of recent work has also confirmed the presence of extended, likely non-tidal, density profiles. For example, @chiti+2021; @chiti+2023 spectroscopically confirm members out to $~9 R_h$ in Tucana II.  
 
@@ -168,7 +158,28 @@ A number of recent work has also confirmed the presence of extended, likely non-
 - @mcconnachie+penarrubia+navarro2007 (velocity space & multiple populations).
 - @cicuendez+battaglia2018
 
-## Multi-epoch star formation and feedback
+## Multi-component density profiles: clues to the past?
+
+A related note is that several dwarf galaxies show evidence for multiple chemodynamical components in their stars. While spectra tend to focus on the inner regions (high probability members), the existence of multiple-component stellar populations in the inner regions of dwarf galaxies hints at a complex star formation history capable of creating the observed profiles.
+
+- @benitez-llambay+2016
+
+- @mercado+2021: formation of metallicity gradients from SFH 
+
+- @revaz+jablonka2018 natural formation of multi-component and gradients from cosmological simulations of dwarf galaxies. Originate from dynamical heating of metal rich population and outside in star formation?
+
+- @el-badry+2016. Feedback drives fluctuations in size + radial migration => population gradients.
+
+  
+
+Observational evidence:
+
+- @arroyo-polonio+2024
+- @pace+2020
+- @fabrizio+2016, @kordopatis+2016 (multi-component in Carina)
+- @battaglia+2006, @amorisco+evans2012 for fornax
+
+## Multi-epoch star formation
 
 The star formation history of dwarf galaxies is typically thought to be *bursty*: a series of discrete episodes of intense star formation separated by periods of quiescence. 
 
@@ -178,24 +189,29 @@ For example, in the simulations of @wheeler+2019, etc., dwarf galaxies exhibit s
 - @wright+2019
 - @azartash-namin+2024
 
-### Multi-component density profiles
-
-A related note is that several dwarf galaxies show evidence for multiple chemodynamical components in their stars. While spectra tend to focus on the inner regions (high probability members), the existence of multiple-component stellar populations in the inner regions of dwarf galaxies hints at a complex star formation history capable of creating the observed profiles.
-
-- @benitez-llambay+2016
-- @mercado+2021: formation of metallicity gradients from SFH 
-- @revaz+jablonka2018 natural formation of multi-component and gradients from cosmological simulations of dwarf galaxies. Originate from dynamical heating of metal rich population and outside in star formation?
-- @el-badry+2016. Feedback drives fluctuations in size + radial migration => population gradients.
 - 
 
-Observational evidence:
+## Dynamical heating of old stars
 
-- @arroyo-polonio+2024
-- @pace+2020
-- @fabrizio+2016, @kordopatis+2016 (multi-component in Carina)
-- @battaglia+2006, @amorisco+evans2012 for fornax
+For a variety of reasons, older stars in a galaxy may be preferentially "hotter" (i.e., higher typical random velocities) than younger stars. 
+
+In the case of dwarf galaxies, a few mechanisms have been proposed which may heat the stellar components: heating by strong feedback, heating by dark sub-subhalos, and heating 
+
+Because dwarf galaxies have extended star formation histories, like the stellar-feedback scattering method, 
+
+One compl
+
+
+
+*cluster dynamics* Could processess which happen in globular clusters also occur in dsarf galaxies, such as mass segragation and the evaporation of the smallest mass stars? This seems unlikely at first glance because dwarf galaxies contain such 
+
+@baumgardt+2022.
 
 ## Past mergers and accretion
+
+When galaxies merge, traces of the effects of the merger can remain for long afterwards. For dwarf galaxies, mergers may appear as multiple populations which may have different sizes, chemistry, and kinematics. 
+
+A number of studies has investigated mergers in dwarf galaxies, showing that this is a feasible scenario for halo formation
 
 - @deason+2014
 - @deason+2022
@@ -207,11 +223,13 @@ Observational evidence:
 - rotation from merger: @cardona-barrero+2021
 - @genina+2019: mergers & two-population formation
 
-
-
 ## Preprocessing
 
-Another alternative is that the dwarf galaxies have been "preprocessed" by another dwarf/LMC like galaxy earlier on and this has resulted in their unique properties
+Another alternative is that the dwarf galaxies have been "preprocessed" by another dwarf/LMC like galaxy earlier on and this has resulted in their unique properties. 
+
+This could involve a strong tidal interaction very early on in the dwarf galaxy. 
+
+
 
 ## Tidal dwarfs
 
@@ -224,3 +242,39 @@ Alternatives to the prevailing cosmology we assume may help explain the nature o
 - WDM: forms cores, doesn't help
 - SIDM: can cause faster disruption, doesn't fix orbital path or change tidal effects?
 - MOND: @sanchez-salcedo+hernandez2007: mond in dsph
+
+
+
+# Summary and outlook
+
+In this thesis, we have investigated tidal effects on the dwarf galaxies Sculptor and Ursa Minor. 
+
+We first showed, using data from J+24, that each galaxy contains a substantial, extended population when compared to an exponential density profile. We show that this population is reasonably independent of the details of the data selection or methodology, implying that this "density excess" is likely a real feature of each galaxy. Sculptor and Ursa Minor are more extended in the outer regions than other nearby dwarf classical, given current observations.
+
+We then investigated if tides were a permissable explanation. By modelling each galaxy based on cosmological initial conditions, we showed that tides do not strongly affect either galaxy. However, the presence of an LMC in the MW possibly complicates our conclusions, but we find that the effect of the LMC means Scl could be on first infal and has experienced a significantlly weaker tidal history, and Ursa Minor may only have a more extended orbit. In all of our investigation, we show that tides are very unlikely to affect the currently-observed density profiles. A stream is possibly detectable, depending on the initial stellar extent of each galaxy and how much deeper future observations are able to reach.
+
+As a result, we conclude that the observed extended density of each galaxy is inconsistent with a tidal origin, and requires a different explanation. In this (final) chapter, we have summarized possible other explanations in the literature,  including the effects of mergrs, episodic star formation histories, stellar halos, 
+
+While we have discussed a number of different avenues through which stellar halos form, these need not be exclusive.
+
+As an example, consider +frenk+carlos+++: when two gas-rich dwarf galaxies collide, the merger can introduce new star formation, possibly forming a new, distint population of stars. The formation of stars may drive a burst which heats up old stars. The merger may scatter old stars into a stellar halo. And the merger may distribute the two populations of the old galaxies into separate components. As a result, many different processes can contribute to the formation of chemically and dynamically distinct populations. 
+
+Is there hope for determining the nature of a stellar halo? Perhaps the most promising tool will be chemistry. In particular, if we reach a point where we can chemically distinguish the populations of different galaxies, then chemistry provides an opportunity to test the merger history of galaxies. 
+
+We propose a categorization of the (\LCDM{}) scenarios above 
+
+- Gas-poor mergers or accretion: more than one *chemodynamically independent* population (e.g. GSE in the MW halo)
+- Gas-rich merger: more than one *chemodynamically independent* population plus an additional, younger population with possibly shared heritage.
+- Continuous dynamical heating (e.g. subsubhalos) : chemically contiguous population with an old to young population gradient. 
+- Strong stellar feedback: Associated bursty star formation history in chemical abundance space, but reasonably chemically-contiguous population. 
+
+
+
+In addition, the first two scenarios could show significant variation among dwarfs (especially for (near) major-mergers), whereas the last two should be relatively similar among similar dwarfs. 
+
+
+
+
+
+Measure halo ellipticity via TMT, @evslin2016
+
