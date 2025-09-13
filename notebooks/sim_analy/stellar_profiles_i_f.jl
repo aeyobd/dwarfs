@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -158,6 +158,15 @@ end
 # ╔═╡ c4c8bb3c-7460-4946-b025-0f56f5502946
 time_f = times[orbital_props["idx_f"]]
 
+# ╔═╡ d0330154-d477-4199-9112-dd6ddd687ed6
+time_f * T2GYR
+
+# ╔═╡ 9a9ff46c-2237-4e01-a37d-374dff336f58
+sigma_v = prof_sim.annotations["sigma_v"]
+
+# ╔═╡ 9fc456ac-7ab9-4033-b682-d2cb5c386392
+r_break = LilGuys.break_radius(t_last_peri/T2GYR, sigma_v)
+
 # ╔═╡ 64aa553d-b024-4991-9265-e0ccbd57d6fb
 md"""
 # Plots
@@ -170,6 +179,9 @@ md"""
 
 # ╔═╡ 940b085c-e78c-4800-8b3e-bdd13ed970d1
 n_center = 13
+
+# ╔═╡ b04a894b-33c2-4daf-9506-cb310ba0c218
+R_b = LilGuys.kpc2arcmin(r_break, orbital_props["distance_f"])
 
 # ╔═╡ ab47f03b-4eac-439d-869e-1ee6c2e22ebe
 norm_obs = LilGuys.mean(prof_obs.log_Sigma[1:n_center])
@@ -185,30 +197,6 @@ ymin = -8
 
 # ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
 norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]]) - dy
-
-# ╔═╡ 5876165d-6232-436b-aea2-a9636f1557b6
-
-
-# ╔═╡ e86ff7fe-b424-4edf-bf23-264a327e3926
-md"""
-## Velocity Dispersions
-"""
-
-# ╔═╡ 41bcae3a-d1ea-4620-a2d0-aa9eddfe8554
-readdir(model_stars_dir)
-
-# ╔═╡ 7bc27716-2c02-47a3-9e04-b9d55a526000
-scalars = read_fits(joinpath(model_stars_dir, "stellar_profiles_3d_scalars.fits"))
-
-# ╔═╡ 9a9ff46c-2237-4e01-a37d-374dff336f58
-sigma_v = scalars.sigma_v[
-	argmin(abs.(scalars.time .- time_f))]
-
-# ╔═╡ 9fc456ac-7ab9-4033-b682-d2cb5c386392
-r_break = LilGuys.break_radius(t_last_peri/T2GYR, sigma_v)
-
-# ╔═╡ b04a894b-33c2-4daf-9506-cb310ba0c218
-R_b = LilGuys.kpc2arcmin(r_break, orbital_props["distance_f"])
 
 # ╔═╡ 54724d9f-0619-4374-abbe-fa600fc5cc92
 let
@@ -242,6 +230,20 @@ let
 	fig
 end
 
+# ╔═╡ 5876165d-6232-436b-aea2-a9636f1557b6
+
+
+# ╔═╡ e86ff7fe-b424-4edf-bf23-264a327e3926
+md"""
+## Velocity Dispersions
+"""
+
+# ╔═╡ 41bcae3a-d1ea-4620-a2d0-aa9eddfe8554
+readdir(model_stars_dir)
+
+# ╔═╡ 7bc27716-2c02-47a3-9e04-b9d55a526000
+scalars = read_fits(joinpath(model_stars_dir, "stellar_profiles_3d_scalars.fits"))
+
 # ╔═╡ 250f4593-5ac1-472b-bdc1-95fd28ce2466
 orbital_props["distance_f"]
 
@@ -259,8 +261,11 @@ let
 	hlines!(middle(σ_obs) - 1, color=:black, linestyle=:dash)
 
 
-	lines!(scalars.time * T2GYR .- time_f*T2GYR, scalars.sigma_v * V2KMS)
-
+	if @isdefined scalars
+		lines!(scalars.time * T2GYR .- time_f*T2GYR, scalars.sigma_v * V2KMS)
+	end
+	scatter!(time_f * T2GYR, sigma_v)
+	
 	fig
 	@savefig "sigma_v_evolution"
 end
@@ -290,6 +295,7 @@ end
 # ╠═a55ebe61-f364-4cde-9006-5e022226e110
 # ╠═dc6e60d9-7203-48a5-b277-9555c5773851
 # ╠═c4c8bb3c-7460-4946-b025-0f56f5502946
+# ╠═d0330154-d477-4199-9112-dd6ddd687ed6
 # ╠═9a9ff46c-2237-4e01-a37d-374dff336f58
 # ╠═9fc456ac-7ab9-4033-b682-d2cb5c386392
 # ╟─64aa553d-b024-4991-9265-e0ccbd57d6fb

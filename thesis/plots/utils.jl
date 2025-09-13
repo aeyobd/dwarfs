@@ -206,3 +206,37 @@ function get_isochrone(M_H, age=12)
     #insert!(isochrone, findlast(isochrone.label .== 3) + 1, fill(NaN, size(isochrone, 2)), promote=true)
     isochrone
 end
+
+
+"""
+    rotation_factor(ax[, log=false)
+
+Given an axis (with pre-specified limits?), computes
+the facto to wich to multiply a slope to convert 
+a geometric slope into a screen slope
+"""
+function rotation_factor(ax, log=false)
+	if log
+		limits = ax.finallimits
+		x1 = @lift $limits.origin[1]
+		x2 = @lift $x1 + $limits.widths[1]
+		y1 = @lift $limits.origin[2]
+		y2 = @lift $y1 + $limits.widths[2]
+
+		Δx_data = @lift log10($x2) - log10($x1)
+		Δy_data = @lift log10($y2) - log10($y1)
+	else
+		Δx_data = @lift $(ax.finallimits).widths[2]
+		Δy_data = @lift $(ax.finallimits).widths[2]
+	end
+	Δx_screen = @lift $(ax.scene.viewport).widths[1]
+	Δy_screen = @lift $(ax.scene.viewport).widths[2]
+	correction_factor = @lift $Δx_data / $Δx_screen * $Δy_screen / $Δy_data
+	return correction_factor
+end
+
+
+function log_derivative(f, x0; h=0.001)
+	y0 = f(x0)
+	return (log10(f(x0 * 10^h)) - log10(y0)) / h
+end

@@ -58,6 +58,6 @@ metallicity_ep = 0.20000000298023224
 metallicity_ref = "MV2020"
 pmra_gsr = nan
 pmdec_gsr = nan
-radial_velocity_gsr = 243.69191833653423
+radial_velocity_gsr = 243.69191833653431
 theta_pm_gsr = -39.64
 MV2020_references = "(14)(15)(99)"

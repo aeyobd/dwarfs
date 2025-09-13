@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -519,17 +519,33 @@ md"""
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = Dict(
 	:mean => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 5.9),
-	:heavy => NFW(v_circ_max = 42 / V2KMS, r_circ_max = 5.9),
+	:heavy => NFW(v_circ_max = 43 / V2KMS, r_circ_max = 7),
 	:compact => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
-	:middle => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 4.2),
 	:smol => NFW(v_circ_max=25/V2KMS, r_circ_max=2.5)
 )
 
-# ╔═╡ 9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
-10^0.4
-
 # ╔═╡ 8a06c0ad-2b48-48ba-a542-85926e164712
-labels_ex = [:mean, :heavy, :compact, :middle, :smol]
+labels_ex = [:mean, :heavy, :compact,  :smol]
+
+# ╔═╡ 7b82aebc-f28b-40ce-83fe-d65f33030682
+for label in labels_ex
+	halo =  halos_ex[label]
+	σv = calc_σv_star_mean(halo) * V2KMS
+	@info "$label: $σv"
+
+end
+
+# ╔═╡ ee71542b-c997-4175-9ec7-0358f1052631
+for label in labels_ex
+	halo =  halos_ex[label]
+	rm = LilGuys.r_circ_max(halo)
+	vm = LilGuys.v_circ_max(halo)
+	@info "$label: $rm, $vm"
+
+end
+
+# ╔═╡ 75a3f14b-a1ea-4b2d-9602-9231eca497d1
+0.2073288331726133 * V2KMS
 
 # ╔═╡ c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 begin 
@@ -566,6 +582,12 @@ r_max_exp, (LilGuys.Ludlow.solve_rmax.(V_max_in, 0.1), LilGuys.Ludlow.solve_rmax
 
 # ╔═╡ b5a53e42-ef26-47b0-82f9-d404a4d3a544
 log10(1 + 3.726 / r_max_exp)
+
+# ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
+# ╠═╡ disabled = true
+#=╠═╡
+k = kde((randn(100), randn(100)))
+  ╠═╡ =#
 
 # ╔═╡ 2a86dad2-2cfa-43e7-b1df-84d274ee7e72
 import LinearAlgebra: diagm
@@ -747,10 +769,11 @@ let
 	fig
 end
 
+# ╔═╡ bd4095bf-9e3f-4d04-895d-3567b24f99e6
+k = kde((log10.(samples.r_circ_max), samples.log_v_circ_max))
+
 # ╔═╡ 3e2acadd-7c80-4671-a5a9-fbb4470cd0f2
-#=╠═╡
 [KernelDensity.pdf(k, x, y) for (x, y) in zip( log10.(samples.r_circ_max)[1:10000], samples.log_v_circ_max[1:10000])]
-  ╠═╡ =#
 
 # ╔═╡ 37b73ce2-0822-4a4b-b4a6-092baba747f6
 function plot_2d_bands_quick!(x, y; Nmax=10000, p=[0.683, 0.954, 0.997], kwargs...)
@@ -894,17 +917,6 @@ LilGuys.R200(halo_in)
 # ╔═╡ b97bdec3-2dbe-4a1d-bad9-4116b2d2e614
 LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 
-# ╔═╡ bd4095bf-9e3f-4d04-895d-3567b24f99e6
-#=╠═╡
-k = kde((log10.(samples.r_circ_max), samples.log_v_circ_max))
-  ╠═╡ =#
-
-# ╔═╡ 21acda7b-a116-4bc1-af7d-e715e2b32b86
-# ╠═╡ disabled = true
-#=╠═╡
-k = kde((randn(100), randn(100)))
-  ╠═╡ =#
-
 # ╔═╡ Cell order:
 # ╟─07a710d8-0ae4-4d9f-9759-002750730010
 # ╟─33f433ec-e94e-41fd-a808-6254bf4d34ce
@@ -985,8 +997,10 @@ k = kde((randn(100), randn(100)))
 # ╟─b85256a1-786f-4dee-a6f1-f55406c3b18e
 # ╠═e7ab194c-63a4-4274-aaba-43c3d369ce0d
 # ╠═82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
-# ╠═9ad6c9af-6922-46b9-919e-1c9a5efb2b3e
 # ╠═8a06c0ad-2b48-48ba-a542-85926e164712
+# ╠═7b82aebc-f28b-40ce-83fe-d65f33030682
+# ╠═ee71542b-c997-4175-9ec7-0358f1052631
+# ╠═75a3f14b-a1ea-4b2d-9602-9231eca497d1
 # ╠═c49ac57e-8e8d-4ed6-ad35-be400863f6b4
 # ╠═afb4aff2-8ecc-40e1-a43a-e42cbb9536f6
 # ╠═f335d286-04d3-4248-b9bd-4bb6d8e82e33

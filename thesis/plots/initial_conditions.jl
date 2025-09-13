@@ -19,98 +19,116 @@ end
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
 
+# ╔═╡ b74a4535-1e12-422e-a524-135db4d8a9f7
+import TOML
+
 # ╔═╡ 20c338e3-3d10-41f4-b8ee-d0eda4e755bd
 CairoMakie.activate!(type=:png)
 
-# ╔═╡ caf046d9-e475-4810-844e-b65e9c08c832
-stars_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "sculptor/1e7_new_v31_r3.2/", "stars")
+# ╔═╡ 38901ab0-64df-4201-9492-0acc305376a1
+function get_M_star(galaxyname)
+	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml"))
+	M_star = LilGuys.mag_to_L(obs_props["Mv"]) * obs_props["M_L_s"]
+	return M_star / M2MSUN
+end
 
 # ╔═╡ 7a6d6345-fefb-4017-8230-3ff5bea55c83
-snap = Snapshot(joinpath(stars_dir, "iso_paint.hdf5"))
+function assign_weights!(snap, df)
+	snap.weights = df.probability[snap.index]
+end
 
-# ╔═╡ a3a3a875-d0cc-4594-86c2-b242e859efef
-df_probs = LilGuys.read_hdf5_table(joinpath(stars_dir, "exp2d_rs0.10", "probabilities_stars.hdf5"))
+# ╔═╡ 0dbc4770-fd1d-4a57-9825-3576900dd7a3
+function load_stars(galaxyname, haloname, starsname)
+	stars_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, haloname, "stars")
 
-# ╔═╡ 01e34341-e806-44ef-9591-d226b345dec6
-snap.weights = df_probs.probability[snap.index]
+	df_probs = LilGuys.read_hdf5_table(joinpath(stars_dir, starsname, "probabilities_stars.hdf5"))
 
-# ╔═╡ 95f811eb-b7c0-48e9-8b88-716cd667db3d
-prof_dm = DensityProfile(snap, bins=-2:0.1:2.1)
+	snap_i = Snapshot(joinpath(stars_dir, "iso_paint.hdf5"))
+	assign_weights!(snap_i, df_probs)
 
-# ╔═╡ 932473fc-535f-4dab-bb03-53c8a71aff16
-prof_dm_ana = NFW(r_circ_max=6, v_circ_max=31/V2KMS)
+	snap_f = Snapshot(joinpath(stars_dir, "iso_final.hdf5"))
+	assign_weights!(snap_f, df_probs)
 
-# ╔═╡ a6fd5c3f-c9ae-40a0-a8b7-c09b9dd9d2af
-prof_stars_ana = LilGuys.load_profile(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/1e7_new_v31_r3.2/stars/exp2d_rs0.10/profile.toml"))
+	Mstar = get_M_star("sculptor")
 
-# ╔═╡ 3edb5998-a200-4e94-9598-5b73c29def33
-sum(densities(prof_dm) .* diff(π*LilGuys.radius_bins(prof_dm) .^3)) 
+	prof_s_i = DensityProfile(snap_i, snap_i.weights * Mstar)
+	prof_i = DensityProfile(snap_i)
+	prof_s_f = DensityProfile(snap_f, snap_f.weights * Mstar)
+	prof_f = DensityProfile(snap_f)
 
-# ╔═╡ 5743880e-567f-4af5-acb5-e2ec420110aa
-Mstar = 3e6 / M2MSUN
+	return (;dm_i = prof_i, dm_f = prof_f, stars_i=prof_s_i, stars_f=prof_s_f)
+end
 
-# ╔═╡ ee96c7dd-56a3-47c7-b6d8-fdff3f598f3d
-LilGuys.mass(prof_stars_ana)
+# ╔═╡ 8ac764c8-ca9e-400b-bde4-f3e9b1ebf6b9
+scl_profs = load_stars("sculptor", "1e7_new_v31_r3.2", "exp2d_rs0.10")
 
-# ╔═╡ 098e33d5-22a5-496b-943b-b8c194cdcc62
-prof_stars = DensityProfile(snap, snap.weights * Mstar)
+# ╔═╡ ef66f5ee-31c9-461f-a843-5a8506e5fdbe
+scl_profs_midres = load_stars("sculptor", "1e6_new_v31_r3.2", "exp2d_rs0.10")
 
-# ╔═╡ f6d51dd1-91df-4a6b-85a8-cd9b26d2c9c9
-sum(densities(prof_stars) .* diff(4π/3*LilGuys.radius_bins(prof_stars) .^3)) 
+# ╔═╡ 3d78046d-6846-483f-9477-db24747888de
+scl_profs_lowres = load_stars("sculptor", "1e5_new_v31_r3.2", "exp2d_rs0.10")
+
+# ╔═╡ edc6003e-e931-45a0-82c4-4aa394a3f060
+umi_profs = load_stars("ursa_minor", "1e7_new_v38_r4.0", "exp2d_rs0.10")
+
+# ╔═╡ 7034614b-eb03-4333-bf69-c3fb64a5c0fc
+function plot_i_f(prof_i, prof_f; kwargs...)
+	lines!(log_radii(prof_i), log_densities(prof_i), linestyle=:dot; kwargs...)
+	lines!(log_radii(prof_f), log_densities(prof_f), linestyle=:solid; kwargs...)
+end
+
+
+# ╔═╡ b4e8c800-2c75-4ce5-b2e1-3205256fa4e0
+smalllinewidth = theme(:linewidth)[]/2
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "initial_conditions" let
-	fig = Figure()
+	fig = Figure(size=(5*72, 5*72))
 
 	ax = Axis(fig[1,1], 
 		xlabel = "log radius / kpc",
 		ylabel = L"log $\rho$ / $10^{10}\,\textrm{M}_\odot\,\textrm{kpc}^{-3}$",
-		limits = (-2, 2, -9.5, 2.5)
+		limits = (-2, 1.5, -9.5, 0.5)
 	)
-
-	lines!(log_radii(prof_dm), log_densities(prof_dm), label="DM", linestyle=:dot, color=COLORS[5])
-	lines!(log_radii(prof_stars), log_densities(prof_stars), label="stars", color=COLORS[9])
-
-	axislegend(margin=(19,19,19,19), position=:rt)
-	fig
-end
-
-# ╔═╡ c1d328a6-a05f-4231-9494-58502c0f7942
-@savefig "example_density_profiles" let
-	fig = Figure()
-
-	ax = Axis(fig[1,1], 
-		xlabel = "log radius / kpc",
-		ylabel = L"log $\rho$ / $10^{10}\,\textrm{M}_\odot\,\textrm{kpc}^{-3}$",
-		limits = (-2, 2, -9.5, 0.5)
-	)
-
-	x = LinRange(-2, 2, 1000)
-	r = 10 .^ x
 	
-	lines!(x, log10.(LilGuys.density.(prof_dm_ana, r)), label="NFW dark matter", linestyle=:solid, color=COLORS[1])
-	lines!(x, log10.(Mstar * LilGuys.density.(prof_stars_ana, r)), label="exponential profile", color=COLORS[2], linestyle=:dot)
+	plot_i_f(scl_profs.dm_i, scl_profs.dm_f, color=COLORS[1], label="Scl DM")
+	plot_i_f(scl_profs.stars_i, scl_profs.stars_f, color=COLORS[2], label="Scl stars", linewidth=smalllinewidth)
+	hidexdecorations!(ticks=false, minorticks=false)
+
+	axislegend(position=:rt, merge=true)
+
+	l1 = lines!([NaN], [NaN], linestyle=:dot, label="initial")
+	l2 = lines!([NaN], [NaN], linestyle=:solid, label="end of isolation")
+	axislegend(ax, [l1, l2], ["initial profile", "end of isolation"], position=:lb, merge=true)
 
 
-	axislegend(margin=(19,19,19,19), position=:rt)
+	ax = Axis(fig[2,1], 
+		xlabel = "log radius / kpc",
+		ylabel = L"log $\rho$ / $10^{10}\,\textrm{M}_\odot\,\textrm{kpc}^{-3}$",
+		limits = (-2, 1.5, -9.5, 0.5)
+	)
+	
+
+	plot_i_f(umi_profs.dm_i, umi_profs.dm_f, color=COLORS[1], label="UMi DM")
+	plot_i_f(umi_profs.stars_i, umi_profs.stars_f, color=COLORS[2], label="UMi stars",  linewidth=smalllinewidth)
+	axislegend(position=:rt, merge=true)
+
+	
 	fig
 end
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═b74a4535-1e12-422e-a524-135db4d8a9f7
 # ╠═20c338e3-3d10-41f4-b8ee-d0eda4e755bd
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
-# ╠═caf046d9-e475-4810-844e-b65e9c08c832
+# ╠═0dbc4770-fd1d-4a57-9825-3576900dd7a3
+# ╠═38901ab0-64df-4201-9492-0acc305376a1
 # ╠═7a6d6345-fefb-4017-8230-3ff5bea55c83
-# ╠═a3a3a875-d0cc-4594-86c2-b242e859efef
-# ╠═01e34341-e806-44ef-9591-d226b345dec6
-# ╠═95f811eb-b7c0-48e9-8b88-716cd667db3d
-# ╠═932473fc-535f-4dab-bb03-53c8a71aff16
-# ╠═a6fd5c3f-c9ae-40a0-a8b7-c09b9dd9d2af
-# ╠═3edb5998-a200-4e94-9598-5b73c29def33
-# ╠═f6d51dd1-91df-4a6b-85a8-cd9b26d2c9c9
-# ╠═5743880e-567f-4af5-acb5-e2ec420110aa
-# ╠═ee96c7dd-56a3-47c7-b6d8-fdff3f598f3d
-# ╠═098e33d5-22a5-496b-943b-b8c194cdcc62
+# ╠═8ac764c8-ca9e-400b-bde4-f3e9b1ebf6b9
+# ╠═ef66f5ee-31c9-461f-a843-5a8506e5fdbe
+# ╠═3d78046d-6846-483f-9477-db24747888de
+# ╠═edc6003e-e931-45a0-82c4-4aa394a3f060
+# ╠═7034614b-eb03-4333-bf69-c3fb64a5c0fc
+# ╠═b4e8c800-2c75-4ce5-b2e1-3205256fa4e0
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
-# ╠═c1d328a6-a05f-4231-9494-58502c0f7942

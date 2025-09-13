@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -103,9 +103,10 @@ md"""
 
 # ╔═╡ 55027866-d309-4557-b8a9-9f73a20b7785
 scl_orbits = OrderedDict(
-	"mean" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_mean", "exp2d_rs0.10"),
-	"smallperi" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_smallperi", "exp2d_rs0.10"),
-	"lmc" => get_scalars("sculptor", "1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.10"),
+	#"mean" => get_scalars("sculptor", "1e7_V31_r3.2/orbit_mean", "exp2d_rs0.10"),
+	"smallperi" => get_scalars("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"),
+	#"plummer" => get_scalars("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20"),
+	#"lmc" => get_scalars("sculptor", "1e7_V31_r4.2/vasiliev24_L3M11_2x_smallperilmc", "exp2d_rs0.10"),
 )
 	
 	

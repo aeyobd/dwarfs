@@ -1,2 +1,25 @@
-break_radius_arcmin = 240.12113896406137
-break_radius_kpc = 4.518730128387832
+[initial]
+delta_t = nan
+r_break = nan
+sigma_v = 0.04832276142915656
+r_max_sigma = 1.0
+bound_mass = 1.0
+time = 0.0
+r_h = 0.17936794568453565
+R_h = 0.13496132776945133
+delta_t_Gyr = nan
+sigma_v_kms = 10.022140720407071
+r_break_arcmin = nan
+
+[final]
+delta_t = 170.02441406250014
+r_break = 3.706663325160231
+sigma_v = 0.03963776555907039
+r_max_sigma = 1.0
+bound_mass = 0.9998522668542992
+time = 2050.126953125
+r_h = 0.22405901320989352
+R_h = 0.1691554523623393
+delta_t_Gyr = 0.8016651123046881
+sigma_v_kms = 8.2208725769512
+r_break_arcmin = 196.96866024423022

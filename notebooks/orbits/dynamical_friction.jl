@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -13,9 +13,6 @@ begin
 
 	using LilGuys
 end
-
-# ╔═╡ 7ae682ad-bc41-4584-a562-08c1c5095fe7
-using PythonCall
 
 # ╔═╡ 50edc139-077a-4e23-9c67-067fc133f16d
 md"""
@@ -36,6 +33,16 @@ The help for dynamical friction below describes the current implementation.
 
 # ╔═╡ 058c1b2a-e461-4961-91fa-4ec0bfeb1b21
 help(LilGuys.a_dyn_friction)
+
+# ╔═╡ c23b938b-77d2-4267-9598-edb82e54f7bb
+obs_i = ICRS(
+	ra = 15.0183,
+	dec = -33.7186,
+	distance = 86,
+	pmra = 0.14,
+	pmdec = -0.151,
+	radial_velocity = 111.2
+)
 
 # ╔═╡ 88310aa2-a470-4a58-abb9-6d4b9530a15b
 begin 
@@ -75,13 +82,10 @@ Arya.update_figsize!(4)
 obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxy/observed_properties.toml"))
 
 # ╔═╡ 927389fb-ce7c-4f0b-ad17-884ee067ab34
-N = 100
-
-# ╔═╡ c23b938b-77d2-4267-9598-edb82e54f7bb
-obs_i = LilGuys.rand_coords(obs_props, N)
+N = 1
 
 # ╔═╡ 725770d5-03b4-40eb-a747-e7e9622ff308
-coords_i = LilGuys.transform.(LilGuys.Galactocentric, obs_i)
+coords_i = LilGuys.transform(LilGuys.Galactocentric, obs_i)
 
 # ╔═╡ ae7f9bca-fa3d-463c-ab13-49f0cb00e565
 function get_potential(potname; kwargs...)
@@ -89,7 +93,7 @@ function get_potential(potname; kwargs...)
 end
 
 # ╔═╡ 0345c9a9-20ad-499f-9715-158ba7817415
-function plot_orbits(orbits::AbstractVector{<:Orbit}...; N=100, alpha=0.1)
+function plot_orbits(orbits::AbstractVector{<:Orbit}...; N=100, alpha=1)
 	N = min(length(orbits[1]), N)
 
 	fig = Figure()
@@ -107,16 +111,16 @@ function plot_orbits(orbits::AbstractVector{<:Orbit}...; N=100, alpha=0.1)
 end
 
 # ╔═╡ 04152ab7-a6e3-4763-a464-533d68f7d8ac
-function plot_orbits(orbits::Pair...; N=100, alpha=0.1)
+function plot_orbits(orbits::Pair...; N=100, alpha=1)
 	N = min(length(orbits[1].second), N)
 
 	fig = Figure()
-	axes = LilGuys.axis_xyz(fig, limits=LilGuys.limits_xyz(orbits[1].second[1].positions))
+	axes = LilGuys.axis_xyz(fig, limits=LilGuys.limits_xyz(orbits[1].second.positions))
 	legend = false
 	
 	for (i, (label, orbit)) in enumerate(orbits)
-		pos = (LilGuys.positions.(orbit)[1:N])
-		LilGuys.plot_xyz!(axes, pos..., alpha=alpha, color=COLORS[i], label=label=>(; alpha=max(0.5, alpha)))
+		pos = (LilGuys.positions(orbit))
+		LilGuys.plot_xyz!(axes, pos, alpha=alpha, color=COLORS[i], label=label=>(; alpha=max(0.5, alpha)))
 	end
 
 	Legend(fig[1,2], axes[1], tellwidth=false, merge=true, unique=true)
@@ -124,45 +128,43 @@ function plot_orbits(orbits::Pair...; N=100, alpha=0.1)
 	fig
 end
 
-# ╔═╡ 9a768080-29cf-4bd4-b040-7e58d448a041
-function plot_peris(orbits::Pair...)
-
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "pericentre / kpc")
-	
-	for (i, (label, orbit)) in enumerate(orbits)
-		peris = minimum.(radii.(LilGuys.positions.(orbit)))
-		stephist!(peris,  label=label)
-	end
-
-	Legend(fig[1,2], ax, tellwidth=false, merge=true, unique=true)
-
-	fig
-end
-
-# ╔═╡ 545976f9-c846-46f4-b762-ea54af1985f6
-function plot_apos(orbits::Pair...)
-
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "apocentre / kpc")
-	
-	for (i, (label, orbit)) in enumerate(orbits)
-		peris = maximum.(radii.(LilGuys.positions.(orbit)))
-		stephist!(peris,  label=label)
-	end
-
-	Legend(fig[1,2], ax, tellwidth=false, merge=true, unique=true)
-
-	fig
-end
-
 # ╔═╡ e42de723-34c2-4a50-8e8c-6b0ee3d198a9
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ fb7a5392-21cb-41f0-b32f-c61b00b72b82
+function plot_radii_time!(orbit; color=COLORS[1], N=100, kwargs...)
+	lines!(orbit.times * T2GYR, radii(orbit.positions); color=color, kwargs...)
+	
+end
+
 # ╔═╡ f5455167-36d9-4560-a11a-cd957cb6e2be
 function radii_axis(gs)
-	ax = Axis(gs, xlabel = "time / Gyr", ylabel = "galcen radius / kpc")
+	ax = Axis(gs, xlabel = "time / Gyr", ylabel = "galcen radius / kpc", limits=(nothing, nothing, 0, nothing))
 
+end
+
+# ╔═╡ cedd460e-fe60-46ab-b6c6-47ae9494b0ea
+function plot_radii(orbitss...; kwargs...)
+    fig = Figure()
+	ax = radii_axis(fig[1,1])
+	legend = false
+	for i in eachindex(orbitss)
+		orbits = orbitss[i]
+		if orbits isa AbstractVector{<:Orbit}
+			label = ""
+		else
+			label, orbits = orbits
+			legend = true
+		end
+		
+		plot_radii_time!(orbits; color=COLORS[i], label=label=>(; alpha=0.5), kwargs...)
+	end
+
+	if legend
+		Legend(fig[1,2], ax, merge=true, unique=true)
+	end
+	
+	fig
 end
 
 # ╔═╡ 8cc8db0a-a126-4a7a-9191-48e4c80a8f4a
@@ -178,9 +180,6 @@ to_sym_mat(x) = [x[1] x[4] x[6]
 md"""
 # Comparison
 """
-
-# ╔═╡ b654cddc-147c-4e21-8f94-af2c54c773e1
-LilGuys.peris_apos
 
 # ╔═╡ c6ed2e5b-da5e-4206-9ad6-aeef24f5d64e
 md"""
@@ -209,40 +208,6 @@ end
 
 # ╔═╡ 742d3997-528f-4da1-8d26-68e879dedb00
 orbits_ep2020 = orbits(pot_ep2020)
-
-# ╔═╡ fb7a5392-21cb-41f0-b32f-c61b00b72b82
-function plot_radii_time!(orbits; color=COLORS[1], N=100, kwargs...)
-	N =  min(length(orbits), N)
-	pos = (LilGuys.positions.(orbits_ep2020)[1:N])
-	for orbit in orbits[1:N]
-		lines!(orbit.times * T2GYR, radii(orbit.positions); alpha=0.1, color=color, kwargs...)
-	end
-	
-end
-
-# ╔═╡ cedd460e-fe60-46ab-b6c6-47ae9494b0ea
-function plot_radii(orbitss...; kwargs...)
-    fig = Figure()
-	ax = radii_axis(fig[1,1])
-	legend = false
-	for i in eachindex(orbitss)
-		orbits = orbitss[i]
-		if orbits isa AbstractVector{<:Orbit}
-			label = ""
-		else
-			label, orbits = orbits
-			legend = true
-		end
-		
-		plot_radii_time!(orbits; color=COLORS[i], label=label=>(; alpha=0.5), kwargs...)
-	end
-
-	if legend
-		Legend(fig[1,2], ax, merge=true, unique=true)
-	end
-	
-	fig
-end
 
 # ╔═╡ bb4c9727-b8af-467b-b900-9c2a14231035
 md"""
@@ -287,7 +252,7 @@ LilGuys.acceleration(pot::Agama.Potential, x) = Agama.acceleration(pot, x)
 f_tot = (pos, vel, t) -> (LilGuys.acceleration(dyn_fric, pos, vel) + Agama.acceleration(pot_ep2020, pos, units, t=t))
 
 # ╔═╡ 3b681ed0-d7d5-4aab-a5fe-986f4b395825
-orbits_dyn_fric = [LilGuys.leapfrog(f_tot, coord, timerange=(0, tmax)) for coord in coords_i]
+orbits_dyn_fric = LilGuys.leapfrog(f_tot, coords_i, timerange=(0, tmax))
 
 # ╔═╡ 2f3b22c5-aff6-4c30-8c23-77554463a6db
 f_tot([100., 5, 0], [0., 0, 0.0000001], 0.0)
@@ -296,140 +261,34 @@ f_tot([100., 5, 0], [0., 0, 0.0000001], 0.0)
 f_tot_moving = (pos, vel, t) -> (LilGuys.acceleration(dyn_fric_moving, pos, vel) + Agama.acceleration(pot_ep2020, pos, units, t=t))
 
 # ╔═╡ 45449bd6-140d-4009-82d7-54e387265957
-orbits_dyn_fric_moving = [LilGuys.leapfrog(f_tot_moving, coord, timerange=(0, tmax)) for coord in coords_i]
+orbits_dyn_fric_moving = LilGuys.leapfrog(f_tot_moving, coords_i, timerange=(0, tmax))
 
 # ╔═╡ aaa1976b-2719-4a0d-b119-8f928b5a6003
 orbits_list = [
-	"no dyn fric" => orbits_ep2020[1:100], 
-	"dyn fric" => orbits_dyn_fric[1:100], 
-	"dyn fric moving" => orbits_dyn_fric_moving[1:100],
-	# "galpy" => [orbit_galpy], 
-	# "galpy_dyn_fric" => orbit_galpy_dyn_fric[1:1],
-	# "galpy_dyn_fric_const" => orbit_galpy_dyn_fric_const[1:1],
+	"no dyn fric" => orbits_ep2020, 
+	"dyn fric" => orbits_dyn_fric, 
+	"dyn fric moving" => orbits_dyn_fric_moving,
+
 ]
 
 # ╔═╡ dbcc21e7-1b92-48b9-902e-e05b1436d5d6
-plot_orbits(orbits_list..., alpha=0.1, )
+plot_orbits(orbits_list...,)
 
 # ╔═╡ 0632953f-c513-4e25-a14e-0e016ed180d3
-plot_radii(orbits_list..., alpha=0.1, )
+plot_radii(orbits_list..., )
 
 # ╔═╡ a6d1c4a2-3037-49e9-a209-e82f6eb734c4
 all_orbits_list = [
 	"no dyn fric" => orbits_ep2020, 
 	"dyn fric" => orbits_dyn_fric, 
 	"dyn fric moving" => orbits_dyn_fric_moving,
-	# "galpy" => [orbit_galpy], 
-	# "galpy_dyn_fric" => orbit_galpy_dyn_fric,
-	# "galpy_dyn_fric_const" => orbit_galpy_dyn_fric_const,
 ]
-
-# ╔═╡ 5cb3e798-7d20-4ccc-a863-62d65b799224
-plot_peris(all_orbits_list..., )
-
-# ╔═╡ 86983878-13a7-4c2b-8f86-e767752cfde4
-plot_apos(all_orbits_list..., )
-
-# ╔═╡ 9d7306fb-eecf-4a58-8ab2-0e584eaf43e7
-md"""
-## Galpy
-"""
-
-# ╔═╡ 7d330a1c-b2d7-4167-aa60-a2ac92936fd8
-begin 
-	galpy = pyimport("galpy")
-	gp = pyimport("galpy.potential")
-	go = pyimport("galpy.orbit")
-	u = pyimport("astropy.units")
-	ac = pyimport("astropy.coordinates")
-	np = pyimport("numpy")
-end
-
-# ╔═╡ e024bb62-a11a-4f9f-b6f5-618216f2308d
-pot_galpy = let
-	MN75 = gp.MiyamotoNagaiPotential
-	ExpDisk = gp.DoubleExponentialDiskPotential
-	NFW = gp.NFWPotential
-	#plaw = gp.PowerSphericalPotentialawCutoff
-	Plummer = gp.PlummerPotential
-	
-	
-	EP2020_thin = MN75(amp=5.9, a=3.944, b=0.311)
-	EP2020_thick =  MN75(amp=2, a=4.4, b=0.92)
-	
-	M200 = 126.38
-	c = 11.2849
-	Ms = LilGuys.NFW(M200=M200, c=c).M_s
-	
-	EP2020_halo =  NFW(amp=Ms, a=20.2)
-	EP2020_bulge = gp.HernquistPotential(amp=2.1 * (2), a=1.3) # instead of 1.3
-	
-	EP2020 = EP2020_thin + EP2020_thick + EP2020_halo + EP2020_bulge
-end
-
-# ╔═╡ dd92077b-6629-4e80-a1a5-f762b5821103
-f_dyn_fric_galpy = gp.ChandrasekharDynamicalFrictionForce(GMs=M_tot, rhm=rhalf, dens=pot_galpy, maxr=300)
-
-# ╔═╡ 1b1ef32d-b185-4266-8d26-8a9114cfb3a5
-f_dyn_fric_galpy_const = gp.ChandrasekharDynamicalFrictionForce(GMs=0.1, rhm=rhalf, dens=pot_galpy, maxr=300, const_lnLambda=3)
-
-# ╔═╡ 9489cd6f-e1dc-41c4-a00c-241c284b41f2
-function galpy_orbit(potential, obs_gc)
-	kms = u.km/u.s
-	# dwarf_galaxy = ac.SkyCoord(ra=obs.ra*u.degree, dec=obs.dec*u.degree, 
-	#                          distance=obs.distance*u.kpc, radial_velocity=obs.radial_velocity*kms,
-	#                          pm_ra_cosdec=obs.pmra*u.mas/u.year, pm_dec=obs.pmdec*u.mas/u.year)  
-	
-	
-	# ac.galactocentric_frame_defaults.set("v4.0")
-	
-	# gc_frame = ac.Galactocentric()
-	# dwarf_galaxy_gc = dwarf_galaxy.transform_to(gc_frame)
-	
-	# print(dwarf_galaxy_gc.cartesian.xyz)
-	# print(dwarf_galaxy_gc.velocity.d_xyz)
-
-	R = sqrt(obs_gc.x^2 + obs_gc.y^2)
-	
-	vR = (obs_gc.v_x * obs_gc.x + obs_gc.v_y * obs_gc.y) / R / V2KMS
-	vT = (-obs_gc.v_x * obs_gc.y + obs_gc.v_y * obs_gc.x) / R / V2KMS
-	z = obs_gc.z
-	vz = obs_gc.v_z / V2KMS
-	phi = atan(obs_gc.y, obs_gc.x)
-	
-	vxvv = [R, vR, vT, z, vz, phi + 2π]
-
-	o = go.Orbit(np.array(vxvv) )
-
-	ts = np.linspace(0, tmax, 100)
-	
-	o.integrate(ts, potential,)
-
-	pos = [Agama.py2vec(o.x(ts)) Agama.py2vec(o.y(ts)) Agama.py2vec(o.z(ts))]'
-
-	vels = [Agama.py2vec(o.vx(ts)) Agama.py2vec(o.vy(ts))* V2KMS Agama.py2vec(o.vz(ts))* V2KMS]'
-
-	LilGuys.Orbit(
-	    times = Agama.py2vec(ts),
-	    positions = pos,
-		velocities = vels,	    
-	    )
-
-end
-
-# ╔═╡ 07329841-56ec-45c7-bc48-32484d95198b
-orbit_galpy = galpy_orbit(pot_galpy, coords_i[1])
-
-# ╔═╡ 99d1a441-8b14-40b1-b9cc-cd720ca0348f
-orbit_galpy_dyn_fric = [galpy_orbit(pot_galpy + f_dyn_fric_galpy, coord) for coord in coords_i]
-
-# ╔═╡ f7e26d15-960b-4512-98ba-86340dff6faf
-orbit_galpy_dyn_fric_const = [galpy_orbit(pot_galpy + f_dyn_fric_galpy_const, coord) for coord in coords_i]
 
 # ╔═╡ Cell order:
 # ╟─50edc139-077a-4e23-9c67-067fc133f16d
 # ╟─337d4229-53ff-4619-8a20-7f81cbd5fa4a
 # ╠═058c1b2a-e461-4961-91fa-4ec0bfeb1b21
+# ╠═c23b938b-77d2-4267-9598-edb82e54f7bb
 # ╠═64695fe6-14b2-47f7-8c6f-1565f45ee34a
 # ╠═35cc230d-0f7b-4e10-9270-4244f29945dc
 # ╠═88310aa2-a470-4a58-abb9-6d4b9530a15b
@@ -441,13 +300,10 @@ orbit_galpy_dyn_fric_const = [galpy_orbit(pot_galpy + f_dyn_fric_galpy_const, co
 # ╠═71002bea-e657-4d14-9d17-2564bbaff92e
 # ╠═dbe50390-6cd4-4287-8cea-9c050f8c19e1
 # ╠═927389fb-ce7c-4f0b-ad17-884ee067ab34
-# ╠═c23b938b-77d2-4267-9598-edb82e54f7bb
 # ╠═725770d5-03b4-40eb-a747-e7e9622ff308
 # ╠═ae7f9bca-fa3d-463c-ab13-49f0cb00e565
 # ╠═0345c9a9-20ad-499f-9715-158ba7817415
 # ╠═04152ab7-a6e3-4763-a464-533d68f7d8ac
-# ╠═9a768080-29cf-4bd4-b040-7e58d448a041
-# ╠═545976f9-c846-46f4-b762-ea54af1985f6
 # ╠═e42de723-34c2-4a50-8e8c-6b0ee3d198a9
 # ╠═fb7a5392-21cb-41f0-b32f-c61b00b72b82
 # ╠═f5455167-36d9-4560-a11a-cd957cb6e2be
@@ -461,9 +317,6 @@ orbit_galpy_dyn_fric_const = [galpy_orbit(pot_galpy + f_dyn_fric_galpy_const, co
 # ╠═a6d1c4a2-3037-49e9-a209-e82f6eb734c4
 # ╠═dbcc21e7-1b92-48b9-902e-e05b1436d5d6
 # ╠═0632953f-c513-4e25-a14e-0e016ed180d3
-# ╠═5cb3e798-7d20-4ccc-a863-62d65b799224
-# ╠═86983878-13a7-4c2b-8f86-e767752cfde4
-# ╠═b654cddc-147c-4e21-8f94-af2c54c773e1
 # ╟─c6ed2e5b-da5e-4206-9ad6-aeef24f5d64e
 # ╠═5c612348-aef7-4a47-bf41-e33d21820150
 # ╠═c54baa68-26d8-4890-a5eb-0bde94a26133
@@ -482,13 +335,3 @@ orbit_galpy_dyn_fric_const = [galpy_orbit(pot_galpy + f_dyn_fric_galpy_const, co
 # ╠═2f3b22c5-aff6-4c30-8c23-77554463a6db
 # ╠═4b80bed0-65ef-46ff-b44b-086b0d563a81
 # ╠═50f3c97d-4385-4cff-930c-a9d0c6cbe0c4
-# ╟─9d7306fb-eecf-4a58-8ab2-0e584eaf43e7
-# ╠═7ae682ad-bc41-4584-a562-08c1c5095fe7
-# ╠═7d330a1c-b2d7-4167-aa60-a2ac92936fd8
-# ╠═e024bb62-a11a-4f9f-b6f5-618216f2308d
-# ╠═dd92077b-6629-4e80-a1a5-f762b5821103
-# ╠═1b1ef32d-b185-4266-8d26-8a9114cfb3a5
-# ╠═9489cd6f-e1dc-41c4-a00c-241c284b41f2
-# ╠═07329841-56ec-45c7-bc48-32484d95198b
-# ╠═99d1a441-8b14-40b1-b9cc-cd720ca0348f
-# ╠═f7e26d15-960b-4512-98ba-86340dff6faf
