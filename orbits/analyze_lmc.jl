@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -55,9 +55,6 @@ Additionally, see analyze_lmc.jl in this directory for a version which also plot
 md"""
 The most important variable is to set the modelname to the appropriate directory.
 """
-
-# ╔═╡ 1c211fe0-c3cc-47a3-9255-814404257e3d
-
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -171,6 +168,9 @@ err = lguys.ICRS(;(prop => LilGuys.get_uncertainty(obs_props, string(prop)) for 
 # ╔═╡ da6e5566-f2df-4feb-9188-53eca9a1a0d5
 df_props = read_fits(joinpath(galaxyname, modelname, "orbital_properties.fits"))
 
+# ╔═╡ 74469ce6-ae1f-4eea-bc02-f1d5b73648fd
+df_props_special2 = read_fits(joinpath(galaxyname, modelname * "_special_cases", "orbital_properties.fits"))
+
 # ╔═╡ 384be6a6-f9d9-47e0-9792-aef6689dcbdb
 apos = df_props.apocentre
 
@@ -201,7 +201,9 @@ peri_qs = lguys.quantile(peris, quantiles)
 peri_lmc_qs = lguys.quantile(df_props.pericentre_lmc, quantiles)
 
 # ╔═╡ 17a63cc8-84f4-4248-a7b0-c8378454b1f7
-#idx = [argmin(abs.(p .- peris)) for p in peri_qs]
+if random_examples
+	idx = [argmin(abs.(p .- peris)) for p in peri_qs]
+end
 
 # ╔═╡ 61c5e886-4c54-4080-8111-122765405ffe
 pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"))
@@ -221,6 +223,7 @@ else
 	orbits = [Orbit(joinpath(galaxyname, modelname * "_special_cases", "orbit_" * name * ".csv")) for name in orbit_labels]
 
 	icrs0 = [LilGuys.ICRS(o) for o in orbit_ics["orbits"]]
+	#orbits = LilGuys.agama_orbit(pot, icrs0, agama_units=agama_units, timerange=(0, -10/T2GYR))
 end
 
 # ╔═╡ 2d7b23d0-600e-439f-b547-91df46802252
@@ -243,8 +246,8 @@ end
 # ╔═╡ e4dac06c-aadc-475d-8066-31ced204b6d0
 df_special_lmc.pericentre
 
-# ╔═╡ 1c987b44-b43b-4ad3-8045-2bf159314216
-
+# ╔═╡ 2b344d65-a142-4b83-9f46-0203367935ee
+df_props.x
 
 # ╔═╡ 1acef60e-60d6-47ba-85fd-f9780934788b
 md"""
@@ -339,7 +342,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
-		ylabel="Scl–MW distance / kpc"
+		ylabel="galaxy–MW distance / kpc"
 	)
 
 	for i in eachindex(orbits)
@@ -351,7 +354,7 @@ let
 	end
 
 	scatter!([NaN], [NaN], color=:black, label="pericentre")
-	
+	ylims!(0, nothing)
 	Legend(fig[1, 2], ax)
 	fig
 end
@@ -361,7 +364,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
-		ylabel="Scl–LMC distance / kpc"
+		ylabel="galaxy–LMC distance / kpc"
 	)
 
 	for i in eachindex(orbits)
@@ -372,13 +375,17 @@ let
 	end
 
 	scatter!([NaN], [NaN], color=:black, label="pericentre")
-	
+		ylims!(0, nothing)
+
 	Legend(fig[1, 2], ax)
 	fig
 end
 
 # ╔═╡ ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
 positions
+
+# ╔═╡ 02d66dc9-ac91-4512-afd4-b665abed7714
+
 
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
 lguys.plot_xyz(positions..., labels=orbit_labels)
@@ -409,6 +416,9 @@ end
 # ╔═╡ 34efe422-e672-4d17-a558-ce32fb704a8e
 lguys.plot_xyz(velocities..., units=" / km / s", labels=orbit_labels)
 
+# ╔═╡ 17522ba0-7e24-4dbe-9659-8f694defaaf9
+orbits[3].times
+
 # ╔═╡ c4a1a691-51bb-4c3e-89ab-398841b1d155
 md"""
 # Orbit Info
@@ -431,6 +441,9 @@ function get_initial_t(j)
 	return t_ini
 end
 	
+
+# ╔═╡ 025fb533-a0d6-4697-bdc7-821bfcf92153
+orbits
 
 # ╔═╡ de1e5245-0946-47cd-8e2c-ba1914cfeb74
 begin 
@@ -461,10 +474,59 @@ begin
 	end
 end
 
+# ╔═╡ 1c5d6ba8-fec2-4629-bcc3-e9b1501b04c0
+md"""
+# LMC Bound?
+"""
+
+# ╔═╡ 44719d22-2e49-4edc-b460-8f0529b74b0b
+function is_bound_to_lmc(df_props, lmc_pot, lmc_orbit)
+    units = agama_units
+
+	time_0 = orbits[1].times[1]
+	lmc_centre = LilGuys.resample(lmc_orbit, [time_0])
+
+    is_bound = fill(false, size(df_props, 1))
+
+    for i in eachindex(is_bound)
+        pos = [df_props.x_i[i], df_props.y_i[i], df_props.z_i[i]]
+        vel = [df_props.v_x_i[i], df_props.v_y_i[i], df_props.v_z_i[i]] / V2KMS
+        phi = Agama.potential(lmc_pot, pos, units, t=time_0)
+
+        ke = radii(vel, lmc_centre.velocities[:, 1]) ^ 2 / 2
+        is_bound[i] = ke + phi < 0
+    end
+
+    return is_bound
+end
+
+# ╔═╡ 6bef3bf2-231d-4b07-9729-75a28fe03c1a
+orbits[1].times[end]
+
+# ╔═╡ 9a43f9b6-79cc-455f-b1a5-7403fa407eb6
+lmc_pot = Agama.Potential(file=joinpath(galaxyname, modelname, "potential_lmc.ini"))
+
+# ╔═╡ 07f31190-63ce-45a6-b77a-7a6141c22d59
+lmc_bound = is_bound_to_lmc(df_props, lmc_pot, lmc_orbit)
+
+# ╔═╡ 7b771b69-9472-4f31-acf7-212a768528d9
+is_bound_to_lmc(df_props_special2, lmc_pot, lmc_orbit)
+
+# ╔═╡ 6ebb0cde-357a-48e0-8723-72fabdbf8b3a
+
+
+# ╔═╡ ded55ff2-5b96-484b-86df-1874ee2b4314
+mean(lmc_bound)
+
+# ╔═╡ 1dd8afb2-90f9-4cd6-b16a-22c3835e7037
+is_bound_to_lmc(df_special_lmc, lmc_pot, lmc_orbit)
+
+# ╔═╡ 696599b3-2fc7-4acf-8fd0-adceca5e9e01
+PlotUtils.plot_correlations(df_props[lmc_bound, :], props_special, :pericentre_lmc)
+
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
-# ╠═1c211fe0-c3cc-47a3-9255-814404257e3d
 # ╠═425ca5e9-364f-437c-9986-3a09eb60affc
 # ╠═c9eae5d6-ea64-4a81-80fb-950a33913824
 # ╠═94f73107-6934-4e13-828e-b289bb0190ba
@@ -494,6 +556,7 @@ end
 # ╠═fa790a4d-e74f-479b-8ff6-aa2f23cb573d
 # ╠═eff58c52-a32b-4faa-9b98-c8234d9b21fc
 # ╠═da6e5566-f2df-4feb-9188-53eca9a1a0d5
+# ╠═74469ce6-ae1f-4eea-bc02-f1d5b73648fd
 # ╠═384be6a6-f9d9-47e0-9792-aef6689dcbdb
 # ╠═4481a5e1-d635-4fea-a5c5-c85f0d6df62f
 # ╟─392315ee-72d2-4a14-9afc-5fd6424b3e83
@@ -507,7 +570,7 @@ end
 # ╠═61c5e886-4c54-4080-8111-122765405ffe
 # ╠═2d7b23d0-600e-439f-b547-91df46802252
 # ╠═4132f73b-e037-45f9-b94e-0e0dfe0be3c6
-# ╠═1c987b44-b43b-4ad3-8045-2bf159314216
+# ╠═2b344d65-a142-4b83-9f46-0203367935ee
 # ╟─1acef60e-60d6-47ba-85fd-f9780934788b
 # ╟─50baf5a6-fb5b-494e-95f3-53414a9f1cc0
 # ╠═049ef8a5-fe4d-4c18-95d0-a361e1abdf30
@@ -534,9 +597,22 @@ end
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═3def754c-46a3-43da-9b75-9ef5540a6022
 # ╠═ee01b25e-c32e-4f6e-96d6-cb9c6f3ea95c
+# ╠═02d66dc9-ac91-4512-afd4-b665abed7714
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
 # ╟─57a8d1c8-3940-4430-8b46-375fb2bf1695
 # ╠═34efe422-e672-4d17-a558-ce32fb704a8e
+# ╠═17522ba0-7e24-4dbe-9659-8f694defaaf9
 # ╟─c4a1a691-51bb-4c3e-89ab-398841b1d155
 # ╠═519a88f0-8e2d-4c09-83e0-3cc2ee147e35
+# ╠═025fb533-a0d6-4697-bdc7-821bfcf92153
 # ╠═de1e5245-0946-47cd-8e2c-ba1914cfeb74
+# ╠═1c5d6ba8-fec2-4629-bcc3-e9b1501b04c0
+# ╠═44719d22-2e49-4edc-b460-8f0529b74b0b
+# ╠═6bef3bf2-231d-4b07-9729-75a28fe03c1a
+# ╠═9a43f9b6-79cc-455f-b1a5-7403fa407eb6
+# ╠═07f31190-63ce-45a6-b77a-7a6141c22d59
+# ╠═7b771b69-9472-4f31-acf7-212a768528d9
+# ╠═6ebb0cde-357a-48e0-8723-72fabdbf8b3a
+# ╠═ded55ff2-5b96-484b-86df-1874ee2b4314
+# ╠═1dd8afb2-90f9-4cd6-b16a-22c3835e7037
+# ╠═696599b3-2fc7-4acf-8fd0-adceca5e9e01

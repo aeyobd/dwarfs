@@ -179,6 +179,11 @@ md"""
 time range: $(@bind time_range confirm(NumberField(0:10:1000, default=100)))
 """
 
+# ╔═╡ 6a22bbb7-f070-4cc5-9328-9e21cac65487
+md"""
+time smoothing: $(@bind window confirm(NumberField(0:1:100, default=0)))
+"""
+
 # ╔═╡ d7ca78c0-3898-4bd8-b28f-115644bcf314
 md"""
 # Action differences
@@ -277,20 +282,14 @@ let
 end
 
 
-# ╔═╡ d8e81768-ed46-4012-be13-194dde6ccdaa
-ic_future = Galactocentric(orbit_nbody.positions[:, idx_after], orbit_nbody.velocities[:, idx_after] .* V2KMS)
-
-# ╔═╡ 6238247a-e9ff-44d5-9e83-7f57d056a2e1
-orbit_future = LilGuys.agama_orbit(pot,  ic_future, agama_units=units, timerange=(orbit_nbody.times[idx_after], orbit_nbody.times[end]))
-
-# ╔═╡ ed6a519b-f7d4-4ff1-859b-d704667287e8
-orbit_future_resampled = LilGuys.resample(orbit_future, orbit_nbody.times)
-
-# ╔═╡ 35b06869-b449-4193-b3b2-cff7bfc06083
-J_future, Theta_future = get_actions(pot_static, orbit_future_resampled)
+# ╔═╡ 4dff152a-4426-4e47-addc-4ea3bf9157f0
+LilGuys.mean(J_old[:, idx_after:idx_after+window] - J_nbody[:, idx_after:idx_after+window], dims=2)
 
 # ╔═╡ e57d04f4-3908-4316-ad61-407bd1909b9b
 dJ_suggested =  J_old[:, idx_after] - J_nbody[:, idx_after]
+
+# ╔═╡ 77b485d5-da49-437f-8117-52a57f276090
+LilGuys.mean(Theta_old[:, idx_after:idx_after+window] - Theta_nbody[:, idx_after:idx_after+window], dims=2)
 
 # ╔═╡ 71c78bfc-5ba6-437f-b6dc-462db6840b08
 dθ_suggested = Theta_old[:, idx_after] - Theta_nbody[:, idx_after] 
@@ -368,7 +367,7 @@ let
 
 	end
 
-	ylims!(-0.1, 0.1)
+	ylims!(-0.3, 0.3)
 	linkyaxes!(fig.content...)
 
 	Legend(fig[2, 2], ax)
@@ -579,6 +578,58 @@ md"""
 # Additional points
 """
 
+# ╔═╡ 706a0753-018a-48f7-8c77-23af747141fd
+@savefig "delta_xyz_time" let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"\Delta %$coord"
+		)
+
+		lines!(times, 0*orbit_nbody.positions[i, :], label="nbody")
+
+		lines!(orbit_old_resampled.times, orbit_old_resampled.positions[i, :] .- orbit_nbody.positions[i, :], label="point orbit old")
+		
+	
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+		vlines!(orbit_nbody.times[[idx_before, idx_after]])
+
+	end
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
+# ╔═╡ d69c4ec1-c596-4f9e-97a6-1b9fbb0e6feb
+idx_future = idx_after #+ 20
+
+# ╔═╡ d8e81768-ed46-4012-be13-194dde6ccdaa
+ic_future = Galactocentric(orbit_nbody.positions[:, idx_future], orbit_nbody.velocities[:, idx_future] .* V2KMS)
+
+# ╔═╡ 4ed2282e-a16f-4c3a-83b1-61898045fac9
+orbit_nbody.times
+
+# ╔═╡ 6238247a-e9ff-44d5-9e83-7f57d056a2e1
+orbit_future = LilGuys.agama_orbit(pot,  ic_future, agama_units=units, timerange=(orbit_nbody.times[idx_future]+0, orbit_nbody.times[end]))
+
+# ╔═╡ fd9769e7-9a3e-411a-b9af-fafaf8bf04b9
+LilGuys.plot_xyz(LilGuys.positions.((orbit_nbody, orbit_future, orbit_old))..., labels=["nbody", "future", "point"])
+
+# ╔═╡ ed6a519b-f7d4-4ff1-859b-d704667287e8
+orbit_future_resampled = LilGuys.resample(orbit_future, orbit_nbody.times)
+
+# ╔═╡ 35b06869-b449-4193-b3b2-cff7bfc06083
+J_future, Theta_future = get_actions(pot_static, orbit_future_resampled)
+
 # ╔═╡ b1439b38-6dad-487c-b78b-32736c8aa560
 @savefig "xyz_time" let
 	fig = Figure(size=(6*72, 5*72))
@@ -610,7 +661,7 @@ md"""
 end
 
 
-# ╔═╡ 706a0753-018a-48f7-8c77-23af747141fd
+# ╔═╡ d3b3f0ec-bf69-47c5-ba45-8291acad8c5b
 @savefig "delta_xyz_time" let
 	fig = Figure(size=(6*72, 5*72))
 
@@ -624,20 +675,18 @@ end
 		)
 
 		lines!(times, 0*orbit_nbody.positions[i, :], label="nbody")
-
-		lines!(orbit_old_resampled.times, orbit_old_resampled.positions[i, :] .- orbit_nbody.positions[i, :], label="point orbit old")
 		
-		if @isdefined orbit_future
-			lines!(orbit_future_resampled.times, orbit_future_resampled.positions[i, :] .- orbit_nbody.positions[i, :], label="point orbit future")
-		end
+		lines!(orbit_future.times, orbit_future.positions[i, :] .- LilGuys.resample(orbit_nbody, orbit_future.times).positions[i, :], label="point orbit future")
 
 		if i < 3
 			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
 		end
 
-		vlines!(orbit_nbody.times[[idx_before, idx_after]])
+		vlines!(orbit_nbody.times[[idx_before, idx_after, idx_future]])
 
 	end
+
+	linkaxes!(fig.content...)
 
 	Legend(fig[2, 2], ax)
 	fig
@@ -649,9 +698,6 @@ md"""
 # Energy and Angular Momentum
 This is a nice double check on the method
 """
-
-# ╔═╡ d7ffaf38-8e64-4cd0-aedd-6e1e631d91cc
-window = 10
 
 # ╔═╡ d64c3ce0-7a58-4bea-9159-f63be1141954
 E_old = Φ_in(orbit_old.positions, orbit_old.times) .+ 1/2 * speeds(orbit_old) .^2
@@ -686,7 +732,7 @@ let
 	
 	lines!(times, E_nbody)
 	lines!(orbit_old.times, E_old)
-	lines!(orbit_point.times, E_old)
+	lines!(orbit_point.times, E_point)
 	if @isdefined orbit_new
 		lines!(orbit_new.times, E_new )
 	end
@@ -855,10 +901,12 @@ end
 # ╠═0706ee1c-74a6-4a5d-907f-8884895b0361
 # ╟─7131d149-c2b6-4ea4-a022-954102bf0870
 # ╠═3e8e7fcf-0c42-4ac3-a76e-dfab44d101db
+# ╠═fd9769e7-9a3e-411a-b9af-fafaf8bf04b9
 # ╠═9ea9076a-2d51-41ca-ac10-c71a7e379c79
 # ╠═32e71749-6fd2-4640-838f-ece1ee354c6b
 # ╟─5cd10512-5472-4cd5-b9ef-2b5eb0f4bb0c
 # ╠═c7aa2829-9048-42b0-9348-3e36714e8e37
+# ╠═6a22bbb7-f070-4cc5-9328-9e21cac65487
 # ╠═94323325-0d5c-43b8-8793-e28ebad685d9
 # ╠═14a9600c-2495-4dea-b475-7d7f2ec032c1
 # ╟─d7ca78c0-3898-4bd8-b28f-115644bcf314
@@ -881,8 +929,6 @@ end
 # ╠═5c4c0767-6c17-43e4-a9cf-823fde8a4228
 # ╠═04de7674-3013-446d-9889-c0749c007f64
 # ╠═01060309-2889-4055-8d53-b127cb88d3ea
-# ╠═d8e81768-ed46-4012-be13-194dde6ccdaa
-# ╠═6238247a-e9ff-44d5-9e83-7f57d056a2e1
 # ╟─fa257945-41dd-481b-b719-ffffe7b87d67
 # ╠═108911f0-ca4e-42e4-bf44-c350bebec552
 # ╠═cc8d1ced-99a0-41af-8fe8-f4c5bd8eef91
@@ -890,7 +936,9 @@ end
 # ╠═876ca278-e9e7-44ad-bbdf-b3f93b300959
 # ╠═81ff5445-40fb-41e2-b4f8-d0bba8e702a4
 # ╠═1e4c0c1e-6809-4083-aec1-d3d3a2374068
+# ╠═4dff152a-4426-4e47-addc-4ea3bf9157f0
 # ╠═e57d04f4-3908-4316-ad61-407bd1909b9b
+# ╠═77b485d5-da49-437f-8117-52a57f276090
 # ╠═71c78bfc-5ba6-437f-b6dc-462db6840b08
 # ╠═a4ead8dc-c983-4a1e-a6fc-c5dc6d77adbf
 # ╠═e5fef40f-fa04-4156-9e4b-56fcf935ebba
@@ -920,8 +968,12 @@ end
 # ╠═72970a0d-1347-42ea-907e-cc17692f2b7c
 # ╠═b1439b38-6dad-487c-b78b-32736c8aa560
 # ╠═706a0753-018a-48f7-8c77-23af747141fd
+# ╠═d69c4ec1-c596-4f9e-97a6-1b9fbb0e6feb
+# ╠═d8e81768-ed46-4012-be13-194dde6ccdaa
+# ╠═4ed2282e-a16f-4c3a-83b1-61898045fac9
+# ╠═6238247a-e9ff-44d5-9e83-7f57d056a2e1
+# ╠═d3b3f0ec-bf69-47c5-ba45-8291acad8c5b
 # ╠═fcac8470-c0a7-477e-84f8-3a294dbacd6d
-# ╠═d7ffaf38-8e64-4cd0-aedd-6e1e631d91cc
 # ╠═d64c3ce0-7a58-4bea-9159-f63be1141954
 # ╠═071df488-b34a-4636-9677-930c8a0f9a56
 # ╠═8f7b9a24-d612-4680-9d85-336d93e2662d

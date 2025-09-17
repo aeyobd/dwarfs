@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -15,8 +15,23 @@ begin
 	using Arya
 end
 
+# ╔═╡ 784169c7-0ef2-423a-be8a-5ab62fc5cbb6
+using PyFITS
+
 # ╔═╡ b918a965-9e54-42a4-9126-4dd614024ff5
-using StatsBase: median, weights, mad, std
+using StatsBase: median, weights, mad, std, sample
+
+# ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
+models_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/ursa_minor")
+
+# ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
+model_dir = "$models_dir/1e7_new_v38_r4.0/orbit_smallperi.5/"
+
+# ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
+starsfile = "$model_dir/stars/plummer_rs0.20/final.fits"
+
+# ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
+obs_today_filename = joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/observed_properties.toml")
 
 # ╔═╡ 9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 md"""
@@ -24,20 +39,14 @@ md"""
 A detailed analysis of the stars in sculptor
 """
 
+# ╔═╡ c4008b83-b61b-4baa-9fd5-9cced2dc6be8
+import TOML
+
 # ╔═╡ 0e9e2085-bf96-4f9d-a758-8af36edf02da
 import DensityEstimators as DE
 
-# ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = "/arc7/home/dboyea/dwarfs/analysis/ursa_minor"
-
-# ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_v38_r4.0/orbit_smallperi.4/"
-
-# ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/exp2d_rs0.09/final.fits"
-
-# ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = "/astro/dboyea/dwarfs/observations/ursa_minor/observed_properties.toml"
+# ╔═╡ e539cb98-fcf2-456c-8ef9-a7061fce46ae
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ 217527cb-7f25-4fd9-a4a8-78cb2c744c2b
 FIGDIR = joinpath(dirname(starsfile), "figures")
@@ -45,57 +54,10 @@ FIGDIR = joinpath(dirname(starsfile), "figures")
 # ╔═╡ 3a913d3f-db30-4ace-b9d0-b16889f7aa2c
 using LilGuys; FIGDIR
 
-# ╔═╡ d1e9ed33-d600-441a-876d-0c0fcd5cca72
-mkdir(FIGDIR)
-
-# ╔═╡ 89ec03a2-2ec9-4b77-aba0-28af551a1366
-out = lguys.Output(model_dir)
-
-# ╔═╡ 24c24fd2-e615-4ad4-a19d-7b7a49ede6f5
-
-
-# ╔═╡ c4008b83-b61b-4baa-9fd5-9cced2dc6be8
-import TOML
-
-# ╔═╡ e37559b2-229c-4a37-b516-c6cb7c022b71
-orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
-
-# ╔═╡ 0963fc32-2e60-4229-96dd-9858348ec646
-orbit_props["dec0"]
-
-# ╔═╡ 89a34cdf-c724-4c7e-ae42-11da6077feb2
-function add_xi_eta_p!(df)
-	xi_p, eta_p = lguys.to_orbit_coords(df.ra, df.dec, orbit_props["ra0"], orbit_props["dec0"], orbit_props["theta0"])
-
-	df[!, :xi_p] = xi_p
-	df[!, :eta_p] = eta_p
-
-	return df
-end
-
-# ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
-stars = lguys.read_fits(starsfile) |> add_xi_eta_p!
-
-# ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
-obs_cen = stars[1, :]
-
-# ╔═╡ f461f362-7aa6-4b23-a522-bd98cea8473f
-lguys.mean(stars.dec, stars.weights)
-
-# ╔═╡ adca7da4-c7e5-4f24-9f50-0413c91fad1d
-σ_v = std(stars.radial_velocity, weights(stars.weights))
-
-# ╔═╡ 14348e2e-053a-48ac-8e10-7c66ea13906e
-stars
-
-# ╔═╡ 075ae901-bbbd-4d10-9d91-c393fc86a8e7
-sky_orbit = lguys.read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_p!
-
-# ╔═╡ ccc714c4-b2dd-4c83-939b-f0ca3d04c255
-r_b_kpc = lguys.calc_break_radius(orbit_props["t_last_peri"]/lguys.T2GYR, σ_v/lguys.V2KMS)
-
-# ╔═╡ c351926c-1e3d-44d7-8f39-6fb5893b9b0d
-r_b_arcmin = lguys.kpc_to_arcmin(r_b_kpc, orbit_props["distance_f"])
+# ╔═╡ 3ac6fd20-be9b-4d39-a055-5a51e9d4c876
+md"""
+## Data Loading
+"""
 
 # ╔═╡ 0ba05fdb-f859-4381-b2d0-145aa04f7bbf
 obs_today_file = TOML.parsefile(obs_today_filename)
@@ -126,6 +88,48 @@ obs_today_df = Dict(
 
 )
 
+# ╔═╡ e37559b2-229c-4a37-b516-c6cb7c022b71
+orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
+
+# ╔═╡ 6d0cff99-3efb-4405-a11d-f13200fa5334
+idx_f = orbit_props["idx_f"]
+
+# ╔═╡ 69f4a705-b298-4a15-9a07-0fea39473841
+orbit = Orbit(joinpath(model_dir, "centres.hdf5"))
+
+# ╔═╡ 89a34cdf-c724-4c7e-ae42-11da6077feb2
+function add_xi_eta_p!(df)
+	xi_p, eta_p = lguys.to_orbit_coords(df.ra, df.dec, orbit_props["ra_f"], orbit_props["dec_f"], orbit_props["theta0"])
+
+	df[!, :xi_p] = xi_p
+	df[!, :eta_p] = eta_p
+
+	return df
+end
+
+# ╔═╡ 7a92c896-7552-4f35-9761-5709d23e9adf
+stars = read_fits(starsfile) |> add_xi_eta_p!
+
+# ╔═╡ 6c76cfae-928b-47b3-babe-b0b9a5d68e65
+obs_cen = stars[1, :]
+
+# ╔═╡ 075ae901-bbbd-4d10-9d91-c393fc86a8e7
+sky_orbit = read_fits(joinpath(model_dir, "skyorbit.fits")) |> add_xi_eta_p!
+
+# ╔═╡ adca7da4-c7e5-4f24-9f50-0413c91fad1d
+σ_v = std(stars.radial_velocity, weights(stars.weights))
+
+# ╔═╡ ccc714c4-b2dd-4c83-939b-f0ca3d04c255
+r_b_kpc = lguys.break_radius(orbit_props["t_last_peri"]/lguys.T2GYR, σ_v/lguys.V2KMS)
+
+# ╔═╡ c351926c-1e3d-44d7-8f39-6fb5893b9b0d
+r_b_arcmin = lguys.kpc2arcmin(r_b_kpc, orbit_props["distance_f"])
+
+# ╔═╡ 3884f295-9806-4c03-8d5f-ea9ac680c2b8
+md"""
+# Plots
+"""
+
 # ╔═╡ 4c1d6f6f-e257-4126-9b4a-8e5aa8470295
 function ra_dec_axis(ddeg=5; kwargs...)
 	fig = Figure(;kwargs...)
@@ -147,9 +151,6 @@ function ra_dec_axis(ddeg=5; kwargs...)
 
 	return fig, ax
 end
-
-# ╔═╡ 6d0cff99-3efb-4405-a11d-f13200fa5334
-idx_f = orbit_props["idx_f"]
 
 # ╔═╡ 816b9db9-26c6-4ac8-9a46-82209d2cdc85
 idx_orbit = idx_f - 5: idx_f
@@ -187,10 +188,10 @@ sky_orbit[idx_f, :].pmra, sky_orbit[idx_f, :].pmdec
 diff(sky_orbit.ra)[idx_f-1], diff(sky_orbit.dec)[idx_f-1]
 
 # ╔═╡ 93a266da-bbfa-4c83-9ed0-54a6283383f5
-sky_orbit.ra[idx_f], orbit_props["ra0"]
+sky_orbit.ra[idx_f], orbit_props["ra_f"]
 
 # ╔═╡ 2fefefa3-ae22-4979-9cab-6d121306c739
-sky_orbit.dec[idx_f], orbit_props["dec0"]
+sky_orbit.dec[idx_f], orbit_props["dec_f"]
 
 # ╔═╡ 37ef9662-e253-4d99-b26f-4141a58d738b
 lguys.mean(stars.ra, stars.weights .^ 3), lguys.mean(stars.dec, stars.weights .^ 3)
@@ -202,9 +203,6 @@ sind(orbit_props["theta0"] ), cosd(orbit_props["theta0"])
 md"""
 # Transform to stream coordinates
 """
-
-# ╔═╡ 8dd15727-d9b0-47b2-a031-d7765ebd3fba
-orbit_props
 
 # ╔═╡ 237c25a1-5537-400c-826d-5827c52c38a3
 function xi_eta_p_axis(dx=10, dy=5; kwargs...)
@@ -228,7 +226,7 @@ function xi_eta_p_axis(dx=10, dy=5; kwargs...)
 end
 
 # ╔═╡ 7688c0ac-be70-470c-9db5-f2ed937e2fb5
-function xi_eta_axis(dx=5, dy=dx; kwargs...)
+function xi_eta_axis(dx=10, dy=dx; kwargs...)
 	fig = Figure(;kwargs...)
 	
 
@@ -278,7 +276,7 @@ end
 
 # ╔═╡ d1564bf3-a3c4-410b-b61b-69ac56b618e5
 let 
-	fig, ax = xi_eta_axis()
+	fig, ax = xi_eta_p_axis(20, 10)
 	
 	bins = 100
 	limits = ax.limits.val
@@ -295,7 +293,7 @@ let
 
 	
 	Colorbar(fig[1, 2], h,
-		label="stellar density"
+		label="stellar density", ticks=Makie.automatic
 	)
 	fig
 end
@@ -365,16 +363,16 @@ let
 	y = stars.dec
 
 	filt = filt_cen .& filt_dist
-	scatter!(x[filt], y[filt], label="centre", alpha=0.03, markersize=3)
+	scatter!(x[filt], y[filt], label="centre", alpha=0.03, markersize=1)
 
 	filt = filt_trailing .& filt_dist
-	scatter!(x[filt], y[filt], label="trailing arm", alpha=0.1, markersize=5)
+	scatter!(x[filt], y[filt], label="trailing arm", alpha=0.01, markersize=2)
 
 	filt = filt_leading .& filt_dist
-	scatter!(x[filt], y[filt], label="leading arm", alpha=0.1, markersize=5)
+	scatter!(x[filt], y[filt], label="leading arm", alpha=0.01, markersize=2)
 
 	filt = filt_excl
-	scatter!(x[filt], y[filt], label="excluded", alpha=0.1, markersize=5)
+	scatter!(x[filt], y[filt], label="excluded", alpha=0.01, markersize=1)
 	Legend(fig[1,2], ax)
 
 	fig
@@ -387,7 +385,7 @@ let
 
 	x = stars.ra
 	y = stars.dec
-	scatter!(x[filt_cen], y[filt_cen], label="centre", alpha=1, markersize=3)
+	scatter!(x[filt_cen], y[filt_cen], label="centre", alpha=0.05, markersize=3)
 	fig
 end
 
@@ -495,10 +493,10 @@ let
 	scatter!(x[filt_cen], y[filt_cen], label="centre", alpha=0.03, markersize=3)
 
 	filt = filt_trailing .& filt_dist
-	scatter!(x[filt], y[filt], label="trailing arm", alpha=1, markersize=5)
+	scatter!(x[filt], y[filt], label="trailing arm", alpha=0.01, markersize=5)
 
 	filt = filt_leading .& filt_dist
-	scatter!(x[filt], y[filt], label="leading arm", alpha=1, markersize=5)
+	scatter!(x[filt], y[filt], label="leading arm", alpha=0.01, markersize=5)
 
 	Legend(fig[1,2], ax)
 
@@ -575,7 +573,7 @@ let
 	filt = filt_cen
 	hist2d!(stars.pmra[filt], stars.pmdec[filt], weights=stars.weights[filt], limits=limits, colorscale=log10, colorrange=(1e-15, nothing), bins=100)
 
-	errscatter!(obs_today.pmra, obs_today.pmdec)
+	errorscatter!(obs_today.pmra, obs_today.pmdec)
 	
 
 	fig
@@ -653,9 +651,12 @@ function plot_rb!(ax, r_b; y0=nothing, dy=nothing)
 		dy =  0.07 * (ylim[2] - ylim[1])
 	end
 	
-	arrows!([r_b], [y0], [0], [-dy])
-	text!(r_b, y0, text=L"r_b")
+	annotation!(0, -40, r_b, y0, text="r_b")
+	# text!(r_b, y0, text=L"r_b")
 end
+
+# ╔═╡ 404195ec-1a84-4c64-97ec-fe4a583a11a5
+
 
 # ╔═╡ f1cb5d80-57a8-43e8-8819-4e1bc134edea
 function weighted_mad(samples::Vector{T}, weights::Vector{T}) where T
@@ -795,10 +796,50 @@ function plot_hist2d_coord(sym; xsym = :xi_p)
 		colorrange=(1e-10, nothing), colorscale=log10, normalization=:density
 	)
 
-	Colorbar(fig[1, 2], h, label="stellar mass density")
+	Colorbar(fig[1, 2], h, label="stellar mass density", ticks=Makie.automatic)
 
 	return fig
 end
+
+# ╔═╡ 52d96bbd-6ce5-42eb-8cef-9270666793f2
+import Random
+
+# ╔═╡ 5bb11976-1528-441a-9d10-9468e204dfb2
+
+
+# ╔═╡ 594e0f49-6d4a-467f-a357-b58da4e7d261
+function scatter_coord(sym; xsym = :xi_p)
+	mass = stars.weights
+	x = stars[:, xsym]
+	
+	r_max = 5
+	
+	y0 = obs_today_df[sym]
+	dy0 = obs_dy[sym]
+	y = stars[:, sym]
+
+	limits = (-r_max, r_max,  y0 - dy0, y0 + dy0)
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		#limits=limits,
+		xlabel=obs_labels[xsym],
+		ylabel=obs_labels[sym]
+	)
+
+	idx = sample(eachindex(x), weights(mass), 10_000)
+	scatter!(x[idx], y[idx], )
+
+	return fig
+end
+
+# ╔═╡ d81cf267-4020-4398-9cdd-0da783f122c5
+scatter_coord(:pmra)
+
+# ╔═╡ 88186b14-13ff-48a4-ba6a-9cd988a7e156
+scatter_coord(:pmdec)
+
+# ╔═╡ 445fa03b-c540-44c7-b596-366162523f8c
+scatter_coord(:radial_velocity)
 
 # ╔═╡ cc2be8c5-bdfc-4c55-815c-1ccc1d261678
 for sym in [:pmra, :pmra_gsr, :pmdec, :pmdec_gsr, :radial_velocity, :distance, ]
@@ -921,9 +962,6 @@ let
 	@savefig "velocities_along_orbit"
 	fig
 end
-
-# ╔═╡ 424f7b39-33cf-4158-8f00-781e98438b1e
-figdir
 
 # ╔═╡ c6224653-9dcd-4e17-9999-ccb69da6c222
 let
@@ -1159,37 +1197,36 @@ end
   ╠═╡ =#
 
 # ╔═╡ Cell order:
-# ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
-# ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
-# ╠═3a913d3f-db30-4ace-b9d0-b16889f7aa2c
-# ╠═0e9e2085-bf96-4f9d-a758-8af36edf02da
-# ╠═b918a965-9e54-42a4-9126-4dd614024ff5
 # ╠═a4fa1e76-8c2d-4402-b612-2f454bd06b8b
 # ╠═d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
 # ╠═cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
 # ╠═a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
+# ╟─9c7035e7-c1e7-40d5-8ab6-38f0bb682111
+# ╠═fb8bb8ba-34ad-11ef-23e6-1d890b60e0b9
+# ╠═c4008b83-b61b-4baa-9fd5-9cced2dc6be8
+# ╠═3a913d3f-db30-4ace-b9d0-b16889f7aa2c
+# ╠═784169c7-0ef2-423a-be8a-5ab62fc5cbb6
+# ╠═0e9e2085-bf96-4f9d-a758-8af36edf02da
+# ╠═b918a965-9e54-42a4-9126-4dd614024ff5
+# ╠═e539cb98-fcf2-456c-8ef9-a7061fce46ae
 # ╠═217527cb-7f25-4fd9-a4a8-78cb2c744c2b
-# ╠═d1e9ed33-d600-441a-876d-0c0fcd5cca72
+# ╠═3ac6fd20-be9b-4d39-a055-5a51e9d4c876
+# ╠═0ba05fdb-f859-4381-b2d0-145aa04f7bbf
+# ╠═910267ee-aa39-4f04-961b-70f0862d27e2
+# ╠═0d2dafb6-9b64-42c0-ba71-c662ff699aa2
+# ╠═4ef955fb-a813-46ad-8f71-7c8a3d371eee
+# ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
+# ╠═e37559b2-229c-4a37-b516-c6cb7c022b71
 # ╠═7a92c896-7552-4f35-9761-5709d23e9adf
 # ╠═6c76cfae-928b-47b3-babe-b0b9a5d68e65
-# ╠═0963fc32-2e60-4229-96dd-9858348ec646
-# ╠═f461f362-7aa6-4b23-a522-bd98cea8473f
+# ╠═69f4a705-b298-4a15-9a07-0fea39473841
 # ╠═89a34cdf-c724-4c7e-ae42-11da6077feb2
 # ╠═075ae901-bbbd-4d10-9d91-c393fc86a8e7
 # ╠═adca7da4-c7e5-4f24-9f50-0413c91fad1d
 # ╠═ccc714c4-b2dd-4c83-939b-f0ca3d04c255
 # ╠═c351926c-1e3d-44d7-8f39-6fb5893b9b0d
-# ╠═89ec03a2-2ec9-4b77-aba0-28af551a1366
-# ╠═24c24fd2-e615-4ad4-a19d-7b7a49ede6f5
-# ╠═14348e2e-053a-48ac-8e10-7c66ea13906e
-# ╠═c4008b83-b61b-4baa-9fd5-9cced2dc6be8
-# ╠═e37559b2-229c-4a37-b516-c6cb7c022b71
-# ╠═0ba05fdb-f859-4381-b2d0-145aa04f7bbf
-# ╠═4ef955fb-a813-46ad-8f71-7c8a3d371eee
-# ╠═910267ee-aa39-4f04-961b-70f0862d27e2
-# ╠═0d2dafb6-9b64-42c0-ba71-c662ff699aa2
+# ╠═3884f295-9806-4c03-8d5f-ea9ac680c2b8
 # ╠═4c1d6f6f-e257-4126-9b4a-8e5aa8470295
-# ╠═6d0cff99-3efb-4405-a11d-f13200fa5334
 # ╠═e9e35643-168e-4e87-a880-6831b46145c7
 # ╠═3868afc5-a406-4ced-ada0-96336e5fbe96
 # ╠═816b9db9-26c6-4ac8-9a46-82209d2cdc85
@@ -1200,11 +1237,10 @@ end
 # ╠═37ef9662-e253-4d99-b26f-4141a58d738b
 # ╠═9419722f-9c65-45a7-b9c5-c666b22bf70e
 # ╟─12c8d1f6-30fb-4616-b3dd-eb0aefd7d450
-# ╠═8dd15727-d9b0-47b2-a031-d7765ebd3fba
 # ╠═237c25a1-5537-400c-826d-5827c52c38a3
 # ╠═7688c0ac-be70-470c-9db5-f2ed937e2fb5
 # ╠═d1564bf3-a3c4-410b-b61b-69ac56b618e5
-# ╠═49705acd-d623-4860-a5e7-759f112553ab
+# ╟─49705acd-d623-4860-a5e7-759f112553ab
 # ╠═9241f6a2-d829-4370-a497-35f6fb3358dd
 # ╠═b09e9622-b522-4308-ad95-c939ed0a5315
 # ╠═95b7627e-c17a-4be6-ac66-c3212a8feb23
@@ -1221,13 +1257,13 @@ end
 # ╠═9c1839d6-1076-4598-8da6-49c02ec10580
 # ╠═e58263aa-48d5-4a30-8c2d-f6ed19ada10f
 # ╟─c57edba1-09f9-4fe9-bc73-5746884ee7c2
-# ╟─119040e2-ef45-4fc2-809d-aec333e276d0
+# ╠═119040e2-ef45-4fc2-809d-aec333e276d0
 # ╟─443ac755-70fc-4193-945d-0e98622c5919
 # ╟─1d35a894-1eca-4ee0-9d1a-6ac4704b912c
 # ╟─6b0a0ea3-f6f7-4cee-be11-bce6872ab870
 # ╟─54205139-3c7b-4beb-b9cb-c87b272df58a
 # ╟─91955a7b-009e-4afa-aca1-312f4a779bb9
-# ╟─19bdc540-63a8-46ad-8d6f-a425d64cdd81
+# ╠═19bdc540-63a8-46ad-8d6f-a425d64cdd81
 # ╟─51e4628a-a799-48a3-9ad0-b5c2bd7a8d87
 # ╟─e098260a-718a-4f43-b12c-cab0a1302b90
 # ╟─be0158cf-c322-4147-8f01-8b6a715bc0dc
@@ -1238,6 +1274,7 @@ end
 # ╠═1d4a7103-3d37-4597-a180-88a4c3733497
 # ╠═45b7b28f-9125-48bb-8895-a19d60b825d0
 # ╠═e12ac0ef-7903-4cbc-84f9-6052a701771c
+# ╠═404195ec-1a84-4c64-97ec-fe4a583a11a5
 # ╠═f1cb5d80-57a8-43e8-8819-4e1bc134edea
 # ╠═4b0515a9-e55d-4bed-b6d3-0a2f12d0a238
 # ╠═57528a9e-fbcf-4926-a3a1-574935df69b4
@@ -1247,6 +1284,12 @@ end
 # ╠═2c636a11-0908-4e5e-b31b-af71833eb6f5
 # ╠═f171df4d-2a52-4132-9a80-66eec6663179
 # ╠═499f3cd7-b7fc-4fe2-acc0-5e2d2697c3d6
+# ╠═52d96bbd-6ce5-42eb-8cef-9270666793f2
+# ╠═5bb11976-1528-441a-9d10-9468e204dfb2
+# ╠═594e0f49-6d4a-467f-a357-b58da4e7d261
+# ╠═d81cf267-4020-4398-9cdd-0da783f122c5
+# ╠═88186b14-13ff-48a4-ba6a-9cd988a7e156
+# ╠═445fa03b-c540-44c7-b596-366162523f8c
 # ╠═cc2be8c5-bdfc-4c55-815c-1ccc1d261678
 # ╠═a52f14bf-eb6d-4523-b6ee-38af9b822a49
 # ╠═c86fddf0-d293-4735-8397-5a1889f2d1be
@@ -1255,7 +1298,6 @@ end
 # ╠═5eaaa70a-3210-4ab2-9318-b56ad4962c22
 # ╠═6eb0507a-c7dd-4009-b699-ae6423623f63
 # ╠═041ba6c2-0a5c-4a59-b536-95db6e68716f
-# ╠═424f7b39-33cf-4158-8f00-781e98438b1e
 # ╠═c6224653-9dcd-4e17-9999-ccb69da6c222
 # ╠═13c53be9-4922-4872-8ebf-8ed147a72fff
 # ╠═4be2b3c0-98df-4d25-8200-a051a5dba4e9

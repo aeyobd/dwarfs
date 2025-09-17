@@ -8,7 +8,7 @@ end
 
 
 
-function random_orbit(pot, obs_props; units, timestep=0.1)
+function random_orbit(pot, obs_props; units, timestep=0.05)
     ic = NBody.sample_initial_conditions(obs_props)
 
     traj_evolving = NBody.integrate_particles(

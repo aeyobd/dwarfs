@@ -1,0 +1,39 @@
+[[orbits]]
+name = "mean"
+ra = 227.2420
+dec = 67.2221
+distance = 70.1
+pmra = -0.124
+pmdec = 0.078
+radial_velocity = -245.9
+
+
+[[orbits]]
+name = "smallperi"
+ra = 227.2420
+dec = 67.2221
+distance = 73.8
+pmra = -0.097
+pmdec = 0.087
+radial_velocity = -245.6
+
+
+[[orbits]]
+name = "lmcsat"
+ra = 227.2420
+dec = 67.2221
+distance = 63.7
+pmra = -0.102
+pmdec = 0.060
+radial_velocity = -244.7
+
+
+
+[[orbits]]
+name = "smallperilmc"
+ra = 227.2460
+dec = 67.222376
+distance = 76.8
+pmra = -0.113
+pmdec = 0.100
+radial_velocity = -245.7

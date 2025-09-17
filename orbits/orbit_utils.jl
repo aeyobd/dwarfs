@@ -77,14 +77,21 @@ function orbital_properties(pot, orbits; agama_units, actions=false)
         "pericentre" => peris,
         "apocentre" => apos,
         "time_last_peri" => t_last,
-        "Lx_i" => L[1, :],
-        "Ly_i" => L[2, :],
-        "Lz_i" => L[3, :],
-        "E_i" => E, 
+        "Lx_f" => L[1, :],
+        "Ly_f" => L[2, :],
+        "Lz_f" => L[3, :],
+        "E_f" => E, 
         "period" => periods,
         "dt" => dt,
         "peri_apo_max_err" => errs,
+        "x_i" => [orbit.positions[1, end] for orbit in orbits],
+        "y_i" => [orbit.positions[2, end] for orbit in orbits],
+        "z_i" => [orbit.positions[3, end] for orbit in orbits],
+        "v_x_i" => [orbit.velocities[1, end] * V2KMS for orbit in orbits],
+        "v_y_i" => [orbit.velocities[1, end] * V2KMS for orbit in orbits],
+        "v_z_i" => [orbit.velocities[1, end] * V2KMS for orbit in orbits],
    )
+
 
     if actions
         properties[!, "Jr_i"] = J[1, :]
