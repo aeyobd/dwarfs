@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -209,6 +209,18 @@ md"""
 # New initial conditions
 """
 
+# ╔═╡ 6b2fa1a5-6031-4c37-92ac-6a6088570dba
+"""
+	shift_actions(Potential, pos_i, vel_i; dJ, dθ)
+
+Shifts the actions and angles of the initial conditions by the specified delta vectors
+"""
+function shift_actions(Φ, pos_i, vel_i; dJ, dθ)
+	act, ang = get_actions(Φ, pos_i, vel_i)
+
+	return Agama.from_actions(am, act .+ dJ, ang .+ dθ, units)
+end
+
 # ╔═╡ ec74d9e2-b2ae-447d-b9c6-5d55dd464d28
 pos_i_old = LilGuys.positions(orbit_old)[:, 1]
 
@@ -244,6 +256,9 @@ x_cen[:, 1], v_cen[:, 1]
 
 # ╔═╡ d84f975b-dcb6-4d6f-aaa9-497036cf7edf
 pos_i_old, vel_i_old
+
+# ╔═╡ b3fd0308-2056-4d16-8ff2-bb4d17aaa131
+vec.(shift_actions(pot, pos_i_old, vel_i_old, dJ=zeros(3), dθ=zeros(3)))
 
 # ╔═╡ 5bfc3f07-853e-45ea-984a-07a76c372a18
 md"""
@@ -294,21 +309,6 @@ get_actions(pot, pos_i_old, vel_i_old)
 
 # ╔═╡ 3ab820ad-1e95-4533-aa70-ad56b11b549a
 am = Agama.ActionMapper(pot)
-
-# ╔═╡ 6b2fa1a5-6031-4c37-92ac-6a6088570dba
-"""
-	shift_actions(Potential, pos_i, vel_i; dJ, dθ)
-
-Shifts the actions and angles of the initial conditions by the specified delta vectors
-"""
-function shift_actions(Φ, pos_i, vel_i; dJ, dθ)
-	act, ang = get_actions(Φ, pos_i, vel_i)
-
-	return Agama.from_actions(am, act .+ dJ, ang .+ dθ, units)
-end
-
-# ╔═╡ b3fd0308-2056-4d16-8ff2-bb4d17aaa131
-vec.(shift_actions(pot, pos_i_old, vel_i_old, dJ=zeros(3), dθ=zeros(3)))
 
 # ╔═╡ 68669a9d-625a-4b23-99ef-0f235f64454e
 Agama.from_actions(am, get_actions(pot, pos_i_old, vel_i_old)...)
@@ -395,6 +395,77 @@ Note: actions are more important to adjust on initial iterations. Angle evolutio
 # ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
 dθ_suggested = [Theta_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
 
+# ╔═╡ b8f2475a-3588-4611-99ac-de156f25b853
+@savefig "actions_adjustment" let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["r", "z", "ϕ"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"J_%$coord"
+		)
+
+		lines!(out.times .- out.times[idx_f], act_nbody[i, :], label="nbody")
+		band!(out.times .- out.times[idx_f], act_nbody[i, :] .- act_err_nbody[i, :], act_nbody[i, :] .+ act_err_nbody[i, :], alpha=0.5)
+
+		lines!(orbit_old.times .- orbit_old.times[end], J_exp[i, :], label="point orbit old")
+		if @isdefined orbit
+			lines!(orbit.times .- orbit.times[end], act_new[i, :], label="point orbit new")
+		end
+		plot_meas!(J_obs[i])
+		
+		
+		lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+	end
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
+# ╔═╡ b1439b38-6dad-487c-b78b-32736c8aa560
+@savefig "xyz_time" let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"%$coord"
+		)
+
+		lines!(out.times .- out.times[idx_f], x_cen[i, :], label="nbody")
+
+		lines!(orbit_old.times .- orbit_old.times[end], orbit_old.positions[i, :], label="point orbit old")
+		if @isdefined orbit
+			lines!(orbit.times .- orbit.times[end], orbit.positions[i, :], label="point orbit new")
+		end
+		plot_meas!(J_obs[i])
+		
+		
+		#lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+	end
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
 # ╔═╡ 8ebf47fd-acd6-48d1-95df-d83a602e75f4
 J_f_mean = [LilGuys.mean((act_nbody .± act_err_nbody)[i, idx_f-window:idx_f]) for i in 1:3]
 
@@ -440,79 +511,8 @@ v_new = orbit.velocities
 # ╔═╡ 3fa86c92-e6bd-41b6-bd64-cfd33f74b229
 act_new, ang_new = get_actions(pot, x_new, v_new)
 
-# ╔═╡ b1439b38-6dad-487c-b78b-32736c8aa560
-@savefig "xyz_time" let
-	fig = Figure(size=(6*72, 5*72))
-
-	local ax
-	for i in 1:3
-		coord = ["x", "y", "z"][i]
-		
-		ax = Axis(fig[i, 1],
-			xlabel = "time",
-			ylabel = L"%$coord"
-		)
-
-		lines!(out.times .- out.times[idx_f], x_cen[i, :], label="nbody")
-
-		lines!(orbit_old.times .- orbit_old.times[end], orbit_old.positions[i, :], label="point orbit old")
-		if @isdefined orbit
-			lines!(orbit.times .- orbit.times[end], orbit.positions[i, :], label="point orbit new")
-		end
-		plot_meas!(J_obs[i])
-		
-		
-		#lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
-		
-		if i < 3
-			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
-		end
-
-	end
-
-	Legend(fig[2, 2], ax)
-	fig
-end
-
-
 # ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
 get_actions(pot, pos_new, vel_new)
-
-# ╔═╡ b8f2475a-3588-4611-99ac-de156f25b853
-@savefig "actions_adjustment" let
-	fig = Figure(size=(6*72, 5*72))
-
-	local ax
-	for i in 1:3
-		coord = ["r", "z", "ϕ"][i]
-		
-		ax = Axis(fig[i, 1],
-			xlabel = "time",
-			ylabel = L"J_%$coord"
-		)
-
-		lines!(out.times .- out.times[idx_f], act_nbody[i, :], label="nbody")
-		band!(out.times .- out.times[idx_f], act_nbody[i, :] .- act_err_nbody[i, :], act_nbody[i, :] .+ act_err_nbody[i, :], alpha=0.5)
-
-		lines!(orbit_old.times .- orbit_old.times[end], J_exp[i, :], label="point orbit old")
-		if @isdefined orbit
-			lines!(orbit.times .- orbit.times[end], act_new[i, :], label="point orbit new")
-		end
-		plot_meas!(J_obs[i])
-		
-		
-		lines!(out.times[[idx_f-window, idx_f]] .- out.times[idx_f], Measurements.value.([J_f_mean[i], J_f_mean[i]]), linestyle=:solid, linewidth=2, label="adopted mean")
-		
-		if i < 3
-			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
-		end
-
-	end
-
-	Legend(fig[2, 2], ax)
-	fig
-end
-
 
 # ╔═╡ d5be7108-a6c6-4e2a-98b9-562dbd0dc999
 ang_nbody_err[:, idx_f]

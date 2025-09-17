@@ -49,7 +49,7 @@ TopNodeFactor                       3.0
 ActivePartFracForNewDomainDecomp    0.02
 
 #---Gravitational Softening
-SofteningComovingClass0      0.001
+SofteningComovingClass0      0.1
 SofteningMaxPhysClass0       0      # ignored; for cosmological
 SofteningClassOfPartType0    0
 SofteningClassOfPartType1    0

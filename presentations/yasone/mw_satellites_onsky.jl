@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -88,7 +88,7 @@ ambiguous = CSV.read("ambiguous.csv", DataFrame)
 @assert size(alldwarfs, 1) == 65
 
 # ╔═╡ bbe6dced-82eb-4cfc-a10c-69b79ef51606
-@assert size(ambiguous, 1) == 25
+@assert size(ambiguous, 1) == 26
 
 # ╔═╡ 89ae71c5-08eb-4c92-9301-ad2e630bf943
 labels = vcat(alldwarfs.key,yasone_halo.key, andromida.key, yasone_disk.key)
