@@ -43,33 +43,29 @@ md"""
 """
 
 # ╔═╡ 51141c7d-59e7-4df0-8928-1e83238fdcff
-function load_trajectories(modelname)
+function load_trajectories(modelname, outdir="out")
 	filenames = []
 	trajectories = []
-	for file in readdir(joinpath(modelname, "out"))
-		orbits = last.(LilGuys.read_ordered_structs(joinpath(modelname, "out", file), LilGuys.Orbit))
-		push!(trajectories, orbits)
-
-		push!(filenames, file)
+	for file in readdir(joinpath(modelname, outdir))
+		if splitext(file)[end] == ".hdf5"
+			orbits = last.(LilGuys.read_ordered_structs(joinpath(modelname, outdir, file), LilGuys.Orbit))
+			push!(trajectories, orbits)
+	
+			push!(filenames, file)
+		end
 	end
 
 	return trajectories
 end
 
 # ╔═╡ 2ca5f1ae-37b5-4a96-b890-eae1ae4609c7
-traj = load_trajectories("L3M11")
+traj_nosmc = load_trajectories("MW_LMC_SMC", "out_nosmc")
 
-# ╔═╡ 477a6ae1-c2a2-4293-b41e-7122ecad3333
-traj_fric = load_trajectories("L3M11_dyn_fric")
+# ╔═╡ eb91aea8-79ae-4b75-b969-9abe72f7b7d3
+traj = load_trajectories("MW_LMC_SMC")
 
-# ╔═╡ cc25d8ef-b783-4826-92fa-b1bc0d3589e8
-pot = NBody.get_potential("vasiliev24/L3M11/potential")
-
-# ╔═╡ b952b5f7-35f5-462a-862a-0dfe5a33bcc6
-pot_mw = NBody.get_potential("vasiliev24/L3M11/potential_mw_halo_evo") + NBody.get_potential("vasiliev24/L3M11/potential_stars")
-
-# ╔═╡ a3e72a55-2456-4634-9008-dfdfc5aaff19
-pot_lmc = NBody.get_potential("vasiliev24/L3M11/potential_lmc")
+# ╔═╡ 01dcda87-b5cf-45bc-abf5-fea731dd0d7d
+traj_nofric = load_trajectories("MW_LMC_SMC", "out_nofric")
 
 # ╔═╡ 0dcf8e67-570f-4366-b36b-a96a3ecaf128
 initial_df = CSV.read(joinpath(ENV["DWARFS_ROOT"], "simulations/all_galaxies/initial_galaxies.csv"), DataFrame)
@@ -80,9 +76,6 @@ icrs_0 = LilGuys.coords_from_df(initial_df)
 # ╔═╡ 22ff5b38-edeb-4cd4-a2b7-efffaa638e43
 gc_0 = LilGuys.transform.(Galactocentric, icrs_0)
 
-# ╔═╡ 174ea3b9-f95e-40f1-a3ba-f970b6749b68
-galaxynames = initial_df.galaxyname
-
 # ╔═╡ 25b2f7b7-0474-437d-83b6-46f11be6b2d7
 initial_df.masses[initial_df.galaxyname .== "sculptor"]
 
@@ -91,31 +84,137 @@ md"""
 # Comparisons
 """
 
+# ╔═╡ 936c090a-dd4d-44e6-be5b-441f4039be3a
+galaxynames = ["mw", "lmc", "smc", "sculptor", "ursa_minor"]
+
 # ╔═╡ c48273ad-8b2f-482f-851a-b19f5f394ad8
-function get_galaxy(traj, galaxyname)
+function get_galaxy(traj, galaxyname, reference=nothing)
 	if galaxyname ∉ galaxynames
 		@error "galaxyname $galaxyname not found"
 	end
-	@assert sum(galaxynames .== galaxyname) == 1
-	idx = findfirst(galaxynames .== galaxyname)
+	@assert sum(galaxynames .== [galaxyname]) == 1
+	idx = findfirst(galaxynames .== [galaxyname])
 
+	if !isnothing(reference)
+		idx_ref = findfirst(galaxynames .== [reference])
+		return 	traj[idx] - traj[idx_ref]
+	end
+		
 	return traj[idx]
 end
 
 # ╔═╡ 9a4600b4-d3f0-42c4-94bf-44c296701fd9
-function compare_traj_galaxy(traj, galaxyname; color=COLORS[1], alpha=0.1)
-	orbits = get_galaxy.(traj, [galaxyname])
+function compare_traj_galaxy!(ax, traj, galaxyname, reference="mw"; color=COLORS[1], alpha=0.1, time_min=-10/T2GYR)
+	orbits = get_galaxy.(traj, galaxyname, reference) 
 
+	positions = []
 
+	for orbit in orbits
+		push!(positions, orbit.positions[:, orbit.times .> time_min])
+	end
 
-	LilGuys.plot_xyz(LilGuys.positions.(orbits)..., color=color, linestyle=:solid, alpha=alpha)
+	LilGuys.plot_xyz!(ax, positions..., color=color, linestyle=:solid, alpha=alpha)
 end
 
-# ╔═╡ 0eab06bb-7273-482d-a4ed-f2fa5ad42613
-compare_traj_galaxy(traj, "sculptor")
+# ╔═╡ a8100604-2123-4ef0-ba88-3847ad485f57
+function compare_traj_galaxy(traj, galaxyname, reference="mw"; color=COLORS[1], alpha=0.1, time_min=-10/T2GYR)
+	orbits = get_galaxy.(traj, galaxyname, reference) 
 
-# ╔═╡ 96eba240-aa23-4158-8110-7b222a825c11
-compare_traj_galaxy(traj_fric, "sculptor")
+	positions = []
+
+	for orbit in orbits
+		push!(positions, orbit.positions[:, orbit.times .> time_min])
+	end
+
+	LilGuys.plot_xyz(positions..., color=color, linestyle=:solid, alpha=alpha)
+end
+
+# ╔═╡ 8f13863e-b79c-4c45-840d-14636ec272be
+function compare_traj_galaxy_radii!(traj, galaxyname, reference = "mw"; color=COLORS[1], alpha=0.1, kwargs...)
+	orbits = get_galaxy.(traj, galaxyname, reference) 
+
+	for orbit in orbits
+
+		lines!(orbit.times, log10.(radii(orbit));
+			   color=color, linestyle=:solid, alpha=alpha, kwargs...)
+	end
+
+end
+
+# ╔═╡ 502ada8b-2d0d-4dbd-92ee-4891ad68cdd8
+function compare_traj_galaxy_radii(args...;kwargs...)
+	fig = Figure()
+	ax = Axis(fig[1,1])
+	compare_traj_galaxy_radii!(args...; kwargs...)
+
+	fig
+end
+
+# ╔═╡ d597e65d-dfb2-41f5-8821-ad1f8f9614b9
+compare_traj_galaxy(traj, "mw", nothing)
+
+# ╔═╡ 0eab06bb-7273-482d-a4ed-f2fa5ad42613
+compare_traj_galaxy(traj, "lmc")
+
+# ╔═╡ 1507bbf5-e6a4-49a9-bb6a-2f079bb9669c
+let
+	f = compare_traj_galaxy(traj, "lmc", "sculptor", time_min=-0.3/T2GYR)
+	compare_traj_galaxy!(f.content, traj, "smc", "sculptor", time_min=-0.3/T2GYR, color=COLORS[2])
+
+	LilGuys.plot_xyz!(f.content, zeros(3, 1), plot=:scatter, color=:black)
+	f
+end
+
+# ╔═╡ fa3492db-087c-413d-b438-dc09e5c1d80c
+compare_traj_galaxy_radii(traj, "lmc")
+
+# ╔═╡ 12d78b71-123a-4b32-88b0-6b41f564e91f
+compare_traj_galaxy_radii(traj_nofric, "lmc")
+
+# ╔═╡ 6d053852-c5f3-49fa-a110-d233ac6b06c4
+let
+	fig = compare_traj_galaxy_radii(traj, "sculptor", label="Scl_MW")
+	compare_traj_galaxy_radii!(traj, "sculptor", "lmc", color=COLORS[2], label="Scl-LMC")
+	compare_traj_galaxy_radii!(traj, "sculptor", "smc", color=COLORS[3], label="Scl-SMC")
+
+	axislegend(merge=true)
+	fig
+
+end
+
+# ╔═╡ 4a03701e-84fa-4818-a7e7-094f275ecbae
+let
+	fig = compare_traj_galaxy_radii(traj_nosmc, "smc", label="Scl_MW")
+	compare_traj_galaxy_radii!(traj_nosmc, "smc", "lmc", color=COLORS[2], label="Scl-LMC")
+
+	axislegend(merge=true)
+	fig
+
+end
+
+# ╔═╡ 44c2528a-fd4e-42e3-aa24-87e45d4528f2
+compare_traj_galaxy_radii(traj, "sculptor", "lmc")
+
+# ╔═╡ 8f3bd00e-1693-470d-af65-bb50273788ad
+compare_traj_galaxy_radii(traj, "sculptor", "smc")
+
+# ╔═╡ 248530fc-d4f1-43a9-87e7-2b1640481c4e
+compare_traj_galaxy_radii(traj[1:10], "lmc")
+
+# ╔═╡ 0f457415-a61b-4894-b51a-2aefd1d8ea8b
+compare_traj_galaxy_radii(traj_nofric[1:10], "lmc")
+
+# ╔═╡ 8c520387-1d0c-4fbd-8696-fb9acc1c3cfb
+compare_traj_galaxy(traj_nosmc, "lmc")
+
+# ╔═╡ e3ecb803-f33b-4f5a-8288-aa95411e3fd2
+compare_traj_galaxy(traj, "smc")
+
+# ╔═╡ f868386e-976f-4254-be16-0452bb2b0bd7
+compare_traj_galaxy(traj, "smc", "lmc")
+
+# ╔═╡ 598b692d-c083-4d66-bab2-a93af461957c
+compare_traj_galaxy_radii(traj, "smc")
 
 # ╔═╡ 92fe77ec-23f9-49de-afe2-e8659c27085c
 compare_traj_galaxy(traj, "ursa_minor")
@@ -394,20 +493,34 @@ compare_tidal_forces(traj_fric, "ursa_minor")
 # ╟─541a30dd-992c-4078-afa9-e1cb53dfc4a3
 # ╠═51141c7d-59e7-4df0-8928-1e83238fdcff
 # ╠═2ca5f1ae-37b5-4a96-b890-eae1ae4609c7
-# ╠═477a6ae1-c2a2-4293-b41e-7122ecad3333
-# ╠═cc25d8ef-b783-4826-92fa-b1bc0d3589e8
-# ╠═b952b5f7-35f5-462a-862a-0dfe5a33bcc6
-# ╠═a3e72a55-2456-4634-9008-dfdfc5aaff19
+# ╠═eb91aea8-79ae-4b75-b969-9abe72f7b7d3
+# ╠═01dcda87-b5cf-45bc-abf5-fea731dd0d7d
 # ╠═0dcf8e67-570f-4366-b36b-a96a3ecaf128
 # ╠═fce7e21b-a2f7-4d8e-9be6-2ef9e3fe1805
 # ╠═22ff5b38-edeb-4cd4-a2b7-efffaa638e43
-# ╠═174ea3b9-f95e-40f1-a3ba-f970b6749b68
 # ╠═25b2f7b7-0474-437d-83b6-46f11be6b2d7
 # ╟─bb151d8e-7329-48e9-be13-0578506d4a8f
+# ╠═936c090a-dd4d-44e6-be5b-441f4039be3a
 # ╠═c48273ad-8b2f-482f-851a-b19f5f394ad8
 # ╠═9a4600b4-d3f0-42c4-94bf-44c296701fd9
+# ╠═a8100604-2123-4ef0-ba88-3847ad485f57
+# ╠═502ada8b-2d0d-4dbd-92ee-4891ad68cdd8
+# ╠═8f13863e-b79c-4c45-840d-14636ec272be
+# ╠═d597e65d-dfb2-41f5-8821-ad1f8f9614b9
 # ╠═0eab06bb-7273-482d-a4ed-f2fa5ad42613
-# ╠═96eba240-aa23-4158-8110-7b222a825c11
+# ╠═1507bbf5-e6a4-49a9-bb6a-2f079bb9669c
+# ╠═fa3492db-087c-413d-b438-dc09e5c1d80c
+# ╠═12d78b71-123a-4b32-88b0-6b41f564e91f
+# ╠═6d053852-c5f3-49fa-a110-d233ac6b06c4
+# ╠═4a03701e-84fa-4818-a7e7-094f275ecbae
+# ╠═44c2528a-fd4e-42e3-aa24-87e45d4528f2
+# ╠═8f3bd00e-1693-470d-af65-bb50273788ad
+# ╠═248530fc-d4f1-43a9-87e7-2b1640481c4e
+# ╠═0f457415-a61b-4894-b51a-2aefd1d8ea8b
+# ╠═8c520387-1d0c-4fbd-8696-fb9acc1c3cfb
+# ╠═e3ecb803-f33b-4f5a-8288-aa95411e3fd2
+# ╠═f868386e-976f-4254-be16-0452bb2b0bd7
+# ╠═598b692d-c083-4d66-bab2-a93af461957c
 # ╠═92fe77ec-23f9-49de-afe2-e8659c27085c
 # ╠═0e662dc3-d830-4cb9-aced-abfbd8e48adf
 # ╠═26a167c2-2122-41d8-9a3b-82d18687f2fb

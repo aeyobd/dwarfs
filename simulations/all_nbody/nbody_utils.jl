@@ -5,6 +5,7 @@ using LilGuys
 using StaticArrays
 using CSV, DataFrames
 
+import LilGuys: acceleration
 
 Point = SVector{3, Float64}
 
@@ -17,11 +18,17 @@ struct Keplerian
 	mass::Float64
 end
 
+struct Massless
+end
+
 function acceleration(h::Keplerian, pos::Point)
 	r = radii(pos)
 	return -pos /r * h.mass / r^2
 end
 
+function acceleration(h::Massless, pos::Point, vel=nothing)
+    return Point(0, 0, 0)
+end
 
 function acceleration(h::LilGuys.NFW, pos::Point; trunc=10)
 	r = radii(pos)
@@ -30,7 +37,7 @@ function acceleration(h::LilGuys.NFW, pos::Point; trunc=10)
 end
 
 
-function acceleration(pot::Agama.Potential, x, units; time=0.)
+function acceleration(pot::Agama.Potential, x, units=Agama.AgamaUnits(); time=0.)
     return Agama.acceleration(pot, x, units; t=time)
 end
 
@@ -180,45 +187,6 @@ end
 
 
 
-function sample_initial_conditions(obs_props)
-	pos_i = Point[]
-	vel_i = Point[]
-	halos = []
-
-    σ_fattahi = 0.037
-    σ_ludlow = 0.1
-    σ_M_L = 0.2
-	
-	for row in eachrow(obs_props)
-		icrs = LilGuys.rand_coord(Dict((k=>row[k] for k in names(row))))
-		gc_i = LilGuys.transform(Galactocentric, icrs)
-
-        M_L_star = 2.0 * 10^(σ_M_L * rand())
-		L = LilGuys.mag_to_L(row.Mv)
-		Mstar = L / M2MSUN * M_L_star
-
-        vcircmax = LilGuys.vel_from_M_s_fattahi(Mstar * 10^(σ_fattahi*randn()))
-
-        if row.galaxyname == "smc"
-            # di teodoro et al,...
-            vcircmax = (56 + randn() * 5) / V2KMS
-        elseif row.galaxyname == "sagittarius"
-            # vasiliev+2021
-            vcircmax = (13.5 + randn() * 1) / V2KMS
-        end
-
-		rcircmax = LilGuys.Ludlow.solve_rmax(vcircmax, σ_ludlow * randn())
-		halo = LilGuys.NFW(v_circ_max=vcircmax, r_circ_max=rcircmax)
-
-		push!(pos_i, Point(LilGuys.position(gc_i)))
-		push!(vel_i, Point(LilGuys.velocity(gc_i) / V2KMS))
-		push!(halos, halo)
-	end
-
-	return pos_i, vel_i, halos
-end
-
-
 function get_sigma_v(pot, units)
 	gm = Agama.GalaxyModel(pot, Agama.DistributionFunction(pot, type="QuasiSpherical"))
 
@@ -230,7 +198,8 @@ function get_sigma_v(pot, units)
 	sigma3 = sigmas[1, :] .+ sigmas[2, :] + sigmas[3, :]
 
 	sigma1 = sigma3 ./ 3
-	return LilGuys.lerp(Rs, sqrt.(sigma1) .* Agama.velocity_scale(units))
+	interp = LilGuys.lerp(Rs, sqrt.(sigma1) .* Agama.velocity_scale(units))
+    return x-> interp(radii(x))
 end
 
 function get_rho(pot, units)
@@ -239,7 +208,8 @@ function get_rho(pot, units)
 
     pos = [zeros(N) Rs zeros(N)]'
     ρs = Agama.density(pot, pos, units)
-    return LilGuys.lerp(Rs, ρs)
+    interp = LilGuys.lerp(Rs, ρs)
+    return x-> interp(radii(x))
 end
 
 
@@ -291,21 +261,24 @@ function force_potential(pot)
 	end
 end
 
-function force_dyn_friction!(accelerations, positions, velocities, halos)
+function force_dyn_friction!(accelerations, positions, velocities, halos; rev=false)
 
 	for i in 1:length(positions)
         dyn_fric = halos[i]
-        accelerations[i] += LilGuys.acceleration(dyn_fric, positions[i], velocities[i])
+        factor = rev ? -1 : 1
+        accelerations[i] += factor * acceleration(dyn_fric, positions[i], velocities[i])
 	end
 
 	return accelerations
 end
 
-function make_dyn_fric_models(pot_sigma, units, halos)
-    σv = get_sigma_v(pot_sigma, units)
-    f_σ(x) = σv(radii(x))
-    ρ = get_rho(pot_sigma, units)
-    f_ρ(x) = ρ(radii(x))
+function make_dyn_fric_models(pot_sigma, units, halos; f_σ=nothing, f_ρ=nothing)
+    if isnothing(f_σ)
+        f_σ = get_sigma_v(pot_sigma, units)
+    end
+    if isnothing(f_ρ)
+        f_ρ = get_rho(pot_sigma, units)
+    end
 
     f_fric = []
     for i in eachindex(halos)
@@ -319,9 +292,9 @@ function make_dyn_fric_models(pot_sigma, units, halos)
 end
 
 
-function force_potential_nbody_friction(pot, units, halos; pot_sigma=pot)
+function force_potential_nbody_friction(pot, units, halos; pot_sigma=pot, f_σ=nothing, f_ρ=nothing)
 
-    f_fric = make_dyn_fric_models(pot_sigma, units, halos)
+    f_fric = make_dyn_fric_models(pot_sigma, units, halos, f_σ=f_σ, f_ρ=f_ρ)
 	function f(accelerations, positions, velocities, halos, time)
 		nbody_acceleration!(accelerations, positions, halos)
         potential_acceleration!(accelerations, pot, positions, time; units=units)
@@ -329,9 +302,9 @@ function force_potential_nbody_friction(pot, units, halos; pot_sigma=pot)
 	end
 end
 
-function force_potential_friction(pot, units, halos; pot_sigma=pot)
+function force_potential_friction(pot, units, halos; pot_sigma=pot, f_σ=nothing, f_ρ=nothing)
 
-    f_fric = make_dyn_fric_models(pot_sigma, units, halos)
+    f_fric = make_dyn_fric_models(pot_sigma, units, halos, f_σ=f_σ, f_ρ=f_ρ)
 	function f(accelerations, positions, velocities, halos, time)
         potential_acceleration!(accelerations, pot, positions, time; units=units)
         force_dyn_friction!(accelerations, positions, velocities, f_fric)
@@ -339,11 +312,14 @@ function force_potential_friction(pot, units, halos; pot_sigma=pot)
 end
 
 
-function get_obs_props()
-    df = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/observed_properties_complete.csv"), DataFrame)
+"""
+    write_orbits(output, orbits; N_max)
 
-    df[!, :distance_modulus] = LilGuys.kpc2dm.(df.distance)
-    df[!, :ra_err] .= 0
-    df[!, :dec_err] .= 0
-    df
+Write the first `N_max` orbits to a file "orbits.hdf5" in `output`.
+"""
+function write_orbits(filename, orbits; N_max=1000)
+    N_max = min(length(orbits), N_max)
+    structs = [(string(i) => orbit) for (i, orbit) in enumerate(orbits[1:N_max])]
+
+    LilGuys.write_structs_to_hdf5(filename, structs)
 end

@@ -365,17 +365,17 @@ md"""
 # Ursa Minor
 """
 
-# ╔═╡ 5b0df0a1-4c82-45db-a42f-b5ed23aad258
-compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.10", norm_shift=-0.5, 	break_height=-0, title="Ursa Minor")
-
 # ╔═╡ 3263677b-e0e3-4d30-8e28-309de99a8603
 @savefig "umi_smallperi_i_f" compare_both("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10",  r_j=true, norm_shift=0.0, 	break_height=-0)
 
 # ╔═╡ d0ce116f-aa51-43d8-9748-806eb44b8409
 @savefig "umi_plummer_i_f" compare_both("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20",  r_j=true, norm_shift=0.0,break_height=-0)
 
+# ╔═╡ 5b0df0a1-4c82-45db-a42f-b5ed23aad258
+compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.10", norm_shift=-0.5, 	break_height=-0, title="Ursa Minor")
+
 # ╔═╡ 18f2e3da-b749-4134-9604-4e2318ad82ee
-@savefig "umi_smallperi_i_f" compare_both("ursa_minor", "1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10",  r_j=true, norm_shift=-0.6, 	break_height=-0)
+ compare_both("ursa_minor", "1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10",  r_j=true, norm_shift=-0.6, 	break_height=-0)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -414,8 +414,8 @@ compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.1
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
 # ╠═e9a0ce9f-27a5-47dc-8c4d-22887f6a7fc1
 # ╠═f11acd53-a04d-4e1a-b7f5-d66b6011e3a2
-# ╠═77c057e4-78da-4201-b9f8-cb3135508a93
-# ╠═5b0df0a1-4c82-45db-a42f-b5ed23aad258
+# ╟─77c057e4-78da-4201-b9f8-cb3135508a93
 # ╠═3263677b-e0e3-4d30-8e28-309de99a8603
 # ╠═d0ce116f-aa51-43d8-9748-806eb44b8409
+# ╠═5b0df0a1-4c82-45db-a42f-b5ed23aad258
 # ╠═18f2e3da-b749-4134-9604-4e2318ad82ee

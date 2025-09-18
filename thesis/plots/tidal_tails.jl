@@ -25,12 +25,12 @@ include("./paper_style.jl")
 # ╔═╡ cb0f69df-e8c6-4e24-a79c-8e2cccdc3718
 obs_labels = Dict(
 	:radial_velocity => L"{v}_\textrm{los}\ /\ \textrm{km\,s^{-1}}",
-	:radial_velocity_gsr => L"\tilde{v}_\textrm{los}\ /\ \textrm{km\,s^{-1}}",
+	:radial_velocity_gsr => L"{v}_\textrm{los}'\ /\ \textrm{km\,s^{-1}}",
 	:distance => "distance / kpc",
 	:pmra => L"{\mu}_{\alpha*}\ /\ \textrm{mas\,yr^{-1}}",
-	:pmra_gsr => L"\tilde{\mu}_{\alpha*}\ /\ \textrm{mas\,yr^{-1}}",
+	:pmra_gsr => L"{\mu}_{\alpha*}'\ /\ \textrm{mas\,yr^{-1}}",
 	:pmdec => L"{\mu}_{\delta}\ /\ \textrm{mas\,yr^{-1}}",
-	:pmdec_gsr => L"\tilde{\mu}_{\delta}\ /\ \textrm{mas\,yr^{-1}}",
+	:pmdec_gsr => L"{\mu}_{\delta}'\ /\ \textrm{mas\,yr^{-1}}",
 	:xi_p => L"\xi'\ /\ \textrm{degrees}",
 	:eta_p => L"\eta'\ /\ \textrm{degrees}",
 )
@@ -109,7 +109,7 @@ function scatter_coord(gs, stars_mean, ss, sym; xsym = :xi_p, kwargs...)
 
 	scatter!(x, y; rasterize=true, kwargs...)
 	scatter!(0, y0, color=:black)
-
+	return ax
 end
 
 # ╔═╡ 6be80d25-974f-4bfe-96df-18cb0ce96c5a
@@ -121,7 +121,10 @@ function plot_sample(stars)
 		ysym = [:pmra_gsr, :pmdec_gsr, :distance, :radial_velocity_gsr][i]
 
 		gs = fig[(i-1) ÷ 2 + 1, (i-1)%2 + 1]
-		scatter_coord(gs, stars[1, :], ss, ysym, markersize=2, alpha=1, color=COLORS[3])
+		ax = scatter_coord(gs, stars[1, :], ss, ysym, markersize=2, alpha=1, color=COLORS[3])
+		if i < 3
+			ax.xlabel = ""
+		end
 	end
 
 	fig
@@ -144,6 +147,9 @@ plot_sample(load_stars("sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0
 
 # ╔═╡ 7b274c9f-4cdd-41ef-bdef-8a649331d1d9
 plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "plummer_rs0.20"))
+
+# ╔═╡ 5a56e59a-c846-4829-9ddf-496c8a0383fb
+plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"))
 
 # ╔═╡ ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 md"""
@@ -177,6 +183,7 @@ plot_sample(load_stars("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "plummer_rs0.2
 # ╠═f62a2c26-1baa-4a46-98ac-e43f75547a72
 # ╠═53c9aaff-51cd-409e-ab1f-c28e940b2ed1
 # ╠═7b274c9f-4cdd-41ef-bdef-8a649331d1d9
+# ╠═5a56e59a-c846-4829-9ddf-496c8a0383fb
 # ╟─ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 # ╠═52c9a0fc-6db3-4e67-8d01-2f0eb0c1663f
 # ╠═b50e2128-aa69-4ef9-bd7a-a08f412c504e
