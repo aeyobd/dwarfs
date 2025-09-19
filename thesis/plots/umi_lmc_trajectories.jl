@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -113,7 +113,7 @@ let
 	fig = Figure(figsize=(388, 2*388))
 	limits = tuple(fill((-150., 150.), 3)...)
 
-	ax_xyz = axes_xyz_flat(fig, limits)
+	ax_xyz = axes_xyz_flat(fig, limits=limits)
 	for ax in ax_xyz
 		ax.xticks = -100:100:100
 		ax.yticks = -100:100:100
@@ -138,6 +138,7 @@ let
 	plot_rt!(ax_rt, orbits, color=COLORS[2], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, orbits_no, color=COLORS[3], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, lmc_orbit, color=COLORS[1])
+	ylims!(0, nothing)
 
 	plot_rt_today!(ax_rt, lmc_orbit, strokewidth=sw, color=COLORS[1])
 	plot_rt_today!(ax_rt, orbits, strokewidth=sw, color=COLORS[2])
@@ -151,10 +152,11 @@ let
 
 	# LMC distance
 	ax_rt2 = Axis(fig[3, 1:3 ],
-				xlabel = "time / Gyr", ylabel = L"$r_\textrm{UMi-LMC}$ / kpc")
+				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-LMC}$ / kpc")
 	
 	plot_rt!(ax_rt2, orbits .- [pos_lmc_resampled], color=COLORS[2], alpha=0.05, linestyle=:solid)
 	xlims!(-9, 0.2)
+	ylims!(0, 400)
 	plot_rt_today!(ax_rt2, orbits .- [pos_lmc_resampled], strokewidth=sw, color=COLORS[2])
 
 

@@ -34,3 +34,7 @@ R_h_ref = "Choi2018ApJ...869..125C"
 Mv = -18.077
 Mv_em = 0.1
 Mv_ep = 0.1
+
+
+sigma_v = nan
+sigma_v_err = nan

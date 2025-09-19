@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -146,6 +146,9 @@ pot_static = Agama.Potential(file=joinpath(modeldir  * "/potential_mw_init.ini")
 # ╔═╡ 087ae8e4-47ea-4c16-8f70-b38168834268
 orbit_old = LilGuys.resample(Orbit(modeldir * "simulation/orbit.csv"), out.times)
 
+# ╔═╡ 7ada86e5-bc6e-4157-b9cd-a7cf154d25d0
+orbit_nbody = Orbit(joinpath(modeldir, "centres.hdf5"))
+
 # ╔═╡ 17c59968-27bf-4ab6-ac27-26db28bdbcbc
 h5open(joinpath(modeldir, "centres.hdf5")) do centres
 	global x_cen, v_cen, x_cen_err, v_cen_err, times
@@ -222,9 +225,6 @@ x_cen[:, 1], v_cen[:, 1]
 
 # ╔═╡ d84f975b-dcb6-4d6f-aaa9-497036cf7edf
 pos_i_old, vel_i_old
-
-# ╔═╡ 1fb3fd2a-5da2-48de-95ce-83910fb54e3c
-
 
 # ╔═╡ eec1b26c-d028-4305-b2ff-f5772868dfed
 md"""
@@ -741,6 +741,148 @@ acc_proj = [acc_res[:, i] ⋅ v_cen[:, i+1] for i in eachindex(times)[1:end-1]]
 # ╔═╡ 453622ee-8d14-416d-8b1a-fb90f916838f
 plot(log10.(radii(acc_res)), log10.(abs.(acc_proj) ./ radii(v_cen)[2:end] ./ radii(acc_res)))
 
+# ╔═╡ d7ca78c0-3898-4bd8-b28f-115644bcf314
+md"""
+# Action differences
+"""
+
+# ╔═╡ cc180e47-3dca-4209-9ac6-1aa4031faca4
+function get_actions(pot, orbit; units=units)
+	af = Agama.ActionFinder(pot)
+
+	return Agama.actions_angles(af, orbit.positions, orbit.velocities, units)[[1, 2]]
+end
+
+# ╔═╡ f72939d8-87c7-4fb3-9660-c11ac77e389f
+am = Agama.ActionMapper(pot_static)
+
+# ╔═╡ 25368b02-885d-4123-afe4-6766232c9412
+af = Agama.ActionFinder(pot_static)
+
+# ╔═╡ 3d33f8f9-16a4-47ac-be22-d35f09a3ee7e
+time_shift = -(orbit_nbody.times[argmin(radii(orbit_nbody))] - orbit_old.times[argmin(radii(orbit_old))])
+
+# ╔═╡ 1e1f37a8-c3d0-4f78-b542-61b8e0814a9c
+orbit_old_resampled = LilGuys.resample(orbit_old, orbit_nbody.times .+ time_shift)
+
+# ╔═╡ 8b36e2c4-9073-4af7-a9f4-7ea391e12e56
+orbit_nbody.times[argmin(radii(orbit_nbody))] - orbit_old_resampled.times[argmin(radii(orbit_old_resampled))]
+
+# ╔═╡ 35b06869-b449-4193-b3b2-cff7bfc06083
+J_old, Theta_old = get_actions(pot_static, orbit_old_resampled)
+
+# ╔═╡ 5c4c0767-6c17-43e4-a9cf-823fde8a4228
+J_nbody, Theta_nbody = get_actions(pot_static, orbit_nbody)
+
+# ╔═╡ 01060309-2889-4055-8d53-b127cb88d3ea
+t_encounter = orbit_nbody.times[argmin(radii(orbit_nbody))]
+
+# ╔═╡ 14667772-b5cd-4d79-9278-1451bf1bdeaa
+md"""
+## Plots
+"""
+
+# ╔═╡ 32e71749-6fd2-4640-838f-ece1ee354c6b
+let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"J %$coord"
+		)
+
+
+		lines!(orbit_nbody.times, J_nbody[i, :] .- J_old[i, :], label="point orbit old")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+
+	end
+	ylims!(-1, 1)
+	linkyaxes!(fig.content...)
+
+	vlines!(t_encounter)
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
+# ╔═╡ c7aa2829-9048-42b0-9348-3e36714e8e37
+time_range = 100
+
+# ╔═╡ 81ff5445-40fb-41e2-b4f8-d0bba8e702a4
+idx_before = argmin(abs.(orbit_nbody.times .- t_encounter .- time_range/2))
+
+# ╔═╡ 1e4c0c1e-6809-4083-aec1-d3d3a2374068
+idx_after = argmin(abs.(orbit_nbody.times .- t_encounter .+ time_range/2))
+
+# ╔═╡ a4ead8dc-c983-4a1e-a6fc-c5dc6d77adbf
+let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"J %$coord"
+		)
+
+
+		scatter!(orbit_nbody.times, J_nbody[i, :] .- J_old[i, :], label="point orbit old")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+		xlims!(t_encounter - time_range, t_encounter + time_range)
+
+	end
+
+	ylims!(-0.2, 0.2)
+	linkyaxes!(fig.content...)
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
+# ╔═╡ e5fef40f-fa04-4156-9e4b-56fcf935ebba
+let
+	fig = Figure(size=(6*72, 5*72))
+
+	local ax
+	for i in 1:3
+		coord = ["x", "y", "z"][i]
+		
+		ax = Axis(fig[i, 1],
+			xlabel = "time",
+			ylabel = L"theta J %$coord"
+		)
+
+
+		scatter!(orbit_nbody.times, Theta_nbody[i, :] .- Theta_old[i, :], label="point orbit old")
+		
+		if i < 3
+			hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
+		end
+		xlims!(t_encounter - time_range, t_encounter + time_range)
+
+	end
+
+	ylims!(-0.01, 0.01)
+	linkyaxes!(fig.content...)
+
+	Legend(fig[2, 2], ax)
+	fig
+end
+
+
 # ╔═╡ Cell order:
 # ╟─9bfa1465-2ca9-495c-bab6-5110072f02ed
 # ╠═5006f134-648a-4318-9dc3-5de383ac4d0e
@@ -772,6 +914,7 @@ plot(log10.(radii(acc_res)), log10.(abs.(acc_proj) ./ radii(v_cen)[2:end] ./ rad
 # ╠═afeb4045-01be-42e1-9998-36df9b197bb9
 # ╠═7bcdef79-7391-4f35-902b-62d2dda1d858
 # ╠═087ae8e4-47ea-4c16-8f70-b38168834268
+# ╠═7ada86e5-bc6e-4157-b9cd-a7cf154d25d0
 # ╠═17c59968-27bf-4ab6-ac27-26db28bdbcbc
 # ╟─acf9bb4c-c03f-455f-bd12-65766f55bfaa
 # ╠═f7659682-7f06-4618-aa70-4f2c7d3ee838
@@ -787,7 +930,6 @@ plot(log10.(radii(acc_res)), log10.(abs.(acc_proj) ./ radii(v_cen)[2:end] ./ rad
 # ╟─a2c949eb-21e2-4647-a53f-b245b92ea2a7
 # ╠═19803b8e-df6a-41cd-a2dd-dc4f04f95a46
 # ╠═d84f975b-dcb6-4d6f-aaa9-497036cf7edf
-# ╠═1fb3fd2a-5da2-48de-95ce-83910fb54e3c
 # ╟─eec1b26c-d028-4305-b2ff-f5772868dfed
 # ╠═d2ab7faf-27ed-43f3-b915-374b244149d3
 # ╠═8af92209-eafb-4da6-b641-a9c3c2ea1080
@@ -862,3 +1004,20 @@ plot(log10.(radii(acc_res)), log10.(abs.(acc_proj) ./ radii(v_cen)[2:end] ./ rad
 # ╠═ac498cfd-7ce6-4344-be27-55057eb838d1
 # ╠═453622ee-8d14-416d-8b1a-fb90f916838f
 # ╠═b4ed176b-c2ce-4bd0-88ed-7b9ba1b491e0
+# ╠═d7ca78c0-3898-4bd8-b28f-115644bcf314
+# ╠═cc180e47-3dca-4209-9ac6-1aa4031faca4
+# ╠═f72939d8-87c7-4fb3-9660-c11ac77e389f
+# ╠═25368b02-885d-4123-afe4-6766232c9412
+# ╠═1e1f37a8-c3d0-4f78-b542-61b8e0814a9c
+# ╠═3d33f8f9-16a4-47ac-be22-d35f09a3ee7e
+# ╠═8b36e2c4-9073-4af7-a9f4-7ea391e12e56
+# ╠═35b06869-b449-4193-b3b2-cff7bfc06083
+# ╠═5c4c0767-6c17-43e4-a9cf-823fde8a4228
+# ╠═01060309-2889-4055-8d53-b127cb88d3ea
+# ╠═14667772-b5cd-4d79-9278-1451bf1bdeaa
+# ╠═32e71749-6fd2-4640-838f-ece1ee354c6b
+# ╠═81ff5445-40fb-41e2-b4f8-d0bba8e702a4
+# ╠═1e4c0c1e-6809-4083-aec1-d3d3a2374068
+# ╠═c7aa2829-9048-42b0-9348-3e36714e8e37
+# ╠═a4ead8dc-c983-4a1e-a6fc-c5dc6d77adbf
+# ╠═e5fef40f-fa04-4156-9e4b-56fcf935ebba

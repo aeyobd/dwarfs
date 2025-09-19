@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -498,6 +498,32 @@ end
 	"pace dwarfs" => alldwarfs,
 ))
 
+# ╔═╡ ff913a4f-b0ed-46ec-86fc-eecfb1106bdd
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+			 xscale=log10, yreversed=true)
+		
+	
+	df = alldwarfs[sortperm(alldwarfs.rhalf, rev=true), :]
+
+
+	scatter!(df.rhalf[1:20], df.apparent_magnitude_v[1:20])
+	text!(df.rhalf[1:20], df.apparent_magnitude_v[1:20], text=df.name[1:20], fontsize=5)
+
+	fig
+end
+
+# ╔═╡ 9ee8283e-72a7-45e2-931b-7dd4f288fc7f
+alldwarfs.apparent_magnitude_v
+
+# ╔═╡ a7cdbf5d-fec0-4895-86be-102a42e2bbca
+plot_mag_size(OrderedDict(
+	"pace clusters" => allcluster,
+	"ambiguous" => ambiguous,
+	"pace dwarfs" => alldwarfs[alldwarfs.confirmed_dwarf .=== 1, :],
+))
+
 # ╔═╡ 35d385a4-b0f8-4476-a6e6-1b906927733d
 @savefig "magnitude_size_m12_v21" plot_mag_size(OrderedDict(
 	"pace clusters" => harris,
@@ -570,4 +596,7 @@ end
 # ╠═7dda1ac1-a733-4b2f-b25e-9125f1737ff2
 # ╠═a45d2884-9a1f-42d3-933a-656e95855bf7
 # ╠═2ae52446-2741-46fb-8ed5-35b88253eeaf
+# ╠═ff913a4f-b0ed-46ec-86fc-eecfb1106bdd
+# ╠═9ee8283e-72a7-45e2-931b-7dd4f288fc7f
+# ╠═a7cdbf5d-fec0-4895-86be-102a42e2bbca
 # ╠═35d385a4-b0f8-4476-a6e6-1b906927733d

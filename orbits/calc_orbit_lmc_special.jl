@@ -23,7 +23,7 @@ function get_args()
             help = "name of default galaxy properties"
         "--time-max"
             help = "maximum time to integrate for in code units"
-            default = -2120.0
+            default = -1909.0
             arg_type = Float64
         "--num-timesteps"
             help = "number of timesteps to record for peri / apo"

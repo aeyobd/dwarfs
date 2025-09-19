@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -188,7 +188,7 @@ let
 
 	# LMC distance
 	ax_rt2 = Axis(fig[3, 1:3 ],
-				xlabel = "time / Gyr", ylabel = L"$r_\textrm{Scl-LMC}$ / kpc")
+				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-LMC}$ / kpc")
 	
 	plot_rt!(ax_rt2, orbits .- [pos_lmc_resampled], color=COLORS[2], alpha=0.05, linestyle=:solid)
 	xlims!(t_min*T2GYR, 0.2)

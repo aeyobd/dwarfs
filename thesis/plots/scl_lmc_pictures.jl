@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -47,6 +47,9 @@ elseif galaxyname == "ursa_minor"
 	"ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5"
 end
 
+# ╔═╡ 714e6067-3ffa-49a3-93a3-a45eb9d24c97
+orbit = Orbit(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname, "centres.hdf5"))
+
 # ╔═╡ 32db23d9-7959-41ac-aff4-b63df5e4b94a
 figname = Dict(
 	"sculptor" => "scl",
@@ -55,6 +58,9 @@ figname = Dict(
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname));
+
+# ╔═╡ 773cfa95-ba8c-4124-9441-be45faf31425
+
 
 # ╔═╡ a3be2d61-98eb-4037-afb4-4155ba24cc21
 orbit_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname, "orbital_properties.toml"))
@@ -73,28 +79,22 @@ function max_density(out)
 end
 
 # ╔═╡ 185cfe93-b946-4e72-be6f-853205c49d22
-module AgamaProjection 
-	include(joinpath(ENV["HOME"], "LilGuys.jl/scripts", "project_potential.jl"))
+# module AgamaProjection 
+# 	include(joinpath(ENV["HOME"], "LilGuys.jl/scripts", "project_potential.jl"))
 
-end
+# end
 
 # ╔═╡ 5f036156-64e5-4127-a80d-614f8f526559
-module Animation 
-	include(joinpath(ENV["HOME"], "LilGuys.jl/scripts", "animate_dm.jl"))
+# module Animation 
+# 	include(joinpath(ENV["HOME"], "LilGuys.jl/scripts", "animate_dm.jl"))
 
-end
-
-# ╔═╡ d7771353-51a7-4461-a8d8-17b18623f46c
-ENV["LGUYS_SCRIPTS"]
+# end
 
 # ╔═╡ 147e195d-99f1-4c33-a65d-2ccfd7fa9bca
 t_scale = Agama.time_scale(Agama.VASILIEV_UNITS)
 
 # ╔═╡ 4078aa8f-4f2f-4f09-9706-4600838d9960
-projected_potential(pot, idx) = AgamaProjection.project_agama_potential(pot._py, (bins, bins), time=out.times[idx] / t_scale)
-
-# ╔═╡ 336bc60f-9cdc-4ad8-ab87-255654350c61
-
+# projected_potential(pot, idx) = AgamaProjection.project_agama_potential(pot._py, (bins, bins), time=out.times[idx] / t_scale)
 
 # ╔═╡ df6c58bd-385a-4f04-a652-c5de934916d8
 scl_norm_max = maximum(Arya.histogram2d(get_xy(out[1])..., bins).values)
@@ -132,6 +132,13 @@ end
 
 # ╔═╡ 4ccdd469-57fc-4896-a634-76c3a0816455
 traj_lmc = CSV.read(joinpath(ENV["DWARFS_ROOT"], "agama/potentials", "vasiliev24/L3M11/trajlmc.txt"), DataFrame, delim=" ", ignorerepeated=true, header=["t", "x", "y", "z", "v_x", "v_y", "v_z"])
+
+# ╔═╡ 93b3145f-8ac5-41a2-bf4e-fccd5a280076
+orbit_lmc = let 
+	o = Orbit(positions=[traj_lmc.x traj_lmc.y traj_lmc.z]', velocities=[traj_lmc.v_x traj_lmc.v_y traj_lmc.v_z]' / V2KMS, times=traj_lmc.t / T2GYR)
+
+	LilGuys.resample(o, orbit.times)
+end
 
 # ╔═╡ 5992a8eb-69c0-4f25-bd37-80cebc4353bf
 y_lmc = LilGuys.lerp(traj_lmc.t .* t_scale, traj_lmc.y)
@@ -196,6 +203,23 @@ let
 end
 
 
+# ╔═╡ 09efcc48-fa1a-4f59-a8c0-50f7b06280f4
+orbit_lmc
+
+# ╔═╡ bd81c08d-0e9d-4a70-98b4-6381e60fbd1e
+function plot_orbit_trace!(orbit, idx; d_idx=5, color=(:white, 0.3), future=false)
+
+	x = orbit.positions[2, 1:idx]
+	y = orbit.positions[3, 1:idx]
+	lines!(x, y, linewidth=theme(:linewidth)[]/2, color=color)
+
+	if future
+		x = orbit.positions[2, idx:end]
+		y = orbit.positions[3, idx:end]
+		lines!(x, y, linestyle=:dot, linewidth=theme(:linewidth)[]/2, color=color)
+	end
+end
+
 # ╔═╡ 8e391b46-5bb6-4288-8750-82fe2ae8d0f7
 let
 	fig = Figure()
@@ -206,7 +230,7 @@ let
 		plot_xy_density!(out[idx])
 		poly!(xz_iso.x, xz_iso.z, color=COLORS[9])
 		#plot_xy_lmc!(pot_lmc, idx)
-		scatter!(y_lmc(out.times[idx]), z_lmc(out.times[idx]), color=COLORS[3], markersize=1.5*theme(:markersize)[])
+		scatter!(y_lmc(out.times[idx]), z_lmc(out.times[idx]), color=COLORS[3], markersize=1*theme(:markersize)[])
 
 		if i == 1
 			plot_scalebar!()
@@ -215,6 +239,9 @@ let
 		if i == 3
 			text!(y_lmc(out.times[idx]), z_lmc(out.times[idx]), text="LMC", align=(:center, 1.2), color=COLORS[3])
 		end
+		plot_orbit_trace!(orbit, idx, future=true)
+
+		plot_orbit_trace!(orbit_lmc, idx, color=COLORS[3])
 		
 		hidexdecorations!()
 		hideydecorations!()
@@ -225,9 +252,10 @@ let
 	rowsize!(fig.layout, 1, Aspect(1, 1.0))
 	rowsize!(fig.layout, 0, Aspect(1, 1.0))
 
-	rowgap!(fig.layout, 12)
-	colgap!(fig.layout, 12)
+	rowgap!(fig.layout, 6)
+	colgap!(fig.layout, 6)
 
+	resize_to_layout!()
 	@savefig "$(figname)_lmc_sim_images"
 	fig
 end
@@ -243,9 +271,12 @@ end
 # ╠═4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
 # ╠═53cdcc20-96d4-4bd5-8028-df9a38af71ae
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
+# ╠═714e6067-3ffa-49a3-93a3-a45eb9d24c97
+# ╠═93b3145f-8ac5-41a2-bf4e-fccd5a280076
 # ╠═b9600d93-5946-4380-a2ae-9b5f673bbaf5
 # ╠═32db23d9-7959-41ac-aff4-b63df5e4b94a
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╠═773cfa95-ba8c-4124-9441-be45faf31425
 # ╠═a3be2d61-98eb-4037-afb4-4155ba24cc21
 # ╠═5a40b893-021b-46e5-a115-0284e13ae7ae
 # ╠═f9976cbe-ee5c-4c4b-95d7-94302bfbf7aa
@@ -253,10 +284,8 @@ end
 # ╠═666eff06-c57a-4219-ac5e-e68e6b860882
 # ╠═185cfe93-b946-4e72-be6f-853205c49d22
 # ╠═5f036156-64e5-4127-a80d-614f8f526559
-# ╠═d7771353-51a7-4461-a8d8-17b18623f46c
 # ╠═147e195d-99f1-4c33-a65d-2ccfd7fa9bca
 # ╠═4078aa8f-4f2f-4f09-9706-4600838d9960
-# ╠═336bc60f-9cdc-4ad8-ab87-255654350c61
 # ╠═781bd5dc-ae4b-4a11-87e4-01a7a8f5e804
 # ╠═8f864640-4880-4d40-b5dd-9441d110f0ca
 # ╠═df6c58bd-385a-4f04-a652-c5de934916d8
@@ -271,4 +300,6 @@ end
 # ╠═7197e7f9-0d05-45ad-9d52-849f566bba04
 # ╠═c5731120-b0e7-4cd5-aef1-4f3e9c86d50b
 # ╠═5e48acfc-085f-43c8-a4ae-d0aaabcae4ee
+# ╠═09efcc48-fa1a-4f59-a8c0-50f7b06280f4
+# ╠═bd81c08d-0e9d-4a70-98b4-6381e60fbd1e
 # ╠═8e391b46-5bb6-4288-8750-82fe2ae8d0f7

@@ -10,7 +10,7 @@ function get_err(df, key)
     elseif haskey(df, key * "_em")
         return max(df[key * "_em"], df[key * "_ep"])
     else
-        return NaN
+        return 0
     end
 end
 
@@ -37,7 +37,10 @@ function combine_properties()
 
             row = DataFrame(
                 galaxyname=galaxyname, 
-                ra=df["ra"], dec=df["dec"], 
+                ra=df["ra"], 
+                ra_err=get_err(df, "ra"),
+                dec=df["dec"], 
+                dec_err=get_err(df, "dec"),
                 distance=df["distance"],
                 distance_modulus_err = get_err(df, "distance_modulus"),
                 pmra=df["pmra"], 

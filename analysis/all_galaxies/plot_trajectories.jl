@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -51,10 +51,10 @@ function load_trajectories(modelname)
 end
 
 # ╔═╡ 2ca5f1ae-37b5-4a96-b890-eae1ae4609c7
-traj = load_trajectories("L3M11")
+traj = load_trajectories("L3M11_hhr")
 
 # ╔═╡ 0bcbb650-e54e-4a3e-86ff-7ab4b9504b6a
-traj_alt = load_trajectories("L3M11_nointeract")
+traj_alt = load_trajectories("L3M11_hr")
 
 # ╔═╡ e8d209a7-fe07-4ca9-9151-84dd27a75023
 traj_no = load_trajectories("M11")
