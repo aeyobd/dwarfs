@@ -24,7 +24,7 @@ function get_args()
         "-t", "--cutoff"
             help="exponential cutoff radius in units of scale radius"
             arg_type=Float64
-            default=100
+            default=20
         "-c", "--core"
             help="core radius in units of scale radius"
             arg_type=Float64
@@ -57,21 +57,20 @@ function main()
 
     scaleRadius = 1
     mass = 1
-    rho0 = mass / (4π * scaleRadius^3) 
 
-    halo = LilGuys.CoredNFW(M_s=1, r_s=1, r_c=r_c, r_t=cutoff)
+    halo = LilGuys.CoredNFW(M_s=1, r_s=1, r_c=r_c, r_t=cutoff, xi=3)
 
     function ρ(x)
         xj = pyconvert(Matrix{Float64}, x)'
-        r = calc_r(xj)
-        rho =  np.array(calc_ρ.(halo, r))
+        r = radii(xj)
+        rho =  np.array(LilGuys.density.(halo, r))
         return rho
     end
 
     pot = agama.Potential(type="Multipole", 
         density = pyfunc(ρ),
         symmetry="s",
-        gridSizeR=200, rmin=0.001, rmax=5*cutoff
+        gridSizeR=200, rmin=0.001, rmax=10*cutoff
        )
 
     df = agama.DistributionFunction(type="QuasiSpherical", potential=pot)
@@ -88,11 +87,9 @@ function main()
 
     snap = Snapshot(pos, vel, mass) 
 
-    LilGuys.save(args["output"], snap)
+    LilGuys.write(args["output"], snap)
 
-    halo_kwargs = Dict(
-       "CoredNFW" => Dict("r_c" => r_c, "r_t" => cutoff, "M_s"=>1, "r_s"=>1)
-      )
+    halo_kwargs = Dict( "CoredNFW" => LilGuys.struct_to_dict(halo))
 
     tomlfilename = args["output"][1:end-5] * ".toml"
     open(tomlfilename, "w") do f

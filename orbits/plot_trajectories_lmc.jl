@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -153,7 +153,7 @@ pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"
 pot_lmc = Agama.Potential(file=joinpath(galaxyname, modelname, "potential_lmc.ini"))
 
 # ╔═╡ aede5671-cde4-47dd-b15c-4402e3ccdba7
-if modelname == "vasiliev24_L3M11"
+if modelname ∈ ["vasiliev24_L3M11", "vasiliev24_L3M11_noreflex"]
 	modelname_no = "vasiliev24_M11"
 end
 
@@ -170,6 +170,14 @@ end
 
 # ╔═╡ 7cfec8fe-2b5a-4939-a04c-a0cdcc0292ca
 icrs0 = LilGuys.coords_from_df(df_props[idx, :])
+
+# ╔═╡ 89c45144-deb3-4d30-b119-bba0ea729e91
+idx_no, orbits_no = let
+	structs = LilGuys.read_ordered_structs(joinpath(galaxyname, modelname_no, "orbits.hdf5"), LilGuys.Orbit)
+
+	filt = 1:min(Nmax, length(structs))
+	first.(structs)[filt], last.(structs)[filt]
+end
 
 # ╔═╡ bc70970e-3cb8-4592-a056-c074f5f8bd80
 lmc_orbit = LilGuys.resample(OrbitUtils.get_lmc_orbit(joinpath(galaxyname, modelname)), orbits[1].times)
@@ -219,6 +227,27 @@ let
 	end
 
 	@savefig "r_vs_time_samples"
+	fig
+end
+
+# ╔═╡ 1c6def29-8d8a-4db2-b400-b2a63bac4e5e
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="Galactocentric distance / kpc"
+	)
+
+	for i in eachindex(orbits)
+		lines!(orbits[i].times * lguys.T2GYR, rs[i], alpha=0.1, color=COLORS[1])
+	end
+
+	for i in eachindex(orbits_no)
+		lines!(orbits_no[i].times * lguys.T2GYR, radii(orbits_no[i]), alpha=0.1, color=COLORS[2])
+
+	end
+
+	@savefig "r_vs_time_samples_lmc_vs_mw"
 	fig
 end
 
@@ -412,6 +441,7 @@ end
 # ╠═aede5671-cde4-47dd-b15c-4402e3ccdba7
 # ╠═2da68601-f24d-4499-b072-3bd4d9237a4e
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
+# ╠═89c45144-deb3-4d30-b119-bba0ea729e91
 # ╠═bc70970e-3cb8-4592-a056-c074f5f8bd80
 # ╠═b3cf49ea-f928-4bd6-a034-76fe04f6bf83
 # ╠═3eeb1784-bc35-4ffe-b02f-8ea738d41ac8
@@ -421,6 +451,7 @@ end
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
+# ╠═1c6def29-8d8a-4db2-b400-b2a63bac4e5e
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
 # ╠═9976635c-51e9-48ab-87e6-49662aeb58a2
 # ╠═472496f2-ace3-4ec1-8f7b-7e1921fd0938
