@@ -181,10 +181,52 @@ would be fairly significant (factor of \(\sim 2\)in MW mass, REF) but
 since we want to determine the upper limit of tidal effects, it is safe
 to neglect this.
 
-\subsection{Long term orbital history}\label{long-term-orbital-history}
+\subsection{Challenges to backwards-time
+integration}\label{sec:scl_orbit_variability}
 
 \citet{dsouza+bell2022}, \citet{santistevan+2024}. challenges to
 backwards time integration
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{/Users/daniel/thesis/figures/scl_lmc_orbits_mass_effect.png}}
+\caption[Sculptor Orbits with LMC]{The long-term orbital history of
+Sculptor is uncertain. In light, transparent lines, the orbits of
+Sculptor in three different LMC/MW mass models from \citet{vasiliev2024}
+are shown for random samples of the observed properties. The LMC orbits
+are in solid, thick lines of the corresponding colour. The L2M11 has a
+lighter LMC mass, and the L3M10 model has a lighter MW mass than our
+fiducial L3M11 LMC model.}\label{fig:scl_lmc_orbits_mass}
+\end{figure}
+
+Our LMC model only simulates recent tidal effects---the long-term orbit
+of Scl is essentially unknown. Fig.~\ref{fig:scl_lmc_orbits_effect}
+illustrates the orbits of Scl for three different LMC-MW models in
+\citet{vasiliev2024}: L2M11 has a lighter LMC and L3M10 has a lighter MW
+than the L3M11 potential we used. All orbits diverge significantly after
+2 Gyr ago. In addition, other affects such as the lumpiness of the MW
+halo, the growth of the MW halo, dynamical friction, and limitations of
+this potential make long-term backwards time integration yet more
+unreliable \citep[e.g.,][]{dsouza+bell2022}.
+
+In Fig.~\ref{fig:scl_lmc_orbits_effect}, some orbits have a small
+\(\lesssim 10\,\kpc\) pericentre with the Milky Way. In the Appendix, we
+consider a model with a previous MW pericentre of 4kpc. While this
+encounter should affect the inner stellar distribution of Sculptor based
+on the Jacobi radius, the observed light profile remains unaffected.
+Because this model experiences just one tidal shock, stronger tidal
+streams form, but the tidal impact is not strong enough to reshape the
+observed stellar distribution. We conclude that
+
+As discussed in \citet{vasiliev2024}, if the LMC has had a past, second
+pericentre with the Milky Way, there is a chance that UMi was previously
+bound to the LMC. We find that this occurs about 15\% of the time for
+this choice of potential. However, backwards integration may not
+appropriately represent the true probability of a Magellanic origin,
+since tidal stripping is not time reversible. Because of the possibility
+of this past encounter, and the high uncertainties associated with
+backwards integration, we note this as a possibility but defer to the
+discussion for our interpretations.
 
 \subsection{Deviations from the NfW}\label{deviations-from-the-nfw}
 
@@ -194,7 +236,10 @@ backwards time integration
   \citet{dicintio+2013}
 \end{itemize}
 
-\section{Comparison to other work}\label{comparison-to-other-work}
+\section{Comparison to previous work}\label{comparison-to-previous-work}
+
+For both Sculptor and Ursa minor, these galaxies have been studied
+extensively in both a theoretical and observational context.
 
 \subsection{Sculptor}\label{sculptor}
 
@@ -208,8 +253,6 @@ Theoretical work on Sculptor
   \citet{iorio+2019}
 \item
   \citet{amorisco+zavala+deboer2014}
-\item
-  \citet{battaglia+2008}
 \item
   \citet{breddels+2013}
 \item
@@ -250,6 +293,10 @@ Observational work on Scl
 \begin{itemize}
 \tightlist
 \item
+  \citet{tolstoy+2004}: detection of two populations.
+\item
+  \citet{battaglia+2008a}
+\item
   \citet{sestito+2023a}
 \item
   \citet{westfall+2006} wide degree survey for extended structure.
@@ -278,14 +325,6 @@ Observational work on Scl
 \item
   \citet{barbosa+2025}: Using DECam to derive narrowband photometric
   metallicity gradient and search for metal poor stars in Scl.
-\end{itemize}
-
-Future ideas:
-
-\begin{itemize}
-\tightlist
-\item
-  \citet{evslin2016}: measuring ellipticities of halos w TMT.
 \end{itemize}
 
 \subsection{Ursa Minor}\label{ursa-minor}
@@ -353,14 +392,11 @@ Theoretical work
   \citet{lynden-bell1976} early discussion of orbits and LMC plane.
 \end{itemize}
 
-\section{Are Sculptor and Ursa Minor
-typical?}\label{are-sculptor-and-ursa-minor-typical}
+\section{Should we expect exponential
+profiles?}\label{should-we-expect-exponential-profiles}
 
-\subsection{The formation of Exponential
-profiles}\label{the-formation-of-exponential-profiles}
-
-As mentioned earlier, many dwarf galaxies appear to have exponential
-stellar density profiles.
+As discussed in Section~\ref{sec:exponential_profiles}, the exponential
+profile has long been used for dwarf galaxies.
 
 Disk galaxies have long been known to be exponential-like across a wide
 range of scales. As such, several theoretical works have aimed to
@@ -369,10 +405,6 @@ theory posits that scattering of stars in a disk naturally forms an
 exponential \citep[\citet{wu+2022}]{elmegreen+struck2013}, or that the
 disk is due to conservation of angular momentum during spherical
 collapse.
-
-Given that dwarf galaxies were noticed to be exponential like above,
-\citet{faber+lin1983} proposed that dwarf spheroidals formed from disky
-galaxies maintaining the typical exponential density profile
 
 \citet{read+gilmore2005} propsed that exponential dSph form through
 impusive mass loss, redistributing the stellar component into an
@@ -396,34 +428,15 @@ angular momentum,
 
 \citet{klimentowski+2007}, \citet{klimentowski+2009}.
 
-In summary, while there is some theoretical reasons why exponential
-spheroidal stellar profiles may form, the emperical sucess of an
-exponential law still requires explanations. Deviations from this
-exponential thus test wether this exponential law is indeed
-near-universal or if other ingredients in the formation and history of
-dwarf galaxies may be responsible for changes from the empirical
-expectation.
-
-\subsection{Alternatives to exponential
-profiles}\label{alternatives-to-exponential-profiles}
-
-\begin{itemize}
-\tightlist
-\item
-  elmegreen+hunter2006: Discuss the formation of double exponentials in
-  disk galaxies. While a simpler idealized / Semi-analytic model of star
-  formation, show that assuming exponentail gas and KS-relation with SF
-  threshhold, that reduction of turbulance (driven by a number of
-  processes) in outer disk leads to a steeper decline in SFR as crossing
-  the critical SF threshold becomes less likely.
-\end{itemize}
+elmegreen+hunter2006: Discuss the formation of double exponentials in
+disk galaxies. While a simpler idealized / Semi-analytic model of star
+formation, show that assuming exponentail gas and KS-relation with SF
+threshhold, that reduction of turbulance (driven by a number of
+processes) in outer disk leads to a steeper decline in SFR as crossing
+the critical SF threshold becomes less likely.
 
 \section{Understanding the extended density profiles of dwarf
 galaxies}\label{understanding-the-extended-density-profiles-of-dwarf-galaxies}
-
-Are dwarf galaxies indeed expected to be one-component exponential-like
-density profiles? The suggestion of exponential density profiles dates
-back to \citet{faber+lin1983}. Expand\ldots{}
 
 A number of recent work has also confirmed the presence of extended,
 likely non-tidal, density profiles. For example, \citet{chiti+2021};
@@ -443,30 +456,14 @@ in Tucana II.
   populations).
 \item
   \citet{cicuendez+battaglia2018}
+\item
+  \citet{delpino+aparicio+hidalgo2015}: Fornax
+\item
+  \citet{delpino+2017}, \citet{delpino+2017a}
 \end{itemize}
 
-\subsection{Multi-epoch star formation and
-feedback}\label{multi-epoch-star-formation-and-feedback}
-
-The star formation history of dwarf galaxies is typically thought to be
-\emph{bursty}: a series of discrete episodes of intense star formation
-separated by periods of quiescence.
-
-For example, in the simulations of \citet{wheeler+2019}, etc., dwarf
-galaxies exhibit strongly bursty SFHs.
-
-\begin{itemize}
-\tightlist
-\item
-  \citet{maxwell+2012}
-\item
-  \citet{wright+2019}
-\item
-  \citet{azartash-namin+2024}
-\end{itemize}
-
-\subsubsection{Multi-component density
-profiles}\label{multi-component-density-profiles}
+\subsection{Multi-component density profiles: clues to the
+past?}\label{multi-component-density-profiles-clues-to-the-past}
 
 A related note is that several dwarf galaxies show evidence for multiple
 chemodynamical components in their stars. While spectra tend to focus on
@@ -476,9 +473,8 @@ galaxies hints at a complex star formation history capable of creating
 the observed profiles.
 
 \begin{itemize}
-\tightlist
 \item
-  \citet{benitez-llambay+2016}
+  \citet{benitez-llambay+2016}, \citet{benitez-llambay+2015}
 \item
   \citet{mercado+2021}: formation of metallicity gradients from SFH
 \item
@@ -489,7 +485,6 @@ the observed profiles.
 \item
   \citet{el-badry+2016}. Feedback drives fluctuations in size + radial
   migration =\textgreater{} population gradients.
-\item
 \end{itemize}
 
 Observational evidence:
@@ -501,14 +496,68 @@ Observational evidence:
 \item
   \citet{pace+2020}
 \item
-  \citet{fabrizio+2016}, \citet{kordopatis+2016} (multi-component in
-  Carina)
+  \citet{battaglia+2012}, \citet{fabrizio+2016}, \citet{kordopatis+2016}
+  (multi-component in Carina)
 \item
   \citet{battaglia+2006}, \citet{amorisco+evans2012} for fornax
+\item
+  \citet{battaglia+2011} sextans
+\item
+  \citet{ho+2012}: And II
 \end{itemize}
+
+\subsection{Multi-epoch star
+formation}\label{multi-epoch-star-formation}
+
+The star formation history of dwarf galaxies is typically thought to be
+\emph{bursty}: a series of discrete episodes of intense star formation
+separated by periods of quiescence.
+
+For example, in the simulations of \citet{wheeler+2019}, etc., dwarf
+galaxies exhibit strongly bursty SFHs.
+
+\begin{itemize}
+\item
+  \citet{maxwell+2012}
+\item
+  \citet{wright+2019}
+\item
+  \citet{azartash-namin+2024}
+\item
+  \citet{dong+lin+murray2003}
+\end{itemize}
+
+\subsection{Dynamical heating of old
+stars}\label{dynamical-heating-of-old-stars}
+
+For a variety of reasons, older stars in a galaxy may be preferentially
+``hotter'' (i.e., higher typical random velocities) than younger stars.
+
+In the case of dwarf galaxies, a few mechanisms have been proposed which
+may heat the stellar components: heating by strong feedback, heating by
+dark sub-subhalos, and heating
+
+Because dwarf galaxies have extended star formation histories, like the
+stellar-feedback scattering method,
+
+One compl
+
+\emph{cluster dynamics} Could processess which happen in globular
+clusters also occur in dsarf galaxies, such as mass segragation and the
+evaporation of the smallest mass stars? This seems unlikely at first
+glance because dwarf galaxies contain such
+
+\citet{baumgardt+2022}.
 
 \subsection{Past mergers and
 accretion}\label{past-mergers-and-accretion}
+
+When galaxies merge, traces of the effects of the merger can remain for
+long afterwards. For dwarf galaxies, mergers may appear as multiple
+populations which may have different sizes, chemistry, and kinematics.
+
+A number of studies has investigated mergers in dwarf galaxies, showing
+that this is a feasible scenario for halo formation
 
 \begin{itemize}
 \tightlist
@@ -531,14 +580,24 @@ accretion}\label{past-mergers-and-accretion}
 \item
   rotation from merger: \citet{cardona-barrero+2021}
 \item
-  \citet{genina+2019}: mergers \& two-population formation
+  \citet{starkenburg+helmi+sales2016}
+\item
+  \citet{fouquet+2017}: And II via merger
+\item
+  \citet{genina+2019}: \apostle{} galaxies: Mergers with gas can heat
+  old population and form new population subsequently. Additionally,
+  ram-pressure stripping and interactions with cosmic filimants can
+  remove outer gas and trigger inner star formation.
 \end{itemize}
 
 \subsection{Preprocessing}\label{preprocessing}
 
 Another alternative is that the dwarf galaxies have been
 ``preprocessed'' by another dwarf/LMC like galaxy earlier on and this
-has resulted in their unique properties
+has resulted in their unique properties.
+
+This could involve a strong tidal interaction very early on in the dwarf
+galaxy.
 
 \subsection{Tidal dwarfs}\label{tidal-dwarfs}
 
@@ -565,3 +624,78 @@ nature of these dwarf galaxies. t
 \item
   MOND: \citet{sanchez-salcedo+hernandez2007}: mond in dsph
 \end{itemize}
+
+\section{Summary and outlook}\label{summary-and-outlook}
+
+In this thesis, we have investigated tidal effects on the dwarf galaxies
+Sculptor and Ursa Minor.
+
+We first showed, using data from J+24, that each galaxy contains a
+substantial, extended population when compared to an exponential density
+profile. We show that this population is reasonably independent of the
+details of the data selection or methodology, implying that this
+``density excess'' is likely a real feature of each galaxy. Sculptor and
+Ursa Minor are more extended in the outer regions than other nearby
+dwarf classical, given current observations.
+
+We then investigated if tides were a permissable explanation. By
+modelling each galaxy based on cosmological initial conditions, we
+showed that tides do not strongly affect either galaxy. However, the
+presence of an LMC in the MW possibly complicates our conclusions, but
+we find that the effect of the LMC means Scl could be on first infal and
+has experienced a significantlly weaker tidal history, and Ursa Minor
+may only have a more extended orbit. In all of our investigation, we
+show that tides are very unlikely to affect the currently-observed
+density profiles. A stream is possibly detectable, depending on the
+initial stellar extent of each galaxy and how much deeper future
+observations are able to reach.
+
+As a result, we conclude that the observed extended density of each
+galaxy is inconsistent with a tidal origin, and requires a different
+explanation. In this (final) chapter, we have summarized possible other
+explanations in the literature, including the effects of mergrs,
+episodic star formation histories, stellar halos,
+
+While we have discussed a number of different avenues through which
+stellar halos form, these need not be exclusive.
+
+As an example, consider +frenk+carlos+++: when two gas-rich dwarf
+galaxies collide, the merger can introduce new star formation, possibly
+forming a new, distint population of stars. The formation of stars may
+drive a burst which heats up old stars. The merger may scatter old stars
+into a stellar halo. And the merger may distribute the two populations
+of the old galaxies into separate components. As a result, many
+different processes can contribute to the formation of chemically and
+dynamically distinct populations.
+
+Is there hope for determining the nature of a stellar halo? Perhaps the
+most promising tool will be chemistry. In particular, if we reach a
+point where we can chemically distinguish the populations of different
+galaxies, then chemistry provides an opportunity to test the merger
+history of galaxies.
+
+We propose a categorization of the (\LCDM{}) scenarios above
+
+\begin{itemize}
+\tightlist
+\item
+  Gas-poor mergers or accretion: more than one \emph{chemodynamically
+  independent} population (e.g.~GSE in the MW halo)
+\item
+  Gas-rich merger: more than one \emph{chemodynamically independent}
+  population plus an additional, younger population with possibly shared
+  heritage.
+\item
+  Continuous dynamical heating (e.g.~subsubhalos) : chemically
+  contiguous population with an old to young population gradient.
+\item
+  Strong stellar feedback: Associated bursty star formation history in
+  chemical abundance space, but reasonably chemically-contiguous
+  population.
+\end{itemize}
+
+In addition, the first two scenarios could show significant variation
+among dwarfs (especially for (near) major-mergers), whereas the last two
+should be relatively similar among similar dwarfs.
+
+Measure halo ellipticity via TMT, \citet{evslin2016}

@@ -57,7 +57,8 @@ galaxy. For the background likelihoods, the spatial likelihood is a
 uniform distribution over the field, and the background CMD and PM
 likelihoods are constructed empirically from the stars in an annulus far
 from the satellite. Each likelihood is normalized as a probability
-density over the respective parameter space.
+density over the respective parameter space. The appendix discusses the
+details of quality cuts and the likelihood calculation.
 
 The total likelihood is a mixture model of the satellite and background,
 weighted by the fraction of stars in the field belonging to the
@@ -96,10 +97,10 @@ dwarf galaxy candidate member stars, which we will now investigate.
 \section{The effects of membership
 criteria}\label{the-effects-of-membership-criteria}
 
-We analyze stellar distributions in the tangent plane, considering as
-well the projected shape of a galaxy. The tangent plane coordinates
-\(\xi\) and \(\eta\) are offsets in RA and declination as measured on
-the plane tangent relative to the galaxy centre. To account for the
+We analyze stellar distributions in the tangent plane and consider the
+projected shape of a galaxy. The tangent plane coordinates \(\xi\) and
+\(\eta\) are offsets in right ascension (RA) and declination as measured
+on the plane tangent relative to the galaxy centre. To account for the
 elliptical shape of the galaxy, we use \(R_{\rm ell}\), which we define
 as the circularized elliptical radius, \begin{equation}{
 R_{\rm ell}^2 = a\,b\,\left(\frac{{\xi'}^2}{a^2} + \frac{{\eta'}^2}{b^2} \right),
@@ -143,10 +144,10 @@ membership assignment.
 
 Based on the fiducial sample's distribution in
 Figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection},
-Ursa Minor stands out because of its higher ellipticity. Sculptor and
-Ursa Minor show a population of members past \(6R_h\) in radius, but
-Fornax does not, even though Fornax has many more stars. Fornax also has
-a bluer CMD, indicative of more recent star formation. Otherwise, there
+Ursa Minor stands out because of its higher ellipticity. While Sculptor
+and Ursa Minor show an extended population of members past \(6R_h\) in
+radius Fornax does not despite having many more stars. Fornax also has a
+bluer CMD, indicative of more recent star formation. Otherwise, there
 are no major morphological differences between these galaxies.
 
 One limitation of the J+24 method is the assumption of a specific
@@ -154,7 +155,7 @@ density profile for the dwarf galaxy (a one- or two-component
 exponential), which may impact the membership probability of distant
 stars. However, there are no clear extensions or overdensities in the
 ``CMD+PM'' selected sample, which does not include a spatial likelihood.
-If even fainter, more extended features exist, they are not clearly
+If even fainter, more extended features exist, they are not obviously
 detectable with \emph{Gaia}.
 
 To illustrate the extent of Sculptor and Ursa Minor, we highlight
@@ -215,8 +216,7 @@ stars.}\label{fig:fornax_selection}
 We derive density profiles by binning member stars in constant width
 bins in \(\log R_{\rm ell}\) of 0.05 dex. We ignore bins interior or
 exterior to the first empty bin in either direction. We use symmetric
-Poisson uncertainties as ``error bars'' in the density estimate at each
-bin.
+Poisson uncertainties as error bars in the density estimate at each bin.
 
 Fig.~\ref{fig:scl_observed_profiles} show the derived density profiles
 for Sculptor, Ursa Minor, and Fornax. We calculate density profiles for
@@ -233,7 +233,7 @@ subtracting the apparent background in the ``all'' profile.
 
 While the density profiles of all samples agree in the inner regions,
 they begin to deviate outside \(6 R_h\). Outside this radius, the
-fiducial profile extends 1--2 magnitudes below the CMD+PM selection
+fiducial profile extends 1--2 magnitudes below the ``CMD+PM'' selection
 background. Because the fiducial profile in this region depends
 critically on the spatial likelihood, its shape is vulnerable to the
 assumed density profile (an exponential in J+24). We explore this in
@@ -242,9 +242,9 @@ more detail in Appendix \ref{sec:density_extra}.
 Near UMi, there is a small (\(R_h\sim 0.5'\)), likely unassociated,
 ultrafaint star cluster, Muñoz 1 \citep{munoz+2012}. The cluster is at a
 relative position of \((\xi, \eta) \approx(-42, -15)\) arcminutes,
-corresponding to an elliptical radius of 37 arcminutes. This cluster
-does not have a bright RGB, so has few stars brighter than a magnitude
-\(G=22\). The cluster has little effect on the elliptically-averaged
+corresponding to an elliptical radius of 37 arcminutes. Muñoz 1 does not
+have a bright RGB, so has few stars above the \emph{Gaia} magnitude
+limit. The cluster has little effect on the elliptically-averaged
 density profile (see location on Fig.~\ref{fig:scl_observed_profiles}).
 
 Fig.~\ref{fig:classical_dwarfs_densities} compares the fiducial density

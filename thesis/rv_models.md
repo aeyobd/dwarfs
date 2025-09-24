@@ -66,7 +66,26 @@ Our model here is relatively simple. Some things which we note as systematics or
 
 For both Ursa Minor and Sculptor, we also fit models to only data from individual surveys (see REF). Since the resulting parameters are very similar, we conclude that many of the systematic uncertainties are likely smaller than the present errors or that each large survey has similar biases. 
 
+Sculptor mass modeling
 
+In comparison, @battaglia+2008, etc.
+
+- @strigari+frenk+white2017
+- @breddels+2013
+- @vitral+2025
+
+Ursa Minor:
+
+- @pryor+kormendy1990, @lake1990 MLR / velocity dispersion
+- @armandroff+olszewski+pryor1995; @olszewski+pryor+armandroff1996 MLR
+- @aaronson+olszewski+hodge1983; @aaronson1983 carbon stars and velocities
+- @stetson1984 early spectroscopy.
+- @munoz+2005: velocity dispersion profile
+- @spencer+2018
+- @kleyna+1999
+- 
+
+@martinez-garcia+2023: rotation gradients.
 
 ## Velocity modelling and comparisons
 

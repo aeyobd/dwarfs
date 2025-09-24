@@ -7,6 +7,9 @@
 
 
 
-Todo:
 
-- SIMBAD
+
+- SIMBAD: scl dsph
+- SIMBAD: umi dsph
+
+in these, I have likely left out many SFH/CMD/chemical studies much less relevant to my work

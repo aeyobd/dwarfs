@@ -75,17 +75,3 @@ Figure: Similar to [@fig:scl_observed_profiles] except for Ursa Minor
 Figure: Similar to [@fig:scl_density_j24_methods] except for Ursa Minor. 
 
 
-
-
-
-## Comparison to Literature
-
-Here, we compare our density profiles against past derivations of density profiles for Sculptor and Ursa Minor
-
-
-
-
-
-![Comparison of analytic density profiles](figures/analytic_profile_comparison.pdf)
-
-Figure: A comparison of different parameterizations for dwarf galaxy density profiles. Note that deviations between profiles only become apparent past 3 R_h, and only the Plummer profile, in contrast to more commonly assumed profiles, deviates by ~1 dex positive before 6 Rh. Since this profile is a far minority in the literature, deviations from exponential and close relatives are interesting and worth further consideration. 
