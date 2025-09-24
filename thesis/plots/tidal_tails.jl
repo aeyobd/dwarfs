@@ -136,20 +136,23 @@ md"""
 # sculptors tidal tails
 """
 
+# ╔═╡ 9ae7b57f-7649-443e-a438-4e5bd4b4d048
+@savefig "scl_sim_stream" plot_sample(load_stars("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20"))
+
 # ╔═╡ 189db37c-1e59-4e69-9487-8525d45a9c3c
 plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/orbit_mean", "plummer_rs0.20"))
-
-# ╔═╡ f62a2c26-1baa-4a46-98ac-e43f75547a72
-plot_sample(load_stars("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20"))
 
 # ╔═╡ 53c9aaff-51cd-409e-ab1f-c28e940b2ed1
 plot_sample(load_stars("sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20"))
 
 # ╔═╡ 7b274c9f-4cdd-41ef-bdef-8a649331d1d9
-plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "plummer_rs0.20"))
+@savefig "scl_mw_impact_stream" plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "plummer_rs0.20"))
 
 # ╔═╡ 5a56e59a-c846-4829-9ddf-496c8a0383fb
 plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"))
+
+# ╔═╡ a862901d-aa6b-4132-8940-8ec710fd7374
+plot_sample(load_stars("sculptor", "1e6_v43_r3_beta0.2_a4/orbit_smallperi", "exp2d_rs0.13"))
 
 # ╔═╡ ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 md"""
@@ -179,11 +182,12 @@ plot_sample(load_stars("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "plummer_rs0.2
 # ╠═f2ec2966-9018-4ad0-8ec3-36e438012ca6
 # ╠═6be80d25-974f-4bfe-96df-18cb0ce96c5a
 # ╟─8bf905de-5457-4611-8b9d-3ca6039cc582
+# ╠═9ae7b57f-7649-443e-a438-4e5bd4b4d048
 # ╠═189db37c-1e59-4e69-9487-8525d45a9c3c
-# ╠═f62a2c26-1baa-4a46-98ac-e43f75547a72
 # ╠═53c9aaff-51cd-409e-ab1f-c28e940b2ed1
 # ╠═7b274c9f-4cdd-41ef-bdef-8a649331d1d9
 # ╠═5a56e59a-c846-4829-9ddf-496c8a0383fb
+# ╠═a862901d-aa6b-4132-8940-8ec710fd7374
 # ╟─ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 # ╠═52c9a0fc-6db3-4e67-8d01-2f0eb0c1663f
 # ╠═b50e2128-aa69-4ef9-bd7a-a08f412c504e

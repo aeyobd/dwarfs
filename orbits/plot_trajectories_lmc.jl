@@ -149,6 +149,9 @@ Nmax = 100
 # ╔═╡ 61c5e886-4c54-4080-8111-122765405ffe
 pot = Agama.Potential(file=joinpath(galaxyname, modelname, "agama_potential.ini"))
 
+# ╔═╡ cba42f30-bf44-4926-abd5-40282b049539
+pot_mw = Agama.Potential(file=joinpath(galaxyname, modelname, "potential_mw_init.ini"))
+
 # ╔═╡ 7ac315f4-8d01-45ee-9a02-0c7854f3a7ad
 pot_lmc = Agama.Potential(file=joinpath(galaxyname, modelname, "potential_lmc.ini"))
 
@@ -210,26 +213,6 @@ md"""
 The plots below are designed to show the special orbits in a variety of frames.
 """
 
-# ╔═╡ e5d40e2f-ac47-4827-853d-2f94bc39a624
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="time / Gyr",
-		ylabel="Galactocentric distance / kpc"
-	)
-
-	for i in eachindex(orbits)
-		lines!(orbits[i].times * lguys.T2GYR, rs[i], alpha=0.1, color=COLORS[1])
-	end
-
-	for i in eachindex(orbits)
-		lines!(orbits[i].times * lguys.T2GYR, radii(orbits_m_lmc[i]), alpha=0.1, color=COLORS[2])
-	end
-
-	@savefig "r_vs_time_samples"
-	fig
-end
-
 # ╔═╡ 1c6def29-8d8a-4db2-b400-b2a63bac4e5e
 let
 	fig = Figure()
@@ -252,7 +235,11 @@ let
 end
 
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
-@savefig "xyz_samples" lguys.plot_xyz(positions..., color=COLORS[1], alpha=0.1)
+@savefig "xyz_samples" let
+	fig = lguys.plot_xyz(positions..., color=COLORS[1], alpha=0.1)
+	lguys.plot_xyz!(fig.content, lmc_orbit.positions, color=:black,)
+	fig
+end
 
 # ╔═╡ 472496f2-ace3-4ec1-8f7b-7e1921fd0938
 @savefig "xyz_lmc_samples" lguys.plot_xyz(LilGuys.positions.(orbits_m_lmc)..., color=COLORS[1], alpha=0.1)
@@ -322,6 +309,15 @@ end
 # ╔═╡ c0151e67-0ca4-4f0c-8fbd-b397c4ff7de8
 tides = OrbitUtils.scalar_tidal_forces.(pot, positions, agama_units=agama_units)
 
+# ╔═╡ da1941ae-6953-4286-9d35-cf0f26100d08
+accs = radii.(Agama.acceleration.(pot, positions, agama_units))
+
+# ╔═╡ 30c835c7-8c28-4125-8b08-cb8ea787f2bd
+accs_mw = radii.(Agama.acceleration.(pot_mw, positions, agama_units))
+
+# ╔═╡ 6367f3da-c317-42ed-8072-5e231e6563c2
+accs_res = radii.(Agama.acceleration.(pot, positions, agama_units) .- Agama.acceleration.(pot_mw, positions, agama_units))
+
 # ╔═╡ 5c2daad6-e537-4123-b7e4-388f43caa4c8
 tides_no = OrbitUtils.scalar_tidal_forces.(pot_no, positions, agama_units=agama_units)
 
@@ -356,6 +352,86 @@ let
 	end
 
 	@savefig "tides_vs_radius"
+
+	fig
+end
+
+# ╔═╡ 8ffe0498-a754-4734-ad22-60244b6850f0
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+			  xlabel = "galactocentric radius",
+			  ylabel = "acceleration"
+			 )
+
+	for i in eachindex(orbits)
+		lines!(rs[i], log10.((accs[i])), color=COLORS[1], alpha=0.1)
+	end
+
+
+	fig
+end
+
+# ╔═╡ e5d40e2f-ac47-4827-853d-2f94bc39a624
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="time / Gyr",
+		ylabel="Galactocentric distance / kpc"
+	)
+
+	xlims!(-3, 0)
+
+	for i in eachindex(orbits)
+		lines!(orbits[i].times * lguys.T2GYR, rs[i], alpha=0.1, color=COLORS[1])
+	end
+	lines!(lmc_orbit.times*T2GYR, radii(lmc_orbit), color=:black)
+
+
+	for i in eachindex(orbits)
+		lines!(orbits[i].times * lguys.T2GYR, radii(orbits_m_lmc[i]), alpha=0.1, color=COLORS[2])
+	end
+
+	@savefig "r_vs_time_samples"
+	fig
+end
+
+# ╔═╡ 9c4a59e3-1fa2-4dfb-b3aa-a8615cd51bef
+@savefig "xyz_samples" let
+	fig = lguys.plot_xyz(positions..., color=COLORS[1], alpha=0.1)
+	lguys.plot_xyz!(fig.content, lmc_orbit.positions, color=:black,)
+	fig
+end
+
+# ╔═╡ e8fb8c06-b153-4e6e-b5df-f51f2fd38462
+let
+	idx = 1 + 500
+
+	@info orbits[1].times[idx] * T2GYR
+	fig = lguys.plot_xyz([p[:, idx] for p in positions]..., color=COLORS[1], alpha=0.1, plot=:scatter, limits=((-150, 150), (-150, 150), (-150, 150)))
+
+	lguys.plot_xyz!(fig.content, lmc_orbit.positions[:, idx], color=:black, plot=:scatter)
+	lguys.plot_xyz!(fig.content, zeros(3), color=COLORS[2], plot=:scatter)
+
+	fig
+end
+
+# ╔═╡ 66f443d9-7b08-46c8-aab0-80de11181299
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+			  xlabel = "time",
+			  ylabel = " acceleration"
+			 )
+
+	xlims!(-3, 0)
+	for i in eachindex(orbits)
+		lines!(orbits[i].times*T2GYR, accs[i], color=COLORS[1], alpha=0.1)
+		lines!(orbits[i].times*T2GYR, accs_mw[i], color=COLORS[2], alpha=0.1)
+		lines!(orbits[i].times*T2GYR, accs_res[i], color=COLORS[2], alpha=0.1)
+
+	end
+
 
 	fig
 end
@@ -437,6 +513,7 @@ end
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═7cfec8fe-2b5a-4939-a04c-a0cdcc0292ca
 # ╠═61c5e886-4c54-4080-8111-122765405ffe
+# ╠═cba42f30-bf44-4926-abd5-40282b049539
 # ╠═7ac315f4-8d01-45ee-9a02-0c7854f3a7ad
 # ╠═aede5671-cde4-47dd-b15c-4402e3ccdba7
 # ╠═2da68601-f24d-4499-b072-3bd4d9237a4e
@@ -450,7 +527,6 @@ end
 # ╠═5be3fdaa-5c87-4fef-b0eb-06dfa780cb11
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
-# ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
 # ╠═1c6def29-8d8a-4db2-b400-b2a63bac4e5e
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
 # ╠═9976635c-51e9-48ab-87e6-49662aeb58a2
@@ -462,6 +538,9 @@ end
 # ╟─f6b27164-ee7c-428b-aefb-75e89d178f3e
 # ╟─5fdd8307-d528-4cd7-a5e4-1f15aba75cd5
 # ╠═c0151e67-0ca4-4f0c-8fbd-b397c4ff7de8
+# ╠═da1941ae-6953-4286-9d35-cf0f26100d08
+# ╠═30c835c7-8c28-4125-8b08-cb8ea787f2bd
+# ╠═6367f3da-c317-42ed-8072-5e231e6563c2
 # ╠═5c2daad6-e537-4123-b7e4-388f43caa4c8
 # ╠═4d51ff34-dadd-4765-bf08-ecb9e5d97ae5
 # ╠═0e2e3c40-7aca-4fd0-b0c8-0850a4e1c8b5
@@ -469,5 +548,10 @@ end
 # ╠═9adb284c-5f1e-4696-9a39-bffc86124c54
 # ╠═6cc4d76f-cc3c-4619-8dbe-4dea2aed0a10
 # ╠═f0b92dbf-2226-4500-a232-f8f178e46b2e
+# ╠═8ffe0498-a754-4734-ad22-60244b6850f0
+# ╠═e5d40e2f-ac47-4827-853d-2f94bc39a624
+# ╠═9c4a59e3-1fa2-4dfb-b3aa-a8615cd51bef
+# ╠═e8fb8c06-b153-4e6e-b5df-f51f2fd38462
+# ╠═66f443d9-7b08-46c8-aab0-80de11181299
 # ╠═0b394f56-54b8-4a8d-abac-ee6b9e6b705f
 # ╠═16dc40c7-dd4a-4490-ac0f-b2c36c0e984e

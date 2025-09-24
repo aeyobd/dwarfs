@@ -41,11 +41,26 @@ end
 # ╔═╡ 7ea5e47e-af87-4fbb-8888-a9ac4e7f5aad
 snap = LilGuys.Snapshot(joinpath(ENV["DWARFS_ROOT"], "agama/halos/nfw_1e6_beta0.2_ra4.0.hdf5"))
 
+# ╔═╡ b1bc9090-9bb6-4ba0-9447-ba75e1de38cb
+snap2 = LilGuys.Snapshot(joinpath(ENV["DWARFS_ROOT"], "simulations/isolation/1e6_beta0.2_a4/fiducial/out/snapshot_001.hdf5"))
+
 # ╔═╡ 0b05671e-0ee4-4d6a-944b-b918cfd51222
 bins = LinRange(-2, 1, 100)
 
+# ╔═╡ 8a924d29-cb79-4bd7-bb2c-32018185caaf
+bins
+
 # ╔═╡ a33c8581-59a7-46c5-a53c-a2332dd008cb
 σ, β = LilGuys.β_prof(snap, r_bins=10 .^bins)
+
+# ╔═╡ 4e7b8280-b64c-4fe9-a265-0c45fe184b64
+bins2 = bins .+ 0.8
+
+# ╔═╡ d7942769-3889-449d-93c2-d7713fae3499
+σ2, β2 = LilGuys.β_prof(snap2, r_bins=10 .^bins2)
+
+# ╔═╡ d7d8acec-4dac-4495-b760-d44e1ae99d1a
+[argmax(σ2)]
 
 # ╔═╡ 1c79460f-a414-43e1-83e6-5eb6e52b7d6f
 halo = LilGuys.NFW(M_s=1, r_s=1)
@@ -75,11 +90,12 @@ let
 	ax = Axis(fig[1,1])
 		
 	lines!(midpoints(bins), σ)
+	lines!(midpoints(bins2), σ2)
 
 	r = 10 .^ bins
 	ρ = LilGuys.density.(halo, r)
 	y = @. (r^1.875 * ρ) ^ (2/3)
-	lines!(bins, y .* maximum(filter(isfinite, σ)) / maximum(y))
+	lines!(bins2, y .* maximum(filter(isfinite, σ)) / maximum(y))
 	@info r[argmax(y)]
 
 	fig
@@ -104,6 +120,9 @@ let
 	lines!(x, y)
 	ylims!(-0.5, 1)
 	lines!(midpoints(bins) .- log10(r_σmax), β)
+
+	lines!(midpoints(bins2) .- bins2[argmax(σ2)], β2)
+
 	fig
 
 end
@@ -123,9 +142,14 @@ end
 # ╠═845c5238-8ebc-412e-9be5-3ea1b8f10058
 # ╠═959c69ff-c08d-4cf5-bd9b-fd2707dbab4d
 # ╠═2f003396-9395-4cdb-95a7-4b7e928a160a
+# ╠═d7d8acec-4dac-4495-b760-d44e1ae99d1a
+# ╠═8a924d29-cb79-4bd7-bb2c-32018185caaf
 # ╠═7ea5e47e-af87-4fbb-8888-a9ac4e7f5aad
+# ╠═b1bc9090-9bb6-4ba0-9447-ba75e1de38cb
 # ╠═0b05671e-0ee4-4d6a-944b-b918cfd51222
 # ╠═a33c8581-59a7-46c5-a53c-a2332dd008cb
+# ╠═4e7b8280-b64c-4fe9-a265-0c45fe184b64
+# ╠═d7942769-3889-449d-93c2-d7713fae3499
 # ╠═1c79460f-a414-43e1-83e6-5eb6e52b7d6f
 # ╠═d777349d-d7cd-45e8-bfa1-e95e86eff14e
 # ╠═f4ce80f9-f9d5-47d8-9eec-91ff12fd0717

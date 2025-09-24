@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -28,26 +28,31 @@ import TOML
 # ╔═╡ 4ee54995-a31f-4ae1-8204-e55884d786bb
 α = LilGuys.R_h(LilGuys.Exp2D(R_s=1))
 
-# ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
-function load_profile(galaxyname; algname="../mcmc/hist_fast")
-	# if galaxyname ∈ ["crater2", "antlia2"]
-	# 	algname = "mcmc_hist_fast"
-	# else
-	# 	algname = "mcmc_hist"
-	# end
-	# filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
-	# 	"processed/profile.$(algname).toml")
-	@info galaxyname
-	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
-		"density_profiles/$(algname)_profile.toml")
-	
-    prof = LilGuys.StellarDensityProfile(filename) 
+# ╔═╡ a65be29f-bf1c-410d-9f62-cf2c2646f40a
+function get_R_h(galaxyname)
+	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
+	R_h = obs_props["R_h"]
+	return middle(R_h)
+end
 
+# ╔═╡ b3c13c19-9022-4a7c-9355-104d930ae0e1
+function get_R_h_fit(galaxyname, filename)
 
 	density_fit = TOML.parsefile(filename * "_inner_fits.toml")
 	R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
 	R_h_u = α * 10 ^ LilGuys.Measurement(density_fit["log_R_s_exp2d_inner"], density_fit["log_R_s_exp2d_inner_em"], density_fit["log_R_s_exp2d_inner_ep"])
 	@info "R_h = $R_h_u arcmin"
+end
+
+# ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
+function load_profile(galaxyname; algname="../mcmc/hist_fast")
+	@info galaxyname
+	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
+		"density_profiles/$(algname)_profile.toml")
+	
+    prof = LilGuys.SurfaceDensityProfile(filename) 
+
+	R_h = get_R_h(galaxyname)
 	@info "counts = $(sum(prof.counts))"
 
 	Σ_h = 10 .^ LilGuys.lerp(prof.log_R, middle.(prof.log_Sigma))(log10(R_h))
@@ -68,10 +73,13 @@ end
 galaxynames = [
 	"fornax",
 	"leo1",
-	"leo2",
-	"carina",
-	"sextans1",
-	"draco",	
+	"antlia2", # this one is unreliable...
+	 "leo2",
+	 "carina",
+	 "draco",	
+#	"canes_venatici1",
+	 "sextans1",
+#	"crater2",
 ]
 
 # ╔═╡ f4e8b66c-5f18-45fd-8859-32479d7227bc
@@ -100,7 +108,7 @@ let
 	ax = Axis(fig[1,1], 
 		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
 				xticks = -2:1:1,
-		limits=(nothing, nothing, -3.1, 1)
+		limits=(-1.5, nothing, -4.2, 1.1)
 
 	)
 
@@ -118,8 +126,8 @@ let
 	end
 
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", linewidth=1, markersize=3)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", linewidth=1, markersize=3)
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", )
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", )
 
 	axislegend(position=:lb, merge=true, unique=true)
 
@@ -130,7 +138,7 @@ let
 		ylabel = L"\delta \log\,\Sigma",
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
-		limits=(-1.4, 1, -1, 1)
+		limits=(-1.5, 1.1, -1.2, 2)
 	)
 
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
@@ -147,8 +155,8 @@ let
 		lines!(prof.log_R, prof.log_Sigma .- f(prof.log_R), color=COLORS[1], alpha=0.5)
 	end
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], linewidth=1, markersize=3)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3], linewidth=1, markersize=3)
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2])
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3])
 
 
 	linkxaxes!(ax, ax_res)
@@ -225,6 +233,8 @@ end
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═67dd3488-79e1-4ba2-b9ac-f417765d55de
 # ╠═4ee54995-a31f-4ae1-8204-e55884d786bb
+# ╠═a65be29f-bf1c-410d-9f62-cf2c2646f40a
+# ╠═b3c13c19-9022-4a7c-9355-104d930ae0e1
 # ╠═40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
 # ╠═552e9438-862f-4710-a7d4-c8d798b5f1aa
 # ╠═cf655228-1528-4e77-9629-07e99984951f

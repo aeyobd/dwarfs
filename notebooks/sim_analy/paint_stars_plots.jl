@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -109,9 +109,6 @@ profile = lguys.load_profile(paramname)
 
 # ╔═╡ 715f771b-686a-4643-a914-35ba6ca9042d
 df_E = lguys.read_hdf5_table(joinpath(dir, starsname, "probabilities_df.hdf5"))
-
-# ╔═╡ 1f10e98c-42ff-4598-9822-3f0af5c065bb
-df_E[8000, :]
 
 # ╔═╡ 1066a445-600d-4508-96a2-aa9b90460097
 df_probs = lguys.read_hdf5_table(joinpath(dir, starsname, "probabilities_stars.hdf5"))
@@ -554,10 +551,49 @@ let
 	fig
 end
 
+# ╔═╡ 90dc8a11-dea7-4990-88bf-0051ce37cfe4
+[lguys.V2KMS * lguys.std(snap.velocities[i, :], snap.weights) for i in 1:3]
+
+# ╔═╡ 4bafd06e-50a6-47f4-beb2-6e74027349c5
+import StatsBase: quantile
+
+# ╔═╡ 5ab2de54-5383-4522-8836-9977fb398a8c
+lguys.R_h(profile)
+
+# ╔═╡ 98e65da4-86a5-4315-a3b9-fca728522acf
+[quantile(abs.(snap.positions[i, :]), weights(snap.weights), 0.5) for i in 1:3]
+
+# ╔═╡ 95642426-9de6-4ba5-bb73-bb720c2a1732
+lguys.R_h(profile)
+
+# ╔═╡ 54756868-a925-4c32-854b-5aa3df6ea91a
+md"""
+# Density test
+"""
+
+# ╔═╡ 2f05b593-2670-47f0-b8e3-530497639e88
+lguys.MassScalars(snap, lguys.MassProfile(snap))
+
+# ╔═╡ 5accad87-5b57-4983-80bb-2f6d93a8453d
+let
+	prof = lguys.DensityProfile(snap)
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+	r_scale = 1
+
+	lines!(prof.log_r, log10.(prof.rho))
+
+	lines!(log10.(df_E.radii), log10.(df_E.rho))
+	ylims!(-10, 0)
+	fig
+
+end
+
 # ╔═╡ Cell order:
 # ╟─17ffde4b-5796-4915-9741-d594cf0c5ca7
 # ╟─420977eb-31df-44f3-a2eb-3209d66b10c2
-# ╠═81dc2694-56ba-496a-85d1-cf2ecbaa2e67
+# ╟─81dc2694-56ba-496a-85d1-cf2ecbaa2e67
 # ╠═1ff14ee1-3f98-4144-9493-7479e56e8790
 # ╠═a893932c-f184-42bc-9a0e-0960f10520aa
 # ╠═641946b3-e6f2-4d6d-8777-7698f353eb3d
@@ -573,7 +609,6 @@ end
 # ╟─d76e6200-9401-4c2e-bd7c-53e79dd49415
 # ╠═0ede2af5-a572-41c8-b3f0-cb0a24318c5f
 # ╠═715f771b-686a-4643-a914-35ba6ca9042d
-# ╠═1f10e98c-42ff-4598-9822-3f0af5c065bb
 # ╠═578c6196-db59-4d5c-96a7-9a8487bbeaae
 # ╠═ed0996a4-8667-49f7-b89f-64ae44f8a3ea
 # ╠═1066a445-600d-4508-96a2-aa9b90460097
@@ -622,3 +657,11 @@ end
 # ╠═03037c94-7f26-479c-9772-fa2682e3ba37
 # ╠═ad02a484-11b1-479f-b9e0-0e16e64a5109
 # ╠═74845a4f-588b-44d3-a5e1-7155fd6a7b01
+# ╠═90dc8a11-dea7-4990-88bf-0051ce37cfe4
+# ╠═4bafd06e-50a6-47f4-beb2-6e74027349c5
+# ╠═5ab2de54-5383-4522-8836-9977fb398a8c
+# ╠═98e65da4-86a5-4315-a3b9-fca728522acf
+# ╠═95642426-9de6-4ba5-bb73-bb720c2a1732
+# ╟─54756868-a925-4c32-854b-5aa3df6ea91a
+# ╠═2f05b593-2670-47f0-b8e3-530497639e88
+# ╠═5accad87-5b57-4983-80bb-2f6d93a8453d

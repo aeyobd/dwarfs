@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -255,8 +255,14 @@ function plot_sigma_v!(σv; R_h, x0=15, rf=1, vmax = solve_v_from_dispersion_sim
 	
 	slope = log_derivative(x->vmax(x, σv, R_h) * V2KMS, x0)
 	θ = @lift atan(slope * $rf)
+
+	if σv == 8
+		label = L"$\sigma_\textrm{v} = %$σv$\,km\,s$^{-1}$"
+	else
+		label = string(σv)
+	end
 	
-	text!(x0, y0, text=L"$\sigma_\textrm{v} = %$σv\,$km\,s$^{-1}$", rotation=θ, color=color, fontsize=smallfontsize)
+	text!(x0, y0, text=label, rotation=θ, color=color, fontsize=smallfontsize, align=(:center, :bottom))
 end
 
 # ╔═╡ 7d36f094-70bc-4114-b920-3655f73dc75f
@@ -275,9 +281,9 @@ function plot_halo_constraints(gs, der_props, halos)
 
 	plot_mass_concentration!(rf=rf)
 	R_h = der_props.R_h
-	plot_sigma_v!(12; x0=11.8, rf=rf, linestyle=:dot, R_h=R_h)
-	plot_sigma_v!(10; x0=13, rf=rf, linestyle=:dash, R_h=R_h)
-	plot_sigma_v!(8; rf=rf, R_h=R_h)
+	plot_sigma_v!(12; x0=1.2, rf=rf, linestyle=:dot, R_h=R_h)
+	plot_sigma_v!(10; x0=1.45, rf=rf, linestyle=:dash, R_h=R_h)
+	plot_sigma_v!(8; x0 = 2, rf=rf, R_h=R_h)
 
 
 	plot_fattahi!(der_props.log_v_0, der_props.log_v_0_err, label="Fattahi+18")

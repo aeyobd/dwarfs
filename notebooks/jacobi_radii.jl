@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -22,13 +22,13 @@ using PythonCall
 using OrderedCollections
 
 # ╔═╡ 26886e5c-546f-45ca-a882-2b354a962f07
-galaxy = "idealized"
+galaxy = "ursa_minor"
 
 # ╔═╡ cc2c7b51-5483-4693-bda6-40563ffb7289
-modelname = "1e6"
+modelname = "1e7_new_v38_r4.0"
 
 # ╔═╡ d9849d12-43fe-4788-aa26-145ed0d7db19
-orbitname = "orbit_10_100"
+orbitname = "orbit_smallperi.5"
 
 # ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
 vasiliev_units = false

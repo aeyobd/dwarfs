@@ -705,12 +705,19 @@ md"""
 ## Saving
 """
 
+# ╔═╡ e4700e4d-213b-470a-b6f7-ca9e8825a6e7
+if length(idx_apos) > 0
+	r_apo = r[last(idx_apos[idx_apos .< idx_f])]
+else
+	r_apo = NaN
+end
+
 # ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 let
 	
 	orbital_properties = OrderedDict(
 		"pericentre" => r_peri,
-		"apocentre" => r[last(idx_apos[idx_apos .< idx_f])],
+		"apocentre" => r_apo,
 		"pericentres" => r[idx_peris],
 		"apocentres" => r[idx_apos],
 		"period" => period,
@@ -854,5 +861,6 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═592a18e9-ee9a-4638-9454-f0bda3a0a3f2
 # ╟─179c3c32-1368-4a58-b4b8-26d9d3f19f8c
 # ╟─5704daca-a8c4-4292-a6c0-ea294f4373fd
+# ╠═e4700e4d-213b-470a-b6f7-ca9e8825a6e7
 # ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 # ╠═fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67

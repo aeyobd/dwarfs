@@ -112,12 +112,6 @@ x_cen_err, v_cen_err = h5open(joinpath(outpath, "centres.hdf5"), "r") do f
 	return xe, ve
 end
 
-# ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-# ╠═╡ disabled = true
-#=╠═╡
-profs = LilGuys.read_structs_from_hdf5(joinpath(outpath, "profiles.hdf5"), LilGuys.MassProfile)
-  ╠═╡ =#
-
 # ╔═╡ 13fddaff-5379-47ba-a0cf-aba1c87124a0
 scalars = read_fits(joinpath(outpath, "profiles_scalars.fits"))
 
@@ -442,6 +436,9 @@ import LinearAlgebra: ⋅, ×
 # ╔═╡ fc34af5e-069c-47c5-8599-a97d520c1426
 NFW(v_circ_max = 0.1419, r_circ_max=4.2).r_s / 2.76 * 0.14
 
+# ╔═╡ bb20e906-636b-4807-98fe-64453f746697
+scalars.r_circ_max
+
 # ╔═╡ 03da8ffc-247a-4580-8715-4d8e294b02a8
 let
 	fig = Figure()
@@ -455,10 +452,11 @@ let
 	for i in idx
 		snap = out[i]
 		bins = lguys.quantile(radii(snap), LinRange(0, 1, 20+1))
-		σ, β = LilGuys.β_prof(snap, r_bins=bins)
-		x = midpoints(bins)
+		σ, β = LilGuys.β_prof(snap, r_bins=(bins))
+		x = midpoints(log10.(bins))
+		vlines!(log10(5 * halo.r_s * 0.75))
 		
-		scatterlines!(log10.(x), β, color=i, colorrange=(1, length(out)))
+		scatterlines!((x), β, color=i, colorrange=(1, length(out)))
 	end
 	
 	fig
@@ -585,7 +583,6 @@ end
 # ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═382d9256-5a83-4a70-be12-4818fe6c19b4
-# ╠═5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
 # ╠═13fddaff-5379-47ba-a0cf-aba1c87124a0
 # ╠═669967a7-0f29-4537-adc1-e96712793db7
 # ╠═537906ed-1c2d-4be6-9e5b-4696dd3aa854
@@ -632,6 +629,7 @@ end
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 # ╠═ba823177-97e7-43df-8b0a-2ab1f2bafbc0
 # ╠═fc34af5e-069c-47c5-8599-a97d520c1426
+# ╠═bb20e906-636b-4807-98fe-64453f746697
 # ╠═03da8ffc-247a-4580-8715-4d8e294b02a8
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f

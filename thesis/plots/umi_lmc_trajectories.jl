@@ -138,26 +138,13 @@ let
 	plot_rt!(ax_rt, orbits, color=COLORS[2], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, orbits_no, color=COLORS[3], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, lmc_orbit, color=COLORS[1])
-	ylims!(0, nothing)
 
 	plot_rt_today!(ax_rt, lmc_orbit, strokewidth=sw, color=COLORS[1])
 	plot_rt_today!(ax_rt, orbits, strokewidth=sw, color=COLORS[2])
 
-	hidexdecorations!(ticks=false, minorticks=false)
 	
-
-	
-	xlims!(-9, 0.2)
-	ylims!(0, 400)
-
-	# LMC distance
-	ax_rt2 = Axis(fig[3, 1:3 ],
-				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-LMC}$ / kpc")
-	
-	plot_rt!(ax_rt2, orbits .- [pos_lmc_resampled], color=COLORS[2], alpha=0.05, linestyle=:solid)
-	xlims!(-9, 0.2)
-	ylims!(0, 400)
-	plot_rt_today!(ax_rt2, orbits .- [pos_lmc_resampled], strokewidth=sw, color=COLORS[2])
+	xlims!(t_min*T2GYR, 0.2)
+	ylims!(0, 150)
 
 
 	# labels
@@ -170,7 +157,6 @@ let
 
 	
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
-	rowsize!(fig.layout, 3, Aspect(1, 1.0))
 
 	resize_to_layout!(fig)
 	@savefig "umi_lmc_xyzr_orbits"

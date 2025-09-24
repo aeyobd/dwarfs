@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -189,6 +189,23 @@ exp_profile = LilGuys.Sersic(n=1)
 # ╔═╡ 00ed6c32-b602-4c8c-ae13-7b323c6232fd
 fig_limits = (-1.0, 1.2, -5, 1)
 
+# ╔═╡ 10a88d85-08b1-4401-bf9a-4873b9428676
+@savefig "scl_umi_vs_fornax" let
+	fig = Figure()
+	
+	ax = DensityAxis(fig[1,1])
+
+
+	plot_exponential!(ax)
+
+	plot_galaxy_densities!(ax)
+
+	axislegend(position=:lb)
+
+
+	fig
+end
+
 # ╔═╡ 3c2d3aa7-9937-46ad-a393-32c120b670b9
 function DensityAxis(gs)
 	ax = Axis(gs,
@@ -217,23 +234,6 @@ function plot_galaxy_densities!(ax)
 					  label=labels[galaxy], 
 					  color=colors[galaxy],  marker=[:rect, :utriangle, :circle][i])
 	end
-end
-
-# ╔═╡ 10a88d85-08b1-4401-bf9a-4873b9428676
-@savefig "scl_umi_vs_fornax" let
-	fig = Figure()
-	
-	ax = DensityAxis(fig[1,1])
-
-
-	plot_exponential!(ax)
-
-	plot_galaxy_densities!(ax)
-
-	axislegend(position=:lb)
-
-
-	fig
 end
 
 # ╔═╡ 1d54de8d-c9be-42b6-85a1-235f7d8a08d0
