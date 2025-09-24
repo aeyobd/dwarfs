@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -22,11 +22,14 @@ using Distributions
 # ╔═╡ 6c4427b6-fe6d-4ad7-812a-21c9788591d5
 using OrderedCollections
 
+# ╔═╡ 8bcf8114-1823-47de-a7ab-27c136ac4a64
+using PyFITS
+
 # ╔═╡ 08d97b62-2760-47e4-b891-8f446e858c88
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "antlia2"
+	galaxy = "sculptor"
 	skip = 10
 	all_profiles = true
 end
@@ -93,16 +96,16 @@ md"""
 """
 
 # ╔═╡ 5feaa9b0-ca44-48d6-80d1-16303a34005f
-prof_simple = LilGuys.StellarDensityProfile(stars.R_ell[stars.PSAT .> 0.2], bins=log10.(bins), errors=:weighted, normalization=:none)
+prof_simple = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.2], bins=log10.(bins), errors=:weighted, normalization=:none)
 
 # ╔═╡ ab124afe-c94a-44d9-8869-bd4d4cee3fbd
-prof_weighted = LilGuys.StellarDensityProfile(stars.R_ell, weights=stars.PSAT, bins=log10.(bins), errors=:weighted,  normalization=:none)
+prof_weighted = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0], weights=stars.PSAT[stars.PSAT .> 0] |> disallowmissing, bins=log10.(bins), errors=:weighted,  normalization=:none)
 
 # ╔═╡ babcaaa8-8d95-4dcb-b22b-5e36c10c57dd
-prof_bernoulli = LilGuys.StellarDensityProfile(stars.R_ell, weights=stars.PSAT, bins=log10.(bins), errors=:bernoulli,  normalization=:none)
+prof_bernoulli = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0], weights=stars.PSAT[stars.PSAT .> 0] |> disallowmissing, bins=log10.(bins), errors=:bernoulli,  normalization=:none)
 
 # ╔═╡ e60ea082-818d-46f8-bf50-30a932f97ef2
-prof_auto = LilGuys.StellarDensityProfile(stars.R_ell[stars.PSAT .> 0.2], errors=:weighted, normalization=:none)
+prof_auto = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.2], errors=:weighted, normalization=:none)
 
 # ╔═╡ 82f20e46-90c7-4925-83c9-3f49a909664d
 sum(prof_simple.counts)
@@ -113,7 +116,10 @@ md"""
 """
 
 # ╔═╡ d254b67b-8017-4bbf-ba04-50b5b76f48f0
-prof_counts = LilGuys.StellarDensityProfile(stars.R_ell, bins=log10.(bins),  errors=:weighted)
+prof_counts = LilGuys.SurfaceDensityProfile(stars.R_ell, bins=log10.(bins),  errors=:weighted)
+
+# ╔═╡ 08fc0b00-8a55-4604-a580-613a12db150e
+
 
 # ╔═╡ f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
 let
@@ -155,7 +161,7 @@ if all_profiles
 	idxs = 1:skip:Nc
 	fsats = Matrix{Float64}(undef, Ns, length(idxs))
 	psats = Matrix{Float64}(undef, Ns, length(idxs))
-	profiles = Vector{LilGuys.StellarDensityProfile}(undef, length(idxs))
+	profiles = Vector{LilGuys.SurfaceDensityProfile}(undef, length(idxs))
 
 	Threads.@threads for i in eachindex(idxs)
 		idx = idxs[i]
@@ -179,7 +185,7 @@ if all_profiles
 		filt = psat .> 0
 		weights[filt] = rand(Dirichlet(psat[filt]))
 		weights .*= sum(psat)
-		prof = LilGuys.StellarDensityProfile(radii, bins=log10.(bins), 
+		prof = LilGuys.SurfaceDensityProfile(radii, bins=log10.(bins), 
 			weights=weights, errors=:weighted)
 
 		profiles[i] = prof
@@ -195,7 +201,7 @@ let
 	Nc = size(df_chains, 1)
 	Ns = size(stars, 1)
 	
-	global profiles_nostruct = Vector{LilGuys.StellarDensityProfile}(undef, length(idxs))
+	global profiles_nostruct = Vector{LilGuys.SurfaceDensityProfile}(undef, length(idxs))
 	radii = stars.R_ell
 
 	Threads.@threads for i in eachindex(idxs)
@@ -217,7 +223,7 @@ let
 		filt = psat .> 0
 		weights[filt] = rand(Dirichlet(psat[filt]))
 		weights .*= sum(psat)
-		prof = LilGuys.StellarDensityProfile(radii, bins=log10.(bins), 
+		prof = LilGuys.SurfaceDensityProfile(radii, bins=log10.(bins), 
 			weights=weights, errors=:weighted)
 
 		profiles_nostruct[i] = prof	
@@ -357,6 +363,26 @@ let
 	fig
 end
 
+# ╔═╡ ceb22a8a-d0ab-4686-a894-ae78df0b6584
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label,
+		ylabel = L"\Gamma",
+		limits = (nothing, nothing, -10, 2)
+	)
+	skip = 10
+	
+	for h in profiles[1:skip:end]
+
+		filt = isfinite.(h.Gamma)
+		scatter!(10 .^ (h.log_R[filt].+ 0.0*randn(sum(filt))), h.Gamma[filt], color=:black, alpha=0.1, markersize=1)
+	end
+
+
+	fig
+end
+
 # ╔═╡ 9bf31971-1c10-4020-946e-d8cfebf6596a
 md"""
 # Outputs
@@ -374,7 +400,7 @@ profout = joinpath(outdir, "hist_fast_profile.toml")
 starsout = joinpath(outdir, "stars$FIGSUFFIX.fits")
 
 # ╔═╡ 4482bead-75a5-413f-b442-e60ab3d3ec88
-prof_mc_slow = LilGuys.StellarDensityProfile(
+prof_mc_slow = LilGuys.SurfaceDensityProfile(
 	R_units = "arcmin",
 	log_Sigma=log_Sigma_slow,
 	log_R_bins=log10.(bins),
@@ -401,7 +427,7 @@ let
 	end
 	
 	if all_profiles
-		LilGuys.plot_log_Σ!(ax, prof_mc_slow, label="mc hist", size=2, color=(COLORS[2], 0.3))
+		LilGuys.plot_log_Σ!(ax, prof_mc_slow, label="mc hist",color=(COLORS[2], 0.3))
 	end
 	
 	@savefig "scatter_profiles_approx"
@@ -410,18 +436,47 @@ let
 end
 
 # ╔═╡ bf8d5936-1a4e-47c2-bb22-531ab344b8ad
-prof_mc = LilGuys.StellarDensityProfile(
+prof_mc = LilGuys.SurfaceDensityProfile(
 		R_units = "arcmin",
 		log_Sigma=log_Sigma_fast,
 		log_R_bins=log10.(bins), # use normal bins for these
 		log_R=midpoints(log10.(bins)),
 	)
 
+# ╔═╡ f80631b5-aa7e-454a-937f-c2e66b042105
+profiles_fast = [LilGuys.SurfaceDensityProfile(	R_units = "arcmin",
+		log_Sigma=(log_Sigma_fast),
+		log_R_bins=log10.(bins), # use normal bins for these
+		log_R=midpoints(log10.(bins)),)
+ for log_Sigma_fast in eachcol(log_Sigmas_fast)]
+
+# ╔═╡ c507975a-8041-48f0-b46e-ac1ebccf3a94
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label,
+		ylabel = L"\Gamma",
+		limits = (nothing, nothing, -10, 2)
+	)
+	skip = 10
+	
+	for h in profiles_fast[1:skip:end]
+
+		Gamma = LilGuys.gradient(middle.(h.log_Sigma), h.log_R)
+		filt = isfinite.(Gamma)
+
+		scatter!(h.log_R[filt].+ 0.01*randn(sum(filt)), Gamma[filt], color=:black, alpha=0.1, markersize=1)
+	end
+
+
+	fig
+end
+
 # ╔═╡ 4e4624d7-a858-486f-9930-75b9adf9c269
 mean.(eachrow(.!isfinite.(all_Gammas)))
 
 # ╔═╡ 4106ea1f-948f-42fb-9a19-64580a94ce9a
-prof_mc_nostruct = LilGuys.StellarDensityProfile(
+prof_mc_nostruct = LilGuys.SurfaceDensityProfile(
 		R_units = "arcmin",
 		log_Sigma=log_Sigma_nostruct,
 		log_R_bins=log10.(bins), # use normal bins for these
@@ -511,7 +566,7 @@ let
 	stars_new[!, :PSAT_ep] =  upper_error.(psats_pm)
 	stars_new[!, :f_sat] = median.(eachrow(fsats))
 
-	LilGuys.write_fits(starsout, stars_new, overwrite=true)
+	write_fits(starsout, stars_new, overwrite=true)
 end	
 
 # ╔═╡ Cell order:
@@ -522,6 +577,7 @@ end
 # ╠═e74e6a96-a18e-40bf-ade8-07ce0e30e5c4
 # ╠═6c4427b6-fe6d-4ad7-812a-21c9788591d5
 # ╠═1f497448-9ea2-460f-b403-618b78b47565
+# ╠═8bcf8114-1823-47de-a7ab-27c136ac4a64
 # ╠═11d9d9f5-0fb7-4b06-bd4a-36bdb1f00188
 # ╠═b94c3346-bd31-409e-ad6f-5e7afb891ad1
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
@@ -536,7 +592,7 @@ end
 # ╠═6f016a8e-38ae-4f05-a7ee-c292ac0e5741
 # ╠═3e99a9b9-ba06-47ee-bce7-5720a4eb1944
 # ╟─24a65d65-6e0b-4108-8041-79fee06cd28a
-# ╠═7520415d-a482-4a9a-bf8a-7f8443d3b613
+# ╟─7520415d-a482-4a9a-bf8a-7f8443d3b613
 # ╠═5feaa9b0-ca44-48d6-80d1-16303a34005f
 # ╠═ab124afe-c94a-44d9-8869-bd4d4cee3fbd
 # ╠═babcaaa8-8d95-4dcb-b22b-5e36c10c57dd
@@ -544,6 +600,7 @@ end
 # ╠═82f20e46-90c7-4925-83c9-3f49a909664d
 # ╟─6685cdec-7c99-45ca-98c8-f6439dfd7290
 # ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
+# ╠═08fc0b00-8a55-4604-a580-613a12db150e
 # ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
 # ╠═7f4377ad-ab77-487e-87fc-87cd0c1df40d
 # ╠═2027b636-bb17-4004-941e-b715ba8d0216
@@ -571,6 +628,8 @@ end
 # ╠═f2c43c30-b069-4d17-8d61-be801d85b245
 # ╠═94d6a13f-1165-4d8f-a40a-a4cfa9224093
 # ╠═08424d6a-6a21-45d2-9b1a-d28e129c8158
+# ╠═c507975a-8041-48f0-b46e-ac1ebccf3a94
+# ╠═ceb22a8a-d0ab-4686-a894-ae78df0b6584
 # ╠═7c02d24f-7d59-410b-99bc-93513afa4c5d
 # ╟─9bf31971-1c10-4020-946e-d8cfebf6596a
 # ╠═8c565a28-84bc-4bc7-8a0e-b2e0dff76665
@@ -578,6 +637,7 @@ end
 # ╠═28b67692-45a9-435d-8862-882b0f06f947
 # ╠═4482bead-75a5-413f-b442-e60ab3d3ec88
 # ╠═bf8d5936-1a4e-47c2-bb22-531ab344b8ad
+# ╠═f80631b5-aa7e-454a-937f-c2e66b042105
 # ╠═4e4624d7-a858-486f-9930-75b9adf9c269
 # ╠═4106ea1f-948f-42fb-9a19-64580a94ce9a
 # ╠═6f2a4b25-b9ea-4560-ba6e-fc22af9f23e6

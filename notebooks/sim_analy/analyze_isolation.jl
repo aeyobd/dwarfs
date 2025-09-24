@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -112,12 +112,6 @@ x_cen_err, v_cen_err = h5open(joinpath(outpath, "centres.hdf5"), "r") do f
 	return xe, ve
 end
 
-# ╔═╡ 5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
-# ╠═╡ disabled = true
-#=╠═╡
-profs = LilGuys.read_structs_from_hdf5(joinpath(outpath, "profiles.hdf5"), LilGuys.MassProfile)
-  ╠═╡ =#
-
 # ╔═╡ 13fddaff-5379-47ba-a0cf-aba1c87124a0
 scalars = read_fits(joinpath(outpath, "profiles_scalars.fits"))
 
@@ -125,7 +119,7 @@ scalars = read_fits(joinpath(outpath, "profiles_scalars.fits"))
 profs = LilGuys.read_ordered_structs(joinpath(outpath, "profiles.hdf5"), LilGuys.MassProfile)
 
 # ╔═╡ 537906ed-1c2d-4be6-9e5b-4696dd3aa854
-density_profs = LilGuys.read_ordered_structs(joinpath(outpath, "density_profiles.hdf5"), LilGuys.DensityProfile)
+density_profs = LilGuys.DensityProfile.(snaps)
 
 # ╔═╡ 97e98ab8-b60b-4b48-b465-a34a16858f88
 md"""
@@ -157,12 +151,18 @@ let
 	V_nfw(x) = lguys.v_circ(halo, x)
 	log_r = LinRange(-2, 2.5, 1000)
 	y = V_nfw.(10 .^ log_r)
-	lines!(log_r, y * V2KMS, label="NFW", linestyle=:dot, color=:black)
+	lines!(log_r, y * V2KMS, label="expected", linestyle=:dot, color=:black)
 
 	axislegend(position=:lt)
 
 	fig
 end
+
+# ╔═╡ 42a2814f-5a2b-4255-995a-b50472736e4f
+mass(halo, 30)
+
+# ╔═╡ 184c3f9b-d039-469c-b318-507c85b0a988
+sum(snaps[1].masses)
 
 # ╔═╡ 7299dbaf-b332-4e53-85de-7acbfa0c3853
 import StatsBase: percentile
@@ -185,6 +185,9 @@ function plot_ρ_dm!(snap; N=100, kwargs...)
 	lines!(log10.(lguys.midpoints(r)), log10.(ρ); kwargs...)
 end
 
+# ╔═╡ f1717efb-2749-41dc-87f9-f265918a5984
+density_profs
+
 # ╔═╡ 264aedc1-b624-475e-af28-1d31b533839d
 let 
 	fig = Figure()
@@ -192,18 +195,18 @@ let
 	ax = Axis(fig[1,1], xlabel=L"\log\, r / \textrm{kpc}", ylabel = L"\log\, \rho_\textrm{DM}\quad [10^{10} M_\odot / \textrm{kpc}^3]",
 	limits=(-2.5, 4, -20, 1))
 
-	for i in eachindex(profs)
-		lines!(profs[i].second.radii, log10.(profs[i].second.rho))
+	for i in eachindex(density_profs)
+		lines!(density_profs[i].log_r, log10.(density_profs[i].rho))
 	end
 
 	log_r = LinRange(-2, 4, 1000)
-	y = log10.(lguys.calc_ρ.(halo, 10 .^ log_r))
+	y = log10.(lguys.density.(halo, 10 .^ log_r))
 	lines!(log_r, y, label="trunc-NFW", color="black", linestyle=:dot)
 
 	vlines!(log10(softening), color="grey")
 	axislegend(ax)
 	
-	save(figure_dir * "dm_density.pdf", fig)
+	@savefig "dm_density"
 
 	fig
 
@@ -284,8 +287,7 @@ let
 	)
 
 	t = scalars.time
-	Ls = scalars.L
-	Ls = hcat(Ls...)
+	Ls = hcat(scalars.L_1, scalars.L_2, scalars.L_3)'
 
 	for i in 1:3
 		scatter!(t, Ls[i, :], label=["x", "y", "z"][i])
@@ -314,7 +316,7 @@ let
 	E_kin = scalars.K
 	E_pot = -scalars.W
 
-	scatter!(-E_pot ./ 2E_kin)
+	scatter!(E_pot ./ 2E_kin)
 	hlines!(1, color=:black)
 
 
@@ -357,6 +359,9 @@ lguys.plot_xyz(out.v_cen ./ v_cen_err', units=" vel sigma")
 
 # ╔═╡ 46bd928f-cbe3-4cb6-b09c-532164a64ce2
 LilGuys.std((out.v_cen ) ./ v_cen_err')
+
+# ╔═╡ 6cb1e079-f815-46e3-9853-3a5d5890e9f8
+
 
 # ╔═╡ 84f0bac9-5655-4acd-88db-8ba3114f712f
 let 
@@ -431,47 +436,8 @@ import LinearAlgebra: ⋅, ×
 # ╔═╡ fc34af5e-069c-47c5-8599-a97d520c1426
 NFW(v_circ_max = 0.1419, r_circ_max=4.2).r_s / 2.76 * 0.14
 
-# ╔═╡ 7f3e4b46-4356-4238-bd90-65349dcaa622
-function calc_β_prof(snap)
-	vel = snap.velocities .- snap.v_cen
-	pos = snap.positions .- snap.x_cen
-	N = size(vel, 2)
-
-	rs = 	lguys.radii(snap)
-	r_hat = pos ./ rs'
-	
-	ϕ_hat = hcat([r_hat[:, i] × [1,0,0] for i in 1:N]...)
-	ϕ_hat ./= radii(ϕ_hat)'
-	θ_hat = hcat([r_hat[:, i] × ϕ_hat[:, i] for i in 1:N]...)
-	θ_hat ./= radii(θ_hat)'
-
-	v_r = [snap.velocities[:, i] ⋅ r_hat[:, i] for i in 1:N]
-	v_ϕ = [snap.velocities[:, i] ⋅ ϕ_hat[:, i] for i in 1:N]
-	v_θ = [snap.velocities[:, i] ⋅ θ_hat[:, i] for i in 1:N]
-
-
-
-
-	Nq = 30
-	rcs = lguys.quantile(rs, LinRange(0, 1, Nq+1))
-
-	βs = zeros(Nq)
-	σ3d = zeros(Nq)
-
-	for i in 1:Nq
-
-		filt = rs .> rcs[i]
-		filt .&= rs .<= rcs[i+1]
-
-		sr = lguys.std(v_r[filt])
-		st = sqrt(lguys.std(v_θ[filt])^2 + lguys.std(v_ϕ[filt])^2)
-
-		βs[i] = 1 - st / 2sr
-		σ3d[i] = st^2 + sr^2
-	end
-
-	return rcs,σ3d, βs
-end
+# ╔═╡ bb20e906-636b-4807-98fe-64453f746697
+scalars.r_circ_max
 
 # ╔═╡ 03da8ffc-247a-4580-8715-4d8e294b02a8
 let
@@ -485,10 +451,12 @@ let
 	idx = eachindex(out)[1:10:end]
 	for i in idx
 		snap = out[i]
-		r, σ, β = calc_β_prof(snap)
-		x = midpoints(r)
+		bins = lguys.quantile(radii(snap), LinRange(0, 1, 20+1))
+		σ, β = LilGuys.β_prof(snap, r_bins=(bins))
+		x = midpoints(log10.(bins))
+		vlines!(log10(5 * halo.r_s * 0.75))
 		
-		scatterlines!(log10.(x), β, color=i, colorrange=(1, length(out)))
+		scatterlines!((x), β, color=i, colorrange=(1, length(out)))
 	end
 	
 	fig
@@ -595,9 +563,6 @@ let
 	fig
 end
 
-# ╔═╡ 0eb8960a-ca00-4ed4-9b6d-37ef2b1a0a8e
-5/cbrt(1e6)
-
 # ╔═╡ Cell order:
 # ╠═03a1bd03-dc40-42c0-bbcb-4aa562f47bbf
 # ╟─4f1e87b3-f776-4550-a0f9-45eec1b79340
@@ -618,7 +583,6 @@ end
 # ╠═97f89831-00e6-49a2-a712-ac47fd2dee47
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═382d9256-5a83-4a70-be12-4818fe6c19b4
-# ╠═5de2aa65-86ed-46fc-99c6-2cb53ca6f5c5
 # ╠═13fddaff-5379-47ba-a0cf-aba1c87124a0
 # ╠═669967a7-0f29-4537-adc1-e96712793db7
 # ╠═537906ed-1c2d-4be6-9e5b-4696dd3aa854
@@ -627,10 +591,13 @@ end
 # ╠═9dc4f57d-2bb2-4718-9f9d-86445e23bd75
 # ╠═72e84e62-b6c6-4afe-9708-7be49064d081
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
+# ╠═42a2814f-5a2b-4255-995a-b50472736e4f
+# ╠═184c3f9b-d039-469c-b318-507c85b0a988
 # ╠═7299dbaf-b332-4e53-85de-7acbfa0c3853
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═06cafe6c-98ed-42ce-8b6c-b3e12afab896
 # ╠═e5b9ce74-4d2d-4c5d-ad45-b6e233a4ec50
+# ╠═f1717efb-2749-41dc-87f9-f265918a5984
 # ╠═264aedc1-b624-475e-af28-1d31b533839d
 # ╠═4e45e756-8a9c-43b4-aac7-2016347f5afb
 # ╠═e33d56a7-7a0e-4fa9-8f0d-041b43584d59
@@ -651,6 +618,7 @@ end
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
 # ╠═fe25dc38-621b-47f8-aac5-f81c69ad7d8f
 # ╠═46bd928f-cbe3-4cb6-b09c-532164a64ce2
+# ╠═6cb1e079-f815-46e3-9853-3a5d5890e9f8
 # ╠═84f0bac9-5655-4acd-88db-8ba3114f712f
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
 # ╟─5153654a-567f-4663-9b4a-6f08f9e49d1a
@@ -661,7 +629,7 @@ end
 # ╟─24c1b4c5-4be3-4ea0-8b0e-a0b6fb8647e9
 # ╠═ba823177-97e7-43df-8b0a-2ab1f2bafbc0
 # ╠═fc34af5e-069c-47c5-8599-a97d520c1426
-# ╠═7f3e4b46-4356-4238-bd90-65349dcaa622
+# ╠═bb20e906-636b-4807-98fe-64453f746697
 # ╠═03da8ffc-247a-4580-8715-4d8e294b02a8
 # ╠═e5ca8db2-2c3d-4b97-9242-ab1d2ebf51b3
 # ╠═8a097a37-a903-4627-ba25-0a1f0289955f
@@ -673,4 +641,3 @@ end
 # ╠═564c6bcb-04be-4a1c-8f01-f7d76be74eb8
 # ╠═c9ffe8ad-97d2-40e7-8ba7-e27d3708d723
 # ╠═1a320f74-5cb7-44c5-8a59-c6fced771f52
-# ╠═0eb8960a-ca00-4ed4-9b6d-37ef2b1a0a8e

@@ -129,8 +129,21 @@ function compare_traj_galaxy(traj, galaxyname, reference="mw"; color=COLORS[1], 
 	LilGuys.plot_xyz(positions..., color=color, linestyle=:solid, alpha=alpha)
 end
 
+# ╔═╡ e7ba552c-fef6-4b4d-a270-6eceefdecd61
+function compare_traj_galaxy_radii!(traj, traj2::Vector{<:AbstractVector}, galaxyname, reference; color=COLORS[1], alpha=0.1, kwargs...)
+	orbits = get_galaxy.(traj, galaxyname, reference) 
+	orbits2 = get_galaxy.(traj2, galaxyname, reference) 
+
+	for i in eachindex(orbits)
+
+		lines!(orbits[i].times, log10.(radii(orbits[i].positions, orbits2[i].positions));
+			   color=color, linestyle=:solid, alpha=alpha, kwargs...)
+	end
+
+end
+
 # ╔═╡ 8f13863e-b79c-4c45-840d-14636ec272be
-function compare_traj_galaxy_radii!(traj, galaxyname, reference = "mw"; color=COLORS[1], alpha=0.1, kwargs...)
+function compare_traj_galaxy_radii!(traj, galaxyname::String, reference = "mw"; color=COLORS[1], alpha=0.1, kwargs...)
 	orbits = get_galaxy.(traj, galaxyname, reference) 
 
 	for orbit in orbits
@@ -168,8 +181,17 @@ end
 # ╔═╡ fa3492db-087c-413d-b438-dc09e5c1d80c
 compare_traj_galaxy_radii(traj, "lmc")
 
+# ╔═╡ 4fc6f578-b37b-4e1a-b8c8-fe0e9fdbbefd
+compare_traj_galaxy_radii([(o1[[1,2,4,5]] .- o2) for (o1, o2) in zip(traj, traj_nosmc)], "lmc")
+
+# ╔═╡ 2300e33c-1b4d-4751-ab3f-00afe02b5e28
+compare_traj_galaxy_radii([(o1 .- o2) for (o1, o2) in zip(traj, traj_nofric)], "lmc")
+
 # ╔═╡ 12d78b71-123a-4b32-88b0-6b41f564e91f
 compare_traj_galaxy_radii(traj_nofric, "lmc")
+
+# ╔═╡ b928f087-17ee-48fb-8446-c67d69e8288f
+compare_traj_galaxy_radii(traj, "smc", "lmc")
 
 # ╔═╡ 6d053852-c5f3-49fa-a110-d233ac6b06c4
 let
@@ -192,18 +214,6 @@ let
 
 end
 
-# ╔═╡ 44c2528a-fd4e-42e3-aa24-87e45d4528f2
-compare_traj_galaxy_radii(traj, "sculptor", "lmc")
-
-# ╔═╡ 8f3bd00e-1693-470d-af65-bb50273788ad
-compare_traj_galaxy_radii(traj, "sculptor", "smc")
-
-# ╔═╡ 248530fc-d4f1-43a9-87e7-2b1640481c4e
-compare_traj_galaxy_radii(traj[1:10], "lmc")
-
-# ╔═╡ 0f457415-a61b-4894-b51a-2aefd1d8ea8b
-compare_traj_galaxy_radii(traj_nofric[1:10], "lmc")
-
 # ╔═╡ 8c520387-1d0c-4fbd-8696-fb9acc1c3cfb
 compare_traj_galaxy(traj_nosmc, "lmc")
 
@@ -219,11 +229,46 @@ compare_traj_galaxy_radii(traj, "smc")
 # ╔═╡ 92fe77ec-23f9-49de-afe2-e8659c27085c
 compare_traj_galaxy(traj, "ursa_minor")
 
-# ╔═╡ 0e662dc3-d830-4cb9-aced-abfbd8e48adf
-compare_traj_galaxy(traj_fric, "ursa_minor")
+# ╔═╡ 02de13b9-fc64-4127-9beb-1321f6d8e22c
+let
+	fig = compare_traj_galaxy_radii(traj, "ursa_minor", label="UMi-MW")
+	compare_traj_galaxy_radii!(traj, "ursa_minor", "lmc", color=COLORS[2], label="UMi-LMC")
+	compare_traj_galaxy_radii!(traj, "ursa_minor", "smc", color=COLORS[3], label="UMi-SMC")
 
-# ╔═╡ 26a167c2-2122-41d8-9a3b-82d18687f2fb
-compare_traj_galaxy(traj, "bootes3")
+	axislegend(merge=true)
+	fig
+
+end
+
+# ╔═╡ 95ebb8d1-5618-48df-882a-de47f56e150e
+let
+	fig = compare_traj_galaxy_radii(traj_nofric, "ursa_minor", label="UMi-MW")
+	compare_traj_galaxy_radii!(traj_nofric, "ursa_minor", "lmc", color=COLORS[2], label="UMi-LMC")
+	compare_traj_galaxy_radii!(traj_nofric, "ursa_minor", "smc", color=COLORS[3], label="UMi-SMC")
+
+	axislegend(merge=true)
+	fig
+
+end
+
+# ╔═╡ 3b9fd610-6a15-492c-b18f-e1e255a034c2
+let
+	fig = compare_traj_galaxy_radii(traj_nosmc, "sculptor", label="UMi-MW")
+	compare_traj_galaxy_radii!(traj_nosmc, "sculptor", "lmc", color=COLORS[2], label="UMi-LMC")
+
+	axislegend(merge=true)
+	fig
+
+end
+
+# ╔═╡ 3af70d8e-e7bc-45d8-80cb-eb4a4c717221
+hist(log10.(last.(radii.(get_galaxy.(traj, "ursa_minor", "lmc")))))
+
+# ╔═╡ 95b9f993-a094-43f5-b99a-4bba5a2bd8c8
+hist(log10.(last.(radii.(get_galaxy.(traj_nofric, "ursa_minor", "lmc")))))
+
+# ╔═╡ 5527e3dc-952c-4b37-90f3-83f65d9d31aa
+hist(log10.(last.(radii.(get_galaxy.(traj_nosmc, "sculptor", "lmc")))))
 
 # ╔═╡ 1a7b7f71-1c67-4060-a1f5-747940fb4de0
 md"""
@@ -505,25 +550,29 @@ compare_tidal_forces(traj_fric, "ursa_minor")
 # ╠═9a4600b4-d3f0-42c4-94bf-44c296701fd9
 # ╠═a8100604-2123-4ef0-ba88-3847ad485f57
 # ╠═502ada8b-2d0d-4dbd-92ee-4891ad68cdd8
+# ╠═e7ba552c-fef6-4b4d-a270-6eceefdecd61
 # ╠═8f13863e-b79c-4c45-840d-14636ec272be
 # ╠═d597e65d-dfb2-41f5-8821-ad1f8f9614b9
 # ╠═0eab06bb-7273-482d-a4ed-f2fa5ad42613
 # ╠═1507bbf5-e6a4-49a9-bb6a-2f079bb9669c
 # ╠═fa3492db-087c-413d-b438-dc09e5c1d80c
+# ╠═4fc6f578-b37b-4e1a-b8c8-fe0e9fdbbefd
+# ╠═2300e33c-1b4d-4751-ab3f-00afe02b5e28
 # ╠═12d78b71-123a-4b32-88b0-6b41f564e91f
+# ╠═b928f087-17ee-48fb-8446-c67d69e8288f
 # ╠═6d053852-c5f3-49fa-a110-d233ac6b06c4
 # ╠═4a03701e-84fa-4818-a7e7-094f275ecbae
-# ╠═44c2528a-fd4e-42e3-aa24-87e45d4528f2
-# ╠═8f3bd00e-1693-470d-af65-bb50273788ad
-# ╠═248530fc-d4f1-43a9-87e7-2b1640481c4e
-# ╠═0f457415-a61b-4894-b51a-2aefd1d8ea8b
 # ╠═8c520387-1d0c-4fbd-8696-fb9acc1c3cfb
 # ╠═e3ecb803-f33b-4f5a-8288-aa95411e3fd2
 # ╠═f868386e-976f-4254-be16-0452bb2b0bd7
 # ╠═598b692d-c083-4d66-bab2-a93af461957c
 # ╠═92fe77ec-23f9-49de-afe2-e8659c27085c
-# ╠═0e662dc3-d830-4cb9-aced-abfbd8e48adf
-# ╠═26a167c2-2122-41d8-9a3b-82d18687f2fb
+# ╠═02de13b9-fc64-4127-9beb-1321f6d8e22c
+# ╠═95ebb8d1-5618-48df-882a-de47f56e150e
+# ╠═3b9fd610-6a15-492c-b18f-e1e255a034c2
+# ╠═3af70d8e-e7bc-45d8-80cb-eb4a4c717221
+# ╠═95b9f993-a094-43f5-b99a-4bba5a2bd8c8
+# ╠═5527e3dc-952c-4b37-90f3-83f65d9d31aa
 # ╠═1a7b7f71-1c67-4060-a1f5-747940fb4de0
 # ╠═6cff943e-6249-416b-9bef-30eece5f486c
 # ╠═ff763ea8-d733-46b4-a629-0c4a1f3f856a

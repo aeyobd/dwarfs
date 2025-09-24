@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -165,6 +165,17 @@ begin
 	end
 end
 
+# ╔═╡ 370146c4-0414-467e-8a3b-ff3e0fdd09e0
+md"""
+# processing
+"""
+
+# ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
+df_out = vcat(chain_dfs...)
+
+# ╔═╡ 89cd85c9-d588-49cb-9f0f-19f1e66f1bec
+df_out
+
 # ╔═╡ ec5e0fff-0105-4c08-925a-2b771d7d78a2
 # ╠═╡ disabled = true
 #=╠═╡
@@ -219,17 +230,6 @@ let
 
 end
   ╠═╡ =#
-
-# ╔═╡ 370146c4-0414-467e-8a3b-ff3e0fdd09e0
-md"""
-# processing
-"""
-
-# ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
-df_out = vcat(chain_dfs...)
-
-# ╔═╡ 89cd85c9-d588-49cb-9f0f-19f1e66f1bec
-df_out
 
 # ╔═╡ 5320bb1c-c866-44a0-a451-c159b93d8805
 let

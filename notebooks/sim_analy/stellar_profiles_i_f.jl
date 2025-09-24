@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -98,9 +98,6 @@ begin
 	FIGDIR
 end
 
-# ╔═╡ 63cd3e0e-414c-498e-965c-9e943e6b8fb8
-readdir("/cosma/home/durham/dc-boye1/data/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_smallperi/stars")
-
 # ╔═╡ 9fecfed4-8aba-42f6-bcf2-1891e0b5f947
 begin
 	prof_sim = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/final_profile.toml")
@@ -190,7 +187,7 @@ norm_obs = LilGuys.mean(prof_obs.log_Sigma[1:n_center])
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ acc308e5-a3e5-46d7-9311-34f0c4ee7c54
-ymin = -8
+ymin = -10
 
 # ╔═╡ 7671fc47-15d4-4970-98a7-b0ad64f1114c
 @bind dy NumberField(-1:0.05:1, default=0)
@@ -286,7 +283,6 @@ end
 # ╠═5d21d511-8e33-4c25-b9be-57dd8bf6998f
 # ╟─ee38471c-043c-4571-bcf6-5fd93df84132
 # ╠═a9ca639c-c7ab-4ba4-b47a-4a78ed0b2269
-# ╠═63cd3e0e-414c-498e-965c-9e943e6b8fb8
 # ╠═9fecfed4-8aba-42f6-bcf2-1891e0b5f947
 # ╠═8358c354-29f3-4d62-940f-7085419a1970
 # ╠═604a2e03-e3cc-4c48-80d3-04f10017170f

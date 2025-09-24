@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -42,7 +42,7 @@ nfw = NFW(M_s=halo.M_s, r_s=halo.r_s, c=halo.c')
 
 
 # ╔═╡ ba744355-8da6-4caa-a252-ad83ad4b8b13
-log_r_label = "log r / kpc"
+log_r_label = "log radius / kpc"
 
 # ╔═╡ bd023583-28b3-4c4d-8ced-7161350a5d7a
 md"""
@@ -58,7 +58,7 @@ function vcirc_axes(; xlims, ylims)
     fig = Figure()
     ax = Axis(fig[1, 1],
         xlabel=log_r_label,
-        ylabel=L"$v_\textrm{circ}$ / km\,s$^{-1}$",
+        ylabel=L"$\textrm{v}_\textrm{circ}$ / km\,s$^{-1}$",
         limits=(xlims[1], xlims[2], ylims[1], ylims[2]),
 		yscale=log10,
 		yticks=[1:10; 10:10:100]
@@ -68,7 +68,7 @@ function vcirc_axes(; xlims, ylims)
 
     ax_res = Axis(fig[2, 1],
         xlabel=log_r_label,
-        ylabel=L"\Delta\,v\,/v_\textrm{exp}",
+        ylabel=L"\Delta\,\textrm{v}\,/\textrm{v}_\textrm{NFW}",
         limits=(xlims[1], xlims[2], -0.2, 0.2),
     )
 
