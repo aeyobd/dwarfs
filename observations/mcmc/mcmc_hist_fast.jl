@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 8e3f56fa-034b-11f0-1844-a38fa58e125c
 begin
 	using Pkg; Pkg.activate()
@@ -14,6 +26,11 @@ begin
 	using Turing
 end
 
+# ╔═╡ b6a3a299-cde0-41b2-9287-f89d87e77335
+if @isdefined(PlutoRunner)
+	using PlutoUI
+end
+
 # ╔═╡ 67ddb57a-9ee7-4f4c-848f-d0b77fba1855
 using DataFrames, CSV
 
@@ -21,7 +38,7 @@ using DataFrames, CSV
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "reticulum2"
+	@bind galaxy confirm(TextField(default="leo2"))
 end
 
 # ╔═╡ af1d827c-bb7e-4875-936e-cfec7578f7db
@@ -31,9 +48,6 @@ Prior on log sigma relative. Can be fairly loose
 
 # ╔═╡ 72209cca-6101-4905-a286-0489e9247b94
 prior = Uniform(-12, 6)
-
-# ╔═╡ 8b3a3bd5-4126-4991-a27b-49939f90fecb
-pvalue = 0.16
 
 # ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
 import TOML
@@ -75,7 +89,7 @@ md"""
 obs_props = MCMCUtils.get_obs_props(galaxy)
 
 # ╔═╡ b2adcf46-c538-43d0-b08b-193175a4c68a
-struct_params = MCMCUtils.StructuralParams(; LilGuys.dict_to_tuple(TOML.parsefile(joinpath("..", galaxy, "mcmc", "default_bins.toml")))...)
+struct_params = MCMCUtils.StructuralParams(galaxy)
 
 # ╔═╡ c58ed939-07c1-4d34-90a4-3c5d9cc9910b
 stars = MCMCUtils.get_fits(galaxy, obs_props)
@@ -114,12 +128,13 @@ Lbg = stars.L_CMD_BKD .* stars.L_PM_BKD
 
 # ╔═╡ 8f051c8a-def2-4a84-ab43-2ecc8b646b65
 begin 
-	chains = []
+	all_chains = []
 	for i in 1:Nbins
+        @info "sampling bin $i out of $Nbins"
 		filt = r_b .== i
 		model = hist_model(Lsat[filt], Lbg[filt])
-		chain = sample(model, NUTS(0.65), MCMCThreads(), 1000, 16) 
-		push!(chains, chain)
+		chain = sample(model, NUTS(0.65), MCMCThreads(), 1000, 48) 
+		push!(all_chains, chain)
 	end
 end
 
@@ -136,22 +151,22 @@ let
 		ax = Axis(fig[i, 1], 
 			ylabelsize=fontsize, 
 			xlabelsize=fontsize,
-		  xticklabelsize=fontsize,
-		  yticklabelsize=fontsize,
+		    xticklabelsize=fontsize,
+		    yticklabelsize=fontsize,
 			ylabel=L"\theta_{%$i}",
 			xlabel="step",
 			yminorticksvisible=false,
 		)
 		
-		for c in 1:size(chains[1], 3)
-			y = chains[i][:, 1, c]
+		for c in 1:size(all_chains[1], 3)
+			y = all_chains[i][:, 1, c]
 			lines!((y), linewidth=0.1)
 		end
 
 
 
 		ax2 = Axis(fig[i, 2])
-		hist!(vec(chains[i][:, 1, :]), direction=:x)
+		hist!(vec(all_chains[i][:, 1, :]), direction=:x)
 		
 		if i < Nvar
 			hidexdecorations!(ax)
@@ -176,21 +191,15 @@ md"""
 """
 
 # ╔═╡ 22d1fd06-c689-41d9-bc16-aedde1c85444
-begin 
-	summaries = vcat([DataFrame(summarize(chain)) for chain in chains]...)
-	summaries[!, "log_R"] = midpoints(log10.(bins))
-	
-	log_Sigma_median = zeros(Nbins)
-	log_Sigma_low = zeros(Nbins)
-	log_Sigma_high = zeros(Nbins)
-	for i in 1:length(bins)-1
-		log_Sigma_low[i], log_Sigma_median[i], log_Sigma_high[i] = quantile(chains[i][:, 1, :], [pvalue, 0.5, 1-pvalue])
-	end
+summaries = let 
+	summaries = vcat([DataFrame(MCMCUtils.summarize(chain)) for chain in all_chains]...)
 
-	summaries[!, :median] = log_Sigma_median
-	summaries[!, :lower_error] = log_Sigma_median .- log_Sigma_low
-	summaries[!, :upper_error] =  log_Sigma_high .- log_Sigma_median
 	summaries[!, :parameters] = string.(summaries.parameters) .* string.(1:Nbins)
+
+	summaries[!, "log_R"] = midpoints(log10.(bins))
+	summaries[!, "log_R_low"] = log10.(bins)[1:end-1]
+	summaries[!, "log_R_high"] = log10.(bins)[2:end]
+	summaries[!, "N_stars"] = [sum(r_b .== i) for i in 1:Nbins]
 
 	summaries
 end
@@ -212,14 +221,14 @@ let
 end
 
 # ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
-begin 
+df_out = let 
 	df_out = DataFrame()
-	df_out[!, "iteration"] = DataFrame(chains[1])[!, "iteration"]
-	df_out[!, "chain"] = DataFrame(chains[1])[!, "chain"]
+	df_out[!, "iteration"] = DataFrame(all_chains[1])[!, "iteration"]
+	df_out[!, "chain"] = DataFrame(all_chains[1])[!, "chain"]
 	df_out[!, "lp"] .= 0
 
-	for i in eachindex(chains)
-		df = DataFrame(chains[i])
+	for i in eachindex(all_chains)
+		df = DataFrame(all_chains[i])
 		df_out[!, "params[$i]"] = df[!, "log_Σ"]
 		df_out[!, "lp"] .+= df.lp
 		@assert df_out.chain == df.chain
@@ -250,8 +259,8 @@ CSV.write(summaryout, summaries)
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╟─af1d827c-bb7e-4875-936e-cfec7578f7db
 # ╠═72209cca-6101-4905-a286-0489e9247b94
-# ╠═8b3a3bd5-4126-4991-a27b-49939f90fecb
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
+# ╠═b6a3a299-cde0-41b2-9287-f89d87e77335
 # ╠═d1de613c-c3bb-4843-859e-7b8df54bafe0
 # ╠═67ddb57a-9ee7-4f4c-848f-d0b77fba1855
 # ╠═28550d54-ad88-4df5-ac04-f46a15588ff8
