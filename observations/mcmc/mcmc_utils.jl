@@ -5,7 +5,9 @@ import TOML
 import StatsBase: sem
 
 import DensityEstimators as DE
+import Turing
 
+const PVALUE = 0.16
 
 module GaiaFilters
     include("../../utils/gaia_filters.jl")
@@ -26,15 +28,20 @@ Base.@kwdef struct StructuralParams
     bins::Array{Float64}
 end
 
+function StructuralParams(galaxy::String)
+    bin_kwargs = TOML.parsefile(joinpath("..", galaxy, "mcmc", "default_bins.toml"))
+    return StructuralParams(; LilGuys.dict_to_tuple(bin_kwargs)...)
+ end
+
 
 Base.@kwdef struct GaiaData
     source_id::Vector{Float64}
     xi::Vector{Float64}
     eta::Vector{Float64}
     "Prior BG probability"
-    P_bg::Vector{Float64}
+    L_bg::Vector{Float64}
     "Prior Satellite probability"
-    P_sat::Vector{Float64}
+    L_sat::Vector{Float64}
 end
 
 
@@ -75,9 +82,7 @@ function GaiaData(df::DataFrame)
     return GaiaData(
         df.source_id,
         df.xi,
-        #df.xi_err,
         df.eta,
-        #df.eta_err,
         df.L_BKD_nospace,
         df.L_SAT_nospace,
        )
@@ -131,7 +136,6 @@ Given J+24 data, returns the centring statistics
 function centring_stats(data; PSAT_min=0.99)
     members = filter(r->r.PSAT>PSAT_min, data)
 
-
     return (;
         xi_stat = sem(members.xi),
         xi_sys = mean(members.xi),
@@ -154,7 +158,6 @@ end
 
 
 function perturbed_radii(data, params::StructuralParams )
-
 	d_xi = rand(Normal(0.0, params.position_err))
 	d_eta = rand(Normal(0.0, params.position_err))
 	pos_ang = rand(Normal(params.position_angle, params.position_angle_err))
@@ -186,3 +189,44 @@ function Σ_hist(radii::AbstractVector{<:Real}, bins::Vector{<:Real}, Σs::Abstr
     Σs_safe = [0; Σs; 0] # 0 for values outsize bins
     Σ = Σs_safe[bin_idx .+ 1]
 end
+
+
+
+
+"""
+    summarize(samples)
+
+Sumerizes a Turing chain. This loosely wraps Turings version
+except adds median and quantile uncertainties.
+"""
+function summarize(samples)
+	chain_summary = DataFrame(Turing.summarize(samples))
+	Nvar = size(chain_summary, 1)
+
+	medians = zeros(Nvar)
+	err_lows = zeros(Nvar)
+	err_highs = zeros(Nvar)
+	for i in 1:Nvar
+        l, m, h = quantile(samples[:, i, :], [PVALUE, 0.5, 1-PVALUE])
+		medians[i] = m
+		err_lows[i] = m - l
+		err_highs[i] = h - m
+	end
+
+	chain_summary[!, :parameters] = string.(chain_summary.parameters)
+	chain_summary[!, :median] = medians
+	chain_summary[!, :lower_error] = err_lows
+	chain_summary[!, :upper_error] = err_highs
+
+	chain_summary
+end
+
+
+function to_measurements(A::AbstractMatrix; pvalue=PVALUE)
+	m = dropdims(median(A, dims=2), dims=2)
+	h = quantile.(eachrow(A), 1-pvalue)
+	l = quantile.(eachrow(A), pvalue)
+
+	return Measurement.(m, m .- l, h .- m)
+end
+

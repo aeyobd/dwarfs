@@ -4,52 +4,56 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 8e3f56fa-034b-11f0-1844-a38fa58e125c
 begin
 	using Pkg; Pkg.activate()
+	
 	using CairoMakie
 	using Arya
 
 	using LilGuys
+	using PyFITS
+
+	import TOML
+	using OrderedCollections
+	using DataFrames, CSV
 end
 
-# ╔═╡ 67ddb57a-9ee7-4f4c-848f-d0b77fba1855
-using DataFrames, CSV
-
-# ╔═╡ e74e6a96-a18e-40bf-ade8-07ce0e30e5c4
-using Distributions
-
-# ╔═╡ 6c4427b6-fe6d-4ad7-812a-21c9788591d5
-using OrderedCollections
-
-# ╔═╡ 8bcf8114-1823-47de-a7ab-27c136ac4a64
-using PyFITS
+# ╔═╡ e997f77b-02d5-406a-8f78-b9e115baaf88
+using PlutoUI
 
 # ╔═╡ 08d97b62-2760-47e4-b891-8f446e858c88
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	galaxy = "sculptor"
-	skip = 10
-	all_profiles = true
+	@bind galaxy confirm(TextField(default="leo2"))
 end
-
-# ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
-import TOML
 
 # ╔═╡ 1f497448-9ea2-460f-b403-618b78b47565
 module MCMCUtils
 	include("mcmc_utils.jl")
 end
 
+# ╔═╡ 133a025f-407f-49eb-9e02-0c620d5b77ba
+CairoMakie.activate!(type=:png)
+
 # ╔═╡ 11d9d9f5-0fb7-4b06-bd4a-36bdb1f00188
 outdir = joinpath("..", galaxy, "mcmc")
 
 # ╔═╡ b94c3346-bd31-409e-ad6f-5e7afb891ad1
 FIGDIR = joinpath(outdir, "figures"); FIGSUFFIX=".mcmc_hist_fast"
-
-# ╔═╡ 133a025f-407f-49eb-9e02-0c620d5b77ba
-CairoMakie.activate!(type=:png)
 
 # ╔═╡ 0aa44389-f320-4274-abdd-0d7f88006a4d
 log_r_label = L"$\log\,R_\textrm{ell}$ / arcmin"
@@ -65,19 +69,17 @@ md"""
 # ╔═╡ b7b4361a-1ee8-4b1d-a62e-9f7bd0363160
 obs_props = MCMCUtils.get_obs_props(galaxy)
 
-# ╔═╡ c58ed939-07c1-4d34-90a4-3c5d9cc9910b
-stars = MCMCUtils.get_fits(galaxy, obs_props)
-
-# ╔═╡ f078d929-62be-48f2-acdb-808357801a7b
-md"""
-note, we do change the first and last bins to be something more workable (just double the last bin)
-"""
+# ╔═╡ aae56f16-2433-4847-83db-9184a74f28f8
+Threads.nthreads()
 
 # ╔═╡ 4b77612f-e124-4d77-974c-d40c2f5a37ff
 struct_params = MCMCUtils.StructuralParams(; LilGuys.dict_to_tuple(TOML.parsefile(joinpath("..", galaxy, "mcmc", "default_bins.toml")))...)
 
 # ╔═╡ 9726210e-278f-4478-9c4a-8be8975a57d6
 bins = struct_params.bins
+
+# ╔═╡ c58ed939-07c1-4d34-90a4-3c5d9cc9910b
+stars = MCMCUtils.get_fits(galaxy, obs_props)
 
 # ╔═╡ 6f016a8e-38ae-4f05-a7ee-c292ac0e5741
 df_chains = CSV.read(joinpath(outdir, "samples.mcmc_hist_fast.csv"), DataFrame)
@@ -90,50 +92,37 @@ md"""
 # Analysis
 """
 
-# ╔═╡ 7520415d-a482-4a9a-bf8a-7f8443d3b613
+# ╔═╡ 3067ae10-854f-48ce-8285-0d3f3fa7f25c
 md"""
-### Reference profiles
-"""
-
-# ╔═╡ 5feaa9b0-ca44-48d6-80d1-16303a34005f
-prof_simple = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.2], bins=log10.(bins), errors=:weighted, normalization=:none)
-
-# ╔═╡ ab124afe-c94a-44d9-8869-bd4d4cee3fbd
-prof_weighted = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0], weights=stars.PSAT[stars.PSAT .> 0] |> disallowmissing, bins=log10.(bins), errors=:weighted,  normalization=:none)
-
-# ╔═╡ babcaaa8-8d95-4dcb-b22b-5e36c10c57dd
-prof_bernoulli = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0], weights=stars.PSAT[stars.PSAT .> 0] |> disallowmissing, bins=log10.(bins), errors=:bernoulli,  normalization=:none)
-
-# ╔═╡ e60ea082-818d-46f8-bf50-30a932f97ef2
-prof_auto = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.2], errors=:weighted, normalization=:none)
-
-# ╔═╡ 82f20e46-90c7-4925-83c9-3f49a909664d
-sum(prof_simple.counts)
-
-# ╔═╡ 6685cdec-7c99-45ca-98c8-f6439dfd7290
-md"""
-## MCMC Profiles
+We need the counts to turn the log densities in the MCMC hist into true densities
 """
 
 # ╔═╡ d254b67b-8017-4bbf-ba04-50b5b76f48f0
-prof_counts = LilGuys.SurfaceDensityProfile(stars.R_ell, bins=log10.(bins),  errors=:weighted)
+_prof_counts = LilGuys.SurfaceDensityProfile(stars.R_ell, bins=log10.(bins),  errors=:weighted)
 
-# ╔═╡ 08fc0b00-8a55-4604-a580-613a12db150e
+# ╔═╡ 4b644aaf-76ab-4e30-8a78-7e127c2ba7b5
+md"""
+Consistency checks:
+"""
 
+# ╔═╡ 85f59eb3-4f90-498a-923e-36cd679af1c0
+@assert df_summary.log_R ≈ midpoints(log10.(bins))
+
+# ╔═╡ 575a31e1-df22-42e9-9a9e-1dc4b678a5b6
+@assert isapprox(df_summary.N_stars, _prof_counts.counts, atol=2)
 
 # ╔═╡ f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
-let
-	skip = 1
+log_Sigmas_fast = let
 	Nbins = length(bins) - 1
 
 	Nc = size(df_chains, 1)
 	Ns = size(stars, 1)
 	
-	global log_Sigmas_fast = Matrix{Float64}(undef, Nbins, Nc)
+	log_Sigmas_fast = Matrix{Float64}(undef, Nbins, Nc)
 	areas = diff(π * bins .^2)
-	counts = prof_counts.counts
+	counts = df_summary.N_stars
 
-	for i in 1:skip:Nc
+	for i in 1:Nc
 		if i % 200 == 0
 			@info "calculated $i / $Nc"
 		end
@@ -143,25 +132,20 @@ let
 		log_Sigmas_fast[:, i] .= log10.( f_sat .* counts ./ areas)
 	end
 
+	log_Sigmas_fast
+
 end
 
-# ╔═╡ 2027b636-bb17-4004-941e-b715ba8d0216
-psat_min = 1e-10
-
-# ╔═╡ 8abe3d92-f9e8-4e89-96ec-14eaf9482e64
-Nsteps = size(df_chains, 1)
-
-# ╔═╡ 939aa449-26ea-4d2d-8773-42a73c3d0410
-if all_profiles
+# ╔═╡ fe3d955f-c96b-4202-9218-f749a5e9d41f
+fsats, psats = let
 	Nbins = length(bins) - 1
 
 	Nc = size(df_chains, 1)
 	Ns = size(stars, 1)
 
-	idxs = 1:skip:Nc
+	idxs = 1:Nc
 	fsats = Matrix{Float64}(undef, Ns, length(idxs))
 	psats = Matrix{Float64}(undef, Ns, length(idxs))
-	profiles = Vector{LilGuys.SurfaceDensityProfile}(undef, length(idxs))
 
 	Threads.@threads for i in eachindex(idxs)
 		idx = idxs[i]
@@ -170,7 +154,7 @@ if all_profiles
 		end
 		
 		params = [df_chains[idx, "params[$j]"] for j in 1:Nbins]
-		radii = MCMCUtils.perturbed_radii(stars, struct_params)
+		radii = stars.R_ell
 
 		Σ = MCMCUtils.Σ_hist(radii, bins, params)
 		f = 10 .^ Σ ./ (1 .+ 10 .^ Σ)
@@ -181,108 +165,53 @@ if all_profiles
 		psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
 		psats[:, i] .= psat
 
-		weights = zeros(length(psat))
-		filt = psat .> 0
-		weights[filt] = rand(Dirichlet(psat[filt]))
-		weights .*= sum(psat)
-		prof = LilGuys.SurfaceDensityProfile(radii, bins=log10.(bins), 
-			weights=weights, errors=:weighted)
-
-		profiles[i] = prof
 	end
 
+	fsats, psats
 end
 
-# ╔═╡ 7f4377ad-ab77-487e-87fc-87cd0c1df40d
-let
-	skip = 1
-	Nbins = length(bins) - 1
 
-	Nc = size(df_chains, 1)
-	Ns = size(stars, 1)
-	
-	global profiles_nostruct = Vector{LilGuys.SurfaceDensityProfile}(undef, length(idxs))
-	radii = stars.R_ell
+# ╔═╡ 5feaa9b0-ca44-48d6-80d1-16303a34005f
+prof_jax_cut = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.2], bins=log10.(bins), errors=:weighted, normalization=:none)
 
-	Threads.@threads for i in eachindex(idxs)
-		idx = idxs[i]
-		if i % 10 == 0
-			@info "sample $i"
-		end
-		
-		params = [df_chains[idx, "params[$j]"] for j in 1:Nbins]
-		Σ = MCMCUtils.Σ_hist(radii, bins, params)
-		f = 10 .^ Σ ./ (1 .+ 10 .^ Σ)
-		fsats[:, i] .= f
+# ╔═╡ ab124afe-c94a-44d9-8869-bd4d4cee3fbd
+prof_jax_weighted = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0], weights=stars.PSAT[stars.PSAT .> 0] |> disallowmissing, bins=log10.(bins), errors=:weighted,  normalization=:none)
 
-		Ls = stars.L_CMD_SAT .* stars.L_PM_SAT
-		Lb = stars.L_CMD_BKD .* stars.L_PM_BKD
-		psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
-
-		weights = zeros(length(psat))
-		filt = psat .> 0
-		weights[filt] = rand(Dirichlet(psat[filt]))
-		weights .*= sum(psat)
-		prof = LilGuys.SurfaceDensityProfile(radii, bins=log10.(bins), 
-			weights=weights, errors=:weighted)
-
-		profiles_nostruct[i] = prof	
-	end
-
-end
-
-# ╔═╡ ba280361-c910-483a-9108-fd4be4906606
-sum(middle.(10 .^ profiles[1].log_Sigma) .* diff(exp10.(profiles[1].log_R_bins) .^ 2) .* π)
-
-# ╔═╡ 36f7e33d-0ee3-4ea3-bb0f-3cedd34da773
-sum(psats[:, 1])
-
-# ╔═╡ 36bb1876-5937-44fe-bb1c-add10470371d
-pvalue = 0.16
-
-# ╔═╡ 053d441b-9b1b-4c1a-bc96-fa5b1e9f059e
-function to_measurements(A::Matrix; pvalue=pvalue)
-	m = dropdims(median(A, dims=2), dims=2)
-
-	h = quantile.(eachrow(A), 1-pvalue)
-
-	l = quantile.(eachrow(A), pvalue)
-
-	return Measurement.(m, m .- l, h .- m)
-end
-
-# ╔═╡ c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
-all_Sigmas = hcat([prof.log_Sigma for prof in profiles]...)
-
-# ╔═╡ 8c03d71d-2fbf-4ef4-b8f8-f2ebbe694434
-all_Gammas = hcat([prof.Gamma for prof in profiles]...)
-
-# ╔═╡ 33f16b18-1787-4768-847e-10f877825e38
-all_Sigmas_nostruct = hcat([prof.log_Sigma for prof in profiles_nostruct]...)
-
-# ╔═╡ 084a491c-e53a-4371-9c5b-f9450ec5deec
-sum(isnan.(all_Sigmas))
-
-# ╔═╡ 428d53fd-39cd-40f3-ac6b-389f637e351e
-all_Sigmas[isnan.(all_Sigmas)] .= -Inf
-
-# ╔═╡ f4d9ddee-9ca9-4e5a-9d6c-a18e866ba71a
-all_Sigmas_m = middle.(all_Sigmas)
+# ╔═╡ 6685cdec-7c99-45ca-98c8-f6439dfd7290
+md"""
+## MCMC Profiles
+"""
 
 # ╔═╡ 6470edfd-bd06-43b7-aa5e-a80645af78fb
-psats_pm = to_measurements(psats)
-
-# ╔═╡ 5f5bcf71-f306-45db-ba76-af69e88675c2
-log_Sigma_slow = to_measurements(middle.(all_Sigmas))
-
-# ╔═╡ 0e13c17b-2a09-4699-a0a6-4836d303ccc2
-log_Sigma_nostruct = to_measurements(middle.(all_Sigmas_nostruct))
+psats_pm = MCMCUtils.to_measurements(psats)
 
 # ╔═╡ c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
-log_Sigma_fast = to_measurements(log_Sigmas_fast)
+log_Sigma_mean = MCMCUtils.to_measurements(log_Sigmas_fast)
 
-# ╔═╡ 81e5a128-c1ed-4a8a-8bb6-e4efd0593c80
-sum(stars.PSAT)
+# ╔═╡ f80631b5-aa7e-454a-937f-c2e66b042105
+profiles = [
+	LilGuys.SurfaceDensityProfile(
+		R_units = "arcmin",
+		log_Sigma = log_Sigma,
+		log_R_bins = log10.(bins),
+		log_R = midpoints(log10.(bins)),
+		Gamma = LilGuys.gradient(log_Sigma, midpoints(log10.(bins)))
+	) 
+	for log_Sigma in eachcol(log_Sigmas_fast)
+]
+
+# ╔═╡ 93fe93ec-b98c-4037-9504-bf584e31b420
+Gamma_mean = MCMCUtils.to_measurements(
+	hcat((middle.(prof.Gamma) for prof in profiles)...))
+
+# ╔═╡ 4106ea1f-948f-42fb-9a19-64580a94ce9a
+prof_mean = LilGuys.SurfaceDensityProfile(
+		R_units = "arcmin",
+		log_Sigma=log_Sigma_mean,
+		log_R_bins=log10.(bins), # use normal bins for these
+		log_R=midpoints(log10.(bins)),
+		Gamma = Gamma_mean
+	)
 
 # ╔═╡ b8ba7f13-6a1a-43d5-90db-930196dfbbe4
 md"""
@@ -294,29 +223,26 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel = "PSAT J+24", ylabel = "PSAT MCMC")
 
-	skip = 100
+	skip = 1000
 
 	for i in 1:skip:size(psats, 2)
 		y = psats[:, i]
 		filt = 1e-6 .< y .< 1-1e-6
-		scatter!(stars.PSAT[filt], y[filt], color=:black, alpha=0.1, markersize=2, rasterize=true)
+		scatter!(stars.PSAT[filt], y[filt], color=:black, alpha=0.01, markersize=2, rasterize=true)
 	end
-	@savefig "j+24_vs_mcmc"
+	@savefig "psat_j+24_vs_mcmc"
 	
 	fig
 end
-
-# ╔═╡ b2b89764-7990-4441-bd3c-5f369fbbaceb
-size(psats)
 
 # ╔═╡ ad85b789-8f43-489b-a41c-a966e08d78ad
 let
 	fig = Figure()
 	ax = Axis(fig[1,1], xlabel = "log r_ell", ylabel = "psat me - jax")
 
-	skip = 10
+	skip = 100
 
-	scatter!(log10.(stars.R_ell), middle.(psats_pm) .- stars.PSAT, color=:black, alpha=0.1, markersize=2, rasterize=true)
+	scatter!(log10.(stars.R_ell), middle.(psats_pm) .- stars.PSAT, color=:black, alpha=0.03, markersize=1, rasterize=true)
 
 	@savefig "j+24_vs_mcmc_diff"
 
@@ -331,11 +257,12 @@ let
 		ylabel =log_Sigma_label,
 		limits = (nothing, nothing, -8, 3)
 	)
-	skip = 10
+	skip = 100
+	jitter = 0.005
 	
 	for h in profiles[1:skip:end]
 		filt = isfinite.(h.log_Sigma)
-		scatter!(h.log_R[filt] .+ 0.01*randn(sum(filt)), h.log_Sigma[filt], color=:black, alpha=0.1, markersize=1)
+		scatter!(h.log_R[filt] .+ jitter * randn(sum(filt)), h.log_Sigma[filt], color=:black, alpha=0.03, markersize=1)
 	end
 
 	@savefig "scatter_profiles"
@@ -343,162 +270,98 @@ let
 	fig
 end
 
-# ╔═╡ 08424d6a-6a21-45d2-9b1a-d28e129c8158
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = log_r_label,
-		ylabel = L"\Gamma",
-		limits = (nothing, nothing, -10, 2)
-	)
-	skip = 10
-	
-	for h in profiles[1:skip:end]
-
-		filt = isfinite.(h.Gamma)
-		scatter!(h.log_R[filt].+ 0.01*randn(sum(filt)), h.Gamma[filt], color=:black, alpha=0.1, markersize=1)
-	end
-
-
-	fig
-end
-
-# ╔═╡ ceb22a8a-d0ab-4686-a894-ae78df0b6584
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = log_r_label,
-		ylabel = L"\Gamma",
-		limits = (nothing, nothing, -10, 2)
-	)
-	skip = 10
-	
-	for h in profiles[1:skip:end]
-
-		filt = isfinite.(h.Gamma)
-		scatter!(10 .^ (h.log_R[filt].+ 0.0*randn(sum(filt))), h.Gamma[filt], color=:black, alpha=0.1, markersize=1)
-	end
-
-
-	fig
-end
-
-# ╔═╡ 9bf31971-1c10-4020-946e-d8cfebf6596a
-md"""
-# Outputs
-"""
-
-# ╔═╡ 8c565a28-84bc-4bc7-8a0e-b2e0dff76665
-if !isdir(outdir)
-	mkdir(outdir)
-end
-
-# ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
-profout = joinpath(outdir, "hist_fast_profile.toml")
-
-# ╔═╡ 28b67692-45a9-435d-8862-882b0f06f947
-starsout = joinpath(outdir, "stars$FIGSUFFIX.fits")
-
-# ╔═╡ 4482bead-75a5-413f-b442-e60ab3d3ec88
-prof_mc_slow = LilGuys.SurfaceDensityProfile(
-	R_units = "arcmin",
-	log_Sigma=log_Sigma_slow,
-	log_R_bins=log10.(bins),
-	log_R=midpoints(log10.(bins)),
-	#Gamma = to_measurements(middle.(all_Gammas))
-)
-
-# ╔═╡ 94d6a13f-1165-4d8f-a40a-a4cfa9224093
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel = log_r_label,
-		ylabel =log_Sigma_label,
-		limits = (nothing, nothing, -8, 3)
-	)
-	skip = 10
-	
-	for i in 1:skip:Nsteps
-		y = log_Sigmas_fast[2:end-1, i]
-		x = prof_counts.log_R[2:end-1] .+ 0.01*randn(length(prof_counts.log_R) - 2)
-		
-		filt = isfinite.(y)
-		scatter!(x[filt], y[filt], color=:black, alpha=0.1, markersize=1)
-	end
-	
-	if all_profiles
-		LilGuys.plot_log_Σ!(ax, prof_mc_slow, label="mc hist",color=(COLORS[2], 0.3))
-	end
-	
-	@savefig "scatter_profiles_approx"
-
-	fig
-end
-
-# ╔═╡ bf8d5936-1a4e-47c2-bb22-531ab344b8ad
-prof_mc = LilGuys.SurfaceDensityProfile(
-		R_units = "arcmin",
-		log_Sigma=log_Sigma_fast,
-		log_R_bins=log10.(bins), # use normal bins for these
-		log_R=midpoints(log10.(bins)),
-	)
-
-# ╔═╡ f80631b5-aa7e-454a-937f-c2e66b042105
-profiles_fast = [LilGuys.SurfaceDensityProfile(	R_units = "arcmin",
-		log_Sigma=(log_Sigma_fast),
-		log_R_bins=log10.(bins), # use normal bins for these
-		log_R=midpoints(log10.(bins)),)
- for log_Sigma_fast in eachcol(log_Sigmas_fast)]
-
 # ╔═╡ c507975a-8041-48f0-b46e-ac1ebccf3a94
 let
-	fig = Figure()
+	jitter = 0.005
+	fig = Figure(size=(5*72, 3*72))
 	ax = Axis(fig[1,1],
 		xlabel = log_r_label,
 		ylabel = L"\Gamma",
 		limits = (nothing, nothing, -10, 2)
 	)
-	skip = 10
+	skip = 100
 	
-	for h in profiles_fast[1:skip:end]
+	for h in profiles[1:skip:end]
 
 		Gamma = LilGuys.gradient(middle.(h.log_Sigma), h.log_R)
 		filt = isfinite.(Gamma)
 
-		scatter!(h.log_R[filt].+ 0.01*randn(sum(filt)), Gamma[filt], color=:black, alpha=0.1, markersize=1)
+		scatter!(h.log_R[filt].+ jitter*randn(sum(filt)), Gamma[filt], color=:black, alpha=0.1, markersize=1)
 	end
+
+	ax2 = Axis(fig[1,2],
+		xlabel = L"$R_\textrm{ell}$ / arcmin",
+		ylabel = L"\Gamma",
+		limits = (nothing, nothing, -10, 2)
+	)
+	skip = 10
+	
+	for h in profiles[1:skip:end]
+
+		Gamma = LilGuys.gradient(middle.(h.log_Sigma), h.log_R)
+		filt = isfinite.(Gamma)
+
+		scatter!(10 .^ (h.log_R[filt].+ jitter*randn(sum(filt))), Gamma[filt], color=:black, alpha=0.03, markersize=1)
+	end
+
+	linkyaxes!(ax, ax2)
+	hideydecorations!(ax2, ticks=false, minorticks=false)
+	colgap!(fig.layout, 0)
+	
+	@savefig "scatter_slope"
 
 
 	fig
 end
 
-# ╔═╡ 4e4624d7-a858-486f-9930-75b9adf9c269
-mean.(eachrow(.!isfinite.(all_Gammas)))
-
-# ╔═╡ 4106ea1f-948f-42fb-9a19-64580a94ce9a
-prof_mc_nostruct = LilGuys.SurfaceDensityProfile(
-		R_units = "arcmin",
-		log_Sigma=log_Sigma_nostruct,
-		log_R_bins=log10.(bins), # use normal bins for these
-		log_R=midpoints(log10.(bins)),
-	)
-
-# ╔═╡ 7c02d24f-7d59-410b-99bc-93513afa4c5d
+# ╔═╡ bab50892-fab8-44fe-931b-66ff466b6974
 let
+	jitter = 0.005
 	fig = Figure(size=(5*72, 3*72))
 	ax = Axis(fig[1,1],
 		xlabel = log_r_label,
+		ylabel = L"\Gamma",
+		limits = (nothing, nothing, -10, 2)
+	)
+
+
+	profs = OrderedDict(
+		"J+24 probability cut" => prof_jax_cut,
+		"J+24 weighted" => prof_jax_weighted,
+		"MCMC hist" => prof_mean,
+
+	)
+
+	
+	for (i, (label, prof)) in enumerate(profs)
+		errorscatter!(prof.log_R .+ 0.01*i, prof.Gamma, yerror=error_interval.(prof.Gamma),
+					  label=label, markersize=3, errorcolor=(COLORS[i], 0.5))
+	end
+
+	axislegend(position=:lb)
+	
+	@savefig "Gamma_j+24_vs_mcmc"
+
+	fig
+
+end
+
+# ╔═╡ 7c02d24f-7d59-410b-99bc-93513afa4c5d
+let
+	fig = Figure(size=(4*72, 3*72))
+	y_max = maximum(middle.(prof_jax_cut.log_Sigma))
+	
+	ax = Axis(fig[1,1],
+		xlabel = log_r_label,
 		ylabel = log_Sigma_label,
-		limits = (nothing, nothing, -12, 4)
+		limits = (nothing, nothing, y_max + 0.5 - 8, y_max + 0.5)
 	)
 	jitter=0.04
 
 	profs = OrderedDict(
-		"mc hist" => prof_mc_slow,
-		"mc hist approx" => prof_mc,
-		"mc hist nostruct" => prof_mc_nostruct,
-		"weighted" => prof_weighted,
-		"fiducial" => prof_simple,
+		"J+24 probability cut" => prof_jax_cut,
+		"J+24 weighted" => prof_jax_weighted,
+		"MCMC hist" => prof_mean,
 	)
 
 	
@@ -512,7 +375,7 @@ let
 		errorscatter!(x .+ jitter * LilGuys.randu(-1, 1), y, yerror=yerr, label=label, )	
 	end
 
-	Legend(fig[1,2], ax)
+	axislegend(ax, position=:lb)
 
 	
 	ax_res = Axis(fig[2,1],
@@ -521,7 +384,7 @@ let
 		limits=(nothing, nothing, -0.5, 0.5)
 	)
 
-	prof_ref = prof_mc_slow
+	prof_ref = prof_mean
 	
 
 	for (label, prof) in profs
@@ -540,23 +403,32 @@ let
 	hidexdecorations!(ax, grid=false, ticks=false, minorticks=false)
 	linkxaxes!(ax_res, ax)
 
-	@savefig "density_versus_simple"
+	@savefig "density_j+24_vs_mcmc"
 end
+
+# ╔═╡ 9bf31971-1c10-4020-946e-d8cfebf6596a
+md"""
+# Outputs
+"""
+
+# ╔═╡ 8c565a28-84bc-4bc7-8a0e-b2e0dff76665
+if !isdir(outdir)
+	mkdir(outdir)
+end
+
+# ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
+profout = joinpath(outdir, "hist_fast_profile.toml")
+
+# ╔═╡ 28b67692-45a9-435d-8862-882b0f06f947
+starsout = joinpath(outdir, "stars$FIGSUFFIX.fits")
 
 # ╔═╡ 6f2a4b25-b9ea-4560-ba6e-fc22af9f23e6
 open(profout, "w") do f
-	print(f, prof_mc_slow)
+	print(f, prof_mean)
 end
 
-# ╔═╡ 17b68535-445d-4203-861f-f278090de89a
-open(joinpath(outdir, "hist_fast_approx_profile.toml"), "w") do f
-	print(f, prof_mc)
-end
-
-# ╔═╡ cdeeb6c0-f807-419f-bba1-f54f50979da0
-open(joinpath(outdir, "hist_fast_nostruct_profile.toml"), "w") do f
-	print(f, prof_mc_nostruct)
-end
+# ╔═╡ 0e6fe0e9-51d9-4948-9eca-278b82611dea
+import Statistics: median
 
 # ╔═╡ 8b05449b-6d03-40cc-b4d8-9230303c15c1
 let
@@ -567,80 +439,65 @@ let
 	stars_new[!, :f_sat] = median.(eachrow(fsats))
 
 	write_fits(starsout, stars_new, overwrite=true)
+
+	stars_new
 end	
+
+# ╔═╡ fcea9627-7150-4c6b-86c7-c73671554926
+md"""
+# Additional checks
+"""
+
+# ╔═╡ 7a490042-abb2-424e-b61b-e78ed885034a
+scatter(df_summary.N_stars, _prof_counts.counts .- df_summary.N_stars)
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
-# ╠═d1de613c-c3bb-4843-859e-7b8df54bafe0
-# ╠═67ddb57a-9ee7-4f4c-848f-d0b77fba1855
-# ╠═e74e6a96-a18e-40bf-ade8-07ce0e30e5c4
-# ╠═6c4427b6-fe6d-4ad7-812a-21c9788591d5
+# ╠═e997f77b-02d5-406a-8f78-b9e115baaf88
 # ╠═1f497448-9ea2-460f-b403-618b78b47565
-# ╠═8bcf8114-1823-47de-a7ab-27c136ac4a64
-# ╠═11d9d9f5-0fb7-4b06-bd4a-36bdb1f00188
-# ╠═b94c3346-bd31-409e-ad6f-5e7afb891ad1
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
+# ╠═b94c3346-bd31-409e-ad6f-5e7afb891ad1
+# ╠═11d9d9f5-0fb7-4b06-bd4a-36bdb1f00188
 # ╠═0aa44389-f320-4274-abdd-0d7f88006a4d
 # ╠═36ef5f0d-3a14-4e5d-a2fb-f6626a941d5f
 # ╟─04053b71-bd55-40d7-885d-6df67035e3d6
 # ╠═b7b4361a-1ee8-4b1d-a62e-9f7bd0363160
-# ╠═c58ed939-07c1-4d34-90a4-3c5d9cc9910b
-# ╠═f078d929-62be-48f2-acdb-808357801a7b
+# ╠═aae56f16-2433-4847-83db-9184a74f28f8
 # ╠═4b77612f-e124-4d77-974c-d40c2f5a37ff
 # ╠═9726210e-278f-4478-9c4a-8be8975a57d6
+# ╠═c58ed939-07c1-4d34-90a4-3c5d9cc9910b
 # ╠═6f016a8e-38ae-4f05-a7ee-c292ac0e5741
 # ╠═3e99a9b9-ba06-47ee-bce7-5720a4eb1944
 # ╟─24a65d65-6e0b-4108-8041-79fee06cd28a
-# ╟─7520415d-a482-4a9a-bf8a-7f8443d3b613
+# ╟─3067ae10-854f-48ce-8285-0d3f3fa7f25c
+# ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
+# ╟─4b644aaf-76ab-4e30-8a78-7e127c2ba7b5
+# ╠═85f59eb3-4f90-498a-923e-36cd679af1c0
+# ╠═575a31e1-df22-42e9-9a9e-1dc4b678a5b6
+# ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
+# ╠═fe3d955f-c96b-4202-9218-f749a5e9d41f
 # ╠═5feaa9b0-ca44-48d6-80d1-16303a34005f
 # ╠═ab124afe-c94a-44d9-8869-bd4d4cee3fbd
-# ╠═babcaaa8-8d95-4dcb-b22b-5e36c10c57dd
-# ╠═e60ea082-818d-46f8-bf50-30a932f97ef2
-# ╠═82f20e46-90c7-4925-83c9-3f49a909664d
 # ╟─6685cdec-7c99-45ca-98c8-f6439dfd7290
-# ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
-# ╠═08fc0b00-8a55-4604-a580-613a12db150e
-# ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
-# ╠═7f4377ad-ab77-487e-87fc-87cd0c1df40d
-# ╠═2027b636-bb17-4004-941e-b715ba8d0216
-# ╠═8abe3d92-f9e8-4e89-96ec-14eaf9482e64
-# ╠═939aa449-26ea-4d2d-8773-42a73c3d0410
-# ╠═ba280361-c910-483a-9108-fd4be4906606
-# ╠═36f7e33d-0ee3-4ea3-bb0f-3cedd34da773
-# ╠═36bb1876-5937-44fe-bb1c-add10470371d
-# ╠═053d441b-9b1b-4c1a-bc96-fa5b1e9f059e
-# ╠═c48f8ad0-a8c8-46ef-9b56-6f4ff5ac7a83
-# ╠═8c03d71d-2fbf-4ef4-b8f8-f2ebbe694434
-# ╠═33f16b18-1787-4768-847e-10f877825e38
-# ╠═084a491c-e53a-4371-9c5b-f9450ec5deec
-# ╠═428d53fd-39cd-40f3-ac6b-389f637e351e
-# ╠═f4d9ddee-9ca9-4e5a-9d6c-a18e866ba71a
 # ╠═6470edfd-bd06-43b7-aa5e-a80645af78fb
-# ╠═5f5bcf71-f306-45db-ba76-af69e88675c2
-# ╠═0e13c17b-2a09-4699-a0a6-4836d303ccc2
 # ╠═c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
-# ╠═81e5a128-c1ed-4a8a-8bb6-e4efd0593c80
-# ╠═b8ba7f13-6a1a-43d5-90db-930196dfbbe4
+# ╠═93fe93ec-b98c-4037-9504-bf584e31b420
+# ╠═f80631b5-aa7e-454a-937f-c2e66b042105
+# ╠═4106ea1f-948f-42fb-9a19-64580a94ce9a
+# ╟─b8ba7f13-6a1a-43d5-90db-930196dfbbe4
 # ╠═da737b3e-f28a-4917-91d6-eea97458ddb0
-# ╠═b2b89764-7990-4441-bd3c-5f369fbbaceb
 # ╠═ad85b789-8f43-489b-a41c-a966e08d78ad
 # ╠═f2c43c30-b069-4d17-8d61-be801d85b245
-# ╠═94d6a13f-1165-4d8f-a40a-a4cfa9224093
-# ╠═08424d6a-6a21-45d2-9b1a-d28e129c8158
 # ╠═c507975a-8041-48f0-b46e-ac1ebccf3a94
-# ╠═ceb22a8a-d0ab-4686-a894-ae78df0b6584
+# ╠═bab50892-fab8-44fe-931b-66ff466b6974
 # ╠═7c02d24f-7d59-410b-99bc-93513afa4c5d
 # ╟─9bf31971-1c10-4020-946e-d8cfebf6596a
 # ╠═8c565a28-84bc-4bc7-8a0e-b2e0dff76665
 # ╠═a93579f2-d37d-492c-95e6-02bd7491dc8c
 # ╠═28b67692-45a9-435d-8862-882b0f06f947
-# ╠═4482bead-75a5-413f-b442-e60ab3d3ec88
-# ╠═bf8d5936-1a4e-47c2-bb22-531ab344b8ad
-# ╠═f80631b5-aa7e-454a-937f-c2e66b042105
-# ╠═4e4624d7-a858-486f-9930-75b9adf9c269
-# ╠═4106ea1f-948f-42fb-9a19-64580a94ce9a
 # ╠═6f2a4b25-b9ea-4560-ba6e-fc22af9f23e6
-# ╠═17b68535-445d-4203-861f-f278090de89a
-# ╠═cdeeb6c0-f807-419f-bba1-f54f50979da0
+# ╠═0e6fe0e9-51d9-4948-9eca-278b82611dea
 # ╠═8b05449b-6d03-40cc-b4d8-9230303c15c1
+# ╟─fcea9627-7150-4c6b-86c7-c73671554926
+# ╠═7a490042-abb2-424e-b61b-e78ed885034a

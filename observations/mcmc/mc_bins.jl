@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -44,7 +44,12 @@ This notebook checks the variance in assigned bin indicies due to uncertainty in
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	@bind galaxy confirm(TextField(default="galaxy"))
+	md"""
+	$(@bind galaxy confirm(TextField(default="galaxy")))
+
+	$(@bind bin_width confirm(NumberField(0:0.1:1, 0.05)))
+
+	"""
 end
 
 # ╔═╡ 7ff855b9-7a1e-422e-b8a5-1cb5ecfe368f
@@ -55,8 +60,8 @@ begin
 	FIGDIR = joinpath("..", galaxy, "figures"); FIGSUFFIX=".mcmc_hist"
 end
 
-# ╔═╡ 6014a851-525b-4565-b074-fbdd26a8ce2b
-bin_width = 0.1
+# ╔═╡ 11756aee-a4be-46d8-ad0e-3e2fc0089d2d
+num_per_bin = 20
 
 # ╔═╡ e53cdf92-f17d-40ae-9785-c00b7e33aeba
 PSAT_min = 0.2
@@ -129,6 +134,27 @@ md"""
 # Analysis
 """
 
+# ╔═╡ 028fb0dd-0076-4061-92cc-be08ec1b92d8
+mc_params = MCMCUtils.StructuralParams(stars, obs_props, num_per_bin=num_per_bin, bin_width=bin_width)
+
+# ╔═╡ da4218ef-34ed-4464-81ad-fb8fa216fb9a
+@info length(mc_params.bins)
+
+# ╔═╡ ff4e7ea9-fbd9-4e07-87ca-934ff8961393
+mc_params.bins
+
+# ╔═╡ a6060154-db75-456c-903b-959c508dd7c0
+@assert minimum(diff(log10.(mc_params.bins))) >= bin_width * (1-1e-10)
+
+# ╔═╡ f6a14386-2da3-4dc7-9fbe-ccd632b7ae53
+diff(log10.(mc_params.bins))
+
+# ╔═╡ 99e00997-c816-4cda-9643-378a5eff7972
+counts_in_bin = LilGuys.histogram(stars.R_ell, mc_params.bins)[2]
+
+# ╔═╡ 9ea81473-2bde-43e2-b092-d2ce1b7ff5e6
+@assert minimum(counts_in_bin) >= num_per_bin
+
 # ╔═╡ 81876bbe-a200-49ce-9155-5e3c98bc1db5
 MCMCUtils.centring_stats(stars, PSAT_min=0.2)
 
@@ -153,17 +179,8 @@ N_min_clean = max(round(Int, LilGuys.Interface.default_n_per_bin(members.R_ell, 
 # ╔═╡ 08ab794f-02a9-4835-98ca-b0c01a19c60a
 num_per_bin_default = max(round(Int, LilGuys.Interface.default_n_per_bin(members.R_ell, nothing)), 2) / f_cen
 
-# ╔═╡ 11756aee-a4be-46d8-ad0e-3e2fc0089d2d
-@bind num_per_bin NumberField(1:10000, default=num_per_bin_default)
-
-# ╔═╡ 028fb0dd-0076-4061-92cc-be08ec1b92d8
-mc_params = MCMCUtils.StructuralParams(stars, obs_props, num_per_bin=num_per_bin, bin_width=bin_width)
-
-# ╔═╡ da4218ef-34ed-4464-81ad-fb8fa216fb9a
-@info length(mc_params.bins)
-
-# ╔═╡ ff4e7ea9-fbd9-4e07-87ca-934ff8961393
-mc_params.bins
+# ╔═╡ 62d39b10-f078-4cd3-b4c6-0945386ac507
+num_per_bin_default
 
 # ╔═╡ 33e02945-2ab5-4f55-b3d5-e8855d86f120
 let 
@@ -179,7 +196,7 @@ let
 	
 	stephist!(log10.(members.R_ell), bins=log10.(mc_params.bins), label="PSAT > 0.2")
 	stephist!(log10.(stars.R_ell), bins=log10.(mc_params.bins), label="best")
-
+	scatter!(log10.(mc_params.bins), ones(length(mc_params.bins)))
 	axislegend(position=:lt)
 	@savefig "hist_bin_choices"
 	fig
@@ -238,7 +255,8 @@ LilGuys.struct_to_dict(
 # ╔═╡ Cell order:
 # ╠═287cea0a-2745-4720-88b5-96d92742b382
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
-# ╠═6014a851-525b-4565-b074-fbdd26a8ce2b
+# ╠═11756aee-a4be-46d8-ad0e-3e2fc0089d2d
+# ╠═62d39b10-f078-4cd3-b4c6-0945386ac507
 # ╠═e53cdf92-f17d-40ae-9785-c00b7e33aeba
 # ╠═a955c503-c834-4719-89d0-a0004c33ea15
 # ╠═f9ea040c-0d80-4ccc-a990-010d72a5647e
@@ -247,7 +265,6 @@ LilGuys.struct_to_dict(
 # ╠═5c58e059-7e5c-41b6-accd-7020beda42f8
 # ╠═374439b8-767c-4872-991a-90298c9a6dd6
 # ╠═08ab794f-02a9-4835-98ca-b0c01a19c60a
-# ╠═11756aee-a4be-46d8-ad0e-3e2fc0089d2d
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
 # ╠═7ff855b9-7a1e-422e-b8a5-1cb5ecfe368f
 # ╠═408d70ee-ab1c-4630-bd75-21358cd55489
@@ -267,6 +284,10 @@ LilGuys.struct_to_dict(
 # ╠═8e665feb-1a41-440c-a813-163cbf3be4f8
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
 # ╠═cd338225-85b9-45db-86cc-979d5b77a532
+# ╠═a6060154-db75-456c-903b-959c508dd7c0
+# ╠═f6a14386-2da3-4dc7-9fbe-ccd632b7ae53
+# ╠═9ea81473-2bde-43e2-b092-d2ce1b7ff5e6
+# ╠═99e00997-c816-4cda-9643-378a5eff7972
 # ╠═33e02945-2ab5-4f55-b3d5-e8855d86f120
 # ╠═24a65d65-6e0b-4108-8041-79fee06cd28a
 # ╠═028fb0dd-0076-4061-92cc-be08ec1b92d8
