@@ -23,13 +23,13 @@ Most well-studied dwarf galaxies lie near the Milky Way or in its vicinity, the 
 
 
 
-![Dwarf Galaxy Pictures](figures/galaxy_pictures.png){#fig:galaxy_images width=390pt height=390pt}
+![Images of dwarf galaxies](figures/galaxy_pictures.png){#fig:galaxy_images width=390pt height=390pt}
 
 Figure: Images of the LMC (DSS2), Fornax [DES DR2, @abbott+2021], Sculptor (DES DR2),  and Ursa Minor [UNWISE, @lang2014; @meisner+lang+schlegel2017; @meisner+lang+schlegel2017a, with \textit{Gaia} point sources over-plotted]. The grey ellipse represents the half-light radius for the three dwarf spheroidals, and the luminosity is derived from the absolute V-band magnitude of each galaxy.
 
 
 
-![Dwarf galaxies sky position](figures/mw_satellites_1.jpg){#fig:mw_satellite_system width=390pt}
+![The on-sky distribution of Milky Way satellites](figures/mw_satellites_1.jpg){#fig:mw_satellite_system width=390pt}
 
 Figure: The location of MW dwarf galaxies on the sky. We label the classical dwarf galaxies (green diamonds), fainter dwarfs (blue squares), globular clusters (orange circles), and ambiguous systems (pink open hexagons). Globular clusters are more centrally concentrated, but dwarf galaxies are preferentially found away from the MW disk. Sculptor and Ursa Minor are highlighted as two dwarfs we study later. The background image is from ESA/Gaia/DPAC (https://www.esa.int/ESA_Multimedia/Images/2018/04/Gaia_s_sky_in_colour2). Dwarf galaxies (confirmed), globular clusters, and ambiguous systems are from the @pace2024 catalogue (version 1.0.3). 
 
@@ -75,11 +75,11 @@ The two parameters of an NFW profile are not independent. Lower-mass dark matter
 
 [^200]: For the collapse of a uniform spherical density, the virialized overdensity  would be $\Delta = 18\pi^2\approx 178$ for a critical universe $\Omega_m = 1$. This is commonly rounded to $\Delta = 200$. While this parameter may be closer to $\Delta \approx 100$ for our universe, $\Delta$ also increases with redshift [using eq. 6 from @bryan+norman1998]. 
 
-![Example density profiles](figures/example_density_profiles.png){#fig:nfw_density width=80%}
+![Example dark matter and stellar density profiles](figures/example_density_profiles.png){#fig:nfw_density width=80%}
 
-Figure: Density profiles in log density versus log radius for stars and dark matter in a Fornax-like galaxy. The dark matter is more extended and massive than the star across the entire galaxy. The halo has $\vmax=40\,\kpc$ and $\rmax=8\,\kpc$,  or $M_{200} = 1\times10^{10}\,\Mo$ and $c=12.5$, the cosmological mean for a Fornax stellar mass galaxy. The galaxy has a stellar mass $M_\star \approx 2.5\times10^7\,\Mo$ with half-light radius $0.65\,\kpc$ [@munoz+2018; @woo+courteau+dekel2008].
+Figure: Density profiles in log density versus log radius for stars and dark matter in a Fornax-like galaxy. The dark matter is more extended and massive than the star across the entire galaxy. The galaxy has a stellar mass $M_\star \approx 2.5\times10^7\,\Mo$ with half-light radius $0.65\,\kpc$ [@munoz+2018; @woo+courteau+dekel2008]. The halo represents the cosmological mean given the stellar mass, with $\vmax=40\,\kpc$ and $\rmax=8\,\kpc$,  or $M_{200} = 1\times10^{10}\,\Mo$ and $c=12.5$. 
 
-![Stellar-mass halo-mass relation](figures/cosmological_means.pdf){#fig:smhm}
+![Cosmological halo mass and stellar mass relations](figures/cosmological_means.pdf){#fig:smhm}
 
 Figure: **Left** The NFW halo concentration $c=r_{200} / r_s$ as a function of virial mass $M_{200}$. The solid line with 1-$\sigma$ shaded region is the mass-concentration relation from @ludlow+2016 for $z=0$. **Right** Stellar mass (top) as a function of maximum circular velocity. The solid line with the 1-$\sigma$ shaded region is the relation from @fattahi+2018 with scatter points simulated central galaxies from \apostle{} in @fattahi+2018. The pink star illustrates the location of the Fornax galaxy, whose density profiles are shown in @fig:nfw_density.
 
@@ -151,7 +151,7 @@ where $b_n$ is a constant that depends on $n$. A Sérsic profile with $n=1$ is e
 
 @faber+lin1983 were among the first to demonstrate that an exponential law is a reasonable empirical fit, theorizing that dwarf spheroidals may have evolved from exponential disk galaxies[^exp_disk] and maintained a similar light profile. Later, @read+gilmore2005 showed that exponential profiles may originate from mass loss during the evolution of dwarf galaxies. Tides are a possible mechanism for this transformation---the "tidal stirring hypothesis" [@mayer+2001a; @klimentowski+2009]. However, the theoretical origin of exponential disks is unclear.
 
-[^exp_disk]: While studied for far longer, the exponential origin of disk galaxies is no better understood. A sample of ideas range from scattering of stars [@elmegreen+struck2013, @wu+2022] to angular momentum transport [@, to disk viscosity-driven radial gas flows [@lin+pringle1987; key reference to read for me: @wang+lilly2022] or spherical collapse [@freeman1970].
+[^exp_disk]: While studied for far longer, the exponential origin of disk galaxies is no better understood. A sample of ideas range from scattering of stars [@elmegreen+struck2013; @wu+2022] to angular momentum transport, to disk viscosity-driven radial gas flows [@lin+pringle1987; @wang+lilly2022] or spherical collapse [@freeman1970].
 
 
 
@@ -171,9 +171,9 @@ A goal of this work is to determine if tidal effects are indeed responsible for 
 
 
 
-![Sculptor and Ursa Minor match tidal models](./figures/scl_umi_vs_fornax.pdf){#fig:scl_umi_vs_fornax}
+![Scl and UMi have an extended density profile](./figures/scl_umi_fornax_exp.pdf){#fig:scl_umi_vs_fornax}
 
-Figure: A plot of the surface density profiles of Sculptor (orange squares), Ursa Minor (red triangles), and Fornax (green circles) scaled to their half-light radius and the density at half-light radius (data described in @sec:observations). The solid black line is an exponential profile ([@eq:exponential_law]).
+Figure: A plot of the surface density profiles of Sculptor (orange squares), Ursa Minor (red triangles), and Fornax (green circles) scaled to their half-light radius and the density at half-light radius (data described in @sec:observations). The solid black line is an exponential profile ([@eq:exponential_law]). Scl and UMi show a clear overdensity at large radii.
 
 
 
@@ -217,17 +217,17 @@ Table: Observed properties of Ursa Minor. References are: (1) @munoz+2018 Sérsi
 
 # Interpreting tidal signatures {#sec:tidal_theory}
 
-We know a few examples 
+Tidal disruption of dwarfs in the Local Group continues to this day. The Magellanic stream, a massive, gas-rich feature emanating from the Magellanic clouds, is believed to arise partially from the MW's tides [@putman+1998; @diaz+bekki2012; @donghia+fox2016]. Other clear examples of tidal streams include the Sagittarius stream, the Andromeda Giant Southern stream, and the Tucana III stream [e.g., @ibata+gilmore+irwin1994; @ibata+2001;  @li+2018]. These examples illustrate that hierarchical accretion remains an active process. Interpreting such observations relies on simulations of tidal disruption. 
 
-Simulating dwarf galaxies accurately in a cosmological context remains a challenge. Cosmological simulations can predict the overall abundance of the most massive dwarf galaxies [e.g., @sawala+2016,] and broadly examine the effects of tides [e.g., @riley+2024]. However, simulated dwarf galaxies are often near the resolution limit. Insufficient resolution can lead to artificial disruption of dwarf galaxies and over-prediction of tidal effects [e.g., @vandenbosch+2018; @santos-santos+2025]. To address this challenge,  idealized simulations are often used to simulate a single subhalo in an approximate host potential, achieving excellent numerical convergence. For instance, the simulations we describe later reach 3 times higher resolution than Aquarius [@springel+2008] at a fraction of the computational cost (400 times fewer particles). Idealized simulations make numerous simplifications, neglecting mergers, cosmological context, mass assembly, and often baryonic physics [e.g., @hayashi+2003; @bullock+johnston2005; @klimentowski+2009; @ogiya+2019]. We shall use idealized simulations here to assess tidal effects after infall. 
+Cosmological simulations struggle to resolve tidal effects on dwarfs. Since many dwarfs are near the resolution limit, they are vulnerable to artifical disruption [e.g., @vandenbosch+2018; @santos-santos+2025]. To overcome numerical challenges,  idealized simulations model a single subhalo in an analytic host potential, achieving excellent numerical convergence. For instance, the simulations we describe later reach the times higher resolution than Aquarius [@springel+2008] with 400 times fewer particles. Idealized simulations make numerous simplifications, neglecting mergers, cosmological context, mass assembly, and often baryonic physics [e.g., @hayashi+2003; @bullock+johnston2005; @klimentowski+2009; @ogiya+2019]. We shall use idealized simulations here to assess tidal effects after infall. 
 
-Conclusions from early work on tidal evolution remain mostly relevant today. A galaxy undergoing tidal effects loses most mass near the Lagrange points at pericentre, forms symmetric tidal streams with a velocity gradient, and retains its central structure [@oh+lin+aarseth1995; @piatek+pryor1995; @moore+davis1994; @johnston+spergel+hernquist1995; @read+2006].
+Idealized simulations predict clear properties of tidally disrupting dwarf galaxies. Tidally stripped stars form tidal streams---approximately uniform-density stellar tails with a bulk velocity gradient [e.g., @moore+davis1994; @johnston+spergel+hernquist1995; @read+2006]. Most mass loss happens near pericentre, where tides are strongest. However, the central structure of a dwarf galaxy often remains undisturbed [@oh+lin+aarseth1995; @piatek+pryor1995]. For instance, cuspy CDM halos also are found to be nearly immune to full disruption [@EP2020], but cored dark matter halos may disrupt more quickly [e.g., @penarrubia+2010; @errani+2023a]. 
 
-CDM halos also are found to be highly resilient to full disruption [@EP2020]. In addition, NFW halos evolve along "tidal tracks" [e.g, @PNM2008; @green+vandenbosch2019; @EN2021]. On the other hand, cored dark matter halos likely disrupt faster [e.g., @penarrubia+2010; @errani+2023a]. 
+To first order, tidal mass loss peels away the outer energy-layers of a dwarf galaxy.  \citet{drakos+taylor+benson2020, drakos+taylor+benson2022, amorisco2021} showed that tidal effects are nearly entirely described as the removal of particles above a truncation energy [see also @choi+weinberg+katz2009]. @stucker+2023 generalized this idea, creating a model for adiabatic tidal mass loss in an isotropic tidal field. They explain the resilience of NFW halos and origin of characteristic "tidal tracks" [as observed in @PNM2008; @green+vandenbosch2019; @EN2021].
 
-\citet{drakos+taylor+benson2020, drakos+taylor+benson2022, amorisco2021} showed that tidal effects are nearly entirely described as the removal of particles below a certain energy [see also @choi+weinberg+katz2009]. @stucker+2023 generalized this idea, creating a model for adiabatic tidal mass loss in an isotropic tidal field, confirming that an NFW halo is likely unable to be disrupted and explaining the evolution of NFW halos along similar tidal tracks.
+With precise orbital constraints and improved models of the Milky Way potential, recent studies continue to directly probe the dynamical histories of individual dwarf galaxies. \citet{borukhovetskaya+2022, dicintio+2024} both ran simulations tuned to Fornax, showing that this galaxy's stellar component or globular clusters are likely not affected by tides. Similarly, @borukhovetskaya+2022a analyzed Crater II, showing that the present-day structure challenging to reconcile with \LCDM{} initial conditions and/or tidal evolution. Most relevantly, @iorio+2019 modelled Sculptor, concluding tides likely do not affect the stellar component. 
 
-With precise orbits and a better understanding of the Milky Way potential, recent work continues to directly probe the dynamical histories of individual dwarf galaxies. \citet{borukhovetskaya+2022, dicintio+2024} both ran simulations tuned to Fornax, showing that this galaxy's stellar component or globular clusters are likely not affected by tides. @borukhovetskaya+2022a also used N-body simulations to analyze Crater II, showing that the present-day properties of the galaxy are challenging to reconcile with \LCDM{} initial conditions with tidal evolution. Most relevantly, @iorio+2019 conducted simulations of Sculptor, concluding tides likely do not affect this galaxy. Our goal is to apply a similar framework to Sculptor and Ursa Minor.
+Building on this body of work, we will use idealized simulations to understand the severity of tidal effects on Sculptor and Ursa Minor.
 
 ## Tidal and "break" radii {#sec:break_radii}
 
@@ -243,7 +243,7 @@ We also use the **break radius** as defined in @penarrubia+2009, marking where t
 $$
 r_{\rm break} = C\,\sigma_{v}\,\Delta t
 $$ {#eq:r_break}
-where the scaling constant $C \approx 0.55$ was derived empirically. $r_{\rm break}$ describes where the dynamical timescale is longer than the time since the perturbation, i.e. the radius within which the galaxy has had enough time to dynamically relax. 
+where the empirical constant $C \approx 0.55$. $r_{\rm break}$ describes where the dynamical timescale is longer than the time since the perturbation, i.e. the radius within which the galaxy is dynamically relaxed. 
 
 
 
@@ -257,15 +257,15 @@ To first order, the final density profile of this toy simulation indeed resemble
 
 
 
-![Break radius validation](figures/idealized_break_radius.pdf){#fig:idealized_break_radius}
+![Example tidal simulation](figures/idealized_break_radius.pdf){#fig:idealized_break_radius}
 
-Figure: Example density and velocity distributions of an idealized simulation shortly after pericentre. **Top left**: The 2D density profile for the initial and final simulation with the break radius marked.  The break radius of the simulations is set by the time since pericentre.  **Bottom left**: the mean radial velocity (dot product of relative position and velocity relative to dwarf centre) as a function of 2D radius. **Right**: The projected 2D stellar density in the $x$-$y$ plane. The green circle represents the break radius and the grey arrow points towards the host centre. 
+Figure: Example density and velocity distributions of an idealized simulation shortly after pericentre. **Top**: The projected 2D stellar density in the $x$--$y$ plane for the initial (left) and final (right) simulation. The dashed green circle represents the break radius (@eq:r_break) and the solid (dotted) blue line represents the past (future) orbit.  **Bottom left**: The projected stellar density profile for the initial (dotted) and final (solid) simulation snapshot. The green arrow marks the break radius. **Bottom left**: the mean radial velocity (dot product of relative position and velocity relative to dwarf centre) as a function of projected radius. The green arrow marks the break radius.
 
 # Thesis outline
 
 The goal of this thesis is to review the evidence for an extended density profile in Ursa Minor and Sculptor, to assess the impact of tidal effects on each galaxy, and to discuss possible interpretations for the structure of these galaxies. 
 
-In Chapter [-@sec:observations], we describe how we compute observational density profiles following @jensen+2024. In Chapter [-@sec:methods], we review our simulation methods. Next, we present our results for the tidal effects on Sculptor and Ursa Minor in Chapter [-@sec:results], We discuss our results, limitations, and implications in Chapter [-@sec:discussion]. Finally, Chapter [-@sec:summary] summarizes this thesis and discusses future directions for similar work. 
+In Chapter [-@sec:observations], we describe how we compute observational density profiles following @jensen+2024. In Chapter [-@sec:methods], we review our simulation methods. Next, we present our results for the tidal effects on Sculptor and Ursa Minor in Chapter [-@sec:results]. We discuss the implications of our results and ending with a summary and outlook in Chapter [-@sec:discussion]. 
 
 
 

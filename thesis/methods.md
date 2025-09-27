@@ -27,7 +27,7 @@ where $a$ is the disc radial scale length, $b$ is the scale height, and $M$ is t
 
 
 
-![Circular velocity of potential](figures/v_circ_potential.png){#fig:v_circ_potential width=80%} 
+![Circular velocity of the Milky Way potential](figures/v_circ_potential.png){#fig:v_circ_potential width=80%} 
 
 Figure: Circular velocity profile of @EP2020 potential. The total circular velocity (thick black line) is composed of an NFW halo (green dashed line), a think and thick @miyamoto+nagai1975 disk (orange dash-dotted line), and a @hernquist1990 bulge (blue dotted line).
 
@@ -41,13 +41,13 @@ To maximize tidal effects, we select an orbit with the $\sim 3\sigma$ smallest p
 
 
 
-![Sculptor Orbits](/Users/daniel/thesis/figures/scl_xyzr_orbits.pdf){#fig:scl_orbits}
+![Sculptor's possible orbits](/Users/daniel/thesis/figures/scl_xyzr_orbits.pdf){#fig:scl_orbits}
 
 Figure: The orbits of Sculptor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates (top) and in Galactocentric radius $r$ versus time (bottom). The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected \smallperi{} orbit is plotted in black and light green transparent orbits represent the past 5Gyr orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of Sculptor is well-constrained in this potential and it is unlikely to achieve a smaller pericentre than the \smallperi{} orbit.
 
 
 
-![Ursa Minor Orbits](/Users/daniel/thesis/figures/umi_xyzr_orbits.pdf){#fig:umi_orbits}
+![Ursa Minor's possible orbits](/Users/daniel/thesis/figures/umi_xyzr_orbits.pdf){#fig:umi_orbits}
 
 Figure: Similar to @fig:scl_orbits, the orbits of Ursa Minor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates. In the lower panel, we show the radius versus time for only three orbits of Ursa Minor.
 
@@ -113,7 +113,7 @@ Table: Inferred properties of the stellar component and halo for Sculptor and Ur
 
 
 
-![Sculptor initial halos](figures/initial_halo_selection.pdf){#fig:scl_halos}
+![Initial halo selection](figures/initial_halo_selection.pdf){#fig:scl_halos}
 
 Figure: Selection of initial halos for Sculptor and Ursa Minor. The grey line and pink line with shaded regions represent the @ludlow+2016 mass-concentration relation and @fattahi+2018 SMHM relation respectively. The curved lines represent the velocity dispersion of the initial halo given the present-day half-light radius via @eq:wolf_mass.
 
@@ -137,7 +137,7 @@ See Appendix -@sec:extra_convergence for a discussion of this choice, which is s
 
 @fig:numerical_convergence illustrates how well our numerical setup is able to reproduce the desired initial conditions, before and after running the model in isolation. This figure shows that our numerical methods are able to approximate well an NFW halo down to a given innermost radius that strongly depends on resolution. The larger the number of particles, the smaller the radius that is effectively "resolved" in a given simulation. For the Sculptor-like halo shown in this figure (with $\rmax = 6.0\,$kpc and $\vmax = 31\,\kms$), a simulation with $10^7$ particles is needed to resolve the innermost 100 pc. For reference, the half-light radius of Sculptor is roughly 100 pc, which means that at least 10 million particles are needed to follow faithfully its tidal evolution. Vertical arrows in @fig:numerical_convergence indicate the "convergence radius" defined by @power+2003 [eq.~13] for NFW halos formed in cosmological N-body simulations. This radius marks the region where collisional effects driven by the finite number of particles used to describe the innermost regions of a halo become important. The softening length (from @eq:softening_length) is typically a few times smaller than the converged length.
 
-![Numerical halo convergence](figures/iso_converg_num.pdf){#fig:numerical_convergence}
+![Numerical convergence of the N-body simulation](figures/iso_converg_num.pdf){#fig:numerical_convergence}
 
 Figure: Numerical convergence test for circular velocity as a function of log radius for simulations with different total numbers of particles in isolation. Residuals in bottom panel are relative to NFW. The initial conditions are dotted, the converged radius is marked by arrows [eq. 13, @power+2003], and the softening length is marked by a vertical bar. Note that a slight reduction in density starting around $r = 30\,\kpc$ is expected given our outer truncation choice. 
 

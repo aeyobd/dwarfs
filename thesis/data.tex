@@ -57,8 +57,9 @@ galaxy. For the background likelihoods, the spatial likelihood is a
 uniform distribution over the field, and the background CMD and PM
 likelihoods are constructed empirically from the stars in an annulus far
 from the satellite. Each likelihood is normalized as a probability
-density over the respective parameter space. The appendix discusses the
-details of quality cuts and the likelihood calculation.
+density over the respective parameter space. Appendix
+\ref{sec:density_extra} discusses the details of quality cuts and the
+likelihood calculation.
 
 The total likelihood is a mixture model of the satellite and background,
 weighted by the fraction of stars in the field belonging to the
@@ -164,23 +165,23 @@ Figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}. In particular,
 \citet{sestito+2023a}; \citet{sestito+2023b} targeted distant, bright
 stars from the J+24 candidate membership list. The most distant stars
 confirmed in their work lie at radii \(\gtrsim 10 R_h\) from the centres
-of each dwarf. For an exponential profile, 99.95\% of stars fall within
-a radius of \(6R_h\), so the mere presence of very distant member stars
-provides evidence for deviations from an exponential profile.
+of each dwarf. For an exponential profile, 0.05\% of stars fall outside
+a radius of \(6R_h\) and less than \(1/10^6\) fall outside
+\(10R_h\)---the mere presence of very distant member stars provides
+evidence for deviations from an exponential profile.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.7\linewidth,height=\textheight,keepaspectratio]{figures/scl_selection.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_selection.png}}
 \caption[Sculptor sample selection]{The distributions of various samples
-of \emph{Gaia} stars for Sculptor. We plot light grey points for ``all''
-field stars (with consistent parallaxes and reliable photometry and
-astrometry), turquoise points for ``CMD+PM'' selected stars
-(Eq.~\ref{eq:sel_cmd_pm}), blue squares for the ``fiducial'' sample
-(with membership probability \(P_{\rm sat} > 0.2\)), and indigo diamonds
-for the ``RV members'' sample. We mark the two far-outlier stars from
-\citet{sestito+2023a} with rust-outlined indigo stars. \textbf{Top:}
+of \emph{Gaia} stars for Sculptor. In each panel, we plot light grey
+points for the ``all'' sample of stars, turquoise points for ``CMD+PM''
+selected stars (Eq.~\ref{eq:sel_cmd_pm}), blue squares for the
+``fiducial'' sample (\(P_{\rm sat} > 0.2\)), and indigo diamonds for the
+``RV members'' sample. We mark the two far-outlier stars from
+\citet{sestito+2023a} with rust-outlined indigo stars. \textbf{Left:}
 Tangent plane \(\xi, \eta\). The orange ellipses represents 3 and 6
-half-light radii. \textbf{Bottom left:} Colour magnitude diagram in Gaia
+half-light radii. \textbf{Top right:} Colour magnitude diagram in Gaia
 \(G\) magnitude versus \(G_{\rm BP} - G_{\rm RP}\) colour. We plot a
 Padova \(12\,\)Gyr, \({\rm [Fe/H] }=-1.68\) isochone in orange. The
 black bar in the top left represents the median colour error.
@@ -192,7 +193,7 @@ proper motion error.}\label{fig:scl_selection}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.7\linewidth,height=\textheight,keepaspectratio]{figures/umi_selection.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_selection.png}}
 \caption[Ursa Minor sample selection]{Similar to
 Fig.~\ref{fig:scl_selection} except for Ursa Minor. We outline
 ``velocity confirmed'' members outside a radius of \(6R_h\) with red
@@ -203,11 +204,12 @@ circle.}\label{fig:umi_selection}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.7\linewidth,height=\textheight,keepaspectratio]{figures/fornax_selection.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fornax_selection.png}}
 \caption[Fornax sample selection]{Similar to
-Fig.~\ref{fig:scl_selection} except for Fornax. RV measurements are from
-\citet{WMO2009}. Fornax does not show the same extended outer halo of
-probable members as Sculptor or Ursa Minor despite having many more
+Fig.~\ref{fig:scl_selection} except for Fornax. The isocrone is instead
+for a 2Gyr stellar population. RV measurements are from \citet{WMO2009}.
+Fornax does not show the same extended outer halo of probable members as
+Sculptor or Ursa Minor despite having many more
 stars.}\label{fig:fornax_selection}
 \end{figure}
 
@@ -232,7 +234,7 @@ proper motions. Finally, the ``all -- background'' profile results from
 subtracting the apparent background in the ``all'' profile.
 
 While the density profiles of all samples agree in the inner regions,
-they begin to deviate outside \(6 R_h\). Outside this radius, the
+they begin to deviate outside \(6R_h\). Outside this radius, the
 fiducial profile extends 1--2 magnitudes below the ``CMD+PM'' selection
 background. Because the fiducial profile in this region depends
 critically on the spatial likelihood, its shape is vulnerable to the
@@ -247,34 +249,53 @@ have a bright RGB, so has few stars above the \emph{Gaia} magnitude
 limit. The cluster has little effect on the elliptically-averaged
 density profile (see location on Fig.~\ref{fig:scl_observed_profiles}).
 
+Our density profiles are robust to alternative methodologies and
+magnitude cuts. Density profiles based on J+24 candidates may be biased
+by their assumed spatial likelihoods. To address this, we consider a
+Bayesian model with a non-parametric spatial likelihood. We also explore
+selections using absolute cuts, and the effect of structural assumptions
+of the density profile (Appendix \ref{sec:extra_density}). These
+methodologies are consistent except when the derived density drops below
+the background of satellite-like stars (from the CMD+PM sample). We also
+do not find evidence of magnitude biases in the density profiles,
+indicating inhomogeneous magnitude-completeness is small. Our density
+profiles furthermore agree with photometric surveys and similar
+literature (see Section~\ref{sec:extra_density}). We conclude that
+selection criteria do not influence our results.
+
 Fig.~\ref{fig:classical_dwarfs_densities} compares the fiducial density
 profiles of Sculptor, Ursa Minor, Fornax, and other classical dwarf
 galaxies. Of the classicals, we exclude Antlia II, due to the extremely
 high background, and Sagittarius, which was not included in J+24. The
 density profiles are scaled to match at the half-light radius, taken
 from \citet{munoz+2018}. All of the classical dwarfs appear to be well
-described by an exponential profile in the inner regions. In the outer
-regions, however, Sculptor and Ursa Minor deviate, and show a clear
-outer excess over an exponential law (solid black line). These galaxies
-are better fit by a Plummer law (dashed black line). The deviation from
-an exponential grows outwards, and at \(\sim 8 R_h\), may reach 2 orders
-of magnitude. The remainder of this thesis will be devoted to assessing
-whether the outer excess shown by Scl and UMi are due to Galactic tides.
+described by an exponential profile in the inner regions.\footnote{Comparing
+  density profiles of dwarf galaxies is complicated by variations in the
+  effective depth between galaxies. However, the deviations between Scl,
+  UMi and other galaxies is apparent even when data covers all dwarfs.}
+In the outer regions, however, Sculptor and Ursa Minor deviate, and show
+a clear outer excess over an exponential law (solid black line). These
+galaxies are better fit by a Plummer law (dashed black line). The
+deviation from an exponential grows outwards, and at \(\sim 8 R_h\), may
+reach 2 orders of magnitude. The remainder of this thesis will be
+devoted to assessing whether the outer excess shown by Scl and UMi are
+due to Galactic tides.
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_fnx_density_methods.pdf}}
-\caption[Sculptor density profiles]{The density profile of Sculptor,
-Ursa Minor, and Fornax for different selection criteria, ploted as log
-surface dencity versus log elliptical radius. The samples are: ``all''
-selects any high quality and parallax-consistent star (grey
-circles),``all--background'' subtracts a uniform background density from
-the ``all'' profile (orange pentagons), ``CMD+PM'' select stars
-according to CMD and PM only (teal triangles), and ``fiducial'' also
-includes spatial information (blue squares). We mark the half-light
-radius with a vertical dashed line and the background density with the
-horizontal grey line. For Ursa Minor, we show the expected location of
-Muñoz 1 stars as a horizontal bar (ranging from plus/minus 3 half-light
+\caption[Density profiles for different Gaia samples]{The density
+profile of Sculptor, Ursa Minor, and Fornax for different selection
+criteria, ploted as log surface dencity versus log elliptical radius.
+The samples are: ``all'' selects any high quality and
+parallax-consistent star (grey circles),``all--background'' subtracts a
+uniform background density from the ``all'' profile (orange pentagons),
+``CMD+PM'' select stars according to CMD and PM only (turquoise
+triangles), and ``fiducial'' also includes spatial information (blue
+squares). We mark the half-light radius with a vertical dashed line and
+the background density with the horizontal grey line. For Ursa Minor, we
+show the expected location of Muñoz 1 stars as a horizontal bar (ranging
+from \(\pm3\) times the cluster's half-light
 radii).}\label{fig:scl_observed_profiles}
 \end{figure}
 

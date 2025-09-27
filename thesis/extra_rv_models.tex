@@ -174,6 +174,8 @@ similar, we conclude that many of the systematic uncertainties are
 likely smaller than the present errors or that each large survey has
 similar biases.
 
+\citet{martinez-garcia+2023}: rotation gradients.
+
 \section{Velocity modelling and
 comparisons}\label{velocity-modelling-and-comparisons}
 
@@ -187,25 +189,25 @@ smoothed samples from posterior/prior.
 \centering
 \caption[Spectroscopic LOS velocity measurements]{Summary of velocity measurements and derived properties. }
 \label{tbl:rv_measurements}
-\begin{tabular}{lllllllll}
+\begin{tabular}{llllllll}
 \toprule
- & Study & Instrument & Nspec & Nstar & Ngood & Nmemb & $\delta v_{\rm med}$ & $R_{\rm xmatch}$/arcmin\\
+ & Study & Nspec & Nstar & Ngood & Nmemb & $\delta v_{\rm med}$ & $R_{\rm xmatch}$\\
 \midrule
-Scl & combined &  & 8945 & 2280 & 2096 & 1981 & 0.9 & \\
- & tolstoy+23 & FLAMES & 3311 & 1701 & 1522 & 1482 & 0.65 & –\\
- & sestito+23a & GMOS & 2 & 2 & 2 & 2 & 13 & –\\
- & walker+09 & MMFS & 1818 & 1522 & 1417 & 1328 & 1.8 & 3\\
- & APOGEE & APOGEE & 5082 & 253 & 170 & 164 & 0.5 & –\\
-UMi & combined &  & 4714 & 1225 & 1148 & 863 & 2.1 & \\
- & sestito+23b & GRACES & 5 & 5 & 5 & 5 & 1.8 & –\\
- & pace+20 & DEIMOS & 1716 & 1538 & 829 & 678 & 2.5 & 1\\
- & spencer+18 & Hectoshell & 1407 & 970 & 596 & 406 & 0.9 & 2\\
- & APOGEE & APOGEE & 9500 & 279 & 37 & 67 & 0.6 & –\\
+Scl & combined & 8945 & 2280 & 2096 & 1981 & 0.9 & \\
+ & tolstoy+23 & 3311 & 1701 & 1522 & 1482 & 0.65 & –\\
+ & sestito+23a & 2 & 2 & 2 & 2 & 13 & –\\
+ & walker+09 & 1818 & 1522 & 1417 & 1328 & 1.8 & 3”\\
+ & APOGEE & 5082 & 253 & 170 & 164 & 0.5 & –\\
+UMi & combined & 4714 & 1225 & 1148 & 863 & 2.1 & \\
+ & sestito+23b & 5 & 5 & 5 & 5 & 1.8 & –\\
+ & pace+20 & 1716 & 1538 & 829 & 678 & 2.5 & 1”\\
+ & spencer+18 & 1407 & 970 & 596 & 406 & 0.9 & 2”\\
+ & APOGEE & 9500 & 279 & 37 & 67 & 0.6 & –\\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-measurement
+\input{rv_table.tex}
 
 \begin{table*}[t]
 \centering
@@ -242,4 +244,14 @@ best fit rotational axis. RV members are black points, the systematic
 \(v_z\) is the horizontal grey line, blue lines represent the
 (projected) gradient from MCMC samples, and the orange line is a rolling
 median (with a window size of 50).}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/sigma_v_gradient.pdf}}
+\caption[Possible gradients in the velocity dispersion]{The observed
+velocity dispersion gradient (black) in 10 equal number bins and the
+derived slopes from the model fitting. Scl shows moderate evidence for
+an increasing velocity dispersion with radius. UMi's evidence for a
+radial gradient is weaker.}
 \end{figure}

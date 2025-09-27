@@ -1,0 +1,62 @@
+\chapter{Numerical convergence and
+parameters}\label{sec:extra_convergence}
+
+Here, we describe some convergence tests to ensure our methods and
+results are minimally impacted by numerical limitations and assumptions.
+See \citet{power+2003} for a detailed discussion of various assumptions
+and parameters used in N-body simulations.
+
+\section{Softening}\label{softening}
+
+One challenge of N-body integration is close, collisional encounters,
+assuming point particles, cause divergences in the local force. However,
+this should not occur in a \emph{collisionless} simulation. As a result,
+most collisionless N-body codes adopt a gravitational softening, a
+length scale below which the force of gravity begins to decrease between
+point particles.
+
+\citet{power+2003} empirically suggest that the ideal softening is
+\begin{equation}{
+h_{\rm grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}},
+}\end{equation}
+
+where \(h_{\rm grav}\) is the softening length, and \(N_{200}\) is the
+number of particles within \(R_{200}\). This choice balances integration
+time and only compromises resolution in collisional regime.
+
+For our isolation halo (\(M_s=2.7\), \(r_s=2.76\)) and with \(10^7\)
+particles, this works out to be \(0.044\,{\rm kpc}\).We adpoted the
+slightly smaller softening which was reduced by a factor of
+\(\sqrt{10}\) which appears to improve agreement slightly in the
+innermost regions.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/iso_converg_softening.png}}
+\caption{Softening convergence}\label{fig:softening_convergence}
+\end{figure}
+
+\section{Time stepping and force
+accuracy}\label{time-stepping-and-force-accuracy}
+
+In general, we use adaptive timestepping and relative opening criteria
+for gravitational force computations. To verify that these choices and
+associated accuracy parameters minimally impact convergence or speed, we
+show a few more isolation runs (using only 1e5 particles)
+
+\begin{itemize}
+\tightlist
+\item
+  constant timestep (\ldots), approximantly half of minimum timestep
+  with adaptive timestepping
+\item
+  geometric opening, with \(\theta = 0.5\).
+\item
+  strict integration accuracy, (facc = \ldots.)
+\end{itemize}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/iso_converg_methods.png}}
+\caption{Isolation method convergence}\label{fig:methods_convergence}
+\end{figure}

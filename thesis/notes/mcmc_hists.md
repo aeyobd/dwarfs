@@ -183,8 +183,6 @@ Using the same methods above, we select members from J+24's stellar
 
 
 
-
-
 ## Tests
 
 - Does incorporating uncertainties with the MCMC matter?
