@@ -81,18 +81,26 @@ end
 
 
 function compare_j24_samples(datasets, scatter_kwargs, observed_properties; 
-        age=12, legend_position=:lt) 
+        age=12, legend_position=:lt, title="") 
 	fig = Figure(
-		size = (4*72, 6*72),
+        size = (5.39 * 72, 4.5*72)
 	)
+
+    if title != ""
+        Label(fig[0, 1:2], title, fontsize=theme(:fontsize)[]*1.2, tellwidth=false, font=:bold)
+    end
+
+    gs_left = GridLayout(fig[1,1])
+    gs_right = GridLayout(fig[1, 2])
+    colsize!(fig.layout, 2, Relative(2/5))
 
     all_stars = first(datasets)[2]
 	# tangent
     dθ = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
-	ax = Axis(fig[1, 1], 
+	ax = Axis(gs_left[1, 1], 
 		xlabel=plot_labels[:xi_am], 
 		ylabel=plot_labels[:eta_am], 
-		#aspect=1, 
+		aspect=1, 
 		limits=(-dθ, dθ, -dθ, dθ), 
 		xgridvisible=false, ygridvisible=false,
 		xreversed = true
@@ -107,15 +115,15 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
     plot_labeled_R_h_ellipse!(observed_properties, 6)
 
 	
-    axislegend(position=legend_position)
+    Legend(gs_left[2, 1], ax, tellwidth=false, tellheight=true, valign=:top)
+    rowsize!(gs_left, 1, Aspect(1, 1.0))
 
 
-	grid_low = fig[2, 1] = GridLayout()
 	# cmd
     df_best = datasets[(collect∘keys)(datasets)[1]]
     Gmin = minimum(df_best.G) - 0.2
     Gmax = 21
-	ax =  Axis(grid_low[1,1], 
+	ax =  Axis(gs_right[1,1], 
 		yreversed=true,
 		xlabel=plot_labels[:bp_rp],
 		ylabel=plot_labels[:G],
@@ -142,7 +150,7 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 
 
 	# proper motions
-	ax = Axis(grid_low[1,2],
+	ax = Axis(gs_right[2,1],
 		xlabel = plot_labels[:pmra],
 		ylabel = plot_labels[:pmdec],
 		#aspect=DataAspect(),
@@ -169,11 +177,11 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
         markersize=3
        )
 
-	rowsize!(grid_low, 1, Aspect(1, 1))
+    rowsize!(gs_right, 1, Aspect(1, 1.0))
+	rowsize!(gs_right, 2, Aspect(1, 1.0))
 
-	rowsize!(fig.layout, 1, Aspect(1, 1))
 
-	#resize_to_layout!(fig)
+	resize_to_layout!(fig)
 	fig
 end
 

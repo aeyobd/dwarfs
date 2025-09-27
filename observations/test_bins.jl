@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -101,6 +101,9 @@ best_stars = GaiaFilters.select_members(all_stars, filt_params)
 # ╔═╡ 9ca9652b-64e8-4105-a9f6-6b499a31e6b1
 R_ell = maximum(best_stars.R_ell)
 
+# ╔═╡ d897930c-f087-4be2-b9a6-a89d364b3cd6
+@bind bin_max confirm(NumberField(0:0.01:300, default=R_ell))
+
 # ╔═╡ 7c46769e-0fd8-4001-a00d-1aed26552801
 members = filter(r->r.PSAT > 0.2, best_stars)
 
@@ -121,16 +124,19 @@ md"""
 """
 
 # ╔═╡ 41afbd13-c22f-46f3-8d1f-43285ccf867e
-bins = 10 .^ LilGuys.bins_equal_width(log10.(best_stars.R_ell), nothing, bin_width=bin_width)
+bins = reverse(10 .^ (log10(bin_max):-bin_width:log10(minimum(best_stars.R_ell))))
+
+# ╔═╡ 4446b9c4-e309-43df-a06d-ad9effc03a0c
+@assert diff(log10.(bins)) ≈ fill(0.05, length(bins)-1)
+
+# ╔═╡ 86613400-9276-4d94-9230-da996c4373de
+@assert bins[end] ≈ bin_max
 
 # ╔═╡ 8e665feb-1a41-440c-a813-163cbf3be4f8
 Nmemb = sum(best_stars.PSAT)
 
 # ╔═╡ c8ca665d-0c63-442f-8b67-8ec175d38b06
 hist_example = DE.histogram(best_stars.R_ell, bins)
-
-# ╔═╡ fda2c541-04ef-44bc-a0d0-30854cfe4d71
-
 
 # ╔═╡ 9eb25479-df26-4a86-bb6b-9b14f404ee93
 sum(best_stars.PSAT .> 0.2)
@@ -199,6 +205,7 @@ inherits = "bins_eqw.toml"
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═6014a851-525b-4565-b074-fbdd26a8ce2b
+# ╠═d897930c-f087-4be2-b9a6-a89d364b3cd6
 # ╠═8e3f56fa-034b-11f0-1844-a38fa58e125c
 # ╠═7ff855b9-7a1e-422e-b8a5-1cb5ecfe368f
 # ╠═408d70ee-ab1c-4630-bd75-21358cd55489
@@ -219,9 +226,10 @@ inherits = "bins_eqw.toml"
 # ╟─43d159c4-1599-4138-96b9-c9447a8d6315
 # ╟─1d9b3718-45d7-4765-ac7d-017dbf939ec8
 # ╠═41afbd13-c22f-46f3-8d1f-43285ccf867e
+# ╠═4446b9c4-e309-43df-a06d-ad9effc03a0c
+# ╠═86613400-9276-4d94-9230-da996c4373de
 # ╠═8e665feb-1a41-440c-a813-163cbf3be4f8
 # ╠═c8ca665d-0c63-442f-8b67-8ec175d38b06
-# ╠═fda2c541-04ef-44bc-a0d0-30854cfe4d71
 # ╠═9eb25479-df26-4a86-bb6b-9b14f404ee93
 # ╠═33e02945-2ab5-4f55-b3d5-e8855d86f120
 # ╠═dac9bbd7-8fac-4fab-8e74-7e1fea166616

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -40,6 +40,9 @@ using KernelDensity
 md"""
 Makes some basic plots of a projected stellar file
 """
+
+# ╔═╡ f375fd9a-7a81-44a5-b952-1e0fab2df7ae
+@bind finalname TextField(default="final.fits")
 
 # ╔═╡ 145490bd-d87e-4153-865b-342506af8f5a
 md"""
@@ -114,7 +117,7 @@ md"""
 orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
 
 # ╔═╡ 84dc77f7-14b3-4a2e-a556-c025d7df0095
-stars = read_fits(joinpath(model_dir, "stars", starsname, "final.fits"))
+stars = read_fits(joinpath(model_dir, "stars", starsname, finalname))
 
 # ╔═╡ 1e3d61ea-16d0-4bbf-a19e-03e54f0f5a0f
 stars_i = read_fits(joinpath(model_dir, "stars", starsname, "initial.fits"))
@@ -260,7 +263,7 @@ let
 	
 		
 	h = heatmap!(hi, colorscale=log10, colorrange=(1e-6, maximum(hi.values)))
-	errorscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], size=10)
+	errorscatter!([obs_today.ra], [obs_today.dec], color=COLORS[3], markersize=10)
 
 	# idx = idx_f - 20: idx_f + 20
 	# lines!(sky_orbit.ra[idx], sky_orbit.dec[idx])
@@ -452,7 +455,7 @@ let
 	h = Arya.hist2d!(ax, x, y, weights=stars.weights[filt], bins=100, 
 		colorscale=log10, colorrange=(1e-10, nothing))
 	
-	errorscatter!([obs_today.pmra], [obs_today.pmdec], xerr=[obs_today_err.pmra], yerror=[obs_today_err.pmra], color=COLORS[3])
+	errorscatter!([obs_today.pmra], [obs_today.pmdec], xerror=[obs_today_err.pmra], yerror=[obs_today_err.pmra], color=COLORS[3])
 	
 	scatter!([sky_orbit.pmra[idx_f]], 
 		[sky_orbit.pmdec[idx_f]], markersize=10)
@@ -744,13 +747,13 @@ md"""
 nan_filt = isfinite.(stars.r_ell) .& (stars.r_ell .> 0)
 
 # ╔═╡ a8688258-e818-4b7a-b238-5629d99413ed
-prof = lguys.StellarDensityProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:none,  bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
+prof = lguys.SurfaceDensityProfile(stars.r_ell[nan_filt], weights=stars.weights[nan_filt], normalization=:none,  bins=lguys.Interface.bins_both(stars.r_ell[nan_filt], nothing, bin_width=0.05, num_per_bin=1))
 
 # ╔═╡ 0fb0dfd7-8536-4d8f-b368-d5ca3dc74783
-prof_i = lguys.StellarDensityProfile(stars_i.r_ell, weights=stars_i.weights, normalization=:none, bins=lguys.Interface.bins_both(stars_i.r_ell, nothing, bin_width=0.05, num_per_bin=1))
+prof_i = lguys.SurfaceDensityProfile(stars_i.r_ell, weights=stars_i.weights, normalization=:none, bins=lguys.Interface.bins_both(stars_i.r_ell, nothing, bin_width=0.05, num_per_bin=1))
 
 # ╔═╡ 1fde438a-ad46-4b60-bc9f-fddc533d9cdb
-prof_expected = lguys.StellarDensityProfile(ENV["DWARFS_ROOT"] * "/observations/$(inputs.galaxyname)/density_profiles/jax_2c_eqw_profile.toml") |> lguys.filter_empty_bins
+prof_expected = lguys.SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/$(inputs.galaxyname)/density_profiles/jax_2c_eqw_profile.toml") |> lguys.filter_empty_bins
 
 # ╔═╡ b5fd1bcd-b554-48d3-8472-024cb0bd0792
 lguys.GalactocentricFrame().d
@@ -797,11 +800,11 @@ let
 	ax = Axis(fig[1,1], 
 		xlabel=L"\log r \ /\ \textrm{arcmin}",
 		ylabel = L"\log \Sigma\ / \textrm{(fraction/arcmin^2)}",
-		limits=((nothing, 2.5), (-10, nothing))
+		limits=((-1, 2.5), (-10, nothing))
 	)
 
-	errscatter!(prof_expected.log_r, prof_expected.log_Sigma .+ get_normalization(prof_expected),
-		yerr=prof_expected.log_Sigma_err,
+	errorscatter!(prof_expected.log_R, prof_expected.log_Sigma .+ get_normalization(prof_expected),
+		yerror=error_interval.(prof_expected.log_Sigma),
 		label="J+24",
 		color=:black
 	)
@@ -809,10 +812,10 @@ let
 
 	dy = get_normalization(prof)
 	
-	lines!(prof_i.log_r, prof_i.log_Sigma .+ dy, 
+	lines!(prof_i.log_R, prof_i.log_Sigma .+ dy, 
 			label="initial")
 
-	lines!(prof.log_r, prof.log_Sigma .+ dy, 
+	lines!(prof.log_R, prof.log_Sigma .+ dy, 
 			label="final")
 
 	vlines!(log10(r_b_arcmin), color=:grey, label="break radius")
@@ -840,11 +843,11 @@ let
 
 	
 
-	errscatter!(10 .^ prof.log_r, prof.Gamma, yerr=prof.Gamma_err, 
+	errorscatter!(10 .^ prof.log_R, prof.Gamma, yerror=error_interval.(prof.Gamma), 
 			label="model")
 
-	errscatter!(10 .^ prof_expected.log_r, prof_expected.Gamma,
-		yerr=prof_expected.Gamma_err,
+	errorscatter!(10 .^ prof_expected.log_R, prof_expected.Gamma,
+		yerror=error_interval.(prof_expected.Gamma),
 		label="J+24",
 		color=:black
 	)
@@ -856,6 +859,7 @@ end
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╟─1de340a6-da4e-47a6-b499-ced8c469a70d
+# ╠═f375fd9a-7a81-44a5-b952-1e0fab2df7ae
 # ╟─145490bd-d87e-4153-865b-342506af8f5a
 # ╠═340ffbbe-17bd-11ef-35c6-63505bb128b7
 # ╠═7d82571f-4d80-412a-9813-1eee1f916e56

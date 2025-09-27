@@ -38,7 +38,7 @@ using PlutoUI
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	@bind galaxy confirm(TextField(default="galaxyname"))
 end
 
 # ╔═╡ 1f497448-9ea2-460f-b403-618b78b47565
@@ -79,7 +79,7 @@ struct_params = MCMCUtils.StructuralParams(; LilGuys.dict_to_tuple(TOML.parsefil
 bins = struct_params.bins
 
 # ╔═╡ c58ed939-07c1-4d34-90a4-3c5d9cc9910b
-stars = MCMCUtils.get_fits(galaxy, obs_props)
+# stars = MCMCUtils.get_fits(galaxy, obs_props)
 
 # ╔═╡ 6f016a8e-38ae-4f05-a7ee-c292ac0e5741
 df_chains = CSV.read(joinpath(outdir, "samples.mcmc_hist_fast.csv"), DataFrame)
@@ -97,9 +97,6 @@ md"""
 We need the counts to turn the log densities in the MCMC hist into true densities
 """
 
-# ╔═╡ d254b67b-8017-4bbf-ba04-50b5b76f48f0
-_prof_counts = LilGuys.SurfaceDensityProfile(stars.R_ell, bins=log10.(bins),  errors=:weighted)
-
 # ╔═╡ 4b644aaf-76ab-4e30-8a78-7e127c2ba7b5
 md"""
 Consistency checks:
@@ -108,15 +105,11 @@ Consistency checks:
 # ╔═╡ 85f59eb3-4f90-498a-923e-36cd679af1c0
 @assert df_summary.log_R ≈ midpoints(log10.(bins))
 
-# ╔═╡ 575a31e1-df22-42e9-9a9e-1dc4b678a5b6
-@assert isapprox(df_summary.N_stars, _prof_counts.counts, atol=2)
-
 # ╔═╡ f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
 log_Sigmas_fast = let
 	Nbins = length(bins) - 1
 
 	Nc = size(df_chains, 1)
-	Ns = size(stars, 1)
 	
 	log_Sigmas_fast = Matrix{Float64}(undef, Nbins, Nc)
 	areas = diff(π * bins .^2)
@@ -136,54 +129,31 @@ log_Sigmas_fast = let
 
 end
 
-# ╔═╡ fe3d955f-c96b-4202-9218-f749a5e9d41f
-fsats, psats = let
-	Nbins = length(bins) - 1
-
-	Nc = size(df_chains, 1)
-	Ns = size(stars, 1)
-
-	idxs = 1:Nc
-	fsats = Matrix{Float64}(undef, Ns, length(idxs))
-	psats = Matrix{Float64}(undef, Ns, length(idxs))
-
-	Threads.@threads for i in eachindex(idxs)
-		idx = idxs[i]
-		if i % 10 == 0
-			@info "sample $i"
+# ╔═╡ 5feaa9b0-ca44-48d6-80d1-16303a34005f
+prof_jax_cut = let
+	local profile = nothing
+	
+	for filename in ["jax_eqw_profile", "jax_profile"]
+		path = joinpath("..", galaxy, "density_profiles/", filename * ".toml")
+		if isfile(path)
+			profile = LilGuys.SurfaceDensityProfile(path)
+			break
 		end
-		
-		params = [df_chains[idx, "params[$j]"] for j in 1:Nbins]
-		radii = stars.R_ell
-
-		Σ = MCMCUtils.Σ_hist(radii, bins, params)
-		f = 10 .^ Σ ./ (1 .+ 10 .^ Σ)
-		fsats[:, i] .= f
-
-		Ls = stars.L_CMD_SAT .* stars.L_PM_SAT
-		Lb = stars.L_CMD_BKD .* stars.L_PM_BKD
-		psat =  @. f*Ls / (f*Ls + (1-f) * Lb)
-		psats[:, i] .= psat
-
 	end
-
-	fsats, psats
+	
+	profile
 end
 
-
-# ╔═╡ 5feaa9b0-ca44-48d6-80d1-16303a34005f
-prof_jax_cut = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.2], bins=log10.(bins), errors=:weighted, normalization=:none)
+# ╔═╡ 55624f98-a60f-462c-8c76-394edb27cf51
+prof_jax_2c = LilGuys.SurfaceDensityProfile(joinpath("..", galaxy, "density_profiles/jax_2c_eqw_profile.toml"))
 
 # ╔═╡ ab124afe-c94a-44d9-8869-bd4d4cee3fbd
-prof_jax_weighted = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0], weights=stars.PSAT[stars.PSAT .> 0] |> disallowmissing, bins=log10.(bins), errors=:weighted,  normalization=:none)
+prof_jax_weighted = LilGuys.SurfaceDensityProfile(joinpath("..", galaxy, "density_profiles/weighted_profile.toml"))
 
 # ╔═╡ 6685cdec-7c99-45ca-98c8-f6439dfd7290
 md"""
 ## MCMC Profiles
 """
-
-# ╔═╡ 6470edfd-bd06-43b7-aa5e-a80645af78fb
-psats_pm = MCMCUtils.to_measurements(psats)
 
 # ╔═╡ c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
 log_Sigma_mean = MCMCUtils.to_measurements(log_Sigmas_fast)
@@ -217,37 +187,6 @@ prof_mean = LilGuys.SurfaceDensityProfile(
 md"""
 # Plots
 """
-
-# ╔═╡ da737b3e-f28a-4917-91d6-eea97458ddb0
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "PSAT J+24", ylabel = "PSAT MCMC")
-
-	skip = 1000
-
-	for i in 1:skip:size(psats, 2)
-		y = psats[:, i]
-		filt = 1e-6 .< y .< 1-1e-6
-		scatter!(stars.PSAT[filt], y[filt], color=:black, alpha=0.01, markersize=2, rasterize=true)
-	end
-	@savefig "psat_j+24_vs_mcmc"
-	
-	fig
-end
-
-# ╔═╡ ad85b789-8f43-489b-a41c-a966e08d78ad
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "log r_ell", ylabel = "psat me - jax")
-
-	skip = 100
-
-	scatter!(log10.(stars.R_ell), middle.(psats_pm) .- stars.PSAT, color=:black, alpha=0.03, markersize=1, rasterize=true)
-
-	@savefig "j+24_vs_mcmc_diff"
-
-	fig
-end
 
 # ╔═╡ f2c43c30-b069-4d17-8d61-be801d85b245
 let
@@ -314,6 +253,22 @@ let
 	fig
 end
 
+# ╔═╡ 43787c14-2d85-4f5a-8377-5999eaa49486
+begin 
+	profs = OrderedDict(
+		"J+24 probability cut" => prof_jax_cut,
+		"MCMC hist" => prof_mean,
+	)
+
+	if @isdefined prof_jax_weighted
+		profs["J+24 weighted"] = prof_jax_weighted
+	end
+
+	if @isdefined prof_jax_2c
+		profs["J+24 2comp"] = prof_jax_2c
+	end
+end
+
 # ╔═╡ bab50892-fab8-44fe-931b-66ff466b6974
 let
 	jitter = 0.005
@@ -325,12 +280,9 @@ let
 	)
 
 
-	profs = OrderedDict(
-		"J+24 probability cut" => prof_jax_cut,
-		"J+24 weighted" => prof_jax_weighted,
-		"MCMC hist" => prof_mean,
-
-	)
+	if @isdefined prof_jax_weighted
+		profs["J+24 weighted"] => prof_jax_weighted
+	end
 
 	
 	for (i, (label, prof)) in enumerate(profs)
@@ -358,11 +310,9 @@ let
 	)
 	jitter=0.04
 
-	profs = OrderedDict(
-		"J+24 probability cut" => prof_jax_cut,
-		"J+24 weighted" => prof_jax_weighted,
-		"MCMC hist" => prof_mean,
-	)
+	prof_ref = LilGuys.Exp2D(R_s=obs_props["R_h"] / LilGuys.R_h(LilGuys.Exp2D()), M=sum(prof_jax_cut.counts))
+	
+	f(log_R) = log10(LilGuys.surface_density(prof_ref, 10^log_R))
 
 	
 	for (label, prof) in profs
@@ -375,24 +325,25 @@ let
 		errorscatter!(x .+ jitter * LilGuys.randu(-1, 1), y, yerror=yerr, label=label, )	
 	end
 
+	lines!(LinRange(-0.5, 2, 100), f, color=:black)
+
 	axislegend(ax, position=:lb)
 
 	
 	ax_res = Axis(fig[2,1],
 		xlabel = log_r_label,
 		ylabel = "residual",
-		limits=(nothing, nothing, -0.5, 0.5)
+		limits=(nothing, nothing, -2, 2)
 	)
 
-	prof_ref = prof_mean
-	
+
+	lines!(LinRange(-0.5, 2, 100), x->0, color=:black)
+
 
 	for (label, prof) in profs
-		filt = isfinite.(prof_ref.log_Sigma)
-
-		filt .&= isfinite.(prof.log_Sigma)
+		filt = isfinite.(prof.log_Sigma)
 		x = prof.log_R[filt]
-		y = prof.log_Sigma[filt] - prof_ref.log_Sigma[filt]
+		y = prof.log_Sigma[filt] - f.(x)
 		yerr = LilGuys.error_interval.(prof.log_Sigma[filt])
 
 		errorscatter!(x .+ jitter * LilGuys.randu(-1, 1), y, yerror=yerr, label=label)
@@ -419,37 +370,10 @@ end
 # ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
 profout = joinpath(outdir, "hist_fast_profile.toml")
 
-# ╔═╡ 28b67692-45a9-435d-8862-882b0f06f947
-starsout = joinpath(outdir, "stars$FIGSUFFIX.fits")
-
 # ╔═╡ 6f2a4b25-b9ea-4560-ba6e-fc22af9f23e6
 open(profout, "w") do f
 	print(f, prof_mean)
 end
-
-# ╔═╡ 0e6fe0e9-51d9-4948-9eca-278b82611dea
-import Statistics: median
-
-# ╔═╡ 8b05449b-6d03-40cc-b4d8-9230303c15c1
-let
-	stars_new = copy(stars)
-	stars_new[!, :PSAT] = middle.(psats_pm)
-	stars_new[!, :PSAT_em] = lower_error.(psats_pm)
-	stars_new[!, :PSAT_ep] =  upper_error.(psats_pm)
-	stars_new[!, :f_sat] = median.(eachrow(fsats))
-
-	write_fits(starsout, stars_new, overwrite=true)
-
-	stars_new
-end	
-
-# ╔═╡ fcea9627-7150-4c6b-86c7-c73671554926
-md"""
-# Additional checks
-"""
-
-# ╔═╡ 7a490042-abb2-424e-b61b-e78ed885034a
-scatter(df_summary.N_stars, _prof_counts.counts .- df_summary.N_stars)
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
@@ -471,33 +395,24 @@ scatter(df_summary.N_stars, _prof_counts.counts .- df_summary.N_stars)
 # ╠═3e99a9b9-ba06-47ee-bce7-5720a4eb1944
 # ╟─24a65d65-6e0b-4108-8041-79fee06cd28a
 # ╟─3067ae10-854f-48ce-8285-0d3f3fa7f25c
-# ╠═d254b67b-8017-4bbf-ba04-50b5b76f48f0
 # ╟─4b644aaf-76ab-4e30-8a78-7e127c2ba7b5
 # ╠═85f59eb3-4f90-498a-923e-36cd679af1c0
-# ╠═575a31e1-df22-42e9-9a9e-1dc4b678a5b6
 # ╠═f0afb784-c1f4-40f6-84e6-a5c8f12ac67b
-# ╠═fe3d955f-c96b-4202-9218-f749a5e9d41f
 # ╠═5feaa9b0-ca44-48d6-80d1-16303a34005f
+# ╠═55624f98-a60f-462c-8c76-394edb27cf51
 # ╠═ab124afe-c94a-44d9-8869-bd4d4cee3fbd
 # ╟─6685cdec-7c99-45ca-98c8-f6439dfd7290
-# ╠═6470edfd-bd06-43b7-aa5e-a80645af78fb
 # ╠═c6a8bf2b-8a65-48ff-a1ca-7790f7806a94
 # ╠═93fe93ec-b98c-4037-9504-bf584e31b420
 # ╠═f80631b5-aa7e-454a-937f-c2e66b042105
 # ╠═4106ea1f-948f-42fb-9a19-64580a94ce9a
 # ╟─b8ba7f13-6a1a-43d5-90db-930196dfbbe4
-# ╠═da737b3e-f28a-4917-91d6-eea97458ddb0
-# ╠═ad85b789-8f43-489b-a41c-a966e08d78ad
 # ╠═f2c43c30-b069-4d17-8d61-be801d85b245
 # ╠═c507975a-8041-48f0-b46e-ac1ebccf3a94
+# ╠═43787c14-2d85-4f5a-8377-5999eaa49486
 # ╠═bab50892-fab8-44fe-931b-66ff466b6974
 # ╠═7c02d24f-7d59-410b-99bc-93513afa4c5d
 # ╟─9bf31971-1c10-4020-946e-d8cfebf6596a
 # ╠═8c565a28-84bc-4bc7-8a0e-b2e0dff76665
 # ╠═a93579f2-d37d-492c-95e6-02bd7491dc8c
-# ╠═28b67692-45a9-435d-8862-882b0f06f947
 # ╠═6f2a4b25-b9ea-4560-ba6e-fc22af9f23e6
-# ╠═0e6fe0e9-51d9-4948-9eca-278b82611dea
-# ╠═8b05449b-6d03-40cc-b4d8-9230303c15c1
-# ╟─fcea9627-7150-4c6b-86c7-c73671554926
-# ╠═7a490042-abb2-424e-b61b-e78ed885034a

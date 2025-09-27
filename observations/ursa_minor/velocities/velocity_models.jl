@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -32,7 +32,7 @@ using LilGuys; FIGDIR = "figures"
 using OrderedCollections
 
 # ╔═╡ aea6dd0e-930c-4ccf-9fd4-276c50c2d861
-rv_file = "old_rv_memb.fits"
+rv_file = "rv_combined_x_2c_psat_0.2.fits"
 
 # ╔═╡ ff6df679-7ec8-4822-a6ad-3d5faf590765
 n_samples = 1000
@@ -230,6 +230,9 @@ bf_sigma_Rell = RVUtils.bayes_evidence(model_Rell, df_Rell, "dlσ_dlR")
 md"""
 In the plot below, we just want to make sure that the KDE density estimate looks reasonable at zero
 """
+
+# ╔═╡ 97b2d72c-26aa-429b-90f6-e3ff7d49facf
+CSV.write("processed/mcmc_samples_Rell$FIGSUFFIX.csv", df_Rell)
 
 # ╔═╡ 062994bc-fb0c-4f08-b7f7-7cc6714bad1e
 md"""
@@ -522,6 +525,7 @@ end
 # ╠═4d0dbbb0-05bc-4f26-be42-b3226f972e28
 # ╟─f11486fa-a88c-4790-a55e-1a6fa5033140
 # ╠═935cdb6d-56d9-4e95-9983-3ed70fbca11f
+# ╠═97b2d72c-26aa-429b-90f6-e3ff7d49facf
 # ╠═062994bc-fb0c-4f08-b7f7-7cc6714bad1e
 # ╠═5ff274e6-d57f-441c-9f33-9d622c536c6a
 # ╠═cb440be7-1f0e-4a20-b15a-82b1820d1ced

@@ -82,6 +82,9 @@ lmc_orbit_L10 = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/L3M1
 # ╔═╡ 9028c3ec-c8fd-4b2b-a76d-4c16682e24db
 lmc_orbit_light = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/L2M11")) |> reverse
 
+# ╔═╡ 4da40bb0-18d7-4e79-b031-1319a3296207
+lmc_orbit_M10 = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/L3M10")) |> reverse
+
 # ╔═╡ 3d417fe3-a75d-476e-a4f9-8ce25914c473
 function read_orbits(modeldir)
 	structs = LilGuys.read_ordered_structs(joinpath(modeldir, "orbits.hdf5"), LilGuys.Orbit)
@@ -95,15 +98,6 @@ idx, orbits = read_orbits(modeldir)
 
 # ╔═╡ e96f758a-1cb9-436e-b351-cfa311520faa
 idx_no, orbits_no = read_orbits(modeldir_no)
-
-# ╔═╡ 46e1e951-55da-4c2f-9565-330b8853c7fc
-idx_light, orbits_light = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "L2M11"))
-
-# ╔═╡ 633275fd-fe32-483e-8612-fbb27e84bbb3
-idx_L10, orbits_L10 = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "L3M10"))
-
-# ╔═╡ 7beb5358-f1a9-4eb4-9ee1-0f946c9de388
-idx_v21, orbits_v21 = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev2021"))
 
 # ╔═╡ c63a1c4c-6171-4853-906a-54ba74fb0766
 best_orbit = reverse(LilGuys.Orbit(joinpath(modeldir_best, "orbit_smallperilmc.csv")))
@@ -135,9 +129,6 @@ t_min = -5 / T2GYR
 
 # ╔═╡ 587e90ea-8597-445a-a1e9-8ec020469c35
 pos_lmc_resampled = LilGuys.resample(lmc_orbit, orbits[1].times)
-
-# ╔═╡ d6466c39-d703-49a5-a97b-26f51d0cdd85
-pos_lmc_light_resampled = LilGuys.resample(lmc_orbit_light, orbits_light[1].times)
 
 # ╔═╡ 123584a9-e9b4-4c48-acb5-655bd60aaeb6
 sw = @lift $(theme(:linewidth)) / 2
@@ -220,10 +211,33 @@ let
 end
 
 # ╔═╡ c35bf067-73d7-4026-897c-5a737d0d01e7
-import Agama
+md"""
+# LMC mass effects
+"""
 
-# ╔═╡ 6312001f-7b16-4d22-aecf-e631f348f1c4
-Agama.time_scale(Agama.VASILIEV_UNITS) * -1.5
+# ╔═╡ 46e1e951-55da-4c2f-9565-330b8853c7fc
+idx_light, orbits_light = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "L2M11"))
+
+# ╔═╡ d6466c39-d703-49a5-a97b-26f51d0cdd85
+pos_lmc_light_resampled = LilGuys.resample(lmc_orbit_light, orbits_light[1].times)
+
+# ╔═╡ c6945657-7bf1-431f-a9e8-9b4dce2210f1
+pos_lmc_M10_resampled = LilGuys.resample(lmc_orbit_M10, orbits_light[1].times)
+
+# ╔═╡ 633275fd-fe32-483e-8612-fbb27e84bbb3
+idx_L10, orbits_L10 = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "L3M10"))
+
+# ╔═╡ 7beb5358-f1a9-4eb4-9ee1-0f946c9de388
+idx_v21, orbits_v21 = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev2021"))
+
+# ╔═╡ 0d342a60-f6b5-4466-b0a7-ea7d3fd01a21
+_, orbits_umi = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", "vasiliev24_L3M11"))
+
+# ╔═╡ a24e6f3d-5c26-4d20-8f8f-9f7b328c64b1
+_, orbits_umi_light = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", "L2M11"))
+
+# ╔═╡ 25ad3b62-3580-4b9f-81fb-df7217e955dd
+_, orbits_umi_M10 = read_orbits(joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", "L3M10"))
 
 # ╔═╡ e411b2d6-fc0d-4395-94cc-6442ff07fb52
 let
@@ -231,7 +245,7 @@ let
 
 	# MW distance
 	ax_rt = Axis(fig[1,1:2],
-				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-MW}$ / kpc",
+				 ylabel = L"$r_\textrm{sat-MW}$ / kpc",
 				limits=(-9, 0.2, 0, 400))
 	
 	plot_rt!(ax_rt, orbits, color=COLORS[1], alpha=0.05, 
@@ -239,19 +253,40 @@ let
 	plot_rt!(ax_rt, orbits_light, color=COLORS[2], alpha=0.05, 
 			 label="L2M11" => (;alpha=0.5))
 	plot_rt!(ax_rt, orbits_L10, color=COLORS[3], alpha=0.05,  label="L3M10" => (;alpha=0.5))
-	# plot_rt!(ax_rt, orbits_v21, color=COLORS[4], alpha=0.05,  label="L3M10" => (;alpha=0.5))
 	
 	plot_rt!(ax_rt, lmc_orbit, color=COLORS[1])
 	plot_rt!(ax_rt, lmc_orbit_light, color=COLORS[2])
 	plot_rt!(ax_rt, lmc_orbit_L10, color=COLORS[3])
 
 
-	axislegend(position=:lt, merge=true, unique=true)
+	axislegend(position=:rt, merge=true, unique=true)
+	text!(0.05, 0.9, align=(:left, :center), text="Sculptor", space=:relative)
+
+	ax_rt.xticklabelsvisible=false
+
+# MW distance
+	ax_rt_umi = Axis(fig[2,1:2],
+				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-MW}$ / kpc",
+				limits=(-9.0, 0.2, 0, 400))
+	
+	plot_rt!(ax_rt_umi, orbits_umi, color=COLORS[1], alpha=0.05, 
+			 linestyle=:solid, label="L3M11" => (;alpha=0.5))
+	plot_rt!(ax_rt_umi, orbits_umi_light, color=COLORS[2], alpha=0.05, 
+			 label="L2M11" => (;alpha=0.5))
+	plot_rt!(ax_rt_umi, orbits_umi_M10, color=COLORS[3], alpha=0.05,  label="L3M10" => (;alpha=0.5))
+	# plot_rt!(ax_rt, orbits_v21, color=COLORS[4], alpha=0.05,  label="L3M10" => (;alpha=0.5))
+	
+	plot_rt!(ax_rt_umi, lmc_orbit, color=COLORS[1])
+	plot_rt!(ax_rt_umi, lmc_orbit_light, color=COLORS[2])
+	plot_rt!(ax_rt_umi, lmc_orbit_L10, color=COLORS[3])
+
 
 	l1 = lines!([NaN], [NaN], color=:black, linestyle=:solid, alpha=0.2, linewidth=theme(:linewidth)[]/2)
 	l2 = lines!([NaN], [NaN], color=:black, linestyle=:solid, alpha=1)
 
-	axislegend(ax_rt, [l1, l2], ["Scl sample", "LMC"], position=:rt)
+	axislegend(ax_rt_umi, [l1, l2], ["orbit sample", "LMC"], position=:rt)
+	text!(0.05, 0.9, align=(:left, :center), text="Ursa Minor", space=:relative)
+
 
 	@savefig "scl_lmc_orbits_mass_effect"
 	fig
@@ -268,6 +303,25 @@ let
 	
 	plot_rt!(ax_rt, orbits .- [pos_lmc_resampled], color=COLORS[2], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, orbits_light .- [pos_lmc_light_resampled], color=COLORS[1], alpha=0.05)
+
+	plot_rt!(ax_rt, orbits_L10 .- [pos_lmc_M10_resampled], color=COLORS[3], alpha=0.05)
+
+
+	fig
+end
+
+# ╔═╡ 96cfb827-131b-4e3e-90db-7f91f34e9d31
+let
+	fig = Figure()
+
+	# MW distance
+	ax_rt = Axis(fig[1,1:2],
+				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-LMC}$ / kpc",
+				limits=(-10, 0, 0, nothing))
+	
+	plot_rt!(ax_rt, orbits_umi .- [pos_lmc_resampled], color=COLORS[2], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, orbits_umi_light .- [pos_lmc_light_resampled], color=COLORS[1], alpha=0.05)
+	plot_rt!(ax_rt, orbits_umi_M10 .- [pos_lmc_M10_resampled], color=COLORS[3], alpha=0.05)
 
 
 
@@ -295,12 +349,10 @@ end
 # ╠═ff6522d0-84cb-4521-8400-61c02973d535
 # ╠═e201e22e-bab4-4da9-8273-a59ce73f83a3
 # ╠═9028c3ec-c8fd-4b2b-a76d-4c16682e24db
+# ╠═4da40bb0-18d7-4e79-b031-1319a3296207
 # ╠═3d417fe3-a75d-476e-a4f9-8ce25914c473
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═e96f758a-1cb9-436e-b351-cfa311520faa
-# ╠═46e1e951-55da-4c2f-9565-330b8853c7fc
-# ╠═633275fd-fe32-483e-8612-fbb27e84bbb3
-# ╠═7beb5358-f1a9-4eb4-9ee1-0f946c9de388
 # ╠═c63a1c4c-6171-4853-906a-54ba74fb0766
 # ╠═a21de08a-a145-44b2-8be1-19ccc61ed9b0
 # ╠═540dba2d-a1bb-4436-80bc-aba6d8779a55
@@ -311,9 +363,16 @@ end
 # ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2
 # ╠═587e90ea-8597-445a-a1e9-8ec020469c35
 # ╠═d6466c39-d703-49a5-a97b-26f51d0cdd85
+# ╠═c6945657-7bf1-431f-a9e8-9b4dce2210f1
 # ╠═123584a9-e9b4-4c48-acb5-655bd60aaeb6
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
-# ╠═c35bf067-73d7-4026-897c-5a737d0d01e7
-# ╠═6312001f-7b16-4d22-aecf-e631f348f1c4
+# ╟─c35bf067-73d7-4026-897c-5a737d0d01e7
+# ╠═46e1e951-55da-4c2f-9565-330b8853c7fc
+# ╠═633275fd-fe32-483e-8612-fbb27e84bbb3
+# ╠═7beb5358-f1a9-4eb4-9ee1-0f946c9de388
+# ╠═0d342a60-f6b5-4466-b0a7-ea7d3fd01a21
+# ╠═a24e6f3d-5c26-4d20-8f8f-9f7b328c64b1
+# ╠═25ad3b62-3580-4b9f-81fb-df7217e955dd
 # ╠═e411b2d6-fc0d-4395-94cc-6442ff07fb52
 # ╠═dfb3b17e-cbd0-459e-bb7d-2e0cb2708c5f
+# ╠═96cfb827-131b-4e3e-90db-7f91f34e9d31

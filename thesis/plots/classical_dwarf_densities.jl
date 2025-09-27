@@ -46,11 +46,11 @@ function get_R_h_inner(galaxyname)
 end
 
 # ╔═╡ 40ef5263-bf52-4ad7-8c39-ed1e11c45fc4
-function load_profile(galaxyname; algname="jax", inner=false)
+function load_profile(galaxyname; algname="fiducial", inner=false)
 	@info galaxyname
 	
 	filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
-		"density_profiles/$(algname)_eqw_profile.toml")
+		"density_profiles/$(algname)_profile.toml")
 	
     prof = LilGuys.SurfaceDensityProfile(filename) |> LilGuys.filter_empty_bins
 
@@ -80,10 +80,10 @@ end
 α = LilGuys.R_h(LilGuys.Exp2D(R_s=1))
 
 # ╔═╡ 8adc28b1-b0d0-4735-a1f1-ee3bb82e8ef2
-prof_scl = load_profile("sculptor", algname="jax_2c")
+prof_scl = load_profile("sculptor")
 
 # ╔═╡ c3b52d5a-a8b4-4207-a8c7-9d32914aca93
-prof_umi = load_profile("ursa_minor", algname="jax_2c")
+prof_umi = load_profile("ursa_minor")
 
 # ╔═╡ 740d04a4-4327-47cd-b5aa-b71ed94a0610
 prof_fornax = load_profile("fornax")
@@ -121,7 +121,7 @@ galaxies = OrderedDict(
 # ╔═╡ 07e1390f-2789-4e20-80d6-b2cb4631be5c
 galaxies_scatter = OrderedDict(
 	"fornax" => (
-		color = COLORS[1],
+		color = COLORS[3],
 		marker = :circle,
 		label = "Fornax",
 	),
@@ -131,7 +131,7 @@ galaxies_scatter = OrderedDict(
 		label = "Sculptor",
 	),
 	"ursa_minor" => (
-		color = COLORS[3],
+		color = COLORS[4],
 		marker = :utriangle,
 		label = "Ursa Minor",
 		markersize=8,
@@ -195,7 +195,7 @@ let
 		ylabel = L"\delta \log\,\Sigma",
 		xlabel = L"\log\,R\ / \ R_h",
 		xticks = -2:1:1,
-		limits=(-1.5, 1.1, -1.2, 3)
+		limits=(-1.5, 1.1, -1.2, 2.2)
 	)
 
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
@@ -325,7 +325,7 @@ let
 		xlabel = L"\log\,R\ / \ R_h",
 
 				xticks = -2:1:1,
-		limits=(-1.5, 1.2, -5, 1.1)
+		limits=(-1.0, 0.9, -3.5, 1.0)
 
 	)
 

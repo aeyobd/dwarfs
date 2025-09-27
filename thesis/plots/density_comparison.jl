@@ -40,7 +40,7 @@ end
 
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
 function load_expected(galaxyname)
-	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/density_profiles/jax_2c_eqw_profile.toml")
+	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/density_profiles/fiducial_profile.toml")
 		
 	prof =  LilGuys.filter_empty_bins(prof)
 
@@ -229,34 +229,17 @@ function get_recent_orbit(galaxyname, haloname, orbitname)
 	gcs = Galactocentric.(orbit.positions[1, :], orbit.positions[2, :], orbit.positions[3, :], V2KMS*orbit.velocities[1, :], V2KMS*orbit.velocities[2, :], V2KMS*orbit.velocities[3, :])
 	icrs = LilGuys.transform.(ICRS, gcs)
 
-	ra = [g.ra for g in icrs]
-	dec = [g.dec for g in icrs]
 
-	xieta = LilGuys.to_tangent.(ra, dec, ra[idx_f], dec[idx_f])
-
-	xi = first.(xieta)
-	eta = last.(xieta)
-	
 	gsr = LilGuys.transform(GSR, icrs[idx_f])
 	dx, dy = (gsr.pmra, gsr.pmdec) ./ sqrt(gsr.pmra^2 + gsr.pmdec^2)
 	
-	if idx_f +5 > length(orbit)
-		xi_next = 60*xi[idx_f] .+ 1e3 .* dx
-		eta_next = 60*eta[idx_f] .+ 1e3 * dy
-
-		xi_future = [60*xi[idx_f]; xi_next]
-		eta_future = [60*eta[idx_f]; eta_next]
-	else
-		xi_future = 60xi[idx_f:idx_f+5]
-		eta_future = 60eta[idx_f:idx_f+5]
-	end
 	R_h = get_R_h(galaxyname)
 
 
-	xi_past = [60xi[idx_f-10], -6*R_h * dx]
-	eta_past = [60eta[idx_f-10], -6*R_h * dy]
-	xi_future = [6*R_h * dx, xi_future[end]]
-	eta_future = [6*R_h * dy, eta_future[end]]
+	xi_past = [-1e3 * dx, -6*R_h * dx]
+	eta_past = [-1e3 * dy, -6*R_h * dy]
+	xi_future = [6*R_h * dx, 1e3*dx]
+	eta_future = [6*R_h * dy,  1e3*dy]
 	return xi_past, eta_past, xi_future, eta_future, -T2GYR*(orbit.times[idx_f] - orbit.times[1])
 end
 
@@ -279,8 +262,10 @@ function plot_stars_2d(gs, galaxyname, modelname, haloname, starsname; initial=f
 	stars = get_stars_final(galaxyname, modelname, haloname, starsname, filename)
 
 
-	ax = Axis(gs, xlabel=L"\xi \, / \, \textrm{arcmin}", 
-			  ylabel=L"\eta \, / \, \textrm{arcmin}"
+	ax = Axis(gs, 
+			  xlabel = L"\xi \, / \, \textrm{arcmin}", 
+			  ylabel = L"\eta \, / \, \textrm{arcmin}",
+			  xreversed = true,
 			)
 
 	
@@ -292,7 +277,7 @@ function plot_stars_2d(gs, galaxyname, modelname, haloname, starsname; initial=f
 
 	if !isnothing(r_b)
 		arc!((0, 0), r_b, 0, 2π, color=COLORS[3], linestyle=:dash, linewidth=smalllinewidth)
-		text!(r_b, 0, text="break", color=COLORS[3], fontsize=smallfontsize, offset=(smallfontsize/2, 0), align=(:left, :center), )
+		text!(r_b, 0, text="break", color=COLORS[3], fontsize=smallfontsize, offset=(-smallfontsize/2, 0), align=(:center, :bottom), rotation=π/2)
 
 	end
 
@@ -321,7 +306,7 @@ function compare_both(galaxyname, halo::String, orbit::String, star; norm_shift=
 	lines!(xi, eta, color=(COLORS[1]), linewidth=smalllinewidth)
 	lines!(xi_next, eta_next, color=(COLORS[1]), linestyle=:dot, linewidth=smalllinewidth)
 
-	xlims!(extrema(bins)...)
+	xlims!(reverse(extrema(bins))...)
 	ylims!(extrema(bins)...)
 	p = plot_stars_2d(fig[1,1], galaxyname, halo, orbit, star, initial=true,norm=norm)
 
@@ -356,6 +341,9 @@ compare_both("sculptor", "1e6_new_v43_r7", "orbit_smallperi.3", "exp2d_rs0.10", 
 
 # ╔═╡ f11acd53-a04d-4e1a-b7f5-d66b6011e3a2
 @savefig "scl_impact_i_f" compare_both("sculptor", "1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10",  title="Sculptor: MW impact")
+
+# ╔═╡ f6eaabb0-8508-40fd-9dd1-37b1165e1c6d
+
 
 # ╔═╡ c7b50c9b-1bfd-4abf-89cd-7c8cd1dc45c0
 compare_both("sculptor", "1e6_v38_r7_oblate_0.5", "orbit_smallperi", "exp2d_rs0.13",  title="Sculptor: oblate")
@@ -416,6 +404,7 @@ compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.1
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
 # ╠═e9a0ce9f-27a5-47dc-8c4d-22887f6a7fc1
 # ╠═f11acd53-a04d-4e1a-b7f5-d66b6011e3a2
+# ╠═f6eaabb0-8508-40fd-9dd1-37b1165e1c6d
 # ╠═c7b50c9b-1bfd-4abf-89cd-7c8cd1dc45c0
 # ╠═2a3b1df5-7a44-420c-b303-856346df40cf
 # ╟─77c057e4-78da-4201-b9f8-cb3135508a93

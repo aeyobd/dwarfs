@@ -28,7 +28,7 @@ CairoMakie.activate!(type=:png)
 
 # ╔═╡ 8081e889-c1d4-4e50-b8e1-91aa8e82adf1
 function modeldir(modelname)
-	joinpath(ENV["DWARFS_ROOT"], "analysis", "sculptor",modelname,)
+	joinpath(ENV["DWARFS_ROOT"], "analysis",modelname,)
 end
 
 # ╔═╡ 6161cd69-594b-4eb9-83d9-12a682db7c88
@@ -47,7 +47,7 @@ function get_profiles(modelname)
 end
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-function plot_tidal_track(modelname)
+function plot_tidal_track(modelname; title="")
 	df = get_scalars(modelname)
 	profs = get_profiles(modelname)
 	
@@ -59,14 +59,14 @@ function plot_tidal_track(modelname)
 		xscale=log10,
 		yscale=log10,
 		xticks = [0.1, 1, 10],
-		title = "Sculptor Dark Matter: smallperi orbit"
+		title = title
 	)
 
 
-	x, y = LilGuys.EN21_tidal_track(df.r_circ_max[1], df.v_circ_max[1], x_min=0.3)
+	x, y = LilGuys.EN21_tidal_track(df.r_circ_max[1], df.v_circ_max[1], x_min=0.1)
 
 	
-	scatter!(df.r_circ_max, df.v_circ_max * V2KMS, label="max", markersize=theme(:markersize)[]/2)
+	scatter!(df.r_circ_max, df.v_circ_max * V2KMS, label="max", markersize=theme(:markersize)[]/2, color=COLORS[3])
 
 	lines!(radii(profs[1].second), LilGuys.circular_velocity(profs[1].second) * V2KMS, label=L"initial ($t=-9.2$\,Gyr)")
 	lines!(radii(profs[end].second), LilGuys.circular_velocity(profs[end].second) * V2KMS, label=L"final ($t=0.0$\,Gyr)")
@@ -80,7 +80,10 @@ function plot_tidal_track(modelname)
 end
 
 # ╔═╡ 415f249c-de75-454f-8ab8-be3bec7e4222
-@savefig "scl_tidal_track"  plot_tidal_track("1e7_new_v31_r3.2/orbit_smallperi")
+@savefig "scl_tidal_track"  plot_tidal_track("sculptor/1e7_new_v31_r3.2/orbit_smallperi", title="Sculptor Dark Matter: smallperi orbit")
+
+# ╔═╡ 119b9896-f53a-4d17-a7df-53e2408d9156
+@savefig "umi_tidal_track"  plot_tidal_track("ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5", title="Ursa Minor: smallperi orbit")
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -92,3 +95,4 @@ end
 # ╠═f49c9325-4319-4435-ac33-a8980e1c4f7f
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═415f249c-de75-454f-8ab8-be3bec7e4222
+# ╠═119b9896-f53a-4d17-a7df-53e2408d9156
