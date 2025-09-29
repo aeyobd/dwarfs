@@ -53,23 +53,23 @@ Figure: Similar to @fig:scl_orbits, the orbits of Ursa Minor in a static Milky W
 
 
 
-| Property              | Scl: \smallperi{} | Scl: `LMC-flyby` | Umi: \smallperi{} |
-| --------------------- | ----------------- | ---------------- | ----------------- |
-| distance / kpc        | 82.6              | 72.9             | 64.6              |
-| $\pmra / \masyr$      | 0.134             | 0.137            | -0.158            |
-| $\pmdec / \masyr$     | -0.198            | -0.157           | 0.050             |
-| LOS velocity / $\kms$ | 111.2             | 111.2            | -245.75           |
-| $t_i / \Gyr$          | -9.17             | -2.0             | -9.67             |
-| ${x}_{i} / \kpc$      | -2.49             | 4.30             | 17.40             |
-| ${y}_{i} / \kpc$      | -42.78            | 138.89           | 74.51             |
-| ${z}_{i} / \kpc$      | 86.10             | 125.88           | 21.34             |
-| $\V_{x\,i} / \kms$    | -20.56            | 6.89             | 14.27             |
-| $\V_{y\,i} / \kms$    | -114.83           | -56.83           | 48.62,            |
-| $\V_{z\,i} / \kms$    | -57.29            | 52.09            | -114.08           |
+| Property              | Scl: \smallperi{} | Scl: `LMC-flyby` | UMI: \smallperi{} | Umi: \smallperi{}.5 |
+| --------------------- | ----------------- | ---------------- | ----------------- | ------------------- |
+| distance / kpc        | 82.6              | 72.9             | -                 | 64.6                |
+| $\pmra / \masyr$      | 0.134             | 0.137            | -                 | -0.158              |
+| $\pmdec / \masyr$     | -0.198            | -0.157           | -                 | 0.050               |
+| LOS velocity / $\kms$ | 111.2             | 111.2            | -                 | -245.75             |
+| $t_i / \Gyr$          | -9.17             | -2.0             | -                 | -9.67               |
+| ${x}_{i} / \kpc$      | -2.49             | 4.30             |                   | 17.40               |
+| ${y}_{i} / \kpc$      | -42.78            | 138.89           |                   | 74.51               |
+| ${z}_{i} / \kpc$      | 86.10             | 125.88           |                   | 21.34               |
+| $\V_{x\,i} / \kms$    | -20.56            | 6.89             |                   | 14.27               |
+| $\V_{y\,i} / \kms$    | -114.83           | -56.83           |                   | 48.62,              |
+| $\V_{z\,i} / \kms$    | -57.29            | 52.09            |                   | -114.08             |
 
 Table: The orbital initial conditions for models presented in this work. The observables represent the medians from orbital integration used to derived the orbits. Instead, the initial position and velocity represents the initialization of the actual N-body model. The \smallperi{} represents instead the $3\sigma$ smallest pericentre, which we use to provide an upper limit on tidal effects. We describe the \texttt{LMC-flyby} orbit in @sec:scl_lmc. {#tbl:orbit_ics  short="Orbit initial conditions"}
 
-## Ursa Minor's Orbit
+## Ursa Minor's Orbit {#sec:orbit_corrections}
 
 Similar to Sculptor, Ursa Minor has a well-constrained orbit in the assumed MW potential. @fig:umi_orbits shows 100 random point-orbits of Ursa Minor. As for Sculptor, we select an orbit with approximately the $3\sigma$ smallest pericentre, the Ursa Minor $\smallperi{}$ orbit (see @fig:umi_orbits and @tbl:orbit_ics). 
 

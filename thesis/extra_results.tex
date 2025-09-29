@@ -3,7 +3,7 @@
 In this section, we briefly explore additional simulations testing
 assumptions not varied in the main text: variations in the halo
 concentration, cored halos, alternative orbits, anisotropy, and
-oblateness.
+ellipsoidal models.
 
 \section{Alternative initial
 conditions}\label{alternative-initial-conditions}
@@ -80,4 +80,37 @@ profiles for the Sculptor model which passes through the MW previously.
 The impact does not substantially affect the inner density region. The
 hints of a tidal stream in this model are misaligned to the proper
 motion, likely a result of the LMC.}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{/Users/daniel/thesis/figures/umi_sim_stream.pdf}}
+\caption[Ursa Minor predicted stream]{The properties of the stream
+around the UMi \smallperi{} orbit with Plummer stars. The panels are all
+as a function of \(\xi'\), the distance along the stream as defined by
+the current GSR proper motion vector. The top panels show the GSR proper
+motions in RA and Dec, and the bottom two show the distance and GSR
+radial velocities. To sample the stream, we randomly draw 100,000
+samples from the snapshot based on the stellar weights. A detectible
+gradient in \(\mu_{\alpha*}\) and LOS velocity should be detectible if
+the stream is tracked across several
+degrees.}\label{fig:umi_tidal_stream}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_sim_stream.pdf}}
+\caption[Scl predicted stream]{The predicted properties of a tidal tail
+in the Scl model.}\label{fig:scl_tidal_stream}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_mw_impact_stream.pdf}}
+\caption[Scl predicted stream]{the predicted properties of the stream of
+stars around Scl in the MW impact model. Note that, compared to
+Fig.~\ref{fig:scl_sim_stream}, this model produces a much more scattered
+and misaligned stream, due to the long time since stream formation and
+nonlinear effects of the LMC encounter. \textbf{todo check 2d velocity
+gradients in this case}}\label{fig:scl_mw_impact_tidal_stream}
 \end{figure}

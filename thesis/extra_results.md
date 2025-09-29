@@ -1,6 +1,6 @@
 # Additional results an tests {#sec:extra_results}
 
-In this section, we briefly explore additional simulations testing assumptions not varied in the main text: variations in the halo concentration, cored halos, alternative orbits, anisotropy, and oblateness.
+In this section, we briefly explore additional simulations testing assumptions not varied in the main text: variations in the halo concentration, cored halos, alternative orbits, anisotropy, and ellipsoidal models.
 
 ## Alternative initial conditions
 
@@ -46,3 +46,22 @@ Figure: Similar to @fig:tidal_tracks_concentration, except testing the effects o
 
 Figure: The initial and final density profiles for the Sculptor model which passes through the MW previously. The impact does not substantially affect the inner density region. The hints of a tidal stream in this model are misaligned to the proper motion, likely a result of the LMC.
 
+
+
+
+
+![Ursa Minor predicted stream](/Users/daniel/thesis/figures/umi_sim_stream.pdf){#fig:umi_tidal_stream}
+
+Figure: The properties of the stream around the UMi \smallperi{} orbit with Plummer stars. The panels are all as a function of $\xi'$, the distance along the stream as defined by the current GSR proper motion vector. The top panels show the GSR proper motions in RA and Dec, and the bottom two show the distance and GSR radial velocities. To sample the stream, we randomly draw 100,000 samples from the snapshot based on the stellar weights. A detectible gradient in $\mu_{\alpha*}$ and LOS velocity should be detectible if the stream is tracked across several degrees. 
+
+ 
+
+![Scl predicted stream](figures/scl_sim_stream.pdf){#fig:scl_tidal_stream}
+
+Figure: The predicted properties of a tidal tail in the Scl model. 
+
+
+
+![Scl predicted stream](figures/scl_mw_impact_stream.pdf){#fig:scl_mw_impact_tidal_stream}
+
+Figure: the predicted properties of the stream of stars around Scl in the MW impact model. Note that, compared to @fig:scl_sim_stream, this model produces a much more scattered and misaligned stream, due to the long time since stream formation and nonlinear effects of the LMC encounter. **todo check 2d velocity gradients in this case**

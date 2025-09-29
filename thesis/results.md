@@ -1,18 +1,18 @@
-As discussed in Chapters [-@sec:introduction; -@sec:observations], we test whether Galactic tides can form the extended density profiles of Scl and UMi. In this Chapter, we analyze tailored N-body simulations, using the methods described in Chapter [-@sec:methods], to assess tidal impacts on each galaxy. We find that tides drive dark matter loss in both systems but leave their compact stellar components largely unaffected. The Large Magellanic Cloud (LMC) perturbs the orbit of Scl, and somewhat UMi, yet the resulting tidal effects are weaker than in a Milky Way-only potential. Our simulations demonstrate that recent tides are unlikely to alter the stellar structure of Scl or UMi.
+As discussed in Chapters [-@sec:introduction; -@sec:observations], we test whether Galactic tides are responsible for the extended density profiles of Scl and UMi. In this Chapter, we analyze tailored N-body simulations, using the methods described in Chapter [-@sec:methods], to assess the tidal impact of the Galactic potential. To anticipate our main conclusion, we find that tides drive dark matter loss in both systems but leave their compact stellar components largely unaffected. The Large Magellanic Cloud (LMC) perturbs the orbit of Scl, and somewhat UMi, yet the resulting tidal effects are weaker than in a Milky Way-only potential. Our simulations demonstrate that recent tides are unlikely to have altered the stellar structure of Scl or UMi.
 
-In this Chapter, we consider Scl first, describing tidal effects from the MW on dark matter and stellar components, and then consider the effects from the LMC. We then analyze UMi in a similar manner, considering in turn the dark matter evolution, stellar evolution, and orbital effects of the LMC. 
+In this Chapter, we consider Scl first, describing tidal effects from the MW on dark matter and stellar components. Next, we consider how accounting for the LMC amends our conclusions. We then analyze UMi in a similar manner, considering in turn the dark matter evolution, stellar evolution, and orbital effects of the LMC. 
 
 # Tidal effects on Sculptor
 
-## Dark matter evolution
+## Evolution of Sculptor's dark matter halo
 
-As a representation of the most extreme tidal history, we initially investigate the \smallperi{} Scl model. 
+As a representation of an extreme tidal history, we initially investigate the \smallperi{} Scl model. 
 
-Scl experiences moderate tidal mass loss. @fig:scl_sim_images shows the stripping of dark matter and formation of diffuse streams trailing and leading Sculptor's orbit. Because tidal stripping can be described as removal of the lowest energy particles, most mass loss occurs in the outer halo.
+Scl experiences moderate tidal mass loss after 10 Gyrs of evolution. @fig:scl_sim_images shows the stripping of dark matter and formation of diffuse streams trailing and leading Sculptor's orbit. Because tidal stripping can be described as a gradual removal of the least bound particles, most mass loss occurs in the outer halo.
 
-N-body models may deviate from a point-particle trajectory due to dynamical self-friction [e.g., @miller+2020]. However, this effect is slight for Scl, which ends near the observed position, without adjusting the initial conditions (the green point in [@fig:scl_sim_images]).
+N-body models may deviate from a point-particle trajectory due to dynamical self-friction [e.g., @white1983; @miller+2020]. However, this effect is slight for Scl, which ends near the observed position, without adjusting the initial conditions (the green point in [@fig:scl_sim_images]).
 
-The inner density cusp is tidally resilient. @fig:scl_tidal_track shows the initial and final circular velocity profiles, and the evolution of the maximum circular velocity. The maximum velocity drops from $31\,\kms$  to $22\,\kms$, evolving along the tidal track from @EN2021. The final circular velocity profile resembles the initial with an inner cusp, but has a sharper outer truncation. Quantitatively, the halo loses $>90\%$ its initial mass, as listed in @tbl:scl_sim_results. However, the inner structure is not expected to be affected, as the Jacobi radius is over 3kpc, outside of the initial and final $\rmax$. Thus, tides may remove significant mass, but mostly from the outer halo.
+The inner density cusp is tidally resilient. @fig:scl_tidal_track shows the initial and final circular velocity profiles, and the evolution of the maximum circular velocity. The maximum velocity drops from $31\,\kms$  to $22\,\kms$, evolving along the tidal track from @EN2021. The final circular velocity profile resembles the initial with an inner cusp, but has a sharper outer truncation. Quantitatively, the halo loses $>90\%$ its initial mass, as listed in @tbl:scl_sim_results. However, the inner structure is not expected to be affected, as the Jacobi radius is over 3kpc, outside of the initial and final $\rmax$. Thus, tides may remove significant amounts of mass, but mostly from the outer halo.
 
 ![Sculptor simulation snapshots](figures/scl_sim_images.png){#fig:scl_sim_images}
 
@@ -43,11 +43,13 @@ Table: The orbital and dark matter properties  for the simulation of Sculptor. T
 
 
 
-## Stellar evolution
+## Evolution of Sculptor's stars
 
-Tides minimally affect the stellar component of Sculptor in the \smallperi{} orbit. In @fig:scl_smallperi_i_f, the projected stellar distribution displays no prominent distortions, and the radial density profile is nearly unchanged. Only at a surface density $\sim10^8$ times fainter than the centre may faint tidal features emerge. The total stellar mass lost corresponds to $\sim 10$ stars in total (see [@tbl:scl_sim_results])---a formidable challenge with the best of observations.
+Tides minimally affect the stellar component of Sculptor in the \smallperi{} orbit. In @fig:scl_smallperi_i_f, the projected stellar distribution displays no prominent distortions, and the radial density profile is nearly unchanged. Only at a surface density $\sim10^8$ times fainter than the centre do some faint tidal features emerge. The total stellar mass lost corresponds to $\sim 10$ stars in total (see [@tbl:scl_sim_results])---a formidable challenge with the best of observations.
 
-More extended stellar profiles are more sensitive to tides. With Plummer initial conditions, as shown in [@fig:scl_smallperi_plummer_i_f], the model loses more stellar mass and forms more luminous tidal tails. Observations reaching surface densities $\sim10$ times fainter than our data could reveal a stream in this case. Nevertheless, the radial extent probed by our data remains nearly unchanged by tidal evolution. 
+Sculptor may not have been born as an exponential galaxy, and more extended stellar profiles would be more sensitive to tides. As an approximation of the present-day extended density profile, we initialize a model with Plummer stars instead. As shown in [@fig:scl_smallperi_plummer_i_f], the Plummer model loses more stellar mass and forms more luminous tidal tails. Observations reaching surface densities $\sim10$ times fainter than our data could reveal a stream in this case. Nevertheless, the radial extent probed by our data remains nearly unchanged by tidal evolution. 
+
+The Jacobi and break radii further support that tidal effects should not be apparent in the observed stellar component. As calculated for this model, (see [@tbl:scl_sim_results; @tbl:scl_sim_stars_results]), the break and Jacobi radii both fall outside of $\sim 100$ arcminutes for either stellar component. Indeed, the stellar component only begins to deviate from an exponential profile around this break radius ([@fig:scl_smallperi_i_f; @fig:scl_smallperi_plummer_i_f]). Given that no orbits of Scl in this potential produce significantly smaller break or Jacobi radii, it is unlikely any other orbit would produce a significant, observable density excess.
 
 @tbl:scl_sim_stars_results quantifies the evolution of stellar properties. The stellar velocity dispersion decreases by only $\sim1\,\kms$ and the half-light radius expands by $\sim 10\%$. This is consistent with adiabatic expansion due to the reduction of the total mass [e.g., @stucker+2023]. In addition, the break and Jacobi radii are $\gtrsim 100$ arcminutes on the sky—tidal signatures would be beyond the reach of our data. Altogether, Galactic tides negligibly impact Scl's stellar component. 
 
@@ -83,11 +85,11 @@ Table: The present-day stellar properties for the simulations of Sculptor. In ea
 
 The Milky Way isn't the only galaxy in town. Recently, work has shown that the infall of the LMC may substantially affect the Milky Way system [e.g., @erkal+2019; @cautun+2019; @garavito-camargo+2021; @vasiliev2023]. With a mass up to one fifth of the MW [e.g., @penarrubia+2015], the LMC infall affects conclusions about the MW properties and the orbits of satellites [see e.g., @patel+2020; @battaglia+2022; @correamagnus+vasiliev2022]. In this section, we examine how the LMC affects the orbital history of Sculptor.
 
-We use the `L3M11` model of the MW and LMC potential from @vasiliev2024. The `L3M11` potential is an evolving multipole approximation of an N-body simulation including a live MW and LMC dark matter halo. The potential includes a static MW bulge and disk, evolving MW and LMC halos, and the MW reflex motion. In their simulation, the MW was initially a NFW halo with $r_s=16.5\,$kpc and $M_{\rm 200}= 98.4\times10^{10}\Mo$ , and the LMC a NFW halo with $r_s=11.7$ and $M_{200} = 24.6 \times 10^{10} \Mo$.  The total `L3M11` MW mass is lighter than our initial @EP2020 potential. Notably, this model has a previous LMC pericentre $\sim6\,\Gyr$ ago. 
+We use the `L3M11` model of the MW and LMC potential from @vasiliev2024. The `L3M11` potential is an evolving multipole approximation of an N-body simulation including a live MW and LMC dark matter halo. The potential includes a static MW bulge and disk, evolving MW and LMC halos, and the MW reflex motion. In their simulation, the MW was initially a NFW halo with $r_s=16.5\,$kpc and $M_{\rm 200}= 98.4\times10^{10}\Mo$ , and the LMC a NFW halo with $r_s=11.7$ and $M_{200} = 24.6 \times 10^{10} \Mo$.  The total `L3M11` MW mass is lighter than our initial @EP2020 potential. 
 
-The inclusion of the LMC reshapes Scl's orbital history, as shown in @fig:scl_lmc_orbits_effect. In the MW-only potential, Scl's orbit is typical of a long-term MW satellite. However, Scl's passage by the LMC $~\sim0.1\,\Gyr$ ago affects the long-term orbit---Scl instead reaches an apocentre of nearly $300\,\kpc$. Scl may even be on first infall, depending on the MW and LMC mass. Scl's orbit is counter-rotating to the LMC, so Scl is unlikely to be a LMC satellite.
+The inclusion of the LMC reshapes Scl's orbital history, as shown in @fig:scl_lmc_orbits_effect. In the MW-only potential, Scl's orbit is typical of a long-term MW satellite. However, Scl's passage by the LMC $~\sim0.1\,\Gyr$ ago affects the long-term orbit---Scl instead reaches an apocentre of nearly $300\,\kpc$. Scl may even be on first infall, depending on the MW and LMC mass. Scl's orbit is counter-rotating to the LMC, so Scl is unlikely to be a LMC satellite. 
 
-The timing of the LMC encounter implies a break radius consistent with the observed density kink. We select the orbit with the $6\sigma$-smallest LMC pericentre. The orbit is selected following the procedure in [@sec:orbital_estimation] except with observational uncertainties doubled. Results are similar when selecting for a small MW pericentre instead. This `LMC-flyby` orbit, is integrated back in time $2\,\Gyr$ ago to isolate recent tidal effects. We modify Scl's initial halo to have $\rmax = 2.5\,\kpc$ and  $\vmax = 25\,\kms$, slightly reducing the initial stellar velocity dispersion. @fig:scl_lmc_orbits_effect shows this selected orbit in black and @tbl:orbit_ics records the initial conditions.
+The timing of the LMC encounter implies a break radius consistent with the beginning of the observed density excess. We select the orbit with the $6\sigma$-smallest LMC pericentre. The orbit is selected following the procedure in [@sec:orbital_estimation] except with observational uncertainties doubled. Results are similar when selecting for a small MW pericentre instead. This `LMC-flyby` orbit, is integrated back in time $2\,\Gyr$ ago to isolate recent tidal effects. We modify Scl's initial halo to have $\rmax = 2.5\,\kpc$ and  $\vmax = 25\,\kms$, slightly reducing the initial stellar velocity dispersion. @fig:scl_lmc_orbits_effect shows this selected orbit in black and @tbl:orbit_ics records the initial conditions.
 
 
 
@@ -114,9 +116,11 @@ Figure: Similar to @fig:scl_orbits except for orbits with (orange) and without (
 
 ## Tidal effects from the LMC
 
-The combined tidal force of the MW and LMC are even weaker for Scl than in the MW-only case. @fig:scl_lmc_sim_images shows the dark matter evolution of Scl and the passage of the LMC. With only one MW pericentre, Scl's dark matter is less disrupted than the previous MW-only model. The subsequent LMC passage has little effect. As a result, the dark matter structure evolves mildly and $\sim 50\%$ of mass remains bound ([@tbl:scl_lmc_sims]).
+The combined tidal effect of the MW and LMC are even weaker for Scl than in the MW-only case. @fig:scl_lmc_sim_images shows the dark matter evolution of Scl and the passage of the LMC. With only one MW pericentre, Scl's dark matter is less disrupted than the previous MW-only model. The subsequent LMC passage modifies Scl's orbit but has otherwise little effect. As a result, the dark matter structure evolves mildly and $\sim 50\%$ of mass remains bound ([@tbl:scl_lmc_sims]).
 
-Correspondingly, the stellar component is nearly unchanged. @fig:scl_lmc_i_f shows the projected stellar distributions and density profiles of this model. While the break radius is within the observed density profile, tidal effects are too weak to be detectible. Structural properties of the stars similarly evolve little ([@tbl:scl_lmc_sim_stars]). While the instantaneous tidal force from the LMC is larger than the MW, Scl does not experience the LMC tidal field long enough to display disturbances. 
+Correspondingly, the stellar component is nearly unchanged. @fig:scl_lmc_i_f shows the projected stellar distributions and density profiles of this model. While the break radius is within the observed density profile, tidal effects are too weak to be detectable. Structural properties of the stars similarly evolve little ([@tbl:scl_lmc_sim_stars]). 
+
+While the instantaneous tidal force from the LMC is larger than the MW, Scl does not experience the LMC tidal field long enough to display disturbances. Scl and the LMC have a similar orbital plane, but orbit in opposite directions (@fig:scl_lmc_orbits_effect). As a result, the interaction between Scl and the LMC is brief as their relative velocity is $\sim 400\,\kms$ at closest approach. 
 
 
 
@@ -128,7 +132,7 @@ Figure: Similar to @fig:scl_sim_images except for the case where the potential i
 
 ![Sculptor initial and final density with LMC](figures/scl_lmc_i_f.pdf){#fig:scl_lmc_i_f}
 
-Figure: Similar to @fig:scl_smallperi_i_f except for the \texttt{LMC-flyby} model. With only one MW pericentre and a recent, rapid LMC encounter, tidal forces do not appear to affect the stellar distribution.
+Figure: Similar to @fig:scl_smallperi_i_f except for the \texttt{LMC-flyby} model. The Jacobi and break radii here are calculated with respect to the LMC, the corresponding radii with respect to the MW are larger. With only one MW pericentre and a recent, rapid LMC encounter, tidal forces do not appear to affect the stellar distribution. **todo fix break radius position, orbits as arrows...**
 
 
 
@@ -148,7 +152,7 @@ Table: Similar to @tbl:scl_sim_stars_results, but for the properties of the stel
 
 ## Summary
 
-We find, including only the MW, that tides only remove dark matter from the outskirts of Scl. The central cusp and compact stellar distribution are resilient to tides and any tidal effects are well-outside the reach of current observations. We then find that the LMC strongly perturbs Scl's orbit---in this case, Scl may be on first infall. However, with only 2 pericentres, the combined tides of the LMC and MW tides are weaker than for our initial model. In either case, tides are unlikely to affect Sculptor's stellar component.
+We find, including only the MW potential, that tides only remove dark matter from the outskirts of Scl. The central cusp and compact stellar distribution are resilient to tides and any tidal effects are well-outside the reach of current observations. We then find that the LMC strongly perturbs Scl's orbit---in this case, Scl may be on first infall. However, with only 1 pericentre each for the LMC and MW, the combined tides are weaker than for our initial model. In either case, we conclude that tides are unlikely to affect Sculptor's stellar component.
 
 
 
@@ -156,9 +160,11 @@ We find, including only the MW, that tides only remove dark matter from the outs
 
 # Tidal effects on Ursa Minor
 
-The tidal evolution of Ursa Minor is similar to Sculptor in the MW-only case. @Fig:umi_sim_images shows snapshots of the DM evolution. UMi loses more DM mass, with only about 3% of the total mass remaining (see @fig:umi_tidal_track and @tbl:umi_sim_results). However, tidal features in the observed stellar components are still extremely faint, appearing outside 100 arcminutes in [@fig:umi_smallperi_i_f]. Tides only moderately affect the observed size and velocity dispersion of Ursa Minor ([@tbl:umi_sim_stars_results]).
+## Evolution of Ursa Minor's dark matter halo
 
-A stream may just be beyond observational limits if Ursa Minor's stars were initially more extended. As seen in @fig:umi_plummer_i_f, the tidal tails are more luminous than for Sculptor and would begin near the outermost density measurement. The properties of the stream are shown in @fig:umi_tidal_stream. The stream stars become apparent outside of about 2 degrees, or the Jacobi radius. As expected for tidal tails, the stream shows gradients in each observable, with a dispersion in each observable similar to that of the dwarf progenitor. 
+![Ursa Minor simulation snapshots](figures/umi_sim_images.png){#fig:umi_sim_images}
+
+Figure: Similar to @fig:scl_sim_images except for Ursa Minor on the \smallperi{} orbit. Dark matter evolution is more dramatic than for Scl. 
 
 
 
@@ -179,6 +185,18 @@ Table: The present-day properties for Ursa Minor's final dark matter halo. See @
 
 
 
+![Ursa Minor tidal tracks](figures/umi_tidal_track.png){#fig:umi_tidal_track}
+
+Figure: Similar to @fig:scl_tidal_track except for Ursa Minor. Ursa Minor looses substantially more mass than Sculptor.
+
+The tidal evolution of Ursa Minor is similar to Sculptor in the MW-only potential. @Fig:umi_sim_images shows snapshots of the DM evolution. UMi loses significantly more DM mass than Scl, forming substantial dark matter streams encircling the MW several times. 
+
+UMi only retains 3% of its total mass after 9 Gyr (@tbl:umi_sim_results). As a result, the final dark matter component is much smaller than the initial, but still evolves along the predicted tidal track [@fig:umi_tidal_track ]. Despite the more substantial tidal evolution, the Jacobi radius is still large, lying at $\sim 4\,\kpc$, well beyond the final $\rmax$. 
+
+Because of UMi's mass loss, the orbit deviates substantially from a point orbit. Through our orbit-adjustment procedure in @sec:orbit_corrections, we recover nearly exactly the present-day position of Ursa Minor by changing the initial positions by $20\,\kpc$ and $\sim 9\,\kms$. These adjustments do not significantly affect the qualitative structure or pericentre of the orbit. 
+
+## Evolution of Ursa Minor's stars
+
 
 
 | Property                     | smallperi-exp       | smallperi-Plummer   |
@@ -192,15 +210,7 @@ Table: The present-day properties for Ursa Minor's final dark matter halo. See @
 
 Table: Similar to @tbl:scl_sim_stars_results, the present-day stellar properties for the simulation of Ursa Minor for exponential and Plummer stars. {#tbl:umi_sim_stars_results short="Simulation results for Ursa Minor's stars"}
 
-![Ursa Minor simulation snapshots](figures/umi_sim_images.png){#fig:umi_sim_images}
 
-Figure: Similar to @fig:scl_sim_images except for Ursa Minor on the \smallperi{} orbit.
-
-
-
-![Ursa Minor tidal tracks](figures/umi_tidal_track.png){#fig:umi_tidal_track}
-
-Figure: Similar to @fig:scl_tidal_track except for Ursa Minor. Ursa Minor looses substantially more mass than Sculptor.
 
 
 
@@ -216,27 +226,27 @@ Figure: The tidal effects on the stellar surface density of Ursa Minor for Plumm
 
 
 
+Tidal features in UMi's stellar component are still extremely faint, becoming apparent only outside 100 arcminutes in [@fig:umi_smallperi_i_f]. Tides also only moderately affect the observed size and velocity dispersion of Ursa Minor ([@tbl:umi_sim_stars_results]). For exponential initial conditions, tidal effects are unlikely to ever be observable in the near future. 
+
+Similar to Scl, we consider a model where UMi's stars are initially a more extended Plummer profile, resembling the present-day density profile. The stellar evolution of the Plummer stellar component is similar to the exponential stellar profile (@ig:umi_plummer_i_f). However, because there are more loosely-bound stars, the Plummer model looses nearly 4% of its initial stellar mass to tides ([@tbl:umi_sim_stars_results]), and tidal features may be detectible if we measure densities 2 orders of magnitude fainter than our present data. We show the properties of a stream in the Appendix (@fig:umi_tidal_stream), but such a stream is unlikely to be observable in the near future. 
 
 
-![Ursa Minor predicted stream](figures/umi_sim_stream.pdf){#fig:umi_tidal_stream}
-
-Figure: The properties of the stream around the UMi \smallperi{} orbit with Plummer stars. The panels are all as a function of $\xi'$, the distance along the stream as defined by the current GSR proper motion vector. The top panels show the GSR proper motions in RA and Dec, and the bottom two show the distance and GSR radial velocities. To sample the stream, we randomly draw 100,000 samples from the snapshot based on the stellar weights. A detectible gradient in $\mu_{\alpha*}$ and LOS velocity should be detectible if the stream is tracked across several degrees. 
 
 ## Effects of the LMC 
-
-[@fig:umi_orbits_lmc] shows the effects of including an LMC on the orbit of Ursa Minor. Predominantly, the effect is to increase the orbital period, apocentre and pericentre. However, the orbit remains in a similar plane and with similar morphology. As UMi is on the opposite side of the Galaxy of the LMC, this is not unexpected. The deviation from the MW-only orbit is mostly due to the LMC-induced reflex motion of the Milky Way.
 
 ![Ursa Minor orbits with LMC](figures/umi_lmc_xyzr_orbits.png){#fig:umi_orbits_lmc}
 
 Figure: Orbits of Ursa Minor with (orange) and without (green) an LMC. The final positions of Ursa Minor and the LMC are plotted as scatter points and the solid blue line represents the LMC trajectory. Note that the LMC mostly increases Ursa Minor's pericentres and apocentres. 
 
+[@fig:umi_orbits_lmc] shows the effects of including an LMC on the orbit of Ursa Minor. Predominantly, the effect is to increase the orbital period, apocentre and pericentre. However, the orbit remains in a similar plane and with similar morphology. As UMi is on the opposite side as the Galaxy of the LMC, this is not unexpected. 
+
+The deviation from the MW-only orbit is mostly due to the LMC-induced reflex motion of the Milky Way. Because the MW centre, and our origin,  is accelerated towards the LMC, UMi experiences a fictitious acceleration opposite to the acceleration experienced by the MW centre, causing the orbit to increase in characteristic radius. 
+
 
 
 ## Summary
 
-While tides affect UMi more strongly than Scl, the tidal effects are insufficient to reshape the observed stellar density profile. Faint tidal tails may be observable with deeper data. Finally, including the LMC in the potential further weakens the tides experience by UMi.
-
-
+While tides affect UMi more strongly than Scl, the tidal effects are insufficient to reshape the observed stellar density profile. Faint tidal tails may be observable with deeper data. Finally, including the LMC in the potential further weakens the tides experienced by UMi.
 
 
 
@@ -244,7 +254,7 @@ While tides affect UMi more strongly than Scl, the tidal effects are insufficien
 
 ## Modelling assumptions
 
-As @sec:results shows, tides marginally affected the stellar components of Scl and UMi, even under extreme orbits. While @sec:results only presents select models, alternative initial conditions do not affect our qualitative conclusions on tidal effects.
+As @sec:results shows, tides marginally affected the stellar components of Scl and UMi, even under extreme orbits. While @sec:results only presents select models, alternative initial conditions do not affect our qualitative conclusions on tidal effects expected for Scl and UMi in the Galactic (and LMC) potential.
 
 We neglect baryonic physics. Since Scl and UMi have predominantly stars older than $\sim 9$ Gyr [@carrera+2002; @deboer+2011; @weisz+2014; @delosreyes+2022; @sato+2025], gas dynamics are unlikely to affect recent evolution. A collisionless dark-matter only simulation should be an excellent approximation.
 
