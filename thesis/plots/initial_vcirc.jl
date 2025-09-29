@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -73,7 +73,8 @@ function load_stars(galaxyname, haloname, starsname)
 	snap_f = Snapshot(joinpath(stars_dir, "iso_final.hdf5"))
 	assign_weights!(snap_f, df_probs)
 
-	Mstar = get_M_star("sculptor")
+	Mstar = get_M_star(galaxyname)
+	@info "stellar mass $Mstar"
 
 	prof_s_i = MassProfile(snap_i, snap_i.weights * Mstar)
 	prof_i = MassProfile(snap_i)

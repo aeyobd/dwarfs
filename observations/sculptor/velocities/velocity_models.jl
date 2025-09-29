@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
-rv_file = "rv_combined_x_wide_2c_psat_j24_0.2.fits"
+rv_file = "rv_tolstoy+23_x_wide_2c_psat_j24_0.2.fits"
 
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
 n_samples = 10000
@@ -109,6 +109,9 @@ obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/obs
 # ╔═╡ 66c35421-f6d3-4b2d-86e4-319f5476b222
 σv = obs_properties["sigma_v"]
 
+# ╔═╡ 00cd5ad7-ab0e-428f-ba00-05ef6fc86806
+R_h = obs_properties["R_h"]
+
 # ╔═╡ 2d110151-f7f3-4b09-8684-a2fc4327814b
 Δv_gsr = RVUtils.rv_gsr_shift(obs_properties["ra"], obs_properties["dec"])
 
@@ -150,9 +153,6 @@ extrema(memb_stars.RV)
 
 # ╔═╡ a1938588-ca40-4844-ab82-88c4254c435b
 length(memb_stars.RV)
-
-# ╔═╡ 45d748e7-42a0-471e-b290-e3469c0aa283
-
 
 # ╔═╡ 6734991c-16c0-4424-a2bb-84bfa811121f
 md"""
@@ -293,9 +293,6 @@ df_Rell = DataFrame(samples_Rell)
 # ╔═╡ 924369b0-aff6-46e4-a0bf-c6766ff93cbf
 median(df_Rell.μ) + Δv_gsr
 
-# ╔═╡ 4f00f714-6b16-41c7-a3c8-f2743d6023bf
-
-
 # ╔═╡ 137bbc9c-1e02-4f78-acd1-0e30cf982615
 bf_sigma_Rell = RVUtils.bayes_evidence(model_Rell, df_Rell, "dlσ_dlR")
 
@@ -323,6 +320,7 @@ let
 
 	x = df_Rell.dlσ_dlR[df_Rell.dlσ_dlR .< quantile(df_Rell.dlσ_dlR, 0.001)]
 	scatter!(x, 10^-6 .* (1 .+ rand(length(x))), color=COLORS[2], markersize=1)
+	text(0.1, 0.9, text=string(round(bf_sigma_Rell, sigdigits=2)), space=:relative)
 	fig
 end
 
@@ -393,6 +391,9 @@ summary_gradient = RVUtils.summarize(samples_gradient)
 	scatter!(60df_gradient.A, 60df_gradient.B, alpha=0.1, markersize=1, 
 
 	   )
+
+	scatter!(60df_both.A, 60df_both.B, alpha=0.1, markersize=1, )
+
 
 	scatter!(0, 0, color=:black)
 	arrows!([0], [0], [vec_pm[1]], [vec_pm[2]])
@@ -485,6 +486,58 @@ end
 # ╔═╡ 7fce47a1-16be-4dad-afb5-0fb04bd91355
 CSV.write("processed/mcmc_samples_gradient$FIGSUFFIX.csv", df_gradient)
 
+# ╔═╡ 9e23fdbf-79ae-47a1-a499-2a23927b0590
+md"""
+# Both model
+"""
+
+# ╔═╡ 59eb4919-61cb-4a1e-919f-580a3eea2d67
+model_both = RVUtils.model_vel_gradient_both(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta, memb_stars.R_ell, R_h=R_h)
+
+# ╔═╡ bfddda5b-e3c1-4a0a-b191-17b22ae8fba2
+samples_both = sample(model_both, sampler, MCMCThreads(), n_samples, n_threads)
+
+# ╔═╡ 96c6a648-f918-4b1c-b35c-3ad9dbd7d3c6
+df_both = let
+	df = DataFrame(samples_both)
+	df[:, :A]
+	df[:, :B]
+	df[!, :r_grad] = @. 60 * (df.A ⊕ df.B )
+	df[!, :Θ_grad] = @. atand(df.A, df.B) 
+
+	df
+end
+
+# ╔═╡ 8d0ec0fc-888b-489b-976a-6d5c899d939e
+@savefig "both_corner" pairplot(samples_both)
+
+# ╔═╡ 72e0cc55-0e1d-4037-895f-cd81b9c42282
+summary_both = RVUtils.summarize(samples_both)
+
+# ╔═╡ 786e5aa7-35ce-49e2-a31d-a2d9978cdba6
+bf_gradient_both = RVUtils.bayes_evidence(model_both, df_both, ["A", "B"])
+
+# ╔═╡ 43c7905c-0673-4e2d-9be0-d797c3e5f3e5
+bf_Rell_both = RVUtils.bayes_evidence(model_both, df_both, "dlσ_dlR")
+
+# ╔═╡ 8077c5c1-1e53-465a-a83c-175e6aa112a7
+CSV.write("processed/mcmc_samples_both$FIGSUFFIX.csv", df_both)
+
+# ╔═╡ 8c6ba5e8-3814-4253-87fa-30c2fad02957
+θs_both = mod1.(df_both.Θ_grad, 360.) .- 360
+
+# ╔═╡ 8cc98785-1dcb-408e-965f-27a475847a00
+θ_m_both= median(θs_both)
+
+# ╔═╡ aed46019-4199-4a51-8b28-eab8904b4f4c
+θ_both_err = quantile(θs_both, [0.16, 0.5, 0.84]) .- median(θs_both)
+
+# ╔═╡ b3c83ae8-c7e1-487d-b5a7-b78ef989ea28
+r_grad_m_both = median(df_both.r_grad)
+
+# ╔═╡ ff721c52-b23c-47d0-8b4b-ae31f1863329
+r_grad_both_err = quantile(df_both.r_grad, [0.16, 0.5, 0.84]) .- r_grad_m_both
+
 # ╔═╡ 1acdc61b-fb5f-449d-ba86-46525c881a39
 md"""
 # Writing Information
@@ -512,14 +565,17 @@ df_summaries = OrderedDict(
 	"vz" => summary_vz |> OrderedDict, 
 	"gradient" => summary_gradient |> OrderedDict,
 	"rell" => summary_Rell |> OrderedDict,
+	"both" => summary_both |> OrderedDict,
 	"bf_gradient" => bf_gradient,
 	"bf_rell" => bf_sigma_Rell,
-	"R_grad_median" => r_grad_m,
-	"R_grad_el" => r_grad_m .- quantile(df_gradient.r_grad, 0.16),
-	"R_grad_ep" => quantile(df_gradient.r_grad, 0.84) - r_grad_m,
-	"theta_grad_median" => θ_m,
-	"theta_grad_el" => -θ_err[1],
-	"theta_grad_ep" => θ_err[3]
+	"bf_gradient_both" => bf_gradient_both,
+	"bf_rell_both" => bf_Rell_both,
+	"R_grad_median" => r_grad_m_both,
+	"R_grad_el" => r_grad_both_err[1],
+	"R_grad_ep" => r_grad_both_err[end],
+	"theta_grad_median" => θ_m_both,
+	"theta_grad_el" => -θ_both_err[1],
+	"theta_grad_ep" => θ_both_err[3]
 )
 
 # ╔═╡ d71f6eba-7d64-4212-91c3-707a664c6b0b
@@ -555,6 +611,7 @@ end
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═1bc6b7f5-4884-479d-b4be-54f28c2e0a8a
 # ╠═66c35421-f6d3-4b2d-86e4-319f5476b222
+# ╠═00cd5ad7-ab0e-428f-ba00-05ef6fc86806
 # ╠═2d110151-f7f3-4b09-8684-a2fc4327814b
 # ╠═84509e42-8484-410a-8a76-38473b9f4b71
 # ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
@@ -566,7 +623,6 @@ end
 # ╠═3377f632-713d-4fec-84a9-b0211b02cb43
 # ╠═31a6c2e4-538c-4adc-bbda-5043680b17f7
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
-# ╠═45d748e7-42a0-471e-b290-e3469c0aa283
 # ╟─6734991c-16c0-4424-a2bb-84bfa811121f
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
 # ╠═5cf336f6-e3eb-4668-b074-18b396f027be
@@ -595,7 +651,6 @@ end
 # ╠═527ccde2-64db-40f5-9b77-8898a92b3b6a
 # ╠═820b82a1-63a4-4a83-8d6e-5659ef75ce2d
 # ╠═924369b0-aff6-46e4-a0bf-c6766ff93cbf
-# ╠═4f00f714-6b16-41c7-a3c8-f2743d6023bf
 # ╠═137bbc9c-1e02-4f78-acd1-0e30cf982615
 # ╠═3b7cb3ea-3684-4df9-b9e6-919fa11e9ffa
 # ╠═f8cc1ebb-617a-46a0-ab22-2f84d75da2ea
@@ -635,6 +690,20 @@ end
 # ╠═39bb4bb9-8445-4ee1-a3af-639d8fa96f65
 # ╠═3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
 # ╠═7fce47a1-16be-4dad-afb5-0fb04bd91355
+# ╟─9e23fdbf-79ae-47a1-a499-2a23927b0590
+# ╠═59eb4919-61cb-4a1e-919f-580a3eea2d67
+# ╠═bfddda5b-e3c1-4a0a-b191-17b22ae8fba2
+# ╠═96c6a648-f918-4b1c-b35c-3ad9dbd7d3c6
+# ╠═8d0ec0fc-888b-489b-976a-6d5c899d939e
+# ╠═72e0cc55-0e1d-4037-895f-cd81b9c42282
+# ╠═786e5aa7-35ce-49e2-a31d-a2d9978cdba6
+# ╠═43c7905c-0673-4e2d-9be0-d797c3e5f3e5
+# ╠═8077c5c1-1e53-465a-a83c-175e6aa112a7
+# ╠═8c6ba5e8-3814-4253-87fa-30c2fad02957
+# ╠═8cc98785-1dcb-408e-965f-27a475847a00
+# ╠═aed46019-4199-4a51-8b28-eab8904b4f4c
+# ╠═b3c83ae8-c7e1-487d-b5a7-b78ef989ea28
+# ╠═ff721c52-b23c-47d0-8b4b-ae31f1863329
 # ╟─1acdc61b-fb5f-449d-ba86-46525c881a39
 # ╠═0532010e-7832-44d4-a7ee-5a6f6ee9d7da
 # ╠═280ad72b-b4f9-4082-8795-3de522acfbf1

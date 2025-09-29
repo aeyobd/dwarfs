@@ -233,8 +233,7 @@ end
 import DensityEstimators: histogram2d
 
 # ╔═╡ b1817495-c364-4a75-aa12-150c5afe4323
-function plot_isocontours(fig, snap; filter_bound=false)
-	bins = -10:0.5:10
+function plot_isocontours(fig, snap; filter_bound=false, bins = -2:0.1:2)
 	
 	for idx in 1:3
 		i, j = [(1,2), (2,3), (1,3)][idx]
@@ -268,7 +267,7 @@ end
 let 
 	fig = Figure(figsize=(2*72, 10*72))
 	
-	for (i, idx) in enumerate(orbit_props["idx_apos"])
+	for (i, idx) in enumerate([1; orbit_props["idx_apos"]])
 		gs = GridLayout(fig[i, 1])
 		
 		plot_isocontours(gs, out[idx])
@@ -279,12 +278,6 @@ let
 	resize_to_layout!(fig)
 	fig
 end
-
-# ╔═╡ 1c97fb68-f164-4251-9eab-546a1518611e
-
-
-# ╔═╡ bc7f4551-5cea-4d81-8dc6-5f2661ea0936
-
 
 # ╔═╡ 865b194d-9efa-41c2-8184-63bcfcd90f6f
 let
@@ -364,6 +357,4 @@ end
 # ╠═b1817495-c364-4a75-aa12-150c5afe4323
 # ╠═9e36808a-43b3-4a73-aa5e-36d05ae8bfcc
 # ╠═f743edac-e31a-452b-9243-31abbc64a506
-# ╠═1c97fb68-f164-4251-9eab-546a1518611e
-# ╠═bc7f4551-5cea-4d81-8dc6-5f2661ea0936
 # ╠═865b194d-9efa-41c2-8184-63bcfcd90f6f
