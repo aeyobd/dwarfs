@@ -1,15 +1,5 @@
-filename = "../data/j24_2c.fits"
+inherits = "bins_reliable.toml"
 
-ra = 210.02 #muñoz 2018
-dec = 14.5135 
+
+filename = "../data/jensen+24_1c.fits"
 PSAT_min = 0.2
-PA = 6
-
-pmra = -0.39
-pmdec = -1.06
-ellipticity = 0.3
-
-
-
-[profile_kwargs]
-normalization = "mass"

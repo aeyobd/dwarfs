@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -142,6 +142,7 @@ end
 function compare_densities!(ax, profiles; 
 		R_b_R_h=nothing, styles=nothing,
 		prof_ana = nothing, y_R_b=nothing, R_h=nothing,
+							y_min=-5
 	)
 	x_l, x_h, y_l, y_h = get_extrema(profiles)
 
@@ -176,19 +177,9 @@ function compare_densities!(ax, profiles;
 	if R_h !== nothing
 		x = log10(R_h)
 		y = y_l
-				vlines!(ax, x, color=:black, linestyle=:dot, linewidth=lw)
-		text!(ax, [x], [y], text=L"R_h")
+		annotation!(ax, 0, 36, x, y_min, color=:black, linewidth=lw, text=L"R_h")
 	end
 
-	if R_b_R_h !== nothing
-		x = log10(R_b_R_h)
-		if y_R_b === nothing
-			y_R_b = y_l
-		end
-		
-		annotation!(ax, 0, 36, x, y_R_b, text=L"R_b")
-		
-	end
 
 end
 
@@ -196,15 +187,23 @@ end
 function compare_densities(profiles; kwargs...)
 	
 	fig = Figure()
-	ax = Axis(fig[1,1], 
-		xlabel = log_r_ell_label,
-		ylabel = log_Σ_label,
-	)
-
-	compare_densities!(ax, profiles; kwargs...)
+	compare_densities(fig[1,1], profiles; kwargs...)
 
 	fig
 
+end
+
+# ╔═╡ cc48ec77-c92c-40d9-8569-6550f6dde552
+function compare_densities(gs, profiles; y_min=-5, kwargs...)
+	ax = Axis(gs,  
+		xlabel = log_r_ell_label,
+		ylabel = log_Σ_label,
+		limits = (nothing, nothing, y_min, nothing)
+	)
+
+	compare_densities!(ax, profiles; y_min=y_min, kwargs...)
+
+	ax
 end
 
 # ╔═╡ 30a60b7d-630a-4fa3-ac57-e873655ad754
@@ -250,9 +249,6 @@ function compare_densities_residuals(profiles;
 		errorscatter!(x, y, yerror=ye; kwargs...)
 	end
 
-	if R_h !== nothing
-		vlines!(log10(R_h), color=:black, linestyle=:dot, linewidth=1)
-	end
 
 	linkxaxes!(ax, ax2)
 	hidexdecorations!(ax, ticks=false, minorticks=false)
@@ -274,12 +270,12 @@ md"""
 """
 
 # ╔═╡ 5917e45e-50bb-441f-9d12-6901025a81f3
-begin 
-	profiles_scl_j24 = OrderedDict(
-		"fiducial" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
-		"1-component" => load_profile("sculptor", "jax_eqw") |> LilGuys.filter_empty_bins,
-		"circ" => load_profile("sculptor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,	)
-end
+profiles_scl_j24 = OrderedDict(
+	"fiducial" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
+	"1-component" => load_profile("sculptor", "jax_eqw") |> LilGuys.filter_empty_bins,
+	"circ" => load_profile("sculptor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,	
+	"MCMC" => load_profile("sculptor", "../mcmc/hist_fast"),
+)
 
 # ╔═╡ 66761f62-bfe3-4c5e-8630-17a8b63721e7
 begin 
@@ -333,6 +329,7 @@ begin
 		"simple" => load_profile("ursa_minor", "simple") |> LilGuys.filter_empty_bins,
 		"bright" => load_profile("ursa_minor", "jax_bright") |> LilGuys.filter_empty_bins,
 		"UNIONS" => load_profile("ursa_minor", "unions_sub"),
+
 	)
 
 	scale!(profiles_umi_extra, "bright", 1, 2)
@@ -347,6 +344,8 @@ begin
 		"fiducial" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
 		"1-component" => load_profile("ursa_minor", "jax_eqw") |> LilGuys.filter_empty_bins,
 		"circ" => load_profile("ursa_minor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,
+		"MCMC" => load_profile("ursa_minor", "../mcmc/hist_fast"),
+
 	)
 end
 
@@ -361,7 +360,7 @@ begin
 		"all" => load_profile("sculptor", "best_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("sculptor", "best_eqw_sub"),
 		"CMD + PM" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
-		"probable members" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
+		"probable members" => load_profile("sculptor", "fiducial") |> LilGuys.filter_empty_bins,
 	)
 
 
@@ -413,14 +412,28 @@ R_h_scl = get_R_h(obs_props_scl)
 # ╔═╡ 05eba4d6-f566-4e27-9bed-72a7520dfef0
 ana_scl = LilGuys.Exp2D(R_s=R_h_scl / α, M=get_M_s("sculptor"))
 
-# ╔═╡ d6509ab8-9923-443b-8b96-50e4f59498ab
-@savefig "scl_density_methods_j24" compare_densities_residuals(profiles_scl_j24, R_h=R_h_scl, prof_ana=ana_scl)
-
 # ╔═╡ a1109c5b-ea82-40ac-8194-c7dcc4a069ea
-@savefig "scl_density_methods_extra" compare_densities_residuals(profiles_scl_extra, R_h=R_h_scl, prof_ana=ana_scl)
+@savefig "scl_density_methods_extra" let
+	fig = Figure()
+
+	
+	ax2 = compare_densities(fig[1,1], profiles_scl_j24, R_h=R_h_scl, prof_ana=ana_scl)
+	axislegend(position=:lb)
+	hidexdecorations!(ticks=false, minorticks=false)
+
+	ax1 = compare_densities(fig[2,1], profiles_scl_extra, R_h=R_h_scl, prof_ana=ana_scl)
+	axislegend(position=:lb)
+
+
+	linkaxes!(ax1, ax2)
+	xlims!(-0.8, 2.3)
+	ylims!(-5, 2)
+	rowgap!(fig.layout, 0)
+	fig
+end
 
 # ╔═╡ 523186ec-f7c8-4968-afd5-167ca5f06254
-compare_densities_residuals(profiles_scl_sanity, R_h=R_h_scl, prof_ana=ana_scl)
+compare_densities(profiles_scl_sanity, R_h=R_h_scl, prof_ana=ana_scl)
 
 # ╔═╡ 5772d3d1-0ff8-4a6a-a474-b96bc7d67347
 R_h_umi = get_R_h(obs_props_umi)
@@ -432,7 +445,23 @@ ana_umi = LilGuys.Exp2D(R_s=R_h_umi / α, M=get_M_s("ursa_minor"))
 compare_densities_residuals(profiles_umi_sanity, R_h=R_h_umi, prof_ana=ana_umi)
 
 # ╔═╡ 5fa49bc9-a34d-4ae9-9cd3-4051281bc68f
-@savefig "umi_density_methods_extra" compare_densities_residuals(profiles_umi_extra, R_h=R_h_umi, prof_ana=ana_umi)
+@savefig "umi_density_methods_extra" let
+	fig = Figure()
+
+	
+	ax1 = compare_densities(fig[1,1], profiles_umi_extra, R_h=R_h_umi, prof_ana=ana_umi)
+	axislegend(position=:lb)
+	hidexdecorations!(ticks=false, minorticks=false)
+
+	ax2 = compare_densities(fig[2,1], profiles_umi_j24, R_h=R_h_umi, prof_ana=ana_umi)
+	axislegend(position=:lb)
+
+	linkaxes!(ax1, ax2)
+	xlims!(-0.5, 2.3)
+	rowgap!(fig.layout, 0)
+
+	fig
+end
 
 # ╔═╡ 9002ba29-45ef-46dc-8632-e993c9ec2dc8
 @savefig "umi_density_methods_j24" compare_densities_residuals(profiles_umi_j24, R_h=R_h_umi, prof_ana=ana_umi)
@@ -452,32 +481,17 @@ Utils.SELECTION_COLORS[[1, 2, 3]]
 # ╔═╡ 58346276-5061-4d9a-8781-c1aba26d2c42
 grey, COLORS[3], COLORS[1]
 
-# ╔═╡ 44c20584-db45-4137-a07f-f7697a53174d
-log10(R_munoz_1 / R_h_umi)
-
-# ╔═╡ dbeae6d9-1dd7-403b-80ac-82b20d047c3b
-@savefig "scl_density_methods" compare_densities(profiles_scl, styles=plot_kwargs, R_b_R_h=R_b_scl, R_h=R_h_scl)
-
-# ╔═╡ 6ca91232-1b62-4f1d-8162-dc84312404af
-propertynames(plot_kwargs["all"])
-
 # ╔═╡ c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 begin 
 	profiles_umi = OrderedDict(
 		"all" => load_profile("ursa_minor", "best_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("ursa_minor", "best_eqw_sub"),
 		"CMD + PM" => load_profile("ursa_minor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
-		"probable members" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
+		"probable members" => load_profile("ursa_minor", "fiducial") |> LilGuys.filter_empty_bins,
 	)
 
 	profiles_umi
 end
-
-# ╔═╡ 18b9cf25-527e-4bac-91ca-5d1fa69293c8
-@savefig "umi_density_methods" compare_densities(profiles_umi, 
-	styles=plot_kwargs, R_b_R_h=R_b_fornax, 
-	R_h=R_h_umi
-)
 
 # ╔═╡ 7c64d26a-bddd-4159-98d2-3a0f8d2125f5
 begin 
@@ -485,7 +499,7 @@ begin
 		"all" => load_profile("fornax", "best_eqw") |> LilGuys.filter_empty_bins,
 		"BG subtracted" => load_profile("fornax", "best_eqw_sub") ,
 		"CMD + PM" => load_profile("fornax", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
-		"probable members" => load_profile("fornax", "jax_eqw") |> LilGuys.filter_empty_bins,
+		"probable members" => load_profile("fornax", "fiducial") |> LilGuys.filter_empty_bins,
 	)
 
 end
@@ -495,18 +509,22 @@ end
 
 # ╔═╡ 19be0190-af5d-479b-b859-8f1c1e46bba1
 @savefig "scl_umi_fnx_density_methods" let
-	fig = Figure(size=(5, 6) .*72)
+	fig = Figure(size=(5.39, 5.39) .*72)
 	ax = Axis(fig[1,1],
 		#xlabel = log_r_ell_label,
 		ylabel = log_Σ_label,
 	)
+
+	y_min = -3
 	
 	hlines!(get_background("sculptor")[1], color=grey, linewidth=1)
-	compare_densities!(ax, profiles_scl, styles=plot_kwargs, R_h=R_h_scl, y_R_b=-2)
+	compare_densities!(ax, profiles_scl, styles=plot_kwargs, R_h=R_h_scl, y_R_b=-2, y_min=y_min)
 
 	text!(0.8, 0.8, text="Sculptor", space=:relative)
 
+	hidexdecorations!(ticks=false, minorticks=false)
 
+	
 	# Ursa Minor
 	ax_umi = Axis(fig[2,1],
 		#xlabel = log_r_ell_label,
@@ -517,16 +535,18 @@ end
 	
 	compare_densities!(ax_umi, profiles_umi, 
 		styles=plot_kwargs,
-		R_h=R_h_umi
+		R_h=R_h_umi, y_min=y_min
 	)
 
 	text!(0.8, 0.8, text="Ursa Minor", space=:relative)
 
 	#munoz 1
-	lines!([log10(R_munoz_1 - 3R_h_munoz1), log10(R_munoz_1 + 3R_h_munoz1)], [-4.5, -4.5], color=COLORS[5])
-	text!(ax_umi, log10(R_munoz_1), -4.5, text="Muñoz 1", color=COLORS[5], align=(:center, :bottom))
+	lines!([log10(R_munoz_1 - 3R_h_munoz1), log10(R_munoz_1 + 3R_h_munoz1)], [-2.5, -2.5], color=COLORS[5])
+	text!(ax_umi, log10(R_munoz_1), -2.5, text="Muñoz 1", color=COLORS[5], align=(:center, :bottom))
 	
 	axislegend(position=:lb)
+	hidexdecorations!(ticks=false, minorticks=false)
+
 
 
 	# Fornax
@@ -538,22 +558,17 @@ end
 	hlines!(get_background("fornax")[1], color=grey, linewidth=1)
 
 	compare_densities!(ax_fnx, profiles_fornax, styles=plot_kwargs, 	
-		 R_h=R_h_fornax
+		 R_h=R_h_fornax, y_min=y_min
 	)
 	
 	text!(0.8, 0.8, text="Fornax", space=:relative)
 
+
+	linkxaxes!(ax, ax_umi, ax_fnx)
+	rowgap!(fig.layout, 0.)
 	fig
 
 end
-
-# ╔═╡ 188ce016-6011-45c3-9823-eafdc94f9617
-@savefig "fornax_density_methods" compare_densities(profiles_fornax, styles=plot_kwargs, R_b_R_h=R_b_fornax, 
-												   	R_h=R_h_fornax
-)
-
-# ╔═╡ 8a2b9a99-7b11-4910-a097-420f765396e5
-get_R_break
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -584,13 +599,13 @@ get_R_break
 # ╠═92db291e-afb7-490d-a599-d4bcb686dccb
 # ╠═20b94af8-aaad-4832-8643-5d5d1f00e288
 # ╠═3f13f074-e6b3-4b77-8080-bf8861b1e018
+# ╠═cc48ec77-c92c-40d9-8569-6550f6dde552
 # ╠═30a60b7d-630a-4fa3-ac57-e873655ad754
 # ╠═183d7d89-b34d-4be8-9b7f-be039a6ce545
 # ╟─1160f544-3879-4892-a47f-fc88d3620b8a
 # ╠═5917e45e-50bb-441f-9d12-6901025a81f3
 # ╠═66761f62-bfe3-4c5e-8630-17a8b63721e7
 # ╠═c29da90b-32b5-445b-9de4-03cba2349397
-# ╠═d6509ab8-9923-443b-8b96-50e4f59498ab
 # ╠═a1109c5b-ea82-40ac-8194-c7dcc4a069ea
 # ╠═523186ec-f7c8-4968-afd5-167ca5f06254
 # ╠═16034a2d-574e-422a-978b-0add93e3b128
@@ -617,11 +632,5 @@ get_R_break
 # ╠═7c8f5d6e-d53f-49a2-8b3a-239117c7c533
 # ╠═58346276-5061-4d9a-8781-c1aba26d2c42
 # ╠═19be0190-af5d-479b-b859-8f1c1e46bba1
-# ╠═44c20584-db45-4137-a07f-f7697a53174d
-# ╠═dbeae6d9-1dd7-403b-80ac-82b20d047c3b
-# ╠═6ca91232-1b62-4f1d-8162-dc84312404af
 # ╠═c070eb97-b7d8-45e8-ae95-0219da2cd3e6
-# ╠═18b9cf25-527e-4bac-91ca-5d1fa69293c8
 # ╠═7c64d26a-bddd-4159-98d2-3a0f8d2125f5
-# ╠═188ce016-6011-45c3-9823-eafdc94f9617
-# ╠═8a2b9a99-7b11-4910-a097-420f765396e5

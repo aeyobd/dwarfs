@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -93,6 +93,9 @@ length(50:100)
 # ╔═╡ ebea53d4-c421-4c11-9c02-3b8072a3d3f0
 LilGuys.mean(rv_memb.vz), gsr.radial_velocity
 
+# ╔═╡ 204947b2-3a92-47c8-9ed0-831a9ef823ec
+
+
 # ╔═╡ cfc844b8-0274-4c38-a676-32dfd9bcb44b
 filt = (rv_memb.PSAT_RV .> 0.2)
 
@@ -105,25 +108,26 @@ sort(xi_p[filt])[[300, end-300]]
 # ╔═╡ 75ed46bf-6550-44d4-a15e-fbbd59c1ba12
 @savefig "scl_vel_gradient_scatter" let
 	fig, ax = FigAxis(
-		xlabel = L"$\xi'$ / degree",
+		xlabel = L"$\xi'$ / arcmin",
 		ylabel = L"$v_\textrm{gsr}'$ / km s$^{-1}$",
-		limits=(-0.8, 0.8, 35, 115)
+		limits=(-48, 48, 35, 115)
 	)
-	scatter!(xi_p[filt], rv_memb.vz[filt], markersize=2, color=:black, label="members")
+	scatter!(xi_p[filt] .* 60, rv_memb.vz[filt], markersize=2, color=:black, label="members")
 
 	
 	for i in 1:400:size(df_gradient, 1)
-		M = 60df_gradient.B[i] .* sind(df_gradient.Θ_grad[i]) .+ 60df_gradient.A[i] .* cosd(df_gradient.Θ_grad[i])
-		x=LinRange(-0.4, 0.4, 100)
+		M = df_gradient.B[i] .* sind(df_gradient.Θ_grad[i]) .+ df_gradient.A[i] .* cosd(df_gradient.Θ_grad[i])
+		x=LinRange(-24, 24, 100)
 		y = M*x  .+ df_gradient.μ[i]
 		lines!(x, y, alpha=0.03, color=COLORS[1], linewidth=1, label="MCMC samples" => (; alpha=1.0))
 	end
 
 	hlines!(gsr.radial_velocity, color=:black, linewidth=1, alpha=0.3, label="systematic velocity")
 
-	xs, ys = rolling_medians(xi_p[filt] , rv_memb.vz[filt], window=200)
+	xs, ys = rolling_medians(xi_p[filt] .* 60 , rv_memb.vz[filt], window=200)
 	lines!(xs, ys,  color=COLORS[2], label="rolling median")
 
+	annotation!(0, 36, obs_props["R_h"], 35, text=L"R_h")
 	axislegend(position=:lb, unique=true, merge=true)
 	
 	fig
@@ -151,5 +155,6 @@ end
 # ╠═51fc1b13-1cf6-4e7d-b156-1a5bd44cf17b
 # ╠═7c723942-5376-4d34-8acb-3a43c181e60a
 # ╠═ebea53d4-c421-4c11-9c02-3b8072a3d3f0
+# ╠═204947b2-3a92-47c8-9ed0-831a9ef823ec
 # ╠═75ed46bf-6550-44d4-a15e-fbbd59c1ba12
 # ╠═cfc844b8-0274-4c38-a676-32dfd9bcb44b

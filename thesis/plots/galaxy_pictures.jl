@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -47,8 +47,8 @@ fornax = FileIO.load("resources/For_1deg_DES-DR2_ColorIRG.jpg")
 
 # ╔═╡ 00c8ab2a-08e8-467e-a9ba-1793d9af8ea5
 function plot_scalebar!(width_degrees, bar_degrees, bar_label)
-	lines!([0.1, 0.1+bar_degrees / width_degrees], [0.1, 0.1], space=:relative, color=:white, linewidth = theme(:linewidth)[]/2)
-	text!(0.1, 0.1, text=bar_label, color=:white, align=(:left, :bottom), space=:relative, fontsize=10, font="TeX Gyre Heros Makie")
+	lines!([0.05, 0.05+bar_degrees / width_degrees], [0.05, 0.05], space=:relative, color=:white, linewidth = theme(:linewidth)[]/2)
+	text!(0.05, 0.05, text=bar_label, color=:white, align=(:left, :bottom), space=:relative, fontsize=10, font="TeX Gyre Heros Makie")
 	text!
 end
 
@@ -57,7 +57,7 @@ function plot_label!(galaxy, fov)
 	text!(0.5, 0.9, align=(:center, :center),  text="$galaxy",
 		 space=:relative, fontsize=12, font="TeX Gyre Heros Makie", color=:white )
 	
-	text!(0.9, 0.1, align=(:right, :bottom), text="$fov",
+	text!(0.95, 0.05, align=(:right, :bottom), text="$fov",
 		 space=:relative, fontsize=10, font="TeX Gyre Heros Makie", color=:white)
 end
 
@@ -84,7 +84,7 @@ end
 
 	@info LilGuys.arcmin2kpc(0.5*60, d_lmc)
 	plot_scalebar!(fov, LilGuys.kpc2arcmin(scalebar / 1e3, d_lmc) / 60, "$scalebar pc")
-	plot_label!("LMC", L"1.5\times 10^9\ {L}_\odot")
+	plot_label!("LMC", "1.5 × 10⁹ Lₛᵤₙ")
 
 
 	ax_boov = Axis(fig[1,2], xreversed=true )
@@ -97,7 +97,7 @@ end
 	image!((r_arcmin, -r_arcmin), (-r_arcmin, r_arcmin), rotr90(fornax))
 
 	plot_scalebar!(1, LilGuys.kpc2arcmin(scalebar/1e3, d_fornax) / 60, "$scalebar pc")
-	plot_label!("Fornax",  L"2\times 10^7\ {L}_\odot")
+	plot_label!("Fornax",  "2 × 10⁷ Lₛᵤₙ")
 	plot_ellipse!("fornax")
 
 	
@@ -111,7 +111,7 @@ end
 	@info LilGuys.arcmin2kpc(0.25*60, d_scl)
 
 	plot_scalebar!(1, LilGuys.kpc2arcmin(scalebar/1e3, d_scl) / 60, "$scalebar pc")
-	plot_label!("Sculptor",  L"2\times 10^6\ {L}_\odot")
+	plot_label!("Sculptor",  "2 × 10⁶ Lₛᵤₙ")
 	plot_ellipse!("sculptor")
 
 
@@ -127,7 +127,7 @@ end
 
 
 	plot_scalebar!(2, LilGuys.kpc2arcmin(scalebar/1e3, d_umi) / 60, "$scalebar pc")
-	plot_label!("Ursa Minor",  L"3.5\times 10^5\ {L}_\odot")
+	plot_label!("Ursa Minor",  "3.5 × 10⁵ Lₛᵤₙ")
 	plot_ellipse!("ursa_minor")
 
 
@@ -137,10 +137,10 @@ end
 
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
 
-	resize_to_layout!(fig)
 
 	rowgap!(fig.layout, 12)
 	colgap!(fig.layout, 12)
+	resize_to_layout!(fig)
 
 	fig
 end

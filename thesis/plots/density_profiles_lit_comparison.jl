@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -24,6 +24,9 @@ include("./paper_style.jl")
 
 # ╔═╡ 3d07fa5b-cb39-47e1-b932-d976cc1b0371
 import TOML
+
+# ╔═╡ e8526d14-429d-48f6-b1e2-a005d4f5d949
+lw = theme(:linewidth)[]/2
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
@@ -238,6 +241,7 @@ profiles = OrderedDict(
 	"Muñoz+18" => prof_scl_munoz,
 	"Westfall+06" => prof_scl_westfall06,
 	"Walcher+03" => prof_scl_walcher,
+	"Eskridge88" => prof_scl_eskridge,
 )
 
 # ╔═╡ 492d5e36-289d-4df6-8267-2551b4d1da77
@@ -276,7 +280,7 @@ function compare_profiles(profiles)
 	ana = LilGuys.Sersic(R_h=a_h, n=1)
 	f(x) = LilGuys.surface_density.(ana, 10 .^ x) .|> log10
 
-	lines!(x, f(x), color=:black)
+	lines!(x, f(x), color=:black, linewidth=lw)
 
 	for (label, prof) in profiles
 		s0 = LilGuys.lerp(LilGuys.log_radii(prof), float.(LilGuys.log_surface_density(prof)))(log10(obs_props["r_h"]))
@@ -295,7 +299,7 @@ function compare_profiles(profiles)
 	ax_res = Axis(fig[2,1], 
 					 xlabel = L"$\log a$ / arcmin",
 ylabel = L"\delta \log \Sigma")
-	hlines!(0, color=:black)
+	hlines!(0, color=:black, linewidth=lw)
 
 	for (label, prof) in profiles
 		s0 = LilGuys.lerp(LilGuys.log_radii(prof), float.(LilGuys.log_surface_density(prof)))(log10(obs_props["r_h"]))
@@ -331,6 +335,7 @@ compare_profiles(OrderedDict(
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═3d07fa5b-cb39-47e1-b932-d976cc1b0371
 # ╠═5013a073-b6a5-417b-b124-393a18099eca
+# ╠═e8526d14-429d-48f6-b1e2-a005d4f5d949
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═f22aa8a5-9116-4416-9f93-f61b6c7e2a81
@@ -341,7 +346,7 @@ compare_profiles(OrderedDict(
 # ╠═6a827bb5-d4ff-4155-ad52-daa0fac7654a
 # ╠═01f49191-e27b-4bdc-9cbd-2c6f7dc1f17d
 # ╠═338f8161-22a8-4176-a226-027f2bdf7c4a
-# ╠═4e7b4c37-bbc9-4d4d-af4c-f3c7db628254
+# ╟─4e7b4c37-bbc9-4d4d-af4c-f3c7db628254
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═e4bab11b-79a4-48cc-8a35-feac9968635e
 # ╠═51a2acad-9802-4afd-9e0b-41bed0f00b2b

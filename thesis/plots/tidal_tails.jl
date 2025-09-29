@@ -31,8 +31,8 @@ obs_labels = Dict(
 	:pmra_gsr => L"{\mu}_{\alpha*}'\ /\ \textrm{mas\,yr^{-1}}",
 	:pmdec => L"{\mu}_{\delta}\ /\ \textrm{mas\,yr^{-1}}",
 	:pmdec_gsr => L"{\mu}_{\delta}'\ /\ \textrm{mas\,yr^{-1}}",
-	:xi_p => L"\xi'\ /\ \textrm{degrees}",
-	:eta_p => L"\eta'\ /\ \textrm{degrees}",
+	:xi_p => L"\xi'\ /\ \textrm{arcmin}",
+	:eta_p => L"\eta'\ /\ \textrm{arcmin}",
 )
 
 # ╔═╡ 05830907-1355-49ee-8cd3-df4678f33149
@@ -60,8 +60,8 @@ CairoMakie.activate!(type=:png)
 function add_xi_eta_p!(df, orbit_props)
 	xi_p, eta_p = LilGuys.to_orbit_coords(df.ra, df.dec, orbit_props["ra_f"], orbit_props["dec_f"], orbit_props["theta0"])
 
-	df[!, :xi_p] = xi_p
-	df[!, :eta_p] = eta_p
+	df[!, :xi_p] = xi_p .* 60
+	df[!, :eta_p] = eta_p .* 60
 
 	return df
 end
@@ -87,13 +87,39 @@ function sample_stars(stars, N=10_000)
 end
 
 # ╔═╡ 904efe1c-6c2f-4e16-8468-ab4c5c79ebe1
+function get_R_h(galaxyname)
 
+	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
+	R_h = obs_props["R_h"]
+end
+
+# ╔═╡ 226173f5-93c4-401e-be28-d509880aff00
+function get_r_b(galaxyname, modelname, starsname; lmc=false)
+	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
+
+	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml")
+
+	σv = prof_f.annotations["sigma_v"]
+	if lmc
+		props = TOML.parsefile(model_dir * "../../orbital_properties_lmc.toml")
+	else
+		props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
+	end
+
+	dist_f =  TOML.parsefile(model_dir * "../../orbital_properties.toml")["distance_f"]
+
+	
+	dt = props["t_last_peri"]
+	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
+
+	return LilGuys.kpc2arcmin(r_b, dist_f)	
+end
 
 # ╔═╡ f2ec2966-9018-4ad0-8ec3-36e438012ca6
 function scatter_coord(gs, stars_mean, ss, sym; xsym = :xi_p, kwargs...)
-	x = ss[:, xsym]
+	x = ss[:, xsym] 
 	
-	r_max = 10
+	r_max = 10 .* 60
 	
 	y0 =  stars_mean[sym]
 	dy0 = obs_dy[sym]
@@ -113,7 +139,11 @@ function scatter_coord(gs, stars_mean, ss, sym; xsym = :xi_p, kwargs...)
 end
 
 # ╔═╡ 6be80d25-974f-4bfe-96df-18cb0ce96c5a
-function plot_sample(stars)
+function plot_sample(galaxyname, modelname, starsname)
+	stars = load_stars(galaxyname, modelname, starsname)
+	r_b = get_r_b(galaxyname, modelname, starsname)
+	R_h = get_R_h(galaxyname)
+	
 	ss = sample_stars(stars)
 	fig = Figure()
 
@@ -125,10 +155,29 @@ function plot_sample(stars)
 		if i < 3
 			ax.xlabel = ""
 		end
+		y = ax.finallimits[].origin[2] #- ax.finallimits[].widths[2]/2
+		# @info y, r_b
+		vlines!([-r_b, r_b], color=:black, linestyle=:dash, linewidth=theme(:linewidth)[]/2)
+		if i == 1
+			text!(r_b, y, text="break", rotation=π/2, align=(:left, :top), offset=(3, 6))
+		end
 	end
 
 	fig
 
+end
+
+# ╔═╡ 012c3d0d-fcd6-4eff-8939-1dd6a9003b0c
+function get_r_j(galaxyname, modelname; lmc=false)
+	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/")
+
+	if lmc
+		props = TOML.parsefile(model_dir * "jacobi_lmc.toml")
+	else
+		props = TOML.parsefile(model_dir * "jacobi.toml")
+	end
+
+	return props["r_J"]
 end
 
 # ╔═╡ 8bf905de-5457-4611-8b9d-3ca6039cc582
@@ -137,22 +186,22 @@ md"""
 """
 
 # ╔═╡ 9ae7b57f-7649-443e-a438-4e5bd4b4d048
-@savefig "scl_sim_stream" plot_sample(load_stars("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20"))
+@savefig "scl_sim_stream" plot_sample("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20")
 
 # ╔═╡ 189db37c-1e59-4e69-9487-8525d45a9c3c
-plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/orbit_mean", "plummer_rs0.20"))
+# plot_sample("sculptor", "1e6_new_v31_r3.2/orbit_smallperi", "plummer_rs0.25")
 
 # ╔═╡ 53c9aaff-51cd-409e-ab1f-c28e940b2ed1
-plot_sample(load_stars("sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20"))
+# plot_sample(load_stars("sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20"))
 
 # ╔═╡ 7b274c9f-4cdd-41ef-bdef-8a649331d1d9
-@savefig "scl_mw_impact_stream" plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "plummer_rs0.20"))
+@savefig "scl_mw_impact_stream" plot_sample("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "plummer_rs0.20")
 
 # ╔═╡ 5a56e59a-c846-4829-9ddf-496c8a0383fb
-plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"))
+# plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"))
 
 # ╔═╡ a862901d-aa6b-4132-8940-8ec710fd7374
-plot_sample(load_stars("sculptor", "1e6_v43_r3_beta0.2_a4/orbit_smallperi", "exp2d_rs0.13"))
+# plot_sample(load_stars("sculptor", "1e6_v43_r3_beta0.2_a4/orbit_smallperi", "exp2d_rs0.13"))
 
 # ╔═╡ ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 md"""
@@ -160,10 +209,10 @@ md"""
 """
 
 # ╔═╡ 52c9a0fc-6db3-4e67-8d01-2f0eb0c1663f
-@savefig "umi_sim_stream" plot_sample(load_stars("ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "plummer_rs0.20"))
+@savefig "umi_sim_stream" plot_sample("ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "plummer_rs0.20")
 
 # ╔═╡ b50e2128-aa69-4ef9-bd7a-a08f412c504e
-plot_sample(load_stars("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "plummer_rs0.20"))
+# plot_sample(load_stars("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "plummer_rs0.20"))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -179,8 +228,10 @@ plot_sample(load_stars("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "plummer_rs0.2
 # ╠═30ab5003-4218-4a33-a0e6-f97826e56b1d
 # ╠═e9b30734-0237-4b52-9f3f-add7c5460743
 # ╠═904efe1c-6c2f-4e16-8468-ab4c5c79ebe1
+# ╠═226173f5-93c4-401e-be28-d509880aff00
 # ╠═f2ec2966-9018-4ad0-8ec3-36e438012ca6
 # ╠═6be80d25-974f-4bfe-96df-18cb0ce96c5a
+# ╠═012c3d0d-fcd6-4eff-8939-1dd6a9003b0c
 # ╟─8bf905de-5457-4611-8b9d-3ca6039cc582
 # ╠═9ae7b57f-7649-443e-a438-4e5bd4b4d048
 # ╠═189db37c-1e59-4e69-9487-8525d45a9c3c

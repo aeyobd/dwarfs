@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -163,6 +163,7 @@ import Random
 	observed_properties,
 	legend_position=:rt,
 	age = 2,
+	title = "Fornax"
 )
 
 # ╔═╡ 15bf78a4-f246-4849-af09-db7a9f249f75

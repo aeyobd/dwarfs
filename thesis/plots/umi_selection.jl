@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -168,7 +168,7 @@ styles = Dict(
 		color = my_colors[4],
 		strokewidth=1,
 		strokecolor=COLORS[4]
-	)
+	),
 )
 
 # ╔═╡ da9ce4d1-0af1-417b-bb57-197bd101d189
@@ -186,10 +186,11 @@ samples = OrderedDict(
 	fig = Utils.compare_j24_samples(samples, styles,
 		observed_properties,
 		legend_position=:rt,
+		title = "Ursa Minor"
 	)
 
 
-	ax = fig.content[1]
+	ax = fig.content[2]
 
 	Makie.current_axis!(ax)
 	Utils.ellipse!(3*0.5, 0, 0, x0=xi_m1, y0=eta_m1, color=COLORS[5])

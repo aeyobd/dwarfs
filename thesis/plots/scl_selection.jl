@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -92,9 +92,6 @@ members = best_stars[best_stars.PSAT .> 0.2, :]
 # ╔═╡ 731ea468-5003-44e9-95b8-7fa7ef4b475b
 Nmemb = size(members, 1)
 
-# ╔═╡ 7b635d02-617f-41df-9c7c-221c04c10e87
-size(members, 1) * 0.0005
-
 # ╔═╡ 60d0e593-88fd-4b4c-9009-cc24a597c6d5
 members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 
@@ -114,6 +111,9 @@ The plots below show various subsamples of the dataset in different planes to ge
 # ╔═╡ 3ab5488e-4c7c-4b8d-9c4b-cc0a04620298
  my_colors = Utils.SELECTION_COLORS
 
+# ╔═╡ 5ac2a2fd-ad28-476a-a994-0f4edba55f37
+theme(:size)[] ./ 72
+
 # ╔═╡ 9c66468e-c357-4268-875b-ec83510fd982
 md"""
 # Extra
@@ -127,6 +127,42 @@ observed_properties["R_h_inner"]
 
 # ╔═╡ b83ebaf6-cae2-40c0-bd71-98bbbc10eb92
 Ag, Ab, Ar = Utils.get_extinction(best_stars.ra, best_stars.dec, best_stars.bp_rp)
+
+# ╔═╡ 43799d81-ca04-4e51-8fbc-defb0a44446b
+let
+	fig = Figure(
+		size = (5.39 * 72, 4.3*72)
+	)
+
+	gs1 = GridLayout(fig[1,1], tellheight=true)
+
+
+	ax1 = Axis(gs1[1,1], xlabel=Utils.plot_labels[:xi_am], ylabel=Utils.plot_labels[:eta_am], limits=(-240, 240, -240, 240)
+			  )
+	scatter!([NaN], [NaN], label="hi")
+
+	rowsize!(gs1, 1, Aspect(1, 1.0))
+
+	Legend(gs1[2, 1], ax1, tellwidth=false, tellheight=true, valign=:top, halign=:right)
+
+	gs = GridLayout(fig[1,2], tellheight=true)
+
+
+	ax2 = Axis(gs[1,1], xlabel=Utils.plot_labels[:bp_rp], ylabel=Utils.plot_labels[:G], limits=(-0.5, 2.5, 12, 16)
+			  )
+
+
+	ax3 = Axis(gs[2,1], xlabel=Utils.plot_labels[:pmra], ylabel=Utils.plot_labels[:pmdec], limits=(-10, 10, -10, 10)
+			  )
+	colsize!(fig.layout, 2, Relative(2/5))
+
+	rowsize!(gs, 1, Aspect(1, 1.0))
+	rowsize!(gs, 2, Aspect(1, 1.0))
+
+	resize_to_layout!(fig)
+	fig
+end
+	
 
 # ╔═╡ f37a09e1-3c0f-44a7-b7ad-b48c5553871e
 scatter(best_stars.xi, best_stars.eta, color=Ag, markersize=5)
@@ -185,7 +221,8 @@ rv_distant.PSAT
 			strokecolor=COLORS[4]
 		),
 	),
-	observed_properties
+	observed_properties,
+	title = "Sculptor"
 )
 
 # ╔═╡ bc4ad5db-3e90-46e8-ad54-674b02f124c0
@@ -246,21 +283,6 @@ alpha_R = LilGuys.R_h(LilGuys.Exp2D())
 # ╔═╡ 24609348-e4c3-437e-b36a-fb45d7a7352c
 (1 - mass(LilGuys.Exp2D(), 9alpha_R)) * sum(best_stars.PSAT)
 
-# ╔═╡ 28fbacb4-8078-4af2-bf8f-23adab46669b
-
-
-# ╔═╡ f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
-
-
-# ╔═╡ 6b4f3e96-d525-4885-97fd-a3d35171ad76
-
-
-# ╔═╡ 7f6ab558-627e-46c5-8f47-b1ec03fd2b63
-
-
-# ╔═╡ c3eef548-6678-46a3-96a1-01246f5f70e0
-Arya.get_arya_cmap()
-
 # ╔═╡ f6fe794a-e925-4544-b5ac-fda9eb96629b
 import StatsBase: median
 
@@ -320,7 +342,6 @@ end
 # ╠═ec227641-86e6-46b7-8019-9b02072ed9f7
 # ╠═731ea468-5003-44e9-95b8-7fa7ef4b475b
 # ╠═88fbdd09-30be-4fc3-95ae-acce6e0018e1
-# ╠═7b635d02-617f-41df-9c7c-221c04c10e87
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═bc87bc28-167d-493d-9553-e90afeaee2ee
@@ -328,11 +349,13 @@ end
 # ╟─77f69d97-f71a-48e9-a048-1bb520222855
 # ╠═3ab5488e-4c7c-4b8d-9c4b-cc0a04620298
 # ╠═aeb5e17f-6479-4504-ae4f-c9218f374d48
+# ╠═5ac2a2fd-ad28-476a-a994-0f4edba55f37
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8
 # ╟─9c66468e-c357-4268-875b-ec83510fd982
 # ╠═c1fe9907-cdd8-4b69-a9b3-f2553b25cdf6
 # ╠═bbae75e1-b317-4e4f-a62e-817715a5a095
 # ╠═b83ebaf6-cae2-40c0-bd71-98bbbc10eb92
+# ╠═43799d81-ca04-4e51-8fbc-defb0a44446b
 # ╠═f37a09e1-3c0f-44a7-b7ad-b48c5553871e
 # ╠═430fae9d-c708-4447-80ce-aabf19b161d2
 # ╠═bc4ad5db-3e90-46e8-ad54-674b02f124c0
@@ -345,11 +368,6 @@ end
 # ╠═9380d93d-34bb-4e67-a423-a624182d6a56
 # ╠═065175ac-e754-4629-b56c-a4895c8aec70
 # ╠═24609348-e4c3-437e-b36a-fb45d7a7352c
-# ╠═28fbacb4-8078-4af2-bf8f-23adab46669b
-# ╠═f3a2ae1c-92fc-42cf-89da-c46d34d0c5aa
-# ╠═6b4f3e96-d525-4885-97fd-a3d35171ad76
-# ╠═7f6ab558-627e-46c5-8f47-b1ec03fd2b63
-# ╠═c3eef548-6678-46a3-96a1-01246f5f70e0
 # ╠═f6fe794a-e925-4544-b5ac-fda9eb96629b
 # ╠═fefd2f20-7116-4fff-b9c5-8bc3628b508f
 # ╠═45fb74e8-de19-44b6-8abd-6e2e9d3af76f
