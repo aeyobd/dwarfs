@@ -519,6 +519,33 @@ Fits a normal (gaussian) distribution to 3d data with errors (to include spatial
 	x ~ MvNormal(m, s)
 end
 
+@doc raw"""
+    model_vel_gradient_both(vz, vz_err, ξ, η, R_ell; <keyword arguments>)
+Fits a normal (gaussian) distribution to 3d data with errors (to include spatial gradient)
+
+# Arguments
+- `μ_0_prior=0` prior mean on $\mu$
+- `μ_s_prior=0` prior std on $\mu$
+- `σ_max` maximum value of $\sigma$ (uniform prior)
+- `rv_grad_s=0.1` Prior std on gradient in xi and eta (in units of km/s/arcmin).
+- `R_h` the half light radius.
+"""
+@model function model_vel_gradient_both(x, xerr, ξ, η, R_ell; μ_0_prior=0, μ_s_prior=100, σ_max=20, rv_grad_s=0.1, R_h)
+    μ ~ Normal(μ_0_prior, μ_s_prior)
+    σ ~ Uniform(0, σ_max)
+
+    dlσ_dlR ~ Normal(0, 0.3)
+    A ~ Normal(0, rv_grad_s)
+    B ~ Normal(0, rv_grad_s)
+
+	m = @. μ + A*ξ + B*η
+
+    log_R_ell = log10.(R_ell ./ R_h)
+    s_int = σ .* 10 .^ (dlσ_dlR * log_R_ell)
+	s = @. sqrt(s_int^2 + xerr^2)
+
+	x ~ MvNormal(m, s)
+end
 
 """
     bayes_evidence(model, df_samples, arg)

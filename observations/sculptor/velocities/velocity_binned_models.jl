@@ -236,6 +236,15 @@ end
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
 bins = bins_equal_number(memb_stars.R_ell, n=10)
 
+# ╔═╡ a3a9097e-9f70-43a3-a887-71b10f850df4
+A_m = median(df_gradient.A)
+
+# ╔═╡ 121617f4-f33d-4738-9a11-e8465d04574d
+B_m = median(df_gradient.B)
+
+# ╔═╡ 81fc4251-42e5-4e43-8f09-4a932ac14022
+df_r_ell_z_m_grad = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz .- memb_stars.xi * A_m .- memb_stars.eta * B_m, memb_stars.vz_err, bins)
+
 # ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.vz_err, bins)
 
@@ -284,6 +293,30 @@ let
 		lines!(x, log10.(y), alpha=0.03, color=COLORS[1])
 	end
 	@savefig "log_sigma_log_R"
+	fig
+end
+
+# ╔═╡ a7b2a81f-30bf-4b1c-ada8-d90eca95e879
+let
+	fig, ax = FigAxis(
+		xlabel = L"$\log\ R$ / arcmin",
+		ylabel = L"$\log\ \sigma_{v, \textrm{los}}$ / km s$^{-1}$"
+	)
+
+	x_mid = midpoints(log10.(bins))
+	log_bin_errs = [(x_mid[i] - log10(bins[i]), log10(bins[i+1]) - x_mid[i]) for i in eachindex(x_mid)]
+	@info log_bin_errs
+	
+	errorscatter!(x_mid, log10.(df_r_ell_z_m_grad.σ), yerror=max.(df_r_ell_z_m_grad.σ_em, df_r_ell_z_m_grad.σ_ep) ./ df_r_ell_z_m_grad.σ ./ log(10), xerror=log_bin_errs, color=:black)
+	# hlines!(log10.(σ_m), color=:black)
+
+	for i in 1:400:size(df_Rell, 1)
+		x=LinRange(-0.5, 2, 100)
+		y = df_Rell.σ[i] .* 10 .^ ((x .- 1.0) .* df_Rell.dlσ_dlR[i])
+		lines!(x, log10.(y), alpha=0.03, color=COLORS[1])
+	end
+	
+	@savefig "log_sigma_log_R_m_grad"
 	fig
 end
 
@@ -336,6 +369,9 @@ end
 
 # ╔═╡ bf8a9940-1c8b-4fdd-a231-1861721ea8e9
 sind(θ_m), cosd(θ_m)
+
+# ╔═╡ dfa6faa3-842b-48a1-b337-41bd0869ee8e
+slope_m = median(60df_gradient.B .* sind(θ_m) .+ 60df_gradient.A.* cosd(θ_m))
 
 # ╔═╡ 14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
 let
@@ -430,12 +466,16 @@ end
 # ╟─7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
+# ╠═a3a9097e-9f70-43a3-a887-71b10f850df4
+# ╠═121617f4-f33d-4738-9a11-e8465d04574d
+# ╠═81fc4251-42e5-4e43-8f09-4a932ac14022
 # ╠═f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 # ╠═03928d42-ee61-4480-82d3-a482842f8521
 # ╠═38da4da1-74f5-4661-89f2-4b25562a1faf
 # ╠═e05ec20a-3165-4360-866e-3e8cae8665e5
 # ╠═f82d2ff7-7a7f-4520-811e-126f3f4f5349
 # ╠═e50a1968-9f91-4751-a7a9-0a4768c9ab7e
+# ╠═a7b2a81f-30bf-4b1c-ada8-d90eca95e879
 # ╟─31aa8fc5-1415-4c44-9b92-a7d097181639
 # ╠═2f5db664-fc99-41ac-a726-f21dd5d88ad4
 # ╠═301ad1d5-83a1-418d-aa06-583f7212541d
@@ -443,6 +483,7 @@ end
 # ╠═fd0a74a1-6513-4612-8181-745d5b7c3f4c
 # ╠═3b411c40-2436-4d1f-bf41-8f2c3f0bf3a4
 # ╠═bf8a9940-1c8b-4fdd-a231-1861721ea8e9
+# ╠═dfa6faa3-842b-48a1-b337-41bd0869ee8e
 # ╠═14e81f66-8ad9-48d5-aa0b-a09bc2a3bf52
 # ╠═d8d85c45-67ca-4c7a-92c1-a63bbf873c3d
 # ╠═1eeb1572-4b97-4ccf-ad7a-dfd1e353bda7

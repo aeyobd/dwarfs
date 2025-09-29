@@ -32,13 +32,13 @@ using LilGuys; FIGDIR = "figures"
 using OrderedCollections
 
 # ╔═╡ aea6dd0e-930c-4ccf-9fd4-276c50c2d861
-rv_file = "rv_combined_x_2c_psat_0.2.fits"
+rv_file = "rv_tolstoy+23_x_2c_psat_0.2.fits"
 
 # ╔═╡ ff6df679-7ec8-4822-a6ad-3d5faf590765
-n_samples = 1000
+n_samples = 10000
 
 # ╔═╡ f282dbef-9276-4c1c-af3f-366d8b51aa38
-n_threads = 4
+n_threads = 16
 
 # ╔═╡ 729206f5-72fb-4592-bc6d-92f39d9ca305
 sampler = NUTS(0.65)
@@ -360,6 +360,61 @@ end
 # ╔═╡ 128c8ab8-6033-40fe-8b68-c633816df9a2
 CSV.write("processed/mcmc_samples_gradient$FIGSUFFIX.csv", df_gradient)
 
+# ╔═╡ b3ba1ba1-be90-4f13-b9f5-5ee51c55c299
+md"""
+# Both model
+"""
+
+# ╔═╡ df91e538-b283-470a-9a54-167968eac287
+R_h = obs_properties["R_h"]
+
+# ╔═╡ 7d958afa-df2f-4c06-b537-2a4121a343c6
+model_both = RVUtils.model_vel_gradient_both(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta, memb_stars.R_ell, R_h=R_h)
+
+# ╔═╡ fa545320-7119-4fe3-82a9-32a6b7f8bc5a
+samples_both = sample(model_both, sampler, MCMCThreads(), n_samples, n_threads)
+
+# ╔═╡ 22455687-817b-41bb-8a89-ae1ebb145e88
+df_both = let
+	df = DataFrame(samples_both)
+	df[:, :A]
+	df[:, :B]
+	df[!, :r_grad] = @. 60 * (df.A ⊕ df.B )
+	df[!, :Θ_grad] = @. atand(df.A, df.B) 
+
+	df
+end
+
+# ╔═╡ 34844c3e-fae5-4163-9f13-d41738116858
+@savefig "both_corner" pairplot(samples_both)
+
+# ╔═╡ 9ffd5532-3ce2-4bfc-87f4-bf9501690e44
+summary_both = RVUtils.summarize(samples_both)
+
+# ╔═╡ 363081fa-20aa-43dd-a737-356504858e0d
+bf_gradient_both = RVUtils.bayes_evidence(model_both, df_both, ["A", "B"])
+
+# ╔═╡ abf72545-93d3-4e9e-b8cb-c4fc2aa1e5d8
+bf_Rell_both = RVUtils.bayes_evidence(model_both, df_both, "dlσ_dlR")
+
+# ╔═╡ d717656b-9b53-4bed-b433-477dead6ec09
+CSV.write("processed/mcmc_samples_both$FIGSUFFIX.csv", df_both)
+
+# ╔═╡ bfd8425e-5cec-4f2a-a18e-16be3faadc07
+θs_both = mod1.(df_both.Θ_grad, 360.) .- 360
+
+# ╔═╡ 4bccb365-8019-4659-a580-374c21112959
+θ_m_both= median(θs_both)
+
+# ╔═╡ a394f7b0-d443-4a2f-ba41-864ca559ac66
+θ_both_err = quantile(θs_both, [0.16, 0.5, 0.84]) .- median(θs_both)
+
+# ╔═╡ 0ea60392-33f4-480f-9002-7dad289b96b5
+r_grad_m_both = median(df_both.r_grad)
+
+# ╔═╡ bb11d2b2-72a7-4e37-89bf-092b20dc0805
+r_grad_both_err = quantile(df_both.r_grad, [0.16, 0.5, 0.84]) .- r_grad_m_both
+
 # ╔═╡ 82a0e58a-30a4-4e42-b9c1-cb184eb551aa
 md"""
 # Misc plots
@@ -437,6 +492,12 @@ md"""
 # Summaries
 """
 
+# ╔═╡ a78eebb7-a4fd-43fb-8e30-5d8e4b3e59c8
+bf_sigma_Rell, bf_Rell_both
+
+# ╔═╡ c87ccf2c-1f04-430c-9382-35e1e604af32
+bf_gradient_both, BF_gradient
+
 # ╔═╡ 0dbb27cf-8a8c-4521-bda4-5768d8a02176
 function OrderedCollections.OrderedDict(summary_vz::DataFrame)
 	
@@ -454,8 +515,9 @@ end
 # ╔═╡ 010b6aa7-e3d0-4441-aac5-6ab87c053e33
 df_summaries = OrderedDict(
 	"vz" => summary_vz |> OrderedDict, 
-	"bf_gradient" => BF_gradient,
-	"bf_rell" => bf_sigma_Rell,
+	"both" => summary_both |> OrderedDict, 
+	"bf_gradient" => bf_gradient_both,
+	"bf_rell" => bf_Rell_both,
 	"Nmemb" => length(memb_stars.RV), 
 	"median_err" => median(memb_stars.RV_err)
 )
@@ -547,6 +609,21 @@ end
 # ╠═d3fb7136-7600-4782-ba97-f2f785fb3c0a
 # ╠═3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
 # ╠═128c8ab8-6033-40fe-8b68-c633816df9a2
+# ╠═b3ba1ba1-be90-4f13-b9f5-5ee51c55c299
+# ╠═df91e538-b283-470a-9a54-167968eac287
+# ╠═7d958afa-df2f-4c06-b537-2a4121a343c6
+# ╠═fa545320-7119-4fe3-82a9-32a6b7f8bc5a
+# ╠═22455687-817b-41bb-8a89-ae1ebb145e88
+# ╠═34844c3e-fae5-4163-9f13-d41738116858
+# ╠═9ffd5532-3ce2-4bfc-87f4-bf9501690e44
+# ╠═363081fa-20aa-43dd-a737-356504858e0d
+# ╠═abf72545-93d3-4e9e-b8cb-c4fc2aa1e5d8
+# ╠═d717656b-9b53-4bed-b433-477dead6ec09
+# ╠═bfd8425e-5cec-4f2a-a18e-16be3faadc07
+# ╠═4bccb365-8019-4659-a580-374c21112959
+# ╠═a394f7b0-d443-4a2f-ba41-864ca559ac66
+# ╠═0ea60392-33f4-480f-9002-7dad289b96b5
+# ╠═bb11d2b2-72a7-4e37-89bf-092b20dc0805
 # ╟─82a0e58a-30a4-4e42-b9c1-cb184eb551aa
 # ╠═3a69f395-3c2d-4357-89af-5963d5fa79b8
 # ╠═9b4a0a1f-4b0c-4c90-b871-2bd244f0a908
@@ -562,5 +639,7 @@ end
 # ╟─d5615552-caf8-4c0c-a17c-502c0f8198dc
 # ╠═09d570a4-56f1-4ff9-990d-c02534f7351e
 # ╠═010b6aa7-e3d0-4441-aac5-6ab87c053e33
+# ╠═a78eebb7-a4fd-43fb-8e30-5d8e4b3e59c8
+# ╠═c87ccf2c-1f04-430c-9382-35e1e604af32
 # ╠═0dbb27cf-8a8c-4521-bda4-5768d8a02176
 # ╠═c6edc3b5-accc-44c6-afa5-d4b7ed17fd65

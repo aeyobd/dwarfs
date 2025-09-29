@@ -246,9 +246,6 @@ end
 # ╔═╡ 7e5b185c-77b4-4066-82f3-3d9f1393db9e
 get_recent_orbit("sculptor", "1e6_new_v31_r3.2", "orbit_smallperi",)
 
-# ╔═╡ bbe0ea49-f629-40ff-9090-c6d2400c325c
-LilGuys.to_tangent(0, 0, 1, 1)
-
 # ╔═╡ ece6315f-1dc3-4874-8760-4b32474366f3
 colormap = Reverse(:Greys)
 
@@ -351,6 +348,12 @@ compare_both("sculptor", "1e6_v38_r7_oblate_0.5", "orbit_smallperi", "exp2d_rs0.
 # ╔═╡ 2a3b1df5-7a44-420c-b303-856346df40cf
 compare_both("sculptor", "1e6_v43_r3_beta0.2_a4", "orbit_smallperi", "exp2d_rs0.13",  title="Sculptor: anisotropic")
 
+# ╔═╡ 8e4c5116-7de6-4f8d-bc09-ff3aa4ffc50f
+compare_both("sculptor", "1e4_exp_M3e-4_r0.1", "orbit_smallperi", "stars", title="Sculptor: dm free", norm_shift=-5)
+
+# ╔═╡ 9c0f4e30-ee69-4b55-a15d-0566c5582200
+
+
 # ╔═╡ 77c057e4-78da-4201-b9f8-cb3135508a93
 md"""
 # Ursa Minor
@@ -363,7 +366,7 @@ md"""
 @savefig "umi_plummer_i_f" compare_both("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20",  r_j=true, norm_shift=0.0,break_height=-0, title="Ursa Minor: smallperi-Plummer")
 
 # ╔═╡ 5b0df0a1-4c82-45db-a42f-b5ed23aad258
-compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.10", norm_shift=-0.5, 	break_height=-0, title="Ursa Minor")
+compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.13", norm_shift=-0.5, 	break_height=-0, title="Ursa Minor")
 
 # ╔═╡ 18f2e3da-b749-4134-9604-4e2318ad82ee
  compare_both("ursa_minor", "1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10",  r_j=true, norm_shift=-0.6, 	break_height=-0)
@@ -395,7 +398,6 @@ compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.1
 # ╠═32f4d363-8115-4819-a2ee-4c25d792a14e
 # ╠═24d2dade-4969-4a99-86aa-1e9ee0f64af6
 # ╠═7e5b185c-77b4-4066-82f3-3d9f1393db9e
-# ╠═bbe0ea49-f629-40ff-9090-c6d2400c325c
 # ╠═ece6315f-1dc3-4874-8760-4b32474366f3
 # ╠═e231dce2-1969-4e86-a519-e9e2eb91d9f6
 # ╠═fafd07cb-2378-421b-b6e5-8525c71f9c8d
@@ -407,6 +409,8 @@ compare_both("ursa_minor", "1e6_new_v38_r4.0", "orbit_smallperi.4", "exp2d_rs0.1
 # ╠═f6eaabb0-8508-40fd-9dd1-37b1165e1c6d
 # ╠═c7b50c9b-1bfd-4abf-89cd-7c8cd1dc45c0
 # ╠═2a3b1df5-7a44-420c-b303-856346df40cf
+# ╠═8e4c5116-7de6-4f8d-bc09-ff3aa4ffc50f
+# ╠═9c0f4e30-ee69-4b55-a15d-0566c5582200
 # ╟─77c057e4-78da-4201-b9f8-cb3135508a93
 # ╠═3263677b-e0e3-4d30-8e28-309de99a8603
 # ╠═d0ce116f-aa51-43d8-9748-806eb44b8409

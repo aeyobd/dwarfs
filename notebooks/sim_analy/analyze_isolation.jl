@@ -60,7 +60,7 @@ end
 
 # ╔═╡ 03a1bd03-dc40-42c0-bbcb-4aa562f47bbf
 @bind inputs confirm(notebook_inputs(;
-	haloname = TextField(default="1e5/fiducial"),
+	haloname = TextField(default="1e5/example"),
 ))
 
 # ╔═╡ 7e548032-56a4-4b5c-bc47-ea86bb4cf917
@@ -201,7 +201,7 @@ let
 
 	log_r = LinRange(-2, 4, 1000)
 	y = log10.(lguys.density.(halo, 10 .^ log_r))
-	lines!(log_r, y, label="trunc-NFW", color="black", linestyle=:dot)
+	lines!(log_r, y, label="analytic", color="black", linestyle=:dot)
 
 	vlines!(log10(softening), color="grey")
 	axislegend(ax)
@@ -239,7 +239,7 @@ sum(lguys.radii(snaps[end]) .< 0.1)
 
 # ╔═╡ 34d9fdea-8961-44ca-a92f-2f48a281f2cd
 let
-	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", yscale=log10)
+	fig, ax = FigAxis( ylabel="count", xlabel="log r / kpc", yscale=log10, yticks=Makie.automatic)
 	
 	hist!(log10.(lguys.radii(snaps[1])), label="", bins=100)
 
@@ -360,9 +360,6 @@ lguys.plot_xyz(out.v_cen ./ v_cen_err', units=" vel sigma")
 # ╔═╡ 46bd928f-cbe3-4cb6-b09c-532164a64ce2
 LilGuys.std((out.v_cen ) ./ v_cen_err')
 
-# ╔═╡ 6cb1e079-f815-46e3-9853-3a5d5890e9f8
-
-
 # ╔═╡ 84f0bac9-5655-4acd-88db-8ba3114f712f
 let 
 	fig = Figure()
@@ -454,7 +451,7 @@ let
 		bins = lguys.quantile(radii(snap), LinRange(0, 1, 20+1))
 		σ, β = LilGuys.β_prof(snap, r_bins=(bins))
 		x = midpoints(log10.(bins))
-		vlines!(log10(5 * halo.r_s * 0.75))
+		#vlines!(log10(5 * halo.r_s * 0.75))
 		
 		scatterlines!((x), β, color=i, colorrange=(1, length(out)))
 	end
@@ -618,7 +615,6 @@ end
 # ╠═e61c095e-a763-466b-b419-755fd0aadd0d
 # ╠═fe25dc38-621b-47f8-aac5-f81c69ad7d8f
 # ╠═46bd928f-cbe3-4cb6-b09c-532164a64ce2
-# ╠═6cb1e079-f815-46e3-9853-3a5d5890e9f8
 # ╠═84f0bac9-5655-4acd-88db-8ba3114f712f
 # ╠═967136d3-8d58-4fdc-9537-aa3a85a92528
 # ╟─5153654a-567f-4663-9b4a-6f08f9e49d1a
