@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -40,16 +40,13 @@ end
 stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/rv_combined_x_wide_2c_psat_0.2.fits")
 
 # ╔═╡ 799fd372-b4ea-473f-93cb-65eff73b9bbc
-samples = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_vz.rv_combined_x_wide_2c_psat_0.2.csv", DataFrame)
-
-# ╔═╡ 6d558d6c-60b6-4361-b875-c821078c0675
-
+samples = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_both.rv_combined_x_wide_2c_psat_0.2.csv", DataFrame)
 
 # ╔═╡ f9f00f0c-0924-4abe-8c16-a58d46c76faa
 stars_umi = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/rv_combined_x_2c_psat_0.2.fits")
 
 # ╔═╡ 21bdc277-d3b0-48c6-984b-538bda4348a4
-samples_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/mcmc_samples_vz.rv_combined_x_2c_psat_0.2.csv", DataFrame)
+samples_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/mcmc_samples_both.rv_combined_x_2c_psat_0.2.csv", DataFrame)
 
 # ╔═╡ 0a22b941-0651-405e-9624-e9c344b7d93c
 v0 = median(samples.μ)
@@ -103,7 +100,7 @@ make_label("Sculptor", samples, digits_sigma=1)
 	v0 = median(samples.μ)
 	σ = median(samples.σ)
 	ax = Axis(fig[1,1], 
-		xlabel = L"$v_\textrm{gsr}'$ / km\,s$^{-1}$",
+		xlabel = L"$\textrm{v}_\textrm{gsr}'$ / km\,s$^{-1}$",
 		ylabel = "density",
 			  limits=(v0-4σ, v0+4σ, 0, nothing)
 	)
@@ -152,7 +149,6 @@ end
 # ╠═f27c2500-b92c-4de0-8482-4a8acfa2667f
 # ╠═3b5e60d4-1ac4-4b8d-8284-fb1c53e966c6
 # ╠═799fd372-b4ea-473f-93cb-65eff73b9bbc
-# ╠═6d558d6c-60b6-4361-b875-c821078c0675
 # ╠═f9f00f0c-0924-4abe-8c16-a58d46c76faa
 # ╠═21bdc277-d3b0-48c6-984b-538bda4348a4
 # ╠═0a22b941-0651-405e-9624-e9c344b7d93c

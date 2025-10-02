@@ -99,13 +99,15 @@ begin
 end
 
 # ╔═╡ 9fecfed4-8aba-42f6-bcf2-1891e0b5f947
-begin
-	prof_sim = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/final_profile.toml")
-	prof_sim_i = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/initial_profile.toml")
-	prof_obs = LilGuys.SurfaceDensityProfile(
-	joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "density_profiles", "fiducial_profile.toml")
-	) |> LilGuys.filter_empty_bins
-end
+prof_obs = LilGuys.SurfaceDensityProfile(
+joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "density_profiles", "fiducial_profile.toml")
+) |> LilGuys.filter_empty_bins
+
+# ╔═╡ e3fe8cb2-fc6f-4bbd-86e9-d1cd1c296c15
+prof_sim_i = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/initial_profile.toml") |> LilGuys.filter_empty_bins
+
+# ╔═╡ 11a8ec0c-0565-4bed-9406-d4944d7ab333
+prof_sim = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/final_profile.toml") |> LilGuys.filter_empty_bins
 
 # ╔═╡ 8358c354-29f3-4d62-940f-7085419a1970
 if lmc 
@@ -190,7 +192,7 @@ CairoMakie.activate!(type=:png)
 ymin = -10
 
 # ╔═╡ 7671fc47-15d4-4970-98a7-b0ad64f1114c
-@bind dy NumberField(-1:0.05:1, default=0)
+@bind dy confirm(NumberField(-10:0.05:10, default=0))
 
 # ╔═╡ 9a1dd286-f0d0-499a-a421-9e94a0d19bc0
 norm_sim = LilGuys.mean(prof_sim.log_Sigma[prof_sim.log_R .< prof_obs.log_R[n_center]]) - dy
@@ -284,6 +286,8 @@ end
 # ╟─ee38471c-043c-4571-bcf6-5fd93df84132
 # ╠═a9ca639c-c7ab-4ba4-b47a-4a78ed0b2269
 # ╠═9fecfed4-8aba-42f6-bcf2-1891e0b5f947
+# ╠═e3fe8cb2-fc6f-4bbd-86e9-d1cd1c296c15
+# ╠═11a8ec0c-0565-4bed-9406-d4944d7ab333
 # ╠═8358c354-29f3-4d62-940f-7085419a1970
 # ╠═604a2e03-e3cc-4c48-80d3-04f10017170f
 # ╠═2226b7b1-fa78-4428-9cea-3f3a8b17db5f

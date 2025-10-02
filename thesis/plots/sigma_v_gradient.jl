@@ -103,7 +103,7 @@ let
 
 			  )
 
-	plot_samples!(df_samples_umi, skip=20)
+	plot_samples!(df_samples_umi)
 
 	plot_obs!(df_gradient_umi)	
 	text!(0, 1, offset=(6, -6), text="Ursa Minor", space=:relative, align=(:left, :top))

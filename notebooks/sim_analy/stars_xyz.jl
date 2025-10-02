@@ -312,6 +312,15 @@ let
 	fig
 end
 
+# ╔═╡ 87c9a6dc-cb71-4476-b7d7-2fa9b5cd2d10
+filt_inner = radii(snap_f) .< 1
+
+# ╔═╡ 9fc833c7-da43-4f97-a106-a8e6aa3c383f
+[LilGuys.std(snap_f.positions[i, filt_inner], snap_f.weights[filt_inner]) for i in 1:3]
+
+# ╔═╡ 702c40e9-f82f-4ffd-8a1e-35b129eb64f3
+[LilGuys.std(snap_f.velocities[i, filt_inner], snap_f.weights[filt_inner]) for i in 1:3] .* V2KMS
+
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═ab06c999-3ff6-4580-a979-f0ddeb466569
@@ -358,3 +367,6 @@ end
 # ╠═9e36808a-43b3-4a73-aa5e-36d05ae8bfcc
 # ╠═f743edac-e31a-452b-9243-31abbc64a506
 # ╠═865b194d-9efa-41c2-8184-63bcfcd90f6f
+# ╠═87c9a6dc-cb71-4476-b7d7-2fa9b5cd2d10
+# ╠═9fc833c7-da43-4f97-a106-a8e6aa3c383f
+# ╠═702c40e9-f82f-4ffd-8a1e-35b129eb64f3

@@ -104,7 +104,7 @@ function sample_umi_halo()
 		
 		h = LilGuys.NFW(v_circ_max=vmax / V2KMS, r_circ_max=rmax)
 		σv = LilGuys.σv_star_mean(h, LilGuys.Exp2D(R_s=0.13))
-		if σv * V2KMS > 8.6 #- 0.3*3# - 1
+		if σv * V2KMS > 8.6 - 0.3*3# - 1
 			return h
 		end
 
@@ -234,11 +234,11 @@ df_umi = analyze_mw("ursa_minor", "EP2020", umi_halo)
 # ╔═╡ e1f5f252-7d60-4320-b638-2b0a0fa34af5
 scl_halo =  NFW(r_circ_max=3.2, v_circ_max=31/V2KMS)
 
-# ╔═╡ 2aabaa14-256c-4500-9262-f9c24ce4b5bc
-df_lmc = analyze_lmc("sculptor", "vasiliev24_L3M11", scl_halo)
-
 # ╔═╡ c8f21530-9e47-471b-a8d9-80ec395c2bcb
 df = analyze_mw("sculptor", "EP2020", scl_halo)
+
+# ╔═╡ 2aabaa14-256c-4500-9262-f9c24ce4b5bc
+df_lmc = analyze_lmc("sculptor", "vasiliev24_L3M11", scl_halo)
 
 # ╔═╡ 9b0252d2-6253-4215-8570-dc7da3db369e
 samples = OrderedDict(
@@ -288,7 +288,7 @@ function plot_samples(samples, samples_rJ, r_kink; limits=(-0.5, 1))
 
 	axs = []
 	for (i, (label, sample)) in enumerate(samples)
-		ax = Axis(fig[i,1], xlabel = "Radius / kpc")
+		ax = Axis(fig[i,1], xlabel = "log Radius / kpc")
 		
 		hist!(log10.(abs.(samples_rJ[label])), bins=bins, normalization=:pdf, label="Jacobi radii")
 		stephist!(log10.(abs.(sample)), bins=bins, normalization=:pdf, color=COLORS[2], linewidth=theme(:linewidth)[]/2, label="break radii")
@@ -349,28 +349,40 @@ let
 end
 
 # ╔═╡ d4fae6f9-7355-42b5-b74f-22026749fd67
-# df_lmc_halos = analyze_lmc("sculptor", "vasiliev24_L3M11", sample_scl_halos(100_000))
+df_lmc_halos = analyze_lmc("sculptor", "vasiliev24_L3M11", sample_scl_halos(100_000))
 
 # ╔═╡ ad31388a-dc6f-4a05-853e-4e37c812446e
-# df_umi_halos = analyze_mw("ursa_minor", "EP2020", sample_umi_halos(100_000))
+df_umi_halos = analyze_mw("ursa_minor", "EP2020", sample_umi_halos(100_000))
+
+# ╔═╡ 8162b969-2877-4480-abef-46eb33713900
+df_scl_halos = analyze_mw("sculptor", "EP2020", sample_scl_halos(100_000))
 
 # ╔═╡ 3b85c1df-dc0a-4ca0-8c7a-707b46cabaf9
 plot_samples(OrderedDict(
-	"MW only" => df_lmc_halos.r_break,
-	"MW+LMC (mw)" => df_lmc.r_break,
+	"MW only" => df_lmc.r_break,
+	"MW+halo uncert" => df_lmc_halos.r_break,
 ) , OrderedDict(
-	"MW only" => df_lmc_halos.r_J,
-	"MW+LMC (mw)" => df_lmc.r_J,
-), r_kink_scl,limits=(0, 7))
+	"MW only" => df_lmc.r_J,
+	"MW+halo uncert" => df_lmc_halos.r_J,
+), r_kink_scl,limits=(0, 1))
 
 # ╔═╡ 63123436-8f01-4783-a7c8-41da3fe8e556
 plot_samples(OrderedDict(
 	"MW only" => df_umi.r_break,
-	"MW+LMC (mw)" => df_umi_halos.r_break,
+	"MW+halo uncert" => df_umi_halos.r_break,
 ) , OrderedDict(
 	"MW only" => df_umi.r_J,
-	"MW+LMC (mw)" => df_umi_halos.r_J,
-), r_kink_scl,limits=(0, 7))
+	"MW+halo uncert" => df_umi_halos.r_J,
+), r_kink_umi,limits=(-1, 1))
+
+# ╔═╡ ebaf6932-655d-4d07-b7da-3f6675de6f95
+plot_samples(OrderedDict(
+	"MW only" => df.r_break,
+	"MW+halo uncert (mw)" => df_scl_halos.r_break,
+) , OrderedDict(
+	"MW only" => df.r_J,
+	"MW+halo uncert (mw)" => df_scl_halos.r_J,
+), r_kink_scl,limits=(0, 1))
 
 # ╔═╡ b3957136-6f04-4528-93aa-6c355153901c
 LilGuys.error_interval(r_kink_scl)
@@ -399,9 +411,9 @@ LilGuys.error_interval(r_kink_scl)
 # ╠═72736bff-eccc-491e-8c31-63cc52ea95ff
 # ╠═a9a983f5-4570-40d3-9d6e-e22d085b332a
 # ╠═1b474924-ab4f-4e8f-b18d-b28dd116ef77
+# ╠═c8f21530-9e47-471b-a8d9-80ec395c2bcb
 # ╠═2aabaa14-256c-4500-9262-f9c24ce4b5bc
 # ╠═e8e0236b-dac4-4196-bed6-d1122a1c4377
-# ╠═c8f21530-9e47-471b-a8d9-80ec395c2bcb
 # ╠═0a1b2a5e-6cca-44a4-bb8f-759bff2de019
 # ╠═a19f8018-30aa-4cb9-a433-d7ff0c938af9
 # ╠═442c6efc-38cf-4f69-b6c2-74dd3859574c
@@ -419,6 +431,8 @@ LilGuys.error_interval(r_kink_scl)
 # ╠═e60f1827-e1de-4c9f-a60b-0f658352f19c
 # ╠═d4fae6f9-7355-42b5-b74f-22026749fd67
 # ╠═ad31388a-dc6f-4a05-853e-4e37c812446e
+# ╠═8162b969-2877-4480-abef-46eb33713900
 # ╠═3b85c1df-dc0a-4ca0-8c7a-707b46cabaf9
 # ╠═63123436-8f01-4783-a7c8-41da3fe8e556
+# ╠═ebaf6932-655d-4d07-b7da-3f6675de6f95
 # ╠═b3957136-6f04-4528-93aa-6c355153901c

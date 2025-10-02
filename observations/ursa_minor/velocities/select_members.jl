@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -35,7 +35,7 @@ md"""
 
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
 begin 
-	rv_file = "rv_apogee.fits"
+	rv_file = "rv_combined.fits"
 	j24_sample = "2c"
 	psat_min = 0.2
 end
@@ -165,6 +165,12 @@ memb_filt = (rv_meas.PSAT_RV .> 0.2) .&
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
 
+# ╔═╡ 2c69332e-9341-4805-9066-10df38fa32fe
+"$(outname)_memb.fits"
+
+# ╔═╡ f9f5759a-9a4a-4765-81c8-d513c8a0a181
+write_fits(joinpath(data_dir, "$(outname).fits"), memb_stars, overwrite=true)
+
 # ╔═╡ 92f4c8b3-442d-4a56-b05f-1fc547231508
 "RV_gmos" ∈ names(memb_stars) && memb_stars[.!ismissing.(memb_stars.RV_gmos), [:source_id, :ra, :dec, :PSAT]]
 
@@ -258,6 +264,8 @@ scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
+# ╠═2c69332e-9341-4805-9066-10df38fa32fe
+# ╠═f9f5759a-9a4a-4765-81c8-d513c8a0a181
 # ╠═92f4c8b3-442d-4a56-b05f-1fc547231508
 # ╠═ea3d420f-00f8-4ca2-a49d-e26b48e50afd
 # ╠═a162219f-df5a-41d8-bf54-927a355f6431

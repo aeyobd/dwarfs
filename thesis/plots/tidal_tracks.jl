@@ -105,6 +105,9 @@ end
 function get_Jacobi_radius(modelname)
 end
 
+# ╔═╡ 2971bd21-552f-4dc4-a863-26a20e2b2cd8
+
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 function plot_tidal_track(modelname, starsname; Mstar=1, title="")
 	df = get_scalars(modelname)
@@ -125,40 +128,41 @@ function plot_tidal_track(modelname, starsname; Mstar=1, title="")
 
 	r_j = get_r_j(modelname)
 
-
 	x, y = LilGuys.EN21_tidal_track(df.r_circ_max[1], df.v_circ_max[1], x_min=0.1)
 
 	
-	scatter!(df.r_circ_max, df.v_circ_max * V2KMS, label="max", markersize=theme(:markersize)[]/2, color=COLORS[1])
+	scatter!(df.r_circ_max, df.v_circ_max * V2KMS, markersize=theme(:markersize)[]/2, color=COLORS[1])
 
-	lines!(radii(profs[1]), LilGuys.circular_velocity(profs[1]) * V2KMS, label=L"DM initial ($t=-9.2$\,Gyr)", color=COLORS[1], linestyle=:dot)
-	lines!(radii(profs[2]), LilGuys.circular_velocity(profs[2]) * V2KMS, label=L"DM final ($t=0.0$\,Gyr)", color=COLORS[1], linestyle=:solid)
-	lines!(radii(profs[3]), LilGuys.circular_velocity(profs[3]) * V2KMS, label="DM final + unbound", color=COLORS[1], linestyle=:dash)
-	lines!(x, y * V2KMS, color=:black,linestyle=:dot, label="EN21 tidal track")
+	lines!(radii(profs[1]), LilGuys.circular_velocity(profs[1]) * V2KMS, color=COLORS[1], linestyle=:dot)
+	lines!(radii(profs[2]), LilGuys.circular_velocity(profs[2]) * V2KMS, label="dark matter ", color=COLORS[1], linestyle=:solid)
 
 	# stars
-	lines!(radii(profs_stars[1]), LilGuys.circular_velocity(profs_stars[1]) * V2KMS, label="stars initial", color=COLORS[2], linestyle=:dot)
-	lines!(radii(profs_stars[end]), LilGuys.circular_velocity(profs_stars[end]) * V2KMS, label="stars final", color=COLORS[2], linestyle=:solid)
+	lines!(radii(profs_stars[1]), LilGuys.circular_velocity(profs_stars[1]) * V2KMS, color=COLORS[2], linestyle=:dot)
+	lines!(radii(profs_stars[end]), LilGuys.circular_velocity(profs_stars[end]) * V2KMS, label="stars", color=COLORS[2], linestyle=:solid)
 	
-	scatter!(stellar_scalars.r_h, stellar_scalars.sigma_v * V2KMS, color=COLORS[3])
-
-	
-	text!(stellar_scalars.r_h[1], stellar_scalars.sigma_v[1] * V2KMS, text=L"r_h, \sigma_\textrm{v}", color=COLORS[3])
-
+	lines!(x, y * V2KMS, color=:black,linestyle=:dash, label="EN21 tidal track")
 	
 	axislegend(position=:rb, patchsize=(24, 12), backgroundcolor=(:white, 2))
 
-	vlines!(r_j, color=:black, linewidth=theme(:linewidth)[]/2)
-	text!(r_j, 8, text="Jacobi", rotation=π/2)
+	v0 = df.v_circ_max[1]*V2KMS 
+	y0 = v0*0.1
+	arrows2d!([r_j], [y0], [0], [y0 * (1 - 10^0.10)], shaftwidth=theme(:linewidth)[]/2, tipwidth=6, tiplength=6)
+	text!(r_j, y0, text="Jacobi", rotation=π/2, align=(:left, :center))
 
+
+	t_i = round(-profs[end].time * T2GYR, digits=1)
+	l1 = lines!([NaN], [NaN], linestyle=:dot, color=:black)
+	l2 = lines!([NaN], [NaN], linestyle=:solid, color=:black)
+
+	axislegend(ax, [l1, l2], [L"initial ($t=%$t_i$ Gyr)", L"final ($t=0$ Gyr)"], position=:lt)
 	xlims!(0.03, df.r_circ_max[1] * 10^1)
-	ylims!(1, df.v_circ_max[1]*V2KMS * 10^0.1)
+	ylims!(v0* 10^-1.9, v0 * 10^0.1)
 
 	fig
 end
 
 # ╔═╡ 415f249c-de75-454f-8ab8-be3bec7e4222
-@savefig "scl_tidal_track"  plot_tidal_track("sculptor/1e7_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10", Mstar=3.1e-4, title="Sculptor Dark Matter: smallperi orbit")
+@savefig "scl_tidal_track"  plot_tidal_track("sculptor/1e7_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10", Mstar=3.1e-4, title="Sculptor: smallperi orbit")
 
 # ╔═╡ f40dab86-d30b-4ba5-95b2-929b872dd887
 R_h_3d_to_2d = LilGuys.R_h(LilGuys.Exp2D()) / LilGuys.r_h(LilGuys.Exp2D())
@@ -182,6 +186,7 @@ R_h_3d_to_2d = LilGuys.R_h(LilGuys.Exp2D()) / LilGuys.r_h(LilGuys.Exp2D())
 # ╠═72e106eb-8aee-445e-bf07-dc3c427aa229
 # ╠═11d210d4-3b54-42d9-89f0-b4677ec32348
 # ╠═0a4e4850-71c5-4b81-bc24-eb2daf78b341
+# ╠═2971bd21-552f-4dc4-a863-26a20e2b2cd8
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═415f249c-de75-454f-8ab8-be3bec7e4222
 # ╠═f40dab86-d30b-4ba5-95b2-929b872dd887

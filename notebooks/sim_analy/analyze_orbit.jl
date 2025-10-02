@@ -721,25 +721,34 @@ let
 		"pericentres" => r[idx_peris],
 		"apocentres" => r[idx_apos],
 		"period" => period,
-		"idx_f" => idx_f,
-		"idx_peri" => idx_peri,
-		"t_last_peri" => t_f - t_peri,
-		# these three are for the final stream coordinate frame
-		"t_f_gyr" => t_f,
-		"ra_f" => ra0,
-		"dec_f" => dec0,
-		"distance_f" => obs_c.distance[idx_f],
-		"pmra_f" => obs_c.pmra[idx_f],
-		"pmdec_f" => obs_c.pmdec[idx_f],
-		"radial_velocity_f" => obs_c.pmdec[idx_f],
-		"theta0" => θ0,
 		"idx_peris" => idx_peris, 
 		"idx_apos" => idx_apos,
 		"t_peris" => t[idx_peris], 
 		"t_apos" => t[idx_apos],
-		"chi2_best" => χ2[idx_f],
-		"chi2_best_interp" => χ2[idx_f],
+		
 	)
+
+	if @isdefined obs_today
+		orbital_properties_today = OrderedDict(
+			"idx_f" => idx_f,
+			"idx_peri" => idx_peri,
+			"t_last_peri" => t_f - t_peri,
+			# these three are for the final stream coordinate frame
+			"t_f_gyr" => t_f,
+			"ra_f" => ra0,
+			"dec_f" => dec0,
+			"distance_f" => obs_c.distance[idx_f],
+			"pmra_f" => obs_c.pmra[idx_f],
+			"pmdec_f" => obs_c.pmdec[idx_f],
+			"radial_velocity_f" => obs_c.pmdec[idx_f],
+			"theta0" => θ0,
+	
+			"chi2_best" => χ2[idx_f],
+			"chi2_best_interp" => χ2[idx_f],
+		)
+
+		merge!(orbital_properties, orbital_properties_today)
+	end
 
 
 	open(outfile, "w") do f

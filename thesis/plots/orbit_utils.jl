@@ -8,55 +8,12 @@ import LinearAlgebra: ⋅
 strokewidth = @lift $(theme(:linewidth)) / 2
 
 """
-    plot_present_position!(axes, positions, velocities)
+    axes_xyz_flat(fig; row=1, limits, units, kwargs...)
 
-Plot the present position as an arrow pointing at the present velocity
+Creates axes for xy, yz, and xz planes in three columns in the given figure row.
+`units` controls the unit labels, and kwargs are passed to axes. 
+The aspect is set to 1 (i.e. symmetric limits required).
 """
-function plot_present_position!(axes, x0::AbstractVector, v0::AbstractVector, )
-
-	ax = axes[1]
-	i = 1
-	j = 2
-	arrowhead!(ax, x0[i], x0[j], v0[i], v0[j]; )
-
-	ax = axes[2]
-	i = 2
-	j = 3
-	arrowhead!(ax, x0[i], x0[j], v0[i], v0[j]; )
-
-	ax = axes[3]
-	i = 1
-	j = 3
-	arrowhead!(ax, x0[i], x0[j], v0[i], v0[j]; )
-
-	axes
-end
-
-
-"""
-    arrowhead!(ax, x, y, v_x, v_y; length=0.15)
-
-Plot an arrowhead pointing in dataspace v_x and v_y
-"""
-function arrowhead!(ax, x, y, v_x, v_y; markersize=1.5 * theme(:markersize)[], notch=0.2, kwargs...)
-
-	(xlims, ylims) = ax.limits[]
-	ax_scale = sqrt((xlims[2] - xlims[1])^2 + (ylims[2] - ylims[1]))
-
-    # this is just so arrowhead shows up due to bug
-    length = 1
-	scale = length*ax_scale
-	v_x_norm, v_y_norm = (v_x, v_y) ./ sqrt(v_x^2 + v_y^2)
-	
-    style = Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=markersize, notch=notch))
-        
-	annotation!(ax, x - scale*v_x_norm, y - scale*v_y_norm, x, y;
-                style=style, labelspace=:data, linewidth=0, shrink=(0., 0.))
-end
-
-
-
-
 function axes_xyz_flat(fig; row=1, limits, units="kpc", kwargs...)
     ax_xy = Axis(fig[row,1];
         xlabel = "x / $units",
@@ -84,7 +41,13 @@ function axes_xyz_flat(fig; row=1, limits, units="kpc", kwargs...)
     return [ax_xy, ax_yz, ax_xz]
 end
 
+"""
+    plot_xyz!(axes, positions; plot, kwargs...)
 
+Plots a 3xN array of positions onto a triple of xyz axes. 
+the `plot` kwarg changes the call to a makie mutating plotting function, 
+and kwargs are passed to the plot call.
+"""
 function plot_xyz!(axes, positions::AbstractMatrix;
         plot=lines!, kwargs...)
     ax_xy, ax_yz, ax_xz = axes
@@ -99,6 +62,13 @@ function plot_xyz!(axes, positions::AbstractMatrix;
 end
 
 
+"""
+    plot_xyz!(axes, orbit(s); time_min, kwargs...)
+
+Similar to the matrix plot_xyz! call except plots for each given orbit
+(either a single orbit or a vector). Optionally can filter the 
+orbit to only plot times more recent than time_min.
+"""
 function plot_xyz!(axes, orbit::Orbit; time_min=-Inf, kwargs...)
     time_filt = orbit.times .> time_min
     plot_xyz!(axes, orbit.positions[:, time_filt]; kwargs...)
@@ -113,11 +83,21 @@ end
 
 
 
+"""
+    plot_rt!(ax, times, rs; plot, kwargs...)
+
+Plots the radii at each given time onto the specified axes.
+"""
 function plot_rt!(axes, times, rs; plot=lines!, kwargs...)
     plot(axes, times, rs; kwargs...)
 end
 
 
+"""
+    plot_rt!(ax, orbit(s); plot, kwargs...)
+
+Plots the radii for each timestep in the orbit(s). 
+"""
 function plot_rt!(axes, orbit::Orbit; kwargs...)
     plot_rt!(axes, orbit.times * T2GYR, radii(orbit); kwargs...)
 end
@@ -134,7 +114,7 @@ end
 """
     plot_present_position!(axes, positions, velocities)
 
-Plot the present position as an arrow pointing at the present velocity
+Plot the present position as a dot point.
 """
 function plot_xyz_today!(axes, orbit::Orbit, index=1; kwargs...)
     x0 = orbit.positions[:, index]
@@ -143,15 +123,17 @@ function plot_xyz_today!(axes, orbit::Orbit, index=1; kwargs...)
 end
 
 function plot_xyz_today!(axes, orbits, index=1; kwargs...)
-
     xyz_mean = LilGuys.mean([o.positions[:, index] for o in orbits])
 
     return plot_xyz_today!(axes, xyz_mean; kwargs...)
-
 end
 
 
+"""
+    plot_xyz_today!(axes, x0; kwargs...)
 
+Plots the xy, yz, and zx position of the provided 3-vecotr onto a 3-tuple of xyz axes slices.
+"""
 function plot_xyz_today!(axes, x0::AbstractVector{<:Real}; strokewidth=strokewidth, kwargs...)
     ax_xy, ax_yz, ax_xz = axes
 	i = 1
@@ -199,5 +181,6 @@ function plot_xyz_sun!(axes; kwargs...)
 
     plot_xyz_today!(axes, X_SUN; marker=:star5, color=COLORS[9], kwargs...)
 end
+
 
 

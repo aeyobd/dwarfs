@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -45,7 +45,7 @@ modelname = "EP2020"
 FIGDIR = "./figures"
 
 # ╔═╡ 43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
-t_max = -5/T2GYR
+t_max = -15/T2GYR
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -105,46 +105,12 @@ md"""
 # ╔═╡ dc9be70c-a1f2-4cc1-afce-758548972cf2
 sw = theme(:linewidth)[] / 2
 
-# ╔═╡ abf0975b-88c4-4bb9-8da5-c8f5a6ba427d
-# let
-# 	fig = Figure()
-# 	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
-
-# 	ax_xyz = axes_xyz_flat(fig, limits)
-
-# 	for ax in ax_xyz
-# 		ax.xticks = -100:100:100
-# 		ax.yticks = -100:100:100
-# 	end
-
-# 	plot_xyz!(ax_xyz, orbits, color=COLORS[3], alpha=0.05, time_min=t_max, linestyle=:solid)
-# 	plot_xyz!(ax_xyz, best_orbit, color=:black, time_min=t_max)
-# 	#plot_xyz_today!(ax_xyz, best_orbit, length(best_orbit))
-# 	plot_xyz_sun!(ax_xyz, strokewidth=sw)
-
-# 	ax_rt = Axis(fig[2, 1:3],
-# 				xlabel = "time / Gyr", ylabel =   L"$r_\textrm{sat-MW}$ / kpc")
-	
-# 	plot_rt!(ax_rt, orbits, color=COLORS[3], alpha=0.05, linestyle=:solid)
-# 	plot_rt!(ax_rt, best_orbit, color=:black)
-# 	xlims!(-10, 0.1)
-# 	ylims!(0, 120)
-# 	#plot_rt_today!(ax_rt, best_orbit, length(best_orbit))
-
-# 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
-
-# 	resize_to_layout!(fig)
-# 	@savefig "umi_xyzr_orbits"
-# 	fig
-
-# end
-
 # ╔═╡ d38c2f93-0ddc-4e46-887c-a43c55d663c6
 let
 	fig = Figure()
 	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
 
-	ax_xyz = axes_xyz_flat(fig, limits)
+	ax_xyz = axes_xyz_flat(fig, limits=limits)
 
 	for ax in ax_xyz
 		ax.xticks = -100:100:100
@@ -197,5 +163,4 @@ end
 # ╠═367eb7e4-8c54-4fa9-a01c-41c3c7ff7f2a
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╠═dc9be70c-a1f2-4cc1-afce-758548972cf2
-# ╠═abf0975b-88c4-4bb9-8da5-c8f5a6ba427d
 # ╠═d38c2f93-0ddc-4e46-887c-a43c55d663c6

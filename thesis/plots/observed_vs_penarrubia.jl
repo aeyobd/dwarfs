@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,11 @@ md"""
 # ╔═╡ 221247cd-e447-400c-8491-b7248787f7a7
 import TOML
 
+# ╔═╡ fb11d8ff-e314-4109-9340-67785a848485
+module Utils
+	include("./model_utils.jl")
+end
+
 # ╔═╡ d143090f-a2e1-4068-a3e7-6ef35635f758
 galaxies = ["sculptor", "ursa_minor", "fornax"]
 
@@ -48,32 +53,18 @@ p08_notides = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/data", "pe
 # ╔═╡ 39d1e497-a359-4d58-8f83-8aff1eeeb1f2
 p08_tides = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/all/data", "penarrubia08_apo.csv"), DataFrame)
 
-# ╔═╡ d3780086-bc13-4b35-a960-e7aa51f2433e
-α = LilGuys.R_h(LilGuys.Exp2D())
-
 # ╔═╡ 81805051-a10d-40f8-b128-612a6dec304f
 begin 
 	obs_profs = LilGuys.SurfaceDensityProfile[]
 	
 	for galaxy in galaxies
-		dir = joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "density_profiles")
-		filepath = ""
-		for filename in ["jax_eqw_profile.toml", "jax_eqw_profile.toml"]
-			if isfile(joinpath(dir, filename))
-				filepath = joinpath(dir, filename)
-				break
-			end
-		end
+		filepath = joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "density_profiles", "fiducial_profile.toml")		
 		
 
 		prof = LilGuys.SurfaceDensityProfile(filepath) |> LilGuys.filter_empty_bins
 		@assert prof.log_R_scale == 0.0
-		
-		density_fit = TOML.parsefile(filepath * "_inner_fits.toml")
-		R_h = 10 .^ density_fit["log_R_s_exp2d_inner"] * α
+		R_h = Utils.get_R_h(galaxy)
 
-		# filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxy, "observed_properties.toml")
-		# obs_props = TOML.parsefile(filename)
 		Σ_h = 10 .^ LilGuys.lerp(prof.log_R, middle.(prof.log_Sigma))(log10(R_h))
 		M_s = Σ_h * R_h .^ 2
 
@@ -82,9 +73,6 @@ begin
 		push!(obs_profs, prof)
 	end
 end
-
-# ╔═╡ b17e6d02-24f5-4bef-9d77-74d9f16b60cb
-
 
 # ╔═╡ abe2deee-32e3-43d5-8232-10aeb797bac1
 md"""
@@ -118,12 +106,6 @@ begin
 	prof_f = LilGuys.scale(prof_f, r_scale, m_scale)
 
 end
-
-# ╔═╡ 3b5d2ad4-9cf8-4032-8d9f-6ca10f6b6f1b
-theme(:size)
-
-# ╔═╡ 567e9206-4dfc-48a1-a130-5b146f3bb67a
-388.5429638854297 / 72
 
 # ╔═╡ 411dc796-d15b-45cb-8180-d8e1ba8e4fde
 colors = [COLORS[2], COLORS[4], COLORS[3]]
@@ -160,7 +142,7 @@ let
 	ax2 = Axis(fig[1,2],
 		xlabel = L"log $R$ / $R_h$",
 		ylabel = L"log $\Sigma_\star\ /\ \Sigma_h$",
-		limits = (-1.5, 1, nothing, nothing)
+		limits = (-1.5, 1.1, -3.5, nothing)
 	)
 
 
@@ -170,7 +152,7 @@ let
 		prof = obs_profs[i]
 
 		errorscatter!(prof.log_R, prof.log_Sigma, yerror=LilGuys.error_interval.(prof.log_Sigma), 
-					  color=COLORS[i+2])
+					  color=colors[i], marker=markers[i])
 	end
 
 
@@ -222,21 +204,18 @@ end
 # ╠═221247cd-e447-400c-8491-b7248787f7a7
 # ╠═81684bfc-3316-42c2-a2a9-d9db98858edd
 # ╠═01240d81-5b6e-41b6-a2be-32b87a6568ef
+# ╠═fb11d8ff-e314-4109-9340-67785a848485
 # ╠═d143090f-a2e1-4068-a3e7-6ef35635f758
 # ╠═b51a4ddd-90fd-415f-8a48-e4f35aeee801
 # ╟─b8d70c2e-30bc-43f6-965f-c68399ba54d1
 # ╠═7c31c70f-9ade-407d-8db0-34ff94a43ffd
 # ╠═9a7adce4-a829-42c4-9902-02b5d4e1891d
 # ╠═39d1e497-a359-4d58-8f83-8aff1eeeb1f2
-# ╠═d3780086-bc13-4b35-a960-e7aa51f2433e
 # ╠═81805051-a10d-40f8-b128-612a6dec304f
-# ╠═b17e6d02-24f5-4bef-9d77-74d9f16b60cb
 # ╟─abe2deee-32e3-43d5-8232-10aeb797bac1
 # ╠═940c75b5-e19b-474f-8913-a489d770372a
 # ╠═b0e33ee3-ae02-400a-b468-33de44a44c06
 # ╠═0732a179-aca0-4bf4-8be7-be1e713ee18e
-# ╠═3b5d2ad4-9cf8-4032-8d9f-6ca10f6b6f1b
-# ╠═567e9206-4dfc-48a1-a130-5b146f3bb67a
 # ╠═411dc796-d15b-45cb-8180-d8e1ba8e4fde
 # ╠═1011d118-6ada-41e7-a5da-7df868326112
 # ╠═8031f228-6515-42f7-915b-d437781c9875
