@@ -1,149 +1,26 @@
 \chapter{LOS velocity modeling}\label{sec:rv_obs}
 
 In this section, we analyze the observed line-of-sight (LOS) velocity
-distributions for Scl and UMi. Our goal is to derive the systemic
-velocity and velocity disperions, and understand if the galaxies show
-evidence of tidal features, e.g.~a velocity gradient or a rising outer
-velocity dispersion. Our derived velocity distributions are consistent
-with literature. We find weak evidence for a velocity gradient in Scl
-and a rising outer velocity dispersion. However, Scl's velocity gradient
-is misaligned with its proper motion, likely inconsistent with a tidal
-interpretation. We find no evidence of a gradient in mean velocity or
+distributions for Sculptor (Scl) and Ursa Minor (UMi). Our goal is to
+understand if the galaxies show evidence of tidal features---for
+example, a velocity gradient or rising outer velocity dispersion. Our
+derived systemic velocities and dispersions are consistent with
+literature. We find weak evidence for a velocity gradient in Scl and a
+rising outer velocity dispersion. However, Scl's velocity gradient is
+misaligned with its proper motion, likely inconsistent with a tidal
+interpretation. Scl's velocity dispersion also mostly rises within the
+effective radius, more likely a feature of inner structure than tidal
+disruption. We find no evidence of a gradient in mean velocity or
 velocity dispersion in UMi. We conclude that Scl and UMi do not show
-observable features of tidal disruption given current velocity
-observations.
+clear features of tidal disruption given current velocity observations.
 
 \section{Data selection}\label{data-selection}
 
-For both Sculptor and Ursa Minor, we construct literature samples of
-radial velocity measurements. We combine these samples with J+24's
-Bayesian likelihoods to produce likely members using additional RV
-information.
-
-First, we crossmatch all catalogues to J+24 Gaia stars. If a study did
-not report GaiaDR3 source ID's, we match to the nearest star within 1--3
-arcseconds (see REF Table~\ref{tbl:rv_measurements}). We combine the
-mean RV measurement from each study using the inverse-variance weighted
-mean \(\bar v\), standard uncertainty \(\delta \bar v\), and (biased)
-variance \(s^2\).
-
-We remove stars with significant velocity dispersions as measured
-between observations in a study or between studies, to filter out
-unreliable measurements or possible spectroscopic binaries. By using
-that \(\chi^2=\frac{s^2}{\delta \bar v^2}\), we remove stars with a
-\(\chi^2\) larger than the 99.9th percentile of the \(\chi^2\)
-distribution with \(N-1\) measurements. This cut typically removes stars
-with reduced chi-squared values
-\(\tilde\chi^2  = \frac{s^2}{\nu\,\delta \bar v^2}\gtrsim 7\) (since the
-number of measurements is 1-3 typically)..
-
-Next, we need to correct the coordinate frames for the solar motion and
-on-sky size of the galaxy. We transform the frame into the galactic
-standard of rest (GSR). The next step is to account for the slight
-differences in the direction of each radial velocity. Let the \(\hat z\)
-be the direction from the sun to the dwarf galaxy. Then if \(\phi\) is
-the angular distance between the centre of the galaxy and the individual
-star, the corrected radial velocity is then \begin{equation}{
-v_{\rm gsr}' = v_{\rm los, gsr}\cos\phi  - v_{\alpha}\cos\theta \sin\phi - v_\delta \sin\theta\sin\phi
-}\end{equation} \{eq:v\_z\} where \(v_{\rm los, gsr}\) is the line of
-sight velocity in the GSR frame, \(v_\alpha\) and \(v_\delta\) are the
-tangental velocities in RA and Dec, and \(\theta\) is the position angle
-of the star with respect to the centre of the dwarf. The correction from
-both effects induces an apparent gradient of about \(1.3\,\kmsdeg\) for
-Sculptor and less for Ursa Minor \citep[see
-also][]{WMO2008, strigari2010}. We add the uncertainty in \(v_z\) from
-the distance uncertainty and velocity dispersion in quadrature to the RV
-uncertainties for each star. We then use the \(v_z\) values for the
-following modelling, however repeating with uncorrected, heliocentric
-velocities does not significantly affect the results.
-
-The combined likelihood, including RV information, becomes
-\begin{equation}{
-{\cal L} = {\cal L}_{\rm space} {\cal L}_{\rm CMD} {\cal L}_{\rm PM} {\cal L}_{\rm RV}
-}\end{equation} where we assume that the satellite and background
-distributions are Gaussian. Specifically, \begin{equation}{
-\begin{split}
-{\cal L}_{\rm RV, sat} &= f\left( \frac{v_i -\mu_{v}}{\sqrt{\sigma_{v}^2 + (\delta v_i)^2}}\right) \\
-{\cal L}_{\rm RV, bg} &= f\left( v_i /  \sigma_{\rm halo} \right)
-\end{split}
-}\end{equation} where \(f\) is the probability density of a standard
-normal distribution, \(\mu_v\) and \(\sigma_v\) are the systemic
-velocity and dispersion of the satellite, and \(\delta v_i\) is the
-individual measurement uncertainty. Typically, the velocity dispersion
-dominates the uncertainty budget. We assume a halo/background velocity
-dispersion of a constant \(\sigma_{\rm halo} = 100\,\kms\)
-\citep[e.g.][]{brown+2010}.
-
-Similar to above, we retain stars with the resulting membership
-probability of greater than 0.2. Like in J+24, most stars have
-probabilities of nearly 1 or 0, so the precise choice of cut marginally
-affects the resulting sample.
-
-\section{MCMC modeling}\label{mcmc-modeling}
-
-We use Monte-Carlo Markov chains (MCMC) to calculate the posterior
-distributions of our models of the intrinsic velocity dispersion and
-possible velocity gradients in Scl and UMi.
-
-The likelihood is based on the distribution of stars with respect to the
-model's predicted \(\mu_\V\) and \(\sigma_\V\) at each star's position
-in the tangent plane \(\xi\) and \(\eta\). Specifically, the log
-likelihood is \begin{equation}{
-\log {\cal L} = \sum_i \frac{1}{\sigma_i} \log f\left(\frac{\V_i - \mu_i}{\sigma_i}\right),
-}\end{equation} where \(f\) is the probability distribution of a
-standard normal distribution, \(\V_i\) is the velocity of the \(i\)th
-star, and \(\mu_i\) and \(\sigma_i\) are the model's predicted mean and
-velocity dispersion at the \(i\)th star's position \(\xi_i\) and
-\(\eta_i\).
-
-For all models, we ado \begin{equation}{
-\mu_{0} \sim N(0\,\kms, \sigma^2_{\rm halo})\\
-\sigma_{0} \sim U(0\,\kms, 20\,\kms),
-}\end{equation} where \(\sigma_{\rm halo} = 100\,{\rm km\,s^{-1}}\) is
-the velocity dispersion of the MW halo adopted above, a reasonable
-assumption for dwarfs in orbit around the MW.
-
-For the simplest model, \(\mu\) and \(\sigma\) are held
-fixed---\(\mu(\xi, \eta) = \mu_0\) and \(\sigma(\xi, \eta) = \sigma_0\).
-There are no additional parameters besides \(\mu_0\) and \(\sigma_0\).
-
-To model a velocity gradient, we add two parameters, the gradient
-\begin{equation}{
-\mu(\xi, \eta) = \mu_0 + a\,\xi + b\,\eta\\
-\sigma = \sigma_0
-}\end{equation}
-
-To model an increasing velocity dispersion, we add a third parameter,
-\(c\) which applies as \begin{equation}{
-\log \sigma(R_{\rm ell}) = \log \sigma_0 + c\,\log\left(R_{\rm ell} / R_h\right) \\
-\mu = \mu_0 + a\,\xi + b\,\eta\\
-}\end{equation} with \(c \sim U(0, 1)\) where \(R_{\rm ell}\) is the
-elliptical radius. We only consider this model including the velocity
-gradient as a velocity gradient is the simplest way to increase the
-dispersion gradient.
-
-Bayes factors quantify the relative evidence between Bayesian model. If
-the Bayes factor
-
-Our models are \emph{nested}, where the fiducial model (\(\sigma_0\) and
-\(\mu_0\) only) always arises from setting parameters of the more
-complex models to zero (\(a=0, b=0\) and/or \(c=0\) ). As a result, we
-can use the Savage-Dickey method to calculate the Bayes factors
-\citep{dickey+lientz1970}, where the Bayes factor is then the relative
-density of posterior versus prior samples where \(a=b=c=0\). To
-calculate densities, we use a Silverman-bandwidth KDE to smooth the
-samples.
-
-\section{Results}\label{sec:rv_results}
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_rv_fits.pdf}}
-\caption[LOS velocity fit to Scl]{Velocity histogram of Scl and UMi in
-terms of projected-correction GSR LOS velocity (Eq.~\ref{eq:v_z}). Black
-points with error bars are from the crossmatched observed sample, and
-green lines represent MCMC fits to the velocity dispersion.}
-\end{figure}
+For both Sculptor and Ursa Minor, we construct literature samples of LOS
+velocity measurements. We combine these samples with J+24's Bayesian
+likelihoods to produce LOS velocity-informed membership probabilities.
+We select stars with moderate to large membership probabilities for
+future analysis.
 
 \begin{table*}[t]
 \centering
@@ -167,44 +44,155 @@ UMi & combined & 4714 & 1225 & 1148 & 863 & 2.1 & \\
 \end{tabular}
 \end{table*}
 
-\input{rv_table.tex}
+First, we crossmatch all catalogues to J+24 Gaia stars. If a study did
+not report GaiaDR3 source ID's, we match to the nearest star within 1--3
+arcseconds (see REF Table~\ref{tbl:rv_measurements}). We combine the
+mean RV measurement from each study using the inverse-variance weighted
+mean \(\bar v\), standard uncertainty \(\delta \bar v\), and (biased)
+variance \(s^2\).
 
-\begin{table*}[t]
-\centering
-\caption[Ursa Minor RV fits]{MCMC fits for UMi velocity dispersion. }
-\label{tbl:umi_rv_mcmc}
-\begin{tabular}{lllll}
-\toprule
-study & mean & sigma & $\log bf_{\rm sigma}$ & $\log bf_{\rm grad}$\\
-\midrule
-all & $-245.8\pm0.3$ & $8.8\pm0.2$ & +1.3 & +0.9\\
-pace & $-244.6\pm0.4$ & $9.0\pm0.3$ & +0.3 & +0.5\\
-spencer & $-246.9\pm0.4$ & $8.8\pm0.3$ & +1.8 & -0.06\\
-apogee & $-245.6\pm1.2$ & $10.0_{-0.8}^{+1.0}$ & +1.0 & +0.5\\
-\bottomrule
-\end{tabular}
-\end{table*}
+We next remove stars with significant velocity dispersions as measured
+between observations in a study or between studies, to filter out
+unreliable measurements or possible spectroscopic binaries. By using
+that \(\chi^2=\frac{s^2}{\delta \bar v^2}\), we remove stars with a
+\(\chi^2\) larger than the 99.9th percentile of the \(\chi^2\)
+distribution with \(N-1\) measurements. This cut typically removes stars
+with reduced chi-squared values
+\(\tilde\chi^2  = \frac{s^2}{\nu\,\delta \bar v^2}\gtrsim 7\) (as a star
+typically fewer than four velocity measurements).
+
+We correct the velocities for the solar motion and on-sky size of the
+galaxy. First, we transform the velocities into the galactic standard of
+rest (GSR), a reference frame centred at the Sun's position but at rest
+with respect to the Galactic centre. Next, we transform velocities to
+correct for the apparent gradient induced by the dwarf's proper motion.
+Let the \(\hat z\) be the direction from the sun to the dwarf galaxy.
+Then if \(\phi\) is the angular distance between the centre of the
+galaxy and the individual star, the corrected radial velocity is then
+\begin{equation}{
+v_{\rm gsr}' = v_{\rm los, gsr}\cos\phi  - v_{\alpha}\cos\theta \sin\phi - v_\delta \sin\theta\sin\phi
+}\end{equation} \{eq:v\_z\} where \(v_{\rm los, gsr}\) is the LOS
+velocity in the GSR frame, \(v_\alpha\) and \(v_\delta\) are the
+tangental velocities in RA and Dec in the GSR frame, and \(\theta\) is
+the position angle of the star with respect to the centre of the dwarf.
+The correction from both effects induces an apparent gradient of about
+\(1.3\,\kmsdeg\) for Sculptor and less for Ursa Minor \citep[see
+also][]{WMO2008, strigari2010}. We add the uncertainty in \(v_z\) from
+the distance uncertainty and velocity dispersion in quadrature to the RV
+uncertainties for each star. We use the \(v_z\) values for the following
+modelling.
+
+We build on J+24's likelihood framework to add velocity information (see
+Section~\ref{sec:extra_density}). The total likelihood of a star
+belonging to the satellite or foreground/background population is
+\begin{equation}{
+{\cal L} = {\cal L}_{\rm space} {\cal L}_{\rm CMD} {\cal L}_{\rm PM} {\cal L}_{\rm los},
+}\end{equation} where we have added \({\cal L}_{\rm los}\), LOS-velocity
+likelihood term. We assume that the satellite and background
+\(v_{\rm los, gsr}\) distributions are Gaussian. Specifically,
+\begin{equation}{
+\begin{split}
+{\cal L}_{\rm los, sat} &= f\left( \frac{v_i -\mu_{v}}{\sqrt{\sigma_{v}^2 + (\delta v_i)^2}}\right) \\
+{\cal L}_{\rm los, bg} &= f\left( v_i /  \sigma_{\rm halo} \right)
+\end{split}
+}\end{equation} where \(f\) is the probability density of a standard
+normal distribution, \(\mu_v\) and \(\sigma_v\) are the systemic
+velocity and dispersion of the satellite, and \(\delta v_i\) is the
+individual measurement uncertainty. Typically, the velocity dispersion
+dominates the uncertainty budget. We assume a halo/background velocity
+dispersion of a constant \(\sigma_{\rm halo} = 100\,\kms\)
+\citep[e.g.][]{brown+2010}.
+
+Similar to above, we retain stars with the resulting membership
+probability of greater than 0.2. Like in J+24, most stars have
+probabilities of nearly 1 or 0, so the precise choice of cut marginally
+affects the resulting sample.
+
+\section{MCMC modeling}\label{mcmc-modeling}
+
+To model for possible gradients. We use Monte-Carlo Markov chains (MCMC)
+to calculate the posterior distributions of our models of the intrinsic
+velocity dispersion and possible velocity gradients in Scl and UMi.
+
+The likelihood is based on the distribution of stars with respect to the
+model's predicted \(\mu_\V\) and \(\sigma_\V\) at each star's position
+in the tangent plane \(\xi\) and \(\eta\). Specifically, the log
+likelihood is \begin{equation}{
+\log {\cal L} = \sum_i \frac{1}{\sigma_i} \log f\left(\frac{\V_i - \mu_i}{\sigma_i}\right),
+}\end{equation} where \(f\) is the probability distribution of a
+standard normal distribution, \(\V_i\) is the velocity of the \(i\)th
+star, and \(\mu_i\) and \(\sigma_i\) are the model's predicted mean and
+velocity dispersion at the \(i\)th star's position \(\xi_i\) and
+\(\eta_i\).
+
+We consider a single model designed to derive systemic velocity and the
+velocity dispersion, detect velocity gradients, and detect a rising
+velocity dispersion. The mean velocity at a given point on the sky,
+\(\mu\), is assumed to be, \begin{equation}{
+\mu(\xi, \eta) = \mu_0 + a\,\xi + b\,\eta
+}\end{equation}
+
+for tangent-plane coordinates \(\xi\) and \(\eta\), systemtic velocity
+\(\mu_0\), and velocity gradient slopes \(a\) and \(b\). The velocity
+dispersion at a given position, \(\sigma\), is assumed to depend as a
+power-law on elliptical radius \(R_{\rm ell}\) alone: \begin{equation}{
+\log \sigma = \log \sigma_0 + c\,\log(R_{\rm ell} / R_h)
+}\end{equation} where \(\sigma_0\) is the system's velocity dispersion
+at \(R_h\), and \(c\) is the velocity dispersion gradient slope.
+
+Our model has parameters with priors \begin{equation}{
+\mu_{0} \sim N(0, \sigma^2_{\rm halo}) \,\kms\\
+\sigma_{0} \sim U(0, 20)\ \kms \\
+a \sim N(0, 6^2)\ \kms\,{\rm deg}^{-1}\\
+b \sim N(0, 6^2)\ \kms\,{\rm deg}^{-1}\\
+c\sim N(0, 0.3^2)\ {\rm dex} \\
+}\end{equation} where \(\sigma_{\rm halo} = 100\,{\rm km\,s^{-1}}\) is
+the velocity dispersion of the MW halo adopted above,
+\(N(\mu, \sigma^2)\) is a standard normal distribution with mean \(\mu\)
+and variance \(\sigma^2\), and \(U(l, h)\) is a uniform distribution
+between \(l\) and \(h\).
+
+Bayes factors quantify the relative evidence between Bayesian models. We
+can use Bayes factors to compare the above model to simpler models
+without gradients in \(\sigma\) or \(\mu\). Assuming that a
+gradient-free model represents the case \(a=b=0\) (gradient free) or
+\(c=0\) (fixed dispersion) models, we can quickly calculate the relative
+Bayes factors without running another model. We use the Savage-Dickey
+method \citep{dickey+lientz1970}, where the Bayes factor is then the
+relative density of posterior versus prior samples when \(a=b=0\)
+(gradient free) or \(c=0\) (fixed dispersion). In order to calculate
+these densities, we use a kernel density estimator on the posterior
+samples with a Silvermann bandwidth in each dimension.
+
+While this is a more complex model, we find each parameter agrees with
+models of reduced complexity.
+
+\section{Results}\label{sec:rv_results}
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_vel_gradient_scatter.pdf}}
-\caption[Scl velocity gradient]{The corrected LOS velocity along the
-best fit rotational axis. RV members are black points, the systematic
-\(v_z\) is the horizontal grey line, blue lines represent the
-(projected) gradient from MCMC samples, and the orange line is a rolling
-median (with a window size of
-50).}\label{fig:scl_velocity_gradient_scatter}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_rv_fits.pdf}}
+\caption[LOS velocity fit to Scl]{Velocity histogram of Scl and UMi in
+terms of projected-correction GSR LOS velocity (Eq.~\ref{eq:v_z}). Black
+points with error bars are from the crossmatched observed sample, and
+green lines represent MCMC fits to the velocity dispersion.}
 \end{figure}
 
+\input{rv_table.tex}
+
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_rv_scatter.pdf}}
-\caption[Sculptor's velocity gradient orientation]{RV members of
-Sculptor plotted in the tangent plane coloured by corrected velocity
-difference from mean \(v_z - \bar v_z\) . The black ellipse marks the
-half-light radius in Fig.~\ref{fig:scl_selection}. The black and green
-arrows mark the proper motion (PM, GSR frame) and derived velocity
-gradient (rot) vectors (to scale).}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_rv_scatter_gradient.png}}
+\caption[Scl velocity gradient]{\textbf{Top} members of Sculptor plotted
+in the tangent plane coloured by corrected velocity difference from mean
+\(v_z - \bar v_z\) . The black ellipse marks the half-light radius in
+Fig.~\ref{fig:scl_selection}. The black and green arrows mark the proper
+motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to
+scale). \textbf{Bottom}: The corrected LOS velocity along the best fit
+rotational axis. RV members are black points, the systematic \(v_z\) is
+the horizontal grey line, blue lines represent the (projected) gradient
+from MCMC samples, and the orange line is a rolling median (with a
+window size of 50).}\label{fig:scl_velocity_gradient_scatter}
 \end{figure}
 
 \begin{figure}
@@ -214,7 +202,8 @@ gradient (rot) vectors (to scale).}
 velocity dispersion gradient (black) in 10 equal number bins and the
 derived slopes from the model fitting. Scl shows moderate evidence for
 an increasing velocity dispersion with radius. UMi's evidence for a
-radial gradient is weaker.}
+radial gradient is weaker, and Scl's velocity dispersion appears to be
+flat outside of \(R_h\).}
 \end{figure}
 
 For Sculptor, we combine radial velocity measurements from APOGEE,

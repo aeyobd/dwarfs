@@ -1,10 +1,11 @@
 \chapter{Numerical convergence and
 parameters}\label{sec:extra_convergence}
 
-Here, we describe some convergence tests to ensure our methods and
-results are minimally impacted by numerical limitations and assumptions.
-See \citet{power+2003} for a detailed discussion of various assumptions
-and parameters used in N-body simulations.
+Here, we describe the numerical specifics of our simulation and
+analysis. We present convergence tests supporting our choices of
+softening and additional parameters. We find alternate choices of
+numerical parameters are unlikely to improve our convergence or result
+in significantly different evolution.
 
 \section{Softening}\label{softening}
 
@@ -22,41 +23,64 @@ h_{\rm grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}},
 
 where \(h_{\rm grav}\) is the softening length, and \(N_{200}\) is the
 number of particles within \(R_{200}\). This choice balances integration
-time and only compromises resolution in collisional regime.
-
-For our isolation halo (\(M_s=2.7\), \(r_s=2.76\)) and with \(10^7\)
-particles, this works out to be \(0.044\,{\rm kpc}\).We adpoted the
-slightly smaller softening which was reduced by a factor of
-\(\sqrt{10}\) which appears to improve agreement slightly in the
-innermost regions.
+time and only compromises resolution in collisional regime. For our
+isolation halo (\(\rmax=6\,\kpc\), \(\vmax=31\,\kms\)) with \(10^7\)
+particles, this works out to be \(0.044\,{\rm kpc}\), about
+\(\sqrt{10}\) times larger than our adopted softening
+(Eq.~\ref{eq:softening_length}).
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/iso_converg_softening.png}}
-\caption{Softening convergence}\label{fig:softening_convergence}
+\caption[Softening convergence]{Similar to
+Fig.~\ref{fig:numerical_convergence} except for simulations with
+different softening lengths, \(h_{\rm grav}\). \(0.044\,\kpc\) is our
+fiducial softening length for this halo. All simulations here were ran
+in isolation of 5 Gyr with \(10^{6}\)
+particles.}\label{fig:softening_convergence}
 \end{figure}
 
-\section{Time stepping and force
+Fig.~\ref{fig:softening_convergence} illustrates the influence of
+softening length on isolation evolution. The simulation with
+\(h=0.14\,\kpc\) deviates the most from the expected profile. Instead,
+the final profiles for \(h=0.044\,\kpc\) and \(h=0.014\,\kpc\) are
+nearly identical. Smaller values of softening than \(h=0.044\,\kpc\)
+likely will not affect the evolution in the inner regions. As
+computation time increases moderately with decreasing softening length,
+\(h=0.044\,\kpc\) is an ideal choice balancing efficiency and accuracy.
+Our simulations therefore adopt this choice (as in
+Eq.~\ref{eq:softening_length}).
+
+\section{Time-stepping and force
 accuracy}\label{time-stepping-and-force-accuracy}
 
-In general, we use adaptive timestepping and relative opening criteria
+In general, we use adaptive time-stepping and relative opening criteria
 for gravitational force computations. To verify that these choices and
 associated accuracy parameters minimally impact convergence or speed, we
-show a few more isolation runs (using only 1e5 particles)
+show a few more isolation runs (using only \(10^5\) particles).
 
-\begin{itemize}
-\tightlist
-\item
-  constant timestep (\ldots), approximantly half of minimum timestep
-  with adaptive timestepping
-\item
-  geometric opening, with \(\theta = 0.5\).
-\item
-  strict integration accuracy, (facc = \ldots.)
-\end{itemize}
+We use in \gadget{} the relative tree opening criterion with the
+accuracy parameter set to \(\alpha =0.005\) (so nodes are opened when
+\(M\,l/r^3 < \alpha |a|\) for a distance from the node of mass \(M\) of
+\(r\), \(l\) is the side length of the node, and \(a\) is the particle's
+total acceleration), and adaptive time stepping with integration
+accuracy set to \(\eta=0.01\) (particles must take time-steps smaller
+than \(dt < \sqrt{2\,\eta\,h_{\rm grav} / a}\) for acceleration \(a\)).
+
+Fig.~\ref{fig:methods_convergence} tests various additional simulation
+parameters in isolation. We compare against an equivalent model ran
+instead with \texttt{GADGET-2}, a model ran with constant timestep of
+0.5Myr (\texttt{dt0.1} named after our dimensionless units), a
+simulation with the time-step accuracy set to \(\eta=0.003\) (high
+accuracy), and a simulation using a geometric opening criterian instead
+of the force (geometric). In all cases, the final isolation velocity
+profile is nearly the same after 5Gyr. The numerical details likely do
+not limit our convergence (as marked by the arrow).
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/iso_converg_methods.png}}
-\caption{Isolation method convergence}\label{fig:methods_convergence}
+\caption[Isolation method convergence]{A comparison against different
+integration methods. See text for details on each
+model.}\label{fig:methods_convergence}
 \end{figure}

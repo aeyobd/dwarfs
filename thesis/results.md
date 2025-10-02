@@ -22,13 +22,13 @@ Figure: Images of the dark matter evolution over a selection of past apocentres 
 
 ![Sculptor tidal tracks](figures/scl_tidal_track.png){#fig:scl_tidal_track}
 
-Figure: Dark matter evolution for the \smallperi{} model of Sculptor. Blue solid and orange dashed lines show the initial and final circular velocity profiles. The points represent the evolution of the maximum circular velocity, and the dotted black line shows the tidal track from @EN2021. To calculate the velocity profiles, unbound particles are iteratively removed, recalculating the potential at each step assuming spherical symmetry. 
+Figure: Dynamical evolution for the \smallperi{} model of Sculptor. Dotted and solid lines show the initial and final circular velocity profiles, and blue and orange lines show the dark matter and stellar (2D exponential) profiles. The points represent the evolution of the maximum circular velocity, and the dotted black line shows the tidal track from @EN2021. To calculate the velocity profiles, unbound particles are iteratively removed, recalculating the potential at each step assuming spherical symmetry.
 
 
 
 | Property                                  | random samples  | \smallperi{} |
 | ----------------------------------------- | --------------- | ------------ |
-| pericentre                                | $53\pm3$        | 29           |
+| pericentre                                | $53\pm3$        | 42           |
 | apocentre                                 | $102\pm3$       | 94.4         |
 | time of last pericentre / Gyr             | $-0.45 \pm 0.2$ | -0.47        |
 | number of pericentres                     | 6               | 6            |
@@ -55,7 +55,7 @@ The Jacobi and break radii further support that tidal effects should not be appa
 
 ![Sculptor initial and final density profiles](figures/scl_smallperi_i_f.pdf){#fig:scl_smallperi_i_f}
 
-Figure: The tidal effects on Scl's stellar component, for the \smallperi{} orbit with the fiducial halo and exponential stars with $R_s=0.10\,\kpc$. **Top:** the initial (left) and final (right) 2D projected density of stars on the sky. The solid circle marks $6R_h$, the dotted circle the break radius, and the (dotted) line the past (future) orbit. **Bottom:** The initial (dotted) and final (solid) stellar density profiles as compared to the observed stellar density profile. Arrows mark the break and Jacobi radii ([@eq:r_break; @eq:r_jacobi]) . 
+Figure: The tidal effects on Scl's stellar component, for the \smallperi{} orbit with the fiducial halo and exponential stars with $R_s=0.10\,\kpc$. **Top:** the initial (left) and final (right) 2D projected density of stars on the sky. The solid circle marks $6R_h$, the dotted circle the break radius, and the blue arrow the orbital direction. **Bottom:** The initial (dotted) and final (solid) stellar density profiles as compared to the observed stellar density profile. Arrows mark the half-light ($R_h$), break, and Jacobi radii ([@eq:r_break; @eq:r_jacobi]) . 
 
 
 
@@ -132,7 +132,7 @@ Figure: Similar to @fig:scl_sim_images except for the case where the potential i
 
 ![Sculptor initial and final density with LMC](figures/scl_lmc_i_f.pdf){#fig:scl_lmc_i_f}
 
-Figure: Similar to @fig:scl_smallperi_i_f except for the \texttt{LMC-flyby} model. The Jacobi and break radii here are calculated with respect to the LMC, the corresponding radii with respect to the MW are larger. With only one MW pericentre and a recent, rapid LMC encounter, tidal forces do not appear to affect the stellar distribution. **todo fix break radius position, orbits as arrows...**
+Figure: Similar to @fig:scl_smallperi_i_f except for the \texttt{LMC-flyby} model. The Jacobi and break radii here are calculated with respect to the LMC, the corresponding radii with respect to the MW are larger. With only one MW pericentre and a recent, rapid LMC encounter, tidal forces do not appear to affect the stellar distribution.
 
 
 
@@ -143,7 +143,7 @@ Figure: Similar to @fig:scl_smallperi_i_f except for the \texttt{LMC-flyby} mode
 | fractional stellar mass loss | $<10^{-12}$          | 0.0013          |
 | $R_{h, i}$ / kpc             | 0.186                | 0.201           |
 | $R_{h, f}$ / kpc             | 0.189                | 0.205           |
-| break radius                 | $77'$, 1.6 kpc       | $80'$, 1.7 kpc  |
+| break radius                 | $78'$, 1.6 kpc       | $81'$, 1.7 kpc  |
 | LMC break radius             | $23'$, 0.49 kpc      | $24'$, 0.52 kpc |
 
 Table: Similar to @tbl:scl_sim_stars_results, but for the properties of the stellar components of the \texttt{LMC-flyby} model of Sculptor.  {#tbl:scl_lmc_sim_stars short="Simulation results for Sculptor's stars in the LMC+MW potential"}
@@ -226,9 +226,9 @@ Figure: The tidal effects on the stellar surface density of Ursa Minor for Plumm
 
 
 
-Tidal features in UMi's stellar component are still extremely faint, becoming apparent only outside 100 arcminutes in [@fig:umi_smallperi_i_f]. Tides also only moderately affect the observed size and velocity dispersion of Ursa Minor ([@tbl:umi_sim_stars_results]). For exponential initial conditions, tidal effects are unlikely to ever be observable in the near future. 
+Tidal features in UMi's stellar component are still extremely faint, becoming apparent only outside 100 arcminutes in [@fig:umi_smallperi_i_f]. The observed size and velocity dispersion of Ursa Minor evolve little ([@tbl:umi_sim_stars_results]). For exponential initial conditions, tidal effects are unlikely to ever be observable in the near future. 
 
-Similar to Scl, we consider a model where UMi's stars are initially a more extended Plummer profile, resembling the present-day density profile. The stellar evolution of the Plummer stellar component is similar to the exponential stellar profile (@ig:umi_plummer_i_f). However, because there are more loosely-bound stars, the Plummer model looses nearly 4% of its initial stellar mass to tides ([@tbl:umi_sim_stars_results]), and tidal features may be detectible if we measure densities 2 orders of magnitude fainter than our present data. We show the properties of a stream in the Appendix (@fig:umi_tidal_stream), but such a stream is unlikely to be observable in the near future. 
+Similar to Scl, we consider a model where UMi's stars are initially a more extended Plummer profile, resembling the present-day density profile. The stellar evolution of the Plummer stellar component is similar (@fig:umi_plummer_i_f). However, because there are more loosely-bound stars, the Plummer model looses nearly 4% of its initial stellar mass to tides ([@tbl:umi_sim_stars_results]), and tidal features may be detectible if we measure densities 2 orders of magnitude fainter than our present data. We show the properties of a stream in the Appendix (@fig:umi_tidal_stream), but such a stream is unlikely to be observable in the near future. We conclude that tides do not strongly affect the stellar component of this model.
 
 
 
@@ -263,8 +263,6 @@ Cored or less concentrated dark matter halos disrupt quicker [e.g., @stucker+202
 Galaxies are rarely perfect isotropic spheres. Sculptor and Ursa Minor are elliptical, and halos are expected to be radially anisotropic [e.g., @navarro+2010]. We test example non-spherical and anisotropic models in @sec:extra_results, finding that these assumptions likely do not alter our conclusions. 
 
 A system's observed velocity dispersion directly constrains the mean density within $R_h$ [e.g., @wolf+2010]. Thus, the tidal force required to disrupt the stellar component does not strongly depend on the inner halo structure (via the Jacobi radius). Alternative initial conditions may influence the total mass evolution but would produce a similar final stellar structure.
-
-
 
 ## Orbital uncertainties
 

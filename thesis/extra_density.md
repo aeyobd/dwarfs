@@ -1,6 +1,6 @@
 # The reliability of derived density profiles {#sec:extra_density}
 
-In this Appendix, we describe the details of J+24's likelihoods. We then test the reliability of the derived density profiles of the dwarfs, comparing methodologies, samples, and to literature. In conclusion, the density profiles from J+24 converge among methods out to a background-limited radius, derived here. 
+In this section, we describe the details of J+24's likelihoods. We then test the reliability of the derived density profiles for Scl and UMi, comparing methodologies, samples, and to literature. Finally, we present a comparison of J+24's samples to a non-parametric Bayesian-derived density profile, finding similar results except in the very outer regions. Past a "limiting radius", the density profiles become susceptible to the likelihood specification and may select mostly background stars. In conclusion, the density profiles from J+24 converge among methods out to our limiting radii derived here. 
 
 ## Bayesian membership probabilities
 
@@ -148,7 +148,11 @@ Comparison of density profiles for each J+24 method. The fiducial is a 2-compone
 
 ![Scl literature density profiles](figures/scl_literatre_profiles.pdf)
 
-Figure: A comparison of the Scl derived density profile and historical works. 
+Figure: A comparison of the Scl derived density profile and historical works. Unlike most profiles in this thesis, this density profile is plotted with respect to the semi-major elliptical radius ($a = R_{\rm ell} / \sqrt{1-{\rm ell}}$). The solid black line is a 2D exponential with corresponding scale radius to Scl's half-light radius, and residuals in the lower panel are relative to this exponential. 
+
+
+
+
 
 ### Ursa Minor
 
@@ -156,7 +160,9 @@ Figure: A comparison of the Scl derived density profile and historical works.
 
 Figure: Similar to [@fig:scl_observed_profiles] except for Ursa Minor.
 
+![UMi density profiles in literatures](figures/umi_literature_profiles.pdf)
 
+Figure: Similar to 
 
 
 
