@@ -95,6 +95,87 @@ LilGuys.plot_xyz(x_i, plot=:scatter, markersize=1, alpha=0.01)
 # ╔═╡ 93019bc6-cf42-46de-90c0-33ad4ce3e4de
 LilGuys.plot_xyz(x_f[:, LilGuys.bound_particles(snap_f)], plot=:scatter, markersize=1, alpha=0.01, limits=((-10, 10), (-10, 10), (-10, 10)))
 
+# ╔═╡ 0ca0c4df-6f59-4191-b14c-461d5ad906c8
+import DensityEstimators: histogram2d
+
+# ╔═╡ ff983edb-7461-487b-8ac9-0ad197f3d661
+import KernelDensity: kde
+
+# ╔═╡ a177f182-07d9-4520-89b9-a7c37ba35f24
+import DensityEstimators: density2d
+
+# ╔═╡ 332f418d-6b41-4b1a-9396-1a994660e5d2
+function plot_isocontours(gs, positions; bandwidth=0.4, filter_bound=false, )
+	
+	r_max = 10
+	x = positions[3, :]
+	y = positions[1, :]
+
+	h = kde((x, y), boundary=((-r_max, r_max), (-r_max, r_max)), bandwidth=(bandwidth, bandwidth))
+	h_min = 1e-10
+
+	h_max = log10(maximum(h.density) )
+	
+	ax = Axis(gs, xlabel=L"$x'$ / kpc", ylabel=L"$z'$ / kpc", )
+	contour!(h.x, h.y, h.density, colorscale=log10, levels=10 .^ LinRange(h_max-2, h_max, 20), linewidth=theme(:linewidth)[]/2, linestyle=:solid)
+
+
+	ax
+end
+
+# ╔═╡ 8e60f605-a2fb-4223-9cb9-7f11d8e2f24c
+let
+	fig = Figure()
+
+	ax = plot_isocontours(fig[1,1], x_i)
+	ax.title = "initial"
+
+	ax = plot_isocontours(fig[1, 2], x_f)
+	ax.title = "final"
+	hideydecorations!(ticks=false, minorticks=false)
+
+	rowsize!(fig.layout, 1, Aspect(1, 1))
+
+	resize_to_layout!()
+	@savefig "oblate_projected_2d"
+	fig
+
+end
+
+# ╔═╡ 7c81c3b6-e51a-40f2-9b4a-006366e7bc34
+function plot_isocontours_2(gs, positions; filter_bound=false, )
+	
+	r_max = 10
+	x = positions[3, :]
+	y = positions[1, :]
+
+	# h = kde((x, y), boundary=((-r_max, r_max), (-r_max, r_max)))
+	h = histogram2d(x, y, limits=((-r_max, r_max), (-r_max, r_max)))
+	h_min = 1e-10
+
+	h_max = log10(maximum(h.values) )
+	
+	ax = Axis(gs, xlabel=L"$x'$ / kpc", ylabel=L"$z'$ / kpc", )
+	contour!(midpoints(h.xbins), midpoints(h.ybins), h.values, colorscale=log10, levels=10 .^ LinRange(h_max-2, h_max, 20), linewidth=theme(:linewidth)[]/2, linestyle=:solid)
+
+
+	h
+end
+
+# ╔═╡ 102f5701-dafa-4c32-a463-644f41228e24
+let
+	fig = Figure()
+
+	plot_isocontours_2(fig[1,1], x_i)
+
+	plot_isocontours_2(fig[1, 2], x_f)
+	hideydecorations!(ticks=false, minorticks=false)
+
+	rowsize!(fig.layout, 1, Aspect(1, 1))
+	fig
+
+end
+
 # ╔═╡ 1610d536-b75b-454a-83b5-dbbe09f0c4ad
 import StatsBase: median
 
@@ -239,6 +320,13 @@ end
 # ╠═2d0de394-c79a-4870-b7a6-9228a47fb769
 # ╠═b801dbdc-9e7e-49c4-ad04-4462aa22a30d
 # ╠═93019bc6-cf42-46de-90c0-33ad4ce3e4de
+# ╠═0ca0c4df-6f59-4191-b14c-461d5ad906c8
+# ╠═ff983edb-7461-487b-8ac9-0ad197f3d661
+# ╠═8e60f605-a2fb-4223-9cb9-7f11d8e2f24c
+# ╠═102f5701-dafa-4c32-a463-644f41228e24
+# ╠═a177f182-07d9-4520-89b9-a7c37ba35f24
+# ╠═332f418d-6b41-4b1a-9396-1a994660e5d2
+# ╠═7c81c3b6-e51a-40f2-9b4a-006366e7bc34
 # ╠═1610d536-b75b-454a-83b5-dbbe09f0c4ad
 # ╠═c3f8fd10-eae6-4f91-a078-008b214beb0e
 # ╠═67b8052a-e0d0-41a0-8f49-0f20623365f4

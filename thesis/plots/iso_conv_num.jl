@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -113,22 +113,26 @@ function plot_vcirc_profiles!(profiles, v_circ_0=x->0; errskip=1)
 end
 
 # ╔═╡ 533eb462-eb9a-4452-b861-253e78b87490
-function plot_marks!(profiles, marks::Real, ylims; residual=false, kwargs...)
+function plot_marks!(profiles, marks::Real, ylims; y0=nothing, residual=false, kwargs...)
 	x = log10(marks)
 	
-	if !residual
+	if isnothing(y0)
 		y = (LilGuys.v_circ(nfw, marks) * V2KMS)
+	elseif y0 == :low
+		y = ylims[1]
 	else
-		y = 0
+		y = y0
 	end
 
 	dy = 0.05 * (ylims[2] - ylims[1])
 	if residual
 		dy /= RES_SIZE
-		@info "marking ($x, $y)"
+		@info "marking ($x, $y, $dy)"
 		arrows2d!([x], [y] .+ 2*dy, [0], [-dy]; kwargs...)
 	else
 		dy = (ylims[2] / ylims[1])^0.05
+		@info "marking ($x, $y, $dy)"
+
 		arrows2d!([x], [y * dy^2], [0], [y*dy-y*dy^2]; kwargs...)
 
 	end
@@ -186,6 +190,12 @@ function plot_residual_profiles!(profiles; errskip=1)
     end
 end
 
+# ╔═╡ 69516e98-4e15-44a8-b0d4-dc8d8bacd7e8
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ 00dc1954-0298-4f20-8ad7-adf2d886c74c
+smallfontsize=0.8*theme(:fontsize)[]
+
 # ╔═╡ 685c9c53-4c4e-4d1f-82da-a64488562662
 smalllinewidth = theme(:linewidth)[] /  2
 
@@ -220,9 +230,10 @@ function compare_vcirc(profiles;
 
 	plot_vcirc_profiles!(profiles)
 	plot_marks!(profiles, marks, vlims)
-	plot_marks!(profiles, softening, vlims, tiplength=0, shaftwidth=smalllinewidth)
+	plot_marks!(profiles, softening, vlims, tiplength=0, y0=:low, shaftwidth=smalllinewidth)
 	plot_analytic!(nfw, xlims)
-	
+	text!(log10(0.014), 3.5*1.1266415859202983^2, text="softening", offset=(0, 6), align=(:left, :center), fontsize=smallfontsize, rotation=π/2, color=COLORS[4])
+	text!(-0.9301245845065439, 9.53748778279495*1.1266415859202983^2, text="converged", offset=(0, 6), align=(:left, :center), fontsize=smallfontsize, rotation=π/2, color=COLORS[4])
 
     axislegend(position=:rb, patchsize=[24, 6])
 	li = lines!([NaN], [NaN], linestyle=:dot, label="initial", color=:grey)
@@ -233,8 +244,7 @@ function compare_vcirc(profiles;
 	Makie.current_axis!(ax_res)
 	plot_residual_profiles!(profiles)
 
-	plot_marks!(profiles, marks, (-0.2, 0.2), residual=true)
-	plot_marks!(profiles, softening, (-0.2, 0.2), residual=true, tiplength=0, shaftwidth=smalllinewidth)
+	plot_marks!(profiles, marks, (-0.2, 0.2), y0=0, residual=true)
 
     hlines!(0, color=:black, linestyle=:dash)
 
@@ -250,9 +260,6 @@ part_num = Dict(
 	"10⁷" => 1e7,
 
 )
-
-# ╔═╡ 69516e98-4e15-44a8-b0d4-dc8d8bacd7e8
-CairoMakie.activate!(type=:png)
 
 # ╔═╡ 3c0bb9b7-d1b5-4a67-a9ad-8a89c615110f
 md"""
@@ -306,6 +313,7 @@ r_conv(halo, N=1e7) = LilGuys.Interface.find_zero(r -> t_relax.(r, halo, N) .-  
 # ╠═64efb625-9fed-4ec9-9546-79842e7e6b90
 # ╠═69516e98-4e15-44a8-b0d4-dc8d8bacd7e8
 # ╠═cc50d80b-78b8-4f39-8a41-18ae79bf7287
+# ╠═00dc1954-0298-4f20-8ad7-adf2d886c74c
 # ╠═685c9c53-4c4e-4d1f-82da-a64488562662
 # ╠═f7cee4fe-e8df-429b-9cb0-f508d60c9788
 # ╠═a4b6b203-a42a-48dd-8944-ea150eee376b

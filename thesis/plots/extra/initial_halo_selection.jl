@@ -34,6 +34,9 @@ import LinearAlgebra: eigen, diagm
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ b7a4e67b-a3c9-44c2-acf3-b61f60d387ad
+
+
 # ╔═╡ be9e982a-904d-497c-949a-1fd265fcb67a
 """
 	get_slope(f, x, h)
@@ -58,6 +61,7 @@ md"""
 # ╔═╡ 22629f89-3d2a-457d-b80a-7df412b9c791
 halos_scl = OrderedDict(
 		"Sculptor" => NFW(v_circ_max = 31 / V2KMS, r_circ_max = 3.2),
+		#"Scl: small" => NFW(v_circ_max=25/V2KMS, r_circ_max=2.5),
 	)
 
 # ╔═╡ 61aa6484-ae3c-4478-a426-51e78ae02ed7
@@ -119,17 +123,8 @@ der_props_scl = derived_properties(obs_props_scl)
 # ╔═╡ b76167d8-0c5a-47c1-9cdb-4ca6a16e0651
 der_props_umi = derived_properties(obs_props_umi)
 
-# ╔═╡ 4c02f46a-f571-4169-9c25-05cf213aa872
-10 ^(Measurement(der_props_scl.log_v_0, der_props_scl.log_v_0_err)) * V2KMS
-
-# ╔═╡ e2a2e7b0-fe92-4abc-9b52-842e07138bcc
-10 ^(Measurement(der_props_umi.log_v_0, der_props_umi.log_v_0_err)) * V2KMS
-
 # ╔═╡ 27425538-2104-46fe-8fc9-e6c28c0c6041
 α_exp = LilGuys.R_h(LilGuys.Exp2D())
-
-# ╔═╡ 0ec48582-0a73-4b57-87bc-24c19f79209a
-R2r = LilGuys.r_h(LilGuys.Exp2D()) / LilGuys.R_h(LilGuys.Exp2D())
 
 # ╔═╡ 1f74ca1b-ac53-425c-8f89-1afe361525cd
 function solve_v_from_dispersion(r0, σv, R_h)
@@ -141,12 +136,8 @@ function solve_v_from_dispersion(r0, σv, R_h)
 	return v0
 end
 
-# ╔═╡ 38712f63-8f52-4b1c-8da1-788101798f55
-function solve_v_from_dispersion_simple(r0, σv, R_h)
-	f(v) = LilGuys.v_circ(NFW(r_circ_max=r0, v_circ_max=v), R_h*R2r)/sqrt(3) - σv/V2KMS
-	
-	return LilGuys.find_zero(f, [0.01, 0.5])
-end
+# ╔═╡ 273ccadb-04c6-485e-90e5-20cb4935f58d
+solve_v_from_dispersion(1, 2, 0.24)
 
 # ╔═╡ a0e7532b-2aaf-4fb3-af00-1d0912787c35
 function plot_error_ellipses!(μ, Σ; kwargs...)
@@ -174,7 +165,7 @@ function plot_fattahi!(log_v_0, log_v_0_err; label="Fattahi+18")
 
 	hspan!(v_l, v_h, color=(color, 0.1))
 	hlines!(v_0, color=(color, 0.5))
-	text!(10, v_0, text=label, color=color, fontsize=smallfontsize)
+	text!(1.1, v_0, text=label, color=color, fontsize=smallfontsize)
 end
 
 # ╔═╡ 4ff87ef7-2132-4be9-9b71-15510fe3345a
@@ -182,28 +173,6 @@ function log_derivative(f, x0; h=0.001)
 	y0 = f(x0)
 
 	return (log10(f(x0 * 10^h)) - log10(y0)) / h
-end
-
-# ╔═╡ 5106a242-4fe5-47d8-94f7-45c12053c882
-function plot_sigma_v!(σv; R_h, x0=15, rf=1, vmax = solve_v_from_dispersion_simple, kwargs...)
-	color = COLORS[2]
-	
-	x = LinRange(1, 30, 100)
-	y = vmax.(x, σv, R_h) * V2KMS
-	lines!(x, y; color=color, kwargs...)
-
-	y0 = vmax(x0, σv, R_h) * V2KMS
-	
-	slope = log_derivative(x->vmax(x, σv, R_h) * V2KMS, x0)
-	θ = @lift atan(slope * $rf)
-
-	if σv == 8
-		label = L"$\sigma_\textrm{v} = %$σv$\,km\,s$^{-1}$"
-	else
-		label = string(σv)
-	end
-	
-	text!(x0, y0, text=label, rotation=θ, color=color, fontsize=smallfontsize, align=(:center, :bottom))
 end
 
 # ╔═╡ 12177747-6d65-42d4-be9f-c4a86d37e65e
@@ -247,6 +216,55 @@ function rotation_factor(ax, log=false)
 	return correction_factor
 end
 
+# ╔═╡ 53967222-f243-4529-9544-caf2d68215c2
+md"""
+# Sanity checks
+"""
+
+# ╔═╡ 1dcf3552-a488-4913-b9c8-9d4d37ad7590
+R_h=0.24
+
+# ╔═╡ 80005476-d236-4a62-bfc0-2e7d8ca914ff
+stars = LilGuys.Exp2D(R_s = R_h/α_exp)
+
+# ╔═╡ e0e418d2-16f2-4bbe-92db-ccdc6e89669e
+[label => LilGuys.σv_star_mean(halo, stars) * V2KMS for (label, halo) in halos_scl]
+
+# ╔═╡ f29e7c86-9fe2-4f9b-9d03-9a029773123e
+R2r = LilGuys.r_h(LilGuys.Exp2D()) / LilGuys.R_h(LilGuys.Exp2D())
+
+# ╔═╡ 38712f63-8f52-4b1c-8da1-788101798f55
+function solve_v_from_dispersion_simple(r0, σv, R_h)
+	f(v) = LilGuys.v_circ(NFW(r_circ_max=r0, v_circ_max=v), R_h*R2r)/sqrt(3) - σv/V2KMS
+	
+	return LilGuys.find_zero(f, [0.01, 0.5])
+end
+
+# ╔═╡ 5555b64e-c234-4b32-b8dd-965e3842671c
+solve_v_from_dispersion_simple(1, 2, 0.24)
+
+# ╔═╡ 5106a242-4fe5-47d8-94f7-45c12053c882
+function plot_sigma_v!(σv; R_h, x0=15, rf=1, vmax = solve_v_from_dispersion_simple, kwargs...)
+	color = COLORS[2]
+	
+	x = LinRange(1, 30, 100)
+	y = vmax.(x, σv, R_h) * V2KMS
+	lines!(x, y; color=color, kwargs...)
+
+	y0 = vmax(x0, σv, R_h) * V2KMS
+	
+	slope = log_derivative(x->vmax(x, σv, R_h) * V2KMS, x0)
+	θ = @lift atan(slope * $rf)
+
+	if σv == 8
+		label = L"$\sigma_\textrm{v} = %$σv$\,km\,s$^{-1}$"
+	else
+		label = string(σv)
+	end
+	
+	text!(x0, y0, text=label, rotation=θ, color=color, fontsize=smallfontsize, align=(:center, :bottom))
+end
+
 # ╔═╡ 7d36f094-70bc-4114-b920-3655f73dc75f
 function plot_halo_constraints(gs, der_props, halos)
 	ax = Axis(gs,
@@ -278,6 +296,7 @@ function plot_halo_constraints(gs, der_props, halos)
 	end
 
 	
+	axislegend(position=:rb)
 
 	ax
 end
@@ -287,9 +306,7 @@ let
 	fig = Figure(size=(5, 3) .* 72)
 
 	ax1 = plot_halo_constraints(fig[1,1], der_props_scl, halos_scl)
-	ax1.title = "Sculptor"
 	ax2 = plot_halo_constraints(fig[1,2], der_props_umi, halos_umi)
-	ax2.title = "Ursa Minor"
 
 	linkaxes!(ax1, ax2)
 	hideydecorations!(ax2, ticks=false, minorticks=false)
@@ -299,6 +316,39 @@ let
 	fig
 end
 
+# ╔═╡ 0ca4187b-d63c-48e4-947c-c9a48973323d
+[LilGuys.v_circ(halo, R_h * R2r) * V2KMS / sqrt(3) for (label, halo) in halos_scl]
+
+# ╔═╡ 51075ee8-2cd7-4643-bf45-24a8a60d4eec
+let
+
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+	for (label, halo) in merge(halos_scl, halos_umi)
+		x = LinRange(-2, 2, 10_000)
+		y = @. LilGuys.potential(halo, 10^x) 
+
+		lines!(x, y)
+	end
+
+	fig
+
+end
+
+# ╔═╡ 9fb0dfe4-5d49-4b05-899e-cb4138dc7aac
+md"""
+These values are from the MCMC halo mass estimator notebook in `analysis/sculptor` 
+"""
+
+# ╔═╡ f178ab03-06ba-4e83-9be9-3924543bd288
+Σ_scl = [0.019467512114446032 0.0019034735328083907; 0.0019034735328083907 0.001516776581639168]
+
+# ╔═╡ 28f7a671-8b64-43ed-b079-95cd7360a73d
+μ_scl = 
+[0.780442
+1.49899]
+
 # ╔═╡ Cell order:
 # ╠═eb4a5051-43b6-4afa-bf42-5a74125cf60a
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -307,7 +357,8 @@ end
 # ╠═325ff1ea-ddfa-4661-9dd0-22866afca67d
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
-# ╠═be9e982a-904d-497c-949a-1fd265fcb67a
+# ╠═b7a4e67b-a3c9-44c2-acf3-b61f60d387ad
+# ╟─be9e982a-904d-497c-949a-1fd265fcb67a
 # ╟─3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═c515f500-27c5-403d-b50f-f0f25c7850cd
 # ╠═d10fb6a6-6bd1-4748-9c7f-b69cccabe176
@@ -319,12 +370,11 @@ end
 # ╠═f5794260-7b09-492b-a7e3-0f9559ce0d35
 # ╠═4f4dd26d-3b93-49fe-9d9a-472f504e365d
 # ╠═b76167d8-0c5a-47c1-9cdb-4ca6a16e0651
-# ╠═4c02f46a-f571-4169-9c25-05cf213aa872
-# ╠═e2a2e7b0-fe92-4abc-9b52-842e07138bcc
 # ╠═27425538-2104-46fe-8fc9-e6c28c0c6041
-# ╠═0ec48582-0a73-4b57-87bc-24c19f79209a
 # ╠═1f74ca1b-ac53-425c-8f89-1afe361525cd
 # ╠═38712f63-8f52-4b1c-8da1-788101798f55
+# ╠═273ccadb-04c6-485e-90e5-20cb4935f58d
+# ╠═5555b64e-c234-4b32-b8dd-965e3842671c
 # ╠═a0e7532b-2aaf-4fb3-af00-1d0912787c35
 # ╠═5106a242-4fe5-47d8-94f7-45c12053c882
 # ╠═21c57d80-3dda-412f-a912-0248a2f6d600
@@ -334,3 +384,13 @@ end
 # ╠═2f97e7db-b2d5-44af-9c03-72e78f3edcde
 # ╠═7d36f094-70bc-4114-b920-3655f73dc75f
 # ╠═a15dbc88-8dbf-48d4-8a72-1881151c8e26
+# ╟─53967222-f243-4529-9544-caf2d68215c2
+# ╠═1dcf3552-a488-4913-b9c8-9d4d37ad7590
+# ╠═0ca4187b-d63c-48e4-947c-c9a48973323d
+# ╠═e0e418d2-16f2-4bbe-92db-ccdc6e89669e
+# ╠═80005476-d236-4a62-bfc0-2e7d8ca914ff
+# ╠═f29e7c86-9fe2-4f9b-9d03-9a029773123e
+# ╠═51075ee8-2cd7-4643-bf45-24a8a60d4eec
+# ╟─9fb0dfe4-5d49-4b05-899e-cb4138dc7aac
+# ╠═f178ab03-06ba-4e83-9be9-3924543bd288
+# ╠═28f7a671-8b64-43ed-b079-95cd7360a73d

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -25,6 +25,17 @@ using Agama
 # ╔═╡ dea35f32-ba19-474f-a7b9-fdaa5e89fc43
 include("./paper_style.jl")
 
+# ╔═╡ cf74dd35-70f3-4a88-b1c0-580d0ffe69aa
+CairoMakie.activate!(type=:png)
+
+# ╔═╡ 8210dd49-cef9-48a2-a774-ac96e3312161
+scale_theme_element!(:linewidth, 0.8)
+
+# ╔═╡ 49f594c0-a1a8-4a39-900a-9a287fbfb531
+md"""
+# Data loading and utilities
+"""
+
 # ╔═╡ 2a7db353-9975-41d0-8a03-d91622d549d4
 potential_dir = joinpath(ENV["DWARFS_ROOT"], "agama", "potentials")
 
@@ -42,7 +53,7 @@ function v_circ(pot, r)
 end
 
 # ╔═╡ 86961f65-fa3e-4899-81d5-94c6bec3b8de
-function plot_v_circ!(pot; x=LinRange(0, 2.5, 1000), kwargs...)
+function plot_v_circ!(pot; x=LinRange(-5, 2.5, 1000), kwargs...)
 	r = 10 .^ x
 
 	m = pot.enclosedMass(r) |> Agama.py2vec
@@ -52,23 +63,14 @@ function plot_v_circ!(pot; x=LinRange(0, 2.5, 1000), kwargs...)
 	
 end
 
-# ╔═╡ cf74dd35-70f3-4a88-b1c0-580d0ffe69aa
-CairoMakie.activate!(type=:png)
-
-# ╔═╡ 0b3729e3-184a-4eed-91df-67a8fee539b9
-theme(:fontsize)
-
-# ╔═╡ 33c4f27a-9bf7-404f-9acd-03fc2aa16827
-eilers19 = CSV.read("eilers+19.dat", DataFrame, delim=' ')
-
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "v_circ_potential" let
-	fig = Figure(figure_padding=12)
+	fig = Figure(figure_padding=12, size=(3.5*72, 3*72))
 
 	ax = Axis(fig[1,1], 
 		xlabel = "radius / kpc",
 		ylabel = L"circular velocity / km\,s$^{-1}$",
-		limits=(0, 200, nothing, nothing)
+		limits=(0, 200, 0, nothing)
 	)
 
 	plot_v_circ!(Φ_ep._py, label="total", linestyle=:solid, color=:black, linewidth=2*theme(:linewidth)[])
@@ -85,7 +87,6 @@ eilers19 = CSV.read("eilers+19.dat", DataFrame, delim=' ')
 	text!(100, 57 + dy, text="disk", fontsize=smallfontsize, color=COLORS[2], rotation=0)
 	text!(100, 29 - dy, text="bulge", fontsize=smallfontsize, color=COLORS[1], align=(:left, :top), rotation=0)
 
-	#Legend(fig[1,2], ax)
 	fig
 end
 
@@ -105,15 +106,15 @@ v_circ(Φ_nfw, 100.)
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═874f376a-c16b-411c-a260-d925e25d1277
 # ╠═25f6474b-2ee7-4d2e-9ce5-fdf782adfa72
+# ╠═cf74dd35-70f3-4a88-b1c0-580d0ffe69aa
 # ╠═dea35f32-ba19-474f-a7b9-fdaa5e89fc43
+# ╠═8210dd49-cef9-48a2-a774-ac96e3312161
+# ╟─49f594c0-a1a8-4a39-900a-9a287fbfb531
 # ╠═2a7db353-9975-41d0-8a03-d91622d549d4
 # ╠═5cbabcc8-6473-4ac1-8084-80da24a84617
 # ╠═babbbe3b-13b7-4450-98be-f807f21706d8
 # ╠═4c0c9322-186e-4ba3-a98e-81e3c3c1b037
 # ╠═86961f65-fa3e-4899-81d5-94c6bec3b8de
-# ╠═cf74dd35-70f3-4a88-b1c0-580d0ffe69aa
-# ╠═0b3729e3-184a-4eed-91df-67a8fee539b9
-# ╠═33c4f27a-9bf7-404f-9acd-03fc2aa16827
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═e83f16b2-3d84-4a67-90f3-ffe9b439a863
 # ╠═d01934f7-ab69-4715-b68c-e53709c57dee

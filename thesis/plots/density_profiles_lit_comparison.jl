@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -232,7 +232,7 @@ log10(cosd(36))
 # ╔═╡ e4f85a1e-c755-426c-9d93-71485bb2cf63
 profiles = OrderedDict(
 	L"Gaia" => prof_scl,
-	"DELVE" => prof_scl_delve,
+	# "DELVE" => prof_scl_delve,
 	"Muñoz+2018" => prof_scl_munoz,
 	"Westfall+2006" => prof_scl_westfall06,
 	"Walcher+2003" => prof_scl_walcher,
@@ -263,9 +263,8 @@ log10(10*a_h)
 log10(10*a_h)
 
 # ╔═╡ 6c04f96a-b14b-4c60-91de-716c9379491f
-function compare_profiles(profiles, galaxyname; title="")
-	fig = Figure()
-	ax = Axis(fig[1,1],
+function compare_profiles(gs, profiles, galaxyname; title="")
+	ax = Axis(gs,
 			 xlabel = L"$\log\, a$ / arcmin",
 			 ylabel = L"\log\, \Sigma\ /\ \Sigma(a_h)",
 			 limits=(-0.2, nothing, -4.2, nothing),
@@ -297,12 +296,26 @@ function compare_profiles(profiles, galaxyname; title="")
 	
 	axislegend(position=:lb)
 	hidexdecorations!(ax, ticks=false, minorticks=false)
-
 	
-	ax_res = Axis(fig[2,1], 
+	dx = x_max - x_min
+	xlims!(x_min - 0.05dx, x_max + 0.05dx)
+
+	ax
+
+end
+
+# ╔═╡ f1926cef-5723-40be-8a91-e50e2aa34a4c
+function compare_profiles_res(gs, profiles, galaxyname)
+	ax_res = Axis(gs, 
 		xlabel = L"$\log a$ / arcmin",
 		ylabel = L"\Delta\,\log\, \Sigma"			 
 	)
+
+	a_h = get_a_h(galaxyname).middle
+	
+	ana = LilGuys.Sersic(R_h=a_h, n=1)
+	f(x) = LilGuys.surface_density.(ana, 10 .^ x) .|> log10
+
 	
 	hlines!(0, color=:black, linewidth=lw)
 
@@ -312,21 +325,42 @@ function compare_profiles(profiles, galaxyname; title="")
 		scatter!(LilGuys.log_radii(prof), LilGuys.log_surface_density(prof) .- s0 .- f(LilGuys.log_radii(prof)), label=label)
 	end
 	
-
-	linkxaxes!(ax, ax_res)
-	dx = x_max - x_min
-	xlims!(x_min - 0.05dx, x_max + 0.05dx)
-	rowsize!(fig.layout, 2, Relative(0.2))
-	rowgap!(fig.layout, 0.)
-	fig
+	ax_res
 
 end
+
+# ╔═╡ 4f74cfb5-4e2c-416d-adde-661ad9bf7f7d
+function compare_profiles(profiles, galaxyname; kwargs...)
+	fig = Figure(size=(4.5*72, 3.5*72))
+	ax = compare_profiles(fig[1,1], profiles, galaxyname; kwargs...)
+
+	ax_res = compare_profiles_res(fig[2, 1], profiles, galaxyname)
+
+	rowsize!(fig.layout, 2, Relative(0.2))
+	rowgap!(fig.layout, 0.)
+	linkxaxes!(ax, ax_res)
+
+
+	return fig
+end
+
+# ╔═╡ 1673a2ce-0a0a-4564-b7f2-8ac9cff83b81
+let
+	prof_scl_eskridge.log_R[1:2:end] + prof_scle
 
 # ╔═╡ 4314ec9e-8359-4b2a-8eea-30f71d92b743
 compare_profiles(profiles, "sculptor")
 
 # ╔═╡ a991a4fb-8037-485b-b48c-0f73d14bd0b5
-@savefig "scl_literatre_profiles" compare_profiles(merge(profiles, profiles_old), "sculptor", title="Sculptor")
+@savefig "scl_literatre_profiles" let
+	fig = compare_profiles(merge(profiles, profiles_old), "sculptor", title="Sculptor")
+
+	xlims!(-0.4, 2.2)
+	ylims!(fig.content[1], -3.6, 1)
+
+	fig
+
+end
 
 # ╔═╡ 4cb354cb-4f07-4871-92dc-fd479b1b546d
 compare_profiles(OrderedDict(
@@ -411,18 +445,50 @@ end
 # ╔═╡ f4797072-3103-4f85-b6b5-a3906205d9b3
 profiles_umi = OrderedDict(
 	L"Gaia" => prof_umi,
-	"UNIONS" => prof_umi_unions,
-	"Sato+2025 (minor axis)" => prof_umi_sato_minor,
+	# "UNIONS" => prof_umi_unions,
+	"Sato+2025" => prof_umi_sato_minor,
 	"Palma+2003" => prof_umi_palma,
-	"Martínez-Delgado+2001" => prof_umi_md,
+	"MD+2001" => prof_umi_md,
 	"Kleyna+1998" => prof_umi_kleyna,
 	"IH1995" => prof_umi_ih,
 	"Hodge1964" => prof_umi_hodge1964,
 )
 
 # ╔═╡ fa32b6b9-d09c-4dfe-8af1-a408043db231
-@savefig "umi_literature_profiles" compare_profiles(profiles_umi, "ursa_minor"
+@savefig "umi_literature_profiles" let
+	fig = compare_profiles(profiles_umi, "ursa_minor", title="Ursa Minor"
 )
+	xlims!(0.1, 2.4)
+	ylims!(fig.content[1], -3.4, 1)
+	fig
+end
+
+# ╔═╡ 5ee0a135-2c30-4074-96e7-0c2d5572dfd9
+all_profiles_scl = merge(profiles, profiles_old)
+
+# ╔═╡ a9194007-e598-49a3-b462-a1710ebab5b2
+@savefig "scl_umi_literature_profiles" let
+	fig = Figure(size=(5.39*72, 4*72))
+	ax1 = compare_profiles(fig[1,1], all_profiles_scl, "sculptor", title="Sculptor")
+	ax2 = compare_profiles_res(fig[2,1], all_profiles_scl, "sculptor")
+
+	ax3 = compare_profiles(fig[1, 2], profiles_umi, "ursa_minor", title="Ursa Minor")
+	hideydecorations!(ticks=false, minorticks=false)
+	ax4 = compare_profiles_res(fig[2, 2], profiles_umi, "ursa_minor",)
+	hideydecorations!(ticks=false, minorticks=false)
+
+	rowsize!(fig.layout, 2, Relative(0.2))
+	rowgap!(fig.layout, 0)
+	colgap!(fig.layout, 0)
+
+
+	linkxaxes!(ax1, ax2)
+	linkxaxes!(ax3, ax4)
+	linkyaxes!(ax1, ax3)
+	linkyaxes!(ax2, ax4)
+	fig
+
+end
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -467,6 +533,9 @@ profiles_umi = OrderedDict(
 # ╠═7efdd9e6-1970-4864-a177-616e256e5a7e
 # ╠═f86d7b90-0147-4490-a995-3b347e9805ab
 # ╠═6c04f96a-b14b-4c60-91de-716c9379491f
+# ╠═f1926cef-5723-40be-8a91-e50e2aa34a4c
+# ╠═4f74cfb5-4e2c-416d-adde-661ad9bf7f7d
+# ╠═1673a2ce-0a0a-4564-b7f2-8ac9cff83b81
 # ╠═4314ec9e-8359-4b2a-8eea-30f71d92b743
 # ╠═a991a4fb-8037-485b-b48c-0f73d14bd0b5
 # ╠═4cb354cb-4f07-4871-92dc-fd479b1b546d
@@ -482,3 +551,5 @@ profiles_umi = OrderedDict(
 # ╠═917c8053-da0a-4226-808e-9f02ea92a222
 # ╠═f4797072-3103-4f85-b6b5-a3906205d9b3
 # ╠═fa32b6b9-d09c-4dfe-8af1-a408043db231
+# ╠═5ee0a135-2c30-4074-96e7-0c2d5572dfd9
+# ╠═a9194007-e598-49a3-b462-a1710ebab5b2

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -45,26 +45,20 @@ function get_profiles(modelname)
 	return mass_profs[1].second, mass_profs[idx_f].second
 end
 
-# ╔═╡ b50a1346-19e1-49a7-b723-c7fb001c9d20
-get_profiles("sculptor/1e6_v49_r7.1_c0.1/orbit_smallperi")
-
 # ╔═╡ cb38048e-99d9-431c-ae90-de8817e02ff7
 let
-	fig = Figure()
+	fig = Figure(size=(4*72, 3*72))
 	ax = Axis(fig[1,1], xlabel = "log radius / kpc", ylabel = "log density",
-			  limits=(-1.5, 2, -8, -1.0)
+			  limits=(-1.5, 1, -6, -0.0)
 			 )
 
 
+	x = LinRange(-1.5, 1.5, 1000)
+	h = LilGuys.NFW(M_s=0.54, r_s=1.08)
+	y = log10.(LilGuys.density.(h, 10 .^ x))
+	lines!(x, y, linewidth=theme(:linewidth)[]/2, label="NFW")
 
-
-
-	profs = get_profiles("sculptor/1e6_new_v43_r7/orbit_smallperi")
-
-	lines!(profs[1].log_r, LilGuys.log_densities(profs[1]), color=COLORS[1], linestyle=:dot, label="cuspy initial")
-	lines!(profs[2].log_r, LilGuys.log_densities(profs[2]), color=COLORS[1], label="cuspy final")
-
-	profs = get_profiles("sculptor/1e6_v49_r7.1_c0.1/orbit_smallperi")
+	profs = get_profiles("sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi")
 
 	lines!(profs[1].log_r, LilGuys.log_densities(profs[1]), linestyle=:dot, color=COLORS[2], label="cored initial")
 	lines!(profs[2].log_r, LilGuys.log_densities(profs[2]), color=COLORS[2], label="cored final")
@@ -85,5 +79,4 @@ end
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═8081e889-c1d4-4e50-b8e1-91aa8e82adf1
 # ╠═f49c9325-4319-4435-ac33-a8980e1c4f7f
-# ╠═b50a1346-19e1-49a7-b723-c7fb001c9d20
 # ╠═cb38048e-99d9-431c-ae90-de8817e02ff7

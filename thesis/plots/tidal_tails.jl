@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -77,9 +77,6 @@ function load_stars(galaxyname, modelname, starsname)
 	return stars
 end
 
-# ╔═╡ 30ab5003-4218-4a33-a0e6-f97826e56b1d
-
-
 # ╔═╡ e9b30734-0237-4b52-9f3f-add7c5460743
 function sample_stars(stars, N=10_000)
 	idx = sample(1:size(stars, 1), weights(stars.weights), 100_000)
@@ -138,6 +135,12 @@ function scatter_coord(gs, stars_mean, ss, sym; xsym = :xi_p, kwargs...)
 	return ax
 end
 
+# ╔═╡ b257827b-ca9c-4abe-bbaa-1097f0034b03
+galaxy_labels = Dict(
+	"sculptor" => "Sculptor", 
+	"ursa_minor" => "Ursa Minor",
+)
+
 # ╔═╡ 6be80d25-974f-4bfe-96df-18cb0ce96c5a
 function plot_sample(galaxyname, modelname, starsname)
 	stars = load_stars(galaxyname, modelname, starsname)
@@ -163,6 +166,7 @@ function plot_sample(galaxyname, modelname, starsname)
 		end
 	end
 
+	Label(fig[0, :], text=galaxy_labels[galaxyname], font=:bold)
 	fig
 
 end
@@ -225,11 +229,11 @@ md"""
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═2c2b0102-43e6-4314-a6e4-855980f27149
 # ╠═bcf2d214-84eb-42b4-95b0-da22ed4aecab
-# ╠═30ab5003-4218-4a33-a0e6-f97826e56b1d
 # ╠═e9b30734-0237-4b52-9f3f-add7c5460743
 # ╠═904efe1c-6c2f-4e16-8468-ab4c5c79ebe1
 # ╠═226173f5-93c4-401e-be28-d509880aff00
 # ╠═f2ec2966-9018-4ad0-8ec3-36e438012ca6
+# ╠═b257827b-ca9c-4abe-bbaa-1097f0034b03
 # ╠═6be80d25-974f-4bfe-96df-18cb0ce96c5a
 # ╠═012c3d0d-fcd6-4eff-8939-1dd6a9003b0c
 # ╟─8bf905de-5457-4611-8b9d-3ca6039cc582

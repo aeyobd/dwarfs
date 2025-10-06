@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -118,7 +118,7 @@ obs_props_scl = Utils.get_obs_props("sculptor")
 plot_kwargs = Dict(
 	:best => (; markersize=0.5, alpha=1, color=RGBf(0.8, 0.8, 0.8)),
 	:best_inner => (; markersize=0.5, alpha=1, color=RGBf(0.0, 0.0, 0.0)),
-	:members => (; markersize=0.5, alpha=1, color=COLORS[2])
+	:members => (; markersize=0.0, alpha=1, color=COLORS[2])
 )
 
 # ╔═╡ b30602a3-d3a2-4258-80e0-dbef5be3ee21
@@ -233,48 +233,6 @@ function plot_cmd(gs, datasets;
 
 end
 
-# ╔═╡ fc60f85e-10fb-4674-b538-972c273a9ef2
-let
-	fig = Figure(size=(4.5*72, 4.5*72))
-
-
-
-	plot_cmd(fig[1,1], scl_simple, title="Sculptor", xlabel=bp_rp_label, ylabel=G_label)
-	xlims!(-0.5, 2.5)
-	ylims!(21, 15.5)
-	label_survey!(L"Gaia")
-
-
-
-	plot_cmd(fig[1,2], umi_simple, title="Ursa Minor", xlabel=bp_rp_label, ylabel=G_label)
-
-	xlims!(-0.5, 2.5)
-	ylims!(21, 15.5)
-
-	label_survey!(L"Gaia")
-
-	
-	# scl - delve
-	plot_cmd(fig[2,1], scl_delve, x1=:mag_psf_g, x2=:mag_psf_r, y=:mag_psf_g, 
-			 xlabel = L"g-r", ylabel=L"g",
-			)
-	xlims!(-1, 2)
-	ylims!(24, 17)
-
-	label_survey!("DELVE")
-
-
-	plot_cmd(fig[2,2], umi_unions, x1=:RMAG, x2=:IMAG, y=:IMAG,)
-	xlims!(-1, 1)
-	ylims!(24, 17)
-	label_survey!("UNIONS")
-
-
-
-	@savefig "extra_cmd_selection"
-	fig
-end
-
 # ╔═╡ 00a96fce-0e9d-4e93-9c3b-5d6e1c86fa9d
 function plot_cmd_cut!(filt_params)
 	cmd = filt_params.cmd_cut
@@ -286,7 +244,57 @@ function plot_cmd_cut!(filt_params)
 
 	x = [x; x[1]]
 	y = [y; y[1]]
-	lines!(x, y)
+	lines!(x, y, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
+end
+
+# ╔═╡ fc60f85e-10fb-4674-b538-972c273a9ef2
+let
+	fig = Figure(size=(4.5*72, 4.5*72))
+
+
+
+	plot_cmd(fig[1,1], scl_simple, title="Sculptor", xlabel=bp_rp_label, ylabel=G_label)
+	plot_cmd_cut!(params_scl_simple)
+
+	xlims!(-0.5, 2.5)
+	ylims!(21, 15.5)
+	label_survey!(L"Gaia")
+
+
+
+	plot_cmd(fig[1,2], umi_simple, title="Ursa Minor", xlabel=bp_rp_label, ylabel=G_label)
+	plot_cmd_cut!(params_umi_simple)
+
+
+	xlims!(-0.5, 2.5)
+	ylims!(21, 15.5)
+
+	label_survey!(L"Gaia")
+
+	
+	# scl - delve
+	plot_cmd(fig[2,1], scl_delve, x1=:mag_psf_g, x2=:mag_psf_r, y=:mag_psf_g, 
+			 xlabel = L"g-r", ylabel=L"g",
+			)
+	plot_cmd_cut!(params_scl_delve)
+
+	xlims!(-1, 2)
+	ylims!(25, 17)
+
+	label_survey!("DELVE")
+
+
+	plot_cmd(fig[2,2], umi_unions, x1=:RMAG, x2=:IMAG, y=:IMAG,)
+	plot_cmd_cut!(params_umi_unions)
+
+	xlims!(-1, 1)
+	ylims!(25, 17)
+	label_survey!("UNIONS")
+
+
+
+	@savefig "extra_cmd_selection"
+	fig
 end
 
 # ╔═╡ 871aafc3-e71c-475a-b651-e83a1badf470
