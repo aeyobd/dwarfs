@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -126,17 +126,7 @@ Fattahi2018 analyzes a sample of dwarfs from apostle simulations. Their fit is d
 """
 
 # ╔═╡ 18a20162-1b0f-4da8-931d-5ff95da22f54
-"""
-Given the maximum circular velocity (in km/s), returns the stellar mass (in Msun).
-Uses the fit from @fattahi2018.
-"""
-function M_s_from_vel(v_max)
-	ν = v_max * V2KMS / 50 # km/s
-	α = 3.36
-	γ = -2.4
-	m_0 = 3e-2 # 1e10 Msun
-	return m_0 * ν^α * exp(-ν^γ)
-end
+M_s_from_vel = LilGuys.vel_from_M_s_fattahi
 
 # ╔═╡ 2ec0b911-6338-4364-a250-90664e90f1a6
 lMs_to_lVc_err = 0.036

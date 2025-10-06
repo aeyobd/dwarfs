@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -32,7 +32,7 @@ using LilGuys; FIGDIR = "figures"
 using OrderedCollections
 
 # ╔═╡ aea6dd0e-930c-4ccf-9fd4-276c50c2d861
-rv_file = "rv_apogee_x_2c_psat_0.2.fits"
+rv_file = "rv_combined_x_2c_psat_0.2_bin.fits"
 
 # ╔═╡ ff6df679-7ec8-4822-a6ad-3d5faf590765
 n_samples = 10000
@@ -111,17 +111,6 @@ end
 # ╔═╡ 7f4a5254-ed6f-4faa-a71e-4b4986a99d45
 hist(memb_stars.RV)
 
-# ╔═╡ 32674b48-0118-414f-9d48-2b1c44c02885
-md"""
-# Numbers
-"""
-
-# ╔═╡ 29425bbc-05b6-434f-b4b3-17ca39ebf830
-median(memb_stars.RV_err)
-
-# ╔═╡ d8b97f8b-f9c3-4f3e-942f-e25a4f27fff6
-length(memb_stars.RV)
-
 # ╔═╡ b3ba1ba1-be90-4f13-b9f5-5ee51c55c299
 md"""
 # Both model
@@ -166,16 +155,16 @@ CSV.write("processed/mcmc_samples_both$FIGSUFFIX.csv", df_both)
 θs_both = mod1.(df_both.Θ_grad, 360.) .- 360
 
 # ╔═╡ 4bccb365-8019-4659-a580-374c21112959
-θ_m_both= median(θs_both)
+θ_m = median(θs_both)
 
 # ╔═╡ a394f7b0-d443-4a2f-ba41-864ca559ac66
-θ_both_err = quantile(θs_both, [0.16, 0.5, 0.84]) .- median(θs_both)
+θ_err = quantile(θs_both, [0.16, 0.5, 0.84]) .- θ_m
 
 # ╔═╡ 0ea60392-33f4-480f-9002-7dad289b96b5
-r_grad_m_both = median(df_both.r_grad)
+r_grad_m = median(df_both.r_grad)
 
 # ╔═╡ bb11d2b2-72a7-4e37-89bf-092b20dc0805
-r_grad_both_err = quantile(df_both.r_grad, [0.16, 0.5, 0.84]) .- r_grad_m_both
+r_grad_err = quantile(df_both.r_grad, [0.16, 0.5, 0.84]) .- r_grad_m
 
 # ╔═╡ d5615552-caf8-4c0c-a17c-502c0f8198dc
 md"""
@@ -202,7 +191,13 @@ df_summaries = OrderedDict(
 	"bf_gradient" => bf_gradient_both,
 	"bf_rell" => bf_Rell_both,
 	"Nmemb" => length(memb_stars.RV), 
-	"median_err" => median(memb_stars.RV_err)
+	"median_err" => median(memb_stars.RV_err),
+	"R_grad_median" => r_grad_m,
+	"R_grad_el" => r_grad_err[1],
+	"R_grad_ep" => r_grad_err[end],
+	"theta_grad_median" => θ_m,
+	"theta_grad_el" => -θ_err[1],
+	"theta_grad_ep" => θ_err[3]
 )
 
 # ╔═╡ c6edc3b5-accc-44c6-afa5-d4b7ed17fd65
@@ -238,10 +233,7 @@ end
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
-# ╟─32674b48-0118-414f-9d48-2b1c44c02885
-# ╠═29425bbc-05b6-434f-b4b3-17ca39ebf830
-# ╠═d8b97f8b-f9c3-4f3e-942f-e25a4f27fff6
-# ╠═b3ba1ba1-be90-4f13-b9f5-5ee51c55c299
+# ╟─b3ba1ba1-be90-4f13-b9f5-5ee51c55c299
 # ╠═df91e538-b283-470a-9a54-167968eac287
 # ╠═7d958afa-df2f-4c06-b537-2a4121a343c6
 # ╠═fa545320-7119-4fe3-82a9-32a6b7f8bc5a

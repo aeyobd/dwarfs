@@ -50,11 +50,89 @@ LilGuys.concentration(halo_initial)
 # ╔═╡ 0987f7b8-9a36-4fe9-8e2c-3fb76e50cbe1
 markersize = @lift 1.5* $(theme(:markersize))
 
+# ╔═╡ 7b1ef998-820c-4403-be2f-938cd86ee876
+smallfontsize = @lift 0.8 * $(theme(:fontsize))
+
+# ╔═╡ 702c1789-3c69-498b-842c-ae14dd8719c4
+σ_ludlow = 0.09
+
+# ╔═╡ 4a9d1f8e-127c-4e43-b4f0-65abe25370b5
+σ_fattahi = 0.035
+
+# ╔═╡ ae770668-7050-4854-a7be-0ceaa9c80e1a
+10^σ_fattahi
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "cosmological_means" let
-	fig = Figure(figure_padding=10, size=( 5.4*72, 2.7*72,))
+	fig = Figure(figure_padding=10, size=( 5.4*72, 2.0*72,))
 
-	ax = Axis(fig[1,2], 
+
+
+	
+
+	ax_ludlow = Axis(fig[1,1],
+			   yscale=log10, 
+			   xscale = log10,
+			   yticks = [10, 20, 30],
+				xticks=Makie.automatic, #[0.01, 0.1, 1, 10, 100],
+				ylabel = L"$c$",
+			   xlabel = L"$M_{200}\,/\,10^{10}\, \textrm{M}_\odot$",
+			   limits = (0.01, 100, 5, 30),
+					 yminorticks=1:1:30
+			  )
+
+	log_M200 = LinRange(-2, 2, 100) 
+	M200 = 10 .^ log_M200
+
+
+	c_0 =  LilGuys.Ludlow.c_ludlow.(M200, 0.0)
+	c_l = c_0 * 10^-σ_ludlow
+	c_h = c_0 * 10^σ_ludlow
+	lines!(M200, c_0, color=COLORS[2])
+
+	fill_between!(ax_ludlow, M200, c_l, c_h, alpha=0.5, color=COLORS[2])
+	scatter!(LilGuys.M200(halo_initial), LilGuys.concentration(halo_initial), marker=:star5, color=COLORS[5], markersize=markersize)
+	text!(LilGuys.M200(halo_initial), LilGuys.concentration(halo_initial), color=COLORS[5], text="Fornax", align=(0.8, :top), fontsize=0.8*theme(:fontsize)[], offset=(-0.8*theme(:fontsize)[], -0.0*theme(:fontsize)[]))
+
+	θ = -0.32
+	text!(1, LilGuys.Ludlow.c_ludlow(1, 0)*10^0.09, text=L"Ludlow\!+\!16 $z=0$", rotation=θ, align=(:center, :bottom), color=COLORS[2], fontsize=smallfontsize)
+
+
+
+# velocity axis
+	ax_ludlow_vel = Axis(fig[1,2],
+			   yscale=log10, 
+			   xscale = log10,
+			   yticks = [10, 30,100],
+				yminorticks = 10:10:100,
+				xticks=[1, 10, 100],
+				ylabel = L"$\textrm{v}_\textrm{max}$ / km\,s$^{-1}$",
+			   xlabel = L"$\textrm{r}_\textrm{max}$",
+						 limits=(1, 50, 10, 100)
+			  )
+
+
+	h_m = [LilGuys.NFW(M200=m, c=c) for (m, c) in zip(M200, c_0)]
+	h_l = [LilGuys.NFW(M200=m, c=c) for (m, c) in zip(M200, c_l)]
+	h_h = [LilGuys.NFW(M200=m, c=c) for (m, c) in zip(M200, c_h)]
+
+	x = LilGuys.r_circ_max.(h_m)
+	y = LilGuys.v_circ_max.(h_m) .* V2KMS
+
+	x_l = LilGuys.Ludlow.solve_rmax.(y/V2KMS, -0.1)
+	x_h = LilGuys.Ludlow.solve_rmax.(y/V2KMS, 0.1)
+	lines!(x, y, color=COLORS[2])
+	band!(ax_ludlow_vel, y, x_l, x_h, direction=:y, color=(COLORS[2], 0.3))
+
+	scatter!(LilGuys.r_circ_max(halo_initial), LilGuys.v_circ_max(halo_initial)*V2KMS, 
+			 marker=:star5, color=COLORS[5], markersize=markersize)
+
+	text!(LilGuys.Ludlow.solve_rmax(13/V2KMS, 0.1), 13, text=L"Ludlow\!+\!16 $z=0$", rotation=π/3, align=(:left, :bottom), color=COLORS[2], fontsize=smallfontsize)
+
+
+
+	#fattahi trend
+	ax = Axis(fig[1,3], 
 		xlabel = L"$\textrm{v}_\textrm{max}$ / $\textrm{km\,s}^{-1}$",
 		ylabel = L"stellar mass in $\textrm{M}_\odot$",
 		xscale = log10, 
@@ -68,53 +146,21 @@ markersize = @lift 1.5* $(theme(:markersize))
 
 	x = LinRange(10, 100, 1000)
 	ms = LilGuys.M_s_from_vel_fattahi.(x ./ V2KMS) .* M2MSUN
-	lines!(x, ms, label="Fattahi+18 relation")
-	band!(ms, x ./ 1.09, x .* 1.09, alpha=0.5, direction=:y)
-	scatter!(x_apostle, y_apostle, color=:black, markersize=3, label="$apostle central galaxies")
-	text!(22, 1e6, text="Fattahi+18 fit", color=COLORS[1], rotation=π/2.6)
-	text!(0.05, 0.9, space=:relative, text="$apostle centrals", fontsize=10)
+	lines!(x, ms, linewidth=theme(:linewidth)[]/2, color=COLORS[1])
+	band!(ms, x ./ 10^σ_fattahi, x .* 10^σ_fattahi, alpha=0.5, direction=:y)
+	
+	scatter!(x_apostle, y_apostle, 
+			 color=:black, markersize=3)
+	
+	text!(22, 1e6, text="Fattahi+18 fit", 
+		  color=COLORS[1], rotation=π/2.6, fontsize=smallfontsize)
+	text!(0.05, 0.9, text="$apostle", 
+		  space=:relative, fontsize=10)
 
 	scatter!(LilGuys.v_circ_max(halo_initial) * V2KMS, M_s_initial, marker=:star5, color=COLORS[5], markersize=markersize)
-
-	
-
-	ax_ludlow = Axis(fig[1,1],
-			   yscale=log10, 
-			   xscale = log10,
-			   yticks = [10, 20, 30],
-				xticks=Makie.automatic, #[0.01, 0.1, 1, 10, 100],
-				ylabel = L"$c$",
-			   xlabel = L"$M_{200} / 10^{10}\, \textrm{M}_\odot$",
-			   limits = (0.01, 100, 5, 30),
-					 yminorticks=1:1:30
-			  )
-
-	log_M200 = LinRange(-2, 2, 100) 
-	M200 = 10 .^ log_M200
-
-
-
-	# lines!(vm .* V2KMS, rm)
-	c_0 =  LilGuys.Ludlow.c_ludlow.(M200, 0.0)
-	c_l = c_0 * 10^-0.09
-	c_h = c_0 * 10^0.09
-	lines!(M200, c_0, color=COLORS[2])
-
-	fill_between!(ax_ludlow, M200, c_l, c_h, alpha=0.5, color=COLORS[2])
-	scatter!(LilGuys.M200(halo_initial), LilGuys.concentration(halo_initial), marker=:star5, color=COLORS[5], markersize=markersize)
-	text!(LilGuys.M200(halo_initial), LilGuys.concentration(halo_initial), color=COLORS[5], text="Fornax", align=(:right, :center), fontsize=0.8*theme(:fontsize)[], offset=(-0.8*theme(:fontsize)[], -0.0*theme(:fontsize)[]))
-
-	θ = -0.32
-	text!(1, LilGuys.Ludlow.c_ludlow(1, 0)*10^0.09, text=L"Ludlow\!+\!16 $z=0$", rotation=θ, align=(:center, :bottom), color=COLORS[2])
-	# #text!(LilGuys.Ludlow.solve_rmax.(20/V2KMS, z=2), 20, text=L"z=2", rotation=θ, align=(:left, :bottom), color=COLORS[3])
-	
 	
 	fig
 end
-
-# ╔═╡ c9efa73b-d776-4b72-a82a-af1206000ae4
-	annotation(-12, -48, LilGuys.M200(halo_initial), LilGuys.concentration(halo_initial), color=COLORS[4], text="Fornax", path=Ann.Paths.Line(), shrink=(4, 6), style = Ann.Styles.Line())
-
 
 # ╔═╡ 49e82dff-d3d8-48fc-a2b5-5909495c811d
 md"""
@@ -182,6 +228,8 @@ let
 
 	log_res = log10.(x_pred  .* V2KMS) .- log10.( x_apostle)
 	scatter!(x_apostle,log_res )
+	hspan!(-σ_fattahi, σ_fattahi, alpha=0.1)
+	hlines!(0, )
 
 	sigma = sqrt(LilGuys.mean(log_res .^ 2))
 	@info "sigma vmax = $(sigma)"
@@ -208,8 +256,11 @@ end
 # ╠═0c62103b-a589-4769-af7c-5eea551b7e65
 # ╠═1f5cf1ca-c90f-4a90-97ec-da79403e4f69
 # ╠═0987f7b8-9a36-4fe9-8e2c-3fb76e50cbe1
+# ╠═7b1ef998-820c-4403-be2f-938cd86ee876
+# ╠═702c1789-3c69-498b-842c-ae14dd8719c4
+# ╠═4a9d1f8e-127c-4e43-b4f0-65abe25370b5
+# ╠═ae770668-7050-4854-a7be-0ceaa9c80e1a
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
-# ╠═c9efa73b-d776-4b72-a82a-af1206000ae4
 # ╟─49e82dff-d3d8-48fc-a2b5-5909495c811d
 # ╠═51b5dc87-2463-4aaf-9513-eb1c135969b0
 # ╠═32073146-98cc-41a7-92b2-4815277ef41a

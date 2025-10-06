@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -145,12 +145,15 @@ rv_meas = let
 
 	
 	rv_meas[:, :vz] .= rv_meas.radial_velocity_gsr .+ rv_meas.delta_rv
-	rv_meas[:, :vz_err] .= rv_meas.RV_err .⊕ rv_meas.delta_rv_err
+	rv_meas[:, :vz_err] .= rv_meas.RV_err
 
 	RVUtils.add_PSAT_RV!(rv_meas; sigma_v=σv, radial_velocity_gsr=rv0, f_sat=f_sat)
 	
 	rv_meas
 end
+
+# ╔═╡ b76a094e-11a4-4d43-869b-27c7f0c2eaee
+hist(rv_meas.delta_rv_err ./ rv_meas.RV_err)
 
 # ╔═╡ c28071fe-6077-43ad-b930-604483d5eb28
 md"""
@@ -158,12 +161,18 @@ md"""
 """
 
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
-memb_filt = (rv_meas.PSAT_RV .> 0.2) .&
+memb_filt = (rv_meas.PSAT_RV .> psat_min) .&
 	rv_meas.F_scatter .&
 	(rv_meas.F_BEST .== 1)
 
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
+
+# ╔═╡ 2c69332e-9341-4805-9066-10df38fa32fe
+"$(outname)_memb.fits"
+
+# ╔═╡ f9f5759a-9a4a-4765-81c8-d513c8a0a181
+write_fits(joinpath(data_dir, "$(outname).fits"), memb_stars, overwrite=true)
 
 # ╔═╡ 92f4c8b3-442d-4a56-b05f-1fc547231508
 "RV_gmos" ∈ names(memb_stars) && memb_stars[.!ismissing.(memb_stars.RV_gmos), [:source_id, :ra, :dec, :PSAT]]
@@ -173,6 +182,20 @@ nonmemb_stars = rv_meas[.!memb_filt, :]
 
 # ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
 write_fits(joinpath(data_dir, "$(outname)_nonmemb.fits"), nonmemb_stars, overwrite=true)
+
+# ╔═╡ 226fe323-0e2b-4adb-ae53-5b50feafc05a
+
+
+# ╔═╡ da83eff8-1459-428d-94b5-d0c82489c6c4
+memb_filt_bin = (rv_meas.PSAT_RV .> psat_min) .&
+	 (.!rv_meas.F_scatter) .&
+	(rv_meas.F_BEST .== 1)
+
+# ╔═╡ ee2f1f6f-5b31-4ff9-9fb9-f0f4768ca56f
+memb_bin = rv_meas[memb_filt_bin, :]
+
+# ╔═╡ 7f62cdb7-3003-46e5-8cec-e4c75b98d577
+write_fits(joinpath(data_dir, "$(outname)_bin.fits"), memb_bin, overwrite=true)
 
 # ╔═╡ 55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 md"""
@@ -255,12 +278,19 @@ scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 # ╠═fc3ec4d1-5812-4177-90b8-29bbba72d720
 # ╠═097a102b-d6a6-444d-9761-ecb06d64d07f
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
+# ╠═b76a094e-11a4-4d43-869b-27c7f0c2eaee
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
+# ╠═2c69332e-9341-4805-9066-10df38fa32fe
+# ╠═f9f5759a-9a4a-4765-81c8-d513c8a0a181
 # ╠═92f4c8b3-442d-4a56-b05f-1fc547231508
 # ╠═ea3d420f-00f8-4ca2-a49d-e26b48e50afd
 # ╠═a162219f-df5a-41d8-bf54-927a355f6431
+# ╠═226fe323-0e2b-4adb-ae53-5b50feafc05a
+# ╠═7f62cdb7-3003-46e5-8cec-e4c75b98d577
+# ╠═da83eff8-1459-428d-94b5-d0c82489c6c4
+# ╠═ee2f1f6f-5b31-4ff9-9fb9-f0f4768ca56f
 # ╟─55ce0f69-8a96-4bbb-a59f-ee6503624ea6
 # ╠═31a6c2e4-538c-4adc-bbda-5043680b17f7
 # ╠═3377f632-713d-4fec-84a9-b0211b02cb43

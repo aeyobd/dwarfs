@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -151,12 +151,6 @@ filename = "orbit_$(r_peri)_$(r_apo)"
 # ╔═╡ 1fe08ed1-77bd-4efb-9193-1f0e2202733a
 import TOML
 
-# ╔═╡ c9fc5439-8c5c-452e-a041-573fa82e1da2
-pwd()
-
-# ╔═╡ 24cda804-99f6-456c-9495-c37d6511e72a
-orbit
-
 # ╔═╡ d3b89db4-bdfb-4274-a2e0-b359c650bd20
 df_props = OrderedDict(
 	:position_i => x0,
@@ -184,7 +178,7 @@ end
 # ╠═c478b122-41ad-4c59-9752-b795f65b658b
 # ╠═910f0e20-f077-4d83-aed7-58245469b6e0
 # ╠═8335702e-2cc5-44df-a9c1-8df713ced453
-# ╠═ad9a0a4b-c222-44e6-a2e0-e7243112a82a
+# ╟─ad9a0a4b-c222-44e6-a2e0-e7243112a82a
 # ╠═539105c2-c885-4a81-8be2-d25d1a7ba0f3
 # ╠═c6f999ec-0e57-4c50-8afd-ec9d060181f0
 # ╠═f911eb19-ac18-4778-8f51-0d8e22dc9c09
@@ -204,7 +198,5 @@ end
 # ╠═7d681d34-2bf6-4aae-b2b6-3ef6759c19b8
 # ╠═d78f8d6b-1a96-48c9-a67a-4b4f958eca44
 # ╠═1fe08ed1-77bd-4efb-9193-1f0e2202733a
-# ╠═6c4dc92c-7f0c-4e0d-871e-494fb207cc4d
-# ╠═c9fc5439-8c5c-452e-a041-573fa82e1da2
-# ╠═24cda804-99f6-456c-9495-c37d6511e72a
 # ╠═d3b89db4-bdfb-4274-a2e0-b359c650bd20
+# ╠═6c4dc92c-7f0c-4e0d-871e-494fb207cc4d

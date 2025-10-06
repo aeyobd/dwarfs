@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -40,7 +40,12 @@ function get_scalars(modelname)
 	)
 	idx_f = TOML.parsefile(joinpath(modeldir(modelname), "orbital_properties.toml"))["idx_f"]
 
-	df.time .-= df.time[idx_f]
+	if idx_f < size(df, 1)
+		df.time .-= df.time[idx_f]
+	else
+		@warn "idx_f > number calculated profiles for $modelname"
+		df.time .-= df.time[end]
+	end
 	df
 end
 
@@ -83,6 +88,29 @@ function plot_tidal_track(modelname; title="")
 	xlims!(df.r_circ_max[1] * 10^-1.5, df.r_circ_max[1] * 10^1)
 	ylims!(df.v_circ_max[1]*V2KMS * 10^-0.7, df.v_circ_max[1]*V2KMS * 10^0.1)
 
+	fig
+end
+
+# ╔═╡ 6830deae-07e6-4668-b600-7790145328c7
+function compare_final(modelnames; kwargs...)
+	fig = Figure()
+
+	ax = Axis(fig[1,1], 
+		xlabel = L"$r_\textrm{circ}$ / kpc",
+		ylabel = L"$\textrm{v}_\textrm{circ}$ / km\,s$^{-1}$",
+		xscale=log10,
+		yscale=log10,
+		xticks = [0.1, 1, 10],
+	)
+
+	for (label, modelname) in modelnames
+
+		profs = get_profiles(modelname)
+
+		lines!(radii(profs[end].second), LilGuys.circular_velocity(profs[end].second) * V2KMS; label=label)
+	end
+
+	axislegend(position=:rt)
 	fig
 end
 
@@ -182,27 +210,22 @@ plot_tidal_track("sculptor/1e6_new_v43_r7/orbit_smallperi.3")
 plot_tidal_track("sculptor/1e6_v43_r5_beta0.2_a4/orbit_smallperi")
 
 # ╔═╡ 4f5b3992-021a-4a9c-9ccc-750669156f28
-plot_tidal_track("sculptor/1e6_v38_r7_oblate_0.5/orbit_smallperi")
+plot_tidal_track("sculptor/1e6_v48_r7_oblate_0.5/orbit_smallperi")
 
-# ╔═╡ 7ec571cc-a159-4426-ab21-0213399b8910
-compare_tidal_tracks(OrderedDict(
-	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"heavy" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
-	"lighter halo" => "sculptor/1e6_new_v25_r2.5/orbit_smallperi",
-
-))
+# ╔═╡ 254ef828-1a85-4c40-bc36-9c94345c21c0
+plot_tidal_track("sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi")
 
 # ╔═╡ faff05dd-31b7-47bf-b6da-32d94ca80514
 @savefig "scl_mw_halo_boundmass" compare_boundmass(OrderedDict(
 	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"mean orbit" => "sculptor/1e6_new_v31_r3.2/orbit_mean",
-	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
+	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi",
+	"heavier, new orbit" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
 	"lighter halo" => "sculptor/1e6_new_v25_r2.5/orbit_smallperi",
 ),
 				 )
 
 # ╔═╡ ffad6fd8-a767-459e-aa3d-e9fd6741a47f
-compare_boundmass(OrderedDict(
+@savefig "scl_orbits_boundmass"  compare_boundmass(OrderedDict(
 	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
 	"mean orbit" => "sculptor/1e6_new_v31_r3.2/orbit_mean",
 	"mw impact" => "sculptor/1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4",
@@ -211,10 +234,10 @@ compare_boundmass(OrderedDict(
 
 # ╔═╡ a4c31b0c-41d7-498f-9d78-74bfc441c6fd
 @savefig "scl_mw_structure_boundmass" compare_boundmass(OrderedDict(
-	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
-	"cored" => "sculptor/1e6_v49_r7.1_c0.1/orbit_smallperi",
+	"heavy NFW" => "sculptor/1e6_new_v43_r7/orbit_smallperi",
+	"cored" => "sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi",
 	"anisotropic" =>  "sculptor/1e6_v43_r5_beta0.2_a4/orbit_smallperi",
-	"oblate" => "sculptor/1e6_v38_r7_oblate_0.5/orbit_smallperi",
+	"oblate" => "sculptor/1e6_v48_r7_oblate_0.5/orbit_smallperi",
 ),
 				 )
 
@@ -244,6 +267,20 @@ end
 #	"LMC smallperilmc" => "ursa_minor/1e5_new_v38_r4.0/L3M11_smallperilmc",
 ), )
 
+# ╔═╡ 6bc1364d-ab67-414b-9519-4cb8706100af
+compare_boundmass(OrderedDict(
+	"fiducial" => "ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5",
+	"fiducial/1" => "ursa_minor/1e5_new_v38_r4.0/orbit_smallperi.1",
+	"cored" => "ursa_minor/1e5_v51_r4_c0.1//orbit_smallperi",
+	"big cored" => "ursa_minor/1e5_Ms0.5_r0.9_c1/orbit_smallperi",
+	# "big cored2" => "ursa_minor/1e5_Ms0.25_r0.9_c1/orbit_smallperi",
+	"anisotropic" =>  "ursa_minor/1e5_v38_r3_beta0.2_a4//orbit_smallperi",
+),
+)
+
+# ╔═╡ b44f0e10-370d-42d7-8d6d-b3ce1dec9048
+
+
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═c1b20bd0-bc18-4c53-b687-5f6b792fdcd0
@@ -254,15 +291,18 @@ end
 # ╠═6161cd69-594b-4eb9-83d9-12a682db7c88
 # ╠═f49c9325-4319-4435-ac33-a8980e1c4f7f
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╠═6830deae-07e6-4668-b600-7790145328c7
 # ╠═cf57e5bb-8829-409c-8189-79a1fdb9fddb
 # ╠═7d8f9954-0bbc-4fc0-ba21-aad54b3aaee4
 # ╠═415f249c-de75-454f-8ab8-be3bec7e4222
 # ╠═fc8596bc-237b-4b67-a747-f01c708a4f22
 # ╠═450f3db7-7c66-40b9-990a-24329097858f
 # ╠═4f5b3992-021a-4a9c-9ccc-750669156f28
-# ╠═7ec571cc-a159-4426-ab21-0213399b8910
+# ╠═254ef828-1a85-4c40-bc36-9c94345c21c0
 # ╠═faff05dd-31b7-47bf-b6da-32d94ca80514
 # ╠═ffad6fd8-a767-459e-aa3d-e9fd6741a47f
 # ╠═a4c31b0c-41d7-498f-9d78-74bfc441c6fd
 # ╠═e12645e3-5466-4dd3-b5d2-2ee9288d1ade
 # ╠═39a6433a-281a-42b4-a231-0fc6e9379422
+# ╠═6bc1364d-ab67-414b-9519-4cb8706100af
+# ╠═b44f0e10-370d-42d7-8d6d-b3ce1dec9048

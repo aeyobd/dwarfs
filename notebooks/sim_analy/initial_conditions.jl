@@ -44,9 +44,6 @@ import TOML
 # ╔═╡ d8998dd8-bac8-450d-9e9f-fa5d0b282e13
 CairoMakie.activate!(type=:png)
 
-# ╔═╡ 4c9ccee1-d343-4768-8fae-d3b4626d1a4f
-24 * 3600
-
 # ╔═╡ b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 md"""
 To make this both a cml utility and interactive, we take inputs in the following cells
@@ -158,12 +155,6 @@ props.v_circ_max * V2KMS
 
 # ╔═╡ 2e293959-9c05-4d9b-b889-a68584ca88f0
 props.r_circ_max 
-
-# ╔═╡ 3cc4a870-da17-4c0a-8ab8-27e134c71044
-0.044 * 0.53612788
-
-# ╔═╡ bc127b27-c573-462b-84f1-66890391b49b
-10*16
 
 # ╔═╡ a49d1735-203b-47dd-81e1-500ef42b054e
 md"""
@@ -446,7 +437,6 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═920546bd-4838-413c-b687-f891a7f5e985
 # ╠═9303ace1-bd7c-4391-bace-8a0a8eccd251
 # ╠═d8998dd8-bac8-450d-9e9f-fa5d0b282e13
-# ╠═4c9ccee1-d343-4768-8fae-d3b4626d1a4f
 # ╟─b7ef1dbd-1865-4ac3-a4d7-26fc9b443c45
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═80da94f9-6fdd-4591-93e3-c98ea1479c65
@@ -469,8 +459,6 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═9fb58f1b-c98b-4a93-9683-ab478e44e2d7
 # ╠═3d4f1a39-fbfc-4e07-8bd4-17e7813da5af
 # ╠═2e293959-9c05-4d9b-b889-a68584ca88f0
-# ╠═3cc4a870-da17-4c0a-8ab8-27e134c71044
-# ╠═bc127b27-c573-462b-84f1-66890391b49b
 # ╠═0e89851e-763f-495b-b677-b664501a17ef
 # ╟─a49d1735-203b-47dd-81e1-500ef42b054e
 # ╠═72dfab8a-c6c8-4dcc-b399-a0cf6cb0dea0

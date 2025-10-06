@@ -22,16 +22,16 @@ using PyFITS
 using StatsBase: median, weights, mad, std, sample
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/ursa_minor")
+models_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor")
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e7_new_v38_r4.0/orbit_smallperi.5/"
+model_dir = "$models_dir/1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
 starsfile = "$model_dir/stars/plummer_rs0.20/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/observed_properties.toml")
+obs_today_filename = joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observed_properties.toml")
 
 # ╔═╡ 9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 md"""

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -40,7 +40,7 @@ md"""
 
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
 begin 
-	rv_file = "rv_combined.fits"
+	rv_file = "rv_apogee.fits"
 	j24_sample = "wide_2c"
 	psat_min = 0.2
 end
@@ -150,7 +150,7 @@ rv_meas = let
 
 	
 	rv_meas[:, :vz] .= rv_meas.radial_velocity_gsr .+ rv_meas.delta_rv
-	rv_meas[:, :vz_err] .= rv_meas.RV_err .⊕ rv_meas.delta_rv_err
+	rv_meas[:, :vz_err] .= rv_meas.RV_err
 
 	RVUtils.add_PSAT_RV!(rv_meas; sigma_v=σv, radial_velocity_gsr=rv0, f_sat=f_sat)
 	
@@ -163,7 +163,7 @@ md"""
 """
 
 # ╔═╡ 733fe42e-b7a5-4285-8c73-9a41e4488d40
-memb_filt = (rv_meas.PSAT_RV .> 0.2) .&
+memb_filt = (rv_meas.PSAT_RV .> psat_min) .&
 	rv_meas.F_scatter .&
 	(rv_meas.F_BEST .== 1)
 
@@ -192,6 +192,17 @@ number_memb = length(memb_stars.RV)
 
 # ╔═╡ a162219f-df5a-41d8-bf54-927a355f6431
 write_fits(joinpath(data_dir, "$outname.fits"), memb_stars, overwrite=true)
+
+# ╔═╡ 264d924e-818f-40b1-b386-cfec45cfacd8
+memb_filt_bin = (rv_meas.PSAT_RV .> psat_min) .&
+	 (.!rv_meas.F_scatter) .&
+	(rv_meas.F_BEST .== 1)
+
+# ╔═╡ 10a40c44-6319-413f-8f62-53a58af248eb
+memb_bin = rv_meas[memb_filt_bin, :]
+
+# ╔═╡ 36a6b228-b79d-4a00-90f8-b648e87e15f6
+write_fits(joinpath(data_dir, "$(outname)_bin.fits"), memb_bin, overwrite=true)
 
 # ╔═╡ b8ee2ea3-98aa-44c4-a309-1a356feb0686
 sample_info = OrderedDict(
@@ -300,6 +311,9 @@ end
 # ╠═a1938588-ca40-4844-ab82-88c4254c435b
 # ╠═a162219f-df5a-41d8-bf54-927a355f6431
 # ╠═2ef9b009-0acc-4fdb-9fd4-b2e2202d28bb
+# ╠═36a6b228-b79d-4a00-90f8-b648e87e15f6
+# ╠═264d924e-818f-40b1-b386-cfec45cfacd8
+# ╠═10a40c44-6319-413f-8f62-53a58af248eb
 # ╠═b8ee2ea3-98aa-44c4-a309-1a356feb0686
 # ╠═b1230b9d-e3ea-4330-b7f5-e708f08db51c
 # ╟─cb3bc2ab-8ed7-493d-9868-f793fe24bc42

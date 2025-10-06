@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -55,9 +55,6 @@ note that we use
 # ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
 import StatsBase: quantile, mean, std, median, kurtosis, sem
 
-# ╔═╡ 257caa92-ccce-44ff-88ee-6a9c550ae5d9
-CairoMakie.activate!(type=:png)
-
 # ╔═╡ ef1bb6f5-00b8-405b-8702-244eca618644
 import DensityEstimators: histogram, calc_limits, make_bins
 
@@ -69,6 +66,9 @@ module RVUtils
 	include("../../rv_utils.jl")
 	not = !
 end
+
+# ╔═╡ 257caa92-ccce-44ff-88ee-6a9c550ae5d9
+CairoMakie.activate!(type=:png)
 
 # ╔═╡ dfa3ccb0-66f7-49b9-bc6d-55e3f41070fe
 not = !

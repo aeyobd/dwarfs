@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -68,7 +68,7 @@ we can load  stars without fbest, but this causes havoc later on since the proba
 """
 
 # ╔═╡ 7a50a176-96a5-4098-88d6-0fa2874d0f90
-j24 = read_fits("../processed/best_sample.fits")
+j24 = read_fits("../samples/best_sample.fits")
 
 # ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
 obs_properties = TOML.parsefile("../observed_properties.toml")
@@ -119,6 +119,8 @@ graces = let
 
 	graces[!, :RV_sigma] .= NaN
 	graces[!, :RV_count] .= 1
+	graces[!, :fe_h] = graces.met
+	graces[!, :fe_h_err] = graces.met_err
 	graces
 end
 

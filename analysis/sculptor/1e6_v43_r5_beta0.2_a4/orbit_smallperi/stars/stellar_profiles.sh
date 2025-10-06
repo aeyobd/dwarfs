@@ -6,5 +6,5 @@ if [ $# -ne 1 ]; then
 fi
 
 for f in $1/*.fits; do
-    stellar_profile.jl $f -s --mass-column probability --bin-method both
+    stellar_profile.jl $f -s
 done

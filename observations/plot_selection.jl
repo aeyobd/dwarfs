@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -99,10 +99,14 @@ observed_properties = TOML.parsefile(galaxyname * "/observed_properties.toml")
 # ╔═╡ 4c8b9c30-f873-4756-a729-aa023b3a804e
 readdir("$galaxyname/data")
 
+# ╔═╡ 9e22f26d-4813-4cdc-93ee-c64b6a9f0960
+
+
 # ╔═╡ 9de0d55c-c273-4098-aeb1-3baf9c6f857a
 begin 
-	filt_kwargs = TOML.parsefile("$galaxyname/density_profiles/$profname.toml")
+	filt_kwargs = read_paramfile("$galaxyname/density_profiles/$profname.toml")
 	filt_kwargs["filename"] = joinpath("$galaxyname/density_profiles", filt_kwargs["filename"])
+	profile_kwargs = pop!(filt_kwargs, "profile_kwargs")
 	filt_kwargs
 end
 
@@ -439,7 +443,7 @@ If there is crowding, the plot below should appear to have deviations in brightn
 
 # ╔═╡ 02d19c07-411f-40d6-9ac3-010ebfd4bdfe
 let 
-	dθ = θmax*60 / 10
+	dθ = θmax / 10
 	fig = Figure()
 	ax = Axis(fig[1, 1], 
 		xlabel=L"\xi / \textrm{arcmin}", ylabel=L"\eta / \textrm{arcmin}",
@@ -495,6 +499,7 @@ end
 # ╠═9ecf79a8-2ed3-40c6-b555-a102250ecbd4
 # ╠═65822789-b261-45be-817f-cba0e37b82ce
 # ╠═4c8b9c30-f873-4756-a729-aa023b3a804e
+# ╠═9e22f26d-4813-4cdc-93ee-c64b6a9f0960
 # ╠═9de0d55c-c273-4098-aeb1-3baf9c6f857a
 # ╠═d87f28e5-cc94-4afc-9e70-ece1686db22c
 # ╠═338be0b8-e732-4202-a20f-9ca841516075

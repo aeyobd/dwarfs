@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -16,6 +16,9 @@ begin
 
 end
 
+# ╔═╡ 5bf5bd8d-65db-43e0-a999-5289d5cd1acf
+using OrderedCollections
+
 # ╔═╡ 51f50a8d-1684-47f8-af6d-4cea827a4961
 using DataFrames, CSV
 
@@ -31,56 +34,18 @@ import DensityEstimators: histogram2d
 # ╔═╡ 3a8954e9-0f5b-4f2c-8a9e-6e66f0f20ccc
 import TOML
 
+# ╔═╡ 629e397d-a4ae-469d-b81c-f92069d0b28a
+import DensityEstimators
+
+# ╔═╡ 8ae7dc9a-9f56-4540-bbe4-d98f8ea2bdc9
+import StatsBase: weights
+
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:svg)
 
-# ╔═╡ e084a02a-f445-422f-b0b3-700a44bf204c
-function get_R_h(galaxyname)
-
-	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
-	R_h = obs_props["R_h"]
-end
-
-# ╔═╡ b9e03109-9f49-4897-b26c-e31698a5fe49
-function get_r_b(galaxyname, haloname, orbitname, starsname; lmc=false)
-	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$haloname/$orbitname/stars/$starsname/")
-
-	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml")
-
-	σv = prof_f.annotations["sigma_v"]
-	if lmc
-		props = TOML.parsefile(model_dir * "../../orbital_properties_lmc.toml")
-	else
-		props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
-	end
-
-	dist_f =  TOML.parsefile(model_dir * "../../orbital_properties.toml")["distance_f"]
-
-	
-	dt = props["t_last_peri"]
-	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
-	R_h = get_R_h(galaxyname)
-
-	return LilGuys.kpc2arcmin(r_b, dist_f)	/ R_h
-end
-
-# ╔═╡ fe3bc6ee-14ed-4006-b3ec-f068d2492da4
-function get_r_j(galaxyname, haloname, orbitname; lmc=false)
-	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$haloname/$orbitname/")
-
-	if lmc
-		props = TOML.parsefile(model_dir * "jacobi_lmc.toml")
-	else
-		props = TOML.parsefile(model_dir * "jacobi.toml")
-	end
-	R_h = get_R_h(galaxyname)
-
-	return props["r_J"] / R_h
-end
-
 # ╔═╡ 5abb6cec-e947-4fc1-9848-760e50bd5628
-function get_stars_final(galaxyname, haloname, orbitname, starsname, filename="final.fits")
-	modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$haloname/$orbitname/stars/$starsname/")
+function get_stars_final(galaxyname, modelname, starsname, filename="final.fits")
+	modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
 
 	return read_fits(joinpath(modeldir, filename))
 end
@@ -91,12 +56,6 @@ smallfontsize=0.8*theme(:fontsize)[]
 # ╔═╡ cb898eeb-0803-42a7-a2c9-d6e2b95f8945
 smalllinewidth = theme(:linewidth)[]/2
 
-# ╔═╡ 629e397d-a4ae-469d-b81c-f92069d0b28a
-import DensityEstimators
-
-# ╔═╡ 8ae7dc9a-9f56-4540-bbe4-d98f8ea2bdc9
-import StatsBase: weights
-
 # ╔═╡ 5acf2849-d5bf-49df-94fe-7c3fe738f921
 """
 Given a set of radii and velocity
@@ -106,6 +65,22 @@ function calc_σv(r_ell, rv, mass;  r_max = 30)
 	vel = rv[filt]
 
 	return LilGuys.std(vel, weights(mass)[filt])
+end
+
+# ╔═╡ dd10823e-cf9a-4c5f-9cab-8d8f30effa33
+module ModelUtils
+	include("model_utils.jl")
+end
+
+# ╔═╡ cd0ea281-28b5-46fe-8ca2-23e44c623da6
+function plot_density_f!(galaxyname, modelname, starsname; norm_shift=0, kwargs...)
+	prof_i, prof_f, norm = ModelUtils.load_stellar_profiles(galaxyname, modelname, starsname, norm_shift=norm_shift)
+
+	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
+	dist_f =  TOML.parsefile(model_dir * "../../orbital_properties.toml")["distance_f"]
+	
+	lines!(prof_f.log_R, prof_f.log_Sigma; kwargs...)
+
 end
 
 # ╔═╡ 0cc4c7b4-d707-4f3d-9a82-1b6eb4119143
@@ -156,6 +131,17 @@ df_scl = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/velocities
 # ╔═╡ be9267a9-eebc-4edf-bde4-c224341f0ff5
 df_umi = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/velocities/processed/vz_r_ell_binned.rv_combined_x_2c_psat_0.2.csv"), DataFrame)
 
+# ╔═╡ ed028d05-86b4-4752-9462-2a837fe11e55
+function plot_σv_obs!(galaxyname)
+	if galaxyname == "sculptor"
+		df = df_scl
+	else
+		df = df_umi
+	end
+	
+	errorscatter!(log10.(df.x), log10.(df.σ), yerror=df.σ_em ./ df.σ ./ log(10), color=:black, markersize=6)
+end
+
 # ╔═╡ 6368512b-30ed-4457-b419-69dfef2721c7
 function plot_σv_prof(args...; kwargs...)
 	
@@ -168,79 +154,120 @@ function plot_σv_prof(args...; kwargs...)
 
 	plot_σv_prof!(args...; kwargs...)
 
-	if args[1] == "sculptor"
-		df = df_scl
-	else
-		df = df_umi
+
+	plot_σv_obs!(args[1])
+
+	fig
+	
+end
+
+# ╔═╡ 767186a1-090f-426c-862c-892e5e728ba7
+function compare_both(galaxyname, modelnames; density_kwargs = Dict()) 
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel="log radius / arcmin", ylabel = "log surface density", limits=(-0.5, 3, -3, 2))
+
+	ModelUtils.plot_expected_profile!("sculptor")
+
+	for (i, (label, model)) in enumerate(modelnames)
+		kwargs = get(density_kwargs, label, (;))
+		plot_density_f!(galaxyname, model..., label=label; color=COLORS[i], kwargs...)
 	end
 	
-	errorscatter!(log10.(df_scl.x), log10.(df_scl.σ), yerror=df_scl.σ_em ./ df_scl.σ ./ log(10), color=:black, markersize=6)
+	axislegend(position=:lb)
+	hidexdecorations!(ax, ticks=false, minorticks=false)
 
-	fig
+
+	ax_v = Axis(fig[2, 1], xlabel = "log radius / arcmin", ylabel = "log velocity dispersion")
 	
-end
-
-# ╔═╡ affe66b1-dc16-4c07-b945-88513cf554e8
-let 
-	fig = plot_σv_prof("sculptor", "1e7_new_v31_r3.2", "orbit_smallperi", "exp2d_rs0.10", label="smallperi")
-
-	plot_σv_prof!("sculptor", "1e7_new_v31_r3.2", "orbit_smallperi", "plummer_rs0.20", label="smallperi-Plummer")
-	
-	plot_σv_prof!("sculptor", "1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.11", label="LMC flyby")
-
-	plot_σv_prof!("sculptor", "1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10", label="MW impact")
-
-	plot_σv_prof!("sculptor", "1e6_v43_r5_beta0.2_a4", "orbit_smallperi", "exp2d_rs0.13", label="anisotropy")
+	plot_σv_obs!("sculptor")
 
 
-	axislegend(position=:lt)
+	for (i, (label, model)) in enumerate(modelnames)
+		plot_σv_prof!(galaxyname, model..., color=COLORS[i], label=label)
+	end
 
-	ylims!(0.6, 1.6)
 
-	@savefig "scl_sigma_v_profiles"
+
+	ylims!(0.6, 1.2)
+
+	xlims!(0, 2.5)
+	linkxaxes!(ax, ax_v)
 
 	fig
 end
+
+# ╔═╡ 5c56c73e-d8db-4894-b0cf-f7f1b0e01a72
+md"""
+# Plot
+"""
+
+# ╔═╡ 2c5eca31-bea1-4805-b869-877ec54828ca
+plot_σv_prof("sculptor", "1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars")
+
+# ╔═╡ 4a7222a7-4739-4059-9b91-1e317e2e2662
+plot_σv_prof("sculptor", "1e4_exp_M3e-4_r0.1/smallperilmc", "stars")
+
+# ╔═╡ 8b791ca5-3747-48f4-b410-a5b3523777a5
+compare_both("ursa_minor", OrderedDict(
+	"dm_free" => ("1e4_exp_M4e-4_r0.13/orbit_smallperi", "stars")
+)
+			)
+
+# ╔═╡ 23837d49-6bec-4a86-ad39-0cb66c655f02
+ModelUtils.compare_both("sculptor", "1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars", r_j=true)
+
+# ╔═╡ c61b48ac-62a4-466e-8238-a7c8ad5638f5
+ModelUtils.compare_both("sculptor", "1e4_exp_M3e-4_r0.1/smallperilmc", "stars", r_j=true)
+
+# ╔═╡ 1d917d95-bcb3-41b7-a00c-b7b6959d69bc
+ModelUtils.compare_both("ursa_minor", "1e4_exp_M4e-4_r0.13/orbit_smallperi", "stars", norm_shift=-2)
+
+# ╔═╡ 8888a121-61e0-46ba-81f6-5b4047b29620
+@savefig "scl_extra_densities_sigma_vs" compare_both("sculptor", OrderedDict(
+	"fiducial" => ("1e6_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"),
+	"MW impact" => ("1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"),
+	"anisotropic" => ("1e6_v43_r5_beta0.2_a4/orbit_smallperi", "exp2d_rs0.10"),
+	"oblate" => ("1e6_v48_r7_oblate_0.5/orbit_smallperi", "exp2d_rs0.10"),
+	# "dm free" => ("1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars")
+),
+	density_kwargs=Dict(
+		"anisotropic" => (; norm_shift=-0.5),
+		"oblate" => (; norm_shift=-0.5),
+	))
 
 # ╔═╡ 108e5761-fdc8-4729-96b1-26b9fc886606
-let 
-	fig = plot_σv_prof("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", label="smallperi")
 
-	plot_σv_prof!("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", label="smallperi-Plummer")
-
-
-	plot_σv_prof!("ursa_minor", "1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10", label="mean")
-
-	axislegend(position=:lt)
-
-	ylims!(0.6, 1.6)
-
-	@savefig "umi_sigma_v_profiles"
-
-
-	fig
-end
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
+# ╠═5bf5bd8d-65db-43e0-a999-5289d5cd1acf
 # ╠═51f50a8d-1684-47f8-af6d-4cea827a4961
 # ╠═2bacd818-4985-4922-85a3-716bdfda5146
 # ╠═3a8954e9-0f5b-4f2c-8a9e-6e66f0f20ccc
 # ╠═9309c10c-6ba3-436c-b975-36d26dafb821
+# ╠═629e397d-a4ae-469d-b81c-f92069d0b28a
+# ╠═8ae7dc9a-9f56-4540-bbe4-d98f8ea2bdc9
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
-# ╠═e084a02a-f445-422f-b0b3-700a44bf204c
-# ╠═b9e03109-9f49-4897-b26c-e31698a5fe49
-# ╠═fe3bc6ee-14ed-4006-b3ec-f068d2492da4
 # ╠═5abb6cec-e947-4fc1-9848-760e50bd5628
 # ╠═3ed68a46-04aa-4fea-b484-d9f3cc158738
 # ╠═cb898eeb-0803-42a7-a2c9-d6e2b95f8945
 # ╠═5acf2849-d5bf-49df-94fe-7c3fe738f921
-# ╠═629e397d-a4ae-469d-b81c-f92069d0b28a
-# ╠═8ae7dc9a-9f56-4540-bbe4-d98f8ea2bdc9
+# ╠═dd10823e-cf9a-4c5f-9cab-8d8f30effa33
+# ╠═cd0ea281-28b5-46fe-8ca2-23e44c623da6
+# ╠═ed028d05-86b4-4752-9462-2a837fe11e55
 # ╠═6368512b-30ed-4457-b419-69dfef2721c7
 # ╠═0cc4c7b4-d707-4f3d-9a82-1b6eb4119143
-# ╠═affe66b1-dc16-4c07-b945-88513cf554e8
-# ╠═108e5761-fdc8-4729-96b1-26b9fc886606
+# ╠═767186a1-090f-426c-862c-892e5e728ba7
 # ╠═908d84f6-18b2-4f33-abb4-537cd2fdea52
 # ╠═be9267a9-eebc-4edf-bde4-c224341f0ff5
+# ╟─5c56c73e-d8db-4894-b0cf-f7f1b0e01a72
+# ╠═2c5eca31-bea1-4805-b869-877ec54828ca
+# ╠═4a7222a7-4739-4059-9b91-1e317e2e2662
+# ╠═8b791ca5-3747-48f4-b410-a5b3523777a5
+# ╠═23837d49-6bec-4a86-ad39-0cb66c655f02
+# ╠═c61b48ac-62a4-466e-8238-a7c8ad5638f5
+# ╠═1d917d95-bcb3-41b7-a00c-b7b6959d69bc
+# ╠═8888a121-61e0-46ba-81f6-5b4047b29620
+# ╠═108e5761-fdc8-4729-96b1-26b9fc886606

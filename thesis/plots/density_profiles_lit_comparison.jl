@@ -43,17 +43,23 @@ md"""
 """
 
 # ╔═╡ a74de18f-e9df-437d-bdcd-da798f98d23a
-function get_R_h(galaxyname)
+function get_a_h(galaxyname)
 	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
-	R_h = obs_props["R_h"]
-	return R_h
+	a_h = obs_props["r_h"]
+	return a_h
+end
+
+# ╔═╡ 9a1a580e-c694-488e-9d64-da4470775b4a
+function get_ell(galaxyname)
+	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "observed_properties.toml")) |> LilGuys.collapse_errors
+	return obs_props["ellipticity"]
 end
 
 # ╔═╡ c725564c-e140-43da-8c6e-d40905b5aafc
-get_R_h("leo1")
+get_a_h("leo1")
 
 # ╔═╡ 6a827bb5-d4ff-4155-ad52-daa0fac7654a
-get_R_h("fornax")
+get_a_h("fornax")
 
 # ╔═╡ 01f49191-e27b-4bdc-9cbd-2c6f7dc1f17d
 function get_R_h_inner(galaxyname)
@@ -70,20 +76,8 @@ function load_profile(galaxyname; algname="jax_eqw", inner=false, filter = true)
 		"density_profiles/$(algname)_profile.toml")
 	
     prof = LilGuys.SurfaceDensityProfile(filename) 
-
-
-	if inner
-		R_h = get_R_h_inner(galaxyname)
-	else
-		R_h = get_R_h(galaxyname)
-	end
 	
-	@info "R_h = $R_h arcmin"
 	@info "counts = $(sum(prof.counts))"
-
-	Σ_h = 10 .^ LilGuys.lerp(prof.log_R, middle.(prof.log_Sigma))(log10(middle(R_h)))
-	M_s = Σ_h * middle(R_h) .^ 2
-
 	
 
 	filt = maximum.(LilGuys.error_interval.(prof.log_Sigma)).< 1
@@ -94,6 +88,7 @@ function load_profile(galaxyname; algname="jax_eqw", inner=false, filter = true)
 		prof = prof |> LilGuys.filter_empty_bins
 	end
 
+	ell = get_ell(galaxyname).middle
 	prof = LilGuys.scale(prof, 1/sqrt(1-ell), 1)
 	
 	prof
@@ -105,7 +100,7 @@ md"""
 """
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-prof_scl = LilGuys.filter_by_bin(load_profile("sculptor", algname="jax_2c_eqw"), 1:49)
+prof_scl = load_profile("sculptor", algname="fiducial")
 
 # ╔═╡ e4bab11b-79a4-48cc-8a35-feac9968635e
 prof_scl_delve = load_profile("sculptor", algname="delve_rgb_sub", filter=false)
@@ -236,20 +231,20 @@ log10(cosd(36))
 
 # ╔═╡ e4f85a1e-c755-426c-9d93-71485bb2cf63
 profiles = OrderedDict(
-	"Gaia" => prof_scl,
+	L"Gaia" => prof_scl,
 	"DELVE" => prof_scl_delve,
-	"Muñoz+18" => prof_scl_munoz,
-	"Westfall+06" => prof_scl_westfall06,
-	"Walcher+03" => prof_scl_walcher,
-	"Eskridge88" => prof_scl_eskridge,
+	"Muñoz+2018" => prof_scl_munoz,
+	"Westfall+2006" => prof_scl_westfall06,
+	"Walcher+2003" => prof_scl_walcher,
+	"Eskridge1988" => prof_scl_eskridge,
 )
 
 # ╔═╡ 492d5e36-289d-4df6-8267-2551b4d1da77
 profiles_old = OrderedDict(
-	"Gaia" => prof_scl,
-	"Eskridge88" => prof_scl_eskridge,
-	"Demers+80" => prof_scl_demers,
-	"Hodge61" => prof_scl_hodge,
+	L"Gaia" => prof_scl,
+	"Eskridge1988" => prof_scl_eskridge,
+	"Demers+1980" => prof_scl_demers,
+	"Hodge1961" => prof_scl_hodge,
 )
 
 # ╔═╡ 316d12a7-54e8-42db-9ba2-5623e07164b9
@@ -268,47 +263,59 @@ log10(10*a_h)
 log10(10*a_h)
 
 # ╔═╡ 6c04f96a-b14b-4c60-91de-716c9379491f
-function compare_profiles(profiles)
+function compare_profiles(profiles, galaxyname; title="")
 	fig = Figure()
 	ax = Axis(fig[1,1],
-			 xlabel = L"$\log a$ / arcmin",
-			 ylabel = L"\log \Sigma",
-			 limits=(nothing, nothing, -4.2, nothing))
+			 xlabel = L"$\log\, a$ / arcmin",
+			 ylabel = L"\log\, \Sigma\ /\ \Sigma(a_h)",
+			 limits=(-0.2, nothing, -4.2, nothing),
+			  title = title
+			 )
 
 
-	x = LinRange(-1, 2.2, 1000)
+	a_h = get_a_h(galaxyname).middle
+	
+	x = LinRange(-0.5, 2.2, 1000)
 	ana = LilGuys.Sersic(R_h=a_h, n=1)
 	f(x) = LilGuys.surface_density.(ana, 10 .^ x) .|> log10
 
-	lines!(x, f(x), color=:black, linewidth=lw)
+	lines!(x, f(x), color=:black, linewidth=lw, label="2D exponential")
 
+	x_min = Inf
+	x_max = -Inf
 	for (label, prof) in profiles
-		s0 = LilGuys.lerp(LilGuys.log_radii(prof), float.(LilGuys.log_surface_density(prof)))(log10(obs_props["r_h"]))
+		s0 = LilGuys.lerp(LilGuys.log_radii(prof), float.(LilGuys.log_surface_density(prof)))(log10(a_h))
 		
 		scatter!(LilGuys.log_radii(prof), LilGuys.log_surface_density(prof) .- s0, label=label)
+		x_min = min(minimum(LilGuys.log_radii(prof)), x_min)
+		x_max = max(maximum(LilGuys.log_radii(prof)), x_max)
 
 		@info label, s0
 
 	end
-	scatter!(log10(obs_props["r_h"]), 0, color=:black)
+	scatter!(log10(a_h), 0, color=:black)
 	
 	axislegend(position=:lb)
 	hidexdecorations!(ax, ticks=false, minorticks=false)
 
 	
 	ax_res = Axis(fig[2,1], 
-					 xlabel = L"$\log a$ / arcmin",
-ylabel = L"\delta \log \Sigma")
+		xlabel = L"$\log a$ / arcmin",
+		ylabel = L"\Delta\,\log\, \Sigma"			 
+	)
+	
 	hlines!(0, color=:black, linewidth=lw)
 
 	for (label, prof) in profiles
-		s0 = LilGuys.lerp(LilGuys.log_radii(prof), float.(LilGuys.log_surface_density(prof)))(log10(obs_props["r_h"]))
+		s0 = LilGuys.lerp(LilGuys.log_radii(prof), float.(LilGuys.log_surface_density(prof)))(log10(a_h))
 		
 		scatter!(LilGuys.log_radii(prof), LilGuys.log_surface_density(prof) .- s0 .- f(LilGuys.log_radii(prof)), label=label)
 	end
 	
 
 	linkxaxes!(ax, ax_res)
+	dx = x_max - x_min
+	xlims!(x_min - 0.05dx, x_max + 0.05dx)
 	rowsize!(fig.layout, 2, Relative(0.2))
 	rowgap!(fig.layout, 0.)
 	fig
@@ -316,19 +323,105 @@ ylabel = L"\delta \log \Sigma")
 end
 
 # ╔═╡ 4314ec9e-8359-4b2a-8eea-30f71d92b743
-compare_profiles(profiles)
-
-# ╔═╡ 16db74e9-ee57-4f70-8794-9ca151e47c7f
-compare_profiles(profiles_old)
+compare_profiles(profiles, "sculptor")
 
 # ╔═╡ a991a4fb-8037-485b-b48c-0f73d14bd0b5
-@savefig "scl_literatre_profiles" compare_profiles(merge(profiles, profiles_old))
+@savefig "scl_literatre_profiles" compare_profiles(merge(profiles, profiles_old), "sculptor", title="Sculptor")
 
 # ╔═╡ 4cb354cb-4f07-4871-92dc-fd479b1b546d
 compare_profiles(OrderedDict(
 	"Gaia" => prof_scl,
-	"shapley38" => prof_scl_shapley
+	"shapley38" => prof_scl_shapley,
+	
+), "sculptor"
 )
+
+# ╔═╡ ad36eb3e-5a81-4803-ad8c-4583649c6b6f
+md"""
+# Ursa Minor
+"""
+
+# ╔═╡ 977f1b17-d0cd-414b-ac5d-9bd0e7e79f91
+prof_umi = load_profile("ursa_minor", algname="fiducial")
+
+# ╔═╡ 186fbcec-d10a-4894-86c9-b0733dc9d7f1
+prof_umi_unions = load_profile("ursa_minor", algname="unions_sub", filter=false)
+
+# ╔═╡ f8636f32-78b6-4237-aa13-cfcc0ec07d4a
+prof_umi_hodge1964 = let
+	r_qroot = [1.1749241891852864, 1.3928954436497012, 1.5536817582332951, 1.662498916988361, 1.7661676790819911, 1.84564436785814, 1.9144603714007913, 1.9876026454364295, 2.0466339998267182, 2.1003013179048295, 2.157338005525766, 2.2005333230647786, 2.250534767080297, 2.2931101206234294, 2.3337986272225804, 2.3757405392916624]
+	log_N = [0.85007072135785, 0.7782507793081666, 0.7000453165982341, 0.6112522486645335, 0.5315499649826287, 0.4423311956715783, 0.3225717856112935, 0.21039260652833658, 0.10722181788220442, -0.04655250545859024, -0.1545845291880089, -0.2438307631040496, -0.33626289119896735, -0.42954642204858484, -0.5572293706485767, -0.6877411735625713]
+
+	surf_dens_from_plot(r_qroot .^4, 10 .^ log_N)
+end
+
+
+# ╔═╡ d8243837-f9fa-4fed-bd2d-f773d5abb021
+prof_umi_kleyna = let
+	# kleyna 1998, top of Fig. 5
+	x = [1.5683306948736442, 3.756726854867074, 4.906147485599572, 5.988181342666751, 6.915136663207678, 7.757148097491587, 8.57164078872496, 9.368579355006046, 10.200541932497414, 10.975668787326457, 11.685507594986278, 12.498898579292046, 13.254923859254513, 14.109969023739017, 14.768307426806416, 15.470633660319141, 16.29320311889058, 17.012210977687634, 17.95102554722695, 18.831871411660373, 19.569552743871892, 20.595593985326776, 21.556536594889753, 22.595344000367078, 23.788379216233665, 24.950306764015803, 25.97118680651925, 27.387835275396036, 28.749678130977983, 29.835096914891903]
+	y = [5.013220289625585, 5.572546133486681, 4.83721282146444, 3.801346529424993, 4.431950682741875, 3.770475534599094, 3.832691925807803, 2.9661320294514457, 2.7926709419923093, 3.4372472421742377, 2.3838432415346387, 2.3393215806888743, 2.4153439870712634, 1.8135518198449658, 3.1723061460169992, 1.8114554285597528, 1.5685168694381568, 1.6719261436412451, 1.1707882532439684, 1.535044546329311, 1.1547172908293866, 0.8546689332854508, 0.7723158613898501, 0.6745651066603027, 0.5130985663520592, 0.6026958526601233, 0.5611190538821655, 0.17629328178873482, 0.43017750862290965, 0.3231279235737276]
+	surf_dens_from_plot(x, y)
+end
+
+# ╔═╡ 4b8ae796-742d-4edc-9c87-97826a490d4f
+prof_umi_md = let
+	# martinez-delgado+2001 bg subtracted
+	x = [6.511079195732457, 12.078375051292573, 17.614895363151415, 23.057037340993023, 28.582273286828066, 34.02697989331145, 39.53221173574067, 45.11540828887977, 50.60525235945835, 56.08535084119819, 67.16249487074272, 78.27349199835864]
+	y = [1.4773311266930884, 1.326771482078307, 1.0933539479987808, 0.8245503244632204, 0.5440311833108316, 0.3433430599712557, 0.0015025477984409452, -0.12366621662819555, -0.3362440660249989, -0.5538304080832717, -0.6641261269108488, -0.5912852227690432]
+
+	surf_dens_from_plot(x, 10 .^ y)
+end
+
+# ╔═╡ 33f4c2aa-fc01-4f71-9c28-c79c4126fcfd
+prof_umi_palma = let
+	x = [3.393651144847543, 6.843631043603873, 10.258570168635764, 13.657129291147244, 20.460183872106548, 27.04990815683354, 33.93248752748862, 40.78465667668747, 47.71618947152965, 54.19511477390642, 61.14843398246341, 67.8809518504975, 75.01086049055203, 81.74345839646027, 88.4278320880245, 95.50983923786588, 121.94910310707179, 149.27615864579238, 176.79544397214357]
+	y = [8.367107347919156, 7.173404854121636, 5.803637532710367, 3.978525693472169, 2.9607976420624915, 1.1131435814861095, 0.7489708032685642, 0.23905883865456243, 0.21815124206034642, 0.15155247628032165, 0.08925696885306258, 0.08792686039326335, 0.07126730116103845, 0.03503448920673088, 0.06373156827351083, 0.047758018125772024, 0.01812234935693242, 0.03046675189941488, 0.010823321499582882]
+
+	surf_dens_from_plot(x, y)
+
+end
+
+# ╔═╡ bcbb9d6a-6b99-49c6-8bd6-ffe6b7739602
+prof_umi_sato_major = let
+	x = [2.816506890326771, 8.409899021840669, 13.866696481404942, 19.447523437275613, 24.77794002431016, 30.441820564984283, 35.48438177309061, 41.41232845760215, 46.825876280341426, 52.387853059538365, 57.690887012978855, 62.78838784479955, 69.04489568320092, 73.45162394960815, 79.66395891268346, 85.18347312816509]
+	y = [106.4613134059435, 59.90545745925621, 32.10765567017933, 7.775716000490203, 2.8699070298292395, 1.988748268005301, 1.4661575718812558, 0.9630292147675485, 0.6708474070766045, 0.4781128233615646, 0.32878324400406556, 0.6630540758744532, 0.2840775076812935, 0.30396614978905606, 0.22362334369283512, 0.08493104440641504]
+
+	surf_dens_from_plot(x, y)
+end
+
+# ╔═╡ 0ed2720d-2220-489a-8392-03f95027764a
+prof_umi_sato_minor = let
+	x = [2.7905615355776785, 8.455307173013596, 13.832153361952454, 19.454166331244547, 25.053264614872035, 30.713241306389644, 35.90702694509149, 41.65213292717819, 47.13872208071194, 52.37506057796316, 57.549545573052306, 63.11496004114744, 68.92048266915018, 73.07590259067526, 79.60341402771314, 85.78555995528703]
+	y = [104.02427502744538, 58.65957150664925, 31.06560863741536, 7.499805079669077, 2.8881434017783314, 1.929247341737902, 1.4729451604202959, 0.9734425560793767, 0.6485406056141135, 0.4788399596461362, 0.3298850880983333, 0.6731035263067725, 0.28445421604624477, 0.30251192805382526, 0.22261211011472892, 0.08643642795088329]
+
+
+	surf_dens_from_plot(x / (1 - 0.46), y)
+end
+
+# ╔═╡ 917c8053-da0a-4226-808e-9f02ea92a222
+prof_umi_ih = let
+	x = [0.7714429867980259, 1.9174788872470818, 2.6971928562343543, 3.4629020187933066, 4.219299446402017, 4.999782375331193, 5.742774118309672, 6.558513349095155, 7.317403723198111, 8.076702052276406, 8.932769939224041, 9.66353010981573, 10.35861559162735, 11.940931692608975, 11.940931692608975, 11.137307016924437, 12.785583439851452, 13.324038502849866, 14.162516625217378, 15.124164723644386, 15.765286374769339, 16.798313373594674, 17.96272951396602, 18.962969542661558, 19.80038751821533, 20.686848509352, 21.44746674602294, 22.319919224507505, 22.860092445596642, 24.58507822857947, 26.16409869747314, 30.128792593920362, 37.99098990082207, 47.707136891842794, 55.190291453451316, 61.03356240189908]
+	y = [3.519514960274528, 3.8575549265862756, 3.8929720259236316, 3.2398947672327107, 2.195839099438655, 2.9264587273827396, 3.415655418468127, 2.5580333864171254, 2.46425362205618, 2.46425362205618, 1.9096851752686712, 1.6515474887033441, 2.7195516766609176, 1.8217823479885793, 1.8217823479885793, 1.784537667163541, 1.5178467226101842, 1.757220739573295, 1.5139227073686103, 1.464984621174007, 1.7977850302360556, 1.0913672270214625, 0.5331652507683602, 0.6906901397537294, 0.8034272218269215, 0.5891479678092707, 0.641958565115059, 0.40374955282048863, 0.49620273830968603, 0.3991053092246535, 0.3612382976629583, 0.11152048645593286, 0.08526691020607116, 0.058715940616551256, 0.10983078450557375, 0.07186435952847177]
+
+
+	surf_dens_from_plot(x, y)
+end
+
+# ╔═╡ f4797072-3103-4f85-b6b5-a3906205d9b3
+profiles_umi = OrderedDict(
+	L"Gaia" => prof_umi,
+	"UNIONS" => prof_umi_unions,
+	"Sato+2025 (minor axis)" => prof_umi_sato_minor,
+	"Palma+2003" => prof_umi_palma,
+	"Martínez-Delgado+2001" => prof_umi_md,
+	"Kleyna+1998" => prof_umi_kleyna,
+	"IH1995" => prof_umi_ih,
+	"Hodge1964" => prof_umi_hodge1964,
+)
+
+# ╔═╡ fa32b6b9-d09c-4dfe-8af1-a408043db231
+@savefig "umi_literature_profiles" compare_profiles(profiles_umi, "ursa_minor"
 )
 
 # ╔═╡ Cell order:
@@ -340,8 +433,9 @@ compare_profiles(OrderedDict(
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═f22aa8a5-9116-4416-9f93-f61b6c7e2a81
 # ╠═5bfee795-b988-4ffd-ac65-120c57648b29
-# ╠═9e983a35-bb7d-4279-a9c0-190f9157007b
+# ╟─9e983a35-bb7d-4279-a9c0-190f9157007b
 # ╠═a74de18f-e9df-437d-bdcd-da798f98d23a
+# ╠═9a1a580e-c694-488e-9d64-da4470775b4a
 # ╠═c725564c-e140-43da-8c6e-d40905b5aafc
 # ╠═6a827bb5-d4ff-4155-ad52-daa0fac7654a
 # ╠═01f49191-e27b-4bdc-9cbd-2c6f7dc1f17d
@@ -374,6 +468,17 @@ compare_profiles(OrderedDict(
 # ╠═f86d7b90-0147-4490-a995-3b347e9805ab
 # ╠═6c04f96a-b14b-4c60-91de-716c9379491f
 # ╠═4314ec9e-8359-4b2a-8eea-30f71d92b743
-# ╠═16db74e9-ee57-4f70-8794-9ca151e47c7f
 # ╠═a991a4fb-8037-485b-b48c-0f73d14bd0b5
 # ╠═4cb354cb-4f07-4871-92dc-fd479b1b546d
+# ╠═ad36eb3e-5a81-4803-ad8c-4583649c6b6f
+# ╠═977f1b17-d0cd-414b-ac5d-9bd0e7e79f91
+# ╠═186fbcec-d10a-4894-86c9-b0733dc9d7f1
+# ╠═f8636f32-78b6-4237-aa13-cfcc0ec07d4a
+# ╠═d8243837-f9fa-4fed-bd2d-f773d5abb021
+# ╠═4b8ae796-742d-4edc-9c87-97826a490d4f
+# ╠═33f4c2aa-fc01-4f71-9c28-c79c4126fcfd
+# ╠═bcbb9d6a-6b99-49c6-8bd6-ffe6b7739602
+# ╠═0ed2720d-2220-489a-8392-03f95027764a
+# ╠═917c8053-da0a-4226-808e-9f02ea92a222
+# ╠═f4797072-3103-4f85-b6b5-a3906205d9b3
+# ╠═fa32b6b9-d09c-4dfe-8af1-a408043db231

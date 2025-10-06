@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -30,9 +30,6 @@ modelname = "EP2020"
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 FIGDIR = "./figures"
-
-# ╔═╡ 43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
-t_max = -15/T2GYR
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -92,22 +89,10 @@ end
 modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", modelname)
 
 # ╔═╡ 10acf60c-8acf-4c53-9c18-fbd4692b28e3
-idx, orbits = load_orbits("sculptor")
-
-# ╔═╡ b8a50fa5-b6e7-442e-8ef1-aa924db6278d
-idx_umi, orbits_umi = load_orbits("ursa_minor")
+_, orbits = load_orbits("sculptor")
 
 # ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
 scl_best = load_best_orbit("sculptor")
-
-# ╔═╡ 7379245c-3a47-48f1-bfcc-a4e959f5bb22
-umi_best = load_best_orbit("ursa_minor")
-
-# ╔═╡ b932e811-0f4c-41ee-aa70-ac6b3173bd3e
-umi_mean = load_best_orbit("ursa_minor", "EP2020_special_cases", "orbit_mean")
-
-# ╔═╡ 5327cfc6-a932-44d2-b251-b9a127224463
-umi_largeperi = load_best_orbit("ursa_minor", "EP2020_special_cases", "orbit_largeperi")
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -131,8 +116,8 @@ let
 		ax.yticks = -100:100:100
 	end
 
-	plot_xyz!(ax_xyz, orbits, color=COLORS[3], alpha=0.05, time_min=t_max, linestyle=:solid)
-	plot_xyz!(ax_xyz, scl_best, color=:black, time_min=t_max)
+	plot_xyz!(ax_xyz, orbits, color=COLORS[3], alpha=0.05, linestyle=:solid)
+	plot_xyz!(ax_xyz, scl_best, color=:black,)
 	plot_xyz_today!(ax_xyz, scl_best, length(scl_best))
 	plot_xyz_sun!(ax_xyz, strokewidth=OrbitUtils.strokewidth)
 
@@ -153,64 +138,9 @@ let
 
 end
 
-# ╔═╡ 4e57106c-80f7-40d8-b1d8-9a90c2dbf6eb
-let
-	fig = Figure()
-	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
-
-	ax_xyz = axes_xyz_flat(fig, limits=limits, xticks = -100:100:100, yticks = -100:100:100, xlabelvisible=false)
-
-	plot_xyz!(ax_xyz, orbits, color=COLORS[3], alpha=0.05, time_min=t_max, linestyle=:solid)
-	plot_xyz!(ax_xyz, scl_best, color=:black, time_min=t_max)
-	plot_xyz_today!(ax_xyz, scl_best, length(scl_best))
-	plot_xyz_sun!(ax_xyz, strokewidth=OrbitUtils.strokewidth)
-
-	ax_xyz[2].title = "Sculptor"
-
-
-	ax_xyz2 = axes_xyz_flat(fig, row=2, limits=limits, xticks = -100:100:100, yticks = -100:100:100)
-
-
-	plot_xyz!(ax_xyz2, orbits_umi, color=COLORS[3], alpha=0.05, time_min=t_max, linestyle=:solid)
-	plot_xyz!(ax_xyz2, umi_best, color=:black, time_min=t_max)
-	plot_xyz_today!(ax_xyz2, umi_best, length(umi_best))
-	plot_xyz_sun!(ax_xyz2, strokewidth=OrbitUtils.strokewidth)
-	
-	ax_xyz2[2].title = "Ursa Minor"
-
-	ax_rt = Axis(fig[3, 1:3],
-				xlabel = "time / Gyr", ylabel =   L"$r_\textrm{sat-MW}$ / kpc")
-	
-	plot_rt!(ax_rt, orbits, color=COLORS[3], alpha=0.05, linestyle=:solid)
-	plot_rt!(ax_rt, scl_best, color=:black)
-	xlims!(-10, 0.1)
-	ylims!(0, 120)
-	plot_rt_today!(ax_rt, scl_best, length(scl_best))
-
-	rowsize!(fig.layout, 3, Aspect(1, 1.0))
-
-
-	ax_rt2 = Axis(fig[4, 1:3],
-				xlabel = "time / Gyr", ylabel =   L"$r_\textrm{sat-MW}$ / kpc")
-	
-	plot_rt!(ax_rt2, [umi_best, umi_mean, umi_largeperi], color=COLORS[3], alpha=0.3, linestyle=:solid)
-	plot_rt!(ax_rt2, umi_best, color=:black)
-	xlims!(-10, 0.1)
-	ylims!(0, 120)
-	plot_rt_today!(ax_rt2, umi_best, length(umi_best))
-
-	rowsize!(fig.layout, 4, Aspect(1, 1.0))
-
-	resize_to_layout!(fig)
-	@savefig "scl_umi_xyzr_orbits"
-	fig
-
-end
-
 # ╔═╡ Cell order:
 # ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
-# ╠═43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
 # ╠═2b01d8f5-272e-4aa2-9825-58bb052acd10
@@ -227,12 +157,7 @@ end
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
 # ╠═10acf60c-8acf-4c53-9c18-fbd4692b28e3
-# ╠═b8a50fa5-b6e7-442e-8ef1-aa924db6278d
 # ╠═127a988e-74ab-41f4-8979-6800622f3ff4
-# ╠═7379245c-3a47-48f1-bfcc-a4e959f5bb22
-# ╠═b932e811-0f4c-41ee-aa70-ac6b3173bd3e
-# ╠═5327cfc6-a932-44d2-b251-b9a127224463
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e
-# ╠═4e57106c-80f7-40d8-b1d8-9a90c2dbf6eb
