@@ -1,6 +1,6 @@
 As discussed in [@sec:exponential_profiles], the projected luminosity/stellar mass density profile of dwarf galaxies is generally well-described by an exponential law ([@eq:exponential_law]). A prototypical example is the Fornax dSph — well-fit by an exponential over 4.5 decades in surface density. On the other hand, Sculptor or Ursa Minor have profiles that deviate significantly from an exponential profile fitted to the inner regions, with a clear excess of stars/light in the outer regions. In this chapter, we critically review the density profile of the MW classical dwarfs.  This thesis concerns the origin of the outer deviations from exponential profiles, with a tidal interpretation explored in subsequent chapters.
 
-# Satellite stellar membership with *Gaia*
+# Satellite stellar membership with *Gaia* {#sec:the_algorithm}
 
 Measuring the light profile of a resolved galaxy requires careful consideration of whether any given star belongs to the system or not. Without removing contamination from foreground/background sources, faint features may be lost in the noise or be of uncertain association. When only photometric data was available, the membership of stars was ascertained using the colour-magnitude diagram alone [e.g., matched filter methods like those used by @rockosi+2002]. Now that *Gaia* data are available, stellar parallax and proper motion are also available to improve membership assignment. 
 
@@ -11,7 +11,7 @@ $$
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}.
 $$
 
-For a satellite, the *spatial likelihood* is specified either as a one- or two-component elliptical exponential profile. A second exponential component is considered only when the preferred amplitude of the second component is non-zero. The *proper-motion likelihood* quantifies the agreement of a star's motion with the dwarf galaxy's systemic motion, accounting for observational uncertainties. The *CMD likelihood* measures the consistency of a star's *Gaia* $G$ magnitude and $G_{\rm BP}- G_{\rm RP}$ colour with theoretical isochrones for the dwarf. For the background likelihoods, the spatial likelihood is a uniform distribution over the field, and the background CMD and PM likelihoods are constructed empirically from the stars in an annulus far from the satellite. Each likelihood is normalized as a probability density over the respective parameter space. Appendix [-@sec:density_extra] discusses the details of quality cuts and the likelihood calculation.
+For a satellite, the *spatial likelihood* is specified either as a one- or two-component elliptical exponential profile. A second exponential component is considered only when the preferred amplitude of the second component is non-zero. The *proper-motion likelihood* quantifies the agreement of a star's motion with the dwarf galaxy's systemic motion, accounting for observational uncertainties. The *CMD likelihood* measures the consistency of a star's *Gaia* $G$ magnitude and $G_{\rm BP}- G_{\rm RP}$ colour with theoretical isochrones for the dwarf. For the background likelihoods, the spatial likelihood is a uniform distribution over the field, and the background CMD and PM likelihoods are constructed empirically from the stars in an annulus far from the satellite. Each likelihood is normalized as a probability density over the respective parameter space. Appendix [-@sec:density_extra] discusses the details of quality cuts and the likelihood calculation [see also, @MV2020a; @jensen+2024].
 
 The total likelihood is a mixture model of the satellite and background, weighted by the fraction of stars in the field belonging to the satellite, $f_{\rm sat}$: 
 $$
@@ -40,7 +40,7 @@ We illustrate the likelihood-based membership selection criteria through a progr
 $$
 {\cal L}_{\rm CMD,\ sat}\ {\cal L}_{\rm PM,\ sat} > {\cal L}_{\rm CMD,\ bg}\ {\cal L}_{\rm PM,\ bg}.
 $$ {#eq:sel_cmd_pm}
-Next, our **fiducial** sample, $P_{\rm sat} > 0.2$, includes a spatial likelihood as described in J+24. Finally, the **RV members** (for radial velocity) sample adds line-of-sight velocity information (see Appendix [-@sec:rv_obs] for details). While the latter is the highest-purity membership sample, we do not use this sample for stellar density analysis due to its incompleteness and complex selection function. 
+Next, our **fiducial** sample, $P_{\rm sat} > 0.2$, includes a spatial likelihood as described in J+24. Finally, the **RV members** (for radial velocity) sample adds line-of-sight velocity information (see Appendix [-@sec:extra_rv_models] for details). While the latter is the highest-purity membership sample, we do not use this sample for stellar density analysis due to its incompleteness and complex selection function. 
 
 [@Fig:scl_selection; @Fig:umi_selection; @Fig:fornax_selection] show our fiducial sample for three dSphs (Sculptor, Ursa Minor, and Fornax), as well as impact of different samples, in tangent-plane coordinates, the CMD, and proper-motion space. The "all" sample extends uniformly across the tangent plane, but includes a substantial background population. The "CMD+PM" sample has a much lower background density in the tangent plane, revealing the satellite more clearly.  The fiducial sample appears similar to the "CMD+PM" sample in the CMD and PM planes, but excludes improbably distant stars. The "RV member" sample also traces out similar distributions in CMD and PM space as the fiducial sample, with less dispersion, likely reflecting the brighter magnitudes of stars with spectroscopic follow-up. Each selection criteria—spatial, CMD, and PM—contributes towards a high-quality membership assignment. 
 
@@ -52,17 +52,15 @@ To illustrate the extent of Sculptor and Ursa Minor, we highlight distant, spect
 
 
 
-![Sculptor sample selection](figures/scl_selection.png){#fig:scl_selection}
+![Sculptor sample selection](figures/scl_selection.png){#fig:scl_selection width=100%}
 
 Figure: The distributions of various samples of *Gaia* stars for Sculptor. In each panel, we plot light grey points for the "all" sample of stars, turquoise points for "CMD+PM" selected stars ([@eq:sel_cmd_pm]), blue squares for the "fiducial" sample ($P_{\rm sat} > 0.2$), and indigo diamonds for the "RV members" sample. We mark the two far-outlier stars from @sestito+2023a with rust-outlined indigo stars. **Left:** Tangent plane $\xi, \eta$. The orange ellipses represents 3 and 6 half-light radii. **Top right:** Colour magnitude diagram in Gaia $G$ magnitude versus $G_{\rm BP} - G_{\rm RP}$ colour. We plot a Padova $12\,$Gyr, ${\rm [Fe/H] }=-1.68$ isochone in orange. The black bar in the top left represents the median colour error. **Bottom right:** Proper motion in declination $\mu_\delta$ vs RA $\mu_{\alpha*}$ (corrected). The orange point marks the systemic @MV2020b proper motion. The black cross represents the median proper motion error. 
 
-
-
-![Ursa Minor sample selection](figures/umi_selection.png){#fig:umi_selection}
+![Ursa Minor sample selection](figures/umi_selection.png){#fig:umi_selection width=100%}
 
 Figure: Similar to @fig:scl_selection except for Ursa Minor. We outline "velocity confirmed" members outside a radius of $6R_h$ with red stars [from @sestito+2023b; @pace+2020; @spencer+2018]. We also mark the location of Muñoz 1 with a pink circle.
 
-![Fornax sample selection](figures/fornax_selection.png){#fig:fornax_selection}
+![Fornax sample selection](figures/fornax_selection.png){#fig:fornax_selection width=100%}
 
 Figure: Similar to @fig:scl_selection except for Fornax. The isocrone is instead for a 2Gyr stellar population. RV measurements are from @WMO2009. Fornax does not show the same extended outer halo of probable members as Sculptor or Ursa Minor despite having many more stars.
 

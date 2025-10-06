@@ -27,7 +27,7 @@ where $a$ is the disc radial scale length, $b$ is the scale height, and $M$ is t
 
 
 
-![Circular velocity of the Milky Way potential](figures/v_circ_potential.png){#fig:v_circ_potential width=80%} 
+![Circular velocity of the Milky Way potential](figures/v_circ_potential.pdf){#fig:v_circ_potential} 
 
 Figure: Circular velocity profile of @EP2020 potential. The total circular velocity (thick black line) is composed of an NFW halo (green dashed line), thin and thick @miyamoto+nagai1975 disks (orange dash-dotted line), and a @hernquist1990 bulge (blue dotted line).
 

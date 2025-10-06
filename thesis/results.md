@@ -110,7 +110,7 @@ Table: The orbital properties and dark matter evolution for the models including
 
 
 
-![Sculptor orbits with LMC](figures/scl_lmc_xyzr_orbits.png){#fig:scl_lmc_orbits_effect}
+![Sculptor orbits with LMC](figures/scl_lmc_xyzr_orbits.png){#fig:scl_lmc_orbits_effect width=100%}
 
 Figure: Similar to @fig:scl_orbits except for orbits with (orange) and without (green lines) the inclusion of an LMC (blue line) in the potential. The bottom row additionally shows the distance between Scl and the LMC over time.
 
@@ -270,7 +270,7 @@ Galaxies are rarely perfect isotropic spheres. Sculptor and Ursa Minor are ellip
 
 Alternative initial conditions may influence the total mass evolution but should produce a similar final stellar structure. A system's observed velocity dispersion directly constrains the mean density within $R_h$ [e.g., @wolf+2010]. Thus, the tidal force required to disrupt the stellar component does not strongly depend on the inner halo structure (via the Jacobi radius).
 
-## Orbital uncertainties
+## Orbital uncertainties {#sec:scl_umi_orbit_uncert}
 
 The long-term orbits of satellites are uncertain. Analytic Milky Way potentials neglect many unknown details, including triaxiality, halo twisting, mass evolution, and substructure. Due to these inadequacies, calculated orbits may diverge significantly from the true orbits of satellites [e.g., @dsouza+bell2022]. The mass-growth of the Milky Way and dynamical friction imply that orbits are typically less bound in the past (less affected by tides). Orbital energy and angular momentum of subhalos are not conserved in cosmological N-body simulations. Consequently, orbits in analytic potentials may overestimate the pericentre and underestimate the maximum tidal stress [although typically not by enough to change our conclusions, @santistevan+2023; @santistevan+2024]. 
 

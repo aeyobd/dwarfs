@@ -19,14 +19,13 @@ selection}\label{data-processing-and-selection}
 
 We compile LOS velocities from several spectroscopic surveys. For
 Sculptor, we combine \citet{tolstoy+2023}; \citet{walker+2009};
-\citet{sestito+2023a}; and \apogee{} \citep[DR17,][]{abdurrouf+2022}.
-For Ursa Minor, we combine \citet{spencer+2018}; \citet{pace+2020};
-\citet{sestito+2023b}; and \apogee{}. We then crossmatch all catalogues
-to J+24 Gaia stars. If a study did not report GaiaDR3 source ID's, we
-match to the nearest star within 1--3 arcseconds. We combine
-measurements of the same star using inverse-variance weighting.
-
-To reduce likely binaries, we remove stars with significant velocity
+\citet{sestito+2023a}; and APOGEE \citep[DR17,][]{abdurrouf+2022}. For
+Ursa Minor, we combine \citet{spencer+2018}; \citet{pace+2020};
+\citet{sestito+2023b}; and APOGEE. We then crossmatch all catalogues to
+J+24 Gaia stars. If a study did not report GaiaDR3 source ID's, we match
+to the nearest star within 1--3 arcseconds. We combine measurements of
+the same star using inverse-variance weighting. To reduce likely
+binaries, we remove stars with significant velocity
 dispersions.\footnote{Specifically, using that
   \(\chi^2=\frac{s^2}{\delta \bar v^2}\), we remove stars with a
   \(\chi^2\) larger than the 99.9th percentile of the \(\chi^2\)
@@ -34,7 +33,7 @@ dispersions.\footnote{Specifically, using that
 
 We build on J+24's likelihood by adding multiplicative terms in the
 total likelihood for the velocity consistency (see
-Section~\ref{sec:extra_density}). We assume that the satellite and
+Section~\ref{sec:the_algorithm}). We assume that the satellite and
 background \(v_{\rm los, gsr}\) distributions are Gaussian. We assume a
 halo/background velocity dispersion of a constant
 \(\sigma_{\rm halo} = 100\,\kms\) with mean 0
@@ -44,29 +43,31 @@ satellite membership probabilities of greater than 0.2. For Scl, we find
 
 For UMi, we shifted the velocities of \citet{spencer+2018}
 (\(-1.1\,\kms\)) and \citet{pace+2020} (\(+1.1\,\kms\) ) to account for
-a systematic velocity offset. Otherwise all studies appear to agree.
+a systematic velocity offset. Otherwise, all studies appear to be on a
+similar velocity scale.
 
 We correct the velocities for the solar motion and on-sky size of the
 galaxy. We transform the velocities into the galactic standard of rest
 (GSR, i.e.~same location as ICRS but velocities relative to the galactic
 centre), and then transform velocities to correct for the apparent
-gradient induced by the dwarf's proper motion.\footnote{Specifically,
-  sub} We define \(v_{\rm gsr}'\) to be velocities in the The correction
-from both effects induces an apparent gradient of about \(1.3\,\kmsdeg\)
-for Sculptor and less for Ursa Minor \citep[see
-also][]{WMO2008, strigari2010}. The uncertainty on this velocity
-correction are less than the individual star uncertainties and our
-derived velocity gradient.
+gradient induced by the dwarf's proper motion \citep[see
+also][]{WMO2008, strigari2010}. We define \(v_{\rm gsr}'\) to be
+velocities in the GSR frame subtracting the PM-induced gradient. The
+correction from both effects induces an apparent gradient of about
+\(1.3\,\kmsdeg\) for Sculptor and less for Ursa Minor. The uncertainty
+on this velocity correction are less than the individual star
+uncertainties and any derived velocity gradients.
 
 \section{MCMC modeling}\label{mcmc-modeling}
 
 We fit Monte-Carlo Markov chain (MCMC) models to solve for the systemic
-velocity, velocity dispersion, and possible gradient. We assume that the
-galaxy follows a planar velocity gradient. The mean velocity at a given
-point on the sky, \(\mu\), is assumed to be,
+velocity, velocity dispersion, and possible gradients in velocities or
+velocity dispersions. We assume that the galaxy follows a planar
+velocity gradient. The mean velocity at a given point on the sky,
+\(\mu\), is assumed to be,
 
 \begin{equation}{
-\mu(\xi, \eta) = \mu_0 + a\,\xi + b\,\eta
+\mu(\xi, \eta) = \mu_0 + a\,\xi + b\,\eta,
 }\end{equation}
 
 for tangent-plane coordinates \(\xi\) and \(\eta\), systemic velocity
@@ -84,17 +85,17 @@ and with \(a, b \sim N(0, 6^2)\,\kmsdeg\).
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_rv_fits.pdf}}
-\caption[LOS velocity fit to Scl]{Velocity histogram of Scl and UMi in
-terms of projected-correction GSR LOS velocity (Eq.~\ref{eq:v_z}). Black
+\caption[LOS velocity fit to Scl]{\textbf{Left}: Velocity histogram of
+Scl and UMi in terms of projected-correction GSR LOS velocity. Black
 points with error bars are from the crossmatched observed sample, and
-green lines represent MCMC fits to the velocity dispersion.}
+green lines represent MCMC fits to the velocity dispersion.
+\textbf{Right} The observed velocity dispersion gradient (black points)
+in 10 equal number bins and the derived slopes for MCMC samples (green
+lines). Scl shows moderate evidence for an increasing velocity
+dispersion with radius, but Scl's velocity dispersion appears to flatten
+outside of \(R_h\). UMi's evidence for a radial gradient is
+weaker.}\label{fig:rv_hists}
 \end{figure}
-
-Figure: The observed velocity dispersion gradient (black) in 10 equal
-number bins and the derived slopes from the model fitting. Scl shows
-moderate evidence for an increasing velocity dispersion with radius.
-UMi's evidence for a radial gradient is weaker, and Scl's velocity
-dispersion appears to be flat outside of \(R_h\).
 
 \input{rv_table.tex}
 
@@ -114,8 +115,9 @@ window size of 50).}\label{fig:scl_velocity_gradient_scatter}
 \end{figure}
 
 We derive a systemic velocity for Sculptor of \(111.3\pm0.2\,\kms\)with
-velocity dispersion \(9.64\pm0.16\,\kms\). Our values are very
-consistent with previous work \citep[e.g.][\citet{arroyo-polonio+2024},
+velocity dispersion \(9.64\pm0.16\,\kms\) (see Fig.~\ref{fig:rv_hists}).
+Our values are very consistent with previous work
+\citep[e.g.][\citet{arroyo-polonio+2024},
 \citet{battaglia+2008}]{walker+2009}. We detect a moderately significant
 gradient of \(4.3\pm1.3\,\kmsdeg\) at a position angle of
 \(-149_{-13}^{+17}\) degrees, similar to past detections
@@ -129,9 +131,9 @@ velocity gradient, consistent with the rolling median trend. The
 velocity gradient in Scl is misaligned with the proper motion
 
 We derive a mean \(-245.8\pm0.3_{\rm stat}\,\kms\) and velocity
-dispersion of \(8.8\pm0.2\,\kms\) for UMi. We do not find evidence for a
-velocity gradient. This is consistent with previous work
-\citetext{\citealp{pace+2020}; \citealp[somewhat
+dispersion of \(8.8\pm0.2\,\kms\) for UMi (see Fig.~\ref{fig:rv_hists}).
+We do not find evidence for a velocity gradient. This is consistent with
+previous work \citetext{\citealp{pace+2020}; \citealp[somewhat
 with][]{spencer+2018}; \citealp{martinez-garcia+2023}}.
 
 \section{Discussion and caveats}\label{discussion-and-caveats}

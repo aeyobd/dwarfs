@@ -28,15 +28,6 @@ isolation halo (\(\rmax=6\,\kpc\), \(\vmax=31\,\kms\)) with \(10^7\)
 particles, this works out to be \(0.044\,{\rm kpc}\). Next we consider
 the effect of softening as applied to our isolation halo.
 
-The two other key numerical parameters in \gadget{} are the tree-force
-and time-step accuracy parameters. Specifically, \gadget{} opens a node
-if \(M\,l/r^3 < \alpha |a|\), the node's mass is \(M\), distance from
-the particle is \(r\), side-length is \(l\), and the particle's total
-acceleration is \(a\). We adopt \(\alpha =0.005\). We also elect to use
-adaptive time stepping with integration accuracy set to \(\eta=0.01\).
-(particles must take time-steps smaller than
-\(dt < \sqrt{2\,\eta\,h_{\rm grav} / a}\) for acceleration \(a\)).
-
 The top panel of Fig.~\ref{fig:methods_convergence} illustrates the
 influence of softening length for simulations of Scl's \smallperi{}
 orbit with \(10^5\) particles. We show a model with the fiducial
@@ -45,20 +36,24 @@ by a factor \(\sqrt{10}\). The larger softening length is consistent
 with Eq.~\ref{eq:power_softening}'s prediction. With a larger softening
 length, the halo diverges from the expectation (using \(100\times\) more
 particles) across most radii. On the other hand, the fiducial and
-smaller softening lengths predict similar final results, although the
-smaller softening length simulation deviates slightly more than the
-fiducial, likely a result of more collisional encounters. As computation
-time increases moderately with decreasing softening length, the fiducial
-softening length balances efficiency and accuracy for this simulation.
-While smaller than \citet{power+2003}'s suggestion, our choice is
-designed for more compact, dwarf satellite halos instead of large,
-galaxy-mass isolated halos.
+smaller softening lengths predict similar final results. As computation
+time increases with decreasing softening length, the fiducial softening
+length balances efficiency and accuracy for this simulation.
 
-The lower panel of Fig.~\ref{fig:methods_convergence} tests changes to
-these parameters. We include a model with smaller integration accuracy
-(``small timestep'') and a stricter tree-force tolerance (``high acc.
-force''). More precise tolerances on these parameters does not affect
-the evolution within the uncertainties of the final profile.
+The two other key numerical parameters in \gadget{} are the tree-force
+and time-step accuracy parameters. Specifically, \gadget{} opens a node
+if \(M\,l/r^3 < \alpha |a|\), the node's mass is \(M\), distance from
+the particle is \(r\), side-length is \(l\), and the particle's total
+acceleration is \(a\). We adopt \(\alpha =0.005\). We also elect to use
+adaptive time stepping with integration accuracy set to \(\eta=0.01\).
+(particles must take time-steps smaller than
+\(dt < \sqrt{2\,\eta\,h_{\rm grav} / a}\) for acceleration \(a\)). The
+lower panel of Fig.~\ref{fig:methods_convergence} tests changes to these
+parameters. We include a model with smaller integration accuracy
+(\(\eta=0.003\) in ``small timestep'') and a stricter tree-force
+tolerance (\(\alpha=0.001\), ``high acc. force''). More precise
+tolerances on these parameters does not affect the evolution within the
+uncertainties of the final profile.
 
 As demonstrated in this subsection, stricter numerical accuracy and
 modified softening lengths do not affect our results. We thus conclude
@@ -72,13 +67,10 @@ that our simulations are numerically well-converged (up to the
 profiles using different simulation methods for Sculptor's \smallperi{}
 model. The benchmark model is our fiducial \(10^7\) particle run, and
 all other models use \(10^5\) paritcles, with their ``converged radius''
-marked by the black arrow and softening by the vertical bar.
+marked by the black arrow and softening by the vertical bar(s).
 \textbf{Top:} Models with \(\sqrt{10}\) larger and smaller softening
-lengths. \textbf{Bottom:} Models with more precise timestep accuracy
-(\(\eta=0.001\) compared to fiducial \(\eta=0.005\)) and gravitational
-force accuracy (\(\alpha=0.003\) versus \(\alpha=0.01\)).
-\textbf{Summary:} Except for the model with a larger softening length,
-all simulations agree within uncertainties. \textbf{Todo: softening
-along lower axis always\ldots, changing
-linewidth?}}\label{fig:methods_convergence}
+lengths than the fiducial. \textbf{Bottom:} Models with more precise
+timestep accuracy and gravitational force accuracy. \textbf{Summary:}
+Except for the model with a larger softening length, all simulations
+agree within uncertainties.}\label{fig:methods_convergence}
 \end{figure}

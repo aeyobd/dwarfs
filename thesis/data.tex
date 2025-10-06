@@ -11,7 +11,7 @@ the outer deviations from exponential profiles, with a tidal
 interpretation explored in subsequent chapters.
 
 \section{\texorpdfstring{Satellite stellar membership with
-\emph{Gaia}}{Satellite stellar membership with Gaia}}\label{satellite-stellar-membership-with-gaia}
+\emph{Gaia}}{Satellite stellar membership with Gaia}}\label{sec:the_algorithm}
 
 Measuring the light profile of a resolved galaxy requires careful
 consideration of whether any given star belongs to the system or not.
@@ -59,7 +59,7 @@ CMD and PM likelihoods are constructed empirically from the stars in an
 annulus far from the satellite. Each likelihood is normalized as a
 probability density over the respective parameter space. Appendix
 \ref{sec:density_extra} discusses the details of quality cuts and the
-likelihood calculation.
+likelihood calculation \citep[see also,][]{MV2020a, jensen+2024}.
 
 The total likelihood is a mixture model of the satellite and background,
 weighted by the fraction of stars in the field belonging to the
@@ -124,10 +124,11 @@ satellite membership:
 }\end{equation} Next, our \textbf{fiducial} sample,
 \(P_{\rm sat} > 0.2\), includes a spatial likelihood as described in
 J+24. Finally, the \textbf{RV members} (for radial velocity) sample adds
-line-of-sight velocity information (see Appendix \ref{sec:rv_obs} for
-details). While the latter is the highest-purity membership sample, we
-do not use this sample for stellar density analysis due to its
-incompleteness and complex selection function.
+line-of-sight velocity information (see Appendix
+\ref{sec:extra_rv_models} for details). While the latter is the
+highest-purity membership sample, we do not use this sample for stellar
+density analysis due to its incompleteness and complex selection
+function.
 
 Figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection}
 show our fiducial sample for three dSphs (Sculptor, Ursa Minor, and
@@ -173,7 +174,7 @@ evidence for deviations from an exponential profile.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/scl_selection.png}}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{figures/scl_selection.png}
 \caption[Sculptor sample selection]{The distributions of various samples
 of \emph{Gaia} stars for Sculptor. In each panel, we plot light grey
 points for the ``all'' sample of stars, turquoise points for ``CMD+PM''
@@ -194,7 +195,7 @@ proper motion error.}\label{fig:scl_selection}
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_selection.png}}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{figures/umi_selection.png}
 \caption[Ursa Minor sample selection]{Similar to
 Fig.~\ref{fig:scl_selection} except for Ursa Minor. We outline
 ``velocity confirmed'' members outside a radius of \(6R_h\) with red
@@ -205,7 +206,7 @@ circle.}\label{fig:umi_selection}
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/fornax_selection.png}}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{figures/fornax_selection.png}
 \caption[Fornax sample selection]{Similar to
 Fig.~\ref{fig:scl_selection} except for Fornax. The isocrone is instead
 for a 2Gyr stellar population. RV measurements are from \citet{WMO2009}.
