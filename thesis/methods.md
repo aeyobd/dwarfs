@@ -31,7 +31,7 @@ where $a$ is the disc radial scale length, $b$ is the scale height, and $M$ is t
 
 Figure: Circular velocity profile of @EP2020 potential. The total circular velocity (thick black line) is composed of an NFW halo (green dashed line), thin and thick @miyamoto+nagai1975 disks (orange dash-dotted line), and a @hernquist1990 bulge (blue dotted line).
 
-## Sculptor's Orbit
+## Sculptor's Orbit {#sec:scl_smallperi}
 
 Sculptor's orbit in the assumed potential is relatively well-constrained. [@fig:scl_orbits] illustrates point particle orbits for 100 samples of Sculptor's observed kinematics integrated backwards for $10\,\Gyr$ in both Galactocentric Cartesian coordinates ($x$, $y$, $z$) and in Galactocentric radius with time. These orbits sample the uncertainties in distance, proper motion, and radial velocity, as given in [@tbl:scl_obs_props]. All sampled orbits of Sculptor have nearly the same morphology---the orbit primarily resides in the $y$–$z$ plane and completes a similar number of periods and pericentric and apocentric passages. 
 
@@ -80,7 +80,7 @@ We shall see later that the orbit of Ursa Minor's N-body model differs from the 
 We use \agama{} [@agama] to generate the initial N-body dark matter halo. We assume galaxies are described by a spherical, isotropic NFW dark matter potential ([@eq:nfw]). We also assume the stars do not contribute to the potential. The dark matter density is truncated in the outer regions by
 $$
 \rho_{\rm tNFW}(r) = e^{-(r/r_t)^3}\ \rho_{\rm NFW}(r),
-$$
+$$ {#eq:trunc_nfw}
 where we adopt $r_t = 20 r_s$. 
 
 ## Initial dark matter halos for Sculptor and Ursa Minor

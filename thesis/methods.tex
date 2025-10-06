@@ -87,7 +87,7 @@ thick \citet{miyamoto+nagai1975} disks (orange dash-dotted line), and a
 line).}\label{fig:v_circ_potential}
 \end{figure}
 
-\subsection{Sculptor's Orbit}\label{sculptors-orbit}
+\subsection{Sculptor's Orbit}\label{sec:scl_smallperi}
 
 Sculptor's orbit in the assumed potential is relatively
 well-constrained. Fig.~\ref{fig:scl_orbits} illustrates point particle
@@ -189,7 +189,8 @@ We use \agama{} \citep{agama} to generate the initial N-body dark matter
 halo. We assume galaxies are described by a spherical, isotropic NFW
 dark matter potential (Eq.~\ref{eq:nfw}). We also assume the stars do
 not contribute to the potential. The dark matter density is truncated in
-the outer regions by \begin{equation}{
+the outer regions by
+\begin{equation}\protect\phantomsection\label{eq:trunc_nfw}{
 \rho_{\rm tNFW}(r) = e^{-(r/r_t)^3}\ \rho_{\rm NFW}(r),
 }\end{equation} where we adopt \(r_t = 20 r_s\).
 

@@ -1,10 +1,14 @@
-# Additional results an tests {#sec:extra_results}
+# Additional simulation tests {#sec:extra_results}
 
-In this section, we briefly explore additional simulations testing assumptions not varied in the main text: variations in the halo concentration, cored halos, alternative orbits, anisotropy, and ellipsoidal models.
+In this section, we briefly explore additional simulations testing assumptions not varied in the main text: variations in the halo concentration, cored halos, alternative orbits, anisotropy, and ellipsoidal models. While each of these variables influences resulting dark matter evolution, the final stellar component and dark matter remnant remains largely across alternate initial conditions. We conclude that consideration of these effects likely would not change our conclusions.
+
+The following models aim to reproduce the velocity dispersion $\lesssim 1\,\kms$ with a similar present-day half-light radius.
 
 ## Alternative initial conditions
 
-The initial concentration (i.e. choice of $\vmax$ and $\rmax$) affects total dark matter evolution. @fig:tidal_tracks_concentration compares models on the \smallperi{} orbit with different initial halo parameters. The heavier halo has $\vmax=43$ and $\rmax=7$, whereas the lighter halo has $\vmax=25$ and $\rmax=2.5$. While the less concentrated halo loses more mass, the halo evolves to similar final structural parameters, as expected in @EN2021. We note these choices were constrained to match Scl's present-day velocity dispersion.
+### Halo concentration
+
+Changing the initial concentration (or $\vmax$ and $\rmax$) primarily affects total dark matter evolution. @fig:tidal_tracks_concentration compares models on the \smallperi{} orbit with different initial halo parameters. The heavier halo has $\vmax=43$ and $\rmax=7$, whereas the lighter halo has $\vmax=25$ and $\rmax=2.5$. While the less concentrated halo loses more mass, the halo evolves to similar final structural parameters.
 
 
 
@@ -14,19 +18,43 @@ Figure: A comparison of the evolution of different N-body models for different h
 
 
 
-We have good observational evidence for some dwarf galaxies to be cored. Even Sculptor has debated claims for having a core [e.g., @amorisco+zavala+deboer2014; @breddels+helmi2013; @battaglia+2008; @walker+2009a; @richardson+fairbairn2014; @agnello+evans2012]. To test if a core matter, we adopt a "cored-NFW" model,
+![](figures/anisotropy_i_f.pdf)
+
+Figure: The evolution of velocity anisotropy.
+
+### Dark matter cores
+
+Many dwarf galaxies appear to have dark matter cores. In Scl, the presence or absence of a core has been debated [e.g., @battaglia+2008; @walker+2009a;  @agnello+evans2012; @breddels+helmi2013; @amorisco+zavala+deboer2014; @richardson+fairbairn2014]. To simulate the evolution of a cored dark matter halo, we adopt a "cored-NFW" model,
 $$
 \rho/\rho	_s = \frac{1}{(1+r/r_s)^2 (r_c/r_s + r/r_s)},
 $$
-where $r_c$ is the core radius. We adopt $r_c = 0.1r_s$ and adopt an extreme initial mass of $\vmax=49\,\kms$ and $\rmax=7.1\,\kpc$.
+where $r_c$ is the core radius. We set $M_s=0.79\times10^{10}\,\Mo$ where $M_s = 4\pi/3\ r_s^3 \rho_s$, $r_s=2.76\,\kpc$, $r_c=0.1r_s$, and use the same truncation as our fiducial halo (@eq:trunc_nfw). While this is not the largest possible core, the core is similar in size to the stellar component. Larger cores would require a more massive halo in order to match the velocity dispersion at a constant scale radius. 
+
+In @fig:tidal_tracks_structure, we show the evolution of the cored model as compared to a heavier halo. The cored halo loses more total dark matter mass, evolving further along the tidal track as expected. However, in order to reproduce the observed velocity dispersion, the final halo reaches a $\rmax$ and $\vmax$ as the fiducial halo. A cored dark matter halo likely cannot be completely tidally disrupted and still recover the observed velocity dispersion. 
+
+![](figures/cored_density_i_f.pdf)
+
+Figure: Cored versus cuspy initial and final density (todo, fix)..
+
+### An ellipsoidal halo
+
+Sculptor and Ursa Minor may be highly elliptical in 3D, possibly violating our assumption of spherical symmetry [e.g., @an+koposov2022]. 
+
+We create an oblate initial dark matter halo using \agama{}. The initial snapshot is sampled from the distribution function 
+$$
+\begin{split}
+f = \frac{M_0}{(2\pi\,J_0)^3} \left[1 + \left(\frac{J_0}{h(J)}\right)^\eta\right]^{\Gamma / \eta} \ \left[1 + \left(\frac{g(J)}{J_0}\right)^\eta\right]^{-B/\eta} \\ \ \exp\left[-\left(\frac{g(J)}{J_{\rm cutoff}} \right)^\zeta\right] 
+\end{split},
+$$
+(`doublePowerLaw` in \agama{}), with $g(J) = g_r J_r + g_z J_z + (3-g_r - g_z) |J_\phi|$ and $h(J) = h_rJ_r + h_zJ_z + (3-h_r-h_z) |J_\phi|$. The `example_doublepowerlaw.py` script in \Agama{} solves for the best parameters matching a given density profile. We chose to create a model resembling an NFW but scaled by a factor 0.5 in the $z$ axis. For a scale-free halo ($r_s=1$, $M_s=1$), the best-fit parameters are $J_0=0.890$, $\Gamma=1.46$, $\eta=0.568$, $B=2.97$, $h_r=0.845$, $h_z=1.66$, $g_r=0.753$, $g_z=1.69$, $M_0=0.965$, $J_{\rm cutoff}=2.40$, $\zeta=20$. The resulting initial conditions are stable in isolation and produce a halo with near the desired density profile and ellipticity. We scale the halo to have a major axis density profile equivalent to an NFW with $\rmax = 7\,\kpc$ and $\vmax=48\,\kpc$.
+
+We find the evolution of the oblate halo to be nearly identical to the spherical halo, similar to @battaglia+sollima+nipoti2015. The oblate halo however becomes spherical as time progresses. If Scl's dark matter halo is indeed elliptical, this model may not be an adequate description. Possibly, internal rotation, alternative density structure, or velocity anisotropy play a role in the stability of oblate initial conditions to tidal stripping. A full investigation of these effects is left to future work. 
+
+![](figures/oblate_density_i_f.pdf)
+
+Slices of the oblate density before and after tidal evolution. **TODO: isodensity contours on RHS projected major/minor axis**. 
 
 
-
-Sculptor and Ursa Minor may also be highly elliptical in 3D [e.g., @an+koposov2022], especially given their projected shapes. We consider 
-
-We find the evolution of the oblate halo to be nearly identical to the spherical halo, similar to @battaglia+sollima+nipoti2015. 
-
-While we have compared the evolution of orbits in the MW potential for simplicity, because the tidal evolution of Scl is very weak in the LMC model, the differences between models become even more slight.
 
 ![Tidal dependence on halo structure](figures/scl_mw_structure_boundmass.pdf){#fig:tidal_tracks_structure}
 
@@ -34,19 +62,31 @@ Figure: Similar to @fig:tidal_tracks_concentration, except testing the effects o
 
 
 
+### Orbital variation
+
+In the main text, we focus on recent tidal impacts on Scl and UMi. But, due to the long-term orbital uncertainties of Scl and UMi with an LMC (see @fig:scl_umi_orbit_uncert), tidally extreme orbits are entirely possible. Here, we consider a few examples of extreme orbital evolution in the long term case. While the actual orbit of either galaxy almost certainly deviates from these examples (discussion in @sec:orbital_uncertainties), these orbits still represent extreme past tidal histories. 
+
+For a more massive LMC (e.g., the L3M11 model), Scl may have undergone an extreme pericentric passage with the MW $\sim 6\,\Gyr$ ago. We find that the 3$\sigma$ smallest pericentre is $4\,\kpc$. To test if this model forms a different density profile, we simulate this model.
+
+Because of the strong tidal interaction with the MW, the trajectory is substantially perturbed from a point orbit. We adjust the initial conditions by comparing the change in actions (as calculated in the static MW-only potential) before and after the pericentre. @tbl:orbit_adjustments records the iterations we take. Our final model is able to approximately reproduce the observed position of Scl, but more refinement is required for a closer match. 
 
 
-![Ursa Minor tidal dependence on orbit](figures/umi_orbits_boundmass.pdf){#fig:tidal_tracks_umi}
+
+![Ursa Minor tidal dependence on orbit](figures/scl_orbits_boundmass.pdf){#fig:tidal_tracks_umi}
 
 Figure: Similar to @fig:tidal_tracks_concentration, except testing the effects of orbits in the LMC. Most LMC models evolve more weakly than the MW models, however these do not reach full agreement with the present-day position so misrepresent recent tidal evolution. 
 
+## Present-day properties
 
+We find that this model also does not display strong signs of tidal signatures. @fig:scl_mw_impact_i_f shows the initial and final stellar profiles for this model (integrated with a lower-resolution $10^6$ particles). The model evolves little more than the \smallperi{}. Given that the Jacobi radius would be within $R_h$, why does this model not show strong density perturbations?
 
-![Scl MW impact stellar densities](figures/scl_impact_i_f.pdf)
+We propose that th case Scl undergoes a small MW pericentre is an impulsive encounter. Because Scl's apocentre is still $\sim 300\,\kpc$ in this model, the galaxy passes through the MW with velocity $600\,\kms?$. Since the crossing time at the half-light radius is about 90 Myr, in one crossing-time, the model moves from pericentre to a Galactocentric distance of $\sim20\,\kpc$, where tides forced have dropped substantially. As a result, after $6\Gyr$ of relatively isolated evolution, the break radius falls well outside the observed density profile, but the injection of energy uniformly throughout the halo only results in moderate DM loss predominantly in the outskirts, not a reshaping of the inner density profile. Note that the Jacobi radius is derived on circular orbits, not highly elliptical orbits like this case. 
 
-Figure: The initial and final density profiles for the Sculptor model which passes through the MW previously. The impact does not substantially affect the inner density region. The hints of a tidal stream in this model are misaligned to the proper motion, likely a result of the LMC.
+However, we only note that the stars appear to be consistent but are well below the @power+2003's numerically converged radius.
 
+## The formation of tidal tails
 
+As we predict that any tidal tails formed in Scl and UMi would be extremely faint, we deferred discussion of the properties of any such tails to this section. We note that in extreme cases, $\sim 2\%$ of stars may become unbound in either galaxy, forming tidal tails which may be detectible with substantially better observations. 
 
 
 
@@ -58,10 +98,10 @@ Figure: The properties of the stream around the UMi \smallperi{} orbit with Plum
 
 ![Scl predicted stream](figures/scl_sim_stream.pdf){#fig:scl_tidal_stream}
 
-Figure: The predicted properties of a tidal tail in the Scl model. 
+Figure: The predicted properties of a tidal tail in the Scl model. **TODO: titles**
 
 
 
-![Scl predicted stream](figures/scl_mw_impact_stream.pdf){#fig:scl_mw_impact_tidal_stream}
+## Summary
 
-Figure: the predicted properties of the stream of stars around Scl in the MW impact model. Note that, compared to @fig:scl_sim_stream, this model produces a much more scattered and misaligned stream, due to the long time since stream formation and nonlinear effects of the LMC encounter. **todo check 2d velocity gradients in this case**
+While we have compared the evolution of orbits in the MW potential for simplicity, because the tidal evolution of Scl is very weak in the LMC model, the differences between models become even more slight. And while UMi has a lower pericentre than Scl, the differences between halo structure should apply similarly to UMi.

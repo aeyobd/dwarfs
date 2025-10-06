@@ -3,21 +3,21 @@ parameters}\label{sec:extra_convergence}
 
 Here, we describe the numerical specifics of our simulation and
 analysis. We present convergence tests supporting our choices of
-softening and additional parameters. We find alternate choices of
-numerical parameters are unlikely to improve our convergence or result
-in significantly different evolution.
+softening and additional parameters. We find that alternate choices of
+numerical parameters neither improve convergence nor the resulting
+evolution.
 
-\section{Softening}\label{softening}
+Due to the finite resolution of N-body simulations, collisional (close)
+encounters between particles are inevitable. Such collisional encounters
+are both unphysical (with possible arbitrary acceleration, violating the
+``collisionless'' assumption) and computationally expensive (requiring
+many small time-steps). As a remedy, many N-body codes use a
+``softened'' gravitational force law, where the force weakens when
+closer to a particle than a ``softening length''. The choice of
+softening length ideally balances resolution and computational speed.
 
-One challenge of N-body integration is close, collisional encounters,
-assuming point particles, cause divergences in the local force. However,
-this should not occur in a \emph{collisionless} simulation. As a result,
-most collisionless N-body codes adopt a gravitational softening, a
-length scale below which the force of gravity begins to decrease between
-point particles.
-
-\citet{power+2003} empirically suggest that the ideal softening is
-\begin{equation}{
+Empirically, \citet{power+2003} suggest that the ideal softening is
+\begin{equation}\protect\phantomsection\label{eq:power_softening}{
 h_{\rm grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}},
 }\end{equation}
 
@@ -25,62 +25,60 @@ where \(h_{\rm grav}\) is the softening length, and \(N_{200}\) is the
 number of particles within \(R_{200}\). This choice balances integration
 time and only compromises resolution in collisional regime. For our
 isolation halo (\(\rmax=6\,\kpc\), \(\vmax=31\,\kms\)) with \(10^7\)
-particles, this works out to be \(0.044\,{\rm kpc}\), about
-\(\sqrt{10}\) times larger than our adopted softening
-(Eq.~\ref{eq:softening_length}).
+particles, this works out to be \(0.044\,{\rm kpc}\). Next we consider
+the effect of softening as applied to our isolation halo.
+
+The two other key numerical parameters in \gadget{} are the tree-force
+and time-step accuracy parameters. Specifically, \gadget{} opens a node
+if \(M\,l/r^3 < \alpha |a|\), the node's mass is \(M\), distance from
+the particle is \(r\), side-length is \(l\), and the particle's total
+acceleration is \(a\). We adopt \(\alpha =0.005\). We also elect to use
+adaptive time stepping with integration accuracy set to \(\eta=0.01\).
+(particles must take time-steps smaller than
+\(dt < \sqrt{2\,\eta\,h_{\rm grav} / a}\) for acceleration \(a\)).
+
+The top panel of Fig.~\ref{fig:methods_convergence} illustrates the
+influence of softening length for simulations of Scl's \smallperi{}
+orbit with \(10^5\) particles. We show a model with the fiducial
+softening length (\(h=0.14\,\kpc\)), and larger and smaller softenings
+by a factor \(\sqrt{10}\). The larger softening length is consistent
+with Eq.~\ref{eq:power_softening}'s prediction. With a larger softening
+length, the halo diverges from the expectation (using \(100\times\) more
+particles) across most radii. On the other hand, the fiducial and
+smaller softening lengths predict similar final results, although the
+smaller softening length simulation deviates slightly more than the
+fiducial, likely a result of more collisional encounters. As computation
+time increases moderately with decreasing softening length, the fiducial
+softening length balances efficiency and accuracy for this simulation.
+While smaller than \citet{power+2003}'s suggestion, our choice is
+designed for more compact, dwarf satellite halos instead of large,
+galaxy-mass isolated halos.
+
+The lower panel of Fig.~\ref{fig:methods_convergence} tests changes to
+these parameters. We include a model with smaller integration accuracy
+(``small timestep'') and a stricter tree-force tolerance (``high acc.
+force''). More precise tolerances on these parameters does not affect
+the evolution within the uncertainties of the final profile.
+
+As demonstrated in this subsection, stricter numerical accuracy and
+modified softening lengths do not affect our results. We thus conclude
+that our simulations are numerically well-converged (up to the
+``convergence'' radius).
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/iso_converg_softening.png}}
-\caption[Softening convergence]{Similar to
-Fig.~\ref{fig:numerical_convergence} except for simulations with
-different softening lengths, \(h_{\rm grav}\). \(0.044\,\kpc\) is our
-fiducial softening length for this halo. All simulations here were ran
-in isolation of 5 Gyr with \(10^{6}\)
-particles.}\label{fig:softening_convergence}
-\end{figure}
-
-Fig.~\ref{fig:softening_convergence} illustrates the influence of
-softening length on isolation evolution. The simulation with
-\(h=0.14\,\kpc\) deviates the most from the expected profile. Instead,
-the final profiles for \(h=0.044\,\kpc\) and \(h=0.014\,\kpc\) are
-nearly identical. Smaller values of softening than \(h=0.044\,\kpc\)
-likely will not affect the evolution in the inner regions. As
-computation time increases moderately with decreasing softening length,
-\(h=0.044\,\kpc\) is an ideal choice balancing efficiency and accuracy.
-Our simulations therefore adopt this choice (as in
-Eq.~\ref{eq:softening_length}).
-
-\section{Time-stepping and force
-accuracy}\label{time-stepping-and-force-accuracy}
-
-In general, we use adaptive time-stepping and relative opening criteria
-for gravitational force computations. To verify that these choices and
-associated accuracy parameters minimally impact convergence or speed, we
-show a few more isolation runs (using only \(10^5\) particles).
-
-We use in \gadget{} the relative tree opening criterion with the
-accuracy parameter set to \(\alpha =0.005\) (so nodes are opened when
-\(M\,l/r^3 < \alpha |a|\) for a distance from the node of mass \(M\) of
-\(r\), \(l\) is the side length of the node, and \(a\) is the particle's
-total acceleration), and adaptive time stepping with integration
-accuracy set to \(\eta=0.01\) (particles must take time-steps smaller
-than \(dt < \sqrt{2\,\eta\,h_{\rm grav} / a}\) for acceleration \(a\)).
-
-Fig.~\ref{fig:methods_convergence} tests various additional simulation
-parameters in isolation. We compare against an equivalent model ran
-instead with \texttt{GADGET-2}, a model ran with constant timestep of
-0.5Myr (\texttt{dt0.1} named after our dimensionless units), a
-simulation with the time-step accuracy set to \(\eta=0.003\) (high
-accuracy), and a simulation using a geometric opening criterian instead
-of the force (geometric). In all cases, the final isolation velocity
-profile is nearly the same after 5Gyr. The numerical details likely do
-not limit our convergence (as marked by the arrow).
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/iso_converg_methods.png}}
-\caption[Isolation method convergence]{A comparison against different
-integration methods. See text for details on each
-model.}\label{fig:methods_convergence}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/orbit_converg_methods.png}}
+\caption[Isolation method convergence]{A comparison of the final
+profiles using different simulation methods for Sculptor's \smallperi{}
+model. The benchmark model is our fiducial \(10^7\) particle run, and
+all other models use \(10^5\) paritcles, with their ``converged radius''
+marked by the black arrow and softening by the vertical bar.
+\textbf{Top:} Models with \(\sqrt{10}\) larger and smaller softening
+lengths. \textbf{Bottom:} Models with more precise timestep accuracy
+(\(\eta=0.001\) compared to fiducial \(\eta=0.005\)) and gravitational
+force accuracy (\(\alpha=0.003\) versus \(\alpha=0.01\)).
+\textbf{Summary:} Except for the model with a larger softening length,
+all simulations agree within uncertainties. \textbf{Todo: softening
+along lower axis always\ldots, changing
+linewidth?}}\label{fig:methods_convergence}
 \end{figure}

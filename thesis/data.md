@@ -66,7 +66,7 @@ Figure: Similar to @fig:scl_selection except for Ursa Minor. We outline "velocit
 
 Figure: Similar to @fig:scl_selection except for Fornax. The isocrone is instead for a 2Gyr stellar population. RV measurements are from @WMO2009. Fornax does not show the same extended outer halo of probable members as Sculptor or Ursa Minor despite having many more stars.
 
-# Density profiles
+# Density profiles {#sec:data_density_profiles}
 
 We derive density profiles by binning member stars in constant width bins in $\log R_{\rm ell}$ of 0.05 dex. We ignore bins interior or exterior to the first empty bin in either direction. We use symmetric Poisson uncertainties as error bars in the density estimate at each bin. 
 
@@ -76,7 +76,7 @@ While the density profiles of all samples agree in the inner regions, they begin
 
 Near UMi, there is a small ($R_h\sim 0.5'$), likely unassociated, ultrafaint star cluster, Muñoz 1 [@munoz+2012]. The cluster is at a relative position of $(\xi, \eta) \approx(-42, -15)$  arcminutes, corresponding to an elliptical radius of 37 arcminutes. Muñoz 1 does not have a bright RGB, so has few stars above the *Gaia* magnitude limit. The cluster has little effect on the elliptically-averaged density profile (see location on [@fig:scl_observed_profiles]).
 
-Our density profiles are robust to alternative methodologies and magnitude cuts. Density profiles based on J+24 candidates may be biased by their assumed spatial likelihoods. To address this, we consider a Bayesian model with a non-parametric spatial likelihood. We also explore selections using absolute cuts, and the effect of structural assumptions of the density profile (Appendix -@sec:extra_density). These methodologies are consistent except when the derived density drops below the background of satellite-like stars (from the CMD+PM sample). We also do not find evidence of magnitude biases in the density profiles, indicating inhomogeneous magnitude-completeness is small. Our density profiles furthermore agree with photometric surveys and similar literature (see @sec:extra_density). We conclude that selection criteria do not influence our results.
+Our density profiles are robust to alternative methodologies and magnitude cuts. Density profiles based on J+24 candidates may be biased by their assumed spatial likelihoods. To address this, we consider a Bayesian model with a non-parametric spatial likelihood. We also explore selections using absolute cuts, and the effect of structural assumptions of the density profile (Appendix -@sec:extra_density). These methodologies are consistent except when the derived density drops below the background of satellite-like stars (from the CMD+PM sample). We also do not find evidence of magnitude biases in the density profiles, indicating inhomogeneous magnitude-completeness is small. Our density profiles furthermore agree with photometric surveys and similar literature (see Appendix -@sec:extra_density). We conclude that selection criteria do not influence our results.
 
 
 
