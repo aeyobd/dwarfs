@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -37,7 +37,7 @@ md"""
 """
 
 # ╔═╡ 50488b8f-6886-4191-8778-af66929f1445
-rv_file = "rv_combined_x_wide_2c_psat_0.2.fits"
+rv_file = "rv_tolstoy+23_x_wide_2c_psat_0.2.fits"
 
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
 n_samples = 10000
@@ -99,9 +99,6 @@ md"""
 
 # ╔═╡ 3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 data_dir = "processed"
-
-# ╔═╡ 1bc6b7f5-4884-479d-b4be-54f28c2e0a8a
-
 
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
@@ -303,7 +300,6 @@ end
 # ╠═5ec475a1-14bb-40f6-856a-69fa9efe087a
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
-# ╠═1bc6b7f5-4884-479d-b4be-54f28c2e0a8a
 # ╠═66c35421-f6d3-4b2d-86e4-319f5476b222
 # ╠═00cd5ad7-ab0e-428f-ba00-05ef6fc86806
 # ╠═2d110151-f7f3-4b09-8684-a2fc4327814b

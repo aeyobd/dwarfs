@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -40,7 +40,12 @@ function get_scalars(modelname)
 	)
 	idx_f = TOML.parsefile(joinpath(modeldir(modelname), "orbital_properties.toml"))["idx_f"]
 
-	df.time .-= df.time[idx_f]
+	if idx_f < size(df, 1)
+		df.time .-= df.time[idx_f]
+	else
+		@warn "idx_f > number calculated profiles for $modelname"
+		df.time .-= df.time[end]
+	end
 	df
 end
 
@@ -205,60 +210,34 @@ plot_tidal_track("sculptor/1e6_new_v43_r7/orbit_smallperi.3")
 plot_tidal_track("sculptor/1e6_v43_r5_beta0.2_a4/orbit_smallperi")
 
 # ╔═╡ 4f5b3992-021a-4a9c-9ccc-750669156f28
-plot_tidal_track("sculptor/1e6_v38_r7_oblate_0.5/orbit_smallperi")
+plot_tidal_track("sculptor/1e6_v48_r7_oblate_0.5/orbit_smallperi")
 
-# ╔═╡ 291ee06e-8da0-4d1b-b29e-8001ed32a2f0
-
-
-# ╔═╡ 7ec571cc-a159-4426-ab21-0213399b8910
-compare_tidal_tracks(OrderedDict(
-	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"heavy" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
-	"lighter halo" => "sculptor/1e6_new_v25_r2.5/orbit_smallperi",
-
-))
+# ╔═╡ 254ef828-1a85-4c40-bc36-9c94345c21c0
+plot_tidal_track("sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi")
 
 # ╔═╡ faff05dd-31b7-47bf-b6da-32d94ca80514
 @savefig "scl_mw_halo_boundmass" compare_boundmass(OrderedDict(
 	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"mean orbit" => "sculptor/1e6_new_v31_r3.2/orbit_mean",
-	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
+	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi",
+	"heavier, new orbit" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
 	"lighter halo" => "sculptor/1e6_new_v25_r2.5/orbit_smallperi",
 ),
 				 )
 
 # ╔═╡ ffad6fd8-a767-459e-aa3d-e9fd6741a47f
-compare_boundmass(OrderedDict(
+@savefig "scl_orbits_boundmass"  compare_boundmass(OrderedDict(
 	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
 	"mean orbit" => "sculptor/1e6_new_v31_r3.2/orbit_mean",
 	"mw impact" => "sculptor/1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4",
 
 ))
 
-# ╔═╡ 753a342b-f55d-447a-8074-2994562dd7d1
-compare_final(OrderedDict(
-	"1e7" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"1e6" => "sculptor/1e6_new_v31_r3.2/orbit_smallperi",
-	#"1e6" => "sculptor/1e6_new_v31_r3.2/orbit_smallperi",
-	# "1e4" => "sculptor/1e5_new_v31_r3.2/orbit_smallperi",
-))
-
-# ╔═╡ 52434bdf-3061-41c5-a9d0-1ac200a4cc94
-compare_final(OrderedDict(
-	#"fiducial" => "sculptor/1e6_new_v31_r3.2/orbit_smallperi",
-	"s0.044" => "sculptor/1e5_s0.044_v31_r3.2/orbit_smallperi",
-	"s0.44" => "sculptor/1e5_s0.44_v31_r3.2/orbit_smallperi",
-	"f0.001" => "sculptor/1e5_f0.001_v31_r3.2/orbit_smallperi",
-	"acc0.003" => "sculptor/1e5_acc0.003_v31_r3.2/orbit_smallperi",
-
-))
-
 # ╔═╡ a4c31b0c-41d7-498f-9d78-74bfc441c6fd
 @savefig "scl_mw_structure_boundmass" compare_boundmass(OrderedDict(
-	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
-	"cored" => "sculptor/1e6_v49_r7.1_c0.1/orbit_smallperi",
+	"heavy NFW" => "sculptor/1e6_new_v43_r7/orbit_smallperi",
+	"cored" => "sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi",
 	"anisotropic" =>  "sculptor/1e6_v43_r5_beta0.2_a4/orbit_smallperi",
-	"oblate" => "sculptor/1e6_v38_r7_oblate_0.5/orbit_smallperi",
+	"oblate" => "sculptor/1e6_v48_r7_oblate_0.5/orbit_smallperi",
 ),
 				 )
 
@@ -288,6 +267,20 @@ end
 #	"LMC smallperilmc" => "ursa_minor/1e5_new_v38_r4.0/L3M11_smallperilmc",
 ), )
 
+# ╔═╡ 6bc1364d-ab67-414b-9519-4cb8706100af
+compare_boundmass(OrderedDict(
+	"fiducial" => "ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5",
+	"fiducial/1" => "ursa_minor/1e5_new_v38_r4.0/orbit_smallperi.1",
+	"cored" => "ursa_minor/1e5_v51_r4_c0.1//orbit_smallperi",
+	"big cored" => "ursa_minor/1e5_Ms0.5_r0.9_c1/orbit_smallperi",
+	# "big cored2" => "ursa_minor/1e5_Ms0.25_r0.9_c1/orbit_smallperi",
+	"anisotropic" =>  "ursa_minor/1e5_v38_r3_beta0.2_a4//orbit_smallperi",
+),
+)
+
+# ╔═╡ b44f0e10-370d-42d7-8d6d-b3ce1dec9048
+
+
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═c1b20bd0-bc18-4c53-b687-5f6b792fdcd0
@@ -305,12 +298,11 @@ end
 # ╠═fc8596bc-237b-4b67-a747-f01c708a4f22
 # ╠═450f3db7-7c66-40b9-990a-24329097858f
 # ╠═4f5b3992-021a-4a9c-9ccc-750669156f28
-# ╠═291ee06e-8da0-4d1b-b29e-8001ed32a2f0
-# ╠═7ec571cc-a159-4426-ab21-0213399b8910
+# ╠═254ef828-1a85-4c40-bc36-9c94345c21c0
 # ╠═faff05dd-31b7-47bf-b6da-32d94ca80514
 # ╠═ffad6fd8-a767-459e-aa3d-e9fd6741a47f
-# ╠═753a342b-f55d-447a-8074-2994562dd7d1
-# ╠═52434bdf-3061-41c5-a9d0-1ac200a4cc94
 # ╠═a4c31b0c-41d7-498f-9d78-74bfc441c6fd
 # ╠═e12645e3-5466-4dd3-b5d2-2ee9288d1ade
 # ╠═39a6433a-281a-42b4-a231-0fc6e9379422
+# ╠═6bc1364d-ab67-414b-9519-4cb8706100af
+# ╠═b44f0e10-370d-42d7-8d6d-b3ce1dec9048

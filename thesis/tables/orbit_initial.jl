@@ -23,12 +23,20 @@ function print_orbit(args...)
         println(key, "\t", round(orbit_props_i[key], sigdigits=4))
     end
 
+    if radii([orbit_props_i["v_x_i"], orbit_props_i["v_y_i"], orbit_props_i["v_z_i"]]) > 10
+        v_scale = 1
+    else
+        v_scale = V2KMS
+    end
+
     for key in ["v_x_i", "v_y_i", "v_z_i"]
-        println(key, "\t", round(orbit_props_i[key] * V2KMS, digits=2))
+        println(key, "\t", round(orbit_props_i[key] * v_scale, digits=2))
     end
 
     println("t_i (nbody)", "\t", orbit_props["t_f_gyr"])
-    println("t_i (point)", "\t", orbit_props_i["t_i"] * T2GYR)
+    t_i = get(orbit_props_i, "t_i", NaN)
+    println("t_i (point)", "\t", t_i * T2GYR)
+    println()
 end
 
 function print_point_orbit(args...)
@@ -54,7 +62,7 @@ println("ursa minor --- smallperi")
 print_orbit("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5")
 
 
-println("sculptor point")
-#print_point_orbit("sculptor", "vasiliev24_L3M11_2x_special_cases/orbit_smallperilmc")
-#print_point_orbit("sculptor", "EP2020_special_cases/orbit_smallperi")
-#print_point_orbit("ursa_minor", "EP2020_special_cases/orbit_smallperi")
+println("sculptor -- mw impact")
+print_orbit("sculptor", "1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi.a4/")
+print_point_orbit("sculptor", "vasiliev24_L3M11_9Gyr_special_cases/orbit_smallperilmc")
+

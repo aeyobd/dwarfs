@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -119,9 +119,6 @@ F_match = (F_best .== 1.0)
 # ╔═╡ 744832f2-3a89-4df8-b1f5-7a088ee84139
 p_chi2 = RVUtils.prob_chi2(tolstoy23_all)
 
-# ╔═╡ 957ae76e-aa8f-4e72-999a-d560b7530183
-F_scatter_old = tolstoy23_all.RV_sigma .< 3*tolstoy23_all.RV_err .* sqrt.(tolstoy23_all.RV_count)
-
 # ╔═╡ 986a8caf-fc50-4d75-919a-51d03ce98c4f
 F_scatter = RVUtils.filter_chi2(p_chi2)
 
@@ -147,12 +144,6 @@ md"""
 # ╔═╡ 875b963d-3a9b-4da4-9ca9-c370db1f6969
 ccdf(Normal(), 3)
 
-# ╔═╡ 10177a44-8cdc-4151-a0d1-cf9b70791751
-sum(F_scatter_old .!= F_scatter)
-
-# ╔═╡ b8cb8b9e-d944-43d0-ba45-3cd9d759db28
-sum(.!F_scatter_old)
-
 # ╔═╡ 6834fa86-4bda-4d14-a57d-dad882f417f5
 sum(.!F_scatter)
 
@@ -177,6 +168,15 @@ md"""
 md"""
 ## Uncertainties
 """
+
+# ╔═╡ 957ae76e-aa8f-4e72-999a-d560b7530183
+F_scatter_old = tolstoy23_all.RV_sigma .< 3*tolstoy23_all.RV_err .* sqrt.(tolstoy23_all.RV_count)
+
+# ╔═╡ 10177a44-8cdc-4151-a0d1-cf9b70791751
+sum(F_scatter_old .!= F_scatter)
+
+# ╔═╡ b8cb8b9e-d944-43d0-ba45-3cd9d759db28
+sum(.!F_scatter_old)
 
 # ╔═╡ 91208c77-3664-48fd-a659-1151a4dc0bf4
 (tolstoy23_all.RV_sigma ./ tolstoy23_all.RV_err)[.!F_scatter] # number of sigma for filtered stars

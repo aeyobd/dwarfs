@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -225,7 +225,7 @@ let
 		yscale=log10,
 		yticks=[1, 10, 20, 30, 40, 50, 60],
 		yminorticks=[1:9; 10:2:60],
-		limits=((-2, 3), (1, 50)),
+		limits=((-2, 3), (1, 120)),
 		xgridvisible=false,
 		ygridvisible=false
 	)
@@ -375,6 +375,9 @@ let
 	# only include bound points in profile...
 end
 
+# ╔═╡ 15eecc05-c7fb-4424-94ac-819450e4f6ec
+df_scalars.bound_mass[idx_f]
+
 # ╔═╡ 48e54b34-4b22-4609-8928-ba6d8d027370
 let 
 	fig = Figure()
@@ -451,6 +454,8 @@ let
 		xdirection=2, ydirection=3
 	)
 
+
+	# scatter!(snap_f.x_cen[2], snap_f.x_cen[3], markersize=0.3)
 	Colorbar(fig[1, 2], h, label="DM density", ticks=Makie.automatic)
 
 	@savefig "xz_fin_projection"
@@ -575,6 +580,7 @@ end
 # ╠═dfa6a5aa-e7ff-4e8b-b249-600ca7a02bc3
 # ╠═4a8fb43f-e2b1-4fa3-a99c-aa6fff4b727f
 # ╠═871f7679-dbaa-4901-85ab-357b58588d46
+# ╠═15eecc05-c7fb-4424-94ac-819450e4f6ec
 # ╠═48e54b34-4b22-4609-8928-ba6d8d027370
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd
 # ╠═f7f8ed80-c715-43db-bebe-e62b14173ac6

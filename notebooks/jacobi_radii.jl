@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ ca5f69e4-31c3-11f0-2b96-d3cead0ed832
 begin
 	import Pkg; Pkg.activate()
@@ -15,32 +27,56 @@ begin
 	
 end
 
+# ╔═╡ 1374aa1e-ee19-4a17-b317-cf0be4196dfe
+using PlutoUI
+
 # ╔═╡ ad687c7e-a9d9-4a80-b7d1-dc24f7be8a76
 using PythonCall
 
 # ╔═╡ aff88239-9b72-44df-b895-3d3e0b6430dc
 using OrderedCollections
 
-# ╔═╡ 26886e5c-546f-45ca-a882-2b354a962f07
-galaxy = "ursa_minor"
-
-# ╔═╡ cc2c7b51-5483-4693-bda6-40563ffb7289
-modelname = "1e7_new_v38_r4.0"
-
-# ╔═╡ d9849d12-43fe-4788-aa26-145ed0d7db19
-orbitname = "orbit_smallperi.5"
-
-# ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
-vasiliev_units = false
-
 # ╔═╡ 620d4b82-d277-46d1-b01c-329a65ca3626
 r_break_obs_arcmin = 25
 
+# ╔═╡ a0048a1f-e098-4cbf-898a-a9e94631e98e
+function notebook_inputs(; kwargs...)
+	return PlutoUI.combine() do Child
+		
+		user_inputs = [
+			md""" $(string(name)): $(
+				Child(name, obj)
+			)"""
+			
+			for (name, obj) in kwargs
+		]
+		
+		md"""
+		#### Inputs
+		$(user_inputs)
+		"""
+	end
+end
+
+# ╔═╡ f9d80bb9-0e61-4a3a-aa2f-6f9393a96fb7
+@bind inputs confirm(notebook_inputs(;
+	galaxyname = TextField(70, default="ursa_minor"),
+	modelname = TextField(70, default="1e6_new_v31_r4.0/orbitname"),
+	lmc = CheckBox(),
+	vasiliev_units = CheckBox(),
+))
+
+# ╔═╡ 26886e5c-546f-45ca-a882-2b354a962f07
+galaxy = inputs.galaxyname
+
+# ╔═╡ cc2c7b51-5483-4693-bda6-40563ffb7289
+modelname = inputs.modelname
+
+# ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
+vasiliev_units = inputs.vasiliev_units
+
 # ╔═╡ c73efb23-ba43-43ba-952a-18ed7fec9e91
-lmc = false
-
-# ╔═╡ 1374aa1e-ee19-4a17-b317-cf0be4196dfe
-
+lmc = inputs.lmc
 
 # ╔═╡ f7b10565-3af7-4fa3-8dbf-a34e82b044cb
 md"""
@@ -94,17 +130,8 @@ begin
 	end
 end
 
-# ╔═╡ 8db8ca90-4c26-4277-8697-5ffd370a7bec
-readdir(potential_dir * "vasiliev24/L3M11")
-
-# ╔═╡ f3d4a880-300f-450a-bd57-9f9639f5966e
-readdir(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxy,modelname))
-
 # ╔═╡ fa86bf35-2f3a-4830-bd1d-dd3f40085f3c
-modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxy, modelname, orbitname)
-
-# ╔═╡ b9665a69-879a-485f-a5e0-ef16d55b09c0
-readdir(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxy, modelname))
+modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxy, modelname)
 
 # ╔═╡ 23a1da00-2941-4911-8f14-ebed939dca19
 dwarf_halo = LilGuys.load_profile(joinpath(modeldir, "../halo.toml"))
@@ -194,6 +221,9 @@ r_J = LilGuys.find_zero(r -> calc_ρ_mean(dwarf_halo, r) - 3*ρ_host, 0.1)
 # ╔═╡ 4e072f88-f319-4ae7-8220-3f8d5b0766b9
 r_J_arcmin = LilGuys.kpc2arcmin(r_J, orbital_props["distance_f"])
 
+# ╔═╡ e9fe6359-898d-4ba2-8992-9e917ca4a5a7
+
+
 # ╔═╡ 40c80707-2d4d-449f-b4af-20e691d4d43d
 md"""
 # inverse
@@ -218,7 +248,11 @@ function calc_rperi_rj(host, satellite; limits=(0, 2), vasiliev_units=vasiliev_u
     
     for i in eachindex(rj)
         rr = rperi[i]
-        rj[i] = LilGuys.find_zero(r -> ρ_mean_sat(r) - 3*ρ_mean_host(rr), 1.)
+		if ρ_mean_sat(0) < 3*ρ_mean_host(rr)
+			rj[i] = 0
+		else
+        	rj[i] = 10^LilGuys.find_zero(log_r -> ρ_mean_sat(10^log_r) - 3*ρ_mean_host(rr), 0.)
+		end
     end
 
     return rperi, rj
@@ -334,15 +368,15 @@ open(joinpath(modeldir, outname), "w") do f
 end
 
 # ╔═╡ Cell order:
+# ╠═f9d80bb9-0e61-4a3a-aa2f-6f9393a96fb7
 # ╠═26886e5c-546f-45ca-a882-2b354a962f07
 # ╠═cc2c7b51-5483-4693-bda6-40563ffb7289
-# ╠═d9849d12-43fe-4788-aa26-145ed0d7db19
 # ╠═17c701ff-2620-42b7-b2f2-02e5cbe1900d
 # ╠═620d4b82-d277-46d1-b01c-329a65ca3626
 # ╠═c73efb23-ba43-43ba-952a-18ed7fec9e91
 # ╠═8bb2a7f2-97de-4f09-afdd-6cbebe9b86f5
+# ╠═a0048a1f-e098-4cbf-898a-a9e94631e98e
 # ╠═1374aa1e-ee19-4a17-b317-cf0be4196dfe
-# ╠═8db8ca90-4c26-4277-8697-5ffd370a7bec
 # ╟─f7b10565-3af7-4fa3-8dbf-a34e82b044cb
 # ╟─bea952a4-e48a-489e-8f31-62dd8827e869
 # ╠═ca5f69e4-31c3-11f0-2b96-d3cead0ed832
@@ -353,9 +387,7 @@ end
 # ╠═44334862-c17b-4ed1-8239-1b0902748fa8
 # ╟─7ca75d0b-cd00-4fae-a03b-f88f740b6743
 # ╠═3b645724-08a1-4689-99c6-2ff45c5cf676
-# ╠═f3d4a880-300f-450a-bd57-9f9639f5966e
 # ╠═fa86bf35-2f3a-4830-bd1d-dd3f40085f3c
-# ╠═b9665a69-879a-485f-a5e0-ef16d55b09c0
 # ╠═23a1da00-2941-4911-8f14-ebed939dca19
 # ╠═0d8ae710-df73-45f7-910b-cf127f38e9d4
 # ╠═29a0a1ee-d953-487f-8be3-1f9335fb098b
@@ -372,6 +404,7 @@ end
 # ╠═7dcbcf23-7a19-4931-b63c-5308e5abed10
 # ╠═7784c958-e815-4f08-a255-ddd7cc2af8b0
 # ╠═4e072f88-f319-4ae7-8220-3f8d5b0766b9
+# ╠═e9fe6359-898d-4ba2-8992-9e917ca4a5a7
 # ╟─40c80707-2d4d-449f-b4af-20e691d4d43d
 # ╠═71cc56b5-8fb5-4d79-b8f9-4ec72963fc92
 # ╠═80ac2f40-678d-4de4-b77d-d3780e164f05

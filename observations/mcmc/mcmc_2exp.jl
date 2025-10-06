@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -91,11 +91,8 @@ md"""
 # Robust model
 """
 
-# ╔═╡ 339711f7-d606-450e-92b8-0dae89cbcd66
-R_outer = 1.2 * obs_props["R_h"] / LilGuys.R_h(LilGuys.Exp2D())
-
 # ╔═╡ c38c2f54-1a6d-4bfd-966a-0ddf66ab94da
-@model function double_exp_model(data::MCMCUtils.GaiaData, R_outer=R_outer)
+@model function double_exp_model(data::MCMCUtils.GaiaData)
 	d_xi = 0# ~ Normal(0, 5)
 	d_eta = 0# ~ Normal(0, 5)
 	ellipticity ~ Uniform(0, 0.99)
@@ -104,7 +101,7 @@ R_outer = 1.2 * obs_props["R_h"] / LilGuys.R_h(LilGuys.Exp2D())
 
 	f_outer ~ Uniform(0, 1)
 
-	R_s_outer ~ LogUniform(R_outer, 1e3)
+	R_s_outer ~ LogUniform(R_s * 1.5, 1.5e3)
 	ellipticity_outer ~ Uniform(0, 0.99)
 	position_angle_outer ~ Uniform(0, 180)
 
@@ -137,16 +134,35 @@ sampler = NUTS()
 mcmc_model = double_exp_model(data)
 
 # ╔═╡ 8f051c8a-def2-4a84-ab43-2ecc8b646b65
-samples = sample(mcmc_model, sampler, MCMCThreads(), 1000, 16) 
+samples = sample(mcmc_model, sampler, MCMCThreads(), 10000, 16) 
 
 # ╔═╡ d57d7605-3904-490b-b785-42320275b0c5
-@info mean(df_out.acceptance_rate), mean(df_out.is_accept)
+@info "acceptance rate (subsample, total)", mean(df_out.acceptance_rate), mean(df_out.is_accept)
 
 # ╔═╡ 064a0bfc-827e-4686-8953-00db383fb235
 @savefig "corner" PairPlots.pairplot(samples)
 
 # ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
 df_out = DataFrame(samples)
+
+# ╔═╡ bf9f68cd-1817-48ff-87f3-7e46d251fd2c
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="Rs inner", ylabel="Rs outer")
+
+	scatter!(df_out.R_s, df_out.R_s_outer, markersize=1, color=:black, alpha=0.1)
+
+	x = LinRange(extrema(df_out.R_s)..., 10)
+	y = 1.5 * x
+
+	lines!(x, y)
+	text!(x[end], y[end], text="prior limit", align=(:right, :top), offset=(0, -12), color=COLORS[1])
+
+
+	@savefig "Rs_inner_outer_cutoff"
+	fig
+
+end
 
 # ╔═╡ 115bb78a-ab2e-4ee5-bec2-b3054b42b482
 chain_summary = MCMCUtils.summarize(samples)
@@ -181,7 +197,7 @@ let
 		y2 = @. log10(LilGuys.surface_density(prof_outer, R))
 
 		lines!(x, y, color=COLORS[3], alpha=0.1)
-		lines!(x, y2, color=COLORS[3], alpha=0.1)
+		lines!(x, y2, color=COLORS[2], alpha=0.1)
 	end
 
 	ylims!(-6, 3)
@@ -192,7 +208,7 @@ let
 end
 
 # ╔═╡ 428e8ecd-b28d-4c4e-b662-fb5d75e1ba4e
-PairPlots.pairplot(samples)
+
 
 # ╔═╡ ec5e0fff-0105-4c08-925a-2b771d7d78a2
 let
@@ -278,13 +294,13 @@ CSV.write(summaryout, chain_summary)
 # ╠═67b865b5-6d7d-4a62-84cd-82983a76f8ba
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
 # ╟─24a65d65-6e0b-4108-8041-79fee06cd28a
-# ╠═339711f7-d606-450e-92b8-0dae89cbcd66
 # ╠═c38c2f54-1a6d-4bfd-966a-0ddf66ab94da
 # ╠═df3ab039-55ee-4431-bd68-1c77f843dd18
 # ╠═7b1b4c0f-aa49-4ee0-b860-0bd927db8768
 # ╠═8f051c8a-def2-4a84-ab43-2ecc8b646b65
 # ╠═d57d7605-3904-490b-b785-42320275b0c5
 # ╠═064a0bfc-827e-4686-8953-00db383fb235
+# ╠═bf9f68cd-1817-48ff-87f3-7e46d251fd2c
 # ╠═36db7e1d-4b48-4510-99d5-7d567ac70d5d
 # ╠═115bb78a-ab2e-4ee5-bec2-b3054b42b482
 # ╠═d1600a1c-1a73-4a0e-a36f-3008a5e9ed23

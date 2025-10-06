@@ -73,6 +73,9 @@ In particular, we plot the density profiles, velocity profiles, and evolution of
 # ╔═╡ 96c91860-f3cc-4531-a8cf-39c85887b394
 import TOML
 
+# ╔═╡ 892ebc0f-8db1-485f-accd-50a11643ad6b
+CairoMakie.activate!(type=:png)
+
 # ╔═╡ 7eb3e35f-c2a5-499e-b884-85fb59060ec5
 md"""
 # Inputs
@@ -571,6 +574,7 @@ end
 # ╠═96c91860-f3cc-4531-a8cf-39c85887b394
 # ╠═7e232e3c-34b9-4b08-a297-7aa19aca644b
 # ╠═c4fc0a87-c75f-4528-aa20-75cc7aff856c
+# ╠═892ebc0f-8db1-485f-accd-50a11643ad6b
 # ╟─7eb3e35f-c2a5-499e-b884-85fb59060ec5
 # ╠═03164025-b3e0-4535-abba-7cf7da5360d7
 # ╠═a29c993a-c7eb-4b57-a474-50bdbd0ce1ec

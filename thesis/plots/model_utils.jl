@@ -91,6 +91,7 @@ end
 function compare_both(galaxyname, modelname::String, star; norm_shift=0, lmc=false, r_j=nothing, title="", r_max=4*60, break_height=nothing, kwargs...)
     # setup
 	r_b = get_r_b(galaxyname, modelname, star, lmc=lmc)
+    @info "break radius $r_b"
 	R_h = get_R_h(galaxyname)
 	if !isnothing(r_j)
 		r_j = get_r_j(galaxyname, modelname, lmc=lmc)

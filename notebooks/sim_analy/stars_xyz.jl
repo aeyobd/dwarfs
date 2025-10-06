@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -80,7 +80,7 @@ end
 # ╔═╡ ab06c999-3ff6-4580-a979-f0ddeb466569
 @bind inputs confirm(notebook_inputs(;
 	galaxyname = TextField(default="sculptor"),
-	modelname = TextField(60, default="1e6_v38_r7_oblate_0.5/orbit_"),
+	modelname = TextField(60, default="1e6_v48_r7_oblate_0.5/orbit_"),
 	starsname = TextField(default="exp2d_rs0.13"),
 ))
 
@@ -321,6 +321,9 @@ filt_inner = radii(snap_f) .< 1
 # ╔═╡ 702c40e9-f82f-4ffd-8a1e-35b129eb64f3
 [LilGuys.std(snap_f.velocities[i, filt_inner], snap_f.weights[filt_inner]) for i in 1:3] .* V2KMS
 
+# ╔═╡ 4ba9993e-465c-4f73-856f-13a43f05958e
+9.6 / 12.3 * 58
+
 # ╔═╡ Cell order:
 # ╟─377284f2-dcee-44d3-9a04-728605cea92a
 # ╠═ab06c999-3ff6-4580-a979-f0ddeb466569
@@ -370,3 +373,4 @@ filt_inner = radii(snap_f) .< 1
 # ╠═87c9a6dc-cb71-4476-b7d7-2fa9b5cd2d10
 # ╠═9fc833c7-da43-4f97-a106-a8e6aa3c383f
 # ╠═702c40e9-f82f-4ffd-8a1e-35b129eb64f3
+# ╠═4ba9993e-465c-4f73-856f-13a43f05958e
