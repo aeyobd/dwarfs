@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -92,6 +92,12 @@ get_M_star("sculptor")
 
 # ╔═╡ edc6003e-e931-45a0-82c4-4aa394a3f060
 umi_profs = load_stars("ursa_minor", "1e7_new_v38_r4.0", "exp2d_rs0.10")
+
+# ╔═╡ 1443385e-6d9b-4ddc-805c-2c12fb1c9067
+scl_max = LilGuys.fit_v_r_circ_max(radii(scl_profs[1]), middle.(LilGuys.circular_velocity(scl_profs[1])))
+
+# ╔═╡ 195582cf-83e3-44c8-9efe-b7d98f092c3c
+umi_max = LilGuys.fit_v_r_circ_max(radii(umi_profs[1]), middle.(LilGuys.circular_velocity(umi_profs[1])))
 
 # ╔═╡ ed95b670-3ba7-438a-8e4d-9fc6362d4d79
 function text_along_line!(x, y, x_0; text, h=0.03, kwargs...)
@@ -245,6 +251,13 @@ function vcirc_axis(gs)
 	)
 end
 
+# ╔═╡ 62407923-e1ba-445c-8726-2d72121a4ed2
+function set_limits!(maxes)
+	xlims!(0.03, maxes.r_circ_max * 10^1)
+	ylims!(maxes.v_circ_max*V2KMS* 10^-1.9, maxes.v_circ_max*V2KMS * 10^0.1)
+
+end
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "initial_velocity" let
 	fig = Figure(size=(5*72, 5*72))
@@ -258,6 +271,7 @@ end
 	plot_density_line!(get_mean_density("sculptor")...)
 	
 	plot_sigma_v!("sculptor")
+	set_limits!(scl_max)
 
 	ax_umi = vcirc_axis(fig[2,1])
 	ax_umi.title = "Ursa Minor"
@@ -269,8 +283,8 @@ end
 	plot_density_line!(get_mean_density("ursa_minor")...)
 	
 	plot_sigma_v!("ursa_minor")
+	set_limits!(umi_max)
 
-	linkaxes!(ax, ax_umi)
 	hidexdecorations!(ax, ticks=false, minorticks=false)
 
 	l1 = lines!([NaN], [NaN], linewidth=smalllinewidth, linestyle=:dot, label="initial")
@@ -295,6 +309,8 @@ end
 # ╠═8ac764c8-ca9e-400b-bde4-f3e9b1ebf6b9
 # ╠═4258c055-e11a-409d-9b53-441c55cd815f
 # ╠═edc6003e-e931-45a0-82c4-4aa394a3f060
+# ╠═1443385e-6d9b-4ddc-805c-2c12fb1c9067
+# ╠═195582cf-83e3-44c8-9efe-b7d98f092c3c
 # ╠═7034614b-eb03-4333-bf69-c3fb64a5c0fc
 # ╠═ed95b670-3ba7-438a-8e4d-9fc6362d4d79
 # ╠═ee01807c-785e-43b8-a8bd-b093aacbf281
@@ -318,3 +334,4 @@ end
 # ╠═cf800bd7-2cd1-4ac1-870b-ba29056e7920
 # ╠═fb3dd9fe-2f1b-45fd-9d2d-3996859645b3
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╠═62407923-e1ba-445c-8726-2d72121a4ed2

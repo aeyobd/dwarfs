@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -53,14 +53,14 @@ end
 # ╔═╡ c2eed577-ff2c-4a28-b043-3ba7f4a68d3a
 compare_both = ModelUtils.compare_both
 
-# ╔═╡ e231dce2-1969-4e86-a519-e9e2eb91d9f6
-ModelUtils.compare_both("sculptor", "1e6_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.13", norm_shift=0.0, 	break_height=-4, title="Sculptor low-resolution")
-
 # ╔═╡ 91d8ebb5-47b8-44ed-a334-96dbc6514c44
 ModelUtils.compare_both("sculptor", "1e6_new_v43_r7/orbit_smallperi.3", "exp2d_rs0.10", norm_shift=-0.7, 	break_height=-4, title="Sculptor heavy")
 
 # ╔═╡ fafd07cb-2378-421b-b6e5-8525c71f9c8d
 compare_both("sculptor", "1e6_new_v43_r7/orbit_smallperi.3", "exp2d_rs0.10", norm_shift=-0.7, 	break_height=-4, title="Sculptor heavy")
+
+# ╔═╡ e231dce2-1969-4e86-a519-e9e2eb91d9f6
+ModelUtils.compare_both("sculptor", "1e6_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10", norm_shift=0.0, 	break_height=-4, title="Sculptor low-resolution")
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
 @savefig "scl_smallperi_i_f" compare_both("sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10",  r_j=true, norm_shift=0.2, 	break_height=-3, title="Sculptor: smallperi-exponential")
@@ -113,9 +113,9 @@ ModelUtils.compare_both("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "exp2d_rs0.10
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═e93918f6-0c72-4dec-9cdf-97f185c0bceb
 # ╠═c2eed577-ff2c-4a28-b043-3ba7f4a68d3a
-# ╠═e231dce2-1969-4e86-a519-e9e2eb91d9f6
 # ╠═91d8ebb5-47b8-44ed-a334-96dbc6514c44
 # ╠═fafd07cb-2378-421b-b6e5-8525c71f9c8d
+# ╠═e231dce2-1969-4e86-a519-e9e2eb91d9f6
 # ╠═3317cfec-be70-418c-944a-0a6741f03cf3
 # ╠═fc45829c-bf28-4d7b-9bea-e223e4b29e7d
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
