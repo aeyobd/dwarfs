@@ -1,19 +1,18 @@
-\chapter{Additional simulation tests}\label{sec:extra_results}
+\chapter{Additional Simulation Results}\label{sec:extra_results}
 
 In this section, we briefly explore additional simulations testing
-assumptions not varied in the main text: variations in the halo
-concentration, cored halos, alternative orbits, anisotropy, and
-ellipsoidal models. While each of these variables influences total dark
-matter evolution, the resulting inner structure is similar across
-models. We conclude that consideration of these effects likely would not
-change our conclusions.
+variations in the halo concentration, cored halos, alternative orbits,
+anisotropies, and ellipticities. While each of these variables
+influences total dark matter evolution, the resulting inner structure is
+similar across models. We conclude that consideration of these effects
+likely would not change our conclusions.
 
 \section{Alternative initial
 conditions}\label{alternative-initial-conditions}
 
 The following models aim to reproduce the stellar velocity dispersion of
-Scl to within \(\lesssim 1\,\kms\) with a similar present-day half-light
-radius.
+Sculptor to within \(\lesssim 1\,\kms\) with a similar present-day
+half-light radius.
 
 \subsection{Halo concentration}\label{halo-concentration}
 
@@ -39,9 +38,9 @@ simplicity.
 \caption[Tidal dependence on halo concentration]{A comparison of the
 evolution of different N-body models for different halo concentrations
 (heavier and lighter halo), and the heavy halo with the action-angle
-corrected orbit. In the left, the maximum circular velocity \(\vmax\) of
-the dark matter halo is plotted as a function of simulation time. In the
-right, \(\vmax\) is instead plotted as a function of
+corrected orbit. \textbf{Left:} The maximum circular velocity \(\vmax\)
+of the dark matter halo is plotted as a function of simulation time.
+\textbf{Right:} \(\vmax\) is instead plotted as a function of
 \(\rmax\).}\label{fig:tidal_tracks_concentration}
 \end{figure}
 
@@ -60,62 +59,61 @@ fiducial halo (Eq.~\ref{eq:trunc_nfw}). We plot the initial and final
 density, as compared to a cuspy NFW, in Fig.~\ref{fig:cored_i_f}.
 
 In Fig.~\ref{fig:tidal_tracks_structure}, we show the evolution of the
-cored model as compared to a heavier halo. The cored halo loses more
-total dark matter mass, evolving further along the tidal track as
-expected. However, in order to reproduce the observed velocity
-dispersion, the final halo maintains a higher \(\vmax\) than the
-fiducial halo.
+cored model as compared to a heavier halo. The cored halo appears to
+evolve more mildly than the NFW halo. This is possibly because, to match
+the velocity dispersion, the cored halo has \(\sim 50\%\) more mass
+within \(1\,\kpc\) than a similar cuspy halo.
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/cored_density_i_f.pdf}}
-\caption[Cored initial and final density profile]{The initial (dotted
+\caption[Tidal evolution of a cored density profile]{The initial (dotted
 orange) and final (solid orange) 3D density profiles for the cored model
 of Scl on the \smallperi{} orbit. The blue thin line represents an NFW
 halo with the same \(M_s\) and \(r_s\).}\label{fig:cored_i_f}
 \end{figure}
 
-\subsection{Velocity Anisotropy}\label{velocity-anisotropy}
-
-Radial velocity anisotropy may cause halos to disrupt faster
-\citep[e.g.][]{chiang+bosch+schive2024}. To test the effects of moderate
-velocity anisotropy, we initialize a model with a velocity anistropy
-with an Osipkov-Merritt profile rising from \(\beta=0.2\) at the centre
-to \(\beta=1\) and infinity, with scale length \(4r_s\).
-
-Fig.~\ref{fig:anisotropy_i_f} shows the initial and final anisotropy
-profiles. The dwarf galaxy becomes more isotropic with tidal evolution.
-Particles on more radially-anisotropic orbits are more easily stripped
-as they have larger apocentres than more circular orbits of the
-equivalent energy. Regardless, the overall tidal evolution is very
-similar to our fiducial, isotropic case (see
-Fig.~\ref{fig:tidal_tracks_structure}).
-
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/anisotropy_i_f.pdf}}
-\caption[Tidal evolution of anisotropy]{The initial and final anisotropy
-profiles for the initially-anisotropic model of Scl on the \smallperi{}
-orbit. The final profile is far more isotropic (\(\beta=0\)) than the
-initial.}\label{fig:anisotropy_i_f}
-\end{figure}
-
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_mw_structure_boundmass.pdf}}
-\caption[Tidal dependence on halo structure]{Similar to
+\caption[Tidal tracks depending on halo substructure]{Similar to
 Fig.~\ref{fig:tidal_tracks_concentration}, except testing the effects of
 including a core, velocity anisotropy, and evolving an oblate halo.
 While the normalization may differ, the tidal evolution is
 similar.}\label{fig:tidal_tracks_structure}
 \end{figure}
 
+\subsection{Velocity anisotropy}\label{velocity-anisotropy}
+
+Radial velocity anisotropy may cause halos to disrupt faster
+\citep[e.g.][]{chiang+bosch+schive2024}. To test the effects of moderate
+velocity anisotropy, we initialize a model with a velocity anisotropy
+with an Osipkov-Merritt profile rising from \(\beta=0.2\) at the centre
+to \(\beta=1\) and infinity, with scale length \(4r_s\).
+
+Fig.~\ref{fig:anisotropy_i_f} shows the initial and final anisotropy
+profiles after tidal evolution on Scl's \smallperi{} orbit. The dwarf
+galaxy becomes more isotropic with tidal evolution. Particles on more
+radially anisotropic orbits are more easily stripped as they have larger
+apocentres than more circular orbits of the equivalent energy.
+Regardless, the overall tidal evolution is very similar to our fiducial,
+isotropic case (see Fig.~\ref{fig:tidal_tracks_structure}).
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/anisotropy_i_f.pdf}}
+\caption[Tidal evolution of anisotropy]{The initial and final anisotropy
+profiles for the initially anisotropic model of Scl on the \smallperi{}
+orbit. The final profile is far more isotropic (\(\beta=0\)) than the
+initial.}\label{fig:anisotropy_i_f}
+\end{figure}
+
 \subsection{An ellipsoidal halo}\label{an-ellipsoidal-halo}
 
 Sculptor and Ursa Minor may be highly elliptical in 3D, possibly
 violating the assumption of spherical symmetry
-\citep[e.g.,][]{an+koposov2022}. The shape of the underlying dark matter
-halo is unknown, however.
+\citep[e.g.,][]{an+koposov2022}. Although, the shape of the underlying
+dark matter halo is unknown.
 
 We create an oblate initial dark matter halo using \agama{}.
 Fig.~\ref{fig:oblate_i_f} shows the initial equilibrium (after 5Gyr in
@@ -129,7 +127,7 @@ f = \frac{M_0}{(2\pi\,J_0)^3} \left[1 + \left(\frac{J_0}{h(J)}\right)^\eta\right
 \(h(J) = h_rJ_r + h_zJ_z + (3-h_r-h_z) |J_\phi|\). The
 \texttt{example\_doublepowerlaw.py} script in \agama{} solves for the
 best parameters matching a given density profile. We chose to create a
-model resembling an NFW but scaled by a factor 0.5 in the \(z\) axis.
+model resembling an NFW but scaled by a factor of 0.5 in the \(z\)-axis.
 For a scale-free halo (\(r_s=1\), \(M_s=1\)), the best-fit parameters
 are \(J_0=0.890\), \(\Gamma=1.46\), \(\eta=0.568\), \(B=2.97\),
 \(h_r=0.845\), \(h_z=1.66\), \(g_r=0.753\), \(g_z=1.69\), \(M_0=0.965\),
@@ -141,16 +139,16 @@ profile equivalent to an NFW with \(\rmax = 7\,\kpc\) and
 
 We find the evolution of the oblate halo to be nearly identical to the
 spherical halo (see Fig.~\ref{fig:tidal_tracks_structure}), similar to
-\citet{battaglia+sollima+nipoti2015}. The oblate halo however becomes
-spherical after tidal evolution (Fig.~\ref{fig:oblate_i_f}). If Scl's
-dark matter halo is indeed elliptical today, this model may not be an
-adequate description.
+\citet{battaglia+sollima+nipoti2015}. The oblate halo becomes spherical
+after tidal evolution (Fig.~\ref{fig:oblate_i_f}). If Scl's dark matter
+halo is indeed elliptical today, this model may not be an adequate
+description.
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/oblate_projected_2d.pdf}}
-\caption[Oblate halo before and after tidal evolution]{The initial and
-final (after 9Gyr of tidal evolution) projected density profiles for the
+\caption[Oblate halo projected density snapshots]{The initial and final
+(after 9Gyr of tidal evolution) projected density profiles for the
 oblate halo on Scl's \smallperi{} orbit, projected on with \(x'\) and
 \(z'\) the major and minor axes. The contours are drawn assuming normal
 smoothing of 0.4 kpc and are log-spaced with intervals of 0.105
@@ -170,15 +168,15 @@ Because of the strong tidal interaction with the MW, the trajectory is
 substantially perturbed from a point orbit. We adjust the initial
 conditions by comparing the change in actions (as calculated in the
 static MW-only potential) before and after the pericentre. Our final
-model, the \texttt{MW\ impact} model, is able to approximately reproduce
-the observed position of Scl.
+model, the \texttt{MW\ impact} model, can approximately reproduce the
+observed position of Scl.
 
 Fig.~\ref{fig:tidal_tracks_umi} compares the tidal evolution of Scl on
-the mean, \texttt{MW\ impact} , and \smallperi{} orbit. The mean orbit
-evloves less down the tidal track than the \smallperi{} model. Instead,
-the \texttt{MW\ impact} orbit experiences most tidal evolution during
-its first MW-pericentre. While evolving further along the tidal track,
-the stars of this model nevertheless remain exponential
+the mean, \texttt{MW\ impact}, and \smallperi{} orbit. The mean orbit
+loses less mass than the \smallperi{} model. Instead, the
+\texttt{MW\ impact} orbit experiences most tidal evolution during its
+first MW pericentre. While evolving further along the tidal track, the
+stars of this model nevertheless remain exponential
 (Fig.~\ref{fig:scl_mw_impact_i_f}). We suggest that the impulsive
 pericentric passage does not occur for long enough in this model to
 produce the expected extended density profile. A yet more extreme
@@ -187,12 +185,10 @@ orbital history would be necessary to tidally transform Scl's stars.
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_orbits_boundmass.pdf}}
-\caption[Ursa Minor tidal dependence on orbit]{Similar to
+\caption[Sculptor's tidal evolution for different orbits]{Similar to
 Fig.~\ref{fig:tidal_tracks_concentration}, except testing the effects of
 orbits in the LMC. Most LMC models evolve more weakly than the MW
-models, however these do not reach full agreement with the present-day
-position so misrepresent recent tidal
-evolution.}\label{fig:tidal_tracks_umi}
+models.}\label{fig:tidal_tracks_umi}
 \end{figure}
 
 \begin{figure}
@@ -211,9 +207,9 @@ stream around Scl and UMi are beyond the reach of current observational
 facilities. However, we can still predict the properties of such a
 stream.
 
-Fig.~\ref{fig:scl_tidal_stream} and Fig.~\ref{fig:umi_tidal_stream}
-shows the resulting distributions of velocities and distance along the
-stream orbital axis \(\xi'\) for Scl and UMi. The tidal tails may have
+Fig.~\ref{fig:scl_tidal_stream} and Fig.~\ref{fig:umi_tidal_stream} show
+the resulting distributions of velocities and distance along the stream
+orbital axis \(\xi'\) for Scl and UMi. The tidal tails may have
 detectible gradients in radial velocities (\(\sim 10\,\kms\)) and proper
 motions (mostly for UMi, of \(\sim 0.1\,\masyr\)). However, detecting
 such a gradient would require tracing stars across several degrees on

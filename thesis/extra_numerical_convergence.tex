@@ -23,9 +23,9 @@ h_{\rm grav} = 4 \frac{R_{200}}{\sqrt{N_{200}}},
 
 where \(h_{\rm grav}\) is the softening length, and \(N_{200}\) is the
 number of particles within \(R_{200}\). This choice balances integration
-time and only compromises resolution in collisional regime. For our
+time and only compromises resolution in the collisional regime. For our
 isolation halo (\(\rmax=6\,\kpc\), \(\vmax=31\,\kms\)) with \(10^7\)
-particles, this works out to be \(0.044\,{\rm kpc}\). Next we consider
+particles, this works out to be \(0.044\,{\rm kpc}\). Next, we consider
 the effect of softening as applied to our isolation halo.
 
 The top panel of Fig.~\ref{fig:methods_convergence} illustrates the
@@ -42,17 +42,17 @@ length balances efficiency and accuracy for this simulation.
 
 The two other key numerical parameters in \gadget{} are the tree-force
 and time-step accuracy parameters. Specifically, \gadget{} opens a node
-if \(M\,l/r^3 < \alpha |a|\), the node's mass is \(M\), distance from
-the particle is \(r\), side-length is \(l\), and the particle's total
-acceleration is \(a\). We adopt \(\alpha =0.005\). We also elect to use
-adaptive time stepping with integration accuracy set to \(\eta=0.01\).
-(particles must take time-steps smaller than
+if \(M\,l/r^3 < \alpha |a|\), where the node's mass is \(M\), the
+distance from the particle is \(r\), the side-length is \(l\), and the
+particle's total acceleration is \(a\). We adopt \(\alpha =0.005\). We
+also elect to use adaptive time stepping with integration accuracy set
+to \(\eta=0.01\). (particles must take time-steps smaller than
 \(dt < \sqrt{2\,\eta\,h_{\rm grav} / a}\) for acceleration \(a\)). The
 lower panel of Fig.~\ref{fig:methods_convergence} tests changes to these
 parameters. We include a model with smaller integration accuracy
 (\(\eta=0.003\) in ``small timestep'') and a stricter tree-force
 tolerance (\(\alpha=0.001\), ``high acc. force''). More precise
-tolerances on these parameters does not affect the evolution within the
+tolerances on these parameters do not affect the evolution within the
 uncertainties of the final profile.
 
 As demonstrated in this subsection, stricter numerical accuracy and
@@ -66,7 +66,7 @@ that our simulations are numerically well-converged (up to the
 \caption[Isolation method convergence]{A comparison of the final
 profiles using different simulation methods for Sculptor's \smallperi{}
 model. The benchmark model is our fiducial \(10^7\) particle run, and
-all other models use \(10^5\) paritcles, with their ``converged radius''
+all other models use \(10^5\) particles, with their ``converged radius''
 marked by the black arrow and softening by the vertical bar(s).
 \textbf{Top:} Models with \(\sqrt{10}\) larger and smaller softening
 lengths than the fiducial. \textbf{Bottom:} Models with more precise

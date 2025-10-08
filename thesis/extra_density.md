@@ -1,76 +1,70 @@
-# The reliability of derived density profiles {#sec:extra_density}
+# The Reliability of Projected Number Density Profiles Derived from *Gaia*{#sec:extra_density}
 
-In this section, we detail the J+24 membership algorithm and test the resulting density profiles for Scl and UMi. We compare profiles derived with alternative methodologies and literature results. We also present a non-parametric Bayesian density profile, which reproduces J+24's results in the inner regions but diverges when the background dominates. In summary, we find the density profiles are robust up to the background-limited radius derived here.
+In this section, we detail the J+24 membership algorithm and test the resulting density profiles for Scl and UMi. We compare profiles derived with alternative methodologies and literature results. We also present a non-parametric Bayesian density profile, which reproduces J+24's results in the inner regions but differs when the background dominates. We find the density profiles are robust up to the background-limited radius derived here.
 
 ## Bayesian membership probabilities
 
-To create a high-quality sample, J+24 select stars initially from Gaia within a 2--4 degree region around each satellite with high-quality astrometry, reliable photometry, and consistent parallaxes and broadly consistent proper motions and colours. Stars are removed if they have excess astrometric noise [${\rm ruwe} > 1.3$, see @lindegren+2021], colour excess $3\sigma$ outside of expectations [from @riello+2021], proper motions magnitudes $>10\,\masyr$ in $\mu_{\alpha*}$ or $\mu_\delta$, magnitudes brighter than the tip of the red giant branch or fainter than $G=22$, or colours outside $-0.5 < G_{\rm BP} - G_{\rm RP} <  2.5$. Photometry is dereddened with @schlegel+finkbeiner+davis1998 extinction maps.
+To create a high-quality sample, J+24 select stars initially from Gaia within a 2--4 degree region around each satellite with high-quality astrometry, reliable photometry, consistent parallaxes, and broadly consistent proper motions and colours. Stars are removed if they have excess astrometric noise [${\rm ruwe} > 1.3$, see @lindegren+2021], colour excess $3\sigma$ outside of expectations [from @riello+2021], proper motions $>10\,\masyr$ in $|\mu_{\alpha*}|$ or $|\mu_\delta|$, magnitudes brighter than the tip of the red giant branch[^trgb_mag] or fainter than $G=22$, or colours outside $-0.5 < G_{\rm BP} - G_{\rm RP} <  2.5$. Photometry is dereddened with @schlegel+finkbeiner+davis1998 extinction maps.
+
+[^trgb_mag]: Derived from the maximum RGB magnitude from the associated Padova isochrone plus $5\sigma$​ times the distance modulus uncertainty.
 
 J+24 construct satellite likelihoods in spatial, proper motion, and CMD space following expected satellite properties.  J+24 model the spatial likelihood as either a one or two-component exponential (@eq:exponential_law). The structural parameters of the inner component are fixed, and marginalized over if one-component. The outer profile scale radius and normalization are free parameters. 
 
-The PM likelihood is a bivariate gaussian with variance and covariance equal to each star's proper motions. 
+The PM likelihood is a bivariate Gaussian with variance and covariance equal to each star's proper motions. 
 
-J+24 model the CMD as a Padova isochrone [@girardi+2002], with matching metallicity, 12 Gyr age (or 2 Gyr for Fornax), and Gaussian width of 0.1 mag plus the *Gaia* colour uncertainty at each magnitude. The horizontal branch is modelled as a constant-magnitude^[Specifically, the mean magnitude of the 12 Gyr, ${\rm [Fe/H]}=-2.2$, Padova isochrone's horizontal branch.] sequence extending blue of the CMD with the same width as the RGB. The CMD likelihoods are marginalized over the distance modulus and take the maximum of the RGB and horizontal branch likelihoods.
+J+24 model the CMD as a Padova isochrone [@girardi+2002], with metallicity matching that obtained spectroscopically, 12 Gyr age (or 2 Gyr for Fornax), and a Gaussian width of 0.1 mag plus the *Gaia* colour uncertainty at each magnitude. The horizontal branch is modelled as a constant-magnitude^[Specifically, the mean magnitude of the 12 Gyr, ${\rm [Fe/H]}=-2.2$, Padova isochrone's horizontal branch.] sequence extending blue of the CMD with the same width as the RGB. The CMD likelihoods are marginalized over the distance modulus and take the maximum of the RGB and horizontal branch likelihoods.
 
-The background likelihoods are determined empirically as a kernel density estimates from stars outside 5$R_h$ in PM and CMD space. The spatial background likelihood is uniform.  
+The background likelihoods are determined empirically from kernel density estimates of stars outside 5$R_h$ in PM and CMD space. The spatial background likelihood is uniform.  
 
 J+24 derive the distributions of parameters (proper motions, satellite fraction $f_{\rm sat}$, and second spatial component if included) through Monte Carlo Markov chain sampling with broad or weakly-informative priors. The posterior modes are used to calculate the final $P_{\rm sat}$ values. 
 
-## Possible biases in *Gaia*-derived density profiles {#sec:density_extra}
+## Independent sample selection
 
-In this section, we test how assumptions in J+24's algorithm or biases in *Gaia* may affect density profiles. In all cases, density profiles converge until $R_{\rm ell} \approx 60\,{\rm arcmin}$, where background contamination likely dominates. 
+To test for possible limitations in the J+24 methodology (discussed below), we compare their density profiles against samples derived from absolute cuts in *Gaia* and external photometric surveys. 
 
-**Spatial likelihood.** As J+24 include a spatial likelihood, our density profiles risks "double fitting"---the spatial distribution of stars informs the membership catalogue from which density profiles are derived. If the assumed spatial likelihood is misrepresentative, the derived density profiles may bias towards the assumed likelihood. @fig:scl_umi_density_extras illustrates that selecting the one- or two-component spatial models affects the outer extent of the dwarf galaxy. Promisingly, the density excess persists when assuming a one-component exponential profile. We revisit this concern using spatially independent methods below. 
+The `simple` sample is selected from stars in *Gaia* using absolute astrometric and quality cuts. We require high-quality astrometry (`ruwe` < 1.3), parallaxes $3\sigma$-consistent with the dwarf's distance,  proper motions with $1\masyr$  of the systemic value, and colours within the dwarf's apparent CMD as determined from stars near the dwarf's centre (see @fig:extra_cmd).
 
-**Structural uncertainties**. The assumed structural parameters of a dwarf (centre, position angle, ellipticity, scale radius) may be biased or vary radially. As a test, we use a membership sample J+24 derive assuming the outer component is circular. Even when binning in circular radius, the density profiles remain unchanged (the `circ` points in @fig:scl_umi_density_extras). Thus, our conclusions appear to be robust to an extreme shift in ellipticity. Reasonable changes in other structural parameters are unlikely to have a stronger effects.
-
-**Completeness**. *Gaia* appears to have high but imperfect completeness, more limited for crowded fields, faint sources ($G\gtrsim20$), and BP-RP magnitudes. In @fabricius+2021, the completeness down to $G\approx 20$ is $\sim 80\%$ for low-density globular clusters. As dwarfs are even less dense, their completeness is likely higher. To test for magnitude-dependent biases, we show density profiles derived for only the brighter half of member stars in @fig:scl_umi_density_extras. We find no substantive change compared to our fiducial density profile. If *Gaia*'s incompleteness is inhomogeneous, then these variations likely do not affect our density profiles.
-
-
-
-
-
-![Sculptor density methodology comparison](figures/density_methods_extra.pdf){#fig:scl_umi_density_extras}
-
-Figure: Density profiles for various assumptions for Sculptor. `2-exp` is the fiducial double-exponential-likelihood J+24 sample, `1-exp` instead is a one-component exponential spatial likelihood, `simple` uses the simple position-independent selection criteria,  `circ` is a 2-component bayesian model assuming circular radii, `bright` only includes stars brighter than the median magnitude, and `DELVE` or `UNIONS` use photometry from external surveys with background subtraction. In all cases, the density profiles are nearly identical until the background-limited regime (grey shaded region). 
-
-
-
-## Comparison against alternate samples {#sec:simple_selection}
-
-Next, to compare against simpler methods, we create samples using absolute filters in the CMD, PM space. We also compare against similarly selected samples from deep photometry-only data. 
-
-For the `simple` *Gaia* samples, we require high-quality astrometry (`ruwe` < 1.3), parallaxes $3\sigma$-consistent with the dwarf's distance,  proper motions with $1\masyr$ radius of the galaxy's value, and within the dwarf's empirical CMD (@fig:extra_cmd).
-
-We also determine density profiles from the deeper photometric surveys. For Scl, we use DELVE DR2 survey [@drlica-wagner+2022]. We select sources within an ellipse of radius 150 arcminutes, categorized as likely stars, with reliable $g$ and $r$ magnitudes (associated flags $\leq 4$), and within Scl's observed CMD (@fig:extra_cmd). Ursa Minor is within the Ultraviolet Near-Infrared Optical Northern Survey [UNIONS, @gwyn+2025]. We select sources within an ellipse of radius 230 arminutes, with no `FLAGS_CFIS` set, the `s21` and `s31` both $<3$ (i.e. not extended sources), and within the CMD cut in @fig:extra_cmd. @fig:delve_unions_tangent shows the resulting spatial distribution for both samples. The only remarkable structure is Muñoz 1 nearby to Ursa Minor. 
-
-Finally, @fig:scl_umi_density_extras compares the density profiles from each sample. All samples agree until the "limiting radius", where the `simple` and DELVE/UNIONS samples reach their respective backgrounds. The very outskirts of J+24's density profiles may also extend below the background of apparent member stars, complicating the reliability of the outer density profiles. 
+We also determine density profiles from the deeper photometric surveys. For Scl, we use data from the DECam Local Volume Exploration Survey (DELVE) DR2 survey [@drlica-wagner+2022]. We select sources within an ellipse of radius 150 arcminutes, categorized as likely stars, with reliable $g$ and $r$ magnitudes (associated flags $\leq 4$), and within Scl's CMD selection (orange polygon in @fig:extra_cmd). Ursa Minor lies within the Ultraviolet Near-Infrared Optical Northern Survey [UNIONS, @gwyn+2025]. We select sources within an ellipse of radius 230 armin, with no `FLAGS_CFIS` set, both `s21` and `s31`  $<3$ (i.e., not extended sources), and within the CMD polygon in @fig:extra_cmd. 
 
 
 
 ![Colour-Magnitude sample selection](figures/extra_cmd_selection.png){#fig:extra_cmd width=80%}
 
-Figure: Colour-magnitude diagram cuts used in samples in this section. The likely-member stars in the inner $1R_h$ of each dwarf (black points) are used as a guide to determine the CMD cuts (orange polygons). Light grey points instead show the full distribution of stars across the field.
+Figure: Colour-magnitude diagram cuts used in samples in this section. Black points represent stars within $1R_h$, light grey shows all field stars passing quality cuts, and the orange polygon shows the CMD cut. The central, likely-member stars inform the CMD selections.
+
+## Possible biases in *Gaia*-derived density profiles {#sec:density_extra}
+
+We now discuss potential biases in J+24's algorithm for *Gaia* data. We then test how these biases may influence density profiles. In all cases, density profiles converge within $R_{\rm ell} \approx 60\,{\rm arcmin}$, where background contamination begins to dominate. 
+
+**Spatial likelihood.** Since J+24 include a spatial likelihood, the resulting density profiles risk "double fitting"---the same spatial distribution of stars informs the membership catalogue and the subsequent density profiles. If the spatial likelihood misrepresents the underlying satellite structure, then the density profiles may be biased towards the assumed shape. 
+
+**Structural uncertainties.** The assumed structural parameters of a dwarf (centre, position angle, ellipticity, scale radius) may be inaccurate or vary radially. This would change the elliptical radii of stars ($R_{\rm ell}$) and likewise the density profiles. 
+
+**Completeness.** *Gaia*'s completeness appears high but imperfect, more limited in crowded fields, for faint sources ($G\gtrsim20$), and in $G_{\rm BP}$-$G_{\rm RP}$ magnitudes. In @fabricius+2021, the completeness down to $G\approx 20$ is $\sim 80\%$ for low-density globular clusters. As dwarfs are even less dense, their completeness is likely higher. 
+
+The top row of @fig:scl_umi_density_extras compares the density profiles assuming different spatial likelihoods: the `2-exp` and `1-exp` use two or one-component spatial likelihoods in J+24, and `simple` does not assume a spatial likelihood (described above). All profiles agree within the background-limited (BG-limited) radius, derived below. The `1-exp` profile predicts lower outer densities, yet the outer density excess in Sculptor and Ursa Minor persists. Thus, the spatial likelihood can influence the outer regions but has less effect on the inner regions.
+
+The lower panels of @fig:scl_umi_density_extras test other possible biases. The `circ` profile uses circular bins and the J+24 sample, assuming a circular outer profile. As the profile is nearly identical to the fiducial model, an extreme change in ellipticity does not affect our conclusions. The `bright` profile is derived using only the brighter half of stars. We find no substantive change compared to our fiducial density profiles, showing completeness-related magnitude biases are likely small. Finally, the DELVE and UNIONS density profiles nearly identically trace the `2-exp` profile, but both become background-limited near the BG-limited radius.
+
+In all cases, there is little evidence for biases in *Gaia*'s completeness or sensitivity to structural parameters.  As the spatial likelihood appears to be the most severe bias, we next consider a more flexible model. 
 
 
 
+![Density methodology comparison](figures/density_methods_extra.pdf){#fig:scl_umi_density_extras}
 
-
-![DELVE and UNIONS spatial distribution of stars](figures/delve_unions_tangent.pdf){#fig:delve_unions_tangent}
-
-Figure: The distribution of DELVE and UNIONS selected stars in Scl and UMi as grey points overdrawn with isophotes. The clump to the lower right of UMi is Muñoz 1. 
+Figure: Density profiles for various assumptions for Sculptor (left) and Ursa Minor (right). Each profile is plotted as points in log surface density (scaled to the `2-exp` profile) versus log radius, the black line marks a 2D exponential profile, and the grey shaded region represents the background-limited region derived in @sec:mcmc_hists.
 
 
 
 ## A Bayesian density profile {#sec:mcmc_hists}
 
-To address the concerns discussed above, we consider here a non-parametric model to fit the density in each bin. We demonstrate that the non-parametric model fails to find evidence for stellar density where J+24 still detects members. Notably, our density profiles diverge substantially from J+24 for Antlia II. We suggest these differences arise from background contamination, motivating our "limiting radii" representing where densities may become unreliable.
+To address the concerns discussed above, we consider here a non-parametric model to fit the density in each bin. We demonstrate that the non-parametric model fails to find evidence for stellar density, where J+24 still detects members. Notably, our density profiles diverge substantially from J+24 for Antlia II. We suggest these differences arise from background contamination, motivating our "limiting radii" representing where densities may become unreliable.
 
 
 
 ### Methodology
 
-As a non-parametric but similar model to J+24, we consider a piecewise constant spatial likelihood. In this model, the stars are divided into radial bins which are then considered independently. Each bin has only one free parameter, the fraction of satellite stars in that bin, $f_{\rm sat}$. This model thus directly derives the density profile from the data in a single step. If a bin contains insufficient information to estimate a precise satellite density, than the posterior $f_{\rm sat}$ should reflect this uncertainty. 
+As a non-parametric but similar model to J+24, we consider a piecewise constant spatial likelihood. In this model, the stars are divided into radial bins, which are then considered independently. Each bin has only one free parameter, the fraction of satellite stars in that bin, $f_{\rm sat}$. This model thus directly derives the density profile from the data in a single step. If a bin contains insufficient information to estimate a precise satellite density, then the posterior $f_{\rm sat}$ should reflect this uncertainty. 
 
 We parameterize $f_{\rm sat}$ in terms of a log-relative density, $\theta$
 $$
@@ -79,7 +73,7 @@ $$
 f_{\rm sat} &= \frac{10^{\theta}}{1 + 10^{\theta}}.
 \end{split}
 $$
-We then adopt a broad uniform prior on $\theta$ from -12 to 6. The CMD and PM likelihoods are unchanged from J+24, except the systemic PM is fixed for efficiency. 
+We then adopt a broad uniform prior on $\theta$ from -12 to 6. The CMD and PM likelihoods are unchanged from J+24, except that the systemic PM is fixed for efficiency. 
 
 To bin stars, we hold fixed J+24's structural parameters and create bins of the wider of the width $\Delta \log R=0.05$ or containing the next 20 stars. We then derive posterior $f_{\rm sat}$ distributions with MCMC (48 walkers of 1000 steps each, and using the No-U-Turn sampler as implemented in Turing.jl). The final density profile is directly derived from $f_{\rm sat}$ and the number of stars in each bin.
 
@@ -100,11 +94,11 @@ To bin stars, we hold fixed J+24's structural parameters and create bins of the 
 | Sextans I        | 3.42                  | 67.9                |
 | Crater II        | 1.93                  | 39.0                |
 
-Table: For each classical dwarf, the limiting radius $R_{\rm limit}$ in units of $R_h$ and arcminutes. $R_{\rm limit}$ represents where there no longer appears to be evidence of stars in *Gaia* using the nonparametric MCMC density profiles. {#tbl:mcmc_props short="The limiting radii of Gaia-derived density profiles"}
+Table: For each classical dwarf, the limiting radius $R_{\rm limit}$ in units of $R_h$ and arcminutes. $R_{\rm limit}$ represents where there is no longer evidence of *Gaia* members using the nonparametric MCMC density profiles. {#tbl:mcmc_props short="The limiting radii of Gaia-derived density profiles"}
 
-[@fig:mcmc_hists; @fig:mcmc_hists2] show the derived, MCMC density profiles as compared to J+24. In general, both methodologies are consistent. However, J+24 tend to systematically overestimate faint densities and confidently derive densities where the MCMC model fails to derive a density estimate. 
+[@fig:mcmc_hists; @fig:mcmc_hists2] show the derived MCMC density profiles as compared to J+24. In general, both methodologies produce similar densities. However, J+24 tend to systematically overestimate faint densities and confidently derive densities where the MCMC model fails to derive a density estimate. 
 
-In the outskirts of satellites, more background / foreground stars may have consistent PM and CMD properties than satellite members. Improperly estimating the satellite's density in this "background-limited" regime likely affects the inferred density of members. If the satellite's density is severely overestimated, then a J+24-like sample may select many additional background stars. The density of candidates would then be biased towards the assumed density. As J+24 only use a one or two-component density profile across the entire dwarf, the density profile is likely biased where the CMD+PM background dominates. The nonparametric MCMC model instead does not assume a local density, so should better represent the underlying satellite density.
+In the outskirts of satellites, more background/foreground stars may have consistent PM and CMD properties than satellite members. Improperly estimating the satellite's density in this "background-limited" regime likely affects the inferred density of members. If the satellite's density is severely overestimated, then a J+24-like sample may select many additional background stars. The density of candidates would then be biased towards the assumed density. As J+24 only use a one or two-component density profile across the entire dwarf, the density profile is likely biased where the CMD+PM background dominates. The nonparametric MCMC model instead does not assume a local density, so it should better represent the underlying satellite density.
 
 Antlia II represents an extreme example---J+24 and the non-parametric density model systematically disagree across the entire galaxy. Additionally, the piecewise model derives densities with larger uncertainties and over a smaller range than J+24. The methodological divergence here likely arises due to an extraordinary background/foreground of MW stars. *Gaia* data alone may be unable to properly constrain the density of such background-contaminated objects. 
 
@@ -126,13 +120,13 @@ Figure: @fig:mcmc_hists continued.
 
 ## Comparison to literature
 
-Finally, we compare our density profiles against a sample of literature-derived density profiles in [@fig:scl_lit_profiles; @fig:umi_lit_profiles]. Deviations between different profiles are slight, despite the range of methods across time, and all density profiles extending into the outskirts of Scl and UMi show a similar overdensity to the ones we find. The extended stellar profiles of Scl and UMi appear to be a robust result across the literature. 
+Finally, we compare our density profiles against a sample of literature-derived density profiles in [@fig:scl_lit_profiles; @fig:umi_lit_profiles]. Deviations between different profiles are small, despite the range of methods across time, and all density profiles extending into the outskirts of Scl and UMi show a similar overdensity to the ones we find. The extended stellar profiles of Scl and UMi appear to be a robust result across the literature. 
 
 
 
 ![Sculptor literature density profiles](figures/scl_literatre_profiles.pdf){#fig:scl_lit_profiles}
 
-Figure: A comparison of the Scl derived density profile and historical works. Unlike most profiles in this thesis, this density profile is plotted with respect to the semi-major elliptical radius ($a = R_{\rm ell} / \sqrt{1-{\rm ell}}$). The solid black line is a 2D exponential with corresponding scale radius to Scl's half-light radius, and the residuals in the bottom panel are with respect to this profile. References are (in order), @munoz+2018; @westfall+2006; @walcher+2003; @eskridge1988; @demers+krautter+kunkel1980; and @hodge1961. 
+Figure: A comparison of density profiles of Sculptor for works from the literature. Unlike most profiles in this thesis, this density profile is plotted with respect to the semi-major elliptical radius ($a = R_{\rm ell} / \sqrt{1-{\rm ell}}$). The solid black line is a 2D exponential with a corresponding scale radius to Scl's half-light radius, and the residuals in the bottom panel are with respect to this profile. References are (in order), @munoz+2018; @westfall+2006; @walcher+2003; @eskridge1988; @demers+krautter+kunkel1980; and @hodge1961. 
 
 ![Ursa Minor literature density profiles](figures/umi_literature_profiles.pdf){#fig:umi_lit_profiles}
 
@@ -144,4 +138,4 @@ Figure: Similar to @fig:scl_lit_profiles except for Ursa Minor. The references a
 
 ## Summary
 
-In this Appendix, we discussed the methodological details of the J+24 sample selection algorithm. We consider possible biases due to the assumed spatial likelihood, *Gaia*'s completeness, and structural parameters. In all cases, we find these assumptions likely do not cause major biases in the derived density profiles. However, we show that J+24's density profiles may become unreliable when dropping below the background of satellite-like stars. Finally, comparing our density profiles against the literature, we find our results to be consistent. We conclude that the detection of an extended density profile in Scl and UMi is robust to incompleteness, methodology, alternative surveys, and across the literature.
+In this Appendix, we discussed the methodological details of the J+24 sample selection algorithm. We consider possible biases due to the assumed spatial likelihood, *Gaia*'s completeness, and structural parameters. In all cases, we find that these assumptions likely do not cause major biases in the derived density profiles. However, we show that J+24's density profiles may become unreliable when dropping below the background of satellite-like stars. Finally, comparing our density profiles against the literature, we find our results to be consistent. We conclude that the detection of an extended density profile in Scl and UMi is robust to incompleteness, methodology, alternative surveys, and across the literature.

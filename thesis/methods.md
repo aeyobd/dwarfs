@@ -1,4 +1,4 @@
-In the previous chapters, we have seen that the Scl and UMi classical dSphs have outer density profiles that appear to deviate from the exponential law that approximates well all other classical dSphs. Our main intention is to assess whether such deviations result from the effects of Galactic tides. To this purpose, we use N-body simulations of the evolution of CDM halos in a Galactic potential, constrained to have the orbital parameters consistent with a dwarf's present-day position and velocity. We shall assume that, over the past 10 Gyr, the Galactic potential is the static, analytic potential inferred by @mcmillan2011 from observations of kinematic tracers. We also assume that the potential of each dwarf may be initially approximated by a cuspy NFW profile. Since the dwarfs in question are heavily dark matter dominated, we shall use a carefully selected sample of dark matter particles to emulate the evolution of an embedded tracer stellar component. In this Chapter, we describe our choice of Galactic potential, orbital estimation, initial conditions setup, and N-body methods. 
+In the previous chapters, we have seen that the Scl and UMi classical dSphs have outer density profiles that appear to deviate from the exponential law that approximates well all other classical dSphs. Our main intention is to assess whether such deviations result from the effects of Galactic tides. To this purpose, we use N-body simulations of the evolution of CDM halos in a Galactic potential, constrained to have the orbital parameters consistent with a dwarf's present-day position and velocity. We shall assume that, over the past 10 Gyr, the Galactic potential is the static, analytic potential inferred by @mcmillan2011 from observations of kinematic tracers. We also assume that the potential of each dwarf may be initially approximated by a cuspy NFW profile. Since the dwarfs in question are heavily dark-matter-dominated, we shall use a carefully selected sample of dark matter particles to emulate the evolution of an embedded tracer stellar component. In this Chapter, we describe our choice of Galactic potential, orbital estimation, initial conditions setup, and N-body methods. 
 
 
 
@@ -8,9 +8,9 @@ To explore the possible orbits of a dwarf galaxy, we perform a Monte Carlo sampl
 
 ## Galactocentric frame
 
-To convert observed positions and velocities to Galactocentric coordinates, we use the Astropy v4 Galactocentric frame [@astropycollaboration+2022]. Our Cartesian Galactocentric coordinates here assume the Galactic centre is at $[x, y, z] = [0,0,0]$, where $x$ is the direction from the sun to the Galactic centre, $y$ is the direction of the motion of the Local Standard of Rest, and $z$ is the direction perpendicular to the Galactic plane. The coordinate frame is also right-handed, such that the $z$-angular momentum of the sun is negative (since the sun is at $x<0$). In this frame, the solar position is $[-8.122 \pm 0.033, 0, 0.0208 \pm 0.003]\, \kpc$ [@gravitycollaboration+2018; @bennett+bovy2019] and the solar velocity is $\V_\odot = [-12.9 \pm 3.0, 245.6 \pm 1.4, 7.78 \pm 0.08]$ km/s [@reid+brunthaler2004; @drimmel+poggio2018; @gravitycollaboration+2018]. The uncertainties in this reference frame are typically smaller than the uncertainties on a dwarf galaxy's distance and tangental velocity. 
+To convert observed positions and velocities to Galactocentric coordinates, we use the Astropy v4 Galactocentric frame [@astropycollaboration+2022]. Our Cartesian Galactocentric coordinates here assume the Galactic centre is at $[x, y, z] = [0,0,0]$, where $x$ is the direction from the sun to the Galactic centre, $y$ is the direction of the motion of the Local Standard of Rest, and $z$ is the direction perpendicular to the Galactic plane. The coordinate frame is also right-handed, such that the $z$-angular momentum of the sun is negative (since the sun is at $x<0$). In this frame, the solar position is $[-8.122 \pm 0.033, 0, 0.0208 \pm 0.003]\, \kpc$ [@gravitycollaboration+2018; @bennett+bovy2019] and the solar velocity is $\V_\odot = [-12.9 \pm 3.0, 245.6 \pm 1.4, 7.78 \pm 0.08]$ km/s [@reid+brunthaler2004; @drimmel+poggio2018; @gravitycollaboration+2018]. The uncertainties in this reference frame are typically smaller than the uncertainties on a dwarf galaxy's distance and tangential velocity. 
 
-## Milky Way Potential
+## Milky Way potential
 
 We adopt the Milky Way potential described in @EP2020, which is an analytic approximation to that proposed by @mcmillan2011. @fig:v_circ_potential plots the circular velocity profiles of each component and the total circular velocity profile for this potential. The potential includes a stellar bulge, a thin and thick disk, and a dark matter NFW halo. 
 
@@ -31,7 +31,7 @@ where $a$ is the disc radial scale length, $b$ is the scale height, and $M$ is t
 
 Figure: Circular velocity profile of @EP2020 potential. The total circular velocity (thick black line) is composed of an NFW halo (green dashed line), thin and thick @miyamoto+nagai1975 disks (orange dash-dotted line), and a @hernquist1990 bulge (blue dotted line).
 
-## Sculptor's Orbit {#sec:scl_smallperi}
+## Sculptor's orbit {#sec:scl_smallperi}
 
 Sculptor's orbit in the assumed potential is relatively well-constrained. [@fig:scl_orbits] illustrates point particle orbits for 100 samples of Sculptor's observed kinematics integrated backwards for $10\,\Gyr$ in both Galactocentric Cartesian coordinates ($x$, $y$, $z$) and in Galactocentric radius with time. These orbits sample the uncertainties in distance, proper motion, and radial velocity, as given in [@tbl:scl_obs_props]. All sampled orbits of Sculptor have nearly the same morphology---the orbit primarily resides in the $y$–$z$ plane and completes a similar number of periods and pericentric and apocentric passages. 
 
@@ -43,7 +43,7 @@ To maximize tidal effects, we select an orbit with the $\sim 3\sigma$ smallest p
 
 ![Sculptor's possible orbits](/Users/daniel/thesis/figures/scl_xyzr_orbits.pdf){#fig:scl_orbits}
 
-Figure: The orbits of Sculptor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates (top) and in Galactocentric radius $r$ versus time (bottom). The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected \smallperi{} orbit is plotted in black and light green transparent orbits represent the past 10Gyr orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of Sculptor is well-constrained in this potential and it is unlikely to achieve a smaller pericentre than the \smallperi{} orbit. 
+Figure: The orbits of Sculptor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates (top) and in Galactocentric radius $r$ versus time (bottom). The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected \smallperi{} orbit is plotted in black, and light green transparent lines represent orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of Sculptor is well-constrained in this potential, and it is unlikely to achieve a smaller pericentre than the \smallperi{} orbit. 
 
 
 
@@ -67,9 +67,9 @@ Figure: Similar to @fig:scl_orbits, the orbits of Ursa Minor in a static Milky W
 | $\V_{y\,i} / \kms$    | -114.83           | -56.83           | 48.62             |
 | $\V_{z\,i} / \kms$    | -57.29            | 52.09            | -114.08           |
 
-Table: The orbital initial conditions for models presented in this work. The observables represent the medians from orbital integration used to derived the orbits. Instead, the initial position and velocity represents the initialization of the actual N-body model. The \smallperi{} represents instead the $3\sigma$ smallest pericentre, which we use to provide an upper limit on tidal effects. We describe the \texttt{LMC-flyby} orbit in @sec:scl_lmc. {#tbl:orbit_ics  short="Orbit initial conditions"}
+Table: The orbital initial conditions for models presented in this work. The observables represent the medians from orbital integration used to derive the orbits. Instead, the initial position and velocity represent the initialization of the actual N-body model. The \smallperi{} represents instead the $3\sigma$ smallest pericentre, which we use to provide an upper limit on tidal effects. We describe the \texttt{LMC-flyby} orbit in @sec:scl_lmc. {#tbl:orbit_ics  short="Orbit initial conditions"}
 
-## Ursa Minor's Orbit {#sec:orbit_corrections}
+## Ursa Minor's orbit {#sec:orbit_corrections}
 
 Similar to Sculptor, Ursa Minor has a well-constrained orbit in the assumed MW potential. @fig:umi_orbits shows 100 random point-mass orbits of Ursa Minor. As for Sculptor, we select an orbit with approximately the $3\sigma$ smallest pericentre, the Ursa Minor $\smallperi{}$ orbit (see @fig:umi_orbits and @tbl:orbit_ics). 
 
@@ -85,9 +85,9 @@ where we adopt $r_t = 20 r_s$.
 
 ## Initial dark matter halos for Sculptor and Ursa Minor
 
-The observed half-light radius and velocity dispersion of Sculptor and Ursa Minor, together with the mass-concentration relation of \LCDM{} halos, determines the properties of the N-body models adopted for each dwarf.
+The observed half-light radius and velocity dispersion of Sculptor and Ursa Minor, together with the mass-concentration relation of \LCDM{} halos, determine the properties of the N-body models adopted for each dwarf.
 
-[@tbl:derived_props] lists the our inferred halo and kinematic properties of Sculptor and Ursa Minor. First, taking the absolute magnitudes from @munoz+2018 with the mass-to-light ratio from @woo+courteau+dekel2008, the total current stellar mass of Sculptor and Ursa Minor are $M_\star \approx 3.1 \times 10^6 \Mo$ and $M_\star \approx 7 \times 10^5 \Mo$, respectively. Based on the stellar mass-$\vmax$ relation [from @fattahi+2018], Sculptor and Ursa Minor's halos should have $\vmax \approx 31 \,\kms$ and $\vmax \approx 27\,\kms$. Finally, using the @ludlow+2016 $z=0$ mass-concentration relation, this constraint translates into a $\rmax \approx 6 {\rm kpc}$ and $\rmax \approx 5\,\kpc$ for each galaxy. 
+[@tbl:derived_props] lists our inferred halo and kinematic properties of Sculptor and Ursa Minor. First, taking the absolute magnitudes from @munoz+2018 with the mass-to-light ratio from @woo+courteau+dekel2008, the total current stellar mass of Sculptor and Ursa Minor are $M_\star \approx 3.1 \times 10^6 \Mo$ and $M_\star \approx 7 \times 10^5 \Mo$, respectively. Based on the stellar mass-$\vmax$ relation [from @fattahi+2018], Sculptor and Ursa Minor's halos should have $\vmax \approx 31 \,\kms$ and $\vmax \approx 27\,\kms$. Finally, using the @ludlow+2016 $z=0$ mass-concentration relation, this constraint translates into a $\rmax \approx 6 {\rm kpc}$ and $\rmax \approx 5\,\kpc$ for each galaxy. 
 
 The observed velocity dispersion constrains the total mass within the stellar half-light radius.  From the @wolf+2010 mass estimator, the mass contained within the 3D half-light radius $r_h$ is
 $$
@@ -113,17 +113,17 @@ Table: Inferred properties of the stellar component and halo for Sculptor and Ur
 
 
 
-![Initial halo selection](figures/initial_halo_selection.pdf){#fig:scl_halos}
+![Initial halo parameter choice](figures/initial_halo_selection.pdf){#fig:scl_halos}
 
-Figure: Selection of initial halos for Sculptor and Ursa Minor. The grey line and pink line with shaded regions represent the @ludlow+2016 mass-concentration relation and @fattahi+2018 SMHM relation respectively. The curved lines represent the velocity dispersion of the initial halo given the present-day half-light radius via @eq:wolf_mass.
+Figure: The blue circle indicates our choice of initial halo parameters for Sculptor and Ursa Minor. The grey line and green line with shaded regions represent the @ludlow+2016 mass-concentration relation and @fattahi+2018 SMHM relation, respectively. The curved orange lines represent the velocity dispersion of an exponential stellar component with the observed half-light radius of Sculptor and Ursa Minor.
 
 # Numerical methods
 
 ## The N-body code: \gadget{}
 
-To simulate the tidal evolution of galaxies, we use N-body simulations integrated with the parallel, gravitational-tree program \gadget{} [@gadget4]. The N-body method calculates and evolves the gravitational accelerations between a large number of collisionless particles to approximate the dynamical evolution of matter. To approximate a collisionless system (i.e., without strong particle-particle gravitational deflections), the force is tapered below a "softening length." Resolution is limited by the number of particles and the softening length. Tree codes organize particles into a spatial tree, enabling grouping of the gravitational forces from nearby particles. A gravitational tree code substantially reduces the required number of force computations, as compared to the exact, direct-summation method. 
+To simulate the tidal evolution of galaxies, we use N-body simulations integrated with the parallel, gravitational-tree program \gadget{} [@gadget4]. The N-body method calculates and evolves the gravitational accelerations between a large number of collisionless particles to approximate the dynamical evolution of matter. To approximate a collisionless system (i.e., without strong particle-particle gravitational deflections), the force is tapered below a "softening length." Resolution is limited by the number of particles and the softening length. Tree codes organize particles into a spatial tree, enabling the grouping of the gravitational forces from nearby particles. A gravitational tree code substantially reduces the required number of force computations, as compared to the exact, direct-summation method. 
 
-## Isolation runs and simulation parameters 
+## Isolation runs and simulation parameters
 
 To ensure that the initial conditions of the simulation are dynamically relaxed and well-converged, we run a halo first in isolation using \gadget{}. Since gravity is scale-free, we use the same isolation run for all halos and rescale the results to the desired values of size and mass. We adopt a fiducial value of  $\rmax = 6.0\,$kpc and $\vmax = 31\,\kms$  for the isolation halo based on Sculptor's mean properties. We run this model for 5 Gyr (about one-half crossing time $t_{\rm cross} = 2\pi\,r /\vcirc  \approx 9\,\Gyr$ at $r_{200}=36\,$kpc).
 
@@ -139,7 +139,7 @@ where the force is softened by a spline kernel [eqs. 70--71 in @springel+yoshida
 
 ![Numerical convergence of the N-body simulation](figures/iso_converg_num.pdf){#fig:numerical_convergence}
 
-Figure: Numerical convergence test for circular velocity as a function of log radius for simulations with different total numbers of particles in isolation. Residuals in bottom panel are relative to NFW. The initial conditions are dotted, the converged radius is marked by arrows [eq. 13, @power+2003], and the softening length is marked by a vertical bar. Note that a slight reduction in density starting around $r = 30\,\kpc$ is expected given our outer truncation choice. 
+Figure: Numerical convergence test for circular velocity as a function of log radius for simulations with different total numbers of particles in isolation. Residuals in the bottom panel are relative to NFW. The initial conditions are dotted, the converged radius is marked by arrows [eq. 13, @power+2003], and the softening length is marked by a vertical bar. Note that a slight reduction in density starting around $r = 30\,\kpc$ is expected given our outer truncation choice. 
 
 ## Orbital evolution
 
@@ -173,4 +173,6 @@ In practice the right, boundary term is zero.^[If, at large $r$, $\rho \propto r
 
 ![Initial halo velocity profiles](figures/initial_velocity.pdf){#fig:scl_umi_initial_isolation}
 
-Figure: The initial circular velocity profiles of dark matter (blue) and stars (orange) for Sculptor and Ursa Minor. The initial conditions are dotted and the isolation evolved profiles are solid. The green cross marks the present day half-light radius and velocity dispersion, and the black band represents the 1-sigma mean density of the MW at pericentre across orbits. Initial conditions are stable in isolation and mass is dominated by dark matter. 
+Figure: The initial circular velocity profiles of dark matter (blue) and stars (orange) for Sculptor and Ursa Minor. The initial conditions are dotted, and the isolation-evolved profiles are solid. The green cross marks the present-day half-light radius and velocity dispersion, and the black band represents the 1-sigma mean density of the MW at pericentre across orbits. Initial conditions are stable in isolation, and mass is dominated by dark matter. 
+
+<!-- JFN: indicate jacobi radius in above figure, maybe just intersection of lines?-->

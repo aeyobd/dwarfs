@@ -120,23 +120,19 @@ Outside Department
 % context
 \input{abstract.tex}
 
-\chapter*{Acknowledgements}
-\addcontentsline{toc}{chapter}{Acknowledgements}
-I promise I will fill this out thoroughly. 
-
-%Julio Navarro, my supervisor. Rapha and other collegues
-
-%Friends and family and collegues (fill in later).
-
-
-
-
-%% Lists
 
 \tableofcontents
 \listoffigures
 \listoftables
 
+\chapter*{Acknowledgments}
+\addcontentsline{toc}{chapter}{Acknowledgments}
+\input{acknowledgments}
+
+
+
+
+%% Lists
 %\chapter*{Symbols}
 %
 %
@@ -157,6 +153,22 @@ I promise I will fill this out thoroughly.
 %
 \newpage
 
+\thispagestyle{empty}
+\renewcommand{\epigraphflush}{center}
+\vfill
+\setlength{\epigraphwidth}{0.5\textwidth}
+\epigraph{The sun had fallen beneath the horizon in the east, and the long day was about to end. But tomorrow, the sun would rise in the west again, bathing the world in a kinder light.}{Baoshu, translation by Ken Liu}
+
+\epigraph{
+In the land of my birth, there is a hill, and upon that hill is a rock where I have sat and watched a changing world. This rock will not change, I would say. I'll pass from this Earth, but the rock will remain ever watchful of the land.
+
+But my feet kicked the dirt beneath me. Were the granules of soil not once like this rock? Is the rock not a collection of their multitudes?
+
+[We are] neither destroyed nor created, but a collection of dust meant to observe a changing world and then return to dust. 
+}{Joe Fisher, {\it Midnight Burger}}
+\vfill
+
+\newpage
 \pagenumbering{arabic}
 
 
@@ -175,40 +187,17 @@ I promise I will fill this out thoroughly.
 \chapter{Simulation Methods}\label{sec:methods}
 \input{methods}
 
-\chapter{Galactic tidal effects on Sculptor and Ursa Minor}\label{sec:results}
+\chapter{Galactic Tidal Effects on Sculptor and Ursa Minor}\label{sec:results}
 \input{results}
 
 \chapter{Discussion \& Conclusions}\label{sec:discussion}
 \input{discussion}
 
 
-\chapter*{Research Acknowledgements}
-\addcontentsline{toc}{chapter}{Research Acknowledgements}
-This work has made use of data from the European Space Agency (ESA) mission
-{\it Gaia} (\url{https://www.cosmos.esa.int/gaia}), processed by the {\it Gaia}
-Data Processing and Analysis Consortium (DPAC,
-\url{https://www.cosmos.esa.int/web/gaia/dpac/consortium}). Funding for the DPAC
-has been provided by national institutions, in particular the institutions
-participating in the {\it Gaia} Multilateral Agreement. 
-\citep{gaiacollaboration+2016, gaiacollaboration+2023}.
+\chapter*{Research Acknowledgments}
+\addcontentsline{toc}{chapter}{Research Acknowledgments}
+\input{research_acknowledgments}
 
-
-This research made use of hips2fits,\footnote{https://alasky.cds.unistra.fr/hips-image-services/hips2fits} a service provided by CDS.
-
-
-The Digitized Sky Surveys were produced at the Space Telescope Science Institute under U.S. Government grant NAG W-2166. The images of these surveys are based on photographic data obtained using the Oschin Schmidt Telescope on Palomar Mountain and the UK Schmidt Telescope. The plates were processed into the present compressed digital form with the permission of these institutions.
-
-The National Geographic Society --- Palomar Observatory Sky Atlas (POSS-I) was made by the California Institute of Technology with grants from the National Geographic Society.
-
-The Second Palomar Observatory Sky Survey (POSS-II) was made by the California Institute of Technology with funds from the National Science Foundation, the National Geographic Society, the Sloan Foundation, the Samuel Oschin Foundation, and the Eastman Kodak Corporation.
-
-The Oschin Schmidt Telescope is operated by the California Institute of Technology and Palomar Observatory.
-
-The UK Schmidt Telescope was operated by the Royal Observatory Edinburgh, with funding from the UK Science and Engineering Research Council (later the UK Particle Physics and Astronomy Research Council), until 1988 June, and thereafter by the Anglo-Australian Observatory. The blue plates of the southern Sky Atlas and its Equatorial Extension (together known as the SERC-J), as well as the Equatorial Red (ER), and the Second Epoch [red] Survey (SES) were all taken with the UK Schmidt.
-
-All data are subject to the copyright given in the copyright summary. Copyright information specific to individual plates is provided in the downloaded FITS headers.
-
-Supplemental funding for sky-survey work at the ST ScI is provided by the European Southern Observatory.
 
 
 

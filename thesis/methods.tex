@@ -9,8 +9,8 @@ and velocity. We shall assume that, over the past 10 Gyr, the Galactic
 potential is the static, analytic potential inferred by
 \citet{mcmillan2011} from observations of kinematic tracers. We also
 assume that the potential of each dwarf may be initially approximated by
-a cuspy NFW profile. Since the dwarfs in question are heavily dark
-matter dominated, we shall use a carefully selected sample of dark
+a cuspy NFW profile. Since the dwarfs in question are heavily
+dark-matter-dominated, we shall use a carefully selected sample of dark
 matter particles to emulate the evolution of an embedded tracer stellar
 component. In this Chapter, we describe our choice of Galactic
 potential, orbital estimation, initial conditions setup, and N-body
@@ -47,9 +47,9 @@ velocity is \(\V_\odot = [-12.9 \pm 3.0, 245.6 \pm 1.4, 7.78 \pm 0.08]\)
 km/s
 \citep{reid+brunthaler2004, drimmel+poggio2018, gravitycollaboration+2018}.
 The uncertainties in this reference frame are typically smaller than the
-uncertainties on a dwarf galaxy's distance and tangental velocity.
+uncertainties on a dwarf galaxy's distance and tangential velocity.
 
-\subsection{Milky Way Potential}\label{milky-way-potential}
+\subsection{Milky Way potential}\label{milky-way-potential}
 
 We adopt the Milky Way potential described in \citet{EP2020}, which is
 an analytic approximation to that proposed by \citet{mcmillan2011}.
@@ -87,7 +87,7 @@ thick \citet{miyamoto+nagai1975} disks (orange dash-dotted line), and a
 line).}\label{fig:v_circ_potential}
 \end{figure}
 
-\subsection{Sculptor's Orbit}\label{sec:scl_smallperi}
+\subsection{Sculptor's orbit}\label{sec:scl_smallperi}
 
 Sculptor's orbit in the assumed potential is relatively
 well-constrained. Fig.~\ref{fig:scl_orbits} illustrates point particle
@@ -118,12 +118,11 @@ noted in Table~\ref{tbl:orbit_ics}.
 Milky Way potential in Galactocentric \(x\), \(y\), and \(z\)
 coordinates (top) and in Galactocentric radius \(r\) versus time
 (bottom). The Milky Way is at the centre with the disk lying in the
-\(x\)--\(y\) plane. Our selected \smallperi{} orbit is plotted in black
-and light green transparent orbits represent the past 10Gyr orbits
-sampled over Sculptor observables in Table~\ref{tbl:scl_obs_props}. The
-orbit of Sculptor is well-constrained in this potential and it is
-unlikely to achieve a smaller pericentre than the \smallperi{}
-orbit.}\label{fig:scl_orbits}
+\(x\)--\(y\) plane. Our selected \smallperi{} orbit is plotted in black,
+and light green transparent lines represent orbits sampled over Sculptor
+observables in Table~\ref{tbl:scl_obs_props}. The orbit of Sculptor is
+well-constrained in this potential, and it is unlikely to achieve a
+smaller pericentre than the \smallperi{} orbit.}\label{fig:scl_orbits}
 \end{figure}
 
 \begin{figure}
@@ -140,7 +139,7 @@ pericentre.}\label{fig:umi_orbits}
 
 \begin{table*}[t]
 \centering
-\caption[Orbit initial conditions]{The orbital initial conditions for models presented in this work. The observables represent the medians from orbital integration used to derived the orbits. Instead, the initial position and velocity represents the initialization of the actual N-body model. The \smallperi{} represents instead the $3\sigma$ smallest pericentre, which we use to provide an upper limit on tidal effects. We describe the \texttt{LMC-flyby} orbit in Section \ref{sec:scl_lmc}. }
+\caption[Orbit initial conditions]{The orbital initial conditions for models presented in this work. The observables represent the medians from orbital integration used to derive the orbits. Instead, the initial position and velocity represent the initialization of the actual N-body model. The \smallperi{} represents instead the $3\sigma$ smallest pericentre, which we use to provide an upper limit on tidal effects. We describe the \texttt{LMC-flyby} orbit in Section \ref{sec:scl_lmc}. }
 \label{tbl:orbit_ics}
 \begin{tabular}{llll}
 \toprule
@@ -161,7 +160,7 @@ $\V_{z\,i} / \kms$ & -57.29 & 52.09 & -114.08\\
 \end{tabular}
 \end{table*}
 
-\subsection{Ursa Minor's Orbit}\label{sec:orbit_corrections}
+\subsection{Ursa Minor's orbit}\label{sec:orbit_corrections}
 
 Similar to Sculptor, Ursa Minor has a well-constrained orbit in the
 assumed MW potential. Fig.~\ref{fig:umi_orbits} shows 100 random
@@ -199,10 +198,10 @@ Minor}\label{initial-dark-matter-halos-for-sculptor-and-ursa-minor}
 
 The observed half-light radius and velocity dispersion of Sculptor and
 Ursa Minor, together with the mass-concentration relation of \LCDM{}
-halos, determines the properties of the N-body models adopted for each
+halos, determine the properties of the N-body models adopted for each
 dwarf.
 
-Table~\ref{tbl:derived_props} lists the our inferred halo and kinematic
+Table~\ref{tbl:derived_props} lists our inferred halo and kinematic
 properties of Sculptor and Ursa Minor. First, taking the absolute
 magnitudes from \citet{munoz+2018} with the mass-to-light ratio from
 \citet{woo+courteau+dekel2008}, the total current stellar mass of
@@ -256,13 +255,14 @@ $c_{\rm NFW}$ & $13_{-3}^{+4}$ & $13.5_{-3}^{+4}$\\
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/initial_halo_selection.pdf}}
-\caption[Initial halo selection]{Selection of initial halos for Sculptor
-and Ursa Minor. The grey line and pink line with shaded regions
-represent the \citet{ludlow+2016} mass-concentration relation and
-\citet{fattahi+2018} SMHM relation respectively. The curved lines
-represent the velocity dispersion of the initial halo given the
-present-day half-light radius via
-Eq.~\ref{eq:wolf_mass}.}\label{fig:scl_halos}
+\caption[Initial halo parameter choice]{The blue circle indicates our
+choice of initial halo parameters for Sculptor and Ursa Minor. The grey
+line and green line with shaded regions represent the
+\citet{ludlow+2016} mass-concentration relation and \citet{fattahi+2018}
+SMHM relation, respectively. The curved orange lines represent the
+velocity dispersion of an exponential stellar component with the
+observed half-light radius of Sculptor and Ursa
+Minor.}\label{fig:scl_halos}
 \end{figure}
 
 \section{Numerical methods}\label{numerical-methods}
@@ -279,7 +279,7 @@ approximate a collisionless system (i.e., without strong
 particle-particle gravitational deflections), the force is tapered below
 a ``softening length.'' Resolution is limited by the number of particles
 and the softening length. Tree codes organize particles into a spatial
-tree, enabling grouping of the gravitational forces from nearby
+tree, enabling the grouping of the gravitational forces from nearby
 particles. A gravitational tree code substantially reduces the required
 number of force computations, as compared to the exact, direct-summation
 method.
@@ -337,10 +337,10 @@ converged length.
 \caption[Numerical convergence of the N-body simulation]{Numerical
 convergence test for circular velocity as a function of log radius for
 simulations with different total numbers of particles in isolation.
-Residuals in bottom panel are relative to NFW. The initial conditions
-are dotted, the converged radius is marked by arrows \citep[eq.
-13,][]{power+2003}, and the softening length is marked by a vertical
-bar. Note that a slight reduction in density starting around
+Residuals in the bottom panel are relative to NFW. The initial
+conditions are dotted, the converged radius is marked by arrows
+\citep[eq. 13,][]{power+2003}, and the softening length is marked by a
+vertical bar. Note that a slight reduction in density starting around
 \(r = 30\,\kpc\) is expected given our outer truncation
 choice.}\label{fig:numerical_convergence}
 \end{figure}
@@ -418,10 +418,10 @@ consider tidal effects in the next Chapter.
 \pandocbounded{\includegraphics[keepaspectratio]{figures/initial_velocity.pdf}}
 \caption[Initial halo velocity profiles]{The initial circular velocity
 profiles of dark matter (blue) and stars (orange) for Sculptor and Ursa
-Minor. The initial conditions are dotted and the isolation evolved
-profiles are solid. The green cross marks the present day half-light
+Minor. The initial conditions are dotted, and the isolation-evolved
+profiles are solid. The green cross marks the present-day half-light
 radius and velocity dispersion, and the black band represents the
 1-sigma mean density of the MW at pericentre across orbits. Initial
-conditions are stable in isolation and mass is dominated by dark
+conditions are stable in isolation, and mass is dominated by dark
 matter.}\label{fig:scl_umi_initial_isolation}
 \end{figure}
