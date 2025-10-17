@@ -39,7 +39,7 @@ The most important variable is to set the modelname to the appropriate directory
 """
 
 # ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-modelname = "EP2020"
+
 
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 FIGDIR = "./figures"
@@ -69,6 +69,9 @@ import TOML
 # ╔═╡ a7111062-b025-43a9-bdb1-aee08deb60e9
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ fc3e1290-d33d-4a32-844a-d4fef24e503c
+modelnames = TOML.parsefile("model_key.toml")
+
 # ╔═╡ 16f4ac20-d8cf-4218-8c01-c15e04e567fb
 md"""
 # The example orbits
@@ -77,8 +80,11 @@ md"""
 # ╔═╡ 35ce583b-0938-429e-af5d-b17b399f6690
 Nmax = 100 # number of orbits to plot
 
+# ╔═╡ 891618e0-5c9c-443b-a874-34dce7660c66
+modelname = joinpath(modelnames["umi_orbits"])
+
 # ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
-modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", modelname)
+modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", modelname)
 
 # ╔═╡ 3e4f0aa7-22d4-4a19-aafd-cf86c380ade3
 scale_theme_element!(:linewidth, 0.5)
@@ -92,7 +98,7 @@ idx, orbits = let
 end
 
 # ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
-best_orbit = LilGuys.Orbit(modeldir * "_special_cases/orbit_smallperi.csv" ) |> reverse
+best_orbit = OrbitUtils.load_best_orbit(modelnames["umi_smallperi"][1:2]...) |> reverse
 
 # ╔═╡ 367eb7e4-8c54-4fa9-a01c-41c3c7ff7f2a
 other_orbits = LilGuys.Orbit.(modeldir * "_special_cases/" .* ["orbit_smallperi.csv", "orbit_largeperi.csv", "orbit_mean.csv"])
@@ -110,7 +116,7 @@ let
 	fig = Figure()
 	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
 
-	ax_xyz = axes_xyz_flat(fig, limits=limits)
+	ax_xyz = axes_xyz_flat(fig, limits=limits, ylabelpadding=-12)
 
 	for ax in ax_xyz
 		ax.xticks = -100:100:100
@@ -128,7 +134,7 @@ let
 	plot_rt!(ax_rt, other_orbits, color=COLORS[3], alpha=0.5, linestyle=:solid)
 	plot_rt!(ax_rt, best_orbit, color=:black)
 	xlims!(-10, 0.1)
-	ylims!(0, 120)
+	ylims!(0, 110)
 	plot_rt_today!(ax_rt, best_orbit)
 
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
@@ -154,8 +160,10 @@ end
 # ╠═f823e80a-f6db-440f-8d25-56860618c82f
 # ╠═00ba3075-c3e2-4965-acf3-00cda0ef320f
 # ╠═a7111062-b025-43a9-bdb1-aee08deb60e9
+# ╠═fc3e1290-d33d-4a32-844a-d4fef24e503c
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
+# ╠═891618e0-5c9c-443b-a874-34dce7660c66
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
 # ╠═3e4f0aa7-22d4-4a19-aafd-cf86c380ade3
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e

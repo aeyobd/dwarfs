@@ -11,6 +11,11 @@ function get_obs_props(galaxyname)
     return TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
 end
 
+function get_M_star(galaxyname)
+    obs_props = get_obs_props(galaxyname)
+	M_star = LilGuys.mag_to_L(obs_props["Mv"]) * obs_props["M_L_s"]
+	return M_star / M2MSUN
+end
 
 function ellipse!(radius, ellipticity, position_angle; x0=0, y0=0, kwargs...)
 	t = LinRange(0, 2π, 1000) 
@@ -64,4 +69,16 @@ end
 function log_derivative(f, x0; h=0.001)
 	y0 = f(x0)
 	return (log10(f(x0 * 10^h)) - log10(y0)) / h
+end
+
+
+
+function text_along_line_log!(x, y, x_0; text, h=0.03, kwargs...)
+	f = LilGuys.lerp(x, y)
+	y_0 = f(x_0)
+	dy = log_derivative(f, x_0, h=h)
+	rf = rotation_factor(Makie.current_axis(), true)
+	θ = @lift atan($rf * dy)
+
+	text!(x_0, y_0, text=text, rotation=θ; kwargs...)
 end

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -64,7 +64,7 @@ smallfontsize = @lift 0.8 * $(theme(:fontsize))
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "cosmological_means" let
-	fig = Figure(figure_padding=10, size=( 5.4*72, 2.0*72,))
+	fig = Figure(figure_padding=10, size=( 6*72, 2.5*72,))
 
 
 
@@ -107,7 +107,7 @@ smallfontsize = @lift 0.8 * $(theme(:fontsize))
 				yminorticks = 10:10:100,
 				xticks=[1, 10, 100],
 				ylabel = L"$\textrm{v}_\textrm{max}$ / km\,s$^{-1}$",
-			   xlabel = L"$\textrm{r}_\textrm{max}$",
+			   xlabel = L"$\textrm{r}_\textrm{max}$ / kpc",
 						 limits=(1, 50, 10, 100)
 			  )
 
@@ -158,7 +158,10 @@ smallfontsize = @lift 0.8 * $(theme(:fontsize))
 		  space=:relative, fontsize=10)
 
 	scatter!(LilGuys.v_circ_max(halo_initial) * V2KMS, M_s_initial, marker=:star5, color=COLORS[5], markersize=markersize)
-	
+
+	rowsize!(fig.layout, 1, Aspect(1, 1))
+
+	resize_to_layout!()
 	fig
 end
 

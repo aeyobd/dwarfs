@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -108,9 +108,12 @@ pos_lmc_resampled = LilGuys.resample(lmc_orbit, orbits[1].times)
 # ╔═╡ 123584a9-e9b4-4c48-acb5-655bd60aaeb6
 sw = @lift $(theme(:linewidth)) / 2
 
+# ╔═╡ 626b33f9-e5ac-4804-8fc3-dd1d99b81287
+388/72
+
 # ╔═╡ 130fca42-cee8-4d88-a764-cdded04a636e
 let
-	fig = Figure(figsize=(388, 2*388))
+	fig = Figure(size=(6*72, 4*72))
 	limits = tuple(fill((-150., 150.), 3)...)
 
 	ax_xyz = axes_xyz_flat(fig, limits=limits)
@@ -189,4 +192,5 @@ end
 # ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2
 # ╠═587e90ea-8597-445a-a1e9-8ec020469c35
 # ╠═123584a9-e9b4-4c48-acb5-655bd60aaeb6
+# ╠═626b33f9-e5ac-4804-8fc3-dd1d99b81287
 # ╠═130fca42-cee8-4d88-a764-cdded04a636e

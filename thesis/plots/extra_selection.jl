@@ -45,9 +45,6 @@ The goals here are to investigate the main density profile, likelihoods, and wha
 
 """
 
-# ╔═╡ 0107ca79-9c8a-43cf-86af-b99c2560743f
-CairoMakie.activate!(type=:png, px_per_unit=2)
-
 # ╔═╡ a4848423-9be3-48d7-98c2-8d1096eb2560
 module Utils
 	include("gaia_utils.jl")
@@ -324,9 +321,8 @@ end
 
 # ╔═╡ Cell order:
 # ╟─47b8b3b0-0228-4f50-9da4-37d388ef9e9f
-# ╠═c3af8de5-611a-457e-8ba0-636803c5a76c
 # ╠═bff50014-bfa9-11ee-33f0-0f67e543c2d4
-# ╠═0107ca79-9c8a-43cf-86af-b99c2560743f
+# ╠═c3af8de5-611a-457e-8ba0-636803c5a76c
 # ╠═2d5297cd-6a01-4b26-ac77-995b878d765d
 # ╠═69c98029-165c-407b-9a63-a27e06e30e45
 # ╠═a4848423-9be3-48d7-98c2-8d1096eb2560

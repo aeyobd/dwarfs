@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,9 @@ galaxyname = "ursa_minor"
 # ╔═╡ bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 import TOML
 
+# ╔═╡ 280e0cef-896a-4c14-a1ac-a611418be57e
+modelnames = TOML.parsefile("model_key.toml")
+
 # ╔═╡ 4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
 xy_iso = CSV.read("resources/EP2020_iso_xy.csv", DataFrame, tasks=1)
 
@@ -42,9 +45,9 @@ CairoMakie.activate!(type=:png)
 
 # ╔═╡ b9600d93-5946-4380-a2ae-9b5f673bbaf5
 modelname = if galaxyname == "sculptor"
-	"sculptor/1e7_new_v31_r3.2/orbit_smallperi"
+	joinpath(modelnames["scl_smallperi"][1:2]...)
 elseif galaxyname == "ursa_minor"
-	"ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5"
+	joinpath(modelnames["umi_smallperi"][1:2]...)
 end
 
 # ╔═╡ 0f71807d-d698-4164-9f30-49af8dd8ba55
@@ -185,6 +188,7 @@ end
 # ╠═b0a0dddc-fb5a-4bb2-b048-a54859d0b703
 # ╠═bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
+# ╠═280e0cef-896a-4c14-a1ac-a611418be57e
 # ╠═4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
 # ╠═53cdcc20-96d4-4bd5-8028-df9a38af71ae
 # ╠═0f71807d-d698-4164-9f30-49af8dd8ba55

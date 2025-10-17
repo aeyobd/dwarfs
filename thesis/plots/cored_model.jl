@@ -45,6 +45,15 @@ function get_profiles(modelname)
 	return mass_profs[1].second, mass_profs[idx_f].second
 end
 
+# ╔═╡ 04794a51-ee18-4de9-86a7-19f350148f08
+"sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi"
+
+# ╔═╡ 578fa6ed-3d63-49cf-af74-5c927f38dd28
+modelnames = TOML.parsefile("model_key.toml")
+
+# ╔═╡ 0337d33f-d46f-446f-84fa-43995bd3ef3c
+galaxyname, modelname, starsname = modelnames["cored"]
+
 # ╔═╡ cb38048e-99d9-431c-ae90-de8817e02ff7
 let
 	fig = Figure(size=(4*72, 3*72))
@@ -58,7 +67,7 @@ let
 	y = log10.(LilGuys.density.(h, 10 .^ x))
 	lines!(x, y, linewidth=theme(:linewidth)[]/2, label="NFW")
 
-	profs = get_profiles("sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi")
+	profs = get_profiles(joinpath(galaxyname, modelname))
 
 	lines!(profs[1].log_r, LilGuys.log_densities(profs[1]), linestyle=:dot, color=COLORS[2], label="cored initial")
 	lines!(profs[2].log_r, LilGuys.log_densities(profs[2]), color=COLORS[2], label="cored final")
@@ -79,4 +88,7 @@ end
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═8081e889-c1d4-4e50-b8e1-91aa8e82adf1
 # ╠═f49c9325-4319-4435-ac33-a8980e1c4f7f
+# ╠═04794a51-ee18-4de9-86a7-19f350148f08
+# ╠═578fa6ed-3d63-49cf-af74-5c927f38dd28
+# ╠═0337d33f-d46f-446f-84fa-43995bd3ef3c
 # ╠═cb38048e-99d9-431c-ae90-de8817e02ff7

@@ -3,11 +3,22 @@ import TOML
 using PyFITS
 import StatsBase: quantile
 import DataFrames: disallowmissing
+using Printf
+import Agama
+
+include("utils.jl")
+
 
 function calc_r_J(halo, rho_peri)
     return 10 ^ LilGuys.find_zero(lr -> LilGuys.mean_density(halo, 10^lr) - 3*rho_peri, log10(halo.r_s))
 end
 
+
+function print_radius(label, r, distance)
+    r_arcmin = LilGuys.kpc2arcmin.(r, distance)
+    print_quantity(label * " / kpc", r)
+    print_quantity(label * " / arcmin", r_arcmin)
+end
 
 function mean_density(pot, r, units)
     M =  Agama.enclosed_mass(pot, r, units) 
@@ -16,10 +27,9 @@ function mean_density(pot, r, units)
     return M ./ V
 end
 
-
-function get_orbit(galaxyname, haloname, orbitname)
-    orbit_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, haloname, orbitname, "orbital_properties.toml"))
-    pot = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, haloname, orbitname, "simulation/agama_potential.ini"))
+function get_orbit(galaxyname, modelname)
+    orbit_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname, "orbital_properties.toml"))
+    orbit_props
 end
 
 
@@ -29,8 +39,8 @@ function get_samples(galaxyname, potname)
 end
 
 
-function print_orbit(args...)
-    orbit_props = get_orbit(args...)
+function print_orbit(galaxyname, modelname, starsname, halo)
+    orbit_props = get_orbit(galaxyname, modelname)
 
     for key in ["pericentre", "apocentre", "t_last_peri", "idx_peris", "distance_f"]
         val = orbit_props[key]
@@ -39,36 +49,49 @@ function print_orbit(args...)
         end
         println(key, "\t", val)
     end
+
+
+	modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname)
+    pot = Agama.Potential(file = joinpath(modeldir, "simulation/agama_potential.ini"))
+    rho_peri = mean_density(pot, orbit_props["pericentre"], Agama.AgamaUnits())
+    r_J = calc_r_J(halo, rho_peri)
+    println("r_J", "\t", r_J)
+    println("r_J_arcmin\t", LilGuys.kpc2arcmin(r_J, orbit_props["distance_f"]))
 end
 
-function print_orbit_samples(args...)
-    samples = get_samples(args...)
 
+function print_orbit_samples(galaxyname, modelname, halo)
+    samples = get_samples(galaxyname, modelname)
 
-    for key in ["pericentre", "apocentre", "distance"]
-        print_quantity(key, samples[!, key])
+    for key in ["pericentre", "apocentre", "n_peris", "period_apo", "time_last_peri", "distance"]
+        if key ∈ ["time_last_peri", "period_apo"]
+            print_quantity(key, samples[!, key] * T2GYR)
+        else
+            print_quantity(key, samples[!, key])
+        end
     end
-    print_quantity("time last peri", samples[!, "time_last_peri"] * T2GYR)
+
+
+	modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", galaxyname, modelname)
+    pot = Agama.Potential(file = joinpath(modeldir, "agama_potential.ini"))
+    units = Agama.AgamaUnits()
+    rho_peri = mean_density(pot, samples.pericentre, units)
+    r_J = calc_r_J.(halo, rho_peri)
+    print_radius("r_J", r_J, samples.distance)
 end
 
-function print_quantity(key, x)
-    x = disallowmissing(replace(x, missing => NaN))
-    l, m, h = quantile(x, [0.16, 0.5, 0.84])
-    println(key, "\t", m, "\t", l-m, "\t", h-m)
-end
 
-println("sculptor --- smallperi")
+
+println("sculptor --- samples")
 println("random samples")
-print_orbit_samples("sculptor", "EP2020")
-println("smallperi")
-print_orbit("sculptor", "1e7_new_v31_r3.2", "orbit_smallperi")
+scl_halo = LilGuys.NFW(v_circ_max=31/V2KMS, r_circ_max=3.2)
+print_orbit_samples(modelnames["scl_orbits"]..., scl_halo)
+println("sculptor --- smallperi")
+print_orbit(modelnames["scl_smallperi"]..., scl_halo)
 
-println("sculptor --- lmc flyby")
-print_orbit_samples("sculptor", "vasiliev24_L3M11")
-println("example")
-print_orbit("sculptor", "1e7_new_v25_r2.5", "smallperilmc")
-
+umi_halo = LilGuys.NFW(v_circ_max=38/V2KMS, r_circ_max=4)
 println("ursa minor --- smallperi")
-print_orbit_samples("ursa_minor", "EP2020")
-print_orbit("ursa_minor", "1e7_new_v38_r4.0", "orbit_smallperi.5")
+print_orbit_samples(modelnames["umi_orbits"]..., umi_halo)
+println("ursa minor --- smallperi")
+print_orbit(modelnames["umi_smallperi"]..., umi_halo)
 

@@ -73,18 +73,18 @@ module ModelUtils
 end
 
 # ╔═╡ cd0ea281-28b5-46fe-8ca2-23e44c623da6
-function plot_density_f!(galaxyname, modelname, starsname; norm_shift=0, kwargs...)
+function plot_density_f!(galaxyname, modelname, starsname; R_shift=0, norm_shift=0, kwargs...)
 	prof_i, prof_f, norm = ModelUtils.load_stellar_profiles(galaxyname, modelname, starsname, norm_shift=norm_shift)
 
 	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
 	dist_f =  TOML.parsefile(model_dir * "../../orbital_properties.toml")["distance_f"]
 	
-	lines!(prof_f.log_R, prof_f.log_Sigma; kwargs...)
+	lines!(prof_f.log_R .+ R_shift, prof_f.log_Sigma; kwargs...)
 
 end
 
 # ╔═╡ 0cc4c7b4-d707-4f3d-9a82-1b6eb4119143
-function plot_σv_prof!(galaxyname, args...; kwargs...)
+function plot_σv_prof!(galaxyname, args...; R_shift=0, kwargs...)
 	stars = get_stars_final(galaxyname, args...)
 
 
@@ -119,7 +119,7 @@ function plot_σv_prof!(galaxyname, args...; kwargs...)
 		Ns[i] = N
 	end
 
-	lines!(LilGuys.midpoints(r_bins), log10.(σs); kwargs...)
+	lines!(LilGuys.midpoints(r_bins), log10.(σs) .- 1/2 * R_shift; kwargs...)
 
 
 	
@@ -167,11 +167,11 @@ function compare_both(galaxyname, modelnames; density_kwargs = Dict())
 
 	ax = Axis(fig[1,1], xlabel="log radius / arcmin", ylabel = "log surface density", limits=(-0.5, 3, -3, 2))
 
-	ModelUtils.plot_expected_profile!("sculptor")
+	ModelUtils.plot_expected_profile!(galaxyname)
 
 	for (i, (label, model)) in enumerate(modelnames)
 		kwargs = get(density_kwargs, label, (;))
-		plot_density_f!(galaxyname, model..., label=label; color=COLORS[i], kwargs...)
+		plot_density_f!(model..., label=label; color=COLORS[i], kwargs...)
 	end
 	
 	axislegend(position=:lb)
@@ -180,11 +180,12 @@ function compare_both(galaxyname, modelnames; density_kwargs = Dict())
 
 	ax_v = Axis(fig[2, 1], xlabel = "log radius / arcmin", ylabel = "log velocity dispersion")
 	
-	plot_σv_obs!("sculptor")
+	plot_σv_obs!(galaxyname)
 
 
 	for (i, (label, model)) in enumerate(modelnames)
-		plot_σv_prof!(galaxyname, model..., color=COLORS[i], label=label)
+		kwargs = get(density_kwargs, label, Dict{Symbol, Any}())
+		plot_σv_prof!(model..., color=COLORS[i], label=label)
 	end
 
 
@@ -201,6 +202,9 @@ end
 md"""
 # Plot
 """
+
+# ╔═╡ 9c3caa8f-cb12-4b40-b091-9e570af0f074
+modelnames = TOML.parsefile("model_key.toml")
 
 # ╔═╡ 2c5eca31-bea1-4805-b869-877ec54828ca
 plot_σv_prof("sculptor", "1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars")
@@ -223,17 +227,20 @@ ModelUtils.compare_both("sculptor", "1e4_exp_M3e-4_r0.1/smallperilmc", "stars", 
 # ╔═╡ 1d917d95-bcb3-41b7-a00c-b7b6959d69bc
 ModelUtils.compare_both("ursa_minor", "1e4_exp_M4e-4_r0.13/orbit_smallperi", "stars", norm_shift=-2)
 
+# ╔═╡ 57b7ae43-1ab1-49ab-a915-e0064fade974
+ModelUtils.compare_both(modelnames["oblate"]..., norm_shift=-0.8)
+
 # ╔═╡ 8888a121-61e0-46ba-81f6-5b4047b29620
 @savefig "scl_extra_densities_sigma_vs" compare_both("sculptor", OrderedDict(
-	"fiducial" => ("1e6_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"),
-	"MW impact" => ("1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"),
-	"anisotropic" => ("1e6_v43_r5_beta0.2_a4/orbit_smallperi", "exp2d_rs0.10"),
-	"oblate" => ("1e6_v48_r7_oblate_0.5/orbit_smallperi", "exp2d_rs0.10"),
+	"fiducial" => modelnames["scl_smallperi"],
+	"MW impact" => modelnames["mw_impact"],
+	"anisotropic" =>  modelnames["anisotropic"],
+	"oblate" => modelnames["oblate"],
 	# "dm free" => ("1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars")
 ),
 	density_kwargs=Dict(
-		"anisotropic" => (; norm_shift=-0.5),
-		"oblate" => (; norm_shift=-0.5),
+		"anisotropic" => (; norm_shift=0, R_shift=-0.25),
+		"oblate" => (; norm_shift=-0.5, R_shift=-0.1),
 	))
 
 # ╔═╡ 108e5761-fdc8-4729-96b1-26b9fc886606
@@ -263,11 +270,13 @@ ModelUtils.compare_both("ursa_minor", "1e4_exp_M4e-4_r0.13/orbit_smallperi", "st
 # ╠═908d84f6-18b2-4f33-abb4-537cd2fdea52
 # ╠═be9267a9-eebc-4edf-bde4-c224341f0ff5
 # ╟─5c56c73e-d8db-4894-b0cf-f7f1b0e01a72
+# ╠═9c3caa8f-cb12-4b40-b091-9e570af0f074
 # ╠═2c5eca31-bea1-4805-b869-877ec54828ca
 # ╠═4a7222a7-4739-4059-9b91-1e317e2e2662
 # ╠═8b791ca5-3747-48f4-b410-a5b3523777a5
 # ╠═23837d49-6bec-4a86-ad39-0cb66c655f02
 # ╠═c61b48ac-62a4-466e-8238-a7c8ad5638f5
 # ╠═1d917d95-bcb3-41b7-a00c-b7b6959d69bc
+# ╠═57b7ae43-1ab1-49ab-a915-e0064fade974
 # ╠═8888a121-61e0-46ba-81f6-5b4047b29620
 # ╠═108e5761-fdc8-4729-96b1-26b9fc886606

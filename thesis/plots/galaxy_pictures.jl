@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -69,6 +69,9 @@ function plot_ellipse!(galaxy)
 
 	Utils.ellipse!(R_h_rel, obs_props["ellipticity"], obs_props["position_angle"], color=(:white, 0.5), linewidth=theme(:linewidth)[]/2)
 end
+
+# ╔═╡ 10bffed3-7a8b-43b0-874f-3086631e471d
+Utils.get_obs_props("lmc")
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "galaxy_pictures" let
@@ -159,4 +162,5 @@ end
 # ╠═00c8ab2a-08e8-467e-a9ba-1793d9af8ea5
 # ╠═2188831f-d8ed-4a37-ad92-bc1f0d90ebbc
 # ╠═9f38819d-7ec1-4fe0-b3d3-b628b2bf34cb
+# ╠═10bffed3-7a8b-43b0-874f-3086631e471d
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

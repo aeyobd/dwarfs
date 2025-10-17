@@ -344,10 +344,6 @@ function compare_profiles(profiles, galaxyname; kwargs...)
 	return fig
 end
 
-# ╔═╡ 1673a2ce-0a0a-4564-b7f2-8ac9cff83b81
-let
-	prof_scl_eskridge.log_R[1:2:end] + prof_scle
-
 # ╔═╡ 4314ec9e-8359-4b2a-8eea-30f71d92b743
 compare_profiles(profiles, "sculptor")
 
@@ -468,17 +464,20 @@ all_profiles_scl = merge(profiles, profiles_old)
 
 # ╔═╡ a9194007-e598-49a3-b462-a1710ebab5b2
 @savefig "scl_umi_literature_profiles" let
-	fig = Figure(size=(5.39*72, 4*72))
+	fig = Figure(size=(5*72, 7*72))
 	ax1 = compare_profiles(fig[1,1], all_profiles_scl, "sculptor", title="Sculptor")
 	ax2 = compare_profiles_res(fig[2,1], all_profiles_scl, "sculptor")
+	# hidexdecorations!(ticks=false, minorticks=false)
 
-	ax3 = compare_profiles(fig[1, 2], profiles_umi, "ursa_minor", title="Ursa Minor")
-	hideydecorations!(ticks=false, minorticks=false)
-	ax4 = compare_profiles_res(fig[2, 2], profiles_umi, "ursa_minor",)
-	hideydecorations!(ticks=false, minorticks=false)
+	ax3 = compare_profiles(fig[3, 1], profiles_umi, "ursa_minor", title="Ursa Minor")
+	ax4 = compare_profiles_res(fig[4, 1], profiles_umi, "ursa_minor",)
+	# hideydecorations!(ticks=false, minorticks=false)
 
-	rowsize!(fig.layout, 2, Relative(0.2))
-	rowgap!(fig.layout, 0)
+	rowsize!(fig.layout, 2, Relative(0.1))
+	rowsize!(fig.layout, 4, Relative(0.1))
+
+	rowgap!(fig.layout, 1, 0)
+	rowgap!(fig.layout, 3, 0)
 	colgap!(fig.layout, 0)
 
 
@@ -535,7 +534,6 @@ end
 # ╠═6c04f96a-b14b-4c60-91de-716c9379491f
 # ╠═f1926cef-5723-40be-8a91-e50e2aa34a4c
 # ╠═4f74cfb5-4e2c-416d-adde-661ad9bf7f7d
-# ╠═1673a2ce-0a0a-4564-b7f2-8ac9cff83b81
 # ╠═4314ec9e-8359-4b2a-8eea-30f71d92b743
 # ╠═a991a4fb-8037-485b-b48c-0f73d14bd0b5
 # ╠═4cb354cb-4f07-4871-92dc-fd479b1b546d

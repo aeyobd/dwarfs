@@ -52,8 +52,11 @@ function orbital_properties(pot, orbits; agama_units, actions=false)
     
     @info "calculating orbit timescales"
     periods_errs = orbit_period.(orbits)
-    periods = first.(periods_errs)
-    errs = last.(periods_errs)
+    periods = [p[1] for p in periods_errs]
+    errs = [p[2] for p in periods_errs]
+    period_apos = [p[3] for p in periods_errs]
+    n_peris = [p[4] for p in periods_errs]
+
     max_err = maximum(errs)
     @info "max pericentre err: $max_err"
 
@@ -76,12 +79,14 @@ function orbital_properties(pot, orbits; agama_units, actions=false)
     properties = DataFrame(
         "pericentre" => peris,
         "apocentre" => apos,
+        "n_peris" => n_peris,
         "time_last_peri" => t_last,
         "Lx_f" => L[1, :],
         "Ly_f" => L[2, :],
         "Lz_f" => L[3, :],
         "E_f" => E, 
         "period" => periods,
+        "period_apo" => period_apos,
         "dt" => dt,
         "peri_apo_max_err" => errs,
         "x_i" => [orbit.positions[1, end] for orbit in orbits],
@@ -109,10 +114,18 @@ end
 
 
 function orbit_period(orbit)
-    _, idxs, _, _, err = LilGuys.all_peris_apos(orbit)
+    peris, idxs, apos, idx_apos, err = LilGuys.all_peris_apos(orbit)
     period = LilGuys.mean(diff(orbit.times[idxs]))
-    return period, err
+    if length(idx_apos) > 1
+        period_apo = diff(orbit.times[idx_apos])[1] # since most recent is lower index
+    else
+        period_apo = NaN
+    end
+
+    n_peris = length(idxs)
+    return period, err, period_apo, n_peris
 end
+
 
 to_sym_mat(x) = [x[1] x[4] x[6] 
 				x[4] x[2] x[5]

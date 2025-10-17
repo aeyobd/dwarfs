@@ -43,13 +43,13 @@ module RVUtils
 end
 
 # ╔═╡ 2f067cc4-9793-44e0-885e-2875d36e2a20
-filename = "rv_combined_x_wide_2c_psat_0.2"
+filename = "rv_combined_x_2c_psat_0.2"
 
 # ╔═╡ 799fd372-b4ea-473f-93cb-65eff73b9bbc
-df_gradient = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/mcmc_samples_both.$filename.csv", DataFrame)
+df_gradient = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/mcmc_samples_both.$filename.csv", DataFrame)
 
 # ╔═╡ 5927a386-fdb1-459f-b042-0f95677e345e
-rv_memb = read_fits(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/$filename.fits")
+rv_memb = read_fits(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/$filename.fits")
 
 # ╔═╡ 33ee935f-36f6-424c-9f26-138c871c812a
 minimum(rv_memb.PSAT_RV) 
@@ -84,8 +84,11 @@ end
 # ╔═╡ cfc844b8-0274-4c38-a676-32dfd9bcb44b
 filt = (rv_memb.PSAT_RV .> 0.2)
 
+# ╔═╡ d8511ff6-f349-41e6-9b23-332e9dee1eb2
+maximum(rv_memb.R_ell)
+
 # ╔═╡ f382453c-51ab-4cb7-84a7-ee20354cce93
-obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", "sculptor", "observed_properties.toml"))
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", "ursa_minor", "observed_properties.toml"))
 
 # ╔═╡ 4c05511c-d209-4213-a380-d16c60a834a4
 xi_p, eta_p = LilGuys.to_orbit_coords(rv_memb.ra, rv_memb.dec, obs_props["ra"], obs_props["dec"], θ_m)
@@ -109,7 +112,7 @@ let
 		ylabel = L"\eta\ /\ \textrm{arcmin}",
 		xreversed=true,
 		aspect = DataAspect(), 
-			  limits=(-50, 50, -30, 30)
+			  limits=(-50, 50, -50, 50)
 	)
 
 	arrowscale = 4
@@ -140,19 +143,19 @@ let
 
 	arrows2d!([0], [0], [pm_gradient[1]], [pm_gradient[2]])
 	text!([pm_gradient[1]], [pm_gradient[2]], 
-		  text="  PM", color=:black, fontsize=10, rotation=π/2+deg2rad(θ_pm), align=(:left, :center),
+		  text="PM  ", color=:black, fontsize=10, rotation=-π/2+deg2rad(θ_pm), align=(:right, :center),
 		 )
 
 	
 	arrows2d!([0], [0], [derived_gradient[1]], [derived_gradient[2]], 
 			label="gradient", color=COLORS[3])
 	text!([derived_gradient[1]], [derived_gradient[2]], 
-		  text=L"  rot ($\xi'$)", color=COLORS[3], fontsize=10, rotation=π/2+deg2rad(θ_grad), align=(:left, :center))
+		  text=L"rot ($\xi'$)  ", color=COLORS[3], fontsize=10, rotation=-π/2+deg2rad(θ_grad), align=(:right, :center))
 
 	
-	ellipse!(1obs_props["r_h"], obs_props["ellipticity"], obs_props["position_angle"], linewidth=1, color=:black)
+	ellipse!(1obs_props["R_h"], obs_props["ellipticity"], obs_props["position_angle"], linewidth=1, color=:black)
 	
-	text!(-obs_props["r_h"], 0, text=L"  $R_h$", align=(:left, :centre))
+	text!(-obs_props["R_h"]*0.5, 0, text=L"  $R_h$", align=(:left, :centre))
 
 	Colorbar(gs[1, 2], p, label=L"$(\textrm{v}_\textrm{gsr}' - \bar{\textrm{v}}_\textrm{gsr}')$ / km\,s$^{-1}$", halign=:left)
 
@@ -163,7 +166,7 @@ let
 	ax = Axis(gs_lower[1, 1],
 		xlabel = L"$\xi'$ / arcmin",
 		ylabel = L"$\textrm{v}_\textrm{gsr}'$ / km s$^{-1}$",
-		limits=(-48, 48, 35, 115)
+		limits=(-48, 48, -117, -31)
 	)
 	scatter!(xi_p[filt] .* 60, rv_memb.vz[filt], markersize=2, label="members", color=:black)
 
@@ -180,14 +183,17 @@ let
 	xs, ys = rolling_medians(xi_p[filt] .* 60 , rv_memb.vz[filt], window=200)
 	lines!(xs, ys,  color=COLORS[2], label="rolling median")
 
-	annotation!(0, 36, obs_props["R_h"], 35, text=L"R_h")
+	annotation!(0, 36, obs_props["R_h"], -117, text=L"R_h")
 	axislegend(unique=true, merge=true, tellwidth=false, position=:lt, backgroundcolor=(:white, 0.5))
 
 	colsize!(gs_lower, 1, Relative(3/3))
 
-	@savefig "scl_rv_scatter_gradient"
+	@savefig "umi_rv_scatter_gradient"
 	fig
 end
+
+# ╔═╡ ae3e13fa-111c-4e5b-a2e3-a771f9b121bd
+v0 - 5*σv
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -207,8 +213,10 @@ end
 # ╠═fc4794cf-e45b-41ee-acac-6d5dcf8c02ab
 # ╠═0adc833e-8de6-4ab7-a137-9cb6e5aeba86
 # ╠═cfc844b8-0274-4c38-a676-32dfd9bcb44b
+# ╠═d8511ff6-f349-41e6-9b23-332e9dee1eb2
 # ╠═f382453c-51ab-4cb7-84a7-ee20354cce93
 # ╠═d413132c-d6f3-45d4-8a1e-1306b8ad084b
 # ╠═e0764d78-afcf-45fb-b07c-ce0485250f29
 # ╠═c1ad6eab-eb98-470f-ab26-b30316e4b8ce
+# ╠═ae3e13fa-111c-4e5b-a2e3-a771f9b121bd
 # ╠═29a63484-1998-4ce4-978b-ff26cb264ab5

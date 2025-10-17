@@ -1,0 +1,35 @@
+sculptor --- samples
+random samples
+pericentre	$53.1^{+3.1}_{-3.2}$
+apocentre	$102.0^{+3.2}_{-3.0}$
+n_peris	$6.0^{+0.0}_{-1.0}$
+period_apo	$-1.842^{+0.082}_{-0.089}$
+time_last_peri	$-0.448^{+0.018}_{-0.017}$
+distance	$83.2^{+1.9}_{-1.9}$
+r_J / kpc	$4.49^{+0.28}_{-0.28}$
+r_J / arcmin	$186.0^{+11.0}_{-12.0}$
+sculptor --- smallperi
+pericentre	42.18
+apocentre	[94.38516800237568, 93.76025710649954, 93.34051210829656, 93.17699837802017, 93.07749665806689]
+t_last_peri	0.4722
+idx_peris	[44, 129, 213, 296, 379, 462]
+distance_f	81.58
+r_J	3.5211838777408464
+r_J_arcmin	148.3846523219135
+ursa minor --- smallperi
+pericentre	$37.0^{+2.9}_{-2.6}$
+apocentre	$82.8^{+4.4}_{-4.1}$
+n_peris	$7.0^{+1.0}_{-0.0}$
+period_apo	$-1.36^{+0.083}_{-0.091}$
+time_last_peri	$-0.961^{+0.065}_{-0.072}$
+distance	$70.2^{+3.6}_{-3.4}$
+r_J / kpc	$3.74^{+0.32}_{-0.29}$
+r_J / arcmin	$184.0^{+12.0}_{-12.0}$
+ursa minor --- smallperi
+pericentre	29.71
+apocentre	74.87
+t_last_peri	0.8017
+idx_peris	[15, 41, 66, 91, 115, 140, 165, 189]
+distance_f	64.69
+r_J	2.940647902343565
+r_J_arcmin	156.2633092795337

@@ -1,0 +1,14 @@
+scl smallperi
+r_circ_f_i	   0.406
+v_circ_f_i	   0.695
+boundmass_f_i	0.089277
+
+scl lmc-flyby
+r_circ_f_i	   0.763
+v_circ_f_i	   0.928
+boundmass_f_i	0.540205
+
+umi smallperi
+r_circ_f_i	   0.249
+v_circ_f_i	   0.511
+boundmass_f_i	0.034597

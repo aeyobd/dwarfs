@@ -174,29 +174,38 @@ md"""
 """
 
 # ╔═╡ 5917e45e-50bb-441f-9d12-6901025a81f3
-profiles_scl_j24 = OrderedDict(
-	"2-exp" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
-	"1-exp" => load_profile("sculptor", "jax_eqw") |> LilGuys.filter_empty_bins,
-	"simple" => load_profile("sculptor", "simple") |> LilGuys.filter_empty_bins,
-	# "PM+CMD" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
+profiles_scl_j24 = let
+	profs = OrderedDict(
+		"2-exp" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
+		"1-exp" => load_profile("sculptor", "jax_eqw") |> LilGuys.filter_empty_bins,
+		# "PM+CMD" => load_profile("sculptor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
+		"circ" => load_profile("sculptor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,	
+		"bright" => load_profile("sculptor", "jax_bright") |> LilGuys.filter_empty_bins,
+	
+	)
 
-)
+
+	scale!(profs, "bright", 1, 2)
+
+	profs
+end
 
 # ╔═╡ 66761f62-bfe3-4c5e-8630-17a8b63721e7
 begin 
 	profiles_scl_extra = OrderedDict(
 		"2-exp" => load_profile("sculptor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
-		"circ" => load_profile("sculptor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,	
+	"simple" => load_profile("sculptor", "simple") |> LilGuys.filter_empty_bins,
 
-		"bright" => load_profile("sculptor", "jax_bright") |> LilGuys.filter_empty_bins,
 		"DELVE" => load_profile("sculptor", "delve_new_sub"),
 	)
 
-	scale!(profiles_scl_extra, "bright", 1, 2)
 	scale!(profiles_scl_extra, "DELVE", 1, 0.2)
 
 	profiles_scl_extra
 end
+
+# ╔═╡ f05e7437-5f50-49cb-890a-f3a3a0b499e0
+load_profile("sculptor", "delve_new_sub")
 
 # ╔═╡ 8544dd0c-556f-45e2-b432-3258b257ad99
 begin 
@@ -204,13 +213,14 @@ begin
 		"2-exp" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
 		"1-exp" => load_profile("ursa_minor", "jax_eqw") |> LilGuys.filter_empty_bins,
 		# "PM+CMD" => load_profile("ursa_minor", "jax_LLR_0_eqw") |> LilGuys.filter_empty_bins,
-		"simple" => load_profile("ursa_minor", "simple") |> LilGuys.filter_empty_bins,
+		"circ" => load_profile("ursa_minor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,
+		"bright" => load_profile("ursa_minor", "jax_bright") |> LilGuys.filter_empty_bins,
 
 
 	)
+	scale!(profiles_umi_j24, "bright", 1, 2)
 
 
-	scale!(profiles_umi_j24, "simple", 1, 1.25)
 
 end
 
@@ -218,15 +228,14 @@ end
 begin 
 	profiles_umi_extra = OrderedDict(
 		"2-exp" => load_profile("ursa_minor", "jax_2c_eqw") |> LilGuys.filter_empty_bins,
-		"circ" => load_profile("ursa_minor", "jax_circ_eqw") |> LilGuys.filter_empty_bins,
-		"bright" => load_profile("ursa_minor", "jax_bright") |> LilGuys.filter_empty_bins,
+		"simple" => load_profile("ursa_minor", "simple") |> LilGuys.filter_empty_bins,
 
 		"UNIONS" => load_profile("ursa_minor", "unions_sub"),
 
 	)
 
-	scale!(profiles_umi_extra, "bright", 1, 2)
-	scale!(profiles_umi_extra, "UNIONS", 1, 0.25)
+	scale!(profiles_umi_extra, "UNIONS", 1, 0.20)
+	scale!(profiles_umi_extra, "simple", 1, 1.25)
 
 	profiles_umi_extra
 end
@@ -368,6 +377,7 @@ compare_densities(profiles_scl_sanity, R_h=R_h_scl, prof_ana=ana_scl)
 # ╟─1160f544-3879-4892-a47f-fc88d3620b8a
 # ╠═5917e45e-50bb-441f-9d12-6901025a81f3
 # ╠═66761f62-bfe3-4c5e-8630-17a8b63721e7
+# ╠═f05e7437-5f50-49cb-890a-f3a3a0b499e0
 # ╠═8544dd0c-556f-45e2-b432-3258b257ad99
 # ╠═ad8ab6ab-5a63-49f4-a60e-7b6130abfbad
 # ╠═aeb9af8b-3129-4fbf-b2ef-970f6d76e605
