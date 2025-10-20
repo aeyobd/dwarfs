@@ -210,7 +210,7 @@ let
 
 	fig = Figure()
 	ax = Axis(fig[1,1], 
-			 xscale=log10, yscale=log10, limits=(10, 100, 1e5, 1e9), xticks=Makie.automatic, yticks=Makie.automatic)
+			 xscale=log10, yscale=log10, limits=(10, 100, 1e4, 1e9), xticks=Makie.automatic, yticks=Makie.automatic)
 
 
 	

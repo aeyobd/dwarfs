@@ -9,116 +9,57 @@ import LinearAlgebra: normalize
 
 smallfontsize = @lift 0.8*$(theme(:fontsize))
 smalllinewidth = @lift 0.5 * $(theme(:linewidth))
-logdensityrange = (-8, 2)
-
-function get_R_h(galaxyname)
-	obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
-	R_h = obs_props["R_h"]
-end
-
-function get_r_b(galaxyname, modelname, starsname; lmc=false)
-	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
-
-	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml")
-
-	σv = prof_f.annotations["sigma_v"]
-	if lmc
-		props = TOML.parsefile(model_dir * "../../orbital_properties_lmc.toml")
-	else
-		props = TOML.parsefile(model_dir * "../../orbital_properties.toml")
-	end
-
-	dist_f =  TOML.parsefile(model_dir * "../../orbital_properties.toml")["distance_f"]
-
-	
-	dt = props["t_last_peri"]
-	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
-	R_h = get_R_h(galaxyname)
-
-	return LilGuys.kpc2arcmin(r_b, dist_f)
-end
 
 
-function get_r_j(galaxyname, modelname; lmc=false)
-	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/")
+"""
+    compare_both(galaxyname, modelname, starsname, <keyword arguments)
 
-	if lmc
-		props = TOML.parsefile(model_dir * "jacobi_lmc.toml")
-	else
-		props = TOML.parsefile(model_dir * "jacobi.toml")
-	end
+Makes a comparison plot of the 2D densities of the model 
+before and after tidal evolution,
+and the initial and final density as compared with the observed density profile
 
-	return props["r_J"] 
-end
+# Arguments
+- `norm_shift`: Artificially shift the calculated normalization of the density profile in order to better agree with data
+- `lmc`: calculate break and jacobi radii with respect to the lmc
+- `title`: A plot title
+- `kwargs...`: passed to compare profiles.
 
-
-function load_expected_density_profile(galaxyname; scale_by_R_h=false)
-	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/density_profiles/fiducial_profile.toml")
-		
-	prof =  LilGuys.filter_empty_bins(prof)
-
-    if scale_by_R_h
-        R_h = get_R_h(galaxyname)
-        prof = LilGuys.scale(prof, 1/R_h, 1)
-    end
-	prof
-end
-
-
-function load_stellar_profiles(galaxyname, modelname, starsname; norm_shift=0)
-	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
-
-	prof_i = SurfaceDensityProfile(model_dir * "initial_profile.toml") |> LilGuys.filter_empty_bins
-	prof_f = SurfaceDensityProfile(model_dir * "final_profile.toml") |> LilGuys.filter_empty_bins
-
-	prof_expected = load_expected_density_profile(galaxyname)
-
-	dy = get_normalization(prof_f) + norm_shift .- get_normalization(prof_expected)
-
-	dy = middle(dy)
-	prof_i = LilGuys.scale(prof_i, 1, 10^dy)
-	prof_f = LilGuys.scale(prof_f, 1, 10^dy)
-	
-	return prof_i,  prof_f, dy
-end
-
-
-function get_normalization(prof)
-	return -LilGuys.mean(prof.log_Sigma[1:5])
-end
-
-
-function compare_both(galaxyname, modelname::String, star; norm_shift=0, lmc=false, r_j=nothing, title="", r_max=4*60, break_height=nothing, kwargs...)
+"""
+function compare_both(galaxyname::String, modelname::String, star::String; 
+        norm_shift::Real=0, lmc::Bool=false, title::String="", 
+        kwargs...)
     # setup
 	r_b = get_r_b(galaxyname, modelname, star, lmc=lmc)
     @info "break radius $r_b"
-	R_h = get_R_h(galaxyname)
-	if !isnothing(r_j)
-		r_j = get_r_j(galaxyname, modelname, lmc=lmc)
-	end
 
-	prof_i, prof_f, norm = load_stellar_profiles(galaxyname, modelname, star, norm_shift=norm_shift)
-    Σ0 = -get_normalization(load_expected_density_profile(galaxyname)).middle
+	prof_i, prof_f, norm = load_stellar_profiles(galaxyname, modelname, star, 
+                                                 norm_shift=norm_shift)
+
+    Σ0 = -get_normalization(load_expected_density_profile(galaxyname))
     logdensityrange = [Σ0 - 9, Σ0 + 1]
-    if isnothing(break_height)
-        break_height = logdensityrange[1]
-    end
 
     @info "density range $logdensityrange"
 
+    # plots
 	fig = Figure()
 
-	p = plot_stars_2d(fig[1,2], galaxyname, modelname, star, r_b=r_b, norm=norm, colorrange=logdensityrange)
+    # 2D densities
+	p = plot_stars_2d(fig[1,1], galaxyname, modelname, star, 
+                      initial=true, norm=norm, colorrange=logdensityrange)
+
+	p_2 = plot_stars_2d(fig[1,2], galaxyname, modelname, star, 
+                        r_b=r_b, norm=norm, colorrange=logdensityrange)
 	hideydecorations!()
 
-    #xlims!(r_max, -r_max)
-    #ylims!(r_max, -r_max)
-	p = plot_stars_2d(fig[1,1], galaxyname, modelname, star, initial=true,norm=norm, colorrange=logdensityrange)
-
-    t_i = get_time_ini(galaxyname, modelname)
 	Colorbar(fig[1,3], p, label="log surface density", ticks=Makie.automatic)
-	compare_profiles(fig[2,1:3], prof_i, prof_f, r_b; galaxyname=galaxyname, r_j=r_j, t_i=t_i, logdensityrange=logdensityrange, break_height=break_height, kwargs...)
 
+    # Density profiles
+	compare_profiles(fig[2,1:3], prof_i, prof_f, r_b; 
+                     galaxyname=galaxyname, 
+                     modelname=modelname,
+                     lmc=lmc,
+                     logdensityrange=logdensityrange, 
+                     kwargs...)
 
 	Makie.Label(fig[0, :], title)
 	rowsize!(fig.layout, 1, Aspect(1, 1.0))
@@ -128,33 +69,48 @@ function compare_both(galaxyname, modelname::String, star; norm_shift=0, lmc=fal
 end
 
 
+"""
+    compare_profiles(gs, prof_i, prof, r_b; 
+    galaxyname, time_i, break_height, r_j, plot_final, logdensityrange)
 
-function compare_profiles(halo::String, orbit::String, star; lmc=false, norm_shift=0, r_j=nothing, kwargs...)
-	prof_i, prof_f, dy= load_profile(halo, orbit, star; norm_shift=norm_shift)
-	r_b = get_r_b(halo, orbit, star, lmc=lmc)
-	if !isnothing(r_j)
-		r_j = get_r_j(halo, orbit, lmc=lmc)
-	end
-	compare_profiles(prof_i, prof_f, r_b; galaxyname=galaxyname, r_j=r_j, kwargs...)
-end
-
-
-function compare_profiles(gs, prof_i, prof, r_b; galaxyname=nothing, t_i, break_height=0, r_j=nothing, plot_final=true, logdensityrange=logdensityrange) 
+"""
+function compare_profiles(gs, prof_i, prof, r_b; 
+        logdensityrange, galaxyname=nothing, break_height=0, 
+        r_j=false, plot_final=true, modelname, lmc=false,
+    )
 	ax = Axis(gs, 
-		xlabel="log Radius / arcmin",
+		xlabel = "log Radius / arcmin",
 		ylabel = "log surface density",
-        limits=((-0.5 , log10(240)), tuple(logdensityrange...)),
+        limits = ((-0.5 , log10(240)), tuple(logdensityrange...)),
 	)
+
+    t_i = get_time_ini(galaxyname, modelname)
 	
-	lines!(prof_i.log_R, prof_i.log_Sigma, color=COLORS[3], linestyle=:dot,
+	lines!(prof_i.log_R, prof_i.log_Sigma, 
+           color=COLORS[3], linestyle=:dot,
 			label=L"initial ($t = %$(round(t_i, digits=1))$\,Gyr)")
+
 	if plot_final
-		lines!(prof.log_R, prof.log_Sigma, color=COLORS[3], linestyle=:solid,
-				label=L"final ($t = 0.0\,$Gyr)")
+		lines!(prof.log_R, prof.log_Sigma, 
+               color=COLORS[3], linestyle=:solid, 
+               label=L"final ($t = 0.0\,$Gyr)")
 	end
 
     plot_expected_profile!(galaxyname)
+
+    # Add annotations
+    if isnothing(break_height)
+        break_height = logdensityrange[1]
+    end
     plot_r_break_arrow!(r_b, break_height)
+
+	if r_j
+		r_j = get_r_j(galaxyname, modelname, lmc=lmc)
+        @info "r_j = $r_j"
+    else
+        r_j = nothing
+    end
+
     plot_r_jacobi_arrow!(r_j, break_height)
     if !isnothing(galaxyname)
         R_h = get_R_h(galaxyname)
@@ -163,6 +119,14 @@ function compare_profiles(gs, prof_i, prof, r_b; galaxyname=nothing, t_i, break_
 
 	axislegend(position=:lb)
 end
+
+
+function compare_profiles(prof_i, prof, r_b; kwargs...)
+	fig = Figure()
+	compare_profiles(fig[1,1], prof_i, prof, r_b; kwargs...)
+	return fig
+end
+
 
 function plot_expected_profile!(galaxyname)
     if !isnothing(galaxyname)
@@ -181,8 +145,6 @@ function plot_r_break_arrow!(r_b, break_height)
 	if !isnothing(break_height)
 		annotation!(0, 30, log10(r_b), break_height, 
 					color=COLORS[3], 
-					linewidth=theme(:linewidth)[]/2,  
-					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head()),
 				   )
 		
 		text!(log10(r_b), break_height, 
@@ -201,61 +163,51 @@ function plot_R_h_arrow!(R_h, height)
         return
     end
 		
-    annotation!(0, 36, log10(R_h), height, color=:grey, linewidth=theme(:linewidth)[]/2, text=L"R_h")
+    annotation!(0, 30, log10(R_h), height, color=:grey,)
+
+    text!(log10(R_h), height, color=:grey, text=L"R_h",
+          fontsize=smallfontsize, offset=(0, 30), align=(:center, :bottom))
 end
 
 
 function plot_r_jacobi_arrow!(r_j, break_height)
-	if !isnothing(r_j)
-		annotation!(0, 30, log10(r_j), break_height,
-					linewidth=theme(:linewidth)[]/2,
-					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head()),
-				   )
+	if isnothing(r_j)
+        return
+    end
 
-		text!(log10(r_j), break_height, 
-			  text="Jacobi", 
-			  rotation=π/2, 
-			  offset=(0., 30.), 
-			  align=(:left, :center),
-			  fontsize=0.8 * theme(:fontsize)[]
-			 )
+    annotation!(0, 30, log10(r_j), break_height)
 
-	end
-end
-
-function compare_profiles(prof_i, prof, r_b; kwargs...)
-	fig = Figure()
-	compare_profiles(fig[1,1], prof_i, prof, r_b; kwargs...)
-	return fig
-end
-
-function get_time_ini(galaxyname, modelname)
-    model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname")
-	
-	TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))["t_f_gyr"] 
-end
-
-function get_stars_final(galaxyname, modelname, starsname, filename="final.fits")
-	modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/stars/$starsname/")
-
-	return read_fits(joinpath(modeldir, filename))
+    text!(log10(r_j), break_height, 
+          text="Jacobi", 
+          rotation=π/2, 
+          offset=(0., 30.), 
+          align=(:left, :center),
+          fontsize=0.8 * theme(:fontsize)[]
+         )
 end
 
 
-function plot_stars_2d(gs, stars; R_h=NaN, R_h_label=false, 
-        bins=100, r_max=4*60, colormap=Reverse(:Greys), r_b=nothing, orbit_direction=nothing, norm=0, colorrange=logdensityrange, position_multiplier=60)
+function plot_stars_2d(gs, stars; 
+        R_h=NaN, R_h_label=false, 
+        bins=100, r_max=4*60, colormap=Reverse(:Greys), r_b=nothing, 
+        orbit_direction=nothing, norm=0, colorrange, position_multiplier=60)
 
 	ax = Axis(gs, 
-			  xlabel = L"\xi \, / \, \textrm{arcmin}", 
-			  ylabel = L"\eta \, / \, \textrm{arcmin}",
-			  xreversed = true,
-			)
+        xlabel = L"\xi \, / \, \textrm{arcmin}", 
+        ylabel = L"\eta \, / \, \textrm{arcmin}",
+        xreversed = true,
+    )
 
-	
     bins = LinRange(-r_max, r_max, bins)
-	h = histogram2d(stars.xi*position_multiplier, stars.eta*position_multiplier, bins, weights=stars.weights * 10^norm, normalization=:density)
+    xi_am = stars.xi * position_multiplier
+    eta_am = stars.eta * position_multiplier
+
+	h = histogram2d(xi_am, eta_am, bins, 
+        weights=stars.weights * 10^norm, normalization=:density)
+
 
     @info "density maximum: $(log10(maximum(h.values)))"
+
 	p = heatmap!(h.xbins, h.ybins, log10.(h.values), 
                  colorrange=colorrange, colormap=colormap)
 
@@ -270,59 +222,196 @@ function plot_stars_2d(gs, stars; R_h=NaN, R_h_label=false,
     return p
 end
 
+
 function plot_stars_2d(gs, galaxyname, modelname, starsname; initial=false, kwargs...)
     filename = initial ? "initial.fits" : "final.fits"
 	stars = get_stars_final(galaxyname, modelname, starsname, filename)
     R_h = get_R_h(galaxyname)
-    orbit_direction = initial ? nothing :  get_orbit_direction(galaxyname, modelname) 
+    orbit_direction = initial ? nothing : get_orbit_direction(galaxyname, modelname) 
 
     return plot_stars_2d(gs, stars; R_h=R_h, R_h_label=initial, orbit_direction=orbit_direction, kwargs...)
 end
 
+
 function plot_R_h_circle!(R_h::Real; label=false)
-	arc!((0,0), 6R_h, 0, 2π, color=:white, linewidth=theme(:linewidth)[]/2)
+	arc!((0,0), 6R_h, 0, 2π, color=:white, linewidth=smalllinewidth)
 	if label
-        text!(-6R_h, 0, offset=(smallfontsize[]/2, 0), text=L"6R_h", align=(:left, :center), color=:white, smallfontsize)
+        text!(-6R_h, 0, offset=(smallfontsize[]/2, 0), text=L"6R_h", align=(:left, :center), color=:white, fontsize=smallfontsize)
 	end
 end
 
-function plot_R_h_circle!(galaxyname; initial=false)
+
+function plot_R_h_circle!(galaxyname::String; label=false)
 	R_h = get_R_h(galaxyname)
-    plot_R_h_circle!(galaxyname, label=initial)
+    plot_R_h_circle!(R_h, label=label)
 end
+
 
 function plot_r_b_circle!(r_b)
 	if isnothing(r_b)
         return
     end
 
-    arc!((0, 0), r_b, 0, 2π, color=COLORS[3], linestyle=:dash, linewidth=smalllinewidth)
-    text!(r_b, 0, text="break", color=COLORS[3], fontsize=smallfontsize, offset=(-smallfontsize[]/4, 0), align=(:center, :bottom), rotation=π/2)
+    arc!((0, 0), r_b, 0, 2π, 
+         color=COLORS[3], linestyle=:dash, linewidth=smalllinewidth)
+
+    text!(r_b, 0, text="break", 
+          color=COLORS[3], fontsize=smallfontsize, offset=(-smallfontsize[]/4, 0),
+          align=(:center, :bottom), rotation=π/2)
 end
 
 
-function get_orbit_direction(galaxyname, modelname)
-    model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname")
-	orbit = LilGuys.Orbit(joinpath(model_dir, "centres.hdf5"))
-
-	idx_f = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))["idx_f"]
-	gcs = Galactocentric.(orbit.positions[1, :], orbit.positions[2, :], orbit.positions[3, :], V2KMS*orbit.velocities[1, :], V2KMS*orbit.velocities[2, :], V2KMS*orbit.velocities[3, :])
-	icrs = LilGuys.transform.(ICRS, gcs)
-
-
-	gsr = LilGuys.transform(GSR, icrs[idx_f])
-	dx, dy = (gsr.pmra, gsr.pmdec) ./ sqrt(gsr.pmra^2 + gsr.pmdec^2)
-    @info "proper motion: $(gsr.pmra), $(gsr.pmdec)"
-    @info "last motion: $((icrs[idx_f].ra - icrs[idx_f-1].ra)*cosd(icrs[idx_f].dec)), $(icrs[idx_f].dec - icrs[idx_f-1].dec)"
-    return dx, dy
-end
-
-
-
-function plot_orbit_arrow!(ax, dx, dy, r_max; r_label=36, kwargs...)
+function plot_orbit_arrow!(ax, dx, dy, r_max; r_label=30, kwargs...)
     dx, dy = normalize([dx, dy])
     dx_label = @lift $(ax.xreversed) ? dx * r_label : -dx * r_label
     dy_label = @lift $(ax.yreversed) ? dy * r_label : -dy * r_label
 
 	annotation!(dx_label, dy_label, r_max*dx, r_max*dy, color=COLORS[1])
+end
+
+
+# Data Loading functions
+
+
+function load_expected_density_profile(galaxyname)
+	prof = SurfaceDensityProfile(joinpath(ENV["DWARFS_ROOT"],
+        "observations", galaxyname, "density_profiles/fiducial_profile.toml"))
+		
+	prof = LilGuys.filter_empty_bins(prof)
+
+	prof
+end
+
+
+function load_stellar_profiles(galaxyname, modelname, starsname; norm_shift=0)
+    modeldir = get_starsdir_out(galaxyname, modelname, starsname)
+
+    prof_i = SurfaceDensityProfile(joinpath(modeldir, "initial_profile.toml")) |> LilGuys.filter_empty_bins
+    prof_f = SurfaceDensityProfile(joinpath(modeldir, "final_profile.toml")) |> LilGuys.filter_empty_bins
+
+	prof_expected = load_expected_density_profile(galaxyname)
+
+	dy = get_normalization(prof_f) + norm_shift - get_normalization(prof_expected)
+
+	prof_i = LilGuys.scale(prof_i, 1, 10^dy)
+	prof_f = LilGuys.scale(prof_f, 1, 10^dy)
+	
+	return prof_i, prof_f, dy
+end
+
+
+function get_normalization(prof)
+	return -LilGuys.mean(prof.log_Sigma[1:5]) |> middle
+end
+
+
+"""
+    get_R_h(galaxyname::String)
+
+get the value of the (circularized) half-light radius of the galaxy.
+"""
+function get_R_h(galaxyname::String)
+    filename = joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, 
+                        "observed_properties.toml")
+    obs_props = TOML.parsefile(filename)
+	R_h = obs_props["R_h"]
+end
+
+
+"""
+    get_r_b(galaxyname, modelname, starsname; lmc=false)
+
+
+Get the break radius of the specified model
+"""
+function get_r_b(galaxyname::String, modelname::String, starsname::String; lmc=false)
+    modeldir = get_starsdir_out(galaxyname, modelname, starsname)
+    prof_f = SurfaceDensityProfile(joinpath(modeldir, "final_profile.toml"))
+	σv = prof_f.annotations["sigma_v"]
+
+	if lmc
+        props = TOML.parsefile(joinpath(modeldir, "../../orbital_properties_lmc.toml"))
+	else
+        props = TOML.parsefile(joinpath(modeldir, "../../orbital_properties.toml"))
+	end
+
+	dt = props["t_last_peri"]
+	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
+
+    # same with or without lmc
+    dist_f =  TOML.parsefile(joinpath(modeldir, "../../orbital_properties.toml"))["distance_f"]
+	
+	return LilGuys.kpc2arcmin(r_b, dist_f)
+end
+
+
+"""
+    get_r_j(galaxyname, modelname; lmc=false)
+
+Get the jacobi radius of the specified model
+"""
+function get_r_j(galaxyname::String, modelname::String; lmc=false)
+    modeldir = get_modeldir(galaxyname, modelname)
+
+	if lmc
+        props = TOML.parsefile(joinpath(modeldir, "jacobi_lmc.toml"))
+	else
+        props = TOML.parsefile(joinpath(modeldir, "jacobi.toml"))
+	end
+
+	return props["r_J"] 
+end
+
+
+function get_modeldir(galaxyname::String, modelname::String)
+    modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname)
+end
+
+
+function get_starsdir_out(galaxyname::String, modelname::String, starsname::String)
+    modeldir = joinpath(get_modeldir(galaxyname, modelname), "stars", starsname)
+end
+
+
+function get_time_ini(galaxyname, modelname)
+    modeldir = get_modeldir(galaxyname, modelname)
+	TOML.parsefile(joinpath(modeldir, "orbital_properties.toml"))["t_f_gyr"] 
+end
+
+function get_stars_final(galaxyname, modelname, starsname, filename="final.fits")
+    starsdir = get_starsdir_out(galaxyname, modelname, starsname)
+	return read_fits(joinpath(starsdir, filename))
+end
+
+
+
+function get_orbit_direction(galaxyname, modelname)
+    modeldir = get_modeldir(galaxyname, modelname)
+	orbit = LilGuys.Orbit(joinpath(modeldir, "centres.hdf5"))
+	idx_f = TOML.parsefile(joinpath(modeldir, "orbital_properties.toml"))["idx_f"]
+
+    gsr = get_gsr_position(orbit, idx_f)
+    sanity_check_orbit_pm(orbit, idx_f)
+	return (gsr.pmra, gsr.pmdec)
+end
+
+
+function sanity_check_orbit_pm(orbit, idx_f)
+    # sanity checks
+    gsr = get_gsr_position(orbit, idx_f)
+	dx, dy = (gsr.pmra, gsr.pmdec) ./ sqrt(gsr.pmra^2 + gsr.pmdec^2)
+    @info "proper motion: $dx, $dy"
+    gsr_old = get_gsr_position(orbit, idx_f-1)
+    dx_test = cosd(gsr.dec) * (gsr.ra - gsr_old.ra)
+    dy_test = gsr.dec - gsr_old.dec
+    dx_test, dy_test = (dx_test, dy_test) ./ sqrt(dx_test^2 + dy_test^2)
+
+    @info "last motion: $dx_test, $dy_test"
+end
+
+function get_gsr_position(orbit, idx_f)
+    pos_f = orbit.positions[:, idx_f]
+    vel_f = orbit.velocities[:, idx_f] 
+    gc = Galactocentric(pos_f, vel_f * V2KMS)
+    gsr = LilGuys.transform(GSR, gc)
 end

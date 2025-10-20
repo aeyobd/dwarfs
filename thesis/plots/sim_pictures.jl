@@ -62,6 +62,12 @@ figname = Dict(
 	"ursa_minor" => "umi"
 )[galaxyname]
 
+# ╔═╡ 21d0e542-08ea-4f56-a07d-f1a8e7e69019
+figtitle = Dict(
+	"sculptor" => "Sculptor",
+	"ursa_minor" => "Ursa Minor"
+)[galaxyname]
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname));
 
@@ -154,7 +160,7 @@ let
 	fig = Figure()
 
 	for (i, idx) in enumerate(idxs)
-		ii, jj = (i-1) ÷ 3 , (i-1) % 3 
+		ii, jj = 1 + ((i-1) ÷ 3) , (i-1) % 3 
 		axis = Axis(fig[ii, jj])
 		plot_xy_density!(out[idx])
 		poly!(xz_iso.x, xz_iso.z, color=COLORS[9])
@@ -171,8 +177,10 @@ let
 		text!(0.05, 0.95, text= "$(round(t, digits=1)) Gyr", space=:relative, color=:white, align=(:left, :top))
 	end
 
+	Label(fig[0, :], figtitle, font=:bold)
+
 	rowsize!(fig.layout, 1, Aspect(1, 1.0))
-	rowsize!(fig.layout, 0, Aspect(1, 1.0))
+	rowsize!(fig.layout, 2, Aspect(1, 1.0))
 
 	rowgap!(fig.layout, 6)
 	colgap!(fig.layout, 6)
@@ -197,6 +205,7 @@ end
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═b9600d93-5946-4380-a2ae-9b5f673bbaf5
 # ╠═32db23d9-7959-41ac-aff4-b63df5e4b94a
+# ╠═21d0e542-08ea-4f56-a07d-f1a8e7e69019
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═a3be2d61-98eb-4037-afb4-4155ba24cc21
 # ╠═d50c120c-d72a-4fdc-b18a-9ec185c25c04

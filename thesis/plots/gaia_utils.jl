@@ -9,6 +9,7 @@ include("utils.jl")
 
 
 SELECTION_COLORS = [colorant"#cecece"; to_colormap(:YlGnBu_5)[end-2:end]]
+
 plot_labels = OrderedDict(
 	:xi => L"$\xi$\,/\,degree",
 	:eta => L"$\eta$\,/\,degree",
@@ -21,10 +22,23 @@ plot_labels = OrderedDict(
 )
 
 
-function compare_j24_samples(datasets, scatter_kwargs, observed_properties; 
+"""
+    compare_j24_samples(
+        datasets::AbstractDict, 
+        scatter_kwargs::AbstractDict, 
+        observed_properties::AbstractDict; 
+        age::Real=12, 
+        legend_position=:lt, 
+        title::AbstractString=""
+    )
+
+Compare J+24 samples by plotting tangent-plane, CMD, and PM diagrams side by side.
+"""
+function compare_j24_samples(datasets::AbstractDict, scatter_kwargs::AbstractDict, observed_properties::AbstractDict; 
         age=12, legend_position=:lt, title="") 
+
 	fig = Figure(
-        size = (5.39 * 72, 4.5*72)
+        size = (6 * 72, 5*72)
 	)
 
     if title != ""
@@ -53,8 +67,21 @@ function compare_j24_samples(datasets, scatter_kwargs, observed_properties;
 end
 
 
-function plot_tangent(gs, datasets, scatter_kwargs, observed_properties)
-    all_stars = first(datasets)[2]
+
+"""
+    plot_tangent(
+        gs::GridLayout, 
+        datasets::AbstractDict, 
+        scatter_kwargs::AbstractDict, 
+        observed_properties::AbstractDict
+    )
+
+Plots the tangent-plane projection (ξ, η) for the provided datasets, 
+including labeled half-light ellipses from observed properties.
+"""
+function plot_tangent(gs, datasets::AbstractDict, scatter_kwargs::AbstractDict, observed_properties::AbstractDict)
+    all_stars = datasets[:best]
+
     dθ = maximum(sqrt.(all_stars.xi.^2 .+ all_stars.eta .^ 2))
 
 	ax = Axis(gs,
@@ -77,8 +104,19 @@ function plot_tangent(gs, datasets, scatter_kwargs, observed_properties)
 end
 
 
-function plot_cmd(gs, datasets, scatter_kwargs, observed_properties; age)
-    df_best = datasets[(collect∘keys)(datasets)[1]]
+"""
+    plot_cmd(
+        gs::GridLayout, 
+        datasets::AbstractDict, 
+        scatter_kwargs::AbstractDict, 
+        observed_properties::AbstractDict; 
+        age::Real
+    )
+
+Plots the color–magnitude diagram (CMD) with extinction correction and isochrone overlay.
+"""
+function plot_cmd(gs, datasets::AbstractDict, scatter_kwargs::AbstractDict, observed_properties::AbstractDict; age)
+    df_best = datasets[:best]
     Gmin = minimum(df_best.G) - 0.2
     Gmax = 21
 
@@ -113,7 +151,19 @@ function plot_cmd(gs, datasets, scatter_kwargs, observed_properties; age)
 end
 
 
-function plot_pm(gs, datasets, scatter_kwargs, observed_properties)
+
+"""
+    plot_pm(
+        gs::GridLayout, 
+        datasets::AbstractDict, 
+        scatter_kwargs::AbstractDict, 
+        observed_properties::AbstractDict
+    )
+
+Plots proper-motion (μₐ*, μ_δ) distributions for the given datasets and overplots
+the observed mean proper motion with uncertainties.
+"""
+function plot_pm(gs, datasets::AbstractDict, scatter_kwargs::AbstractDict, observed_properties::AbstractDict)
 	ax = Axis(gs,
 		xlabel = plot_labels[:pmra],
 		ylabel = plot_labels[:pmdec],
@@ -146,7 +196,16 @@ function plot_pm(gs, datasets, scatter_kwargs, observed_properties)
 end
 
 
-function plot_labeled_R_h_ellipse!(observed_properties, n=3)
+"""
+    plot_labeled_R_h_ellipse!(
+        observed_properties::AbstractDict, 
+        n::Integer=3
+    )
+
+Plots an ellipse at radius n×Rₕ with the observed ellipticity and position angle,
+and labels it accordingly.
+"""
+function plot_labeled_R_h_ellipse!(observed_properties::AbstractDict, n::Real=3)
     R_h = observed_properties["R_h"]
     ell = observed_properties["ellipticity"]
     θ = observed_properties["position_angle"]
@@ -159,7 +218,15 @@ function plot_labeled_R_h_ellipse!(observed_properties, n=3)
 end
 
 
-function get_isochrone(M_H, age=12)
+
+"""
+    get_isochrone(M_H::Real, age::Real=12)
+
+Loads and filters a Padova isochrone of a given metallicity and age.
+Returns a DataFrame containing stellar evolution quantities and magnitudes.
+"""
+
+function get_isochrone(M_H::Real, age::Real=12)
     iso_columns = string.(split("Zini     MH   logAge Mini        int_IMF         Mass   logL    logTe  logg  label   McoreTP C_O  period0 period1 pmode  Mloss  tau1m   X   Y   Xc  Xn  Xo  Cexcess  Z 	mbolmag  Gmag    G_BPbrmag  G_BPftmag  G_RPmag", 
 	r"\s+"))
 
@@ -182,6 +249,8 @@ end
 """
     get_extinction(ra, dec, bp_rp)
 
+Computes Gaia DR2 G, BP, and RP extinction values using the SFD dust map
+and color-dependent extinction coefficients.
 """
 function get_extinction(ra, dec, bp_rp)
     icrss = SkyCoord(ra, dec, unit="degree", frame="icrs")

@@ -158,7 +158,8 @@ let
 	axislegend(position=:lt, backgroundcolor=(:white, 0.8))
 	#Legend(fig[4, 2], ax_rt, tellwidth=false)
 
-	
+	Label(fig[0, :], "Ursa Minor (with LMC)", font=:bold)
+
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
 
 	resize_to_layout!(fig)

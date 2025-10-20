@@ -23,7 +23,7 @@ using OrderedCollections
 include("./paper_style.jl"); scale_theme_element!(:linewidth, 0.5)
 
 # ╔═╡ eb4a5051-43b6-4afa-bf42-5a74125cf60a
-galaxy = "ursa_minor"
+
 
 # ╔═╡ ed8867fb-ca90-4577-905d-0ad93ec37097
 import TOML

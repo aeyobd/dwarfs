@@ -90,6 +90,11 @@ end
 	fig
 end
 
+# ╔═╡ a470c8bf-cfa6-4fed-be2a-5640626b80ab
+md"""
+these numbers are here to sanity check everythin
+"""
+
 # ╔═╡ e83f16b2-3d84-4a67-90f3-ffe9b439a863
 v_circ(Φ_ep._py, 100.)
 
@@ -116,6 +121,7 @@ v_circ(Φ_nfw, 100.)
 # ╠═4c0c9322-186e-4ba3-a98e-81e3c3c1b037
 # ╠═86961f65-fa3e-4899-81d5-94c6bec3b8de
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╠═a470c8bf-cfa6-4fed-be2a-5640626b80ab
 # ╠═e83f16b2-3d84-4a67-90f3-ffe9b439a863
 # ╠═d01934f7-ab69-4715-b68c-e53709c57dee
 # ╠═d9699355-d786-436b-8811-ec8b8caff091

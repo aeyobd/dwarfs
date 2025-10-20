@@ -4,8 +4,6 @@ using LilGuys
 using Arya
 import TOML
 
-import LinearAlgebra: ⋅
-
 strokewidth = @lift $(theme(:linewidth)) / 2
 
 """
@@ -165,7 +163,6 @@ function plot_rt_today!(ax_rt, orbit::Orbit, index=1; kwargs...)
     x0 = orbit.positions[:, index]
     v0 = orbit.velocities[:, index]
     r0 = radii(x0)
-    vr = (x0 ⋅ v0) / r0 / T2GYR
     t0 = orbit.times[index] * T2GYR
 
     plot_rt_today!(ax_rt, t0, r0; kwargs...)

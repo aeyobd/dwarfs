@@ -70,7 +70,7 @@ function plot_anisotropies(modelname; title="")
 	)
 
 
-	lines!(midpoints(r_bins_i), prof_i[2], label="initial", linestyle=:dot, color=COLORS[1])
+	lines!(midpoints(r_bins_i), prof_i[2], label="initial", linestyle=:dot, color=COLORS[1], )
 	lines!(midpoints(r_bins), prof_f[2], label="final", linestyle=:solid, color=COLORS[1])
 
 	axislegend(position=:lb)

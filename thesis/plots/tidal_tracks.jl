@@ -133,15 +133,6 @@ function i_f_legend(ax, profs)
 	axislegend(ax, [l1, l2, l3], [L"initial ($t=%$t_i$ Gyr)", L"final ($t=0$ Gyr)", "velocity max", ], position=:rb)
 end
 
-# ╔═╡ 07fe2997-559e-4bef-b4f4-934d850cdfe2
-function plot_r_j!(r_j, y0)	
-	y_mark = y0 * 10^-0.5
-	arrows2d!([r_j], [y_mark], [0], [y_mark * (1 - 10^-0.30)], shaftwidth=theme(:linewidth)[]/2, tiplength=9, 
-			  color=:grey, minshaftlength=0)
-	text!(r_j, y_mark, text="Jacobi", rotation=-π/2, align=(:left, :center), color=:grey)
-
-end
-
 # ╔═╡ 59e9658c-7a2c-4964-8a24-fdf7b152ebcc
 theme(:Annotation)[:style][]
 
@@ -193,6 +184,15 @@ end
 
 # ╔═╡ d732b00a-acbc-4772-b7b9-103dd90a9357
 smallfontsize = 0.8 * theme(:fontsize)[]
+
+# ╔═╡ 07fe2997-559e-4bef-b4f4-934d850cdfe2
+function plot_r_j!(r_j, y0)	
+	y_mark = y0 * 10^-0.5
+	arrows2d!([r_j], [y_mark], [0], [y_mark * (1 - 10^-0.30)], shaftwidth=theme(:linewidth)[]/2, tiplength=7.5, tipwidth=7.5 * 2/sqrt(3),
+			  color=:grey, minshaftlength=0)
+	text!(r_j, y_mark, text="Jacobi", rotation=-π/2, align=(:left, :center), color=:grey, fontsize=smallfontsize)
+
+end
 
 # ╔═╡ 2d9e9ecf-32b8-4aa0-8fbb-a5bb24b7e9a1
 function plot_tidal_track_expected!(df)
@@ -266,9 +266,6 @@ end
 @savefig "scl_tidal_track"  plot_tidal_track(modelnames["scl_smallperi"]..., 
 											 title="Sculptor: smallperi orbit")
 
-# ╔═╡ f40dab86-d30b-4ba5-95b2-929b872dd887
-R_h_3d_to_2d = LilGuys.R_h(LilGuys.Exp2D()) / LilGuys.r_h(LilGuys.Exp2D())
-
 # ╔═╡ 119b9896-f53a-4d17-a7df-53e2408d9156
 @savefig "umi_tidal_track"  plot_tidal_track(modelnames["umi_smallperi"]..., title="Ursa Minor: smallperi orbit")
 
@@ -309,5 +306,4 @@ R_h_3d_to_2d = LilGuys.R_h(LilGuys.Exp2D()) / LilGuys.r_h(LilGuys.Exp2D())
 # ╠═cc375e6c-4e7e-4f84-a55e-d72a8ee59ee3
 # ╠═b4de3539-9f82-45b0-b6a0-f51035a173f7
 # ╠═415f249c-de75-454f-8ab8-be3bec7e4222
-# ╠═f40dab86-d30b-4ba5-95b2-929b872dd887
 # ╠═119b9896-f53a-4d17-a7df-53e2408d9156

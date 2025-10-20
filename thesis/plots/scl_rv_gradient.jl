@@ -109,7 +109,9 @@ let
 		ylabel = L"\eta\ /\ \textrm{arcmin}",
 		xreversed=true,
 		aspect = DataAspect(), 
-			  limits=(-50, 50, -30, 30)
+			  limits=(-50, 50, -30, 30),
+		xticks = -40:20:40,
+		yticks = -40:20:40,
 	)
 
 	arrowscale = 4

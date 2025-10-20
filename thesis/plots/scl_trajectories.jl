@@ -120,6 +120,8 @@ let
 	ylims!(0, 120)
 	plot_rt_today!(ax_rt, scl_best, length(scl_best))
 
+	Label(fig[0, :], "Sculptor", font=:bold)
+
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
 
 	resize_to_layout!(fig)

@@ -174,7 +174,7 @@ end
 	v0 = median(samples_umi.μ)
 	σ = median(samples_umi.σ)
 	ax = Axis(fig[2,1], 
-		xlabel = L"$\textrm{v}_\textrm{gsr}'$ / km\,s$^{-1}$",
+		xlabel = L"$\textrm{v}_\textrm{los}'$ / km\,s$^{-1}$",
 		ylabel = "density",
 		limits=(v0-4σ, v0+4σ, 0, nothing)
 
@@ -211,8 +211,8 @@ end
 
 
 	ax2 = Axis(fig[2,2],
-		xlabel = L"$\log\ R$ / arcmin",
-		ylabel = L"$\log\ \sigma_{v, \textrm{los}}$ / km s$^{-1}$"
+		xlabel = L"$\log\ R_\textrm{ell}$ / arcmin",
+		ylabel = L"$\log\ \sigma_{\textrm{v, los}}$ / km s$^{-1}$"
 
 			  )
 

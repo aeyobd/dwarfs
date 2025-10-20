@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -31,10 +31,18 @@ import TOML
 # ╔═╡ ad8414dd-9428-47db-b08d-65940091413e
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ c51c6f13-b5ed-4671-9f08-4adb4f7b38b7
+import Statistics: median
+
 # ╔═╡ 322e01f3-32d2-4408-91ef-ab7777f0f925
 module Utils
 	include("gaia_utils.jl")
 end
+
+# ╔═╡ 476200a0-8d64-4237-8b36-490cf2172e50
+md"""
+# Plot utils
+"""
 
 # ╔═╡ 54e449b3-6bf8-45d4-98da-5eb1c6e7e6ec
 lw = theme(:linewidth)[]/2
@@ -44,6 +52,11 @@ log_r_ell_label = L"$\log\,R_\textrm{ell}$\,/\,arcmin"
 
 # ╔═╡ d42a0cd3-cc8e-4a24-8887-7100f3927961
 log_Σ_label = L"$\log\,\Sigma$\,/\,stars\ arcmin$^{-2}$"
+
+# ╔═╡ 2e1e1605-a4f9-45f7-ab1b-56417d94237e
+md"""
+# Data inputs
+"""
 
 # ╔═╡ 389fefd6-60fd-4dd8-ba77-29e87b4ed846
 obs_props_scl = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/sculptor/observed_properties.toml")
@@ -56,22 +69,6 @@ obs_props_fornax = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/fornax/obs
 
 # ╔═╡ 9ab4431d-e64f-44c9-a641-f16a524f3c19
 α = LilGuys.R_h(LilGuys.Exp2D())
-
-# ╔═╡ 9c594ea7-8670-4235-8bde-cb2d670fe2c3
-function get_R_h(obs_props)	
-	R_h = obs_props["R_h"]
-end
-
-# ╔═╡ 933c2e0a-db49-46fd-b3ae-a40be190022d
-R_munoz_1 = 36.58
-
-# ╔═╡ f3b219b4-7cc7-48a0-9675-91de7f40bb6d
-function get_M_s(galaxyname)
-	fit =  TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "density_profiles/jax_eqw_inner_fits.toml"))
-
-	@info 10^fit["log_R_s_exp2d_inner"] * α
-	return 10 ^ fit["log_M_exp2d_inner"]
-end
 
 # ╔═╡ 5d005025-8d6e-4d06-8b38-8aedd6189dfe
 function load_profile(galaxyname, algname="jax")
@@ -97,24 +94,6 @@ update_theme!(
 		cycle=Cycle([:color, :marker], covary=true)
 		))
 
-# ╔═╡ c51c6f13-b5ed-4671-9f08-4adb4f7b38b7
-import Statistics: median
-
-# ╔═╡ ffaddffc-bbd0-4a08-9422-71bf872eb750
-df_peris = CSV.read(ENV["DWARFS_ROOT"] * "/analysis/all_galaxies/vasiliev+21/properties_w_orbits.csv", DataFrame)
-
-
-# ╔═╡ 50c692f7-93df-4edc-af0b-bb901a1bc907
-function get_R_break(galaxyname, obs_props)
-	dt = df_peris.t_last_peri[df_peris.galaxyname .== galaxyname] |> only
-	dist = obs_props["distance"]
-	sigma_v = obs_props["sigma_v"] / V2KMS
-	r_b_kpc = LilGuys.break_radius(sigma_v, dt)
-	R_b_arcmin = LilGuys.kpc2arcmin(r_b_kpc, dist)
-
-	return R_b_arcmin
-end
-
 # ╔═╡ 7bfc460d-4ac2-4d02-aa3f-d93447fa71a6
 function get_extrema(profiles)
 	x_l = Inf
@@ -138,17 +117,9 @@ end
 # ╔═╡ 20b94af8-aaad-4832-8643-5d5d1f00e288
 function compare_densities!(ax, profiles; 
 		R_b_R_h=nothing, styles=nothing,
-		prof_ana = nothing, y_R_b=nothing, R_h=nothing,
+		y_R_b=nothing, R_h=nothing,
 							y_min=-5
 	)
-	x_l, x_h, y_l, y_h = get_extrema(profiles)
-
-	if prof_ana !== nothing
-		x = LinRange(x_l, x_h, 1000)
-	
-		y = @. log10(surface_density(prof_ana, 10 .^ x))
-		lines!(ax, x, y, label="Exp2D", color=:black, linewidth=lw)
-	end
 	
 	for (name, prof) in profiles
 		if styles !== nothing
@@ -163,13 +134,14 @@ function compare_densities!(ax, profiles;
 		if :label ∉ keys(kwargs)
 			kwargs[:label] = name
 		end
+		
 		errorscatter!(ax, prof.log_R, prof.log_Sigma; 
 			yerror=LilGuys.error_interval.(prof.log_Sigma), 
 			kwargs...)
 	end
 
 	# Plot annotations
-
+	x_l, x_h, y_l, y_h = get_extrema(profiles)
 
 	if R_h !== nothing
 		x = log10(R_h)
@@ -178,87 +150,6 @@ function compare_densities!(ax, profiles;
 	end
 
 
-end
-
-# ╔═╡ 3f13f074-e6b3-4b77-8080-bf8861b1e018
-function compare_densities(profiles; kwargs...)
-	
-	fig = Figure()
-	compare_densities(fig[1,1], profiles; kwargs...)
-
-	fig
-
-end
-
-# ╔═╡ cc48ec77-c92c-40d9-8569-6550f6dde552
-function compare_densities(gs, profiles; y_min=-5, kwargs...)
-	ax = Axis(gs,  
-		xlabel = log_r_ell_label,
-		ylabel = log_Σ_label,
-		limits = (nothing, nothing, y_min, nothing)
-	)
-
-	compare_densities!(ax, profiles; y_min=y_min, kwargs...)
-
-	ax
-end
-
-# ╔═╡ 30a60b7d-630a-4fa3-ac57-e873655ad754
-function compare_densities_residuals(profiles; 
-		R_b_R_h=nothing, styles=nothing, reference=collect(keys(profiles))[begin],
-		prof_ana = nothing, y_R_b=nothing, R_h=nothing,
-	)
-	
-	fig = Figure()
-	ax = Axis(fig[1,1], 
-		xlabel = log_r_ell_label,
-		ylabel = log_Σ_label,
-		limits=(nothing, nothing, -5, nothing)
-	)
-
-	compare_densities!(ax, profiles; R_b_R_h=R_b_R_h, styles=styles, 	
-		prof_ana=prof_ana, y_R_b=y_R_b, R_h=R_h)
-
-	
-	# Residuals axis
-	axislegend(position=:lb)
-	ax2 = Axis(fig[2,1],
-		xlabel = log_r_ell_label,
-		ylabel = L"\log\,\Sigma / \Sigma_\textrm{Exp2D}",
-		limits=(nothing, nothing, -2, 2)
-	)
-
-	hlines!(0, color=:black, linewidth=lw)
-
-	for (key, prof) in profiles
-		ym = log10.(surface_density.(prof_ana, radii(prof)))
-		filt = isfinite.(prof.log_Sigma)
-
-		x = prof.log_R[filt]
-		y = LilGuys.middle.(prof.log_Sigma[filt]) .- ym[filt]
-		ye = LilGuys.error_interval.(prof.log_Sigma)[filt]
-
-		if styles !== nothing
-			kwargs = styles[key]
-		else
-			kwargs = (;)
-		end
-		errorscatter!(x, y, yerror=ye; kwargs...)
-	end
-
-
-	linkxaxes!(ax, ax2)
-	hidexdecorations!(ax, ticks=false, minorticks=false)
-	
-	rowgap!(fig.layout, 0.)
-	rowsize!(fig.layout, 2, Relative(1/4))
-
-	fig
-end
-
-# ╔═╡ 183d7d89-b34d-4be8-9b7f-be039a6ce545
-function scale!(dict, key, R_scale, M_scale)
-	dict[key] = LilGuys.scale(dict[key], R_scale, M_scale)
 end
 
 # ╔═╡ e9f641fe-4ec6-495b-9634-a9be98395a4d
@@ -305,6 +196,11 @@ end
 # ╔═╡ ef3ad471-392d-435a-950b-1b34b2c3b469
 grey = Utils.SELECTION_COLORS[1]
 
+# ╔═╡ 9c594ea7-8670-4235-8bde-cb2d670fe2c3
+function get_R_h(obs_props)	
+	R_h = obs_props["R_h"]
+end
+
 # ╔═╡ 9c4c10a1-6161-4c2f-ba10-05509cabeb49
 R_h_scl = get_R_h(obs_props_scl)
 
@@ -316,6 +212,9 @@ R_h_fornax = get_R_h(obs_props_fornax)
 
 # ╔═╡ fba7941e-8175-47df-8801-7d1f91211376
 R_h_munoz1 = 0.49  # arcmin, munoz+2012
+
+# ╔═╡ 933c2e0a-db49-46fd-b3ae-a40be190022d
+R_munoz_1 = 36.58
 
 # ╔═╡ cc8c0231-d568-4ac8-a090-428fdea08696
 plot_kwargs = Dict(
@@ -343,10 +242,10 @@ plot_kwargs = Dict(
 
 # ╔═╡ 19be0190-af5d-479b-b859-8f1c1e46bba1
 @savefig "scl_umi_fnx_density_methods" let
-	fig = Figure(size=(5.39, 5.39) .*72)
+	fig = Figure(size=(5, 6) .*72)
 	ax = Axis(fig[1,1],
 		#xlabel = log_r_ell_label,
-		ylabel = log_Σ_label,
+		#ylabel = log_Σ_label,
 	)
 
 	y_min = -3
@@ -362,7 +261,7 @@ plot_kwargs = Dict(
 	# Ursa Minor
 	ax_umi = Axis(fig[2,1],
 		#xlabel = log_r_ell_label,
-		ylabel = log_Σ_label,
+		#ylabel = log_Σ_label,
 	)
 
 	hlines!(get_background("ursa_minor")[1], color=grey, linewidth=1)
@@ -386,7 +285,7 @@ plot_kwargs = Dict(
 	# Fornax
 	ax_fnx = Axis(fig[3, 1],
 		xlabel = log_r_ell_label,
-		ylabel = log_Σ_label,
+		#ylabel = log_Σ_label,
 	)
 	
 	hlines!(get_background("fornax")[1], color=grey, linewidth=1)
@@ -400,6 +299,8 @@ plot_kwargs = Dict(
 
 	linkxaxes!(ax, ax_umi, ax_fnx)
 	rowgap!(fig.layout, 0.)
+
+	Label(fig[:, 0], log_Σ_label, rotation=π/2)
 	fig
 
 end
@@ -409,39 +310,34 @@ end
 # ╠═0ac92e62-f8fd-4e17-8b2f-feecdab75497
 # ╠═ad8414dd-9428-47db-b08d-65940091413e
 # ╠═53a18bc2-3bbd-4fe3-8a77-d9c49d2ddea9
+# ╠═e7ae2044-a31e-4a98-b496-3b1b3be056f0
+# ╠═c51c6f13-b5ed-4671-9f08-4adb4f7b38b7
+# ╠═5fc7e171-0fce-40f7-bc22-2aa02bb3694f
 # ╠═322e01f3-32d2-4408-91ef-ab7777f0f925
+# ╠═476200a0-8d64-4237-8b36-490cf2172e50
 # ╠═54e449b3-6bf8-45d4-98da-5eb1c6e7e6ec
 # ╠═b11f3588-9904-46ef-8f35-a7c1d623e020
 # ╠═d42a0cd3-cc8e-4a24-8887-7100f3927961
+# ╟─2e1e1605-a4f9-45f7-ab1b-56417d94237e
 # ╠═389fefd6-60fd-4dd8-ba77-29e87b4ed846
 # ╠═fd74ebb7-625e-4396-a91a-37045a283a08
 # ╠═d50cc41b-9465-4481-86d9-c8cf221e1978
 # ╠═9ab4431d-e64f-44c9-a641-f16a524f3c19
-# ╠═9c594ea7-8670-4235-8bde-cb2d670fe2c3
-# ╠═933c2e0a-db49-46fd-b3ae-a40be190022d
-# ╠═f3b219b4-7cc7-48a0-9675-91de7f40bb6d
 # ╠═5d005025-8d6e-4d06-8b38-8aedd6189dfe
 # ╠═4f854674-f062-4cb2-a026-f9bac6863990
 # ╠═78a7391b-511a-45b8-b4e1-52b0bb675058
-# ╠═e7ae2044-a31e-4a98-b496-3b1b3be056f0
-# ╠═c51c6f13-b5ed-4671-9f08-4adb4f7b38b7
-# ╠═5fc7e171-0fce-40f7-bc22-2aa02bb3694f
-# ╠═ffaddffc-bbd0-4a08-9422-71bf872eb750
-# ╠═50c692f7-93df-4edc-af0b-bb901a1bc907
 # ╠═7bfc460d-4ac2-4d02-aa3f-d93447fa71a6
 # ╠═20b94af8-aaad-4832-8643-5d5d1f00e288
-# ╠═3f13f074-e6b3-4b77-8080-bf8861b1e018
-# ╠═cc48ec77-c92c-40d9-8569-6550f6dde552
-# ╠═30a60b7d-630a-4fa3-ac57-e873655ad754
-# ╠═183d7d89-b34d-4be8-9b7f-be039a6ce545
 # ╟─e9f641fe-4ec6-495b-9634-a9be98395a4d
 # ╠═27abef4c-62cf-4c82-a76f-38b735569328
 # ╠═c070eb97-b7d8-45e8-ae95-0219da2cd3e6
 # ╠═7c64d26a-bddd-4159-98d2-3a0f8d2125f5
 # ╠═ef3ad471-392d-435a-950b-1b34b2c3b469
+# ╠═9c594ea7-8670-4235-8bde-cb2d670fe2c3
 # ╠═9c4c10a1-6161-4c2f-ba10-05509cabeb49
 # ╠═5772d3d1-0ff8-4a6a-a474-b96bc7d67347
 # ╠═a2a77ae2-3a6b-46b2-bc5d-34a0e82fcef9
 # ╠═fba7941e-8175-47df-8801-7d1f91211376
+# ╠═933c2e0a-db49-46fd-b3ae-a40be190022d
 # ╠═cc8c0231-d568-4ac8-a090-428fdea08696
 # ╠═19be0190-af5d-479b-b859-8f1c1e46bba1

@@ -146,7 +146,7 @@ let
 	linkaxes!(fig.content...)
 
 
-	Label(fig[end+1, :], "log Radius / arcmin", )
+	Label(fig[end+1, :], L"log $R_\textrm{ell}$ / arcmin", )
 	Label(fig[:, 0], "log surface density", rotation=π/2, )
 
 	axislegend(ax, position=:rt, unique=true, backgroundcolor=(:white, 0.8))
@@ -179,7 +179,7 @@ let
 	
 	linkaxes!(fig.content...)
 
-	Label(fig[end+1, :], "log Radius / arcmin", )
+	Label(fig[end+1, :], L"log $R_\textrm{ell}$ / arcmin", )
 	Label(fig[:, 0], "log surface density", rotation=π/2, )
 	Legend(fig[0,2], ax, tellwidth=false, unique=true)
 
