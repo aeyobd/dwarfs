@@ -106,10 +106,16 @@ idx, orbits = read_orbits(modeldir)
 idx_no, orbits_no = read_orbits(modeldir_no)
 
 # ╔═╡ c63a1c4c-6171-4853-906a-54ba74fb0766
-best_orbit = OrbitUtils.load_best_orbit(modelnames["scl_lmc"][1:2]...) |> reverse
+best_orbit = OrbitUtils.load_best_orbit(modelnames["mw_impact"][1:2]...) |> reverse
+
+# ╔═╡ 4f834abf-e297-4c15-a72f-835832ca0759
+point_orbit = Orbit(joinpath(ENV["DWARFS_ROOT"], "analysis", modelnames["mw_impact"][1:2]..., "orbit_original.csv")) 
 
 # ╔═╡ 782e9dae-b15f-40fd-9d75-9a334810aa81
 best_m_lmc = best_orbit - LilGuys.resample(lmc_orbit, best_orbit.times)
+
+# ╔═╡ 2c5a9002-b16d-4f50-8bf6-17c0a097e854
+point_m_lmc = point_orbit - LilGuys.resample(lmc_orbit, point_orbit.times)
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -122,7 +128,7 @@ The plots below are designed to show the special orbits in a variety of frames.
 """
 
 # ╔═╡ 59bb1f11-987d-4e2f-bb07-6905cd09a3f2
-t_min = -5 / T2GYR
+t_min = -9 / T2GYR
 
 # ╔═╡ 587e90ea-8597-445a-a1e9-8ec020469c35
 pos_lmc_resampled = LilGuys.resample(lmc_orbit, orbits[1].times)
@@ -145,12 +151,11 @@ let
 
 	plot_xyz!(ax_xyz, orbits, color=COLORS[2], alpha=0.05, time_min=t_min, linestyle=:solid)
 
-	plot_xyz!(ax_xyz, orbits_no, color=COLORS[3], alpha=0.05, time_min=t_min, linestyle=:solid)
-
 	plot_xyz!(ax_xyz, lmc_orbit, time_min=t_min, linestyle=:solid, color=COLORS[1])
 
 
 	plot_xyz!(ax_xyz, best_orbit, time_min=t_min, linestyle=:solid, color=:black)
+	plot_xyz!(ax_xyz, point_orbit, time_min=t_min, linestyle=:dot, color=:black)
 	#plot_xyz!(ax_xyz, best_long_orbit, time_min=t_min, linestyle=:dash, color=:black)
 	OrbitUtils.plot_xyz_today!(ax_xyz, best_orbit, strokewidth=sw, color=:black)
 	OrbitUtils.plot_xyz_today!(ax_xyz, lmc_orbit, strokewidth=sw, color=COLORS[1])
@@ -163,10 +168,10 @@ let
 				xlabel = "time / Gyr", ylabel = L"$r_\textrm{sat-MW}$ / kpc")
 	
 	plot_rt!(ax_rt, orbits, color=COLORS[2], alpha=0.05, linestyle=:solid)
-	plot_rt!(ax_rt, orbits_no, color=COLORS[3], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, lmc_orbit, color=COLORS[1])
 
 	plot_rt!(ax_rt, best_orbit, linestyle=:solid, color=:black)
+	plot_rt!(ax_rt, point_orbit, linestyle=:dot, color=:black)
 	#plot_rt!(ax_rt, best_long_orbit, linestyle=:dash, color=:black)
 	plot_rt_today!(ax_rt, best_orbit, strokewidth=sw, color=:black)
 	plot_rt_today!(ax_rt, lmc_orbit, strokewidth=sw, color=COLORS[1])
@@ -176,7 +181,7 @@ let
 
 	
 	xlims!(t_min*T2GYR, 0.2)
-	ylims!(0, 300)
+	ylims!(0, 400)
 
 	
 
@@ -189,14 +194,15 @@ let
 	ylims!(0, 200)
 
 	plot_rt!(ax_rt2, best_m_lmc, linestyle=:solid, color=:black)
+	plot_rt!(ax_rt2, point_m_lmc, linestyle=:dot, color=:black)
 	#plot_rt!(ax_rt2, best_long_m_lmc, linestyle=:dash, color=:black)
 	plot_rt_today!(ax_rt2, best_m_lmc, strokewidth=sw, color=:black)
 
 
 	# labels
-	lines!([NaN], [NaN], color=COLORS[3], alpha=0.5, label="Scl, MW only")
 	lines!([NaN], [NaN], color=COLORS[2], alpha=0.5, label="Scl, MW+LMC")
-	lines!([NaN], [NaN], color=:black, label="Scl, selected")
+	lines!([NaN], [NaN], color=:black, linestyle=:dot, label="MW-impact: point")
+	lines!([NaN], [NaN], color=:black, label="MW-impact: N-body")
 
 	lines!([NaN], [NaN], color=COLORS[1], label="LMC")
 
@@ -208,7 +214,7 @@ let
 	rowsize!(fig.layout, 3, Aspect(1, 1.0))
 
 	resize_to_layout!(fig)
-	@savefig "scl_lmc_xyzr_orbits"
+	@savefig "scl_mw_impact_orbits"
 	fig
 
 end
@@ -241,7 +247,9 @@ end
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═e96f758a-1cb9-436e-b351-cfa311520faa
 # ╠═c63a1c4c-6171-4853-906a-54ba74fb0766
+# ╠═4f834abf-e297-4c15-a72f-835832ca0759
 # ╠═782e9dae-b15f-40fd-9d75-9a334810aa81
+# ╠═2c5a9002-b16d-4f50-8bf6-17c0a097e854
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2

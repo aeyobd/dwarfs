@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -124,7 +124,7 @@ theme(:size)[] ./ 72
 
 # ╔═╡ ac2be006-902d-4221-88e5-2f6257dc3593
 let
-	fig = Figure(size=(5*72, 5*72))
+	fig = Figure(size=(6*72, 6*72))
 	plot_galaxy(fig[1,1], "fornax")
 	hidexlabels!()
 	
@@ -156,7 +156,7 @@ end
 
 # ╔═╡ 5a2f99c6-416c-4101-a17d-1bbd4e40562b
 let 
-	fig = Figure(size=(5*72, 5*72))
+	fig = Figure(size=(6*72, 6*72))
 
 
 	ax = plot_galaxy(fig[0,1], "draco")

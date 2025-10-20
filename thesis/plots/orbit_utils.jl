@@ -2,6 +2,7 @@ using CairoMakie
 using LilGuys: mean
 using LilGuys
 using Arya
+import TOML
 
 import LinearAlgebra: ⋅
 
@@ -75,10 +76,14 @@ function plot_xyz!(axes, orbit::Orbit; time_min=-Inf, kwargs...)
 
 end
 
-function plot_xyz!(axes, orbits::AbstractVector{<:Orbit}; kwargs...)
+function plot_xyz!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs...)
+    positions = zeros(3, 0)
     for orbit in orbits
-        plot_xyz!(axes, orbit; rasterize=true, kwargs...)
+        time_filt = orbit.times .> time_min
+        positions = hcat(positions, orbit.positions[:, time_filt], [NaN, NaN, NaN])
     end
+
+    plot_xyz!(axes, positions; rasterize=true, kwargs...)
 end
 
 
@@ -104,9 +109,14 @@ end
 
 
 function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; kwargs...)
+    rs = Float64[]
+    ts = Float64[]
     for orbit in orbits
-        plot_rt!(axes, orbit; rasterize=true, kwargs...)
+        rs = vcat(rs, radii(orbit), NaN)
+        ts = vcat(ts, orbit.times*T2GYR, NaN)
     end
+
+    plot_rt!(axes, ts, rs; rasterize=true, kwargs...)
 end
 
 
@@ -182,5 +192,13 @@ function plot_xyz_sun!(axes; kwargs...)
     plot_xyz_today!(axes, X_SUN; marker=:star5, color=COLORS[9], kwargs...)
 end
 
+function load_best_orbit(galaxyname, modelname)
+    modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname)
 
+	best_orbit = LilGuys.Orbit(joinpath(modeldir, "centres.hdf5"))
+		
+	idx_f = TOML.parsefile(joinpath(modeldir, "orbital_properties.toml"))["idx_f"]
+	best_orbit.times .-= best_orbit.times[idx_f]
 
+	return best_orbit[best_orbit.times .<= 0]
+end

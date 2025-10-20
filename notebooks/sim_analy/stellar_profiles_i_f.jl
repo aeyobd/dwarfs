@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -130,7 +130,7 @@ r_J = let
 	else
 		filename = joinpath(model_stars_dir, "../../jacobi.toml")
 		if isfile(filename)
-			r_J = TOML.parsefile()["r_J"]
+			r_J = TOML.parsefile(filename)["r_J"]
 		else
 			@info "jacobi radius not calculated"
 		end

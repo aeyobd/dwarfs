@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -107,9 +107,6 @@ end
 
 # ╔═╡ bce24033-3bca-42d4-9224-b40378cdedab
 allcluster = vcat(read_pace("gc_harris"), read_pace("gc_mw_new"))
-
-# ╔═╡ 71e21c9d-95c0-4397-929d-b415b0720dbf
-hcat(to_galcoords(allcluster.ra, allcluster.dec)..., allcluster.ll, allcluster.bb)
 
 # ╔═╡ 88d507e8-98cb-42ca-be20-16580f5beb4b
 read_pace("gc_other")
@@ -239,12 +236,6 @@ function clear_legend(fig, ax)
 	
 	Legend(fig[1, 1], ax, tellwidth=false, tellheight=false, halign=:right, valign=:bottom, nbanks=2, backgroundcolor=:transparent, labelcolor=fg_color, framecolor=grid_color, pad=0, margin=theme(:Legend).framewidth[] .* ones(4))
 end
-
-# ╔═╡ 7359d341-46f2-43ab-9e95-49bc57e81183
-theme(:Legend)
-
-# ╔═╡ 51eea365-1dd0-4ebf-8a89-30928c51ab5f
-
 
 # ╔═╡ 5a537690-3c29-4a0b-9a31-15d19e456db6
 function plot_points!(ax, x=:ll, y=:bb; xreverse=true, red=COLORS[4])
@@ -421,165 +412,6 @@ end
 	fig
 end
 
-# ╔═╡ 614dae8a-5027-441e-9286-358d7fb45586
-md"""
-# Extra
-"""
-
-# ╔═╡ 25514746-3762-4cb0-8b03-0e3e38d82a69
-let 
-	fig = Figure( )
-	
-
-	ax = Axis(fig[1,1], xscale = log10, xticks=Makie.automatic,
-			xlabel = "galactocentric distance / kpc",
-			  ylabel = "Mv",
-			  yreversed=true
-		)
-
-
-	plot_points!(ax, :distance_gc, :M_V, xreverse=false)
-
-	for key in labels
-		row = allsatalites[allsatalites.key .== key, :]
-		if size(row, 1) != 1
-			@info "not found $key"
-		end
-		
-		name = row.name[1]
-		offset = (12., 0.)
-		fontsize=24
-		color = fg_color
-		align = (:left, :center)
-		text=shorten_name(name)
-
-
-		if key ∈ classical_systems
-			offset = (18., 0.)
-		elseif name ∈ ["LMC", "SMC", "M31", "M33"]
-			continue 
-			offset = (0., 0.)
-		elseif startswith(key, "yasone")
-			continue
-		end
-
-		@info row.distance_gc, row.M_V
-		text!(ax, disallowmissing(row.distance_gc), disallowmissing(row.M_V), text=text, fontsize=fontsize, align=align, offset=offset,  color=:grey)
-	end
-
-	axislegend(position=:lb, margin=theme(:Legend).padding)
-
-	@savefig "mw_satellites_distance_luminosity"
-	fig
-end
-
-# ╔═╡ 6fb045c9-fce3-4d24-8edc-8ddde135972a
-let 
-	fig = Figure(size=(1920, 1080))
-	
-
-	ax = Axis(fig[1,1], xscale = log10, xticks=Makie.automatic,
-			xlabel = "half light radius / parsecs",
-			  ylabel = "Mv",
-			  yreversed=true
-		)
-
-
-	plot_points!(ax, :rhalf_physical, :M_V, xreverse=false)
-
-	for key in labels
-		row = allsatalites[allsatalites.key .== key, :]
-		if size(row, 1) != 1
-			@info "not found $key"
-		end
-		
-		name = row.name[1]
-		offset = (12., 0.)
-		fontsize=24
-		color = fg_color
-		align = (:left, :center)
-		text=shorten_name(name)
-
-
-		if key ∈ classical_systems
-			offset = (18., 0.)
-		elseif name ∈ ["LMC", "SMC"]
-			continue 
-			offset = (0., 0.)
-		elseif startswith(key, "yasone") | (key ∈ ["m31", "m33"])
-			continue
-		end
-
-		text!(ax, disallowmissing(row.rhalf_physical), disallowmissing(row.M_V), text=text, fontsize=fontsize, align=align, offset=offset,  color=:grey)
-	end
-
-	axislegend(position=:rb, margin=theme(:Legend).padding)
-
-	@savefig "mw_satellites_size_luminosity"
-	fig
-end
-
-# ╔═╡ ebc0bd82-2b1e-4653-8aa2-46fbb56952ed
-let 
-	fig = Figure()
-	
-
-	ax = Axis(fig[1,1], xscale = log10, xticks=Makie.automatic,
-			xlabel = "half light radius / arcmin",
-			  ylabel = "Mv",
-			  yreversed=true
-		)
-
-
-	plot_points!(ax, :rhalf, :M_V, xreverse=false)
-
-	for key in labels
-		row = allsatalites[allsatalites.key .== key, :]
-		if size(row, 1) != 1
-			@info "not found $key"
-		end
-		
-		name = row.name[1]
-		offset = (12., 0.)
-		fontsize=24
-		color = fg_color
-		align = (:left, :center)
-		text=shorten_name(name)
-
-
-		if key ∈ classical_systems
-			offset = (18., 0.)
-		elseif name ∈ ["LMC", "SMC"]
-			continue 
-			offset = (0., 0.)
-		elseif startswith(key, "yasone") | (key ∈ ["m31", "m33"])
-			continue
-		end
-
-		text!(ax, disallowmissing(row.rhalf), disallowmissing(row.M_V), text=text, fontsize=fontsize, align=align, offset=offset,  color=:grey)
-	end
-
-	axislegend(position=:rb, margin=theme(:Legend).padding)
-
-	@savefig "mw_satellites_apparant_size_luminosity"
-	fig
-end
-
-# ╔═╡ 7e544a72-62cf-4e0d-a23c-cba001a1e2fd
-LilGuys.arcmin2kpc.(dwarfs.rhalf, dwarfs.distance)
-
-# ╔═╡ d9201257-2e2f-4a21-8bb2-97ff349fe04b
-dwarfs.rhalf_physical
-
-# ╔═╡ 5f321550-4d2e-4f6c-8dbf-9ec1c72f1a44
-icrs = [ICRS(ra=row.ra, dec=row.dec, distance=row.distance) for row in eachrow(confirmed_faint_dwarfs)]
-
-# ╔═╡ 9326b0d6-847d-49fe-bfe3-380f328d5eb0
-gc = LilGuys.transform.(Galactocentric, icrs)
-
-# ╔═╡ c6140b22-0744-456e-a0fe-164d72c577af
-confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
-
 # ╔═╡ Cell order:
 # ╟─7216773a-bf24-49bb-a4ab-4afb35ce2a2b
 # ╠═4c0da6d9-c5d9-4971-8b69-7ec9c107d981
@@ -598,7 +430,6 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═70477210-9891-4225-a544-b0030feb7af2
 # ╠═a232715d-a27f-499b-8123-9adf5257acf5
 # ╠═45499b5b-2c79-4a0e-8cc8-930581a8dec7
-# ╠═71e21c9d-95c0-4397-929d-b415b0720dbf
 # ╠═bce24033-3bca-42d4-9224-b40378cdedab
 # ╠═88d507e8-98cb-42ca-be20-16580f5beb4b
 # ╟─0a1d1783-0c24-455e-84c1-027e168cfef7
@@ -624,8 +455,6 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═21f0d8c8-76a2-41f0-a390-390c5b539ed3
 # ╠═8ea50ebf-87d3-4810-9699-89617463d9b4
 # ╠═21373373-2dec-4bd8-a178-6af90df0835a
-# ╠═7359d341-46f2-43ab-9e95-49bc57e81183
-# ╠═51eea365-1dd0-4ebf-8a89-30928c51ab5f
 # ╠═5a537690-3c29-4a0b-9a31-15d19e456db6
 # ╠═3b31bf9e-1d07-460a-80d9-75625d06bf41
 # ╠═756bb316-6afa-4217-b52b-eff39e5c02d6
@@ -635,12 +464,3 @@ confirmed_faint_dwarfs.distance_gc ./ radii.(LilGuys.position.(gc))
 # ╠═3051cdfb-63fb-44e4-a75d-37a51fd40508
 # ╠═784b840d-08b8-4276-8dd4-6916a7f155ce
 # ╠═4541aa9d-867f-4dca-a456-5dd8fc4fba9b
-# ╟─614dae8a-5027-441e-9286-358d7fb45586
-# ╠═25514746-3762-4cb0-8b03-0e3e38d82a69
-# ╠═6fb045c9-fce3-4d24-8edc-8ddde135972a
-# ╠═ebc0bd82-2b1e-4653-8aa2-46fbb56952ed
-# ╠═7e544a72-62cf-4e0d-a23c-cba001a1e2fd
-# ╠═d9201257-2e2f-4a21-8bb2-97ff349fe04b
-# ╠═5f321550-4d2e-4f6c-8dbf-9ec1c72f1a44
-# ╠═9326b0d6-847d-49fe-bfe3-380f328d5eb0
-# ╠═c6140b22-0744-456e-a0fe-164d72c577af

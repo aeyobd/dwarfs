@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -209,7 +209,7 @@ md"""
 if lmc 
 	peri = orbital_props_lmc["pericentre"]
 else
-	peri = orbital_props["pericentre"]
+	peri = minimum(orbital_props["pericentres"])
 end
 
 # ╔═╡ 7dcbcf23-7a19-4931-b63c-5308e5abed10

@@ -36,14 +36,15 @@ end
 
 # ╔═╡ 6161cd69-594b-4eb9-83d9-12a682db7c88
 function get_scalars(modelname)
-	df = read_fits(joinpath(modeldir(modelname), "profiles_scalars.fits")
+	galaxy, model, stars = modelname
+	df = read_fits(joinpath(modeldir(joinpath(galaxy, model)), "profiles_scalars.fits")
 	)
-	idx_f = TOML.parsefile(joinpath(modeldir(modelname), "orbital_properties.toml"))["idx_f"]
+	idx_f = TOML.parsefile(joinpath(modeldir(joinpath(galaxy, model)), "orbital_properties.toml"))["idx_f"]
 
 	if idx_f < size(df, 1)
 		df.time .-= df.time[idx_f]
 	else
-		@warn "idx_f > number calculated profiles for $modelname"
+		@warn "idx_f > number calculated profiles for $galaxy/$model"
 		df.time .-= df.time[end]
 	end
 	df
@@ -99,7 +100,7 @@ function compare_boundmass(modelnames; relative=false, legend_position=:rb)
 		
 		lines!(df.r_circ_max, y, label=label)
 	end
-	axislegend(position=legend_position, patchsize=(24, 12), backgroundcolor=(:white, 0.5))
+	axislegend(position=legend_position, patchsize=(24, 12), backgroundcolor=(:white, 0.8))
 
 
 	linkyaxes!(ax, ax2)
@@ -110,29 +111,35 @@ function compare_boundmass(modelnames; relative=false, legend_position=:rb)
 	fig
 end
 
+# ╔═╡ 93ba7c53-81c3-40e8-9171-626c04c834ff
+modelnames = TOML.parsefile("model_key.toml")
+
+# ╔═╡ 483b7a71-3e64-41d8-b77d-7f26d5bd33da
+
+
 # ╔═╡ faff05dd-31b7-47bf-b6da-32d94ca80514
 @savefig "scl_mw_halo_boundmass" compare_boundmass(OrderedDict(
-	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"heavier halo" => "sculptor/1e6_new_v43_r7/orbit_smallperi",
-	"heavier, new orbit" => "sculptor/1e6_new_v43_r7/orbit_smallperi.3",
-	"lighter halo" => "sculptor/1e6_new_v25_r2.5/orbit_smallperi",
+	"fiducial" => modelnames["scl_smallperi"],
+	"heavier halo" => modelnames["heavier"],
+	"heavier, new orbit" => modelnames["heavier_new_orbit"],
+	"lighter halo" => modelnames["lighter"],
 ),
 				 )
 
 # ╔═╡ f99c5233-a05c-46e9-b7ac-6f8076377419
 @savefig "scl_mw_structure_boundmass" compare_boundmass(OrderedDict(
-	"heavy NFW" => "sculptor/1e6_new_v43_r7/orbit_smallperi",
-	"cored" => "sculptor/1e6_Ms0.54_rs1.08_c1/orbit_smallperi",
-	"anisotropic" =>  "sculptor/1e6_v43_r5_beta0.2_a4/orbit_smallperi",
-	"oblate" => "sculptor/1e6_v48_r7_oblate_0.5/orbit_smallperi",
+	"heavy NFW" => modelnames["heavier"],
+	"cored" => modelnames["cored"],
+	"anisotropic" =>  modelnames["anisotropic"],
+	"oblate" => modelnames["oblate"],
 ),
 				 )
 
 # ╔═╡ ffad6fd8-a767-459e-aa3d-e9fd6741a47f
 @savefig "scl_orbits_boundmass"  compare_boundmass(OrderedDict(
-	"fiducial" => "sculptor/1e7_new_v31_r3.2/orbit_smallperi",
-	"mean orbit" => "sculptor/1e6_new_v31_r3.2/orbit_mean",
-	"mw impact" => "sculptor/1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4",
+	"fiducial" => modelnames["scl_smallperi"],
+	"mean orbit" => modelnames["scl_mean"],
+	"MW-impact" => modelnames["mw_impact"],
 
 ))
 
@@ -146,6 +153,8 @@ end
 # ╠═6161cd69-594b-4eb9-83d9-12a682db7c88
 # ╠═f49c9325-4319-4435-ac33-a8980e1c4f7f
 # ╠═7d8f9954-0bbc-4fc0-ba21-aad54b3aaee4
+# ╠═93ba7c53-81c3-40e8-9171-626c04c834ff
+# ╠═483b7a71-3e64-41d8-b77d-7f26d5bd33da
 # ╠═faff05dd-31b7-47bf-b6da-32d94ca80514
 # ╠═f99c5233-a05c-46e9-b7ac-6f8076377419
 # ╠═ffad6fd8-a767-459e-aa3d-e9fd6741a47f

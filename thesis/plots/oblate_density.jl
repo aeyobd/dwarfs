@@ -22,14 +22,28 @@ include("./paper_style.jl")
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ d5b66795-8577-4d48-8610-9bc983e7c3c6
+module Utils
+	include("utils.jl")
+end
+
+# ╔═╡ 4524eaeb-c4f5-42fa-9444-f1341c15f957
+import TOML
+
+# ╔═╡ 3f4415d8-a891-462d-9b16-ba5da177774d
+modelnames = TOML.parsefile("model_key.toml")
+
+# ╔═╡ d6e2849c-7888-44ca-9d43-6f47ef628dd2
+galaxyname, modelname, starsname = modelnames["oblate"]
+
 # ╔═╡ ca9e7089-6617-4bff-996b-b16de0587c5b
-Mstar = 3e-4
+Mstar = Utils.get_M_star(galaxyname)
 
 # ╔═╡ 1b202d9d-92ab-4798-8851-f3d8998b5c5f
-stars = LilGuys.read_hdf5_table(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/1e6_v48_r7_oblate_0.5/stars/exp2d_rs0.20/probabilities_stars.hdf5"))
+stars = LilGuys.read_hdf5_table(joinpath(ENV["DWARFS_ROOT"], "analysis//$galaxyname/$modelname/../stars/$starsname/probabilities_stars.hdf5"))
 
 # ╔═╡ 4cfdc774-f065-4d71-bdd9-ffd26dbe64a7
-out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor/1e6_v48_r7_oblate_0.5/orbit_smallperi"), weights=stars.probability * Mstar)
+out = Output(joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname"), weights=stars.probability * Mstar)
 
 # ╔═╡ e9dcf228-7c2d-4deb-bbe5-b9215512bc70
 function moment_inertia_tensor(snap)
@@ -93,7 +107,7 @@ x_f = project_principal(snap_f)
 LilGuys.plot_xyz(x_i, plot=:scatter, markersize=1, alpha=0.01)
 
 # ╔═╡ 93019bc6-cf42-46de-90c0-33ad4ce3e4de
-LilGuys.plot_xyz(x_f[:, LilGuys.bound_particles(snap_f)], plot=:scatter, markersize=1, alpha=0.01, limits=((-10, 10), (-10, 10), (-10, 10)))
+LilGuys.plot_xyz(x_f[:, LilGuys.bound_particles(snap_f)], plot=:scatter, markersize=1, alpha=0.1, limits=((-3, 3), (-3, 3), (-3, 3)))
 
 # ╔═╡ 0ca0c4df-6f59-4191-b14c-461d5ad906c8
 import DensityEstimators: histogram2d
@@ -305,7 +319,11 @@ end
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
+# ╠═d5b66795-8577-4d48-8610-9bc983e7c3c6
 # ╠═ca9e7089-6617-4bff-996b-b16de0587c5b
+# ╠═4524eaeb-c4f5-42fa-9444-f1341c15f957
+# ╠═3f4415d8-a891-462d-9b16-ba5da177774d
+# ╠═d6e2849c-7888-44ca-9d43-6f47ef628dd2
 # ╠═4cfdc774-f065-4d71-bdd9-ffd26dbe64a7
 # ╠═1b202d9d-92ab-4798-8851-f3d8998b5c5f
 # ╠═e9dcf228-7c2d-4deb-bbe5-b9215512bc70

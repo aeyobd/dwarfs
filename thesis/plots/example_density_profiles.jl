@@ -23,7 +23,7 @@ include("./paper_style.jl")
 import TOML
 
 # ╔═╡ 20c338e3-3d10-41f4-b8ee-d0eda4e755bd
-CairoMakie.activate!(type=:png)
+CairoMakie.activate!(type=:svg)
 
 # ╔═╡ d273f1e3-8cf7-4531-8757-6ef4735a01d8
 md"""

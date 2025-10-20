@@ -1,6 +1,7 @@
 using LilGuys
 using TOML
 using OrderedCollections
+include("utils.jl")
 
 
 function calc_props(snap, distance, delta_t=NaN)
@@ -14,8 +15,8 @@ function calc_props(snap, distance, delta_t=NaN)
 end
 
 
-function print_stellar_props(model_dir, starsname)
-    model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", model_dir)
+function print_stellar_props(galaxyname, modelname, starsname)
+    model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname)
     stars_dir_in = joinpath(model_dir, "../stars", starsname)
 
     orbit_props = TOML.parsefile(joinpath(model_dir, "orbital_properties.toml"))
@@ -45,22 +46,21 @@ end
 
 
 println("sculptor - exp")
-print_stellar_props("sculptor/1e7_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10")
+print_stellar_props(modelnames["scl_smallperi"]...)
 println("sculptor - plummer")
-print_stellar_props("sculptor/1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20")
+print_stellar_props(modelnames["scl_smallperi_plummer"]...)
 
 println()
 
 println("sculptor - lmcflyby- exp")
-print_stellar_props("sculptor/1e7_new_v25_r2.5/smallperilmc", "exp2d_rs0.11")
+print_stellar_props(modelnames["scl_lmc"]...)
 println("sculptor - lmcflyby- plummer")
-print_stellar_props("sculptor/1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20")
+print_stellar_props(modelnames["scl_lmc_plummer"]...)
 
 
 println()
 println("umi - exp")
-modeldir = "ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5"
-print_stellar_props(modeldir, "exp2d_rs0.10")
+print_stellar_props(modelnames["umi_smallperi"]...)
 println("umi - plummer")
-print_stellar_props(modeldir, "plummer_rs0.20")
+print_stellar_props(modelnames["umi_smallperi_plummer"]...)
 
