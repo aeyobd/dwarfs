@@ -63,7 +63,7 @@ Since then, the properties of dwarf galaxies have played an increasingly
 important role in our understanding of the clustering of dark matter on
 small scales \citep[e.g.,][]{bullock+boylan-kolchin2017, sales+2022}.
 
-Today, a common definition for a dwarf galaxy is that of a
+Today, a common definition for a (dwarf) galaxy is that of a
 gravitationally bound stellar system with dark matter.\footnote{Or, more
   generally, systems inconsistent with Newtonian dynamics of visible
   matter alone, \citet{willman+strader2012}.} In contrast, star clusters
@@ -106,19 +106,18 @@ decades in stellar mass.
 
 Most well-studied dwarf galaxies lie in the vicinity of the Milky Way,
 the Local Group of galaxies. The Local Group is defined as the group
-consisting of galaxies within \(\sim 1\) Mpc from the Milky
-Way-Andromeda centre \citep[e.g.,][ and references
-therein]{mcconnachie2012}. Today, we know that the Milky Way system is
-teeming with dwarfs, many of which are satellites of either the Milky
-Way (MW) or Andromeda (M31). Fig.~\ref{fig:mw_satellite_system} shows
-the MW satellite system, including dwarf galaxies, globular clusters,
-and ambiguous systems. This nearby population of dwarf galaxies is
-amenable to resolved, detailed studies aimed at understanding their
-nature.
+consisting of galaxies within \(\sim 1\) Mpc from the MW-Andromeda
+centre \citep[e.g.,][ and references therein]{mcconnachie2012}. Today,
+we know that the Milky Way system is teeming with dwarfs, many of which
+are satellites of either the MW or Andromeda (M31).
+Fig.~\ref{fig:mw_satellite_system} shows the MW satellite system,
+including dwarf galaxies, globular clusters, and ambiguous systems. This
+nearby population of dwarf galaxies is amenable to resolved, detailed
+studies aimed at understanding their nature.
 
 \begin{figure}
 \centering
-\includegraphics[width=5.41667in,height=5.41667in]{figures/galaxy_pictures.png}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{figures/galaxy_pictures.png}
 \caption[Images of dwarf galaxies]{Images\footnotemark{} of the LMC
 \citep[Digitized Sky Survey II,][]{lasker+1996}, Fornax \citep[DES
 DR2,][]{abbott+2021}, Sculptor (DES DR2), and Ursa Minor
@@ -181,20 +180,20 @@ structure, galaxy formation, and galaxy interactions.
 
 The very early universe was almost featureless. Our earliest
 observations of the universe stem from the cosmic microwave background
-(CMB)---revealing a nearly uniform, isotropic blackbody emission. But
-tiny perturbations in the CMB, temperature fluctuations of 1 part in
-100,000, reveal the underlying seeds of large-scale cosmological
-structure. In an expanding universe, gravitational instability makes CDM
-overdensities grow and collapse hierarchically onto larger structures.
-Initially, baryonic matter was coupled to radiation and resisted
-collapse. Dark matter, only influenced by gravity instead, freely
-collapsed into the first structures. Mass perturbations sufficiently
-small and overdense become self-gravitating structures, known as
-\emph{halos}. After recombination, where electrons combined with atomic
-nuclei to form atoms, baryons decoupled from radiation and fell into
-dark matter halos, where they condensed at the centre through radiative
-energy losses. The densest pockets of baryons later formed the first
-stars and galaxies.
+(CMB)---revealing a nearly uniform, isotropic blackbody emission
+\citep[e.g.,][]{ryden2016}. But tiny perturbations in the CMB,
+temperature fluctuations of 1 part in 100,000, reveal the underlying
+seeds of large-scale cosmological structure. In an expanding universe,
+gravitational instability makes CDM overdensities grow and collapse
+hierarchically onto larger structures. Initially, baryonic matter was
+coupled to radiation and resisted collapse. Dark matter, only influenced
+by gravity instead, freely collapsed into the first structures. Mass
+perturbations sufficiently small and overdense become self-gravitating
+structures, known as \emph{halos} \citep[e.g.,][]{galaxiesbook}. After
+recombination, where electrons combined with atomic nuclei to form
+atoms, baryons decoupled from radiation and fell into dark matter halos,
+where they condensed at the centre through radiative energy losses. The
+densest pockets of baryons later formed the first stars and galaxies.
 
 Dark matter halos and their associated galaxies rarely evolve in
 isolation. Instead, \LCDM{} structure formation is \emph{hierarchical}.
@@ -218,19 +217,19 @@ the behaviour of dark matter on small scales.
 \subsection{The structure of cold dark matter halos}\label{sec:NFW}
 
 In \LCDM{} cosmological simulations, dark matter halos are remarkably
-self-similar. In \citet{NFW1996, NFW1997}, hereafter NFW, the authors
-observe that the spherically-averaged density profiles \(\rho(r)\) are
-universally well described by a two-parameter law,
+self-similar. \citet{NFW1996, NFW1997} observe that the
+spherically-averaged density profiles \(\rho(r)\) are universally well
+described by a two-parameter law,
 \begin{equation}\protect\phantomsection\label{eq:nfw}{
 \rho/\rho_s= \frac{1}{(r/r_s)(1+r/r_s)^2},
 }\end{equation} where \(r_s\) is a scale radius and \(\rho_s\) a scale
-density. This profile has shown remarkable success at describing \LCDM{}
-halos across several orders of magnitude in mass. NFW profiles are
-\emph{cuspy}, where the density rises like \(\rho \sim 1/r\) at small
-radii \(r \ll r_s\). The steepness of the density profile increases
-gradually with radius, and at large radii the density falls off like
-\(\rho \sim 1/r^3\). The blue solid curve in Fig.~\ref{fig:nfw_density}
-shows an example NFW halo.
+density. This profile, known by the author's initials NFW, has shown
+remarkable success at describing \LCDM{} halos across several orders of
+magnitude in mass. NFW profiles are \emph{cuspy}, where the density
+rises like \(\rho \sim 1/r\) at small radii \(r \ll r_s\). The steepness
+of the density profile increases gradually with radius, and at large
+radii the density falls off like \(\rho \sim 1/r^3\). The blue solid
+curve in Fig.~\ref{fig:nfw_density} shows an example NFW halo.
 
 The total mass of an NFW profile formally diverges, so halo masses are
 conventionally defined using an overdensity criterion. The virial mass,
@@ -278,11 +277,12 @@ be small \citep{navarro+2010, dicintio+2013, dutton+maccio2014}.
 \caption[Example dark matter and stellar density profiles]{Density
 profiles in log 3D density versus log 3D radius for stars and dark
 matter in a Fornax-like galaxy. The dark matter is more extended and
-massive than the star across the entire galaxy. Fornax has a stellar
-mass \(M_\star \approx 2.5\times10^7\,\Mo\) with half-light radius
-\(0.65\,\kpc\) \citep{munoz+2018, woo+courteau+dekel2008}. The
-corresponding cosmological-mean halo for Fornax has \(\vmax=40\,\kpc\)
-and \(\rmax=8\,\kpc\), or \(M_{200} = 1\times10^{10}\,\Mo\) and
+massive than the star across the entire galaxy. This galaxy has a
+stellar mass \(M_\star \approx 2.5\times10^7\,\Mo\) with half-light
+radius \(0.65\,\kpc\) and 2D exponential stars \citep[based
+on,][]{munoz+2018, woo+courteau+dekel2008}. The corresponding
+cosmological-mean halo has \(\vmax=40\,\kpc\) and \(\rmax=8\,\kpc\), or
+\(M_{200} = 1\times10^{10}\,\Mo\) and
 \(c=12.5\).}\label{fig:nfw_density}
 \end{figure}
 
@@ -320,7 +320,7 @@ versus halo mass relation (SMHM, with halo mass represented by
 of Local Group analogues from the \apostle{} project
 \citep{sawala+2016}.\footnote{\apostle{} simulated Local Group analogues
   in a \LCDM{} cosmological context with the hydrodynamical setup from
-  the \eagle{} simulations \citep{crain+2015, schaye+2015}}. While there
+  the \eagle{} simulations \citep{crain+2015, schaye+2015}.} While there
 is some scatter, the range of predicted \(\vmax\) is fairly narrow
 across \(\sim 4\) decades in stellar mass. This figure indicates that
 the SMHM relation becomes increasingly steep in the dwarf galaxy
@@ -564,10 +564,11 @@ assume an exponential density profile to describe dwarf galaxies in
 theoretical or observational modelling
 \citep[e.g.,][]{kowalczyk+2013, martin+2016, MV2020a, battaglia+2022}.
 
-Outside the MW system, exponential profiles are common, but sometimes
-with modifications. For example, many extragalactic dwarf elliptical,
-blue compact, and irregular dwarf galaxies are better described with an
-exponential profile to which a central cusp or nuclear region is added
+Dwarf galaxies outside the Local Group commonly follow exponential
+profiles, but sometimes with modifications. For example, many
+extragalactic dwarf elliptical, blue compact dwarf, and irregular dwarf
+galaxies are better described with an exponential profile to which a
+central cusp or nuclear region is added
 \citep{caldwell+bothun1987, noeske+2003}. On the other hand, some
 studies find an inner density decrement relative to exponentials
 \citep[e.g.,][]{caldwell+1992, makarov+2012}, or that dwarfs are better
@@ -725,8 +726,8 @@ simplifications, neglecting mergers, cosmological context, mass
 assembly, and often baryonic physics
 \citep[e.g.,][]{hayashi+2003, bullock+johnston2005, klimentowski+2009, ogiya+2019}.
 Cosmological simulations appear to predict that tidal disruption is more
-common than idealized work on the Milky Way system suggests, but the
-role of numerics and assumptions in this discrepancy are unclear
+common than idealized simulations of MW dwarfs suggest, but the role of
+numerics and assumptions in this discrepancy are unclear
 \citep{panithanpaisal+2021, shipp+2023, riley+2024}. We shall use
 idealized simulations here to assess tidal effects after the satellite's
 infall into the MW halo.
@@ -816,10 +817,11 @@ simulate the stellar component by assigning stellar weights to each
 particle based on the relative densities of the distribution functions
 in energy space (see Section~\ref{sec:painting_stars}). The stars
 initially follow a 2D exponential profile with a scale radius
-\(R_s=0.25\,\kpc\), embedded within the inner dark matter halo. We start
-the model at apocentre on an orbit with a pericentre of 20,kpc and
-apocentre of 100,kpc. See Section~\ref{sec:methods} for a more detailed
-description of our numerical setup.
+\(R_s=0.25\,\kpc\) and total mass \(5\times10^5\,\Mo\), embedded within
+the inner dark matter halo. We start the model at apocentre on an orbit
+with a pericentre of 20,kpc and apocentre of 100,kpc. See
+Section~\ref{sec:methods} for a more detailed description of our
+numerical setup.
 
 Fig.~\ref{fig:idealized_break_radius} illustrates the properties of this
 idealized simulation at the second apocentre, as seen from the centre of
@@ -845,9 +847,9 @@ distributions of an idealized dwarf galaxy model undergoing tidal
 stripping. \textbf{Top}: The projected 2D stellar density in the
 \(y'\)--\(z'\) plane for the initial (left) and final (right)
 simulation. \(y'\) is the direction of tangential orbital motion, and
-\(z'\) is the direction of orbital angular momentum, as seen from the
-centre of the host. The dashed green circle represents the break radius
-(Eq.~\ref{eq:r_break}) and the blue arrow points in the orbital
+\(z'\) is the direction of orbital angular momentum, as measured from
+the centre of the host. The dashed green circle represents the break
+radius (Eq.~\ref{eq:r_break}) and the blue arrow points in the orbital
 direction. \textbf{Bottom left}: The projected stellar density profile
 for the initial (dotted) and final (solid) simulation snapshot.
 \textbf{Bottom right}: the mean 3D radial velocity (dot product of

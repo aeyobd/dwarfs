@@ -46,7 +46,7 @@ Radial velocity anisotropy may cause halos to disrupt faster [e.g. @chiang+bosch
 
 ![Tidal evolution of anisotropy](figures/anisotropy_i_f.pdf){#fig:anisotropy_i_f}
 
-Figure: The initial and final anisotropy profiles for the initially anisotropic model of Scl on the \smallperi{} orbit. The final profile is far more isotropic ($\beta=0$) than the initial.
+Figure: The initial and final anisotropy profiles for the initially anisotropic model of Scl on the \smallperi{} orbit. The final profile is more isotropic (closer to $\beta=0$) than the initial.
 
 
 
@@ -66,7 +66,7 @@ We find the evolution of the oblate halo to be nearly identical to the spherical
 
 ![Oblate halo projected density snapshots](figures/oblate_projected_2d.pdf){#fig:oblate_i_f}
 
-Figure: The initial and final (after 9Gyr of tidal evolution) projected density profiles for the oblate halo on Scl's \smallperi{} orbit, projected on with $x'$ and $z'$ the major and minor axes. The contours are drawn assuming normal smoothing of 0.4 kpc and are log-spaced with intervals of 0.105 dex.
+Figure: The initial and final (after 9Gyr of tidal evolution) projected density profiles for the oblate halo on Scl's \smallperi{} orbit, projected on with $x'$ and $z'$ the major and minor axes. The contours are drawn assuming normal smoothing of 0.4 kpc and are log-spaced with intervals of 0.1 dex.
 
 
 
@@ -74,11 +74,15 @@ Figure: The initial and final (after 9Gyr of tidal evolution) projected density 
 
 ### Orbital variation
 
-As discussed in @sec:scl_umi_orbit_uncert, the long-term orbit of Scl is uncertain. For a more massive LMC (e.g., the L3M11 model), Scl may have undergone an extreme pericentric passage with the MW $\sim 6\,\Gyr$ ago. We find that the 3$\sigma$ smallest pericentre is $4\,\kpc$, and simulate this model to test if such a pericentre may be sufficient. 
+As discussed in @sec:scl_umi_orbit_uncert, the long-term orbit of Scl is uncertain. For a more massive LMC (e.g., the L3M11 model), Scl may have undergone an extreme pericentric passage with the MW $\sim 6\,\Gyr$ ago. We find that the 3$\sigma$ smallest pericentre is $4\,\kpc$, and simulate this model to test if such a pericentre may be sufficient.
 
-Because of the strong tidal interaction with the MW, the trajectory is substantially perturbed from a point orbit. We adjust the initial conditions by comparing the change in actions (as calculated in the static MW-only potential) before and after the pericentre. Our final model, the `MW impact` model, can approximately reproduce the observed position of Scl.
+Because of the strong tidal interaction with the MW, the trajectory is substantially perturbed from a point orbit. We adjust the initial conditions by comparing the change in actions (as calculated in the static MW-only potential) before and after the pericentre. Our final model, the `MW impact` model, can approximately reproduce the observed position of Scl (see @fig:scl_mw_impact_orbit). The model has a Galactocentric initial position of $[67.83, -352.2, 110.3]\,\kpc$ and velocity of $[-3.68, 30.79, -22.77]\,\kpc$.
 
 @fig:tidal_tracks_umi compares the tidal evolution of Scl on the mean, `MW impact`, and \smallperi{} orbit. The mean orbit loses less mass than the \smallperi{} model. Instead, the `MW impact` orbit experiences most tidal evolution during its first MW pericentre. While evolving further along the tidal track, the stars of this model nevertheless remain exponential (@fig:scl_mw_impact_i_f). We suggest that the impulsive pericentric passage does not occur for long enough in this model to produce the expected extended density profile. A yet more extreme orbital history would be necessary to tidally transform Scl's stars. 
+
+![Sculptor MW impact orbit](figures/scl_mw_impact_orbits.pdf){#fig:scl_mw_impact_orbit}
+
+Figure: The orbit of Sculptor for the MW-impact model. The point (dotted) and n-body (solid) diverge by $\sim 50\,\kpc$ at early times. 
 
 
 

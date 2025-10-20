@@ -54,15 +54,15 @@ To illustrate the extent of Sculptor and Ursa Minor, we highlight distant, spect
 
 ![Sculptor sample selection](figures/scl_selection.png){#fig:scl_selection width=100%}
 
-Figure: The distributions of various samples of *Gaia* stars for Sculptor. In each panel, we use light grey points for the "all" sample of stars, turquoise points for "CMD+PM" selected stars ([@eq:sel_cmd_pm]), blue squares for the "fiducial" sample ($P_{\rm sat} > 0.2$), and indigo diamonds for the "RV members" sample. We mark the two far-outlier stars from @sestito+2023a with rust-outlined indigo stars. **Left:** Tangent plane $\xi, \eta$. The orange ellipses represent 3 and 6 half-light radii. **Top right:** Colour magnitude diagram in Gaia $G$ magnitude versus $G_{\rm BP} - G_{\rm RP}$ colour. We plot a Padova $12\,$Gyr, ${\rm [Fe/H] }=-1.68$ isochone in orange. The black bar in the top left represents the median colour error. **Bottom right:** Proper motion in declination $\mu_\delta$ vs RA $\mu_{\alpha*}$ (corrected). The orange point marks the systemic @MV2020b proper motion. The black cross represents the median proper motion error. 
+Figure: The distributions of various samples of *Gaia* stars for Sculptor. In each panel, we use light grey points for the "all" sample of stars, turquoise points for "CMD+PM" selected stars ([@eq:sel_cmd_pm]), blue squares for the "fiducial" sample ($P_{\rm sat} > 0.2$), and indigo diamonds for the "RV members" sample. We mark the two far-outlier stars from @sestito+2023a with rust-outlined indigo stars. **Left:** Tangent plane $\xi, \eta$. The orange ellipses represent 3 and 6 half-light radii. **Top right:** Colour magnitude diagram in Gaia $G$ magnitude versus $G_{\rm BP} - G_{\rm RP}$ colour. We plot a Padova $12\,$Gyr, ${\rm [Fe/H] }=-1.68$ isochone in orange. The black bar in the top left represents the median member colour error. **Bottom right:** Proper motion in declination $\mu_\delta$ vs RA $\mu_{\alpha*}$ (corrected). The orange point marks the systemic @MV2020b proper motion. The black cross represents the median member proper motion error. 
 
 ![Ursa Minor sample selection](figures/umi_selection.png){#fig:umi_selection width=100%}
 
-Figure: Similar to @fig:scl_selection except for Ursa Minor. We outline "velocity confirmed" members outside a radius of $6R_h$ with red stars [from @sestito+2023b; @pace+2020; @spencer+2018]. We also mark the location of Muñoz 1 with a pink circle.
+Figure: Similar to @fig:scl_selection except for Ursa Minor. We outline "velocity confirmed" members outside a radius of $6R_h$ with red stars [from @sestito+2023b; @pace+2020; @spencer+2018]. The isochrone is 12 Gyr old with ${\rm [Fe/H]} = -2.13$. We also mark the location of Muñoz 1 with a pink circle.
 
 ![Fornax sample selection](figures/fornax_selection.png){#fig:fornax_selection width=100%}
 
-Figure: Similar to @fig:scl_selection except for Fornax. The isochrone is instead for a 2Gyr stellar population. RV measurements are from @WMO2009. Fornax does not show the same extended outer halo of probable members as Sculptor or Ursa Minor.
+Figure: Similar to @fig:scl_selection except for Fornax. The isochrone is instead for a 2Gyr, ${\rm [Fe/H]}=-0.99$ stellar population. RV measurements are from @WMO2009 and APOGEE. Fornax does not show the same extended outer halo of probable members as Sculptor or Ursa Minor.
 
 # Density profiles {#sec:data_density_profiles}
 

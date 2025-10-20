@@ -8,8 +8,8 @@ pandoc $pandocoptions -o data.tex data.md
 pandoc $pandocoptions -o methods.tex methods.md
 pandoc $pandocoptions -o results.tex results.md
 pandoc $pandocoptions -o discussion.tex discussion.md
-pandoc $pandocoptions -o acknowledgments.tex acknowledgments.md
-pandoc $pandocoptions -o research_acknowledgments.tex research_acknowledgments.md
+pandoc $pandocoptions -o acknowledgements.tex acknowledgements.md
+pandoc $pandocoptions -o research_acknowledgements.tex research_acknowledgements.md
 
 pandoc $pandocoptions -o extra_density.tex extra_density.md --top-level-division=chapter
 pandoc $pandocoptions -o extra_rv_models.tex extra_rv_models.md --top-level-division=chapter

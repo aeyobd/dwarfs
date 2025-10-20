@@ -37,7 +37,7 @@ Figure: **Left:** Velocity histogram of Scl and UMi in terms of projected-correc
 
 
 
-![A possible velocity gradient in Sculptor](figures/scl_rv_scatter_gradient.png){#fig:scl_velocity_gradient_scatter} 
+![A possible velocity gradient in Sculptor](figures/scl_rv_scatter_gradient.pdf){#fig:scl_velocity_gradient_scatter} 
 
 Figure: **Top**  members of Sculptor plotted in the tangent plane, coloured by corrected velocity difference from mean $v_z - \bar v_z$. The black ellipse marks the half-light radius in @fig:scl_selection. The black and green arrows mark the proper motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to scale). **Bottom**: The corrected LOS velocity along the most likely rotational axis. RV members are black points, the systematic $v_z$ is the horizontal grey line, blue lines represent the (projected) gradient from MCMC samples, and the orange line is a rolling median (with a window size of 50).
 

@@ -14,13 +14,13 @@ N-body models may deviate from a point-particle trajectory due to dynamical "sel
 
 The inner density cusp is tidally resilient. @fig:scl_tidal_track shows the initial and final circular velocity profiles, and the evolution of the maximum circular velocity. The maximum velocity drops from $31\,\kms$  to $22\,\kms$, evolving along the tidal track from @EN2021. The final circular velocity profile resembles the initial with an inner cusp, but has a sharper outer truncation. Quantitatively, the halo loses $>90\%$ of its initial mass (see @tbl:scl_sim_results). However, the inner structure is not affected, as the Jacobi radius is over 3kpc, outside of the initial and final $\rmax$ (see @tbl:scl_sim_results and @fig:scl_tidal_track). Thus, tides may remove significant amounts of mass, but mostly from the outer halo.
 
-![Sculptor simulation snapshots](figures/scl_sim_images.png){#fig:scl_sim_images}
+![Sculptor simulation snapshots](figures/scl_sim_images.png){#fig:scl_sim_images width=100%}
 
 Figure: Images of the dark matter evolution over a selection of past apocentres and the present day. Limits range from -150 to 150 kpc in the $y$--$z$ ($\sim$orbital) plane, and the colourscale is logarithmic, spanning 5 orders of magnitude between the maximum and minimum values. The green dot represents the final expected position of the galaxy, and the solid and dotted grey curves represent the orbit over one previous or future radial oscillation, respectively.
 
 
 
-![Sculptor tidal tracks](figures/scl_tidal_track.png){#fig:scl_tidal_track}
+![Sculptor tidal tracks](figures/scl_tidal_track.png){#fig:scl_tidal_track width=324pt}
 
 Figure: Dynamical evolution for the \smallperi{} model of Sculptor. Dotted and solid lines show the initial and final circular velocity profiles, and blue and orange lines show the dark matter and stellar (2D exponential) profiles. The points represent the evolution of the maximum circular velocity, and the dotted black line shows the tidal track from @EN2021. To calculate the velocity profiles, unbound particles are iteratively removed, recalculating the potential at each step assuming spherical symmetry.
 
@@ -31,9 +31,9 @@ Figure: Dynamical evolution for the \smallperi{} model of Sculptor. Dotted and s
 | pericentre                                | $53\pm3$        | 42           |
 | apocentre                                 | $102\pm3$       | 94.4         |
 | time of last pericentre / Gyr             | $-0.45 \pm 0.2$ | -0.47        |
-| number of pericentres                     | 6               | 6            |
+| number of pericentres                     | 5--6            | 6            |
 | Jacobi radius / kpc                       | $4.5 \pm 0.3$   | 3.5          |
-| Jacobi radius / arcmin                    | $186\pm12$      | 101          |
+| Jacobi radius / arcmin                    | $186\pm12$      | 148          |
 | final heliocentric distance / kpc         | $83.2\pm2$      | 81.6         |
 | $\V_\textrm{max, f} / \V_\textrm{max, i}$ |                 | 0.695        |
 | $r_\textrm{max, f} / r_\textrm{max, i}$   |                 | 0.406        |
@@ -87,9 +87,7 @@ The Milky Way isn't the only galaxy in town. Recently, work has shown that the i
 
 We use the `L3M11` model of the MW and LMC potential from @vasiliev2024. The `L3M11` potential is an evolving multipole approximation of an N-body simulation including a live MW and LMC dark matter halo. The potential includes a static MW bulge and disk, evolving MW and LMC halos, and the MW reflex motion. In their simulation, the MW was initially a NFW halo with $r_s=16.5\,$kpc and $M_{\rm 200}= 98.4\times10^{10}\Mo$, and the LMC a NFW halo with $r_s=11.7$ and $M_{200} = 24.6 \times 10^{10} \Mo$.  The total `L3M11` MW mass is lighter than our initial @EP2020 potential. 
 
-The inclusion of the LMC reshapes Scl's orbital history, as shown in @fig:scl_lmc_orbits_effect. In the MW-only potential, Scl's orbit is typical of a long-term MW satellite. However, Scl's closest approach to the LMC $~\sim0.1\,\Gyr$ ago affects the long-term orbit---Scl is inferred to have reach an apocentre of nearly $300\,\kpc$. According to this, Scl may even be on first infall, depending on the MW and LMC mass. Scl's is orbiting the Milky Way on a similar plane to the LMC, but in the opposite direction---thus, Scl is unlikely to be an LMC satellite. 
-
-<!---add example for first infall data--->
+The inclusion of the LMC reshapes Scl's orbital history, as shown in @fig:scl_lmc_orbits_effect. In the MW-only potential, Scl's orbit is typical of a long-term MW satellite. However, Scl's closest approach to the LMC $~\sim0.1\,\Gyr$ ago affects the long-term orbit---Scl is inferred to have reach an apocentre of nearly $300\,\kpc$. According to this, Scl may be on first or second infall, depending on the MW and LMC mass.^[The orbital periods may be $\gtrsim 7\,\Gyr$ for the lighter MW model, compared to $\sim 2\,\Gyr$ for the MW-only case] Scl's is orbiting the Milky Way on a similar plane to the LMC, but in the opposite direction---thus, Scl is unlikely to be an LMC satellite. 
 
 Interestingly, the timing of the LMC encounter implies a break radius ($\sim 25'$, from @tbl:scl_lmc_sim_stars) consistent with the beginning of Scl's observed density excess (see @fig:classical_dwarfs_densities, and @sec:data_density_profiles). To probe this further, we select an orbit with the smallest LMC-Scl pericentre ($20\,\kpc$) in the `L3M11` model, consistent with Scl's present-day position and velocity. The orbit is selected following the procedure in [@sec:orbital_estimation] (with uncertainties doubled). This `LMC-flyby` orbit is integrated back in time $2\,\Gyr$ ago to isolate recent tidal effects. We modify Scl's initial halo to have $\rmax = 2.5\,\kpc$ and  $\vmax = 25\,\kms$, slightly reducing the initial stellar velocity dispersion. @fig:scl_lmc_orbits_effect shows this selected orbit in black and @tbl:orbit_ics records the initial conditions.
 
@@ -100,9 +98,9 @@ Interestingly, the timing of the LMC encounter implies a break radius ($\sim 25'
 | pericentre                                | $44\pm 3$ ($29 \pm 2$)    | 39 (20)            |
 | apocentre                                 | $218 \pm 8$               | --                 |
 | time of last pericentre / Gyr             | $-0.38\pm0.01$ (-0.11)    | -0.33 (-0.10)      |
-| number of pericentres                     | 1 (2)                     | 1 (1)              |
-| Jacobi radius / kpc                       | $4.1\pm0.3$ ($4.5\pm0.2$) | 2.8 (2.6)          |
-| Jacobi radius / arcmin                    | $168 \pm 11$ ($186\pm6$)  | 132 (121)          |
+| number of pericentres                     | 1 (1)                     | 1 (1)              |
+| Jacobi radius / kpc                       | $3.3\pm0.2$ ($3.6\pm0.2$) | 2.8 (2.6)          |
+| Jacobi radius / arcmin                    | $136 \pm 9$ ($159\pm5$)   | 132 (121)          |
 | final heliocentric distance / kpc         | $83.2\pm2$                | 72.9               |
 | $\V_\textrm{max, f} / \V_\textrm{max, i}$ |                           | 0.928              |
 | $r_\textrm{max, f} / r_\textrm{max, i}$   |                           | 0.763              |
@@ -116,7 +114,7 @@ Table: The orbital properties and dark matter evolution for the models including
 
 Figure: Similar to @fig:scl_orbits except for orbits with (orange) and without (green lines) the inclusion of an LMC (blue line) in the potential. The bottom row additionally shows the distance between Scl and the LMC over time.
 
-## Tidal effects from the LMC
+## Tidal effects of the LMC
 
 Perhaps surprisingly, the combined tidal effect of the MW and LMC is weaker for Scl than in the MW-only case. @fig:scl_lmc_sim_images shows the dark matter evolution of Scl and the passage of the LMC. With only one MW pericentre, Scl's dark matter is less disrupted than in the previous MW-only model. The subsequent LMC passage modifies Scl's orbit but has otherwise little effect. The dark matter structure evolves mildly and $\sim 50\%$ of mass remains bound ([@tbl:scl_lmc_sims]).
 
@@ -126,7 +124,7 @@ The reduced tides of the LMC-including model are likely a result of the altered 
 
 
 
-![Sculptor simulation snapshots with LMC](figures/scl_lmc_sim_images.png){#fig:scl_lmc_sim_images}
+![Sculptor simulation snapshots with LMC](figures/scl_lmc_sim_images.png){#fig:scl_lmc_sim_images width=100%}
 
 Figure: Similar to @fig:scl_sim_images for the case where the potential includes an LMC. The current position and path of the LMC are represented by the green dot and line, respectively. We also plot the full orbit (over the past 2Gyr) for both Scl and the LMC, as less than one radial period happens over this time frame. 
 
@@ -164,7 +162,7 @@ We find, including only the MW potential, that tides only remove dark matter fro
 
 ## Evolution of Ursa Minor's dark matter halo
 
-![Ursa Minor simulation snapshots](figures/umi_sim_images.png){#fig:umi_sim_images}
+![Ursa Minor simulation snapshots](figures/umi_sim_images.png){#fig:umi_sim_images width=100%}
 
 Figure: Similar to @fig:scl_sim_images but for Ursa Minor on the \smallperi{} orbit. Dark matter evolution is more dramatic than for Scl. 
 
@@ -174,8 +172,8 @@ Figure: Similar to @fig:scl_sim_images but for Ursa Minor on the \smallperi{} or
 | --------------------------- | ---------------- | ------------ |
 | pericentre                  | $37\pm3$         | 30           |
 | apocentre                   | $83 \pm 4$       | 75           |
-| time of last pericentre     | $-0.97 \pm 0.07$ | -0.80        |
-| number of pericentres       | $\sim 8$         | 8            |
+| time of last pericentre     | $-0.96 \pm 0.07$ | -0.80        |
+| number of pericentres       | 7--8             | 8            |
 | Jacobi radius / kpc         | $3.7 \pm 0.3$    | 2.9          |
 | Jacobi radius / arcmin      | $184 \pm 12$     | 156          |
 | final heliocentric distance | $70.1 \pm 3.6$   | 64.7         |
@@ -187,7 +185,7 @@ Table: The present-day properties for Ursa Minor's final dark matter halo. See @
 
 
 
-![Ursa Minor tidal tracks](figures/umi_tidal_track.png){#fig:umi_tidal_track}
+![Ursa Minor tidal tracks](figures/umi_tidal_track.png){#fig:umi_tidal_track width=324pt}
 
 Figure: Similar to @fig:scl_tidal_track except for Ursa Minor. Ursa Minor loses substantially more mass than Sculptor. 
 
@@ -203,12 +201,12 @@ Because of UMi's mass loss, the orbit deviates substantially from a point orbit.
 
 | Property                     | \smallperi{}-exp    | \smallperi{}-Plummer |
 | ---------------------------- | ------------------- | -------------------- |
-| $\sigma_{\V, i}\,/\,\kms$    | 10.0                | 10.9                 |
-| $\sigma_{\V, f}\,/\,\kms$    | 8.2                 | 8.5                  |
-| fractional stellar mass loss | $0.00015$           | 0.039                |
-| $R_{h, i}\,/\,\kpc$          | 0.135               | 0.151                |
-| $R_{h, f}\,/\,\kpc$          | 0.169               | 0.191                |
-| break radius                 | 197 arcmin, 3.7 kpc | 204 arcmin, 3.8 kpc  |
+| $\sigma_{\V, i}\,/\,\kms$    | 11.0                | 12.1                 |
+| $\sigma_{\V, f}\,/\,\kms$    | 8.8                 | 9.1                  |
+| fractional stellar mass loss | $0.00138$           | 0.068                |
+| $R_{h, i}\,/\,\kpc$          | 0.201               | 0.20                 |
+| $R_{h, f}\,/\,\kpc$          | 0.212               | 0.257                |
+| break radius                 | 210 arcmin, 4.0 kpc | 218 arcmin, 4.1 kpc  |
 
 Table: Similar to @tbl:scl_sim_stars_results, the present-day stellar properties for the simulation of Ursa Minor for exponential and Plummer stars. {#tbl:umi_sim_stars_results short="Simulation results for Ursa Minor's stars"}
 
@@ -232,13 +230,13 @@ Tidal features in UMi's stellar component are still extremely faint, becoming ap
 
 The break and Jacobi radii fall well outside the observed stellar profile. Tides would have to be far stronger to affect the observed stellar component. As a result, the minimal tidal evolution of this model is not unexpected. 
 
-As for Scl (@sec:scl_sim_stars), we also consider a model where UMi's stars follow initially a Plummer profile, resembling the present-day density profile. The stellar evolution of this Plummer stellar component is similar (@fig:umi_plummer_i_f). However, because there are more loosely-bound stars, the Plummer model loses nearly 4% of its initial stellar mass to tides ([@tbl:umi_sim_stars_results]), and tidal features may be detectable if we measure densities 2 orders of magnitude fainter than our present data. We show the properties of a stream in the Appendix (@fig:umi_tidal_stream), but such a stream is unlikely to be observable in the near future. We conclude that tides do not strongly affect the stellar component of this model.
+As for Scl (@sec:scl_sim_stars), we also consider a model where UMi's stars follow initially a Plummer profile, resembling the present-day density profile. The stellar evolution of this Plummer stellar component is similar (@fig:umi_plummer_i_f). However, because there are more loosely-bound stars, the Plummer model loses nearly 7% of its initial stellar mass to tides ([@tbl:umi_sim_stars_results]), and tidal features may be detectable if we measure densities 2 orders of magnitude fainter than our present data. We show the properties of a stream in the Appendix (@fig:umi_tidal_stream), but such a stream is unlikely to be observable in the near future. We conclude that tides do not strongly affect the stellar component of this model.
 
 
 
 ## Effects of the LMC 
 
-![Ursa Minor orbits with LMC](figures/umi_lmc_xyzr_orbits.png){#fig:umi_orbits_lmc}
+![Ursa Minor orbits with LMC](figures/umi_lmc_xyzr_orbits.png){#fig:umi_orbits_lmc width=100%}
 
 Figure: Orbits of Ursa Minor with (orange) and without (green) an LMC. The final positions of Ursa Minor and the LMC are plotted as scatter points, and the solid blue line represents the LMC trajectory. Note that the LMC mostly increases Ursa Minor's pericentres and apocentres. 
 
@@ -280,9 +278,9 @@ Motivated by @fig:scl_orbit_lmc_uncert, we examine an extreme pericentre of $4\,
 
 
 
-![Long term orbital uncertainties](/Users/daniel/thesis/figures/scl_lmc_orbits_mass_effect.png){#fig:scl_orbit_lmc_uncert}
+![Long term orbital uncertainties](/Users/daniel/thesis/figures/scl_lmc_orbits_mass_effect.png){#fig:scl_orbit_lmc_uncert width=100%}
 
-Figure: The long-term orbital history of Sculptor (**top**) and UMi (**bottom**) is uncertain. In both panels, light, transparent lines represent randomly sampled orbits of the satellites (following @sec:scl_smallperi) in three different LMC/MW mass models from @vasiliev2024. The LMC orbits are in solid, thick lines of the corresponding colour. The L2M11 has a lighter LMC mass, and the L3M10 model has a lighter MW mass than our fiducial L3M11 LMC model. 
+Figure: The long-term orbital history of Sculptor (**top**) and Ursa Minor (**bottom**) is uncertain. In both panels, light, transparent lines represent randomly sampled orbits of the satellites (following @sec:scl_smallperi) in three different LMC/MW mass models from @vasiliev2024. The LMC orbits are in solid, thick lines of the corresponding colour. The L2M11 has a lighter LMC mass, and the L3M10 model has a lighter MW mass than our fiducial L3M11 LMC model. 
 
 
 

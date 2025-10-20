@@ -19,6 +19,6 @@ The two other key numerical parameters in \gadget{} are the tree-force and time-
 
 As demonstrated in this subsection, stricter numerical accuracy and modified softening lengths do not affect our results. We thus conclude that our simulations are numerically well-converged (up to the "convergence" radius). 
 
-![Isolation method convergence](figures/orbit_converg_methods.png){#fig:methods_convergence}
+![Numerical methods convergence](figures/orbit_converg_methods.png){#fig:methods_convergence width=100%}
 
 Figure: A comparison of the final profiles using different simulation methods for Sculptor's \smallperi{} model. The benchmark model is our fiducial $10^7$ particle run, and all other models use $10^5$ particles, with their "converged radius" marked by the black arrow and softening by the vertical bar(s). **Top:**  Models with $\sqrt{10}$ larger and smaller softening lengths than the fiducial. **Bottom:** Models with more precise timestep accuracy and gravitational force accuracy. **Summary:** Except for the model with a larger softening length, all simulations agree within uncertainties. 

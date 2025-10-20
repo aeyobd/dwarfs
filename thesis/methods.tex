@@ -113,28 +113,29 @@ noted in Table~\ref{tbl:orbit_ics}.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{/Users/daniel/thesis/figures/scl_xyzr_orbits.pdf}}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{/Users/daniel/thesis/figures/scl_xyzr_orbits.png}
 \caption[Sculptor's possible orbits]{The orbits of Sculptor in a static
 Milky Way potential in Galactocentric \(x\), \(y\), and \(z\)
 coordinates (top) and in Galactocentric radius \(r\) versus time
 (bottom). The Milky Way is at the centre with the disk lying in the
-\(x\)--\(y\) plane. Our selected \smallperi{} orbit is plotted in black,
-and light green transparent lines represent orbits sampled over Sculptor
-observables in Table~\ref{tbl:scl_obs_props}. The orbit of Sculptor is
-well-constrained in this potential, and it is unlikely to achieve a
-smaller pericentre than the \smallperi{} orbit.}\label{fig:scl_orbits}
+\(x\)--\(y\) plane. Our selected N-body's \smallperi{} orbit is plotted
+in black, and light green transparent lines represent orbits sampled
+over Sculptor observables in Table~\ref{tbl:scl_obs_props}. The orbit of
+Sculptor is well-constrained in this potential, and it is unlikely to
+achieve a smaller pericentre than the \smallperi{}
+orbit.}\label{fig:scl_orbits}
 \end{figure}
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{/Users/daniel/thesis/figures/umi_xyzr_orbits.pdf}}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{/Users/daniel/thesis/figures/umi_xyzr_orbits.png}
 \caption[Ursa Minor's possible orbits]{Similar to
 Fig.~\ref{fig:scl_orbits}, the orbits of Ursa Minor in a static Milky
 Way potential in Galactocentric \(x\), \(y\), and \(z\) coordinates. In
-the lower panel, we show the radius versus time for only three orbits of
-Ursa Minor, representing the \smallperi{} point-mass orbit (black), the
-mean orbit, and the orbit with the \(3\sigma\)-largest
-pericentre.}\label{fig:umi_orbits}
+the lower panel, we show the radius versus time for the selected
+\smallperi{} N-body orbit (black) and three point orbits of Ursa Minor,
+representing the \smallperi{}, the mean orbit, and \(3\sigma\)-largest
+pericentre orbit.}\label{fig:umi_orbits}
 \end{figure}
 
 \begin{table*}[t]
@@ -145,9 +146,9 @@ pericentre.}\label{fig:umi_orbits}
 \toprule
 Property & Scl: \smallperi{} & Scl: \verb|LMC-flyby| & Umi: \smallperi{}\\
 \midrule
-distance / kpc & 82.6 & 72.9 & 64.6\\
+distance / kpc & 82.6 & 73.1 & 64.6\\
 $\pmra / \masyr$ & 0.134 & 0.137 & -0.158\\
-$\pmdec / \masyr$ & -0.198 & -0.157 & 0.050\\
+$\pmdec / \masyr$ & -0.198 & -0.156 & 0.050\\
 LOS velocity / $\kms$ & 111.2 & 111.2 & -245.75\\
 $t_i / \Gyr$ & -9.17 & -2.0 & -9.67\\
 ${x}_{i} / \kpc$ & -2.49 & 4.30 & -17.40\\
@@ -401,11 +402,12 @@ occupation term \citep{BT1987}. We use Eddington inversion to find the
 distribution function, \citep[eq. 4-140b in][]{BT1987} \begin{equation}{
 f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
 }\end{equation} In practice the right, boundary term is zero.\footnote{If,
-  at large \(r\), \(\rho \propto r^{-n}\) with \(n>1\), so
-  \(\Psi \sim r^{-1}\) then \(d\rho / d\Psi \sim r^{-n+1}\).} We take
-\(\Psi\) from the underlying assumed analytic dark matter potential.
-\(\rho_\star\) can be calculated from the surface density,
-\(\Sigma_\star\), via the inverse Abel transform.
+  at large \(r\), \(\rho \propto r^{-n}\) with \(n>1\), then \(\Psi\)
+  falls off no steeper than \(\Psi \sim r^{-1}\). So \(d\rho / d\Psi\)
+  decays no less rapidly than \$ r\^{}\{-n+1\}\$ which \(\rightarrow0\)
+  at large \(r\).} We take \(\Psi\) from the underlying assumed analytic
+dark matter potential. \(\rho_\star\) can be calculated from the surface
+density, \(\Sigma_\star\), via the inverse Abel transform.
 
 Fig.~\ref{fig:scl_umi_initial_isolation} shows the initial circular
 velocity profiles of stars and dark matter, demonstrating that these
@@ -417,7 +419,7 @@ consider tidal effects in the next Chapter.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/initial_velocity.pdf}}
+\includegraphics[width=6in,height=\textheight,keepaspectratio]{figures/initial_velocity.png}
 \caption[Initial halo velocity profiles]{The initial circular velocity
 profiles of dark matter (blue) and stars (orange) for Sculptor and Ursa
 Minor. The initial conditions are dotted, and the isolation-evolved

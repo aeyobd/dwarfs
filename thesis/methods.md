@@ -41,23 +41,23 @@ To maximize tidal effects, we select an orbit with the $\sim 3\sigma$ smallest p
 
 
 
-![Sculptor's possible orbits](/Users/daniel/thesis/figures/scl_xyzr_orbits.pdf){#fig:scl_orbits}
+![Sculptor's possible orbits](/Users/daniel/thesis/figures/scl_xyzr_orbits.png){#fig:scl_orbits width=100%}
 
-Figure: The orbits of Sculptor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates (top) and in Galactocentric radius $r$ versus time (bottom). The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected \smallperi{} orbit is plotted in black, and light green transparent lines represent orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of Sculptor is well-constrained in this potential, and it is unlikely to achieve a smaller pericentre than the \smallperi{} orbit. 
+Figure: The orbits of Sculptor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates (top) and in Galactocentric radius $r$ versus time (bottom). The Milky Way is at the centre with the disk lying in the $x$--$y$ plane. Our selected N-body's \smallperi{} orbit is plotted in black, and light green transparent lines represent orbits sampled over Sculptor observables in [@tbl:scl_obs_props]. The orbit of Sculptor is well-constrained in this potential, and it is unlikely to achieve a smaller pericentre than the \smallperi{} orbit. 
 
 
 
-![Ursa Minor's possible orbits](/Users/daniel/thesis/figures/umi_xyzr_orbits.pdf){#fig:umi_orbits}
+![Ursa Minor's possible orbits](/Users/daniel/thesis/figures/umi_xyzr_orbits.png){#fig:umi_orbits width=100%}
 
-Figure: Similar to @fig:scl_orbits, the orbits of Ursa Minor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates. In the lower panel, we show the radius versus time for only three orbits of Ursa Minor, representing the \smallperi{} point-mass orbit (black), the mean orbit, and the orbit with the $3\sigma$-largest pericentre. 
+Figure: Similar to @fig:scl_orbits, the orbits of Ursa Minor in a static Milky Way potential in Galactocentric $x$, $y$, and $z$ coordinates. In the lower panel, we show the radius versus time for the selected \smallperi{} N-body orbit (black) and three point orbits of Ursa Minor, representing the \smallperi{}, the mean orbit, and $3\sigma$-largest pericentre orbit. 
 
 
 
 | Property              | Scl: \smallperi{} | Scl: `LMC-flyby` | Umi: \smallperi{} |
 | --------------------- | ----------------- | ---------------- | ----------------- |
-| distance / kpc        | 82.6              | 72.9             | 64.6              |
+| distance / kpc        | 82.6              | 73.1             | 64.6              |
 | $\pmra / \masyr$      | 0.134             | 0.137            | -0.158            |
-| $\pmdec / \masyr$     | -0.198            | -0.157           | 0.050             |
+| $\pmdec / \masyr$     | -0.198            | -0.156           | 0.050             |
 | LOS velocity / $\kms$ | 111.2             | 111.2            | -245.75           |
 | $t_i / \Gyr$          | -9.17             | -2.0             | -9.67             |
 | ${x}_{i} / \kpc$      | -2.49             | 4.30             | -17.40            |
@@ -165,14 +165,12 @@ While $f({\cal E})$ is a phase-space density, the differential energy distributi
 $$
 f({\cal E}) = \frac{1}{\sqrt{8}\, \pi^2}\left( \int_0^{\cal E} \frac{d^2\rho}{d\Psi^2} \frac{1}{\sqrt{{\cal E} - \Psi}}\ d\Psi + \frac{1}{\sqrt{\cal E}} \left(\frac{d\rho}{d\Psi}\right)_{\Psi=0} \right).
 $$
-In practice the right, boundary term is zero.^[If, at large $r$, $\rho \propto r^{-n}$ with $n>1$, so $\Psi \sim r^{-1}$ then $d\rho / d\Psi \sim r^{-n+1}$.] We take $\Psi$ from the underlying assumed analytic dark matter potential. $\rho_\star$ can be calculated from the surface density, $\Sigma_\star$, via the inverse Abel transform. 
+In practice the right, boundary term is zero.^[If, at large $r$, $\rho \propto r^{-n}$ with $n>1$, then $\Psi$ falls off no steeper than $\Psi \sim r^{-1}$. So $d\rho / d\Psi$ decays no less rapidly than $ r^{-n+1}$ which $\rightarrow0$ at large $r$.] We take $\Psi$ from the underlying assumed analytic dark matter potential. $\rho_\star$ can be calculated from the surface density, $\Sigma_\star$, via the inverse Abel transform. 
 
 @fig:scl_umi_initial_isolation shows the initial circular velocity profiles of stars and dark matter, demonstrating that these galaxies are stable in isolation and that the stellar component contributes negligibly to the total mass ($M \sim \V_{\rm circ}^2 R$). Our cosmologically-motivated, observationally-based, and numerically-converged initial conditions enable us to accurately consider tidal effects in the next Chapter.
 
 
 
-![Initial halo velocity profiles](figures/initial_velocity.pdf){#fig:scl_umi_initial_isolation}
+![Initial halo velocity profiles](figures/initial_velocity.png){#fig:scl_umi_initial_isolation width=432pt}
 
 Figure: The initial circular velocity profiles of dark matter (blue) and stars (orange) for Sculptor and Ursa Minor. The initial conditions are dotted, and the isolation-evolved profiles are solid. The green cross marks the present-day half-light radius and velocity dispersion, and the black band represents the 1-sigma mean density of the MW at pericentre across orbits. Initial conditions are stable in isolation, and mass is dominated by dark matter. 
-
-<!-- JFN: indicate jacobi radius in above figure, maybe just intersection of lines?-->
