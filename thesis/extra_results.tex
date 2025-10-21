@@ -20,9 +20,10 @@ Changing the initial concentration (or \(\vmax\) and \(\rmax\))
 primarily affects total dark matter evolution.
 Fig.~\ref{fig:tidal_tracks_concentration} compares models on the
 \smallperi{} orbit with different initial halo parameters. The heavier
-halo has \(\vmax=43\) and \(\rmax=7\), whereas the lighter halo has
-\(\vmax=25\) and \(\rmax=2.5\). While the less concentrated halo loses
-more mass, the halo evolves to similar final structural parameters.
+halo has \(\vmax=43\,\kms\) and \(\rmax=7\,\kpc\), whereas the lighter
+halo has \(\vmax=25\,\kms\) and \(\rmax=2.5\,\kpc\). While the less
+concentrated halo loses more mass, the halo evolves to similar final
+structural parameters.
 
 The heavier halo diverges from the initial point orbit more
 substantially. We show the results of correcting the orbit (akin to Ursa
@@ -85,11 +86,16 @@ similar.}\label{fig:tidal_tracks_structure}
 
 \subsection{Velocity anisotropy}\label{velocity-anisotropy}
 
-Radial velocity anisotropy may cause halos to disrupt faster
-\citep[e.g.][]{chiang+bosch+schive2024}. To test the effects of moderate
-velocity anisotropy, we initialize a model with a velocity anisotropy
-with an Osipkov-Merritt profile rising from \(\beta=0.2\) at the centre
-to \(\beta=1\) and infinity, with scale length \(4r_s\).
+Velocity anisotropy quantifies the number of radial versus circular
+orbits. Specifically, the anisotropy parameter,
+\(\beta = 1 - \frac{\sigma_{\phi}^2 + \sigma_\theta^2}{2\sigma_{r}^2}\)
+where \(\sigma^2\) is the velocity dispersion in the spherical \(r\),
+\(\phi\), or \(\theta\) direction. Radial velocity anisotropy may cause
+halos to disrupt faster \citep[e.g.][]{chiang+bosch+schive2024}. To test
+the effects of moderate velocity anisotropy, we initialize a model with
+a velocity anisotropy with an Osipkov-Merritt profile rising from
+\(\beta=0.2\) at the centre to \(\beta=1\) and infinity, with scale
+length \(4r_s\).
 
 Fig.~\ref{fig:anisotropy_i_f} shows the initial and final anisotropy
 profiles after tidal evolution on Scl's \smallperi{} orbit. The dwarf
@@ -116,15 +122,15 @@ violating the assumption of spherical symmetry
 dark matter halo is unknown.
 
 We create an oblate initial dark matter halo using \agama{}.
-Fig.~\ref{fig:oblate_i_f} shows the initial equilibrium (after 5Gyr in
-isolation) isodensity contours of our model. The initial snapshot is
-sampled from the distribution function \begin{equation}{
+Fig.~\ref{fig:oblate_i_f} shows the initial equilibrium (after
+\(5\,\Gyr\) in isolation) isodensity contours of our model. The initial
+snapshot is sampled from the distribution function \begin{equation}{
 \begin{split}
-f = \frac{M_0}{(2\pi\,J_0)^3} \left[1 + \left(\frac{J_0}{h(J)}\right)^\eta\right]^{\Gamma / \eta} \ \left[1 + \left(\frac{g(J)}{J_0}\right)^\eta\right]^{-B/\eta} \\ \ \exp\left[-\left(\frac{g(J)}{J_{\rm cutoff}} \right)^\zeta\right] 
+f({\bf J}) = \frac{M_0}{(2\pi\,J_0)^3} \left[1 + \left(\frac{J_0}{h({\bf J})}\right)^\eta\right]^{\Gamma / \eta} \ \left[1 + \left(\frac{g({\bf J})}{J_0}\right)^\eta\right]^{-B/\eta} \\ \ \exp\left[-\left(\frac{g({\bf J})}{J_{\rm cutoff}} \right)^\zeta\right] 
 \end{split},
 }\end{equation} (\texttt{doublePowerLaw} in \agama{}), with
-\(g(J) = g_r J_r + g_z J_z + (3-g_r - g_z) |J_\phi|\) and
-\(h(J) = h_rJ_r + h_zJ_z + (3-h_r-h_z) |J_\phi|\). The
+\(g({\bf J}) = g_r J_r + g_z J_z + (3-g_r - g_z) |J_\phi|\) and
+\(h({\bf J}) = h_rJ_r + h_zJ_z + (3-h_r-h_z) |J_\phi|\). The
 \texttt{example\_doublepowerlaw.py} script in \agama{} solves for the
 best parameters matching a given density profile. We chose to create a
 model resembling an NFW but scaled by a factor of 0.5 in the \(z\)-axis.
@@ -148,10 +154,10 @@ description.
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/oblate_projected_2d.pdf}}
 \caption[Oblate halo projected density snapshots]{The initial and final
-(after 9Gyr of tidal evolution) projected density profiles for the
-oblate halo on Scl's \smallperi{} orbit, projected on with \(x'\) and
-\(z'\) the major and minor axes. The contours are drawn assuming normal
-smoothing of 0.4 kpc and are log-spaced with intervals of 0.1
+(after \(9\,\Gyr\) of tidal evolution) projected density profiles for
+the oblate halo on Scl's \smallperi{} orbit, projected on with \(x'\)
+and \(z'\) the major and minor axes. The contours are drawn assuming
+normal smoothing of 0.4 kpc and are log-spaced with intervals of 0.1
 dex.}\label{fig:oblate_i_f}
 \end{figure}
 
@@ -172,7 +178,7 @@ model, the \texttt{MW\ impact} model, can approximately reproduce the
 observed position of Scl (see Fig.~\ref{fig:scl_mw_impact_orbit}). The
 model has a Galactocentric initial position of
 \([67.83, -352.2, 110.3]\,\kpc\) and velocity of
-\([-3.68, 30.79, -22.77]\,\kpc\).
+\([-3.68, 30.79, -22.77]\,\kms\).
 
 Fig.~\ref{fig:tidal_tracks_umi} compares the tidal evolution of Scl on
 the mean, \texttt{MW\ impact}, and \smallperi{} orbit. The mean orbit
@@ -188,9 +194,10 @@ orbital history would be necessary to tidally transform Scl's stars.
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_mw_impact_orbits.pdf}}
-\caption[Sculptor MW impact orbit]{The orbit of Sculptor for the
-MW-impact model. The point (dotted) and n-body (solid) diverge by
-\(\sim 50\,\kpc\) at early times.}\label{fig:scl_mw_impact_orbit}
+\caption[Sculptor MW impact orbit]{Similar to
+Fig.~\ref{fig:scl_lmc_orbits_effect}, except for the orbit of Sculptor
+for the MW-impact model. The point (dotted) and N-body (solid) diverge
+by \(\sim 50\,\kpc\) at early times.}\label{fig:scl_mw_impact_orbit}
 \end{figure}
 
 \begin{figure}
@@ -221,10 +228,10 @@ stream.
 Fig.~\ref{fig:scl_tidal_stream} and Fig.~\ref{fig:umi_tidal_stream} show
 the resulting distributions of velocities and distance along the stream
 orbital axis \(\xi'\) for Scl and UMi. The tidal tails may have
-detectible gradients in radial velocities (\(\sim 10\,\kms\)) and proper
-motions (mostly for UMi, of \(\sim 0.1\,\masyr\)). However, detecting
-such a gradient would require tracing stars across several degrees on
-the sky.
+detectible gradients in radial velocities (\(\sim 10\,\kms\) over 5
+degrees) and proper motions (mostly for UMi, of \(\sim 0.1\,\masyr\)
+over 5 degrees). However, detecting such a gradient would require
+tracing stars across several degrees on the sky.
 
 \begin{figure}
 \centering
@@ -250,8 +257,11 @@ stars.}\label{fig:umi_tidal_stream}
 
 \section{Summary}\label{summary}
 
-While we have compared the evolution of orbits in the MW potential for
-simplicity, because the tidal evolution of Scl is very weak in the LMC
-model, the differences between models become even more slight. And while
-UMi has a lower pericentre than Scl, the differences between halo
-structure should apply similarly to UMi.
+While we compared the evolution of orbits of Scl in the MW-only
+potential for simplicity, we expect the differences between models in
+the MW and LMC potential to be more slight due to the weaker tidal
+evolution. And while UMi has a lower pericentre than Scl, the
+differences between halo structure should apply similarly to UMi. We
+conclude that our assumptions regarding orbits, halo concentration,
+cuspyness, anisotropy, and ellipticity likely do not dramatically change
+our conclusions.

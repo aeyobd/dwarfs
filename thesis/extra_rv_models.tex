@@ -87,15 +87,14 @@ and with \(a, b \sim N(0, 6^2)\,\kmsdeg\).
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_umi_rv_fits.pdf}}
 \caption[Velocity dispersion fits]{\textbf{Left:} Velocity histogram of
-Scl and UMi in terms of projected-correction GSR LOS velocity. Black
-points with error bars are from the sample of LOS-velocity members, and
-green lines represent MCMC fits to the velocity dispersion.
-\textbf{Right:} The observed velocity dispersion gradient (black points)
-in 10 equal number bins and the derived slopes for MCMC samples (green
-lines). Scl shows moderate evidence for an increasing velocity
-dispersion with radius, but Scl's velocity dispersion appears to flatten
-outside of \(R_h\). UMi's evidence for a radial gradient is
-weaker.}\label{fig:rv_hists}
+Scl and UMi in terms of projected-correction LOS velocity. Black points
+with error bars are a histogram of LOS-velocity members, and green lines
+represent MCMC fits to the velocity dispersion. \textbf{Right:} The
+observed velocity dispersion gradient (black points) in 10 equal number
+bins and the derived slopes for MCMC samples (green lines). Scl shows
+moderate evidence for an increasing velocity dispersion with radius, but
+Scl's velocity dispersion appears to flatten outside of \(R_h\). UMi's
+evidence for a radial gradient is weaker.}\label{fig:rv_hists}
 \end{figure}
 
 \input{rv_table.tex}
@@ -105,15 +104,24 @@ weaker.}\label{fig:rv_hists}
 \pandocbounded{\includegraphics[keepaspectratio]{figures/scl_rv_scatter_gradient.pdf}}
 \caption[A possible velocity gradient in Sculptor]{\textbf{Top} members
 of Sculptor plotted in the tangent plane, coloured by corrected velocity
-difference from mean \(v_z - \bar v_z\). The black ellipse marks the
-half-light radius in Fig.~\ref{fig:scl_selection}. The black and green
-arrows mark the proper motion (PM, GSR frame) and derived velocity
-gradient (rot) vectors (to scale). \textbf{Bottom}: The corrected LOS
-velocity along the most likely rotational axis. RV members are black
-points, the systematic \(v_z\) is the horizontal grey line, blue lines
-represent the (projected) gradient from MCMC samples, and the orange
-line is a rolling median (with a window size of
+difference from mean \(v_{\rm gsr}' - \bar v_{\rm gsr}'\). The black
+ellipse marks the half-light radius in Fig.~\ref{fig:scl_selection}. The
+black and green arrows mark the proper motion (PM, GSR frame) and
+derived velocity gradient (rot) vectors (to scale). \textbf{Bottom}: The
+corrected LOS velocity along the most likely rotational axis. RV members
+are black points, the systematic \(v_{\rm gsr}''\) is the horizontal
+grey line, blue lines represent the (projected) gradient from MCMC
+samples, and the orange line is a rolling median (with a window size of
 50).}\label{fig:scl_velocity_gradient_scatter}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio]{figures/umi_rv_scatter_gradient.pdf}}
+\caption[velocity]{Similar to
+Fig.~\ref{fig:scl_velocity_gradient_scatter} except for Ursa Minor. Ursa
+Minor does not have clear evidence of a velocity
+gradient.}\label{fig:umi_velocity_gradient_scatter}
 \end{figure}
 
 We derive a systemic velocity for Sculptor of \(111.3\pm0.2\,\kms\) with

@@ -33,15 +33,16 @@ member stars out to large distances from a dwarf galaxy. J+24 extended
 the algorithm presented in \citet{MV2020a, MV2020b} by additionally
 including a secondary, extended spatial component. J+24 detected
 candidate members out to \textasciitilde10 half-light radii from the
-centres of some galaxies (\(R_h\)). Similar recent work has also
-included \citet{pace+li2019}; \citet{battaglia+2022};
-\citet{pace+erkal+li2022}; \citet{qi+2022}.
+centres of some galaxies (\(R_h\)). Similar recent work includes
+\citet{pace+li2019}; \citet{battaglia+2022}; \citet{pace+erkal+li2022};
+\citet{qi+2022}.
 
-J+24's method uses likelihoods, \({\cal L}\), representing the
-probability density that a star is consistent with either the
-foreground/background, \({\cal L}_{\rm bg}\), or the satellite galaxy,
-\({\cal L}_{\rm sat}\). In either case, the likelihoods are the product
-of a spatial, PM, and CMD component, \begin{equation}{
+J+24's formulate membership through likelihoods, \({\cal L}\),
+representing the probability density that a star is consistent with
+either the foreground/background, \({\cal L}_{\rm bg}\), or the
+satellite galaxy, \({\cal L}_{\rm sat}\). In either case, the
+likelihoods are the product of a spatial, PM, and CMD component,
+\begin{equation}{
 {\cal L} = {\cal L}_{\rm space}\ {\cal L}_{\rm PM}\ {\cal L}_{\rm CMD}.
 }\end{equation}
 
@@ -87,14 +88,15 @@ otherwise. Most stars have \(P_{\rm  sat}\) values which are nearly 0 or
 1, so the exact choice of probability threshold has little effect on the
 resulting sample. Even at our relatively generous probability threshold
 of 0.2, the purity remains high when validated against spectroscopic
-line-of-sight (LOS) velocities (\textasciitilde90\%, J+24). We note,
-however, that these purity estimates may be biased. Stars with LOS
-velocities are typically brighter and, as a result, have more precise
-\emph{Gaia} measurements. However, we find that our conclusions are
-unchanged when limiting samples to only the brightest stars. Altogether,
-the J+24 method provides a high-quality, low-contamination sample of
-dwarf galaxy candidate member stars, which we will now investigate in
-further detail.
+line-of-sight (LOS) velocities (\textasciitilde90\%, J+24).\footnote{This
+  would indicate that the J+24 model probabilities are mis-calibrated.
+  However, most LOS surveys of dwarf galaxies select brighter stars
+  (which have better \emph{Gaia} measurements) and likely members,
+  complicating the interpretation of this purity estimate.} However, we
+find that our conclusions are unchanged when limiting samples to only
+the brightest stars. Altogether, the J+24 method provides a
+high-quality, low-contamination sample of dwarf galaxy candidate member
+stars, which we will now investigate in further detail.
 
 \section{The effects of membership
 criteria}\label{the-effects-of-membership-criteria}
@@ -132,7 +134,7 @@ function.
 
 Figs.~\ref{fig:scl_selection}, \ref{fig:umi_selection}, \ref{fig:fornax_selection}
 show our fiducial sample for three dSphs (Sculptor, Ursa Minor, and
-Fornax), as well as the impact of different samples, in tangent-plane
+Fornax), as well as the impact of sample selection, in tangent-plane
 coordinates, the CMD, and proper-motion space. The ``all'' sample
 extends uniformly across the tangent plane, but includes a substantial
 background population. The ``CMD+PM'' sample has a much lower background
@@ -169,8 +171,8 @@ stars from the J+24 candidate membership list. The most distant stars
 confirmed in their work lie at radii \(\gtrsim 10 R_h\) from the centres
 of each dwarf. For an exponential profile, 0.05\% of stars fall outside
 a radius of \(6R_h\) and less than \(1/10^6\) fall outside
-\(10R_h\)---the mere presence of very distant member stars provides
-evidence for deviations from an exponential profile.
+\(10R_h\)---the mere presence of very distant member stars implies
+likely deviations from an exponential profile.
 
 \begin{figure}
 \centering
@@ -224,7 +226,7 @@ Poisson uncertainties as error bars in the density estimate at each bin.
 
 Fig.~\ref{fig:scl_observed_profiles} shows the derived density profiles
 for Sculptor, Ursa Minor, and Fornax. We calculate density profiles for
-three different samples from above: ``all'', ``CMD+PM'', and the
+three different samples from above: ``all,'' ``CMD+PM,'' and the
 ``fiducial'' sample. In each case, all samples coincide towards the
 inner regions of the satellite. However, the density profile from
 ``all'' plateaus at the total background in the field at radii of 30-60
@@ -235,13 +237,12 @@ that could be mistaken as members because of their coincident colours
 and proper motions. Finally, the ``all -- background'' profile results
 from subtracting the apparent background in the ``all'' profile.
 
-While the density profiles of all samples agree in the inner regions,
-they begin to deviate outside \(6R_h\). Outside this radius, the
-fiducial profile extends 1--2 magnitudes below the ``CMD+PM'' selection
-background. Because the fiducial profile in this region depends
-critically on the spatial likelihood, its shape is vulnerable to the
-assumed density profile (an exponential in J+24). We explore this in
-more detail in Appendix \ref{sec:density_extra}.
+The density profiles of all samples agree in the inner regions. However,
+outside \({\sim} 6R_h\), these profiles would diverge as the
+``fiducial'' sample becomes vulnerable to the assumed spatial likelihood
+(an exponential in J+24). We thus truncate the fiducial profiles near
+the ``CMD+PM'' background to avoid misleading density profiles. We
+explore this in more detail in Appendix \ref{sec:density_extra}.
 
 Near UMi, there is a small (\(R_h\sim 0.5'\)), likely unassociated,
 ultrafaint star cluster, Muñoz 1 \citep{munoz+2012}. The cluster is at a
@@ -306,10 +307,11 @@ radii).}\label{fig:scl_observed_profiles}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio]{figures/classical_dwarf_profiles.pdf}}
 \caption[Classical dwarf density profiles]{The density profiles of
-Sculptor, Ursa Minor, and other classical dwarfs compared to Exp2D and
-Plummer density profiles. Dwarf galaxies are scaled by the half-light
-radius and density at half-light radius. Sculptor and Ursa Minor have an
-excess of stars in the outer regions (past \(\log R/R_h \sim 0.3\))
-compared with other classical
+Sculptor, Ursa Minor, and other classical dwarfs compared to a 2D
+exponential and Plummer density profiles. Dwarf galaxies are scaled by
+the half-light radius and density at half-light radius. The residuals
+(lower panel) are with respect to a 2D exponential. Sculptor and Ursa
+Minor have an excess of stars in the outer regions (past
+\(\log R/R_h \sim 0.3\)) compared with other classical
 dwarfs.}\label{fig:classical_dwarfs_densities}
 \end{figure}

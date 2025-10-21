@@ -4,7 +4,7 @@ In this section, we detail the J+24 membership algorithm and test the resulting 
 
 ## Bayesian membership probabilities
 
-To create a high-quality sample, J+24 select stars initially from Gaia within a 2--4 degree region around each satellite with high-quality astrometry, reliable photometry, consistent parallaxes, and broadly consistent proper motions and colours. Stars are removed if they have excess astrometric noise [${\rm ruwe} > 1.3$, see @lindegren+2021], colour excess $3\sigma$ outside of expectations [from @riello+2021], proper motions $>10\,\masyr$ in $|\mu_{\alpha*}|$ or $|\mu_\delta|$, magnitudes brighter than the tip of the red giant branch[^trgb_mag] or fainter than $G=22$, or colours outside $-0.5 < G_{\rm BP} - G_{\rm RP} <  2.5$. Photometry is dereddened with @schlegel+finkbeiner+davis1998 extinction maps.
+To create a high-quality sample, J+24 select stars initially from Gaia within a 2--4 degree region around each satellite with reliable astrometry, sensible photometry, consistent parallaxes, and broadly consistent proper motions and colours. Stars are removed if they have excess astrometric noise [${\rm ruwe} > 1.3$, see @lindegren+2021], colour excess $3\sigma$ outside of expectations [from @riello+2021], proper motions $>10\,\masyr$ in $|\mu_{\alpha*}|$ or $|\mu_\delta|$, magnitudes brighter than the tip of the red giant branch[^trgb_mag] or fainter than $G=22$, or colours outside $-0.5 < G_{\rm BP} - G_{\rm RP} <  2.5$. Photometry is dereddened with @schlegel+finkbeiner+davis1998 extinction maps.
 
 [^trgb_mag]: Derived from the maximum RGB magnitude from the associated Padova isochrone plus $5\sigma$​ times the distance modulus uncertainty.
 
@@ -35,6 +35,8 @@ Figure: Colour-magnitude diagram cuts used in samples in this section. Black poi
 ## Possible biases in *Gaia*-derived density profiles {#sec:density_extra}
 
 We now discuss potential biases in J+24's algorithm for *Gaia* data. We then test how these biases may influence density profiles. In all cases, density profiles converge within $R_{\rm ell} \approx 60\,{\rm arcmin}$, where background contamination begins to dominate. 
+
+**Likelihood misspecification**. The J+24 likelihoods may be misspecified. Particularly, the CMD model is simple and does not account for, e.g., the expected number of stars on various parts of the isochrone and assume the galaxy is a single population. In this case, the probabilities likely do not reflect true membership probabilities.
 
 **Spatial likelihood.** Since J+24 include a spatial likelihood, the resulting density profiles risk "double fitting"---the same spatial distribution of stars informs the membership catalogue and the subsequent density profiles. If the spatial likelihood misrepresents the underlying satellite structure, then the density profiles may be biased towards the assumed shape. 
 
@@ -75,7 +77,7 @@ f_{\rm sat} &= \frac{10^{\theta}}{1 + 10^{\theta}}.
 $$
 We then adopt a broad uniform prior on $\theta$ from -12 to 6. The CMD and PM likelihoods are unchanged from J+24, except that the systemic PM is fixed for efficiency. 
 
-To bin stars, we hold fixed J+24's structural parameters and create bins of the wider of the width $\Delta \log R=0.05$ or containing the next 20 stars. We then derive posterior $f_{\rm sat}$ distributions with MCMC (48 walkers of 1000 steps each, and using the No-U-Turn sampler as implemented in Turing.jl). The final density profile is directly derived from $f_{\rm sat}$ and the number of stars in each bin.
+To bin stars, we hold fixed J+24's structural parameters and create bins of width $\Delta \log R=0.05$ or containing the next 20 stars, whichever is wider. We then derive posterior $f_{\rm sat}$ distributions with MCMC (48 walkers of 1000 steps each, and using the No-U-Turn sampler as implemented in Turing.jl). The final density profile is directly derived from $f_{\rm sat}$ and the number of stars in each bin.
 
 ### Results
 
@@ -96,7 +98,7 @@ To bin stars, we hold fixed J+24's structural parameters and create bins of the 
 
 Table: For each classical dwarf, the limiting radius $R_{\rm limit}$ in units of $R_h$ and arcminutes. $R_{\rm limit}$ represents where there is no longer evidence of *Gaia* members using the nonparametric MCMC density profiles. {#tbl:mcmc_props short="The limiting radii of Gaia-derived density profiles"}
 
-[@fig:mcmc_hists; @fig:mcmc_hists2] show the derived MCMC density profiles as compared to J+24. In general, both methodologies produce similar densities. However, J+24 tend to systematically overestimate faint densities and confidently derive densities where the MCMC model fails to derive a density estimate. 
+[@fig:mcmc_hists; @fig:mcmc_hists2] show the derived MCMC density profiles as compared to J+24. In general, both methodologies produce similar densities. However, J+24 tend to systematically overestimate faint densities and confidently derive densities where the MCMC model fails to determine the satellite density. 
 
 In the outskirts of satellites, more background/foreground stars may have consistent PM and CMD properties than satellite members. Improperly estimating the satellite's density in this "background-limited" regime likely affects the inferred density of members. If the satellite's density is severely overestimated, then a J+24-like sample may select many additional background stars. The density of candidates would then be biased towards the assumed density. As J+24 only use a one or two-component density profile across the entire dwarf, the density profile is likely biased where the CMD+PM background dominates. The nonparametric MCMC model instead does not assume a local density, so it should better represent the underlying satellite density.
 
