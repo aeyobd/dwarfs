@@ -1,0 +1,38 @@
+# isolation models
+#iso_1e4 = ["isolation", "1e4_new/fiducial", "stars"]
+#iso_1e5 = ["isolation", "1e5_new/fiducial", "stars"]
+#iso_1e6 = ["isolation", "1e6_new/fiducial", "stars"]
+#iso_1e7 = ["isolation", "1e7_new/fiducial", "stars"]
+
+# orbits
+scl_orbits = ["sculptor", "EP2020"]
+scl_lmc_orbits = ["sculptor", "vasiliev24_L3M11"]
+umi_orbits = ["ursa_minor", "EP2020"]
+umi_lmc_orbits = ["ursa_minor", "vasiliev24_L3M11"]
+
+# results models
+scl_smallperi = ["sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"]
+scl_smallperi_plummer = ["sculptor", "1e7_new_v31_r3.2/orbit_smallperi", "plummer_rs0.20"]
+scl_lmc = ["sculptor", "1e7_new_v25_r2.5/smallperilmc", "exp2d_rs0.11"]
+scl_lmc_plummer = ["sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20"]
+umi_smallperi = ["ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "exp2d_rs0.10"]
+umi_smallperi_plummer = ["ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "plummer_rs0.20"]
+
+# convergence models
+#larger_softening = ["sculptor", "1e5_s0.44_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"]
+#smaller_softening = ["sculptor", "1e5_s0.044_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"]
+#high_force_acc = ["sculptor", "1e5_facc0.001_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"]
+#small_timestep = ["sculptor", "1e5_acc0.001_v31_r3.2/orbit_smallperi", "exp2d_rs0.10"]
+
+
+# Extra models
+#heavier = ["sculptor", "1e6_new_v43_r7/orbit_smallperi", "exp2d_rs0.10"]
+#heavier_new_orbit = ["sculptor", "1e6_new_v43_r7/orbit_smallperi.3", "exp2d_rs0.10"]
+#lighter = ["sculptor", "1e6_new_v25_r2.5/orbit_smallperi", "exp2d_rs0.10"]
+#cored = ["sculptor", "1e6_Ms0.54_rs1.08_c1/orbit_smallperi", "exp2d_rs0.10"]
+#anisotropic = ["sculptor", "1e6_v43_r5_beta0.2_a4/orbit_smallperi", "exp2d_rs0.10"]
+#oblate = ["sculptor", "1e6_v48_r7_oblate_0.5/orbit_smallperi", "exp2d_rs0.10"]
+#mw_impact = ["sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"]
+#scl_mean = ["sculptor", "1e6_new_v31_r3.2/orbit_mean", "exp2d_rs0.10"]
+#scl_dm_free = ["sculptor", "1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars"]
+#umi_dm_free = ["ursa_minor", "1e4_exp_M4e-4_r0.13/orbit_smallperi", "stars"]
