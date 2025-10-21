@@ -12,8 +12,8 @@ encounters between particles are inevitable. Such collisional encounters
 are both unphysical (with possible arbitrary acceleration, violating the
 ``collisionless'' assumption) and computationally expensive (requiring
 many small time-steps). As a remedy, many N-body codes use a
-``softened'' gravitational force law, where the force weakens when
-closer to a particle than a ``softening length''. The choice of
+\emph{softened} gravitational force law, where the force weakens when
+closer to a particle than a \emph{softening length.} The choice of
 softening length ideally balances resolution and computational speed.
 
 Empirically, \citet{power+2003} suggest that the ideal softening is
@@ -62,15 +62,15 @@ that our simulations are numerically well-converged (up to the
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/orbit_converg_methods.png}}
-\caption[Isolation method convergence]{A comparison of the final
-profiles using different simulation methods for Sculptor's \smallperi{}
-model. The benchmark model is our fiducial \(10^7\) particle run, and
-all other models use \(10^5\) particles, with their ``converged radius''
-marked by the black arrow and softening by the vertical bar(s).
-\textbf{Top:} Models with \(\sqrt{10}\) larger and smaller softening
-lengths than the fiducial. \textbf{Bottom:} Models with more precise
-timestep accuracy and gravitational force accuracy. \textbf{Summary:}
-Except for the model with a larger softening length, all simulations
-agree within uncertainties.}\label{fig:methods_convergence}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{figures/orbit_converg_methods.png}
+\caption[Numerical methods convergence]{Similar to
+Fig.~\ref{fig:numerical_convergence}, except a comparison of the final
+velocity profiles using different simulation methods for Sculptor's
+\smallperi{} model. The benchmark model is our fiducial \(10^7\)
+particle run, and all other models use \(10^5\) particles, with their
+``converged radius'' marked by the black arrow and softening by the
+vertical bar(s). \textbf{Left:} Models with \(\sqrt{10}\) larger and
+smaller softening lengths than the fiducial. \textbf{Right:} Models with
+more precise timestep accuracy and gravitational force
+accuracy.}\label{fig:methods_convergence}
 \end{figure}

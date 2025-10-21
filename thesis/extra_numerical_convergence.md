@@ -2,7 +2,7 @@
 
 Here, we describe the numerical specifics of our simulation and analysis. We present convergence tests supporting our choices of softening and additional parameters. We find that alternate choices of numerical parameters neither improve convergence nor the resulting evolution. 
 
-Due to the finite resolution of N-body simulations, collisional (close) encounters between particles are inevitable. Such collisional encounters are both unphysical (with possible arbitrary acceleration, violating the "collisionless" assumption) and computationally expensive (requiring many small time-steps). As a remedy, many N-body codes use a "softened" gravitational force law, where the force weakens when closer to a particle than a "softening length". The choice of softening length ideally balances resolution and computational speed.
+Due to the finite resolution of N-body simulations, collisional (close) encounters between particles are inevitable. Such collisional encounters are both unphysical (with possible arbitrary acceleration, violating the "collisionless" assumption) and computationally expensive (requiring many small time-steps). As a remedy, many N-body codes use a *softened* gravitational force law, where the force weakens when closer to a particle than a *softening length.* The choice of softening length ideally balances resolution and computational speed.
 
 Empirically, @power+2003 suggest that the ideal softening is
 $$
@@ -19,6 +19,6 @@ The two other key numerical parameters in \gadget{} are the tree-force and time-
 
 As demonstrated in this subsection, stricter numerical accuracy and modified softening lengths do not affect our results. We thus conclude that our simulations are numerically well-converged (up to the "convergence" radius). 
 
-![Isolation method convergence](figures/orbit_converg_methods.png){#fig:methods_convergence}
+![Numerical methods convergence](figures/orbit_converg_methods.png){#fig:methods_convergence width=100%}
 
-Figure: A comparison of the final profiles using different simulation methods for Sculptor's \smallperi{} model. The benchmark model is our fiducial $10^7$ particle run, and all other models use $10^5$ particles, with their "converged radius" marked by the black arrow and softening by the vertical bar(s). **Top:**  Models with $\sqrt{10}$ larger and smaller softening lengths than the fiducial. **Bottom:** Models with more precise timestep accuracy and gravitational force accuracy. **Summary:** Except for the model with a larger softening length, all simulations agree within uncertainties. 
+Figure: Similar to @fig:numerical_convergence, except a comparison of the final velocity profiles using different simulation methods for Sculptor's \smallperi{} model. The benchmark model is our fiducial $10^7$ particle run, and all other models use $10^5$ particles, with their "converged radius" marked by the black arrow and softening by the vertical bar(s). **Left:**  Models with $\sqrt{10}$ larger and smaller softening lengths than the fiducial. **Right:** Models with more precise timestep accuracy and gravitational force accuracy. 
