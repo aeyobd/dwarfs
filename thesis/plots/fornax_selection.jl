@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -91,6 +91,9 @@ members_nospace = best_stars[best_stars.LLR_nospace .> 0.0, :]
 # ╔═╡ cc2de56d-9fbc-4bee-a52c-c9034a246b92
 rv_members = read_fits(ENV["DWARFS_ROOT"] * "/observations/fornax/velocities/processed/rv_combined_psat_0.2.fits")
 
+# ╔═╡ 427e1a17-379f-4f50-a361-f4091c327e36
+(sum(ismissing.(rv_members.RV_apogee) .& ismissing.(rv_members.RV_w09)))
+
 # ╔═╡ 7439f42f-b25c-4619-913a-44dda4200abe
 samples = 	OrderedDict(
 	:best => best_stars,
@@ -131,5 +134,6 @@ samples = 	OrderedDict(
 # ╠═60d0e593-88fd-4b4c-9009-cc24a597c6d5
 # ╠═082a06dd-eeb5-4761-a233-1ee89e8cb819
 # ╠═cc2de56d-9fbc-4bee-a52c-c9034a246b92
+# ╠═427e1a17-379f-4f50-a361-f4091c327e36
 # ╠═7439f42f-b25c-4619-913a-44dda4200abe
 # ╠═b94901b0-ecc7-480b-b24a-fc526c9491c8

@@ -101,7 +101,7 @@ v0 = gsr.radial_velocity
 
 # ╔═╡ d413132c-d6f3-45d4-8a1e-1306b8ad084b
 let
-	fig = Figure(size=(5*72, 5*72))
+	fig = Figure(size=(6*72, 5*72))
 
 	gs = GridLayout(fig[1,1])
 	ax = Axis(gs[1,1],
@@ -109,7 +109,9 @@ let
 		ylabel = L"\eta\ /\ \textrm{arcmin}",
 		xreversed=true,
 		aspect = DataAspect(), 
-			  limits=(-50, 50, -30, 30)
+			  limits=(-50, 50, -50, 50),
+		xticks = -40:20:40,
+		yticks = -40:20:40,
 	)
 
 	arrowscale = 4
@@ -181,7 +183,8 @@ let
 	lines!(xs, ys,  color=COLORS[2], label="rolling median")
 
 	annotation!(0, 36, obs_props["R_h"], 35, text=L"R_h")
-	axislegend(unique=true, merge=true, tellwidth=false, position=:lt, backgroundcolor=(:white, 0.5))
+	# axislegend(unique=true, merge=true, tellwidth=false, position=:lt, backgroundcolor=(:white, 0.5))
+	Legend(gs[1, 3], ax, unique=true, merge=true, tellheight=false,halign=:right, valign=-0.3)
 
 	colsize!(gs_lower, 1, Relative(3/3))
 

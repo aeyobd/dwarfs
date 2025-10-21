@@ -1,0 +1,152 @@
+# Introduction
+- ./mw_satellites_onsky.jl:@savefig "mw_satellites" let
+- ./mw_satellites_onsky.jl:@savefig "mw_satellites_w_ack" let
+- ./mw_satellites_onsky.jl:@savefig "mw_satellites_all" let
+
+- ./galaxy_pictures.jl:@savefig "galaxy_pictures" let
+
+- ./example_density_profiles.jl:@savefig "example_density_profiles" let
+
+- ./cosmological_means.jl:@savefig "cosmological_means" let
+
+- ./classical_dwarf_densities.jl:	@savefig "scl_umi_fornax_exp"
+
+- ./idealized_model.jl:@savefig "idealized_break_radius" let
+
+# Data
+
+- ./scl_selection.jl:@savefig "scl_selection" Utils.compare_j24_samples(samples, Utils.default_styles, 
+- ./umi_selection.jl:@savefig "umi_selection" let
+- ./fornax_selection.jl:@savefig "fornax_selection" Utils.compare_j24_samples(
+
+- ./j+24_density_methods.jl:@savefig "scl_umi_fnx_density_methods" let
+- ./classical_dwarf_densities.jl:	@savefig "classical_dwarf_profiles"
+
+# Methods
+
+- ./v_circ_potential.jl:@savefig "v_circ_potential" let
+
+- ./scl_trajectories.jl:	@savefig "scl_xyzr_orbits"
+- ./umi_trajectories.jl:	@savefig "umi_xyzr_orbits"
+
+- ./initial_halo_selection.jl:	@savefig "initial_halo_selection"
+- ./iso_conv_num.jl:@savefig "iso_converg_num" compare_vcirc(profiles, marks=Dict(k => r_conv(halo, v) for (k, v) in part_num), vlims=(3.5, 38))
+./initial_vcirc.jl:@savefig "initial_velocity" let
+
+# results
+- ./sim_pictures.jl:	@savefig "$(figname)_sim_images"
+- ./tidal_tracks.jl:@savefig "scl_tidal_track"  plot_tidal_track(modelnames["scl_smallperi"]..., 
+
+- ./density_comparison.jl:@savefig "scl_smallperi_i_f" compare_both(modelnames["scl_smallperi"]...,  r_j=true, norm_shift=0.2, 	break_height=-3, title="Sculptor: smallperi-exponential")
+- ./density_comparison.jl:@savefig "scl_plummer_i_f" compare_both(modelnames["scl_smallperi_plummer"]..., norm_shift=0,  r_j=true, break_height=-2, title="Sculptor: smallperi-Plummer")
+
+
+- ./scl_lmc_trajectories.jl:	@savefig "scl_lmc_xyzr_orbits"
+- ./scl_lmc_pictures.jl:	@savefig "$(figname)_lmc_sim_images"
+- ./density_comparison.jl:@savefig "scl_lmc_i_f" compare_both(modelnames["scl_lmc"]..., norm_shift=0.1, lmc=true, r_j=true, break_height=-7.590274001669055, title="Sculptor: LMC–exponential")
+- ./density_comparison.jl:@savefig "scl_lmc_plummer_i_f" compare_both(modelnames["scl_lmc_plummer"]..., norm_shift=0.1, lmc=true, r_j=true, break_height=-7.590274001669055, title="Sculptor: LMC–Plummer")
+
+
+- ./tidal_tracks.jl:@savefig "umi_tidal_track"  plot_tidal_track(modelnames["umi_smallperi"]..., title="Ursa Minor: smallperi orbit")
+- ./density_comparison.jl:@savefig "umi_smallperi_i_f" compare_both(modelnames["umi_smallperi"]...,  r_j=true, norm_shift=0.0, 	break_height=-5.5, title="Ursa Minor: smallperi-exponential")
+- ./density_comparison.jl:@savefig "umi_plummer_i_f" compare_both(modelnames["umi_smallperi_plummer"]...,  r_j=true, norm_shift=0.0,break_height=-3, title="Ursa Minor: smallperi-Plummer")
+
+- ./umi_lmc_trajectories.jl:	@savefig "umi_lmc_xyzr_orbits"
+
+
+- ./lmc_orbits_mass_effect.jl:	@savefig "scl_lmc_orbits_mass_effect"
+
+# Discussion
+
+- ./metallicity_gradient.jl:	@savefig "scl_umi_fe_h_gradient"
+
+
+# Extra density
+- ./extra_selection.jl:	@savefig "extra_cmd_selection"
+- ./extra_density_profiles.jl:@savefig "density_methods_extra" let
+
+- ./mcmc_hists.jl:	@savefig "mcmc_histograms"
+- ./mcmc_hists.jl:	@savefig "mcmc_histograms2"
+
+- ./density_profiles_lit_comparison.jl:@savefig "scl_literatre_profiles" let
+- ./density_profiles_lit_comparison.jl:@savefig "umi_literature_profiles" let
+
+# extra numerical convergence
+
+- ./iso_extra_conv.jl:@savefig "orbit_converg_methods" let
+
+# extra RV models
+- ./scl_umi_rv_fits.jl:@savefig "scl_umi_rv_fits" let
+- ./scl_rv_gradient.jl:	@savefig "scl_rv_scatter_gradient"
+
+# Extra results
+- ./tidal_track_comparison.jl:@savefig "scl_mw_halo_boundmass" compare_boundmass(OrderedDict(
+
+- ./cored_model.jl:	@savefig "cored_density_i_f"
+
+- ./tidal_track_comparison.jl:@savefig "scl_mw_structure_boundmass" compare_boundmass(OrderedDict(
+
+- ./anisotropy_model.jl:@savefig "anisotropy_i_f" plot_anisotropies("$galaxyname/$modelname")
+- ./oblate_density.jl:	@savefig "oblate_projected_2d"
+
+- ./scl_mw_impact_orbit.jl:	@savefig "scl_mw_impact_orbits"
+- ./tidal_track_comparison.jl:@savefig "scl_orbits_boundmass"  compare_boundmass(OrderedDict(
+- ./density_comparison.jl:@savefig "scl_impact_i_f" compare_both(modelnames["mw_impact"]...,  title="Sculptor: MW impact", break_height=-4, r_j=true)
+
+- ./tidal_tails.jl:@savefig "scl_sim_stream" plot_sample(modelnames["scl_smallperi_plummer"]...)
+
+- ./tidal_tails.jl:@savefig "umi_sim_stream" plot_sample(modelnames["umi_smallperi_plummer"]...)
+
+
+# Okay Extra 
+./extra_selection.jl:	@savefig "delve_unions_tangent"
+./oblate_density.jl:	@savefig "oblate_density_i_f"
+./iso_extra_conv.jl:# @savefig "iso_converg_methods" compare_vcirc(profiles_methods, errskip=1, marks=r_conv(halo, 1e5), xlims=(-1, 1.6), vlims=(7.5, 36))
+./iso_extra_conv.jl:@savefig "iso_converg_softening" compare_vcirc(profiles_softening, marks = r_conv(halo, 1e6), xlims=(0.1, 50), vlims=(5.5, 38))
+./iso_extra_conv.jl:@savefig "iso_converg_methods" compare_vcirc(profiles_methods, marks = r_conv(halo, 1e5), xlims=(0.05, 50), vlims=(5.5, 38))
+./density_profiles_lit_comparison.jl:@savefig "scl_umi_literature_profiles" let
+./tidal_tails.jl:# @savefig "scl_mw_impact_stream" plot_sample(modelnames["scl_smallperi_plummer"]...)
+
+./template_plot.jl:@savefig "test" let
+
+
+
+# Extra plots
+./extra/tidal_track_comparison.jl:@savefig "scl_mw_halo_boundmass" compare_boundmass(OrderedDict(
+./extra/tidal_track_comparison.jl:@savefig "scl_orbits_boundmass"  compare_boundmass(OrderedDict(
+./extra/tidal_track_comparison.jl:@savefig "scl_mw_structure_boundmass" compare_boundmass(OrderedDict(
+./extra/tidal_track_comparison.jl:@savefig "scl_lmc_halo_boundmass" let 
+./extra/tidal_track_comparison.jl:@savefig "umi_orbits_boundmass" compare_boundmass(OrderedDict(
+./extra/classical_dwarf_densities.jl:	@savefig "classical_dwarf_profiles"
+./extra/classical_dwarf_densities.jl:	@savefig "scl_umi_fornax_exp_fit"
+./extra/classical_dwarf_densities.jl:	@savefig "scl_umi_fornax_exp"
+./extra/classical_dwarf_densities.jl:	# @savefig "classical_dwarf_profiles"
+./extra/classical_dwarf_scatter.jl:	@savefig "classical_dwarf_scatter"
+./extra/initial_halo_selection.jl:	@savefig "initial_halo_selection"
+./extra/lagrange_points.jl:@savefig "lagrange_points" let
+./extra/initial_conditions.jl:@savefig "initial_conditions" let
+./extra/scl_selection.jl:@savefig "scl_selection" Utils.compare_j24_samples(
+./extra/umi_selection.jl:@savefig "umi_selection" let
+./extra/observed_vs_penarrubia.jl:	@savefig "scl_umi_vs_penarrubia_2panel" fig
+./extra/observed_vs_penarrubia.jl:	@savefig "scl_umi_vs_penarrubia" fig
+./extra/scl_tidal_tails.jl:@savefig "scl_tidal_tails" compare_samples(
+./extra/umi_density_comparison.jl:@savefig "umi_smallperi_i_f" compare_both("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10",  r_j=true, norm_shift=0.0, 	break_height=-0)
+./extra/umi_density_comparison.jl:@savefig "umi_plummer_i_f" compare_both("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20",  r_j=true, norm_shift=0.0,break_height=-0)
+./extra/umi_density_comparison.jl:@savefig "umi_smallperi_i_f" compare_both("1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10",  r_j=true, norm_shift=-0.6, 	break_height=-0)
+./extra/velocity_dispersions.jl:@savefig "scl_extra_densities_sigma_vs" compare_both("sculptor", OrderedDict(
+./extra/idealized_density.jl:@savefig "scl_umi_vs_fornax" let
+./extra/idealized_density.jl:@savefig "scl_umi_vs_idealized" let
+./extra/classical_mcmc_densities.jl:	@savefig "classical_dwarf_mcmc_profiles"
+./extra/classical_mcmc_densities.jl:	# @savefig "classical_dwarf_profiles"
+./extra/umi_rv.jl:	@savefig "umi_rv_2dhist"
+./extra/umi_rv_gradient.jl:	@savefig "umi_rv_scatter_gradient"
+./extra/sigma_v_vs_time.jl:@savefig "scl_sigma_v_time" compare_sigma_v_time(OrderedDict(
+./extra/sigma_v_vs_time.jl:@savefig "scl_sigma_v_time_weight" compare_sigma_v_time(OrderedDict(
+./extra/sigma_v_vs_time.jl:@savefig "scl_sigma_v_time_orbit" compare_sigma_v_time(OrderedDict(
+./extra/sigma_v_vs_time.jl:@savefig "umi_sigma_v_time" compare_sigma_v_time(umi_orbits, umi_obs)
+
+./extra/scl_umi_trajectories.jl:	@savefig "scl_xyzr_orbits"
+./extra/scl_umi_trajectories.jl:	@savefig "scl_umi_xyzr_orbits"
+./extra/analytic_profile_comparison.jl:@savefig "analytic_profile_comparison" let
+./extra/sigma_v_gradient.jl:	@savefig "sigma_v_gradient" 
+./extra/scl_rv.jl:	@savefig "scl_rv_scatter"

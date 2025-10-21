@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -26,7 +26,7 @@ using CSV, DataFrames
 include("./paper_style.jl")
 
 # ╔═╡ bf905cc5-50e7-4789-abe1-95e74ad93ecd
-potname = "L3M11"
+potname = "EP2020"
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)

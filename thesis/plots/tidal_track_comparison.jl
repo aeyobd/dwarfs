@@ -60,24 +60,23 @@ function get_profiles(modelname)
 end
 
 # ╔═╡ 7d8f9954-0bbc-4fc0-ba21-aad54b3aaee4
-function compare_boundmass(modelnames; relative=false, legend_position=:rb)
+function compare_boundmass(modelnames; legend_position=:rb)
 	
 	fig = Figure()
 
 	ax = Axis(fig[1,1], 
 		xlabel = "simulation time / Gyr",
 		ylabel = L"$\textrm{v}_\textrm{max}$ / km\,s$^{-1}$",
+		yscale=log10,
+		yticks=10:5:60,
+		yminorticks=10:1:60,
 	)
 
 	
 	for (label, modelname) in modelnames
 		df = get_scalars(modelname)
 
-		y = log10.(df.v_circ_max * V2KMS)
-		if relative
-			y .-=  log10(df.v_circ_max[1])
-		end
-		
+		y = df.v_circ_max * V2KMS		
 		lines!(df.time * T2GYR, y, label=label)
 	end
 
@@ -86,17 +85,20 @@ function compare_boundmass(modelnames; relative=false, legend_position=:rb)
 
 	ax2 = Axis(fig[1,2], 
 		xlabel = L"$r_\textrm{max}$ / kpc",
+		xscale = log10,
+		xticks=[1; 2:1:8],
+		xminorticks=[1:0.1:2; 2:0.5:8],
+		yticks=10:5:60,
+		yminorticks=10:1:60,
 		ylabel = L"$\textrm{v}_\textrm{max}$ / km\,s$^{-1}$",
+		yscale = log10
 	)
 
 	
 	for (label, modelname) in modelnames
 		df = get_scalars(modelname)
 
-		y = log10.(df.v_circ_max * V2KMS)
-		if relative
-			y .-=  log10(df.v_circ_max[1])
-		end
+		y = (df.v_circ_max * V2KMS)
 		
 		lines!(df.r_circ_max, y, label=label)
 	end

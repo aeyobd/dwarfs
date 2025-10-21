@@ -38,9 +38,6 @@ md"""
 The most important variable is to set the modelname to the appropriate directory.
 """
 
-# ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
-
-
 # ╔═╡ 46348ecb-ee07-4b6a-af03-fc4f2635f57b
 FIGDIR = "./figures"
 
@@ -113,8 +110,8 @@ sw = theme(:linewidth)[] / 2
 
 # ╔═╡ d38c2f93-0ddc-4e46-887c-a43c55d663c6
 let
-	fig = Figure()
-	limits = LilGuys.limits_xyz(LilGuys.positions.(orbits)...)
+	fig = Figure(figure_padding=12)
+	limits =((-100, 100), (-100, 100), (-100, 100))
 
 	ax_xyz = axes_xyz_flat(fig, limits=limits, ylabelpadding=-12)
 
@@ -136,6 +133,7 @@ let
 	xlims!(-10, 0.1)
 	ylims!(0, 110)
 	plot_rt_today!(ax_rt, best_orbit)
+	Label(fig[0, :], "Ursa Minor", font=:bold)
 
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
 
@@ -148,7 +146,6 @@ end
 # ╔═╡ Cell order:
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
-# ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7

@@ -38,11 +38,8 @@ halo = LilGuys.load_profile("$models_dir/1e6_new/fiducial/halo.toml")
 # ╔═╡ f095ddc2-4d80-49bb-8a55-ce0f2e6524b7
 nfw = NFW(M_s=halo.M_s, r_s=halo.r_s, c=halo.c')
 
-# ╔═╡ 2c77e958-c57c-4bb0-94f3-f29414e275cb
-
-
 # ╔═╡ ba744355-8da6-4caa-a252-ad83ad4b8b13
-log_r_label = "log radius / kpc"
+r_label = "radius / kpc"
 
 # ╔═╡ bd023583-28b3-4c4d-8ced-7161350a5d7a
 md"""
@@ -57,19 +54,24 @@ function vcirc_axes(; xlims, ylims)
     
     fig = Figure()
     ax = Axis(fig[1, 1],
-        xlabel=log_r_label,
+        xlabel=r_label,
         ylabel=L"$\textrm{v}_\textrm{circ}$ / km\,s$^{-1}$",
         limits=(xlims[1], xlims[2], ylims[1], ylims[2]),
 		yscale=log10,
-		yticks=[1:10; 10:10:100]
+		yticks=[1:10; 10:10:100],
+		xscale = log10,
+		xticks = [0.01, 0.1, 1, 10, 100]
         )
 
 
 
     ax_res = Axis(fig[2, 1],
-        xlabel=log_r_label,
-        ylabel=L"\Delta\,\textrm{v}\,/\textrm{v}_\textrm{NFW}",
+        xlabel=r_label,
+        ylabel=L"\Delta\,\textrm{v}_\textrm{circ}\,/\textrm{v}_\textrm{NFW}",
         limits=(xlims[1], xlims[2], -0.2, 0.2),
+		xscale = log10,
+		xticks = [0.01, 0.1, 1, 10, 100],
+		xtickformat = x -> string.(x),
     )
 
 
@@ -82,39 +84,12 @@ function vcirc_axes(; xlims, ylims)
 	return fig, ax, ax_res
 end
 
-# ╔═╡ 95af5b9d-e613-4d7f-849e-f6ddb221bd29
-function plot_vcirc_profiles!(profiles, v_circ_0=x->0; errskip=1)
-    for i in eachindex(profiles)
-        label, profs = profiles[i]
-        profile = profs[1]
-
-		y0 = v_circ_0(profile.radii)
-		y = (LilGuys.circular_velocity(profile) * V2KMS)
-        lines!(log10.(profile.radii), y .- y0,
-            linestyle=:dot,
-            color=COLORS[i]
-        )
-        
-        profile = profs[end]
-		v0 = v_circ_0(profile.radii)
-
-		y0 = v_circ_0(profile.radii)
-		y = (LilGuys.circular_velocity(profile) * V2KMS)
-		x = log10.(profile.radii)
-        lines!(x, y .- y0 ,
-            color=COLORS[i],
-            label=label
-        )
-
-        idx = 1:errskip:length(x)
-        errorbars!(x[idx], middle.(y .- y0)[idx], LilGuys.error_interval.(y .- y0)[idx], color=COLORS[i])
-
-	end
-end
+# ╔═╡ d444f4d5-6f9a-4f1c-84c0-eed8cc101b90
+# lws = LinRange(theme(:linewidth)[], smalllinewidth[], length(profiles))
 
 # ╔═╡ 533eb462-eb9a-4452-b861-253e78b87490
 function plot_marks!(profiles, marks::Real, ylims; y0=nothing, residual=false, kwargs...)
-	x = log10(marks)
+	x = (marks)
 	
 	if isnothing(y0)
 		y = (LilGuys.v_circ(nfw, marks) * V2KMS)
@@ -139,55 +114,16 @@ function plot_marks!(profiles, marks::Real, ylims; y0=nothing, residual=false, k
 
 end
 
-# ╔═╡ ffa1eff7-57d9-4df4-868c-7cb48d5f1909
-function plot_marks!(profiles, marks, ylims; kwargs...)
-    for i in eachindex(profiles)
-		label, _ = profiles[i]
-
-		if label ∈ keys(marks)
-			@info "marking $label"
-			
-			plot_marks!(profiles, marks[label], ylims; color=COLORS[i], kwargs...)
-		end
-    end
-end
-
-# ╔═╡ 27ee63c5-7923-4bbc-b6e6-690968df190d
-function plot_analytic!(nfw, xlims)
-    x = LinRange(xlims[1], xlims[2], 1000)
-    y = LilGuys.v_circ.(nfw, 10 .^ x) 
-    lines!(x, (y * V2KMS), linestyle=:dash, color=:black, label="NFW")
-end
-
 # ╔═╡ 9f1116ee-1fe2-4088-a242-f65a0f22f5f5
 function get_r_res(profile)
-	x = log10.(profile.radii)
+	x = (profile.radii)
 	
-	y_exp = LilGuys.v_circ.(nfw, 10 .^ x)
+	y_exp = LilGuys.v_circ.(nfw, x)
 	dy = LilGuys.circular_velocity(profile) .- y_exp
 	res = dy ./ y_exp
 	res_err = LilGuys.sym_error.(res)
 	res = LilGuys.middle.(res)
 	return x, res, res_err
-end
-
-# ╔═╡ 64efb625-9fed-4ec9-9546-79842e7e6b90
-function plot_residual_profiles!(profiles; errskip=1)  
-    for i in eachindex(profiles)
-        label, profs = profiles[i]
-
-        profile = profs[1]
-		x, res, res_err = get_r_res(profile)
-        lines!(x, res, color=COLORS[i], linestyle=:dot)
-
-        profile = profs[end]
-		x, res, res_err = get_r_res(profile)
-        scatterlines!(x, res, color=COLORS[i], markersize=3)
-
-        idx = 1:errskip:length(res)
-        errorbars!(x[idx], res[idx], res_err[idx], color=COLORS[i])
-
-    end
 end
 
 # ╔═╡ 69516e98-4e15-44a8-b0d4-dc8d8bacd7e8
@@ -199,15 +135,89 @@ smallfontsize=0.8*theme(:fontsize)[]
 # ╔═╡ 685c9c53-4c4e-4d1f-82da-a64488562662
 smalllinewidth = theme(:linewidth)[] /  2
 
+# ╔═╡ 95af5b9d-e613-4d7f-849e-f6ddb221bd29
+function plot_vcirc_profiles!(profiles, v_circ_0=x->0; errskip=1)
+	lws = LinRange(theme(:linewidth)[], smalllinewidth[], length(profiles))
+    
+	for i in eachindex(profiles)
+        label, profs = profiles[i]
+        profile = profs[1]
+
+		y0 = v_circ_0(profile.radii)
+		y = (LilGuys.circular_velocity(profile) * V2KMS)
+        lines!((profile.radii), y .- y0,
+            linestyle=:dot,
+            color=COLORS[i], linewidth=lws[i]
+        )
+        
+        profile = profs[end]
+		y0 = v_circ_0(profile.radii)
+		y = (LilGuys.circular_velocity(profile) * V2KMS)
+		x = (profile.radii)
+        lines!(x, y .- y0 ,
+            color=COLORS[i],
+            label=label,
+			linewidth=lws[i]
+        )
+
+        idx = 1:errskip:length(x)
+        errorbars!(x[idx], middle.(y .- y0)[idx], LilGuys.error_interval.(y .- y0)[idx], color=COLORS[i], linewidth=lws[i])
+
+	end
+end
+
+# ╔═╡ ffa1eff7-57d9-4df4-868c-7cb48d5f1909
+function plot_marks!(profiles, marks, ylims; kwargs...)
+	lws = LinRange(theme(:linewidth)[], smalllinewidth[], length(profiles))
+	
+    for i in eachindex(profiles)
+		label, _ = profiles[i]
+
+		if label ∈ keys(marks)
+			@info "marking $label"
+			
+			plot_marks!(profiles, marks[label], ylims; shaftwidth=lws[i], tiplength=lws[i]*3, tipwidth=lws[i]*3*2/sqrt(3), color=COLORS[i], kwargs...)
+		end
+    end
+end
+
+# ╔═╡ 27ee63c5-7923-4bbc-b6e6-690968df190d
+function plot_analytic!(nfw, xlims)
+    x = LinRange(log10(xlims[1]), log10(xlims[2]), 1000)
+    y = LilGuys.v_circ.(nfw, 10 .^ x) 
+    lines!(10 .^ x, (y * V2KMS), linestyle=:dash, color=:black, label="NFW", linewidth=smalllinewidth)
+end
+
+# ╔═╡ 64efb625-9fed-4ec9-9546-79842e7e6b90
+function plot_residual_profiles!(profiles; errskip=1)  
+	lws = LinRange(theme(:linewidth)[], smalllinewidth[], length(profiles))
+	
+    for i in eachindex(profiles)
+        label, profs = profiles[i]
+
+        profile = profs[1]
+		x, res, res_err = get_r_res(profile)
+        lines!(x, res, color=COLORS[i], linestyle=:dot, linewidth=lws[i])
+
+        profile = profs[end]
+		x, res, res_err = get_r_res(profile)
+        lines!(x, res, color=COLORS[i], linewidth=lws[i])
+
+        idx = 1:errskip:length(res)
+        errorbars!(x[idx], res[idx], res_err[idx], color=COLORS[i], linewidth=lws[i])
+
+    end
+end
+
 # ╔═╡ f7cee4fe-e8df-429b-9cb0-f508d60c9788
 load_profile("1e5/fiducial")
 
 # ╔═╡ a4b6b203-a42a-48dd-8944-ea150eee376b
 profiles = [
-    "10⁴" => load_profile("1e4_new/fiducial"),
-    "10⁵" => load_profile("1e5_new/fiducial"),
+    "10⁷" => load_profile("1e7_new/fiducial"),
 	"10⁶" => load_profile("1e6_new/fiducial"),
-     "10⁷" => load_profile("1e7_new/fiducial")
+    "10⁵" => load_profile("1e5_new/fiducial"),
+    "10⁴" => load_profile("1e4_new/fiducial"),
     ];
 
 # ╔═╡ 6456950b-d95a-4fc9-942a-0d90e140ca39
@@ -223,17 +233,17 @@ softening = Dict(
 
 # ╔═╡ cc50d80b-78b8-4f39-8a41-18ae79bf7287
 function compare_vcirc(profiles; 
-					   errskip=1, xlims = (-2, 1.6), vlims=(3, 36), marks=Dict())
+					   errskip=1, xlims = (0.01, 50), vlims=(3, 36), marks=Dict())
 	fig, ax, ax_res = vcirc_axes(xlims=xlims, ylims=vlims)
 	
 	Makie.current_axis!(ax)
 
 	plot_vcirc_profiles!(profiles)
 	plot_marks!(profiles, marks, vlims)
-	plot_marks!(profiles, softening, vlims, tiplength=0, y0=:low, shaftwidth=smalllinewidth)
+	plot_marks!(profiles, softening, vlims, tiplength=0, y0=:low)
 	plot_analytic!(nfw, xlims)
-	text!(log10(0.014), 3.5*1.1266415859202983^2, text="softening", offset=(0, 6), align=(:left, :center), fontsize=smallfontsize, rotation=π/2, color=COLORS[4])
-	text!(-0.9301245845065439, 9.53748778279495*1.1266415859202983^2, text="converged", offset=(0, 6), align=(:left, :center), fontsize=smallfontsize, rotation=π/2, color=COLORS[4])
+	text!((0.014), 3.5*1.1266415859202983^2, text="softening", offset=(0, 6), align=(:left, :center), fontsize=smallfontsize, rotation=π/2, color=COLORS[1])
+	text!(10^-0.9301245845065439, 9.53748778279495*1.1266415859202983^2, text="converged", offset=(0, 6), align=(:left, :center), fontsize=smallfontsize, rotation=π/2, color=COLORS[1])
 
     axislegend(position=:rb, patchsize=[24, 6])
 	li = lines!([NaN], [NaN], linestyle=:dot, label="initial", color=:grey)
@@ -246,7 +256,7 @@ function compare_vcirc(profiles;
 
 	plot_marks!(profiles, marks, (-0.2, 0.2), y0=0, residual=true)
 
-    hlines!(0, color=:black, linestyle=:dash)
+    hlines!(0, color=:black, linestyle=:dash, linewidth=smalllinewidth)
 
     
     fig
@@ -299,12 +309,12 @@ r_conv(halo, N=1e7) = LilGuys.Interface.find_zero(r -> t_relax.(r, halo, N) .-  
 # ╠═7ae386b0-8c0b-43c1-b414-ac0518b73c70
 # ╠═2a0d9629-0f16-4c51-bcca-93d9d97ea915
 # ╠═f095ddc2-4d80-49bb-8a55-ce0f2e6524b7
-# ╠═2c77e958-c57c-4bb0-94f3-f29414e275cb
 # ╠═ba744355-8da6-4caa-a252-ad83ad4b8b13
 # ╠═bd023583-28b3-4c4d-8ced-7161350a5d7a
 # ╠═57818793-f612-42ed-a003-9e4a4810a163
 # ╠═c50be256-ab72-4d87-90a8-0fac98ef35b7
 # ╠═6456950b-d95a-4fc9-942a-0d90e140ca39
+# ╠═d444f4d5-6f9a-4f1c-84c0-eed8cc101b90
 # ╠═95af5b9d-e613-4d7f-849e-f6ddb221bd29
 # ╠═533eb462-eb9a-4452-b861-253e78b87490
 # ╠═ffa1eff7-57d9-4df4-868c-7cb48d5f1909

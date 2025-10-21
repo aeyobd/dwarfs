@@ -16,9 +16,6 @@ begin
 
 end
 
-# ╔═╡ 9309c10c-6ba3-436c-b975-36d26dafb821
-using PyFITS
-
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
 
@@ -35,9 +32,6 @@ Monolithic figure creation haha
 Appendix
 - `scl_impact_i_f`
 """
-
-# ╔═╡ 2bacd818-4985-4922-85a3-716bdfda5146
-import DensityEstimators: histogram2d
 
 # ╔═╡ 3a8954e9-0f5b-4f2c-8a9e-6e66f0f20ccc
 import TOML
@@ -84,9 +78,6 @@ md"""
 ## Ursa Minor extra
 """
 
-# ╔═╡ 5b0df0a1-4c82-45db-a42f-b5ed23aad258
-ModelUtils.compare_both("ursa_minor", "1e6_new_v38_r4.0/orbit_smallperi.3", "exp2d_rs0.13", norm_shift=-0.5, 	break_height=-0, title="Ursa Minor")
-
 # ╔═╡ 18f2e3da-b749-4134-9604-4e2318ad82ee
 ModelUtils.compare_both("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "exp2d_rs0.10",  r_j=true, norm_shift=-0.6, 	break_height=-4)
 
@@ -102,7 +93,7 @@ md"""
 compare_both(modelnames["oblate"]...,  title="Sculptor: oblate", norm_shift=-0.5)
 
 # ╔═╡ 2a3b1df5-7a44-420c-b303-856346df40cf
-compare_both(modelnames["anisotropic"]..., "exp2d_rs0.13",  title="Sculptor: anisotropic")
+compare_both(modelnames["anisotropic"]...,  title="Sculptor: anisotropic")
 
 # ╔═╡ 91d8ebb5-47b8-44ed-a334-96dbc6514c44
 ModelUtils.compare_both("sculptor", "1e6_new_v43_r7/orbit_smallperi.3", "exp2d_rs0.10", norm_shift=-0.7, 	break_height=-4, title="Sculptor heavy")
@@ -119,9 +110,7 @@ ModelUtils.compare_both("sculptor", "1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars
 # ╔═╡ Cell order:
 # ╠═1f1780d7-c6ed-4a92-b263-f8e43e9fab68
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
-# ╠═2bacd818-4985-4922-85a3-716bdfda5146
 # ╠═3a8954e9-0f5b-4f2c-8a9e-6e66f0f20ccc
-# ╠═9309c10c-6ba3-436c-b975-36d26dafb821
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═e93918f6-0c72-4dec-9cdf-97f185c0bceb
@@ -135,7 +124,6 @@ ModelUtils.compare_both("sculptor", "1e4_exp_M3e-4_r0.1/orbit_smallperi", "stars
 # ╠═3263677b-e0e3-4d30-8e28-309de99a8603
 # ╠═d0ce116f-aa51-43d8-9748-806eb44b8409
 # ╟─8979aeee-5c1d-45bb-ac5b-0d0655cae3a8
-# ╠═5b0df0a1-4c82-45db-a42f-b5ed23aad258
 # ╠═18f2e3da-b749-4134-9604-4e2318ad82ee
 # ╠═f11acd53-a04d-4e1a-b7f5-d66b6011e3a2
 # ╟─d8c7cb86-1712-4547-8552-3bf485c86cca

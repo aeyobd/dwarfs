@@ -14,8 +14,8 @@ CairoMakie.update_theme!(
         markersize=9,
    ),
     Annotation = (;
-      style = Ann.Styles.LineArrow(head=Ann.Arrows.Head(length=9)),
-      linewidth = 2
+      style = Ann.Styles.LineArrow(head=Ann.Arrows.Head(length=7.5)),
+      linewidth = 1.5
     )
 )
 

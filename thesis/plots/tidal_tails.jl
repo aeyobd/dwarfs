@@ -78,8 +78,8 @@ function load_stars(galaxyname, modelname, starsname)
 end
 
 # ╔═╡ e9b30734-0237-4b52-9f3f-add7c5460743
-function sample_stars(stars, N=10_000)
-	idx = sample(1:size(stars, 1), weights(stars.weights), 100_000)
+function sample_stars(stars, N=100_000)
+	idx = sample(1:size(stars, 1), weights(stars.weights), N)
 	return stars[idx, :]
 end
 
@@ -171,19 +171,6 @@ function plot_sample(galaxyname, modelname, starsname)
 
 end
 
-# ╔═╡ 012c3d0d-fcd6-4eff-8939-1dd6a9003b0c
-function get_r_j(galaxyname, modelname; lmc=false)
-	model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/$galaxyname/$modelname/")
-
-	if lmc
-		props = TOML.parsefile(model_dir * "jacobi_lmc.toml")
-	else
-		props = TOML.parsefile(model_dir * "jacobi.toml")
-	end
-
-	return props["r_J"]
-end
-
 # ╔═╡ 8bf905de-5457-4611-8b9d-3ca6039cc582
 md"""
 # sculptors tidal tails
@@ -195,21 +182,6 @@ modelnames = TOML.parsefile("model_key.toml")
 # ╔═╡ 9ae7b57f-7649-443e-a438-4e5bd4b4d048
 @savefig "scl_sim_stream" plot_sample(modelnames["scl_smallperi_plummer"]...)
 
-# ╔═╡ 189db37c-1e59-4e69-9487-8525d45a9c3c
-# plot_sample("sculptor", "1e6_new_v31_r3.2/orbit_smallperi", "plummer_rs0.25")
-
-# ╔═╡ 53c9aaff-51cd-409e-ab1f-c28e940b2ed1
-# plot_sample(load_stars("sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20"))
-
-# ╔═╡ 7b274c9f-4cdd-41ef-bdef-8a649331d1d9
-# @savefig "scl_mw_impact_stream" plot_sample(modelnames["scl_smallperi_plummer"]...)
-
-# ╔═╡ 5a56e59a-c846-4829-9ddf-496c8a0383fb
-# plot_sample(load_stars("sculptor", "1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4", "exp2d_rs0.10"))
-
-# ╔═╡ a862901d-aa6b-4132-8940-8ec710fd7374
-# plot_sample(load_stars("sculptor", "1e6_v43_r3_beta0.2_a4/orbit_smallperi", "exp2d_rs0.13"))
-
 # ╔═╡ ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 md"""
 # Ursa Minor tidal tails
@@ -217,9 +189,6 @@ md"""
 
 # ╔═╡ 52c9a0fc-6db3-4e67-8d01-2f0eb0c1663f
 @savefig "umi_sim_stream" plot_sample(modelnames["umi_smallperi_plummer"]...)
-
-# ╔═╡ b50e2128-aa69-4ef9-bd7a-a08f412c504e
-# plot_sample(load_stars("ursa_minor", "1e6_v37_r5.0/orbit_mean.2", "plummer_rs0.20"))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -238,15 +207,8 @@ md"""
 # ╠═f2ec2966-9018-4ad0-8ec3-36e438012ca6
 # ╠═b257827b-ca9c-4abe-bbaa-1097f0034b03
 # ╠═6be80d25-974f-4bfe-96df-18cb0ce96c5a
-# ╠═012c3d0d-fcd6-4eff-8939-1dd6a9003b0c
 # ╟─8bf905de-5457-4611-8b9d-3ca6039cc582
 # ╠═934b1a11-2646-4860-afa3-593218a9964b
 # ╠═9ae7b57f-7649-443e-a438-4e5bd4b4d048
-# ╠═189db37c-1e59-4e69-9487-8525d45a9c3c
-# ╠═53c9aaff-51cd-409e-ab1f-c28e940b2ed1
-# ╠═7b274c9f-4cdd-41ef-bdef-8a649331d1d9
-# ╠═5a56e59a-c846-4829-9ddf-496c8a0383fb
-# ╠═a862901d-aa6b-4132-8940-8ec710fd7374
 # ╟─ae2c737b-eca9-4ba1-b937-5e3dea3ece65
 # ╠═52c9a0fc-6db3-4e67-8d01-2f0eb0c1663f
-# ╠═b50e2128-aa69-4ef9-bd7a-a08f412c504e

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -489,6 +489,34 @@ let
 	fig
 end
 
+# ╔═╡ 2e6f6253-8408-4bb1-bd5e-36c4a47a814f
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+			  xlabel = "log M200",
+			  ylabel = "log c"
+			 )
+
+
+
+
+	zs = [0, 1, 2, 3, 5, 7]
+
+	for z in zs
+	
+		x = LinRange(-15, 5, 1000) 
+		M = 10 .^ x		
+		c = LilGuys.Ludlow.c_ludlow.(M, z)
+		y = log10.(c)
+		lines!(x, y, color=z, colorrange=extrema(zs))
+
+	end
+
+	Colorbar(fig[1,2], colorrange=(extrema(zs)))
+
+	fig
+end
+
 # ╔═╡ 990c126b-83b4-4f3f-a2d6-d775d2174f1c
 let
 	fig = Figure()
@@ -685,6 +713,7 @@ end
 # ╠═0963eb03-2c6d-45b9-b34d-344a0bc5b545
 # ╠═e1dc5fee-600a-4a81-87cd-9db46ca223e0
 # ╠═faa9c7d6-2d5e-45d7-8cb0-3e47a025f080
+# ╠═2e6f6253-8408-4bb1-bd5e-36c4a47a814f
 # ╠═990c126b-83b4-4f3f-a2d6-d775d2174f1c
 # ╠═9e1b080d-ec12-4345-b56c-5f9c0e233fdc
 # ╠═292b53c4-c1e2-4572-99ea-65842248852e

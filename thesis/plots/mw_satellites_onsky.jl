@@ -120,6 +120,22 @@ md"""
 classical_systems = ["sculptor_1", "ursa_minor_1", "sextans_1", "draco_1", 
 		 "leo_1", "leo_2", "fornax_1", "carina_1", "antlia_2", "sagittarius_1", "canes_venatici_1", "crater_2"]
 
+# ╔═╡ fa47cae6-3879-4c62-8f7b-56aa12e8d105
+md"""
+- Sagittarius
+- Fornax
+- Leo I
+- Sculptor
+- Antlia II
+- Leo II
+- Carina
+- Draco
+- Ursa Minor
+- Canes Venatici I
+- Sextans I
+- Crater II. 
+"""
+
 # ╔═╡ 6142560a-9cd1-491f-a108-b3b45b85df2e
 ambiguous = vcat(ambiguous_table, dwarfs[(dwarfs.confirmed_dwarf .!== 1), :])
 
@@ -434,6 +450,7 @@ end
 # ╠═88d507e8-98cb-42ca-be20-16580f5beb4b
 # ╟─0a1d1783-0c24-455e-84c1-027e168cfef7
 # ╠═6d8cfb4c-5602-4112-a691-92a319f5e224
+# ╟─fa47cae6-3879-4c62-8f7b-56aa12e8d105
 # ╠═6142560a-9cd1-491f-a108-b3b45b85df2e
 # ╠═ce9d55e5-c840-4f5c-a2de-7c3538f42bd2
 # ╠═5918ea56-83ad-48b7-8e7b-a4a5038e236b

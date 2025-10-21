@@ -135,7 +135,7 @@ let
 
 	ax = Axis(fig[1,1], 
 		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
-		xlabel = L"\log\,R\ / \ R_h",
+		xlabel = L"\log\,R_\textrm{ell}\ / \ R_h",
 		#xticks = -2:1:1,
 		limits=(-1.0, 0.9, -3.5, 1.0)
 
@@ -177,7 +177,7 @@ let
 
     x = LinRange(-1.4, 1, 1000)
     y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y, color=:black, label="Exp2D")
+    lines!(x, y, color=:black, label="2D exponential")
     
 
     y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
@@ -189,17 +189,17 @@ let
 	end
 
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", )
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", )
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", marker=:rect, )
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[4], label="Ursa Minor", marker=:utriangle)
 
-	axislegend(position=:lb, merge=true, unique=true)
+	axislegend(position=:lb, merge=true, unique=true, patchsize=(24, 6))
 
 
 
 	# residuals
 	ax_res = Axis(fig[2,1], 
-		ylabel = L"\delta \log\,\Sigma",
-		xlabel = L"\log\,R\ / \ R_h",
+		ylabel = L"\Delta \log\,\Sigma",
+		xlabel = L"\log\,R_\textrm{ell}\ / \ R_h",
 		xticks = -2:1:1,
 		limits=(-1.5, 1, -1.2, 2.2)
 	)
@@ -218,8 +218,8 @@ let
 		lines!(prof.log_R, prof.log_Sigma .- f(prof.log_R), color=COLORS[1], alpha=0.5)
 	end
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2])
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3])
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], marker=:rect)
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[4], marker=:utriangle)
 
 
 	linkxaxes!(ax, ax_res)
@@ -235,7 +235,7 @@ end
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═67dd3488-79e1-4ba2-b9ac-f417765d55de
 # ╠═cf655228-1528-4e77-9629-07e99984951f
-# ╠═6d2bff6d-b347-49c4-87df-ad58d8a27ff3
+# ╟─6d2bff6d-b347-49c4-87df-ad58d8a27ff3
 # ╠═b71fe082-4ef3-41db-ac41-69dee16981a6
 # ╠═9f06a5c4-a8ae-49d2-991e-1c1576361700
 # ╠═40ef5263-bf52-4ad7-8c39-ed1e11c45fc4

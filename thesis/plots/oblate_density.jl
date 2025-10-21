@@ -115,6 +115,9 @@ import DensityEstimators: histogram2d
 # ╔═╡ ff983edb-7461-487b-8ac9-0ad197f3d661
 import KernelDensity: kde
 
+# ╔═╡ 0f4cec77-177d-4140-b251-be708ea90786
+LinRange(-2, 0, 21)
+
 # ╔═╡ a177f182-07d9-4520-89b9-a7c37ba35f24
 import DensityEstimators: density2d
 
@@ -131,7 +134,7 @@ function plot_isocontours(gs, positions; bandwidth=0.4, filter_bound=false, )
 	h_max = log10(maximum(h.density) )
 	
 	ax = Axis(gs, xlabel=L"$x'$ / kpc", ylabel=L"$z'$ / kpc", )
-	contour!(h.x, h.y, h.density, colorscale=log10, levels=10 .^ LinRange(h_max-2, h_max, 20), linewidth=theme(:linewidth)[]/2, linestyle=:solid)
+	contour!(h.x, h.y, h.density, colorscale=log10, levels=10 .^ LinRange(h_max-2, h_max, 21), linewidth=theme(:linewidth)[]/2, linestyle=:solid)
 
 
 	ax
@@ -170,7 +173,7 @@ function plot_isocontours_2(gs, positions; filter_bound=false, )
 	h_max = log10(maximum(h.values) )
 	
 	ax = Axis(gs, xlabel=L"$x'$ / kpc", ylabel=L"$z'$ / kpc", )
-	contour!(midpoints(h.xbins), midpoints(h.ybins), h.values, colorscale=log10, levels=10 .^ LinRange(h_max-2, h_max, 20), linewidth=theme(:linewidth)[]/2, linestyle=:solid)
+	contour!(midpoints(h.xbins), midpoints(h.ybins), h.values, colorscale=log10, levels=10 .^ LinRange(h_max-2, h_max, 21), linewidth=theme(:linewidth)[]/2, linestyle=:solid)
 
 
 	h
@@ -340,6 +343,7 @@ end
 # ╠═93019bc6-cf42-46de-90c0-33ad4ce3e4de
 # ╠═0ca0c4df-6f59-4191-b14c-461d5ad906c8
 # ╠═ff983edb-7461-487b-8ac9-0ad197f3d661
+# ╠═0f4cec77-177d-4140-b251-be708ea90786
 # ╠═8e60f605-a2fb-4223-9cb9-7f11d8e2f24c
 # ╠═102f5701-dafa-4c32-a463-644f41228e24
 # ╠═a177f182-07d9-4520-89b9-a7c37ba35f24
