@@ -8,4 +8,4 @@ $out_dir = "build";
 # 3: dvi conversion, as specified by the $dvipdf variable (useless)
 # 4: lualatex, as specified by the $lualatex variable (best)
 # 5: xelatex, as specified by the $xelatex variable (second best)
-$pdf_mode = 1;
+$pdf_mode = 5;
