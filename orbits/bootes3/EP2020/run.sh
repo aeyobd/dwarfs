@@ -1,1 +1,1 @@
-julia ../../calc_orbit_props.jl -N 10000 --seed 496  --galaxy bootes3 .
+julia ../../calc_orbit_props.jl -N 100000 --seed 496  --galaxy bootes3 .

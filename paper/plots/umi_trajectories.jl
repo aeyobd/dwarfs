@@ -25,6 +25,9 @@ using LilGuys
 # ╔═╡ 2bce531e-eaf1-4258-9ca7-9a05751cbd5b
 include("paper_style.jl")
 
+# ╔═╡ 92234976-7d99-4f8f-aa54-9d1539a50ca4
+include(joinpath(ENV["DWARFS_ROOT"], "orbits/orbit_utils.jl"))
+
 # ╔═╡ 7450144e-5464-4036-a215-b6e2cd270405
 md"""
 This notebook analyzes the result of the MC samples of orbits in the same potential to determine the plausable range of pericentres and apocentres.
@@ -42,7 +45,7 @@ The most important variable is to set the modelname to the appropriate directory
 FIGDIR = "./figures"
 
 # ╔═╡ 43e80dd7-aa44-43e6-adcc-ebb7ae9e9eb8
-t_max = -15/T2GYR
+time_min = -3/T2GYR
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -78,7 +81,7 @@ md"""
 Nmax = 100 # number of orbits to plot
 
 # ╔═╡ 891618e0-5c9c-443b-a874-34dce7660c66
-modelname = joinpath(modelnames["umi_orbits"])
+modelname = joinpath(modelnames["umi_lmc_orbits"])
 
 # ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
 modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", modelname)
@@ -86,19 +89,40 @@ modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", modelname)
 # ╔═╡ 3e4f0aa7-22d4-4a19-aafd-cf86c380ade3
 scale_theme_element!(:linewidth, 0.5)
 
-# ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
-idx, orbits = let
+# ╔═╡ 7ecb2119-ed32-4862-b2de-d3cea8ac740e
+function read_orbits(modeldir)
 	structs = LilGuys.read_ordered_structs(joinpath(modeldir, "orbits.hdf5"), LilGuys.Orbit)
 
 	filt = 1:min(Nmax, length(structs))
 	first.(structs)[filt], last.(structs)[filt]
 end
 
+# ╔═╡ bc4b1457-0130-4874-b553-261928082980
+function read_orbits(galaxyname, modelname)
+	modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", galaxyname, modelname)
+	return read_orbits(modeldir)
+end
+
+# ╔═╡ e43b6324-c887-4087-8853-5e9f986e8eb9
+modeldir_no = joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor", "vasiliev24_M11")
+
+# ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
+idx, orbits = read_orbits(modeldir)
+
+# ╔═╡ 0d445083-48be-4a3d-aaba-4c4bc7870410
+idx_no, orbits_no = read_orbits("ursa_minor", "vasiliev24_M11")
+
+# ╔═╡ 6fe4e1c6-97a1-41c5-84c8-075492e80afb
+_, orbits_ep = read_orbits(modelnames["umi_orbits"]...)
+
 # ╔═╡ 127a988e-74ab-41f4-8979-6800622f3ff4
 best_orbit = OrbitUtils.load_best_orbit(modelnames["umi_smallperi"][1:2]...) |> reverse
 
 # ╔═╡ 367eb7e4-8c54-4fa9-a01c-41c3c7ff7f2a
-other_orbits = LilGuys.Orbit.(modeldir * "_special_cases/" .* ["orbit_smallperi.csv", "orbit_largeperi.csv", "orbit_mean.csv"])
+# other_orbits = LilGuys.Orbit.(modeldir * "_special_cases/" .* ["orbit_smallperi.csv", "orbit_largeperi.csv", "orbit_mean.csv"])
+
+# ╔═╡ 53c1cc51-6360-4af4-94f7-96f9db7e8253
+lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/ursa_minor/vasiliev24_L3M11")) |> reverse
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -110,34 +134,49 @@ sw = theme(:linewidth)[] / 2
 
 # ╔═╡ d38c2f93-0ddc-4e46-887c-a43c55d663c6
 let
-	fig = Figure(figure_padding=12, size=(3.5, 4) .* 72)
-	limits =((-100, 100), (-100, 100), (-100, 100))
+	r_max = 150
+	fig = Figure(size=(3.5, 4.5) .* 72)
+	limits =((-r_max, r_max), (-r_max, r_max), (-r_max, r_max))
 
-	ax_xyz = axes_xyz_flat(fig, limits=limits, ylabelpadding=-12)
+	ax_xyz = axes_xyz_flat(fig, limits=limits, ylabelpadding=-10)
 
 	for ax in ax_xyz
 		ax.xticks = -100:100:100
 		ax.yticks = -100:100:100
 	end
 
-	plot_xyz!(ax_xyz, orbits, color=COLORS[3], alpha=0.05, time_min=t_max, linestyle=:solid, label="random orbits" => (; alpha=0.5))
-	plot_xyz!(ax_xyz, best_orbit, color=:black, time_min=t_max, label="N-body orbit")
+	plot_xyz!(ax_xyz, orbits, color=COLORS[2], alpha=0.05, time_min=time_min, linestyle=:solid, label="UMi: MW+LMC" => (; alpha=0.5))
+
+
+	plot_xyz!(ax_xyz, orbits_ep, color=COLORS[1], alpha=0.05, time_min=time_min, linestyle=:solid, label="UMi: MW only" => (; alpha=0.5))
+
+	plot_xyz!(ax_xyz, best_orbit, color=:black,  label="UMi: N-body")
 	plot_xyz_today!(ax_xyz, best_orbit, color=:black)
+
+	plot_xyz!(ax_xyz, lmc_orbit, time_min=time_min, linestyle=:solid, color=COLORS[3], label="LMC")
+	OrbitUtils.plot_xyz_today!(ax_xyz, lmc_orbit, strokewidth=sw, color=COLORS[3])
+
 	plot_xyz_sun!(ax_xyz, strokewidth=sw)
 
 	ax_rt = Axis(fig[2, 2],
 				xlabel = "time / Gyr", ylabel =   L"$r_\textrm{sat-MW}$ / kpc")
 	
-	plot_rt!(ax_rt, other_orbits, color=COLORS[3], alpha=0.5, linestyle=:solid)
+	plot_rt!(ax_rt, orbits, time_min=time_min, color=COLORS[2], alpha=0.05, linestyle=:solid)
+	plot_rt!(ax_rt, orbits_ep, time_min=time_min, color=COLORS[1], alpha=0.05, linestyle=:solid)
 	plot_rt!(ax_rt, best_orbit, color=:black)
 	xlims!(-10, 0.1)
-	ylims!(0, 110)
+	ylims!(0, 150)
 	plot_rt_today!(ax_rt, best_orbit)
-	Label(fig[0, :], "Ursa Minor", font=:bold)
+
+	plot_rt!(ax_rt, lmc_orbit, color=COLORS[3])
+
+	plot_rt_today!(ax_rt, lmc_orbit, strokewidth=sw, color=COLORS[3])
+
+	# Label(fig[0, :], "Ursa Minor", font=:bold)
 
 	rowsize!(fig.layout, 2, Aspect(1, 1.0))
 
-	Legend(fig[3, :], ax_xyz[1], tellwidth=false, nbanks=2)
+	Legend(fig[3, :], ax_xyz[1], tellwidth=false, nbanks=2, tellheight=true)
 
 	resize_to_layout!(fig)
 	@savefig "umi_xyzr_orbits"
@@ -165,9 +204,16 @@ end
 # ╠═891618e0-5c9c-443b-a874-34dce7660c66
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
 # ╠═3e4f0aa7-22d4-4a19-aafd-cf86c380ade3
+# ╠═7ecb2119-ed32-4862-b2de-d3cea8ac740e
+# ╠═bc4b1457-0130-4874-b553-261928082980
+# ╠═e43b6324-c887-4087-8853-5e9f986e8eb9
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
+# ╠═0d445083-48be-4a3d-aaba-4c4bc7870410
+# ╠═6fe4e1c6-97a1-41c5-84c8-075492e80afb
 # ╠═127a988e-74ab-41f4-8979-6800622f3ff4
 # ╠═367eb7e4-8c54-4fa9-a01c-41c3c7ff7f2a
+# ╠═92234976-7d99-4f8f-aa54-9d1539a50ca4
+# ╠═53c1cc51-6360-4af4-94f7-96f9db7e8253
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╠═dc9be70c-a1f2-4cc1-afce-758548972cf2
 # ╠═d38c2f93-0ddc-4e46-887c-a43c55d663c6

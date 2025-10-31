@@ -102,17 +102,19 @@ end
 
 Plots the radii for each timestep in the orbit(s). 
 """
-function plot_rt!(axes, orbit::Orbit; kwargs...)
-    plot_rt!(axes, orbit.times * T2GYR, radii(orbit); kwargs...)
+function plot_rt!(axes, orbit::Orbit; time_min=-Inf, kwargs...)
+    filt = orbit.times  .> time_min
+    plot_rt!(axes, orbit.times[filt] * T2GYR, radii(orbit)[filt]; kwargs...)
 end
 
 
-function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; kwargs...)
+function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs...)
     rs = Float64[]
     ts = Float64[]
     for orbit in orbits
-        rs = vcat(rs, radii(orbit), NaN)
-        ts = vcat(ts, orbit.times*T2GYR, NaN)
+        filt = orbit.times .> time_min
+        rs = vcat(rs, radii(orbit)[filt], NaN)
+        ts = vcat(ts, orbit.times[filt]*T2GYR, NaN)
     end
 
     plot_rt!(axes, ts, rs; rasterize=true, kwargs...)
