@@ -108,7 +108,7 @@ function plot_rt!(axes, orbit::Orbit; time_min=-Inf, kwargs...)
 end
 
 
-function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs...)
+function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; rasterize=true, time_min=-Inf, kwargs...)
     rs = Float64[]
     ts = Float64[]
     for orbit in orbits
@@ -117,7 +117,7 @@ function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs..
         ts = vcat(ts, orbit.times[filt]*T2GYR, NaN)
     end
 
-    plot_rt!(axes, ts, rs; rasterize=true, kwargs...)
+    plot_rt!(axes, ts, rs; rasterize=rasterize, kwargs...)
 end
 
 

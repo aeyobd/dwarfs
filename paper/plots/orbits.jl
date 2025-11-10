@@ -120,6 +120,9 @@ function plot_rt_point!(ax, orbit::Orbit; time_min=-Inf, plot_today=true, kwargs
 	end
 end
 
+# ╔═╡ 82c764ab-1194-48d2-a7aa-1272dbe4682d
+rasterize = 4
+
 # ╔═╡ 4da40bb0-18d7-4e79-b031-1319a3296207
 
 function plot_yz!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs...)
@@ -129,7 +132,7 @@ function plot_yz!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs..
         positions = hcat(positions, orbit.positions[:, time_filt], [NaN, NaN, NaN])
     end
 
-    plot_yz!(axes, positions; rasterize=true, kwargs...)
+    plot_yz!(axes, positions; rasterize=rasterize, kwargs...)
 end
 
 
@@ -185,18 +188,6 @@ t_min = -5 / T2GYR
 # ╔═╡ 123584a9-e9b4-4c48-acb5-655bd60aaeb6
 sw = @lift $(theme(:linewidth)) / 2
 
-# ╔═╡ 51b371cc-6ba6-4cd5-8060-42261971cf91
-kwargs_mw_only = (; color=COLORS[1], alpha=0.05, linestyle=:solid, label="Dwarf: MW-only" => (; alpha=0.5), time_min=t_min)
-
-# ╔═╡ 7ef18abc-99ff-466a-8f68-88dc8cdefb31
-kwargs_mw_lmc = (; color=COLORS[2], alpha=0.05, linestyle=:solid, label="Dwarf: MW+LMC" => (; alpha=0.5), time_min=t_min)
-
-# ╔═╡ 4ca15028-782c-4480-afae-258d92d5e772
-kwargs_lmc = (; color=COLORS[3],  label="LMC", time_min=t_min, linewidth=sw[]*3, linestyle=:dash)
-
-# ╔═╡ 086494a3-a1d4-4558-bd1f-7ad3a3f21562
-kwargs_best = (; color=:black, label="N-body: MW-only", linestyle=:solid)
-
 # ╔═╡ 4ee69fe0-ab61-457e-86f3-e6b4b3228527
 function plot_yz_sun!(;kwargs...)
     X_SUN = [-8.1219733661223, 0.0, 0.0208]
@@ -204,8 +195,20 @@ function plot_yz_sun!(;kwargs...)
     scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="the Sun", strokewidth=sw, kwargs...)
 end
 
+# ╔═╡ 51b371cc-6ba6-4cd5-8060-42261971cf91
+kwargs_mw_only = (; color=COLORS[1], alpha=0.05, linestyle=:solid, label="Dwarf: MW-only" => (; alpha=0.5), time_min=t_min)
+
+# ╔═╡ 7ef18abc-99ff-466a-8f68-88dc8cdefb31
+kwargs_mw_lmc = (; color=COLORS[2], alpha=0.05, linestyle=:solid, label="Dwarf: MW+LMC" => (; alpha=0.5), time_min=t_min)
+
+# ╔═╡ 4ca15028-782c-4480-afae-258d92d5e772
+kwargs_lmc = (; color=COLORS[3],  label="LMC", time_min=t_min, linewidth=sw[]*3, linestyle=:dash, rasterize=rasterize)
+
+# ╔═╡ 086494a3-a1d4-4558-bd1f-7ad3a3f21562
+kwargs_best = (; color=:black, label="N-body: MW-only", linestyle=:solid)
+
 # ╔═╡ 833502cb-a187-4f14-8982-4ec9b215639f
-kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, plot_today=false)
+kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, rasterize=rasterize, plot_today=false)
 
 # ╔═╡ 9340b2c1-bf46-4959-8d48-9117926bbc1f
 let
@@ -234,8 +237,8 @@ let
 		yticks=0:100:400,
 				   )	
 
-	plot_rt!(ax_scl_t, orbits_scl; kwargs_mw_only...)
-	plot_rt!(ax_scl_t, orbits_scl_lmc; kwargs_mw_lmc...)
+	plot_rt!(ax_scl_t, orbits_scl; rasterize=rasterize, kwargs_mw_only...)
+	plot_rt!(ax_scl_t, orbits_scl_lmc; rasterize=rasterize, kwargs_mw_lmc...)
 	plot_rt_point!(ax_scl_t, best_scl; kwargs_best...)
 	plot_rt_point!(ax_scl_t, best_scl_lmc; kwargs_best_lmc...)
 	plot_rt_point!(ax_scl_t, lmc_orbit; kwargs_lmc...)
@@ -263,8 +266,8 @@ let
 	)	
 
 
-	plot_rt!(ax_umi_t, orbits_umi; kwargs_mw_only...)
-	plot_rt!(ax_umi_t, orbits_umi_lmc; kwargs_mw_lmc...)
+	plot_rt!(ax_umi_t, rasterize=rasterize, orbits_umi; kwargs_mw_only...)
+	plot_rt!(ax_umi_t, rasterize=rasterize, orbits_umi_lmc; kwargs_mw_lmc...)
 	plot_rt_point!(ax_umi_t, best_umi; kwargs_best...)
 	plot_rt_point!(ax_umi_t, lmc_orbit; kwargs_lmc...)
 
@@ -306,6 +309,7 @@ end
 # ╠═cb4788e1-5b01-4387-9188-745890b48217
 # ╠═185947eb-012f-4c7e-ae2a-fd04ef58e8f7
 # ╠═6c1b2974-df12-4b7c-a504-8223f893c50c
+# ╠═82c764ab-1194-48d2-a7aa-1272dbe4682d
 # ╠═4da40bb0-18d7-4e79-b031-1319a3296207
 # ╠═3d417fe3-a75d-476e-a4f9-8ce25914c473
 # ╠═3f3df4af-3f2b-4803-b007-4302a029f988

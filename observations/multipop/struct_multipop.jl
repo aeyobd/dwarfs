@@ -34,10 +34,27 @@ galaxyname = "sculptor"
 # ╔═╡ 902876ac-2f5c-4fe3-9233-9ddace247d41
 import TOML
 
+# ╔═╡ 05ae7aa5-737f-401f-a844-1582bc1657ee
+module MCMCUtils
+	include("../mcmc/mcmc_utils.jl")
+end
+
 # ╔═╡ b92892ce-3bf8-4e60-95da-9776e59f75cb
 md"""
 # Data loading
 """
+
+# ╔═╡ ca90b810-452e-49dc-9ab4-18878069d250
+obs_props = MCMCUtils.get_obs_props(galaxyname)
+
+# ╔═╡ 6533ff08-2fba-49a1-896e-d65880b7b69c
+stars = MCMCUtils.get_fits(galaxyname, obs_props)
+
+# ╔═╡ 98b6576b-b0ea-4e31-90fa-7b46c70dbbd9
+R_max = maximum(stars.R_ell)
+
+# ╔═╡ 299a6506-4d89-4f7a-9de8-46eb13181959
+
 
 # ╔═╡ 9c369fe4-d8c6-4890-95ec-fbc43eb80769
 obs_props_scl = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/$galaxyname/observed_properties.toml"))
@@ -49,31 +66,13 @@ starsfile = Dict(
 )[galaxyname]
 
 # ╔═╡ 06ec245d-129c-4187-aec2-875da4faa2ca
-stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/velocities/processed/" * starsfile)
-
-# ╔═╡ ad2bed21-f45b-48fa-9dc9-e9bcff981d56
-exp_fit = CSV.read(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/mcmc/summary.mcmc_2exp.csv", DataFrame)
+rv_stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/velocities/processed/" * starsfile)
 
 # ╔═╡ 70632fc8-71d9-4dc8-acde-381cb5fd9dde
 function get_param(exp_fit, param)
 	idx = only(findall(exp_fit.parameters .== [param]))
 	return exp_fit.median[idx]
 end
-
-# ╔═╡ 4cbf1e33-7f7a-4d26-ae39-83cd28c52ff5
-R_s_a = get_param(exp_fit, "R_s")
-
-# ╔═╡ a3a48158-2930-46d2-815f-3855e62a709a
-R_s_b = get_param(exp_fit, "R_s_outer")
-
-# ╔═╡ af6f3c41-4c47-441a-94fc-63dcec90cc35
-f_outer = get_param(exp_fit, "f_outer")
-
-# ╔═╡ 080c0ea5-4ab5-4499-9909-a4338f9fdacb
-minimum(stars.PSAT_RV)
-
-# ╔═╡ 8483b37a-4751-427d-9e66-4ff2fd6ccfdc
-hist(stars.vz)
 
 # ╔═╡ ec5a8eb5-3c3f-4a81-b3b3-9f4aca18bd69
 function combine_fe_h(stars)
@@ -105,7 +104,7 @@ function combine_fe_h(stars)
 end
 
 # ╔═╡ ce4a09ec-8a88-48a0-bde2-8ceec99c7431
-fe_h, fe_h_err, R_ell_fe = combine_fe_h(stars)
+fe_h, fe_h_err, R_ell_fe = combine_fe_h(rv_stars)
 
 # ╔═╡ 65a50351-ae87-4675-91ff-ed23c0261c9b
 hist(collect(skipmissing(fe_h)))
@@ -121,88 +120,69 @@ md"""
 # Model fit
 """
 
-# ╔═╡ 8382e25e-1f2f-4365-89fa-da3f58a8d09c
-halo = NFW(r_circ_max = 3.2, v_circ_max=31/V2KMS)
-
-# ╔═╡ 02bf4164-da27-49f2-a659-c5a8d1b199a3
-function rho_sigma2_r(halo, prof, r)
-	integrand(r) = LilGuys.density(prof, r) * LilGuys.mass(halo, r) / r^2
-
-	return LilGuys.integrate(integrand, r, Inf)
-end
-
-# ╔═╡ 081b662e-a3e7-4656-a859-9aad29ab6af1
-function sigma_los(halo::LilGuys.SphericalProfile, prof, R)
-	integrand(r) = rho_sigma2_r(halo, prof, r) * r / sqrt(r^2 - R^2)
-
-	Sigma_sigma2 = 2*LilGuys.integrate(integrand, R* (1+1e-10), Inf)
-
-	return sqrt(Sigma_sigma2 / LilGuys.surface_density(prof, R))
-end
-
-# ╔═╡ 7383bfb2-6209-4ee9-8408-39042bfaa519
-function sigma_los(halo, prof)
-	R = logspace(0.01, 10, 1000)
-	y = sigma_los.(halo, prof, R)
-
-	return LilGuys.lerp(R, y)
-end
-
-# ╔═╡ 3ca15c01-f7f3-4779-b333-99b0c40529fa
-
-
-# ╔═╡ cfdac012-a052-4f17-b5eb-fcf6969500ab
-@model function two_pop_vel_model(v, v_err, R_ell, fe_h, fe_h_err, R_ell_fe)
-	mu_fe_a ~ Normal(-2, 1)
-	sigma_fe_a ~ Uniform(0, 3)
-	mu_fe_b ~ Normal(-2, 1)
-	sigma_fe_b ~ Uniform(0, 3)
-
-
-	mu_vel_a ~ Normal(0, 100)
-	sigma_vel_a ~ Uniform(0, 30)
-	mu_vel_b ~ Normal(0, 100)
-	sigma_vel_b ~ Uniform(0, 30)
-
-
-	prof = LilGuys.Exp2D(R_s=R_s_a, M=1 - f_outer)
-	prof_outer = LilGuys.Exp2D(R_s=R_s_b, M=f_outer)
-
-	f_b = @. surface_density(prof_outer, R_ell) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell))
-
-	dist_vel_a = Normal(mu_vel_a, sigma_vel_a)
-	dist_vel_b = Normal(mu_vel_b, sigma_vel_b)
-	dist_fe_a = Normal(mu_fe_a, sigma_fe_a)
-	dist_fe_b = Normal(mu_fe_b, sigma_fe_b)
-
-	for i in eachindex(v)
-		v[i] ~ MixtureModel([dist_vel_a, dist_vel_b], [1-f_b[i], f_b[i]])
-	end
-
-
-	f_b_fe = @. surface_density(prof_outer, R_ell_fe) / (surface_density(prof, R_ell_fe) + surface_density(prof_outer, R_ell_fe))
-
-	for i in eachindex(fe_h)
-		fe_h[i] ~ MixtureModel([dist_fe_a, dist_fe_b], [1-f_b_fe[i], f_b_fe[i]])
-	end
-	
-end
-
 # ╔═╡ bb23fb9c-d8c5-4119-9223-f0aad311b9fc
-@model function two_pop_model( fe_h, fe_h_err, R_ell)
+@model function two_pop_model(data::MCMCUtils.GaiaData, 
+  		v::Vector{Float64}, v_err::Vector{Float64}, R_ell::Vector{Float64}, 
+  		fe_h::Vector{Float64}, fe_h_err::Vector{Float64}, R_ell_fe::Vector{Float64})
+	
+	# structural 
+	d_xi = 0# ~ Normal(0, 5)
+	d_eta = 0# ~ Normal(0, 5)
+	ellipticity ~ Uniform(0, 0.99)
+	position_angle ~ Uniform(0, 180)
+	R_s ~ LogUniform(0.1, 1e3)
+
+	f_outer ~ Uniform(0, 1)
+
+	R_s_outer ~ LogUniform(R_s * 1.5, 1.5e3)
+	ellipticity_outer ~ Uniform(0, 0.99)
+	position_angle_outer ~ Uniform(0, 180)
+
+
+	prof = LilGuys.Exp2D(R_s=R_s, M=1 - f_outer)
+	prof_outer = LilGuys.Exp2D(R_s=R_s_outer, M=f_outer)
+
+
+	
+	R = LilGuys.calc_R_ell(data.xi .+ d_xi, data.eta .+ d_eta, ellipticity, position_angle)
+	R_outer = LilGuys.calc_R_ell(data.xi .+ d_xi, data.eta .+ d_eta, ellipticity_outer, position_angle_outer)
+
+	
+	L_sat_space = @. LilGuys.surface_density.(prof, R) + LilGuys.surface_density(prof_outer, R_outer)
+	L_bg_space = 1 / (π*R_max^2)
+
+	f_sat ~ Uniform(0, 1)
+	LL = sum(@. log10.(
+		(1-f_sat) * data.L_bg * L_bg_space
+		+ f_sat * data.L_sat * L_sat_space
+	))
+	
+	Turing.@addlogprob!(LL)
+
+	#
+
 	mu_fe_a ~ Normal(-2, 1)
 	sigma_fe_a ~ Uniform(0, 3)
 	mu_fe_b ~ Normal(-2, 1)
 	sigma_fe_b ~ Uniform(0, 3)
 
 
-	prof = LilGuys.Exp2D(R_s=R_s_a, M=1 - f_outer)
-	prof_outer = LilGuys.Exp2D(R_s=R_s_b, M=f_outer)
+	# mu_vel_a ~ Normal(0, 100)
+	# sigma_vel_a ~ Uniform(0, 30)
+	# mu_vel_b ~ Normal(0, 100)
+	# sigma_vel_b ~ Uniform(0, 30)
 
-	f_b = @. surface_density(prof_outer, R_ell) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell))
+	# f_b = @. surface_density(prof_outer, R_ell) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell))
 
+	# dist_vel_a = Normal(mu_vel_a, sigma_vel_a)
+	# dist_vel_b = Normal(mu_vel_b, sigma_vel_b)
 	dist_fe_a = Normal(mu_fe_a, sigma_fe_a)
 	dist_fe_b = Normal(mu_fe_b, sigma_fe_b)
+
+	# for i in eachindex(v)
+	# 	v[i] ~ MixtureModel([dist_vel_a, dist_vel_b], [1-f_b[i], f_b[i]])
+	# end
+
 
 	f_b_fe = @. surface_density(prof_outer, R_ell_fe) / (surface_density(prof, R_ell_fe) + surface_density(prof_outer, R_ell_fe))
 
@@ -211,12 +191,67 @@ end
 	end
 	
 end
+
+# ╔═╡ 658da40d-355b-4efe-a6ea-8b6553398165
+x = rand(10)
+
+# ╔═╡ f0a93bb7-87c5-488b-ac7f-37f214f165e6
+MixtureModel([filldist(Normal(0, 1), 10), filldist(Normal(2, 1), 10)], [x, 1 .-x])
+
+# ╔═╡ b1428f5d-cc6e-463b-a056-7f7082ba82c8
+@model function struct_model(data::MCMCUtils.GaiaData)
+	
+	# structural 
+	d_xi = 0# ~ Normal(0, 5)
+	d_eta = 0# ~ Normal(0, 5)
+	ellipticity ~ Uniform(0, 0.99)
+	position_angle ~ Uniform(0, 180)
+	R_s ~ LogUniform(0.1, 1e3)
+
+	f_outer ~ Uniform(0, 1)
+
+	R_s_outer ~ LogUniform(R_s * 1.5, 2e3)
+	ellipticity_outer ~ Uniform(0, 0.99)
+	position_angle_outer ~ Uniform(0, 180)
+
+
+	prof = LilGuys.Exp2D(R_s=R_s, M=1 - f_outer)
+	prof_outer = LilGuys.Exp2D(R_s=R_s_outer, M=f_outer)
+
+
+	
+	R = LilGuys.calc_R_ell(data.xi .+ d_xi, data.eta .+ d_eta, ellipticity, position_angle)
+	R_outer = LilGuys.calc_R_ell(data.xi .+ d_xi, data.eta .+ d_eta, ellipticity_outer, position_angle_outer)
+
+	
+	L_sat_space = @. LilGuys.surface_density.(prof, R) + LilGuys.surface_density(prof_outer, R_outer)
+	L_bg_space = 1 / (π*R_max^2)
+
+	f_sat ~ Uniform(0, 1)
+	LL = sum(@. log10.(
+		(1-f_sat) * data.L_bg * L_bg_space
+		+ f_sat * data.L_sat * L_sat_space
+	))
+	
+	Turing.@addlogprob!(LL)
+end
+
+# ╔═╡ 13310eae-a7e6-4994-b698-91d976e9b53a
+gaia_data = MCMCUtils.GaiaData(stars)
 
 # ╔═╡ 62182131-faae-4b8b-ac15-697895c1e3c2
-model = two_pop_model(fe_h, fe_h_err, R_ell_fe)
+model = two_pop_model(gaia_data,
+					  rv_stars.vz, rv_stars.vz_err, rv_stars.R_ell, 
+					  disallowmissing(fe_h), fe_h_err, R_ell_fe)
+
+# ╔═╡ e4d79a2e-bdca-4121-8dee-35d9ec14a596
+samples = sample(model, NUTS(), 100)
+
+# ╔═╡ 63159af8-360a-432b-96dd-c0c4f9ee9f4c
+model_st = struct_model(gaia_data)
 
 # ╔═╡ 6ce1df6c-a64c-424c-83d5-d6e2443d8a98
-samples = sample(model, NUTS(), MCMCSerial(), 1000, 4)
+samples_st = sample(model_st, NUTS(), 100)
 
 # ╔═╡ c33a2b82-596c-423a-b4b0-abf2f3df941d
 pairplot(samples)
@@ -287,6 +322,34 @@ let
 	fig
 end
 
+# ╔═╡ db418a63-7aaf-496f-ab08-272ffde18079
+let
+	fig=Figure()
+	ax = Axis(fig[1,1],
+			 xlabel = "μv (A)",
+			 ylabel = "Δ μv (B - A)",
+			 )
+
+	scatter!(df.mu_vel_a, df.mu_vel_b .- df.mu_vel_a)
+	hlines!(0, color=:black)
+
+	fig
+end
+
+# ╔═╡ 0e42f462-eec5-4d56-b68d-ec5dc09eb868
+let
+	fig=Figure()
+	ax = Axis(fig[1,1],
+			 xlabel = "σv (A)",
+			 ylabel = "Δ σv (B - A)",
+
+			 )
+
+	scatter!(df.sigma_vel_a, df.sigma_vel_b .- df.sigma_vel_a)
+	hlines!(0, color=:black)
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╠═a662b1b4-5314-40d2-990f-28db38d21bf3
 # ╠═7d781874-b684-11f0-a926-e3f86a82519c
@@ -294,17 +357,16 @@ end
 # ╠═902876ac-2f5c-4fe3-9233-9ddace247d41
 # ╠═5fabb947-3f85-4b81-b92d-43f58ae55973
 # ╠═e070940a-d1e5-45f6-8737-a61431f29d58
-# ╟─b92892ce-3bf8-4e60-95da-9776e59f75cb
+# ╠═05ae7aa5-737f-401f-a844-1582bc1657ee
+# ╠═b92892ce-3bf8-4e60-95da-9776e59f75cb
+# ╠═ca90b810-452e-49dc-9ab4-18878069d250
+# ╠═6533ff08-2fba-49a1-896e-d65880b7b69c
+# ╠═98b6576b-b0ea-4e31-90fa-7b46c70dbbd9
+# ╠═299a6506-4d89-4f7a-9de8-46eb13181959
 # ╠═9c369fe4-d8c6-4890-95ec-fbc43eb80769
 # ╠═e49b4ca6-1376-4cc5-a43d-859b4db6482d
 # ╠═06ec245d-129c-4187-aec2-875da4faa2ca
-# ╠═ad2bed21-f45b-48fa-9dc9-e9bcff981d56
 # ╠═70632fc8-71d9-4dc8-acde-381cb5fd9dde
-# ╠═4cbf1e33-7f7a-4d26-ae39-83cd28c52ff5
-# ╠═a3a48158-2930-46d2-815f-3855e62a709a
-# ╠═af6f3c41-4c47-441a-94fc-63dcec90cc35
-# ╠═080c0ea5-4ab5-4499-9909-a4338f9fdacb
-# ╠═8483b37a-4751-427d-9e66-4ff2fd6ccfdc
 # ╠═ec5a8eb5-3c3f-4a81-b3b3-9f4aca18bd69
 # ╠═ce4a09ec-8a88-48a0-bde2-8ceec99c7431
 # ╠═65a50351-ae87-4675-91ff-ed23c0261c9b
@@ -312,14 +374,14 @@ end
 # ╠═25154575-f5ee-42b5-a35a-314770c158e7
 # ╟─fd5a1fd7-49a9-4cba-94d7-610a4333d1a4
 # ╠═7daee39d-f973-4a0b-aaf7-5e308e79b45c
-# ╠═8382e25e-1f2f-4365-89fa-da3f58a8d09c
-# ╠═02bf4164-da27-49f2-a659-c5a8d1b199a3
-# ╠═081b662e-a3e7-4656-a859-9aad29ab6af1
-# ╠═7383bfb2-6209-4ee9-8408-39042bfaa519
-# ╠═3ca15c01-f7f3-4779-b333-99b0c40529fa
-# ╠═cfdac012-a052-4f17-b5eb-fcf6969500ab
 # ╠═bb23fb9c-d8c5-4119-9223-f0aad311b9fc
+# ╠═f0a93bb7-87c5-488b-ac7f-37f214f165e6
+# ╠═658da40d-355b-4efe-a6ea-8b6553398165
+# ╠═b1428f5d-cc6e-463b-a056-7f7082ba82c8
+# ╠═13310eae-a7e6-4994-b698-91d976e9b53a
 # ╠═62182131-faae-4b8b-ac15-697895c1e3c2
+# ╠═e4d79a2e-bdca-4121-8dee-35d9ec14a596
+# ╠═63159af8-360a-432b-96dd-c0c4f9ee9f4c
 # ╠═6ce1df6c-a64c-424c-83d5-d6e2443d8a98
 # ╠═c33a2b82-596c-423a-b4b0-abf2f3df941d
 # ╠═6d4b2d04-7083-44ab-adc0-4cefaab8c6f4
@@ -331,3 +393,5 @@ end
 # ╠═7c87c114-3e83-4382-8975-1eab0205329f
 # ╟─bd7dc274-a1aa-49e0-a517-160c63c9de63
 # ╠═965cbbd8-f79c-48a0-a168-1a383d9d31dd
+# ╠═db418a63-7aaf-496f-ab08-272ffde18079
+# ╠═0e42f462-eec5-4d56-b68d-ec5dc09eb868

@@ -97,7 +97,7 @@ end
 
 	ax_umi = compare_density(fig[1, 2], modelnames["umi_smallperi"], )
 	hidedecorations!(ticks=false, minorticks=false)
-	model_label!("explonential")
+	model_label!("exponential")
 
 	ax_umi_plummer = compare_density(fig[2, 2], modelnames["umi_smallperi_plummer"], )
 	hideydecorations!(ticks=false, minorticks=false)
@@ -105,6 +105,8 @@ end
 	ax_umi_plummer.title[] = ""
 	
 	linkaxes!(ax_scl, ax_scl_plummer, ax_umi, ax_umi_plummer)
+	ax_scl_plummer.xticks[] = -0.5:0.5:2
+
 	# Legend(fig[2,2], ax_umi, tellwidth=false)
 
 	Label(fig[:, 0], "log surface density", rotation=π/2)
@@ -127,6 +129,7 @@ end
 	ax_scl = compare_density(fig[1,1], modelnames["scl_lmc"], )
 	model_label!("exponential")
 	ax_scl.title[] = ""
+	ax_scl.xticks[] = -0.5:0.5:2.0
 
 	ax_scl_plummer = compare_density(fig[1,2], modelnames["scl_lmc_plummer"], )
 	# hidexdecorations!(ticks=false, minorticks=false)

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.20
 
 using Markdown
 using InteractiveUtils
@@ -147,7 +147,7 @@ md"""
 
 # ╔═╡ 9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
 function fit_rv_sigma(rv, rv_err; μ_0_prior=0, N=3_000, p=0.16)
-	samples = DataFrame(sample(RVUtils.model_vel_1c(rv, rv_err, μ_0_prior=μ_0_prior), sampler, MCMCThreads(), N, n_threads))
+	samples = DataFrame(sample(RVUtils.model_vel_1c(rv, rv_err, μ_0_prior=μ_0_prior), sampler, MCMCSerial(), N, n_threads))
 
 	μ = median(samples.μ)
 	μ_p = quantile(samples.μ, [p, 1-p]) 
@@ -233,11 +233,48 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 	)
 end	
 
+# ╔═╡ c85a9f55-6fc6-43a2-99cf-536356007285
+function make_bins(x, dx=0.1)
+	bins = LilGuys.bins_equal_width(log10.(x), nothing, bin_width=dx)
+	_, h, _ = LilGuys.histogram(log10.(x), bins)
+	filt = h .> 2
+	return 10 .^ bins[LilGuys.edge_from_midpoint_filter( LilGuys.find_longest_consecutive_true(filt))]
+end
+
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = bins_equal_number(memb_stars.R_ell, n=10)
+bins = make_bins(memb_stars.R_ell)
+
+# ╔═╡ 17e212af-0f21-4718-b084-02078c995cd1
+hist(memb_stars.R_ell, bins=bins)
 
 # ╔═╡ f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 df_r_ell_z = calc_binned_mu_sigma(memb_stars.R_ell, memb_stars.vz, memb_stars.vz_err, bins)
+
+# ╔═╡ fb6b7ba9-25dd-46c3-93ed-ad1788c81e8f
+let
+fig = Figure()
+	ax = Axis(fig[1,1], yscale=log10, xscale=log10)
+		
+	
+	hist!(memb_stars.R_ell[.!ismissing.(memb_stars.RV_p20)], bins=bins)
+	stephist!(memb_stars.R_ell[.!ismissing.(memb_stars.RV_s18)], bins=bins, color=COLORS[2])
+	xlims!(1, 100)
+
+	ax2 = Axis(fig[2,1],
+		xlabel = L"$R_\textrm{ell}$ / arcmin",
+		ylabel = L"$\sigma_{v, \textrm{los}}$ / km s$^{-1}$",
+		xscale=log10,
+		limits = (1, 100, nothing, nothing)
+	)
+
+	errorscatter!( midpoints(bins), df_r_ell_z.σ, yerror=collect(zip(df_r_ell_z.σ_em, df_r_ell_z.σ_ep)), color=:black)
+	# hlines!(σ_m)
+
+
+	linkxaxes!(ax, ax2)
+	fig
+
+end
 
 # ╔═╡ 03928d42-ee61-4480-82d3-a482842f8521
 CSV.write("processed/vz_r_ell_binned$FIGSUFFIX.csv", df_r_ell_z)
@@ -415,6 +452,8 @@ end
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
+# ╠═17e212af-0f21-4718-b084-02078c995cd1
+# ╠═fb6b7ba9-25dd-46c3-93ed-ad1788c81e8f
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
 # ╟─95ef12d2-174a-47c3-a106-9b4005b2a80d
 # ╠═9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
@@ -429,6 +468,7 @@ end
 # ╠═88f2918e-e126-420a-96a2-5746a8010f73
 # ╟─7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
+# ╠═c85a9f55-6fc6-43a2-99cf-536356007285
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
 # ╠═f6d0dc0a-3ae2-4382-8aef-bfc816cdb721
 # ╠═03928d42-ee61-4480-82d3-a482842f8521

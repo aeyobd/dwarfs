@@ -180,7 +180,7 @@ function plot_vel_prof!(profs; kwargs...)
 
 
 	prof = profs.vel_f
-	lines!(prof[1], prof[2] * V2KMS; kwargs...)
+	lines!(prof[1], prof[2] * V2KMS; color=COLORS[2], kwargs...)
 
 end
 
@@ -199,7 +199,7 @@ end
 # ╔═╡ 7034614b-eb03-4333-bf69-c3fb64a5c0fc
 function plot_i_f(profs; kwargs...)
 	# plot_prof(profs.dm_i, text="dark matter", linestyle=:dot; kwargs...)
-	plot_prof(profs.dm_f;text="dark matter",  kwargs...)
+	plot_prof(profs.dm_f;text="dark matter", kwargs...)
 end
 
 # ╔═╡ ee01807c-785e-43b8-a8bd-b093aacbf281
@@ -333,56 +333,8 @@ function plot_σv_obs!(galaxyname)
 	errorscatter!(x, (df.σ), yerror=df.σ_em, color=:black, markersize=6)
 end
 
-# ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
-@savefig "initial_velocity" let
-	fig = Figure(size=(3.5, 3.5) .*72)
-
-	ax = vcirc_axis(fig[1,1])
-	ax.title="Sculptor"
-	
-	plot_i_f(scl_profs, color=COLORS[1], label="Scl DM")
-	plot_i_f_stars(scl_profs, 
-				   color=COLORS[2], label="Scl stars",  linewidth=smalllinewidth)
-
-	plot_r_J(NFW(r_circ_max=3.2, v_circ_max=31/V2KMS), get_mean_density("sculptor")[1])
-	
-	set_limits!(scl_max)
-
-	ax_scl_sigma = sigmav_axis(fig[2, 1])
-	plot_vel_prof!(scl_profs)
-	# plot_sigma_v!("sculptor")
-	plot_σv_obs!("sculptor")
-
-	
-	ax_umi = vcirc_axis(fig[1,2])
-	ax_umi.title = "Ursa Minor"
-	
-	plot_i_f(umi_profs, color=COLORS[1], label="UMi DM")
-	plot_i_f_stars(umi_profs,
-				   color=COLORS[2], label="UMi stars", linewidth=smalllinewidth)
-
-	plot_r_J(NFW(r_circ_max=4, v_circ_max=38/V2KMS), get_mean_density("ursa_minor")[1])
-
-	set_limits!(umi_max)
-
-
-	ax_umi_sigma = sigmav_axis(fig[2, 2])
-	plot_vel_prof!(umi_profs)
-	# plot_sigma_v!("ursa_minor")
-	plot_σv_obs!("ursa_minor")
-
-	
-	hideydecorations!(ax_umi, ticks=false, minorticks=false)
-	hideydecorations!(ax_umi_sigma, ticks=false, minorticks=false)
-
-	# l1 = lines!([NaN], [NaN], linewidth=smalllinewidth, linestyle=:dot, label="initial")
-	# l2 = lines!([NaN], [NaN], linewidth=smalllinewidth, linestyle=:solid, label="final")
-	# linkyaxes!(ax, ax_umi)
-	# colgap!(fig.layout, 0)
-
-	# axislegend(ax, [l1, l2], ["initial conditions", "end of isolation"], position=:lb, backgroundcolor=(:white, 0.8))
-	fig
-end
+# ╔═╡ 57519fa1-e8a2-4baa-a4fa-af4482328164
+COLORS
 
 # ╔═╡ 9721c592-a0f2-4564-83e4-da2eff4c3c79
 let
@@ -457,6 +409,57 @@ scl_max = LilGuys.fit_v_r_circ_max(radii(scl_profs[1]), middle.(LilGuys.circular
 # ╔═╡ 195582cf-83e3-44c8-9efe-b7d98f092c3c
 umi_max = LilGuys.fit_v_r_circ_max(radii(umi_profs[1]), middle.(LilGuys.circular_velocity(umi_profs[1])))
 
+# ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
+@savefig "initial_velocity" let
+	fig = Figure(size=(3.5, 3.5) .*72)
+
+	ax = vcirc_axis(fig[1,1])
+	ax.title="Sculptor"
+	
+	plot_i_f(scl_profs, color=COLORS[5], label="Scl DM")
+	plot_i_f_stars(scl_profs, 
+				   color=COLORS[2], label="Scl stars",  linewidth=smalllinewidth)
+
+	plot_r_J(NFW(r_circ_max=3.2, v_circ_max=31/V2KMS), get_mean_density("sculptor")[1])
+	
+	set_limits!(scl_max)
+
+	ax_scl_sigma = sigmav_axis(fig[2, 1])
+	plot_vel_prof!(scl_profs)
+	# plot_sigma_v!("sculptor")
+	plot_σv_obs!("sculptor")
+
+	
+	ax_umi = vcirc_axis(fig[1,2])
+	ax_umi.title = "Ursa Minor"
+	
+	plot_i_f(umi_profs, color=COLORS[5], label="UMi DM")
+	plot_i_f_stars(umi_profs,
+				   color=COLORS[2], label="UMi stars", linewidth=smalllinewidth)
+
+	plot_r_J(NFW(r_circ_max=4, v_circ_max=38/V2KMS), get_mean_density("ursa_minor")[1])
+
+	set_limits!(umi_max)
+
+
+	ax_umi_sigma = sigmav_axis(fig[2, 2])
+	plot_vel_prof!(umi_profs)
+	# plot_sigma_v!("ursa_minor")
+	plot_σv_obs!("ursa_minor")
+
+	
+	hideydecorations!(ax_umi, ticks=false, minorticks=false)
+	hideydecorations!(ax_umi_sigma, ticks=false, minorticks=false)
+
+	# l1 = lines!([NaN], [NaN], linewidth=smalllinewidth, linestyle=:dot, label="initial")
+	# l2 = lines!([NaN], [NaN], linewidth=smalllinewidth, linestyle=:solid, label="final")
+	# linkyaxes!(ax, ax_umi)
+	# colgap!(fig.layout, 0)
+
+	# axislegend(ax, [l1, l2], ["initial conditions", "end of isolation"], position=:lb, backgroundcolor=(:white, 0.8))
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═3abb0de9-81b7-4fe8-b457-92ae4b2e78e3
@@ -509,6 +512,7 @@ umi_max = LilGuys.fit_v_r_circ_max(radii(umi_profs[1]), middle.(LilGuys.circular
 # ╠═16ce9a3c-69b3-486f-9c22-a3c483cf9570
 # ╠═e7eada5c-6d8a-48b6-a65a-d92126bf37e2
 # ╠═63f93057-14b5-4df9-8e67-5bed7452bbe4
+# ╠═57519fa1-e8a2-4baa-a4fa-af4482328164
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═9721c592-a0f2-4564-83e4-da2eff4c3c79
 # ╠═6720afb1-9968-42e3-a22c-c9232309f586

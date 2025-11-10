@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.20
 
 using Markdown
 using InteractiveUtils
@@ -147,7 +147,7 @@ md"""
 
 # ╔═╡ 9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
 function fit_rv_sigma(rv, rv_err; μ_0_prior=0, N=3_000, p=0.16)
-	samples = DataFrame(sample(RVUtils.model_vel_1c(rv, rv_err, μ_0_prior=μ_0_prior), sampler, MCMCThreads(), N, n_threads))
+	samples = DataFrame(sample(RVUtils.model_vel_1c(rv, rv_err, μ_0_prior=μ_0_prior), sampler, MCMCSerial(), N, n_threads))
 
 	μ = median(samples.μ)
 	μ_p = quantile(samples.μ, [p, 1-p]) 
@@ -170,6 +170,9 @@ code below validates induced PM gradient (should be approx 2).
 
 # ╔═╡ 43175a56-4c8e-4274-baef-db76f6d66bea
 df_gradient = CSV.read("processed/mcmc_samples_gradient$FIGSUFFIX.csv", DataFrame)
+
+# ╔═╡ 3afccf66-e42d-4a37-8feb-32ac86eaf133
+
 
 # ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
 θ_m = median(df_gradient.Θ_grad)
@@ -233,8 +236,19 @@ function calc_binned_mu_sigma(x, y, yerr, bins; kwargs...)
 	)
 end	
 
+# ╔═╡ ba3013b8-1867-4a71-982a-1cd2991c0515
+function make_bins(x, dx=0.1)
+	bins = LilGuys.bins_equal_width(log10.(x), nothing, bin_width=dx)
+	_, h, _ = LilGuys.histogram(log10.(x), bins)
+	filt = h .> 2
+	return 10 .^ bins[LilGuys.edge_from_midpoint_filter( LilGuys.find_longest_consecutive_true(filt))]
+end
+
 # ╔═╡ 8b21cc49-ca17-4844-8238-e27e9752bee7
-bins = bins_equal_number(memb_stars.R_ell, n=10)
+bins = make_bins(memb_stars.R_ell)
+
+# ╔═╡ e5ab17e8-4fdc-49e9-8dde-4ccedf84ad81
+hist(memb_stars.R_ell, bins=bins)
 
 # ╔═╡ a3a9097e-9f70-43a3-a887-71b10f850df4
 A_m = median(df_gradient.A)
@@ -451,6 +465,7 @@ end
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═7f4a5254-ed6f-4faa-a71e-4b4986a99d45
+# ╠═e5ab17e8-4fdc-49e9-8dde-4ccedf84ad81
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
 # ╟─95ef12d2-174a-47c3-a106-9b4005b2a80d
 # ╠═9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
@@ -459,12 +474,14 @@ end
 # ╟─8555e608-53c1-40d3-b21e-413af8953c30
 # ╠═af0d2050-b42e-4a7f-aabb-5b08d23381e9
 # ╠═43175a56-4c8e-4274-baef-db76f6d66bea
+# ╠═3afccf66-e42d-4a37-8feb-32ac86eaf133
 # ╠═7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
 # ╠═3195286d-d85f-43a3-aa25-dae2134f570b
 # ╠═4a473039-79f0-4d77-aa0c-681e2fba4f4c
 # ╠═88f2918e-e126-420a-96a2-5746a8010f73
 # ╟─7a1a920e-45e7-4d6f-925c-88dfb77f6dfb
 # ╠═c2735c49-2892-46ac-bcf8-7cdcef409f44
+# ╠═ba3013b8-1867-4a71-982a-1cd2991c0515
 # ╠═8b21cc49-ca17-4844-8238-e27e9752bee7
 # ╠═a3a9097e-9f70-43a3-a887-71b10f850df4
 # ╠═121617f4-f33d-4738-9a11-e8465d04574d
