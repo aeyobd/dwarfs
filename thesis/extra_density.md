@@ -28,7 +28,7 @@ We also determine density profiles from the deeper photometric surveys. For Scl,
 
 
 
-![Colour-Magnitude sample selection](figures/extra_cmd_selection.png){#fig:extra_cmd width=100%}
+![Colour-magnitude sample selection](figures/extra_cmd_selection.png){#fig:extra_cmd width=100%}
 
 Figure: Colour-magnitude diagram cuts used in samples in this section. Black points represent stars within $1R_h$, light grey shows all field stars passing quality cuts, and the orange polygon shows the CMD cut. The central, likely-member stars inform the CMD selections.
 

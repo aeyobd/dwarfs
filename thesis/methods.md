@@ -109,7 +109,7 @@ While there is some range in the choice of initial halo, reasonable changes to t
 | $M_{200}$           | $0.5 \pm 0.2\times10^{10}\ Mo$                | $0.3_{-0.1}^{+0.2} \times 10^{10}\,\Mo$ |
 | $c_{\rm NFW}$       | $13_{-3}^{+4}$                                | $13.5_{-3}^{+4}$                        |
 
-Table: Inferred properties of the stellar component and halo for Sculptor and Ursa Minor. We record the total luminosity, stellar mass, mass-to-light ratio, dark matter halo $\vmax$ and $\rmax$, and dark matter halo virial mass $M_{200}$ and concentration $c_{\rm NFW}$. Uncertainties are the 16-84th percentile derived using Monte Carlo sampling, assuming 0.035 and 0.1 dex uncertainties in the $\vmax(M_\star)$ and $c(M_{200})$ relations.  {#tbl:derived_props  short="Derived Properties of Sculptor and Ursa Minor"}
+Table: Inferred properties of the stellar component and halo for Sculptor and Ursa Minor. We record the total luminosity, stellar mass, mass-to-light ratio, dark matter halo $\vmax$ and $\rmax$, and dark matter halo virial mass $M_{200}$ and concentration $c_{\rm NFW}$. Uncertainties are the 16-84th percentile derived using Monte Carlo sampling, assuming 0.035 and 0.1 dex uncertainties in the $\vmax(M_\star)$ and $c(M_{200})$ relations.  {#tbl:derived_props  short="Derived properties of Sculptor and Ursa Minor"}
 
 
 

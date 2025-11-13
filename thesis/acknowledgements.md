@@ -2,21 +2,21 @@ While written by my hand, I cannot pretend that I alone created this work. I am 
 
 To my supervisor, Julio Navarro, for being the critical eye and guiding reason to this work. I will always approach research differently now.
 
-To Raphaël, who has helped inspire and direct this project. To everyone who has helped provide me opportunities to share work, and share wonderful ideas with me. Isabel, Jens, Eduardo, Jorge, David, Justin, Eugene, Azi, José, and many others.
+To Raphaël, who has helped inspire and direct this project, and to everyone who has shared ideas and opportunities along the way: Isabel, Jens, Eduardo, Jorge, David, Justin, Eugene, Azi, José, and many others.
 
-To Jax, who has been a support along the way, guiding my research methods and project. 
+To Jax for you guidance and personal support for this project. 
 
-To all of my new friends I have made along the way. Ruxin, Aviv. To Pranav, Ted, Jono, Adrianne, Praneet, Will, Maeve, Ewoud, Anne, Anya, Shoshanah. To Akshara  and Simon for all your personal and professional advice. We have built a wonderful community of students in this department. To all the students who have since moved on and show what we may be: Bobby, Leo, Ryan, Katie, Fletcher, Ayden, Maheyer, Jess, Dhwani, Spencer, Mallory, Omar, Isaac, and Dasha. 
+To all of my new friends I have made along the way---Ruxin, Aviv. To Pranav, Ted, Jono, Adrianne, Praneet, Will, Maeve, Ewoud, Anne, Anya, Shoshanah. To Akshara  and Simon for all your personal and professional advice. We have built a wonderful graduate community. To all the students who have since moved on  but still inspire me: Bobby, Leo, Ryan, Katie, Fletcher, Ayden, Maheyer, Jess, Dhwani, Spencer, Mallory, Omar, Isaac, and Dasha. 
 
- And to my friends across UVic, Wyatt, Rosemary, Maggie. To the Linguistics extended family and team *adequate*.  Melody, Lily, Gillian, Stephen, Jamie, Chloë, Alyssa, Kyle, and Marcus. You are all wonderful human beings, cooks, and always a joy to spend time with. 
+To my friends across UVic: Wyatt, Rosemary, Maggie. To the Linguistics extended family and team *adequate*:  Melody, Lily, Gillian, Stephen, Jamie, Chloë, Alyssa, Kyle, and Marcus. You are all wonderful human beings, cooks, and always a joy to spend time with. 
 
-To my musical friends, Adrienne, Alex for our shared joy in music making. And Steve, for showing me the joy in a simple life and beautiful music. 
+To my musical friends, Adrienne and Alex, for our shared joy in music making. And Steve, for showing me the joy in a simple life and beautiful music. 
 
 To the Victoria performing arts community and Fierce Brosnan, our local legend. 
 
-To my fellow fibre friends and crafters. Leise, Wes, Ashley, Sabrina, Sarah. To the graduate student society for continuing to connect us across departments. 
+To my fellow fibre friends and crafters: Leise, Wes, Ashley, Sabrina, Sarah. To the graduate student society for continuing to connect us across departments. 
 
-To the international community, and my international friends---Marcela, Bernardo, Daniel, Victor, Walla, Mehrab, and everyone else I have met. 
+To the international community, and my international friends---Marcela, Bernardo, Daniel, Victor, Mehrab, and many others. 
 
 To Erica. To my students and everyone working with outreach here. I love being able to pass on our knowledge to the wider world. 
 
@@ -28,11 +28,9 @@ To my past advisors, James who has continued to support me long after our paths 
 
 To my past roommates, Matthew, Josh, and Bryn, for putting up with my chaos and our shared time together. 
 
-To my long-time friends. Nikola and Eric. Mikey and Anthony. Anya, Kaia, Alyssa, Aahliyah, Cameron. May we continue to find each other even as we drift apart. 
+To my long-time friends---Nikola, Eric, Mikey, Anthony, Anya, Kaia, Alyssa, Aahliyah, Cameron---may we continue to stay in touch.
 
-To my parents for their continuous support throughout this project. To my grandparents for always being there. 
-
-To Nolan and Olivia, always a joy to see each other. To Bridget and Gretchen. To my extended family. And to my siblings for always being a source of joy. 
+To my parents for their continuous support throughout this project. To my grandparents for always being there. To Nolan and Olivia, always a joy to see each other. To Bridget and Gretchen. To my extended family. And to my siblings for always being a source of joy. 
 
 To Arya. To all of my furry friends of friends—Nano, Pluto, Hobbs, Penelope, Tochka, Camar, Loki, and Hermes. 
 

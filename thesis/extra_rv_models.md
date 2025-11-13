@@ -41,7 +41,7 @@ Figure: **Left:** Velocity histogram of Scl and UMi in terms of projected-correc
 
 Figure: **Top**  members of Sculptor plotted in the tangent plane, coloured by corrected velocity difference from mean $v_{\rm gsr}' - \bar v_{\rm gsr}'$. The black ellipse marks the half-light radius in @fig:scl_selection. The black and green arrows mark the proper motion (PM, GSR frame) and derived velocity gradient (rot) vectors (to scale). **Bottom**: The corrected LOS velocity along the most likely rotational axis. RV members are black points, the systematic $v_{\rm gsr}''$ is the horizontal grey line, blue lines represent the (projected) gradient from MCMC samples, and the orange line is a rolling median (with a window size of 50).
 
-![velocity](figures/umi_rv_scatter_gradient.pdf){#fig:umi_velocity_gradient_scatter} 
+![No velocity gradient in Ursa Minor](figures/umi_rv_scatter_gradient.pdf){#fig:umi_velocity_gradient_scatter} 
 
 Figure: Similar to @fig:scl_velocity_gradient_scatter except for Ursa Minor. Ursa Minor does not have clear evidence of a velocity gradient.
 

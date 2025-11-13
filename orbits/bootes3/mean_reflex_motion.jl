@@ -56,14 +56,17 @@ icrs = ICRS(obs_props)
 # ╔═╡ d0cf64df-d46b-4776-9b46-d1c69a02cc61
 units = Agama.VASILIEV_UNITS
 
+# ╔═╡ f9075bfd-c7ab-4bf4-8774-7e7074a0c29f
+timerange = (0, 1/T2GYR)
+
 # ╔═╡ 77503fde-9be2-4a7b-bed0-847297be2c76
-orbit = LilGuys.agama_orbit(pot, icrs, timerange=(0, -3/T2GYR), agama_units=units)
+orbit = LilGuys.agama_orbit(pot, icrs, timerange=timerange, agama_units=units)
 
 # ╔═╡ f7c3629d-4339-4e8f-b77b-f9c48ea0bbe4
-orbit_no = LilGuys.agama_orbit(pot_mw_static, icrs, timerange=(0, -3/T2GYR), agama_units=units)
+orbit_no = LilGuys.agama_orbit(pot_mw_static, icrs, timerange=timerange, agama_units=units)
 
 # ╔═╡ 6aea4a07-3405-4e04-a4d4-b31598455043
-orbit_noreflex = LilGuys.agama_orbit(pot_noreflex, icrs, timerange=(0, -3/T2GYR), agama_units=units)
+orbit_noreflex = LilGuys.agama_orbit(pot_noreflex, icrs, timerange=timerange, agama_units=units)
 
 # ╔═╡ 299038ee-d228-4eb9-9a97-708a95668fd2
 acc_tot = Agama.acceleration(pot, orbit.positions, units, t=orbit.times)
@@ -239,6 +242,7 @@ lines(times, L[3, :])
 # ╠═6195c401-2dc7-425b-a082-8bbda16d0ba3
 # ╠═2ccdac03-56fd-4f30-a237-b473435fe321
 # ╠═d0cf64df-d46b-4776-9b46-d1c69a02cc61
+# ╠═f9075bfd-c7ab-4bf4-8774-7e7074a0c29f
 # ╠═77503fde-9be2-4a7b-bed0-847297be2c76
 # ╠═f7c3629d-4339-4e8f-b77b-f9c48ea0bbe4
 # ╠═6aea4a07-3405-4e04-a4d4-b31598455043

@@ -106,7 +106,7 @@ Interestingly, the timing of the LMC encounter implies a break radius ($\sim 25'
 | $r_\textrm{max, f} / r_\textrm{max, i}$   |                           | 0.763              |
 | fractional final bound mass               |                           | 0.5402             |
 
-Table: The orbital properties and dark matter evolution for the models including an LMC. Similar to @tbl:scl_sim_results except quantities with respect to the LMC are in parentheses. {#tbl:scl_lmc_sims short="Orbits and results for Sculptor in the MW+LMC potential."}
+Table: The orbital properties and dark matter evolution for the models including an LMC. Similar to @tbl:scl_sim_results except quantities with respect to the LMC are in parentheses. {#tbl:scl_lmc_sims short="Orbits and results for Sculptor in the MW+LMC potential"}
 
 
 

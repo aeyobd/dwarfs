@@ -197,7 +197,7 @@ Figure: Surface density profiles of Sculptor (orange squares), Ursa Minor (red t
 | position angle   | $94\pm1^\circ$                                               | "      |
 | $M_V$            | $-10.82\pm0.14$                                              | "      |
 
-Table: Observed properties of Sculptor. References are: (1) @munoz+2018 [Sérsic fit], (2) @tran+2022 [RR lyrae distance], (3) @MV2020b, (4) @arroyo-polonio+2024. {#tbl:scl_obs_props  short="Observed Properties of Sculptor"}
+Table: Observed properties of Sculptor. References are: (1) @munoz+2018 [Sérsic fit], (2) @tran+2022 [RR lyrae distance], (3) @MV2020b, (4) @arroyo-polonio+2024. {#tbl:scl_obs_props  short="Observed properties of Sculptor"}
 
 
 
@@ -216,7 +216,7 @@ Table: Observed properties of Sculptor. References are: (1) @munoz+2018 [Sérsic
 | position angle   | $50 \pm 1^\circ$                                             | "      |
 | $M_V$            | $-9.03 \pm 0.05$                                             | "      |
 
-Table: Observed properties of Ursa Minor. References are: (1) @munoz+2018 [Sérsic fit], (2) @garofalo+2025 [RR lyrae distance], (3) @MV2020a, (4) @pace+2020, average of MMT and Keck results with systematic uncertainty from Appendix -@sec:extra_rv_models discussion.  {#tbl:umi_obs_props  short="Observed Properties of Ursa Minor"}
+Table: Observed properties of Ursa Minor. References are: (1) @munoz+2018 [Sérsic fit], (2) @garofalo+2025 [RR lyrae distance], (3) @MV2020a, (4) @pace+2020, average of MMT and Keck results with systematic uncertainty from Appendix -@sec:extra_rv_models discussion.  {#tbl:umi_obs_props  short="Observed properties of Ursa Minor"}
 
 
 
