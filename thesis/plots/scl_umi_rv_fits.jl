@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.20
 
 using Markdown
 using InteractiveUtils
@@ -118,37 +118,6 @@ v0_umi = median(samples_umi.μ)
 # ╔═╡ cb1ff71e-48df-41b3-9da1-8b29c9118e05
 (extrema(stars_umi.vz[stars_umi.vz_err .< 2])  .- v0_umi )./ σ_umi
 
-# ╔═╡ 1acafc19-e86a-4f18-89da-833ae16664e9
-smallfontsize = theme(:fontsize)[]*0.7
-
-# ╔═╡ 9e5c76bd-ca64-4824-afb3-b1ea898f3b13
-df_gradient_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/vz_r_ell_binned.rv_combined_x_2c_psat_0.2.csv", DataFrame)
-
-# ╔═╡ 26b3a353-eaf4-43c3-b55e-b3c80dbc2488
-df_gradient_scl = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/vz_r_ell_binned.rv_combined_x_wide_2c_psat_0.2.csv", DataFrame)
-
-# ╔═╡ 21a633a6-4e53-4ff7-a115-537742f8bdb2
-function plot_obs_sigma!(df)
-	x_mid = log10.(df.x)
-	log_bin_errs = [ (x_mid[i] .- log10.(df.x_low[i]), log10(df.x_high[i]) .- x_mid[i]) for i in eachindex(x_mid)]
-	y_err = collect(zip(df.σ_em ./ df.σ ./ log(10), df.σ_ep ./ df.σ ./ log(10)))
-
-	errorscatter!(x_mid, log10.(df.σ), xerror=log_bin_errs, yerror=y_err, color=:black)
-end
-
-# ╔═╡ a7ef05e7-52ca-45b6-a3f2-7cf451d532bb
-function plot_samples_sigma!(df_Rell; skip=800)
-	x = LinRange(-1, 3, 100)
-
-	
-	for i in 1:skip:size(df_Rell, 1)
-		y = df_Rell.σ[i] .* 10 .^ ((x .- 1.0) .* df_Rell.dlσ_dlR[i])
-		lines!(x, log10.(y), alpha=0.03, color=COLORS[3], linestyle=:solid)
-	end
-
-	hlines!(log10(median(df_Rell.σ)), color=:black, linewidth=theme(:linewidth)[]/2)
-end
-
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 @savefig "scl_umi_rv_fits" let
 	fig = Figure()
@@ -227,6 +196,37 @@ end
 	xlims!(-1, 2.5)
 
 	fig
+end
+
+# ╔═╡ 1acafc19-e86a-4f18-89da-833ae16664e9
+smallfontsize = theme(:fontsize)[]*0.7
+
+# ╔═╡ 9e5c76bd-ca64-4824-afb3-b1ea898f3b13
+df_gradient_umi = CSV.read(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/velocities/processed/vz_r_ell_binned.rv_combined_x_2c_psat_0.2.csv", DataFrame)
+
+# ╔═╡ 26b3a353-eaf4-43c3-b55e-b3c80dbc2488
+df_gradient_scl = CSV.read(ENV["DWARFS_ROOT"] * "/observations/sculptor/velocities/processed/vz_r_ell_binned.rv_combined_x_wide_2c_psat_0.2.csv", DataFrame)
+
+# ╔═╡ 21a633a6-4e53-4ff7-a115-537742f8bdb2
+function plot_obs_sigma!(df)
+	x_mid = log10.(df.x)
+	log_bin_errs = [ (x_mid[i] .- log10.(df.x_low[i]), log10(df.x_high[i]) .- x_mid[i]) for i in eachindex(x_mid)]
+	y_err = collect(zip(df.σ_em ./ df.σ ./ log(10), df.σ_ep ./ df.σ ./ log(10)))
+
+	errorscatter!(x_mid, log10.(df.σ), xerror=log_bin_errs, yerror=y_err, color=:black)
+end
+
+# ╔═╡ a7ef05e7-52ca-45b6-a3f2-7cf451d532bb
+function plot_samples_sigma!(df_Rell; skip=800)
+	x = LinRange(-1, 3, 100)
+
+	
+	for i in 1:skip:size(df_Rell, 1)
+		y = df_Rell.σ[i] .* 10 .^ ((x .- 1.0) .* df_Rell.dlσ_dlR[i])
+		lines!(x, log10.(y), alpha=0.03, color=COLORS[3], linestyle=:solid)
+	end
+
+	hlines!(log10(median(df_Rell.σ)), color=:black, linewidth=theme(:linewidth)[]/2)
 end
 
 # ╔═╡ Cell order:
