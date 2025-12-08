@@ -110,7 +110,7 @@
   % methods heading (mandatory)
    {We conduct idealized N-body simulations of both galaxies in the tidal field of the Milky Way and Large Magellanic Cloud (LMC). }
   % results heading (mandatory)
-   {Tides affect neither galaxy strongly. Because the LMC perturbs Scl's orbit, Scl has few pericentres and the stellar component evolves little. UMi instead loses about 95\% of its dark matter mass, but the stars would still appear unaffected with current observations. }
+   {Tides affect neither galaxy strongly. Because the LMC perturbs Scl's orbit, Scl has few pericentres and the stellar component evolves little. UMi instead loses about 95\% of its dark matter mass, but the stars should appear unaffected. }
   % conclusions heading (optional), leave it empty if necessary
    {The outer stellar excess in Scl and UMi are likely not of tidal origin. Instead, these features are likely innate, possibly explained by past mergers, accretion, or star formation episodes. }
 
@@ -154,12 +154,11 @@ Simulations tuned to Fornax \citep{battaglia+sollima+nipoti2015, borukhovetskaya
 Scl \citep{iorio+2019}, or MW classicals\footnote{We define classicals to be dwarfs with absolute magnitudes between $-7.7$ and $-14$.} in general \citep{tchiorniy+genina2025} often find tides play a minor role in the stellar evolution of dwarf classicals. However, modeling tidal evolution under the Large Magellanic Cloud (LMC) has not yet been considered for most classical dSphs.
 
 Two radii provide estimates of where tidal effects occur.
-The \textbf{Jacobi radius}, $r_{\rm J}$. approximates the radius where stars
-become unbound in a galaxy\footnote{ 
+The \textbf{Jacobi radius}, $r_{\rm J}$, approximates the radius where stars
+become unbound in a galaxy.\footnote{ 
     While strictly valid only for circular orbits, assuming
 \(r_{\rm peri}\) for the host-dwarf distance works as most stars are
-lost during pericentric passages. $r_{\rm J}$ solves
-}
+lost during pericentric passages.} $r_{\rm J}$ solves
 \begin{equation}\label{eq:r_jacobi}
     3\bar \rho_{\rm MW}(r_{\rm peri}) \approx \bar \rho_{\rm dwarf}(r_J),
 \end{equation}
@@ -184,18 +183,18 @@ understand the severity of tidal effects on Scl and UMi.
 Measuring the light profile of a resolved galaxy requires careful
 consideration of whether any given star belongs to the system or not.
 Without removing contamination from foreground/background sources, faint
-features may be lost in the noise or be of uncertain association. In addition to colours and magnitudes, \emph{Gaia} now \citep{gaiacollaboration+2023} provides stellar parallax and proper motion which improve membership assignment.
+features may be lost in the noise or be of uncertain association. \emph{Gaia} now \citep{gaiacollaboration+2023} provides stellar parallaxes and proper motions, improving membership by providing key additional information.
 
 
 Here, we use the \citepos[hereafter J+24]{jensen+2024} membership
-probabilities from \emph{Gaia} data.\footnotemark{} J+24 used a Bayesian framework
+probabilities from \emph{Gaia} data. J+24 used a Bayesian framework
 incorporating proper motion, colour--magnitude diagram, and
 spatial information to determine the probability that a given star
 belongs to the satellite, $P_{\rm sat}$. By accounting for proper motions
 in particular, J+24 produced low contamination samples of candidate
 member stars out to large distances from a dwarf galaxy. J+24 extended
 the algorithm presented in \citet{MV2020a, MV2020b} by additionally
-including a secondary, extended spatial component, J+24 detected
+including a secondary, extended spatial component.\footnotemark{} J+24 detected
 candidate members out to ${\sim}10$ half-light radii from the
 centres of some galaxies (\(R_h\)). Similar recent work includes
 \citet{pace+li2019}; \citet{battaglia+2022}; \citet{pace+erkal+li2022};
@@ -215,8 +214,7 @@ Most stars have \(P_{\rm  sat}\) values which are nearly 0 or 1, so the exact
 choice of probability threshold has little effect on the resulting sample. Even
 at the probability threshold of 0.2, the purity remains high when validated
 against spectroscopic line-of-sight (LOS) velocities (${\sim}90\%$,
-J+24).\footnotemark{} However, we find that our conclusions are unchanged when
-limiting samples to only the brightest stars. Altogether, the J+24 method
+J+24).\footnotemark{} Altogether, the J+24 method
 provides a high-quality, low-contamination sample of dwarf galaxy candidate
 member stars, which we will now investigate in further detail.
 
@@ -224,7 +222,8 @@ member stars, which we will now investigate in further detail.
   would indicate that the J+24 model probabilities are miss-calibrated.
   However, most LOS surveys of dwarf galaxies select brighter stars
   (which have better \emph{Gaia} measurements) and likely members,
-  complicating the interpretation of this purity estimate.}
+  complicating the interpretation of this purity estimate. However, we find that our conclusions are unchanged when
+limiting samples to only the brightest stars. }
 
 
 Fig.~\ref{fig:observed_density_profiles} compares the density
@@ -246,8 +245,8 @@ described by an exponential profile in the inner regions.\footnote{
 In the outer regions, however, Scl and Ursa
 Minor deviate and show a clear outer excess over an exponential law
 (solid black line). These galaxies are better fit by a Plummer law
-(dashed black line). The deviation from an exponential grows outwards,
-and at \(\sim 8 R_h\), may reach 2 orders of magnitude. 
+(dashed black line). The deviation from an exponential grows outwards
+and may reach 2 orders of magnitude at $8 R_h$. 
 
 
 \begin{figure}
@@ -295,7 +294,7 @@ Galactic plane.
 
 For our MW-only models, we adopt the potential from \citet{EP2020}, which is
 an analytic approximation to that proposed by \citet{mcmillan2011}.
-The Potential consists of a \citet{hernquist1990} bulge, a \citet{miyamoto+nagai1975} thin and thick disk, and a NFW \citep{NFW1996, NFW1997} dark matter halo.
+The potential consists of a \citet{hernquist1990} bulge, a \citet{miyamoto+nagai1975} thin and thick disk, and a NFW \citep{NFW1996, NFW1997} dark matter halo.
 A NFW density profile is defined as,
 \begin{equation}\label{eq:nfw}{
 \rho/\rho_s= \frac{1}{(r/r_s)(1+r/r_s)^2},
@@ -384,8 +383,7 @@ unlikely that either has had a significantly smaller pericentre than
 our selected orbit, which we refer to as the \smallperi{} orbit. We take
 the first apocentre after a look-back time of 10 Gyr as the initial conditions for our models of Scl and UMi,
 noted in Table~\ref{tbl:orbit_ics}.
-
-For the Scl MW+LMC model, we select, instead, the $6\sigma$ smallest pericentre with respect to the LMC, (by doubling the observed uncertainties), and only integrate backwards for $2\,\Gyr$.
+For the Scl MW+LMC model, we select, instead, the $6\sigma$ smallest pericentre with respect to the LMC, (by doubling the observed uncertainties). We only integrate this model backwards for $2\,\Gyr$.
 
 
 We iteratively adjust UMi's initial conditions to better match the
@@ -417,7 +415,7 @@ strongly affected by tides, we do not carry out this correction for Scl.
 
 We use \agama{} \citep{agama} to generate the initial N-body dark matter
 halo. We assume galaxies are described by a spherical, isotropic 
-dark matter halo (Eq.~\ref{eq:nfw}). The NFW
+NFW dark matter halo (Eq.~\ref{eq:nfw}). The NFW
 profile truncated in the outer regions by
 \begin{equation}\label{eq:trunc_nfw}
     \rho_{\rm tNFW}(r) = e^{-(r/r_t)^3}\ \rho_{\rm NFW}(r),
@@ -446,8 +444,7 @@ We adopt a softening length of
 for a halo with \(N\) particles. We use $10^7$ particles, and adopt a relative accuracy criterion of $\alpha=0.005$ and integration accuracy of $\eta=0.01$.\footnote{i.e., tree nodes open if $M\,l/r^3 < \alpha |a|$ for node mass $M$, sidelength $l$, distance $r$, and particle acceleration $a$; and particles must take time-steps smaller than $\sqrt{2\,\eta\,h_{\rm grav}}$.}
 
 To ensure that the initial conditions of the simulation are dynamically
-relaxed, we run a halo first in isolation using
-\gadget{}. We use the same isolation run
+relaxed, we run a halo first in isolation. We use the same isolation run
 for all halos (with $\rmax=6$ and $\vmax=31$, ran for $5\,\Gyr$) and rescale the results to the desired initial halo.
 Our isolation halo is converged down to a radius $r\approx 100\,{\rm pc}$ (see also the convergence radius from \citealt{power+2003}).
 
@@ -516,19 +513,18 @@ function, \begin{equation}{
 where $\rho$ is the stellar or DM density, \(\Psi\) is the potential (normalized to vanish at infinity), and
 \({\cal E}\) the binding energy, \({\cal E} = \Psi - 1/2 \V^2\)  
 \citep[see eq. 4-140b in][]{BT1987}. We
-take \(\Psi\) and $\rho$ from the assumed analytic density profiles. We calculate \(\rho_\star\) from \(\Sigma_\star\) via the inverse Abel transform.
+take \(\Psi\) and $\rho$ from the assumed analytic density profiles, calculating \(\rho_\star\) from \(\Sigma_\star\) via the inverse Abel transform.
 
 We consider both an exponential stellar profile, 
 \begin{equation}\label{eq:exponential_law}
 \Sigma_{\rm exp} = \Sigma_0\exp(-\alpha\,R / \alpha\,R_h).
 \end{equation}
 for central surface density $\Sigma_0$, half-light radius $R_h$, and $\alpha \approx 1.6783$.
-We also consider a more extended Plummer law, 
+We also consider a more extended \citep{plummer1911} law component, 
 \begin{equation}{
 \Sigma_{\rm Pl} = \frac{\Sigma_0}{(1 + (R/R_h)^2)^2},
 }\end{equation}
 for half-light radius $R_h$. 
-
 Fig.~\ref{fig:initial_halos} shows the resulting initial conditions for the MW-only models before and after 5 Gyr of isolation evolution. 
 
 
@@ -539,7 +535,7 @@ Fig.~\ref{fig:initial_halos} shows the resulting initial conditions for the MW-o
 Fig.~\ref{fig:orbits} shows orbits of Scl and UMi in the MW-only and MW+LMC potentials. In the MW-only potential, both galaxies follow relatively well-constrained orbits consistent with long-term MW satellites. However, including the LMC dramatically modifies Scl's orbit---the apocentre increases from ${\sim}100$ to ${\sim}220\,\kpc$. Scl also passes by the LMC 100 Myr ago, making the LMC a potential tidal stressor. 
 In contrast, UMi's orbit only slightly increases in characteristic radius, reducing tidal forces overall.\footnote{Note that our MW-only model has a heavier MW mass than the MW+LMC model, but the qualitative effects on each galaxy's orbit are largely similar when using the same MW model in each case.}
 
-The black lines in \ref{fig:orbits} show our selected orbits (black), representing an extreme low-pericentre orbit. We adopt these orbits as the most severe observationally-permisible tidal histories of each galaxy. 
+The black lines in \ref{fig:orbits} show our selected orbits (black), representing an extreme low-pericentre orbit. We adopt these orbits as the most severe observationally-permissible tidal histories of each galaxy. 
 
 \subsection{Tidal effects}
 
@@ -593,9 +589,9 @@ structure likely do not change our conclusions.
 A key caveat is that the long-term orbits of satellites are highly uncertain.
 Analytic MW potentials neglect unknown details including triaxiality, mass
 evolution, and substructure, causing analytic orbits to deviate significantly
-from true satellite orbits \citep[e.g.,]{dsouza+bell2022, santistevan+2023}.
+from true satellite orbits \citep[e.g.,][]{dsouza+bell2022, santistevan+2023}.
 While we cannot constrain the long-term histories of these dwarfs, our results
-indicate that {\it recent tidal effects} would not be observable in Scl and
+indicate that {\it recent tidal effects} are likely not be observable in Scl and
 UMi.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
