@@ -61,6 +61,9 @@ r_h_em = 2.50
 r_h_ep = 2.50
 r_h_ref = "J+24"
 
+R_h = 27.04
+
+
 metallicity = -2.0999999046325684
 metallicity_em = 0.20000000298023224
 metallicity_ep = 0.20000000298023224

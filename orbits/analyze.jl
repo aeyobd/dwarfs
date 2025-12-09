@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -125,6 +125,9 @@ end
 # ╔═╡ 6ca3fe17-3f13-43fe-967b-881078135ead
 modelname = inputs.modelname
 
+# ╔═╡ 3cb2fe9a-80ed-45c7-bd46-51bd175650d5
+@bind modelname_special TextField(36, default = modelname * "_special_cases")
+
 # ╔═╡ c4890c9f-8409-4a58-bd01-670d278088c0
 galaxyname = inputs.galaxyname
 
@@ -224,11 +227,11 @@ if random_examples
 	orbit_labels = ["mean", "smallperi", "largeperi"]
 		
 else
-	@assert isdir(joinpath(galaxyname, modelname * "_special_cases"))
-	orbit_ics = TOML.parsefile(joinpath(galaxyname, modelname * "_special_cases", "initial_conditions.toml"))
+	@assert isdir(joinpath(galaxyname, modelname_special))
+	orbit_ics = TOML.parsefile(joinpath(galaxyname, modelname_special, "initial_conditions.toml"))
 	orbit_labels = [o["name"] for o in orbit_ics["orbits"]]
 	
-	orbits = [Orbit(joinpath(galaxyname, modelname * "_special_cases", "orbit_" * name * ".csv")) for name in orbit_labels]
+	orbits = [Orbit(joinpath(galaxyname, modelname_special, "orbit_" * name * ".csv")) for name in orbit_labels]
 
 	icrs0 = [LilGuys.ICRS(o) for o in orbit_ics["orbits"]]
 end
@@ -671,6 +674,7 @@ end
 # ╟─7450144e-5464-4036-a215-b6e2cd270405
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
 # ╠═b3bb1902-70f7-4720-a125-cca9ee36c3c2
+# ╠═3cb2fe9a-80ed-45c7-bd46-51bd175650d5
 # ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═c4890c9f-8409-4a58-bd01-670d278088c0
 # ╠═0af580dd-1871-4f4c-9716-c8b1e62a36d4

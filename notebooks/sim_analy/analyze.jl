@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -75,8 +75,8 @@ end
 
 # ╔═╡ d3bd61d8-1e90-4787-b892-d90717f6be6e
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="sculptor"),
-	modelname = TextField(60, default="1e6_V31_r3.2/orbit_"),
+	galaxyname = TextField(default="bootes3"),
+	modelname = TextField(60, default="1e6_v35_r3.0/orbit_"),
 ))
 
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0

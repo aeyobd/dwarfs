@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -91,10 +91,11 @@ end
 
 # ╔═╡ d94663e8-b30e-4712-8a3e-6ef7f954f141
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="ursa_minor"),
-	haloname = TextField(default="1e6_new_v38_r4.0"),
+	galaxyname = TextField(default="bootes3"),
+	haloname = TextField(default="1e6_v35_r3.0"),
 	orbitname = TextField(default="orbit_"),
 	t_min = NumberField(-10:0.1:10),
+	t_max = NumberField(-10:0.1:10, default=10),
 ))
 
 # ╔═╡ 3953b76f-a726-4211-a6b8-5cf38149dcdf
@@ -269,7 +270,7 @@ end
 times = t * T2GYR
 
 # ╔═╡ 9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
-t_end = times[times .> t_min][argmin(χ2[times .> t_min])]
+t_end = times[inputs.t_max .> times .> t_min][argmin(χ2[inputs.t_max .> times .> t_min])]
 
 # ╔═╡ 7646ea5b-f1b1-4934-be68-330139f7f838
 length(χ2)

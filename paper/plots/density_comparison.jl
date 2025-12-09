@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -36,7 +36,7 @@ function plot_prof!(prof; kwargs...)
 end
 
 # ╔═╡ 56365cfd-16e0-4567-a85c-f59372a611c7
-function compare_density(gs, modelname_exp; limits=(-0.5, 2.5, -6, 2.5), lmc=false)
+function compare_density(gs, modelname_exp; modelname_plummer=nothing, limits=(-0.5, 2.5, -6, 2.5), lmc=false, y_low_R_h=nothing, y_low=nothing, color=COLORS[3])
 
 	galaxy = modelname_exp[1]
 	ax = Axis(gs,
@@ -49,17 +49,22 @@ function compare_density(gs, modelname_exp; limits=(-0.5, 2.5, -6, 2.5), lmc=fal
 
 	prof_i, prof_f, _ = ModelUtils.load_stellar_profiles(modelname_exp...)
 
-	plot_prof!(prof_i, color=COLORS[3], linewidth=1.5, linestyle=:dot, label="exponential initial")
-	plot_prof!(prof_f, color=COLORS[3], linewidth=1.5, linestyle=:solid, label="exponential final")
+	plot_prof!(prof_i, color=color, linewidth=1.5, linestyle=:dot, label="stars initial")
+	plot_prof!(prof_f, color=color, linewidth=1.5, linestyle=:solid, label="stars final")
 
-	# prof_i, prof_f, _ = ModelUtils.load_stellar_profiles(modelname_plummer...)
 
-	# plot_prof!(prof_i, color=COLORS[2], linestyle=:dot, label="Plummer initial")
-	# plot_prof!(prof_f, color=COLORS[2], linestyle=:solid, label="Plummer final")
+	if !isnothing(modelname_plummer)
+		prof_i, prof_f, _ = ModelUtils.load_stellar_profiles(modelname_plummer...)
+	
+		plot_prof!(prof_i, color=COLORS[2], linestyle=:dot, label="2exp initial")
+		plot_prof!(prof_f, color=COLORS[2], linestyle=:solid, label="2exp final")
+	end
 
 
 	limits!(limits...)
-	y_low = limits[3]
+	if isnothing(y_low)
+		y_low = limits[3]
+	end
 	r_b = ModelUtils.get_r_b(modelname_exp..., lmc=lmc)
 	ModelUtils.plot_r_break_arrow!(r_b, y_low)
 
@@ -67,7 +72,10 @@ function compare_density(gs, modelname_exp; limits=(-0.5, 2.5, -6, 2.5), lmc=fal
 	ModelUtils.plot_r_jacobi_arrow!(r_j, y_low)
 
 	R_h = ModelUtils.get_R_h(galaxy)
-	ModelUtils.plot_R_h_arrow!(R_h, y_low)
+	if isnothing(y_low_R_h)
+		y_low_R_h = limits[3]
+	end
+	ModelUtils.plot_R_h_arrow!(R_h, y_low_R_h)
 	
 	ax
 end
@@ -85,13 +93,13 @@ end
 	fig = Figure(size=(3.5, 3.5) .* 72)
 
 
-	ax_scl = compare_density(fig[1,1], modelnames["scl_smallperi"], )
+	ax_scl = compare_density(fig[1,1], modelnames["scl_smallperi"])
 	hidexdecorations!(ticks=false, minorticks=false)
 	model_label!("exponential")
 	
-	ax_scl_plummer = compare_density(fig[2,1], modelnames["scl_smallperi_plummer"], )
+	ax_scl_plummer = compare_density(fig[2,1], modelnames["scl_smallperi_2exp"], y_low_R_h=-3, y_low=-3)
 	# hidexdecorations!(ticks=false, minorticks=false)
-	model_label!("Plummer")
+	model_label!("double exponential")
 	ax_scl_plummer.title[] = ""
 
 
@@ -99,17 +107,17 @@ end
 	hidedecorations!(ticks=false, minorticks=false)
 	model_label!("exponential")
 
-	ax_umi_plummer = compare_density(fig[2, 2], modelnames["umi_smallperi_plummer"], )
+	ax_umi_plummer = compare_density(fig[2, 2], modelnames["umi_smallperi_2exp"], y_low=-4)
 	hideydecorations!(ticks=false, minorticks=false)
-	model_label!("Plummer")
+	model_label!("double exponential")
 	ax_umi_plummer.title[] = ""
 	
 	linkaxes!(ax_scl, ax_scl_plummer, ax_umi, ax_umi_plummer)
 	ax_scl_plummer.xticks[] = -0.5:0.5:2
 
-	# Legend(fig[2,2], ax_umi, tellwidth=false)
+	axislegend(ax_scl_plummer, position=:lb)
 
-	Label(fig[:, 0], "log surface density", rotation=π/2)
+	Label(fig[:, 0], L"log $\Sigma$ / stars arcmin$^{-2}$", rotation=π/2)
 	rowgap!(fig.layout, 0)
 	colgap!(fig.layout, 0)
 
@@ -121,27 +129,57 @@ end
 
 end
 
+# ╔═╡ 83f2045f-97f1-43ed-84c6-75518ed2beeb
+@savefig "density_i_f_2exp" let
+	fig = Figure(size=(3.5, 3.5) .* 72)
+
+
+	ax_scl = compare_density(fig[1,1], modelnames["scl_smallperi"], modelname_plummer=modelnames["scl_smallperi_2exp"])
+	hidexdecorations!(ticks=false, minorticks=false)
+	
+
+
+	ax_umi = compare_density(fig[1, 2], modelnames["umi_smallperi"], modelname_plummer=modelnames["umi_smallperi_2exp"])
+	hidedecorations!(ticks=false, minorticks=false)
+
+	
+	linkaxes!(ax_scl, ax_umi)
+
+	axislegend(ax_scl, position=:lb)
+
+	Label(fig[:, 0], "log surface density", rotation=π/2)
+	rowgap!(fig.layout, 0)
+	colgap!(fig.layout, 0)
+
+	rowsize!(fig.layout, 1, Aspect(1, 1))
+
+	resize_to_layout!()
+	fig
+
+end
+
 # ╔═╡ d26db585-3e68-4870-99da-bb5d9182c923
 @savefig "scl_lmc_density_i_f" let
 	fig = Figure(size=(3.5, 3.5) .* 72)
 
 
-	ax_scl = compare_density(fig[1,1], modelnames["scl_lmc"], )
+	ax_scl = compare_density(fig[1,1], modelnames["scl_lmc"], y_low=-6, y_low_R_h=-3, color=COLORS[1])
 	model_label!("exponential")
 	ax_scl.title[] = ""
 	ax_scl.xticks[] = -0.5:0.5:2.0
 
-	ax_scl_plummer = compare_density(fig[1,2], modelnames["scl_lmc_plummer"], )
+	ax_scl_plummer = compare_density(fig[1,2], modelnames["scl_lmc_2exp"], color=COLORS[5])
 	# hidexdecorations!(ticks=false, minorticks=false)
-	model_label!("Plummer")
+	model_label!("double exponential")
 	hideydecorations!(ticks=false, minorticks=false)
 
 	ax_scl_plummer.title[] = ""
 
 	
+	axislegend(ax_scl, position=:lb)
 
 
-	Label(fig[:, 0], "log surface density", rotation=π/2)
+	Label(fig[:, 0], L"log $\Sigma$ / stars arcmin$^{-2}$", rotation=π/2, fontsize=10)
 	Label(fig[0, :], "Sculptor: MW+LMC", font=:bold, fontsize=1.2 * theme(:fontsize)[])
 	rowgap!(fig.layout, 0)
 	colgap!(fig.layout, 0)
@@ -161,4 +199,5 @@ end
 # ╠═7948bbd7-2dda-46c8-a850-d80944ba9096
 # ╠═fc0a118f-f8b7-425e-aacf-c8c7630d61a5
 # ╠═dbed5ec4-6030-4667-a87b-e8100deebe4a
+# ╠═83f2045f-97f1-43ed-84c6-75518ed2beeb
 # ╠═d26db585-3e68-4870-99da-bb5d9182c923

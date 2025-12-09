@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -102,6 +102,9 @@ md"""
 # Plots
 """
 
+# ╔═╡ 7af0a20a-fe29-4f0f-ac46-e2bc4655082a
+theme(:Lines)
+
 # ╔═╡ 07e1390f-2789-4e20-80d6-b2cb4631be5c
 galaxies_scatter = OrderedDict(
 	"fornax" => (
@@ -115,7 +118,7 @@ galaxies_scatter = OrderedDict(
 		label = "Sculptor",
 	),
 	"ursa_minor" => (
-		color = COLORS[4],
+		color = COLORS[3],
 		marker = :utriangle,
 		label = "Ursa Minor",
 		markersize=8,
@@ -150,12 +153,12 @@ let
 
 
 	for (galaxy, prof) in profiles
-		lines!(prof.log_R, prof.log_Sigma, color=COLORS[1], alpha=0.5, label="classical dwarfs")
+		lines!(prof.log_R, prof.log_Sigma, color=COLORS[1], alpha=0.5, label="classical dwarfs",  linestyle=:solid)
 	end
 
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", marker=:rect, )
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[4], label="Ursa Minor", marker=:utriangle)
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", marker=:rect, linestyle=:solid )
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", marker=:utriangle, linestyle=:solid)
 
 	axislegend(position=:lb, merge=true, unique=true, patchsize=(24, 6))
 
@@ -172,7 +175,7 @@ let
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
 	
     y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Exp2D")
+    lines!(x, y .- f(x), color=:black, label="Exp2D", linestyle=:solid)
     
 
     y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
@@ -180,11 +183,11 @@ let
 
 	
 	for (galaxy, prof) in profiles
-		lines!(prof.log_R, prof.log_Sigma .- f(prof.log_R), color=COLORS[1], alpha=0.5)
+		lines!(prof.log_R, prof.log_Sigma .- f(prof.log_R), color=COLORS[1], alpha=0.5,  linestyle=:solid)
 	end
 
-	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], marker=:rect)
-	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[4], marker=:utriangle)
+	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], marker=:rect,  linestyle=:solid)
+	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3], marker=:utriangle, linestyle=:solid)
 
 
 	linkxaxes!(ax, ax_res)
@@ -211,6 +214,7 @@ end
 # ╠═552e9438-862f-4710-a7d4-c8d798b5f1aa
 # ╠═f4e8b66c-5f18-45fd-8859-32479d7227bc
 # ╟─971b2120-dfdf-4820-95ab-9b264b566bcf
+# ╠═7af0a20a-fe29-4f0f-ac46-e2bc4655082a
 # ╠═07e1390f-2789-4e20-80d6-b2cb4631be5c
 # ╠═dea5ec9f-7f31-42eb-b8f7-6ca5d22e9f0b
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

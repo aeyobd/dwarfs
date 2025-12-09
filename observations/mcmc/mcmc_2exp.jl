@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -34,8 +34,10 @@ using DataFrames, CSV
 # ╔═╡ 08d97b62-2760-47e4-b891-8f446e858c88
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
+	N_samples = 10_000
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	N_samples = 100
+	@bind galaxy confirm(TextField(default="example"))
 end
 
 # ╔═╡ 05517bcc-7967-4bc7-9396-c271e420665d
@@ -101,7 +103,7 @@ md"""
 
 	f_outer ~ Uniform(0, 1)
 
-	R_s_outer ~ LogUniform(R_s * 1.5, 1.5e3)
+	R_s_outer ~ LogUniform(R_s * 1.5, 1.6e3)
 	ellipticity_outer ~ Uniform(0, 0.99)
 	position_angle_outer ~ Uniform(0, 180)
 
@@ -134,16 +136,35 @@ sampler = NUTS()
 mcmc_model = double_exp_model(data)
 
 # ╔═╡ 8f051c8a-def2-4a84-ab43-2ecc8b646b65
-samples = sample(mcmc_model, sampler, MCMCThreads(), 10000, 16) 
+samples = sample(mcmc_model, sampler, MCMCThreads(), N_samples, 16) 
 
 # ╔═╡ d57d7605-3904-490b-b785-42320275b0c5
 @info "acceptance rate (subsample, total)", mean(df_out.acceptance_rate), mean(df_out.is_accept)
+
+# ╔═╡ 9bf31971-1c10-4020-946e-d8cfebf6596a
+md"""
+# Outputs
+"""
+
+# ╔═╡ d1009491-62de-42d7-89ad-b41b8385aaaf
+samplesout = joinpath(outdir, "samples$FIGSUFFIX.csv")
+
+# ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
+summaryout = joinpath(outdir, "summary$FIGSUFFIX.csv")
+
+# ╔═╡ 27b6b5d5-c839-4f2d-8465-e56233fd0f69
+md"""
+# Plots
+"""
 
 # ╔═╡ 064a0bfc-827e-4686-8953-00db383fb235
 @savefig "corner" PairPlots.pairplot(samples)
 
 # ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
 df_out = DataFrame(samples)
+
+# ╔═╡ aa95112f-01d5-45cb-9c5c-b1c7e0ee7e45
+CSV.write(samplesout, df_out)
 
 # ╔═╡ bf9f68cd-1817-48ff-87f3-7e46d251fd2c
 let
@@ -167,6 +188,9 @@ end
 # ╔═╡ 115bb78a-ab2e-4ee5-bec2-b3054b42b482
 chain_summary = MCMCUtils.summarize(samples)
 
+# ╔═╡ 4c0d5b06-d99b-41de-8a42-e29dbd6e0e53
+CSV.write(summaryout, chain_summary)
+
 # ╔═╡ d1600a1c-1a73-4a0e-a36f-3008a5e9ed23
 prof_obs = LilGuys.SurfaceDensityProfile(stars.R_ell[stars.PSAT .> 0.5]) |> LilGuys.filter_empty_bins
 
@@ -179,7 +203,7 @@ let
 	ax = Axis(fig[1,1])
 
 
-	errorscatter!(prof_obs.log_R, (prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma))
+	errorscatter!(prof_obs.log_R, middle.(prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma))
 
 	errorscatter!(prof_all.log_R, (prof_all.log_Sigma), yerror=error_interval.(prof_all.log_Sigma))
 
@@ -196,8 +220,8 @@ let
 		y = @. log10(LilGuys.surface_density(prof, R))
 		y2 = @. log10(LilGuys.surface_density(prof_outer, R))
 
-		lines!(x, y, color=COLORS[3], alpha=0.1)
-		lines!(x, y2, color=COLORS[2], alpha=0.1)
+		lines!(x, y, color=COLORS[3], alpha=0.1, linestyle=:solid)
+		lines!(x, y2, color=COLORS[2], alpha=0.1, linestyle=:solid)
 	end
 
 	ylims!(-6, 3)
@@ -258,22 +282,15 @@ let
 
 end
 
-# ╔═╡ 9bf31971-1c10-4020-946e-d8cfebf6596a
-md"""
-# Outputs
-"""
+# ╔═╡ e64ac5a9-f941-408f-96e0-35b121768792
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+	h = Arya.histogram2d(randn(100))
 
-# ╔═╡ d1009491-62de-42d7-89ad-b41b8385aaaf
-samplesout = joinpath(outdir, "samples$FIGSUFFIX.csv")
-
-# ╔═╡ a93579f2-d37d-492c-95e6-02bd7491dc8c
-summaryout = joinpath(outdir, "summary$FIGSUFFIX.csv")
-
-# ╔═╡ aa95112f-01d5-45cb-9c5c-b1c7e0ee7e45
-CSV.write(samplesout, df_out)
-
-# ╔═╡ 4c0d5b06-d99b-41de-8a42-e29dbd6e0e53
-CSV.write(summaryout, chain_summary)
+	plot!(h)
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
@@ -299,6 +316,12 @@ CSV.write(summaryout, chain_summary)
 # ╠═7b1b4c0f-aa49-4ee0-b860-0bd927db8768
 # ╠═8f051c8a-def2-4a84-ab43-2ecc8b646b65
 # ╠═d57d7605-3904-490b-b785-42320275b0c5
+# ╟─9bf31971-1c10-4020-946e-d8cfebf6596a
+# ╠═d1009491-62de-42d7-89ad-b41b8385aaaf
+# ╠═a93579f2-d37d-492c-95e6-02bd7491dc8c
+# ╠═aa95112f-01d5-45cb-9c5c-b1c7e0ee7e45
+# ╠═4c0d5b06-d99b-41de-8a42-e29dbd6e0e53
+# ╠═27b6b5d5-c839-4f2d-8465-e56233fd0f69
 # ╠═064a0bfc-827e-4686-8953-00db383fb235
 # ╠═bf9f68cd-1817-48ff-87f3-7e46d251fd2c
 # ╠═36db7e1d-4b48-4510-99d5-7d567ac70d5d
@@ -308,8 +331,4 @@ CSV.write(summaryout, chain_summary)
 # ╠═2b780e99-54e3-4b90-beb9-85501449ff74
 # ╠═428e8ecd-b28d-4c4e-b662-fb5d75e1ba4e
 # ╠═ec5e0fff-0105-4c08-925a-2b771d7d78a2
-# ╟─9bf31971-1c10-4020-946e-d8cfebf6596a
-# ╠═d1009491-62de-42d7-89ad-b41b8385aaaf
-# ╠═a93579f2-d37d-492c-95e6-02bd7491dc8c
-# ╠═aa95112f-01d5-45cb-9c5c-b1c7e0ee7e45
-# ╠═4c0d5b06-d99b-41de-8a42-e29dbd6e0e53
+# ╠═e64ac5a9-f941-408f-96e0-35b121768792

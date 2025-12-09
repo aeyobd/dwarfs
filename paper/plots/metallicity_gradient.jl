@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -155,7 +155,7 @@ end
 
 # ╔═╡ 8bbf2aa6-0804-4f18-b5e6-4b919635663e
 function plot_median_profile(gs, df, prof_obs)
-	ax = Axis(gs, xlabel = "log R / arcmin", ylabel = "log surface density")
+	ax = Axis(gs, xlabel = "log R / arcmin", ylabel = L"log $\Sigma$ / stars arcmin$^{-2}$")
 	
 	errorscatter!(prof_obs.log_R, (prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma), color=:black, markersize=4)
 
@@ -175,7 +175,7 @@ function plot_median_profile(gs, df, prof_obs)
 	lw = theme(:linewidth)[]/2
 	lines!(x, y, color=COLORS[1], linewidth=lw)
 	lines!(x, y2, color=COLORS[4], linewidth=lw)
-	lines!(x, y3, color=COLORS[5], linewidth=lw)
+	lines!(x, y3, color=COLORS[5], linewidth=2lw)
 
 	
 	ylims!(-6, 3)
@@ -195,7 +195,7 @@ function plot_mixture!(df, y_low, y_high)
 	y2 = @. (LilGuys.surface_density(prof_outer, R))
 
 	y = (y1 .* y_high .+ y2 * y_low) ./ (y1 .+ y2)
-	lines!(x, y, color=COLORS[5], linewidth=1)
+	lines!(x, y, color=COLORS[5])
 
 	ylims!(-6, 3)
 
@@ -402,6 +402,88 @@ let
 	fig
 end
 
+# ╔═╡ 2d8f1d30-72de-4f64-bf3a-b79c66dfeee3
+let
+	fig = Figure(size=(3.5, 4) .* 72)
+
+	ax_scl_dens = plot_median_profile(fig[1, 1], fit_scl,Utils.load_expected_density_profile("sculptor") )
+
+	ylims!(-3, 2)
+	ax_scl_dens.title = "Sculptor"
+	
+	ax_scl = Axis(fig[2,1], ylabel="[Fe/H]", xlabel=L"$\log\, R_\textrm{ell}$ / arcmin")
+	for study in ["T+23", "apogee", "S+23"]
+		df = metals_scl[metals_scl.study .== study, :]
+		label_key = Dict("T+23" => "T+23/P+20", "apogee"=>"APOGEE", "S+23"=>"S+23a/b")
+		scatter!(log10.(df.R_ell), df.fe_h, markersize=2; label=label_key[study], styles[study]...)
+	end
+
+	lines!([NaN], [NaN], color=COLORS[1], label="inner model", linewidth=1)
+	lines!([NaN], [NaN], color=COLORS[4], label="outer",  linewidth=1)
+	lines!([NaN], [NaN], color=COLORS[5], label="combined",  linewidth=1)
+	
+	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err)
+	# vlines!(r_trans_scl, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
+	plot_mixture!(fit_scl, get_param(multipop_scl, "mu_fe_b"), get_param(multipop_scl, "mu_fe_a"))
+
+	# axislegend(position=:rt, patchsize=(5, 5), backgroundcolor=(:white, 0.8))
+	ylims!(-4, -0.5)
+	xlims!(-0.2, 2.2)
+
+
+	ax_umi_dens = plot_median_profile(fig[1, 2], fit_umi,Utils.load_expected_density_profile("ursa_minor") )
+	ax_umi_dens.title = "Ursa Minor"
+	ax_umi_dens.ylabel = ""
+	ax_umi_dens.yticklabelsvisible = false
+	ylims!(-3.5, 2)
+	# vlines!(r_trans_umi, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
+
+	
+	ax_umi = Axis(fig[2,2], ylabel="[Fe/H]", xlabel=L"$\log\, R_\textrm{ell}$ / arcmin")
+	for study in ["p+20", "apogee", "S+23"]
+		df = metals_umi[metals_umi.study .== study, :]
+		scatter!(log10.(df.R_ell), df.fe_h, markersize=2; label=study, styles[study]...)
+	end
+	ax_umi.ylabel = ""
+	ax_umi.yticklabelsvisible = false
+	# axislegend(position=:lt)
+
+	median_plot!(log10.(metals_umi.R_ell), metals_umi.fe_h, metals_umi.fe_h_err)
+	# vlines!(r_trans_umi, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
+	plot_mixture!(fit_umi, get_param(multipop_umi, "mu_fe_b"), get_param(multipop_umi, "mu_fe_a"))
+
+	ylims!(-3.5, -0.5)
+	xlims!(-0.5, 2.2)
+
+
+	linkxaxes!(ax_scl, ax_scl_dens)
+	linkxaxes!(ax_umi, ax_umi_dens)
+
+	linkyaxes!(ax_scl, ax_umi)
+	linkyaxes!(ax_scl_dens, ax_umi_dens)
+
+	# hidexdecorations!(ax_scl, ticks=false, minorticks=false)
+	hidexdecorations!(ax_scl_dens, ticks=false, minorticks=false)
+	# hidexdecorations!(ax_scl, ticks=false, minorticks=false)
+
+	hidexdecorations!(ax_umi_dens, ticks=false, minorticks=false)
+	# hidexdecorations!(ax_umi, ticks=false, minorticks=false)
+
+	rowgap!(fig.layout, 5)
+	colgap!(fig.layout, 5)
+
+	# rowsize!(fig.layout, 1, Aspect(1, 1))
+	# rowsize!(fig.layout, 2, Aspect(1, 1))
+
+
+	Legend(fig[3, :], ax_scl, nbanks=3, tellheight=true)
+	resize_to_layout!()
+
+
+	@savefig "scl_umi_fe_h_gradient_nosigma"
+	fig
+end
+
 # ╔═╡ 22598e4a-b7bb-4ed3-a71b-e3e29b37e58a
 md"""
 # Naive transition radius fits
@@ -517,6 +599,7 @@ LilGuys.mean(metals_scl.fe_h[metals_scl.R_ell .< r_trans_scl], 1 ./ metals_scl.f
 # ╠═0b722f4c-368c-4308-abcb-2584252f595f
 # ╠═d8bb89ad-c76c-4a28-b818-b12b782b9966
 # ╠═c2b44dcf-cc5e-4630-b4c7-46fcb1725b66
+# ╠═2d8f1d30-72de-4f64-bf3a-b79c66dfeee3
 # ╟─22598e4a-b7bb-4ed3-a71b-e3e29b37e58a
 # ╠═b70ef4cc-4ea4-46cf-b701-2d6a3e92374c
 # ╠═cfa85373-0eed-482b-a68a-1f3516145fb5

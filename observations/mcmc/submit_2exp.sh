@@ -7,7 +7,7 @@ fi
 
 sbatch <<EOT
 #!/bin/bash
-#SBATCH -t 3:0:0
+#SBATCH -t 12:0:0
 #SBATCH -n 16
 #SBATCH -A durham
 #SBATCH -p cosma5

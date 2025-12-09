@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -22,16 +22,16 @@ using PyFITS
 using StatsBase: median, weights, mad, std, sample
 
 # ╔═╡ a4fa1e76-8c2d-4402-b612-2f454bd06b8b
-models_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/sculptor")
+models_dir = joinpath(ENV["DWARFS_ROOT"], "analysis/bootes3")
 
 # ╔═╡ d0d1ecad-4a8d-4c1a-af2b-49f0d3d16bf2
-model_dir = "$models_dir/1e6_new_v31_r3.2/L3M11_9Gyr_smallperi.a4"
+model_dir = "$models_dir/1e6_v35_r3.0/orbit_5Gyr_largeperi"
 
 # ╔═╡ cfe54fc2-0c12-44cd-a6be-5f6cae93f68d
-starsfile = "$model_dir/stars/plummer_rs0.20/final.fits"
+starsfile = "$model_dir/stars/exp2d_rs0.20/final.fits"
 
 # ╔═╡ a1b48fb9-af21-49e0-ae78-7a1e51c50bc4
-obs_today_filename = joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observed_properties.toml")
+obs_today_filename = joinpath(ENV["DWARFS_ROOT"], "observations/bootes3/observed_properties.toml")
 
 # ╔═╡ 9c7035e7-c1e7-40d5-8ab6-38f0bb682111
 md"""
@@ -175,14 +175,15 @@ let
 	lines!(sky_orbit.ra[idx_orbit], sky_orbit.dec[idx_orbit])
 	
 	Colorbar(fig[1, 2], h,
-		label="stellar density"
+		label="stellar density",
+			 ticks = Makie.automatic
 	)
 
 	fig
 end
 
 # ╔═╡ 2c9e8ad0-bbff-4086-974e-89269868e324
-sky_orbit[idx_f, :].pmra, sky_orbit[idx_f, :].pmdec
+pmra_f, pmdec_f = sky_orbit[idx_f, :].pmra, sky_orbit[idx_f, :].pmdec
 
 # ╔═╡ a89adc86-67a0-453f-b382-96f721f74d39
 diff(sky_orbit.ra)[idx_f-1], diff(sky_orbit.dec)[idx_f-1]
@@ -261,16 +262,23 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-10, maximum(hi.values)))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-5, 1) .* maximum(hi.values))
 
 	lines!(sky_orbit.xi[idx_orbit], sky_orbit.eta[idx_orbit])
 	arc!(Point2f(0, 0), r_b_arcmin / 60, -π, π, color=COLORS[3])
 	text!(0, -r_b_arcmin/60, text=L"r_b", color=COLORS[3])
-	
+
+		
+	pmra, pmdec = 30 .* (pmra_f, pmdec_f) ./ radii([pmra_f, pmdec_f])
+
+	# annotation!([0], [0], [pmra], [pmdec], )
+
 	Colorbar(fig[1, 2], h,
-		label="stellar density"
+		label="stellar density",
+		ticks = Makie.automatic
 	)
 
+	@savefig "tidal_stream_xi_eta"
 	fig
 end
 
@@ -289,12 +297,17 @@ let
 	hi.values ./= areas
 	
 		
-	h = heatmap!(hi, colorscale=log10, colorrange=(1e-6, maximum(hi.values)))
+	h = heatmap!(hi, colorscale=log10, colorrange=(1e-5, 1) .* maximum(hi.values))
 
 	
 	Colorbar(fig[1, 2], h,
-		label="stellar density", ticks=Makie.automatic
+		label="stellar density", ticks=Makie.automatic, 
+			 tellheight=false
 	)
+
+	resize_to_layout!()
+	@savefig "tidal_stream_xi_eta_prime"
+
 	fig
 end
 
