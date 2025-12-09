@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -243,7 +243,7 @@ end
 smalllinewidth=theme(:linewidth)[]/2
 
 # ╔═╡ ebf4a089-0459-4241-b05d-69e1c514a4a5
-function plot_sigma_v!(galaxy, R_s=0.10)
+function plot_sigma_v!(galaxy)
 	obs_props = get_obs_props(galaxy) |> LilGuys.collapse_errors
 
 	R_h = [LilGuys.arcmin2kpc(obs_props["R_h"], obs_props["distance"])]
@@ -252,13 +252,13 @@ function plot_sigma_v!(galaxy, R_s=0.10)
 	errorscatter!(middle.(R_h), middle.(σv), 
 				  xerror = error_interval.(R_h), 
 				  yerror=error_interval.(σv), 
-				  linewidth=smalllinewidth, markersize=1, color=COLORS[3])
+				  linewidth=smalllinewidth, color=COLORS[3])
 	
 	text!(middle.(R_h), middle.(σv), 
 		  align=(:left, :center), 
 		  offset=(theme(:fontsize)[]/2, 0), 
 		  text=L"($\sigma_\textrm{v}$, $R_h$)",
-		  color=COLORS[3])
+		  color=COLORS[3], fontsize=smallfontsize)
 end
 
 # ╔═╡ da1a2d1b-d32c-42c6-957d-82e39fcda005
@@ -297,8 +297,8 @@ function plot_r_J(halo, ρ_host)
 	ms = 4
 	# arrows2d!([r_J], [v1], [0], [v0 - v1], color=:grey,minshaftlength=0, shaftwidth=smalllinewidth, tiplength=ms, tipwidth=ms * 2/sqrt(3))
 
-	vlines!(r_J, color=:grey, linewidth=smalllinewidth)
-	text!(r_J, v1, text=L"R_J", fontsize=smallfontsize, align=(:left, :center), color=:grey)
+	vlines!(r_J, color=:grey, linewidth=smalllinewidth,  linestyle=:dot)
+	text!(r_J, v1, text=L"R_J", fontsize=smallfontsize, align=(:left, :center), color=:grey,)
 end
 
 # ╔═╡ 07a499bb-a861-43fe-b54a-48348141bb0d
@@ -460,6 +460,62 @@ umi_max = LilGuys.fit_v_r_circ_max(radii(umi_profs[1]), middle.(LilGuys.circular
 	fig
 end
 
+# ╔═╡ 7b2c0281-dba8-4e17-9e11-ef8acdc2eba6
+@savefig "initial_velocity_nosigma" let
+	fig = Figure(size=(3.5, 2) .*72)
+
+	ax = vcirc_axis(fig[1,1])
+	ax.title="Sculptor"
+	
+	plot_i_f(scl_profs, color=COLORS[5], label="Scl DM")
+	plot_i_f_stars(scl_profs, 
+				   color=COLORS[2], label="Scl stars",  linewidth=smalllinewidth)
+
+	plot_r_J(NFW(r_circ_max=3.2, v_circ_max=31/V2KMS), get_mean_density("sculptor")[1])
+	plot_sigma_v!("sculptor")
+
+
+	set_limits!(scl_max)
+
+	
+	ax_umi = vcirc_axis(fig[1,2])
+	ax_umi.title = "Ursa Minor"
+	
+	plot_i_f(umi_profs, color=COLORS[5], label="UMi DM")
+	plot_i_f_stars(umi_profs,
+				   color=COLORS[2], label="UMi stars", linewidth=smalllinewidth)
+
+	plot_r_J(NFW(r_circ_max=4, v_circ_max=38/V2KMS), get_mean_density("ursa_minor")[1])
+
+	plot_sigma_v!("ursa_minor")
+	hideydecorations!(ticks=false, minorticks=false)
+
+
+	set_limits!(umi_max)
+
+
+	fig
+end
+
+# ╔═╡ ad4bdf3a-4ec5-4113-b2fe-4f3e4247555c
+function change_in_vcirc(profs, r)
+	prof_i, prof_f = profs.dm_i, profs.dm_f
+
+	M_i = LilGuys.lerp(log10.(prof_i.radii), middle.(prof_i.M_in))(log10(r))
+	M_f = LilGuys.lerp(log10.(prof_f.radii), middle.(prof_f.M_in))(log10(r))
+
+	return M_f/M_i
+end
+
+# ╔═╡ 7c132ca4-f235-42fd-8495-6d4d12881d07
+change_in_vcirc(scl_profs, 0.1 * 3.2 / 4)
+
+# ╔═╡ e084e5e8-e13e-4828-915f-f1c6244e594b
+change_in_vcirc(umi_profs, 0.1)
+
+# ╔═╡ 2ea0bba5-5a65-4e95-b5de-1ab6595a94b0
+6/4
+
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═3abb0de9-81b7-4fe8-b457-92ae4b2e78e3
@@ -514,6 +570,7 @@ end
 # ╠═63f93057-14b5-4df9-8e67-5bed7452bbe4
 # ╠═57519fa1-e8a2-4baa-a4fa-af4482328164
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9
+# ╠═7b2c0281-dba8-4e17-9e11-ef8acdc2eba6
 # ╠═9721c592-a0f2-4564-83e4-da2eff4c3c79
 # ╠═6720afb1-9968-42e3-a22c-c9232309f586
 # ╠═6b0b3b07-6adf-497b-a513-9ecfa47d97c6
@@ -523,3 +580,7 @@ end
 # ╠═b200c0c7-fd55-483e-8a37-6f67f285d68f
 # ╠═1443385e-6d9b-4ddc-805c-2c12fb1c9067
 # ╠═195582cf-83e3-44c8-9efe-b7d98f092c3c
+# ╠═ad4bdf3a-4ec5-4113-b2fe-4f3e4247555c
+# ╠═7c132ca4-f235-42fd-8495-6d4d12881d07
+# ╠═e084e5e8-e13e-4828-915f-f1c6244e594b
+# ╠═2ea0bba5-5a65-4e95-b5de-1ab6595a94b0

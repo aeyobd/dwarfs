@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -177,7 +177,7 @@ md"""
 """
 
 # ╔═╡ 940b085c-e78c-4800-8b3e-bdd13ed970d1
-n_center = 13
+@bind n_center NumberField(1:20, default=13)
 
 # ╔═╡ b04a894b-33c2-4daf-9506-cb310ba0c218
 R_b = LilGuys.kpc2arcmin(r_break, orbital_props["distance_f"])
@@ -189,7 +189,7 @@ norm_obs = LilGuys.mean(prof_obs.log_Sigma[1:n_center])
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ acc308e5-a3e5-46d7-9311-34f0c4ee7c54
-ymin = -10
+ymin = -7
 
 # ╔═╡ 7671fc47-15d4-4970-98a7-b0ad64f1114c
 @bind dy confirm(NumberField(-10:0.05:10, default=0))
@@ -203,7 +203,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel = "log R / arcmin",
 		ylabel = L"\log \Sigma / \Sigma_0",
-			  limits=(-1, 2.5, ymin, 0.5)
+			  limits=(-1, 2.5, ymin, ymin+10)
 	)
 
 	lines!(log_radii(prof_sim_i), log_surface_density(prof_sim_i) .- norm_sim, label ="initial", color=COLORS[2], linestyle=:dot)
@@ -257,13 +257,13 @@ let
 
 	hlines!(middle(σ_obs), color=:black)
 	hspan!(σ_obs.middle - σ_obs.lower, σ_obs.middle + σ_obs.upper, alpha=0.2, color=:black)
-	hlines!(middle(σ_obs) - 1, color=:black, linestyle=:dash)
+	# hlines!(middle(σ_obs) - 1, color=:black, linestyle=:dash)
 
 
 	if @isdefined scalars
 		lines!(scalars.time * T2GYR .- time_f*T2GYR, scalars.sigma_v * V2KMS)
 	end
-	scatter!(time_f * T2GYR, sigma_v)
+	scatter!(0, sigma_v)
 	
 	fig
 	@savefig "sigma_v_evolution"

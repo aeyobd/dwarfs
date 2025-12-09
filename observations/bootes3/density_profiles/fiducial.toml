@@ -1,15 +1,3 @@
+inherits = "bins_eqw.toml"
 filename = "../data/j24_2c.fits"
-
-ra = 209.3
-dec = 26.8
 PSAT_min = 0.2
-PA = 279.0
-
-pmra = -1.176
-pmdec = -0.89
-ellipticity = 0.33
-
-
-
-[profile_kwargs]
-num_per_bin = 10

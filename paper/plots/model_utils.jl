@@ -139,13 +139,13 @@ end
 function plot_r_break_arrow!(r_b, break_height)
 	if !isnothing(break_height)
 		annotation!(0, 30, log10(r_b), break_height, 
-					color=COLORS[3], 
+					color=COLORS[3], text=" ",
 				   )
 		
 		text!(log10(r_b), break_height, 
 			  text="break", 
 			  rotation=π/2, 
-			  offset=(0., 30.), 
+			  offset=(0., 20.), 
 			  color=COLORS[3], 
 			  align=(:left, :center), 
 			  fontsize=0.8 * theme(:fontsize)[]
@@ -158,10 +158,10 @@ function plot_R_h_arrow!(R_h, height)
         return
     end
 		
-    annotation!(0, 30, log10(R_h), height, color=:grey,)
+    annotation!(0, 30, log10(R_h), height, color=:grey, text=" ")
 
     text!(log10(R_h), height, color=:grey, text=L"R_h",
-          fontsize=smallfontsize, offset=(0, 30), align=(:center, :bottom))
+          fontsize=smallfontsize, offset=(0, 20), align=(:center, :bottom))
 end
 
 
@@ -170,12 +170,12 @@ function plot_r_jacobi_arrow!(r_j, break_height)
         return
     end
 
-    annotation!(0, 30, log10(r_j), break_height)
+    annotation!(0, 30, log10(r_j), break_height, text=" ")
 
     text!(log10(r_j), break_height, 
           text="Jacobi", 
           rotation=π/2, 
-          offset=(0., 30.), 
+          offset=(0., 20.), 
           align=(:left, :center),
           fontsize=0.8 * theme(:fontsize)[]
          )
@@ -261,7 +261,7 @@ function plot_orbit_arrow!(ax, dx, dy, r_max; r_label=30, kwargs...)
     dx_label = @lift $(ax.xreversed) ? dx * r_label : -dx * r_label
     dy_label = @lift $(ax.yreversed) ? dy * r_label : -dy * r_label
 
-	annotation!(dx_label, dy_label, r_max*dx, r_max*dy, color=COLORS[1])
+    annotation!(dx_label, dy_label, r_max*dx, r_max*dy, color=COLORS[1], text=" ")
 end
 
 

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -79,8 +79,8 @@ end
 
 # ╔═╡ ab06c999-3ff6-4580-a979-f0ddeb466569
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="sculptor"),
-	modelname = TextField(60, default="1e6_V31_r3.2/orbit_mean"),
+	galaxyname = TextField(default="bootes3"),
+	modelname = TextField(60, default="1e6_v35_r3.0/orbit_mean"),
 	starsname = TextField(default="exp2d_rs0.13"),
 ))
 
@@ -215,7 +215,7 @@ let
 	linkyaxes!(ax_xz, ax_yz)
 	linkxaxes!(ax_xz, ax_xz)
 
-	Colorbar(fig[1, 2], hm, tellwidth=false, label="stellar density")
+	Colorbar(fig[1, 2], hm, tellwidth=false, label="stellar density", ticks=Makie.automatic)
 
     rowsize!(fig.layout, 1, ax_yz.scene.viewport[].widths[1])
 	rowgap!(fig.layout, 1, -50.0)

@@ -29,7 +29,7 @@ using CSV, DataFrames
 using Turing
 
 # ╔═╡ a662b1b4-5314-40d2-990f-28db38d21bf3
-galaxyname = "sculptor"
+galaxyname = "ursa_minor"
 
 # ╔═╡ 902876ac-2f5c-4fe3-9233-9ddace247d41
 import TOML
@@ -100,12 +100,18 @@ function combine_fe_h(stars)
 	end
 
 	fe_h[.!filt] .= missing
-	return fe_h[filt], fe_h_err[filt], stars.R_ell[filt]
+	return fe_h[filt], fe_h_err[filt], stars.xi[filt], stars.eta[filt]
 
 end
 
 # ╔═╡ ce4a09ec-8a88-48a0-bde2-8ceec99c7431
-fe_h, fe_h_err, R_ell_fe = combine_fe_h(stars)
+fe_h, fe_h_err, xi_fe, eta_fe = combine_fe_h(stars)
+
+# ╔═╡ 34116c3f-d06a-4bbc-8c4d-148e6701f611
+R_ell_a = LilGuys.calc_R_ell(xi_fe, eta_fe, get_param(exp_fit, "ellipticity"), get_param(exp_fit, "position_angle"))
+
+# ╔═╡ 66a1cf59-627b-454b-b3b3-1cf6afe20cf7
+R_ell_b = LilGuys.calc_R_ell(xi_fe, eta_fe, get_param(exp_fit, "ellipticity_outer"), get_param(exp_fit, "position_angle_outer"))
 
 # ╔═╡ 65a50351-ae87-4675-91ff-ed23c0261c9b
 hist(collect(skipmissing(fe_h)))
@@ -115,6 +121,9 @@ scatter(stars.xi, stars.eta)
 
 # ╔═╡ 25154575-f5ee-42b5-a35a-314770c158e7
 hist(stars.R_ell)
+
+# ╔═╡ 3ca15c01-f7f3-4779-b333-99b0c40529fa
+scatter(log10.(R_ell_a), log10.(R_ell_b ./ R_ell_a))
 
 # ╔═╡ fd5a1fd7-49a9-4cba-94d7-610a4333d1a4
 md"""
@@ -147,9 +156,6 @@ function sigma_los(halo, prof)
 
 	return LilGuys.lerp(R, y)
 end
-
-# ╔═╡ 3ca15c01-f7f3-4779-b333-99b0c40529fa
-
 
 # ╔═╡ cfdac012-a052-4f17-b5eb-fcf6969500ab
 @model function two_pop_vel_model(v, v_err, R_ell, fe_h, fe_h_err, R_ell_fe)
@@ -189,7 +195,7 @@ end
 end
 
 # ╔═╡ bb23fb9c-d8c5-4119-9223-f0aad311b9fc
-@model function two_pop_model( fe_h, fe_h_err, R_ell)
+@model function two_pop_model( fe_h, fe_h_err, R_ell, R_ell_outer)
 	mu_fe_a ~ Normal(-2, 1)
 	sigma_fe_a ~ Uniform(0, 3)
 	mu_fe_b ~ Normal(-2, 1)
@@ -199,24 +205,22 @@ end
 	prof = LilGuys.Exp2D(R_s=R_s_a, M=1 - f_outer)
 	prof_outer = LilGuys.Exp2D(R_s=R_s_b, M=f_outer)
 
-	f_b = @. surface_density(prof_outer, R_ell) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell))
+	f_b = @. surface_density(prof_outer, R_ell_outer) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell_outer))
 
 	dist_fe_a = Normal(mu_fe_a, sigma_fe_a)
 	dist_fe_b = Normal(mu_fe_b, sigma_fe_b)
 
-	f_b_fe = @. surface_density(prof_outer, R_ell_fe) / (surface_density(prof, R_ell_fe) + surface_density(prof_outer, R_ell_fe))
-
 	for i in eachindex(fe_h)
-		fe_h[i] ~ MixtureModel([dist_fe_a, dist_fe_b], [1-f_b_fe[i], f_b_fe[i]])
+		fe_h[i] ~ MixtureModel([dist_fe_a, dist_fe_b], [1-f_b[i], f_b[i]])
 	end
 	
 end
 
 # ╔═╡ 62182131-faae-4b8b-ac15-697895c1e3c2
-model = two_pop_model(fe_h, fe_h_err, R_ell_fe)
+model = two_pop_model(fe_h, fe_h_err, R_ell_a, R_ell_b)
 
 # ╔═╡ 6ce1df6c-a64c-424c-83d5-d6e2443d8a98
-samples = sample(model, NUTS(), MCMCSerial(), 1000, 4)
+samples = sample(model, NUTS(), MCMCThreads(), 1000, 16)
 
 # ╔═╡ c33a2b82-596c-423a-b4b0-abf2f3df941d
 pairplot(samples)
@@ -307,16 +311,18 @@ end
 # ╠═8483b37a-4751-427d-9e66-4ff2fd6ccfdc
 # ╠═ec5a8eb5-3c3f-4a81-b3b3-9f4aca18bd69
 # ╠═ce4a09ec-8a88-48a0-bde2-8ceec99c7431
+# ╠═34116c3f-d06a-4bbc-8c4d-148e6701f611
+# ╠═66a1cf59-627b-454b-b3b3-1cf6afe20cf7
 # ╠═65a50351-ae87-4675-91ff-ed23c0261c9b
 # ╠═cf87677d-6ba1-4a0b-b51c-ff7dc3cccef5
 # ╠═25154575-f5ee-42b5-a35a-314770c158e7
+# ╠═3ca15c01-f7f3-4779-b333-99b0c40529fa
 # ╟─fd5a1fd7-49a9-4cba-94d7-610a4333d1a4
 # ╠═7daee39d-f973-4a0b-aaf7-5e308e79b45c
 # ╠═8382e25e-1f2f-4365-89fa-da3f58a8d09c
 # ╠═02bf4164-da27-49f2-a659-c5a8d1b199a3
 # ╠═081b662e-a3e7-4656-a859-9aad29ab6af1
 # ╠═7383bfb2-6209-4ee9-8408-39042bfaa519
-# ╠═3ca15c01-f7f3-4779-b333-99b0c40529fa
 # ╠═cfdac012-a052-4f17-b5eb-fcf6969500ab
 # ╠═bb23fb9c-d8c5-4119-9223-f0aad311b9fc
 # ╠═62182131-faae-4b8b-ac15-697895c1e3c2

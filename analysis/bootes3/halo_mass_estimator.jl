@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -519,7 +519,8 @@ md"""
 # ╔═╡ 82c2844a-87ad-4a37-b8e0-6c11d30ec7c4
 halos_ex = OrderedDict(
 	:mean => NFW(v_circ_max = 22 / V2KMS, r_circ_max = 3.9),
-	:heavier => NFW(v_circ_max = 35 / V2KMS, r_circ_max=6.9)
+	:heavier => NFW(v_circ_max = 35 / V2KMS, r_circ_max=6.9),
+	:both => NFW(v_circ_max = 35 / V2KMS, r_circ_max=3.0)
 )
 
 # ╔═╡ f81eeb5a-0059-45a3-b9b5-c0b3307ccc08
@@ -602,6 +603,9 @@ let
 	fig
 end
 
+# ╔═╡ ebbed40c-9e50-460e-8174-6eefdb3e70b8
+6^2-5^2, 3^2
+
 # ╔═╡ 6cc2372a-208b-4839-b5c6-6f625fcc483c
 let
 	fig, ax = FigAxis(
@@ -681,7 +685,7 @@ let
 end
 
 # ╔═╡ 41283b0b-6563-4b2b-b978-4e65f32c8240
-calc_σv_star_mean(LilGuys.TruncNFW(r_circ_max=4.9, v_circ_max= 30/V2KMS, trunc=100)) * V2KMS
+# calc_σv_star_mean(LilGuys.TruncNFW(r_circ_max=4.9, v_circ_max= 30/V2KMS, trunc=100)) * V2KMS
 
 # ╔═╡ fb835e20-957e-4866-8ba6-2e64df38f68e
 (median(samples.r_circ_max))
@@ -932,6 +936,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═af879549-aacd-4a4f-a136-20f04276a6d3
 # ╠═68877a5a-fbf5-4ff2-8335-4f89f2ea8e90
 # ╠═8196e6b2-8355-438c-abc1-ffce2e29b8f2
+# ╠═ebbed40c-9e50-460e-8174-6eefdb3e70b8
 # ╠═6cc2372a-208b-4839-b5c6-6f625fcc483c
 # ╠═8f5a2253-18da-49c6-b1ee-94e9e7ababb2
 # ╠═45bd5f50-ad6f-491b-89fb-caa16565e8c4

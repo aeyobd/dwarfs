@@ -1,1 +1,1 @@
-../../calc_orbit_lmc.jl . --galaxy ursa_minor -N 100000
+../../calc_orbit_lmc.jl . --galaxy ursa_minor -N 100000 --time-max 1060
