@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -173,6 +173,9 @@ orbits_m_lmc = orbits_w_lmc .- [orbit_lmc]
 # ╔═╡ 751ae520-59a2-471c-9247-90fba399cb42
 Arya.update_fontsize!(12)
 
+# ╔═╡ 2683e73a-e9d9-4f79-a101-8f306d36e428
+@savefig "scl_lmc_mc_orbits_xy" plot_orbits_w_lmc(trajectories, lmc_visible=true)
+
 # ╔═╡ 6f1a1958-708a-4aac-935d-0e5a87091a98
 function plot_traj_lmc!(; x_direction = 2, t_min=-5/T2GYR)
 	times = orbit_lmc.times
@@ -260,9 +263,6 @@ function plot_orbits_w_lmc(trajectories; lmc_visible=false, act_visible=false)
 	resize_to_layout!(fig)
 	fig
 end
-
-# ╔═╡ 2683e73a-e9d9-4f79-a101-8f306d36e428
-@savefig "scl_lmc_mc_orbits_xy" plot_orbits_w_lmc(trajectories, lmc_visible=true)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -30,7 +30,7 @@ R_h = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/obser
 
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
 prof_expected = let
-	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
+	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/density_profiles/fiducial_profile.toml") |> LilGuys.filter_empty_bins
 
 	
 	prof = LilGuys.scale(prof, 1/R_h, 1)
@@ -96,32 +96,17 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 				label="final")
 	end
 
-	if !isnothing(break_height)
-		annotation!(0, 60, log10(r_b), break_height, 
-					color=COLORS[2], 
-					linewidth=theme(:linewidth)[],  
-					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=theme(:markersize)[])),
-				 )
-		
-		text!(log10(r_b), break_height, 
-			text="break", 
-			rotation=π/2, 
-			offset=(0., 60.), 
-			color=COLORS[2], 
-			align=(:left, :center), 
-			fontsize=0.8 * theme(:fontsize)[]
-			)
-	end	
 
 	if !isnothing(r_j)
-		annotation!(0, 60, log10(r_j), break_height, 
+		annotation!(0, 80, log10(r_j), break_height, 
 					color=:black, 
 					linewidth=theme(:linewidth)[],  
 					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=theme(:markersize)[])),
+					text=" ",
 				 )
 
 		text!(log10(r_j), break_height, 
-			text="jacobi", 
+			text="Jacobi", 
 			rotation=π/2, 
 			offset=(0., 60.), 
 			align=(:left, :center),
@@ -149,20 +134,11 @@ function compare_profiles(halo::String, orbit::String, star; kwargs...)
 	compare_profiles(prof_i, prof_f, r_b; kwargs...)
 end
 
-# ╔═╡ 4e76a22b-631a-4478-b3bd-47be18496b3a
-@savefig "umi_i_f_mean" compare_profiles("1e6_v37_r5.0", "orbit_mean.2", "exp2d_rs0.10", norm_shift=-0.3, break_height= - 4, r_j=get_r_j("1e6_v37_r5.0", "orbit_mean.2"))
-
 # ╔═╡ 26a20e13-7b1f-4c6b-a3de-b16bd9883a93
 @savefig "umi_i_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=nothing, plot_final=false)
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-@savefig "umi_i_f_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=-3.5, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
-
-# ╔═╡ 7eb32f5b-2765-488a-a7aa-cea11a63315e
-@savefig "umi_i_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=nothing, plot_final=false)
-
-# ╔═╡ 302bbb9f-6eb8-4b32-a375-8a86f2f5c8d1
-@savefig "umi_i_f_smallperi_plummer" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "plummer_rs0.20", norm_shift=0.05, break_height=1, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
+@savefig "umi_i_f_smallperi" compare_profiles("1e7_new_v38_r4.0", "orbit_smallperi.5", "exp2d_rs0.10", norm_shift=0.1, break_height=-3.2, r_j=get_r_j("1e7_new_v38_r4.0", "orbit_smallperi.5", ))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -178,8 +154,5 @@ end
 # ╠═89cc7dd4-6643-463d-9fa3-bfc2859476f2
 # ╠═64073fad-7ebd-484b-ba95-c740186f02d7
 # ╠═4851087d-2679-4409-b44f-cb22f778974e
-# ╠═4e76a22b-631a-4478-b3bd-47be18496b3a
 # ╠═26a20e13-7b1f-4c6b-a3de-b16bd9883a93
 # ╠═3317cfec-be70-418c-944a-0a6741f03cf3
-# ╠═7eb32f5b-2765-488a-a7aa-cea11a63315e
-# ╠═302bbb9f-6eb8-4b32-a375-8a86f2f5c8d1

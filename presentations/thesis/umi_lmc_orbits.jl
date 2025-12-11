@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -127,13 +127,13 @@ md"""
 orbits_fiducial = read_traj("EP2020")
 
 # ╔═╡ 93ca6a6b-5f41-40d1-8661-31d0b3c5aa58
-orbits_w_lmc = read_traj("vasiliev24_L3M11")
+orbits_w_lmc = read_traj("L3M11_5Gyr")
 
 # ╔═╡ 18b45a96-ddcd-4a9d-88e2-4dde209676cf
 read_lmc_orbit(filename) = LilGuys.resample(OrbitUtils.get_lmc_orbit(joinpath(orbits_dir, filename)), orbits_w_lmc[1].times)
 
 # ╔═╡ af5cc193-033b-48d2-b2f5-266f7c54c8d6
-orbit_lmc = read_lmc_orbit("vasiliev24_L3M11")
+orbit_lmc = read_lmc_orbit("L3M11_5Gyr")
 
 # ╔═╡ 4529b1cc-5046-4491-8932-4c3fbb1f1e48
 pos_0_lmc = orbit_lmc.positions[:, 1]
@@ -152,8 +152,8 @@ lw_thick = @lift 2*$(theme(:linewidth))
 # ╔═╡ ff89d7db-c954-48b8-b87a-446ccfb2d79b
 trajectories = OrderedDict(
 
-	"UMi: MW only" => orbits_no_lmc,
-	 "UMi: MW & LMC" => orbits_w_lmc,
+	"Ursa Minor: MW-only" => orbits_no_lmc,
+	 "Ursa Minor: MW & LMC" => orbits_w_lmc,
 )
 
 # ╔═╡ 92fb5b1f-5dc6-4766-b69d-f8644861d4cd
@@ -166,15 +166,15 @@ orbits_m_lmc = orbits_w_lmc .- [orbit_lmc]
 
 # ╔═╡ 081e6a08-92e3-4f9d-bc8e-7ff80ca74693
 trajectories_radii = OrderedDict(
-	"UMi -- MW only" => orbits_no_lmc,
-	 "UMi -- MW & LMC" => orbits_w_lmc,
+	"Ursa Minor -- MW only" => orbits_no_lmc,
+	 "Ursa Minor -- MW & LMC" => orbits_w_lmc,
 )
 
 # ╔═╡ 6f1a1958-708a-4aac-935d-0e5a87091a98
 function plot_traj_lmc!(; x_direction = 2, t_min=-5/T2GYR)
 	times = orbit_lmc.times
 	times = times[times .> t_min]
-	plot_x_y_traj!([orbit_lmc], label="LMC", color=-times, colormap=:greys, linewidth=6, t_min=t_min, alpha=1, x_direction=x_direction)
+	plot_x_y_traj!([orbit_lmc], label="LMC", color=COLORS[3], linewidth=6, t_min=t_min, alpha=1, x_direction=x_direction)
 end
 
 
@@ -198,10 +198,10 @@ function plot_orbits_w_lmc(trajectories; lmc_visible=false)
 
 	if lmc_visible
 		plot_traj_lmc!(t_min=t_min)
-		scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=:black)
+		scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=20, color=COLORS[3])
 	end
 	
-	scatter!(pos_0[2], pos_0[3], markersize=20, color=COLORS[1], strokewidth=lw_thick[]/2, strokecolor=:black)
+	scatter!(pos_0[2], pos_0[3], markersize=20, color=COLORS[1], strokewidth=lw_thick[]/2, strokecolor=:black, marker=:circ)
 
 	
 	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(12, 0), fontsize=0.8*theme(:fontsize)[])
@@ -222,7 +222,7 @@ end
 @savefig "umi_lmc_mc_orbits_xy" plot_orbits_w_lmc(trajectories, lmc_visible=true)
 
 # ╔═╡ fdf801ec-3fc8-4c99-9348-9ac9f31c9f10
-@savefig "umi_mw_only_orbits_xy" plot_orbits_w_lmc(Dict("UMi: MW only" => orbits_no_lmc), lmc_visible=true)
+@savefig "umi_mw_only_orbits_xy" plot_orbits_w_lmc(Dict("Ursa Minor: MW-only" => orbits_no_lmc), lmc_visible=true)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a

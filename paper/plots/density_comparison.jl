@@ -97,9 +97,9 @@ end
 	hidexdecorations!(ticks=false, minorticks=false)
 	model_label!("exponential")
 	
-	ax_scl_plummer = compare_density(fig[2,1], modelnames["scl_smallperi_2exp"], y_low_R_h=-3, y_low=-3)
+	ax_scl_plummer = compare_density(fig[2,1], modelnames["scl_smallperi_plummer"], y_low_R_h=-3, y_low=-3)
 	# hidexdecorations!(ticks=false, minorticks=false)
-	model_label!("double exponential")
+	model_label!("Plummer")
 	ax_scl_plummer.title[] = ""
 
 
@@ -107,9 +107,9 @@ end
 	hidedecorations!(ticks=false, minorticks=false)
 	model_label!("exponential")
 
-	ax_umi_plummer = compare_density(fig[2, 2], modelnames["umi_smallperi_2exp"], y_low=-4)
+	ax_umi_plummer = compare_density(fig[2, 2], modelnames["umi_smallperi_plummer"], y_low=-4)
 	hideydecorations!(ticks=false, minorticks=false)
-	model_label!("double exponential")
+	model_label!("Plummer")
 	ax_umi_plummer.title[] = ""
 	
 	linkaxes!(ax_scl, ax_scl_plummer, ax_umi, ax_umi_plummer)
@@ -163,14 +163,14 @@ end
 	fig = Figure(size=(3.5, 3.5) .* 72)
 
 
-	ax_scl = compare_density(fig[1,1], modelnames["scl_lmc"], y_low=-6, y_low_R_h=-3, color=COLORS[1])
+	ax_scl = compare_density(fig[1,1], modelnames["scl_lmc"], y_low=-6, y_low_R_h=-3)
 	model_label!("exponential")
 	ax_scl.title[] = ""
 	ax_scl.xticks[] = -0.5:0.5:2.0
 
-	ax_scl_plummer = compare_density(fig[1,2], modelnames["scl_lmc_2exp"], color=COLORS[5])
+	ax_scl_plummer = compare_density(fig[1,2], modelnames["scl_lmc_plummer"], )
 	# hidexdecorations!(ticks=false, minorticks=false)
-	model_label!("double exponential")
+	model_label!("Plummer")
 	hideydecorations!(ticks=false, minorticks=false)
 
 	ax_scl_plummer.title[] = ""

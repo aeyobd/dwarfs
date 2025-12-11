@@ -167,8 +167,14 @@ ms = 24
 # ╔═╡ ff89d7db-c954-48b8-b87a-446ccfb2d79b
 trajectories = OrderedDict(
 
-	"MW-only" => orbits_no_lmc,
-	 "MW & LMC" => orbits_w_lmc,
+	"Sculptor: MW-only" => orbits_no_lmc,
+	 "Sculptor: MW & LMC" => orbits_w_lmc,
+)
+
+# ╔═╡ 5f223658-28d7-417c-b23e-90ad4029c327
+trajectories_mw = OrderedDict(
+
+	"Sculptor: MW-only" => orbits_no_lmc,
 )
 
 # ╔═╡ eac841e7-5015-48cc-898b-f0232c8d0d72
@@ -182,11 +188,14 @@ md"""
 # ╔═╡ 0f3018a2-42e2-4140-8e9e-f094276b76f2
 orbits_m_lmc = orbits_w_lmc .- [orbit_lmc]
 
+# ╔═╡ 074acf8b-a53f-47fe-83a9-35d88a30fc93
+
+
 # ╔═╡ 6f1a1958-708a-4aac-935d-0e5a87091a98
 function plot_traj_lmc!(; x_direction = 2, t_min=-5/T2GYR)
 	times = orbit_lmc.times
 	times = times[times .> t_min]
-	plot_x_y_traj!([orbit_lmc], label="LMC", color=:black, linewidth=lw_thick, t_min=t_min, alpha=1, x_direction=x_direction)
+	plot_x_y_traj!([orbit_lmc], label="LMC", color=COLORS[3], linewidth=lw_thick, t_min=t_min, alpha=1, x_direction=x_direction)
 end
 
 
@@ -211,14 +220,14 @@ function plot_orbits_w_lmc(trajectories; lmc_visible=false, act_visible=false)
 
 	
 	if lmc_visible
-		scatter!(pos_0_lmc[1], pos_0_lmc[3], markersize=ms, color=:black, )
+		scatter!(pos_0_lmc[1], pos_0_lmc[3], markersize=ms, color=COLORS[3], )
 		plot_traj_lmc!(x_direction=1, t_min=t_min)
 	end
 	
 	scatter!(pos_0[1], pos_0[3], markersize=ms, color=COLORS[1], strokewidth=lw_thick[]/2, strokecolor=:black)
 
 	if act_visible
-		lines!(o.positions[1, :], o.positions[3, :], linewidth=lw_thick, color=COLORS[3])
+		lines!(o.positions[1, :], o.positions[3, :], linewidth=lw_thick, color=:black)
 	end
 
 	# poly!(xz_iso_v24..., color=COLORS[8])
@@ -239,20 +248,20 @@ function plot_orbits_w_lmc(trajectories; lmc_visible=false, act_visible=false)
 
 	if lmc_visible
 		plot_traj_lmc!(t_min=t_min)
-		scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=ms, color=:black)
+		scatter!(pos_0_lmc[2], pos_0_lmc[3], markersize=ms, color=COLORS[3])
 	end
 	
 	scatter!(pos_0[2], pos_0[3], markersize=ms, color=COLORS[1], strokewidth=lw_thick[]/2, strokecolor=:black)
 
 	
-	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(5, 0), fontsize=0.8*theme(:fontsize)[])
+	text!(pos_0[2], pos_0[3], text="today", align=(:left, :center), offset=(16, 0), fontsize=0.8*theme(:fontsize)[])
 
 
-	text!(0, 0, text="Sun", align=(:left, :center), offset=(5, 0), fontsize=0.8*theme(:fontsize)[])
+	text!(0, 0, text="Sun", align=(:left, :center), offset=(16, 0), fontsize=0.8*theme(:fontsize)[])
 
 
 	if act_visible
-		lines!(o.positions[2, :], o.positions[3, :], linewidth=lw_thick, color=COLORS[3])
+		lines!(o.positions[2, :], o.positions[3, :], linewidth=lw_thick, color=:black)
 	end
 
 	# poly!(yz_iso_v24..., color=COLORS[8])
@@ -265,14 +274,20 @@ function plot_orbits_w_lmc(trajectories; lmc_visible=false, act_visible=false)
 	linkyaxes!(ax, ax2)
 	
 
-	axislegend(ax2, merge=true, unique=true, position=:lb, )
+	axislegend(ax2, merge=true, unique=true, position=:lb, margin=theme(:Legend)[:margin][])
 
 	resize_to_layout!(fig)
 	fig
 end
 
+# ╔═╡ 443d8f14-9ffa-4736-82ba-69e1d0e804af
+@savefig "scl_nolmc_mc_orbits" plot_orbits_w_lmc(trajectories_mw, lmc_visible=true)
+
 # ╔═╡ 2683e73a-e9d9-4f79-a101-8f306d36e428
 @savefig "scl_lmc_mc_orbits_xy" plot_orbits_w_lmc(trajectories, lmc_visible=true)
+
+# ╔═╡ a47311f9-2497-4cda-ae44-0e6ca7566ea0
+@savefig "scl_lmc_mc_orbits_xy_w_act" plot_orbits_w_lmc(trajectories, act_visible=true, lmc_visible=true)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -314,9 +329,13 @@ end
 # ╠═f62f0c8b-bfa3-4bfe-8c02-b3d232f6fef6
 # ╠═665bd308-210b-4e8f-bddd-9e9a9df6951a
 # ╠═ff89d7db-c954-48b8-b87a-446ccfb2d79b
+# ╠═5f223658-28d7-417c-b23e-90ad4029c327
 # ╠═eac841e7-5015-48cc-898b-f0232c8d0d72
 # ╟─92fb5b1f-5dc6-4766-b69d-f8644861d4cd
 # ╠═0f3018a2-42e2-4140-8e9e-f094276b76f2
-# ╠═2683e73a-e9d9-4f79-a101-8f306d36e428
 # ╠═f4bf5ad4-7c8e-456b-91b0-45f1a6baedf9
+# ╠═074acf8b-a53f-47fe-83a9-35d88a30fc93
 # ╠═6f1a1958-708a-4aac-935d-0e5a87091a98
+# ╠═443d8f14-9ffa-4736-82ba-69e1d0e804af
+# ╠═2683e73a-e9d9-4f79-a101-8f306d36e428
+# ╠═a47311f9-2497-4cda-ae44-0e6ca7566ea0
