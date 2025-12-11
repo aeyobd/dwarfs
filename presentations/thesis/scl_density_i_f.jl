@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -30,7 +30,7 @@ R_h = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/observe
 
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
 prof_expected = let
-	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/sculptor/density_profiles/jax_2c_eqw_profile.toml")
+	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/sculptor/density_profiles/fiducial_profile.toml")
 		
 	prof =  LilGuys.filter_empty_bins(prof)
 
@@ -83,12 +83,6 @@ function get_r_j(haloname, orbitname; lmc=false)
 	return props["r_J"] / R_h
 end
 
-# ╔═╡ 991fe214-c10c-44a6-a284-0356ef993412
-get_r_j("1e7_V31_r3.2", "orbit_smallperi", )
-
-# ╔═╡ 43c973e6-ad30-4bf8-93b3-4924bc498927
-readdir("/cosma/home/durham/dc-boye1/data/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_mean/stars/")
-
 # ╔═╡ f875e0e9-2f05-4420-8f40-76284be58e03
 function get_normalization(prof)
 	return -LilGuys.mean(prof.log_Sigma[1:5])
@@ -127,33 +121,17 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 		lines!(prof.log_R, prof.log_Sigma .+ dy, color=COLORS[2], linestyle=:solid,
 				label="final")
 	end
-	
-	if !isnothing(break_height)
-		annotation!(0, 60, log10(r_b), break_height, 
-					color=COLORS[2], 
-					linewidth=theme(:linewidth)[],  
-					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=theme(:markersize)[])),
-				  )
-		
-		text!(log10(r_b), break_height, 
-			 text="break", 
-			 rotation=π/2, 
-			 offset=(0., 60.), 
-			 color=COLORS[2], 
-			 align=(:left, :center), 
-			 fontsize=0.8 * theme(:fontsize)[]
-			)
-	end	
 
 	if !isnothing(r_j)
-		annotation!(0, 60, log10(r_j), break_height, 
+		annotation!(0, 80, log10(r_j), break_height, 
 					color=:black, 
 					linewidth=theme(:linewidth)[],  
 					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=theme(:markersize)[])),
+					text=" ",
 				  )
 
 		text!(log10(r_j), break_height, 
-			 text="jacobi", 
+			 text="Jacobi", 
 			 rotation=π/2, 
 			 offset=(0., 60.), 
 			 align=(:left, :center),
@@ -182,7 +160,7 @@ end
 @savefig "scl_smallperi_i_f_b" compare_profiles("1e7_new_v31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=nothing)
 
 # ╔═╡ 3317cfec-be70-418c-944a-0a6741f03cf3
-@savefig "scl_smallperi_i_f" compare_profiles("1e7_new_v31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=-1.0, r_j=true)
+@savefig "scl_smallperi_i_f" compare_profiles("1e7_new_v31_r3.2", "orbit_smallperi", "exp2d_rs0.10", norm_shift=0.15, break_height=-5.0, r_j=true)
 
 # ╔═╡ f053b7f9-f934-4cd4-ae46-32a0a373ff7e
 
@@ -193,21 +171,13 @@ end
 # ╔═╡ fc45829c-bf28-4d7b-9bea-e223e4b29e7d
 @savefig "scl_plummer_i_f" compare_profiles("1e7_new_v31_r3.2", "orbit_smallperi", "plummer_rs0.20", norm_shift=0.0, break_height=-6, r_j=true)
 
+# ╔═╡ 1349a85e-415a-4094-96f0-8a5566725112
+@savefig "scl_lmc_i" compare_profiles("1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.11", 
+	norm_shift=0.1, lmc=true, plot_final=false)
+
 # ╔═╡ 5f989e91-8870-462e-a363-767be64dac5c
-@savefig "scl_lmc_i_f" compare_profiles("1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.13", 
+@savefig "scl_lmc_i_f" compare_profiles("1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.11", 
 	norm_shift=0.1, break_height=-6, lmc=true, r_j=true)
-
-# ╔═╡ c3ae7b58-68b5-49ed-a874-611debd890bc
-@savefig "scl_lmc_smallperi_i_f" compare_profiles("1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi.3b", "exp2d_rs0.13", 
-	norm_shift=-0.1, break_height=-6)
-
-# ╔═╡ fab0c970-7d9a-4ed6-9632-72a7b0d52c5b
- compare_profiles("1e6_new_v31_r3.2", "L3M11_9Gyr_smallperi", "exp2d_rs0.13", 
-	norm_shift=0.2, break_height=-6)
-
-# ╔═╡ 084e8e1d-daec-4859-bbe2-888d484d6123
-@savefig "scl_lmc_i_f_mw_break_radii" compare_profiles("1e7_new_v25_r2.5", "smallperilmc", "exp2d_rs0.13", 
-	norm_shift=0.1,  lmc=false, r_j=true)
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -219,8 +189,6 @@ end
 # ╠═8d90a98b-09df-4834-ab9d-0aed44d6206b
 # ╠═b9e03109-9f49-4897-b26c-e31698a5fe49
 # ╠═fe3bc6ee-14ed-4006-b3ec-f068d2492da4
-# ╠═991fe214-c10c-44a6-a284-0356ef993412
-# ╠═43c973e6-ad30-4bf8-93b3-4924bc498927
 # ╠═f875e0e9-2f05-4420-8f40-76284be58e03
 # ╠═56da34d4-7ccd-41f0-98b4-31bb1afc8a49
 # ╠═d0140b51-02ca-4f25-9ecc-57a20f6a64cd
@@ -232,7 +200,5 @@ end
 # ╠═f053b7f9-f934-4cd4-ae46-32a0a373ff7e
 # ╠═4f02015a-dfc0-4c7c-935d-9992b0690576
 # ╠═fc45829c-bf28-4d7b-9bea-e223e4b29e7d
+# ╠═1349a85e-415a-4094-96f0-8a5566725112
 # ╠═5f989e91-8870-462e-a363-767be64dac5c
-# ╠═c3ae7b58-68b5-49ed-a874-611debd890bc
-# ╠═fab0c970-7d9a-4ed6-9632-72a7b0d52c5b
-# ╠═084e8e1d-daec-4859-bbe2-888d484d6123

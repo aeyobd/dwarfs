@@ -88,6 +88,9 @@ function calc_sigma_v_prof(stars, w = stars.weights)
 	
 	r_bins = DensityEstimators.make_bins(x, (-1, 3), DensityEstimators.bins_equal_number, n=bins)
 
+	r_max = LilGuys.quantile(x, w, 1-1e-6)
+	r_bins = r_bins[r_bins .< r_max]
+	bins = length(r_bins) - 1
 	
 	σs = Vector{Float64}(undef, bins)
 	Ns = Vector{Float64}(undef, bins)
@@ -108,38 +111,7 @@ end
 function plot_σv_prof!(galaxyname, args...; filename="final.fits", R_shift=0, kwargs...)
 	stars = get_stars_final(galaxyname, args..., filename)
 
-
-	x = log10.(stars.r_ell)
-	w = stars.weights
-	v = stars.radial_velocity
-
-	filt = @. !isnan(x)
-
-	x = x[filt]
-	w = w[filt]
-	v = v[filt]
-
-	bins = 80
-	
-	r_bins = DensityEstimators.make_bins(x, (-1, 3), DensityEstimators.bins_equal_number, n=bins)
-
-	
-	σs = Vector{Float64}(undef, bins)
-	err = Vector{Float64}(undef, bins)
-	Ns = Vector{Float64}(undef, bins)
-	
-	for i in 1:bins
-		filt = r_bins[i] .<= x .< r_bins[i+1]
-		σs[i] = calc_σv(x[filt], v[filt], w[filt], r_max=Inf)
-		N = sum(filt)
-		if N > 1
-			err[i] = σs[i] * sqrt(2/(N - 1))
-		else
-			err[i] = NaN
-		end
-		Ns[i] = N
-	end
-
+	r_bins, σs, Ns, Ms = calc_sigma_v_prof(stars)
 
 	lines!(LilGuys.midpoints(r_bins), σs ./ sqrt(10^R_shift); kwargs...)
 
@@ -327,6 +299,45 @@ end
 
 end
 
+# ╔═╡ 2a382105-9db1-48fd-96c5-6c3922d3c4c7
+@savefig "velocity_dispersion_profiles" let
+	fig = Figure()
+
+	ax_scl_sigma = plot_σv_prof(fig[1,1], modelnames["scl_smallperi_2exp"]..., color=COLORS[5], label="2exp")
+	ax_scl_sigma.title[] = "Sculptor"
+	ax_scl_sigma.xticks[] = 0:0.5:2
+
+	plot_σv_prof!(modelnames["scl_smallperi"]..., color=COLORS[1], linewidth=smalllinewidth, label="exp")
+
+	r_b = ModelUtils.get_r_b(modelnames["scl_smallperi"]...,)
+	ModelUtils.plot_r_break_arrow!(r_b, 4.)
+
+
+
+
+	ax_umi_sigma = plot_σv_prof(fig[1,2], modelnames["umi_smallperi_2exp"]..., color=COLORS[5])
+	ax_umi_sigma.title[] = "Ursa Minor"
+
+	plot_σv_prof!(modelnames["umi_smallperi"]..., color=COLORS[1], linewidth=smalllinewidth)
+	r_b = ModelUtils.get_r_b(modelnames["umi_smallperi"]...,)
+	ModelUtils.plot_r_break_arrow!(r_b, 4.)
+
+
+	hideydecorations!(ax_umi_sigma, ticks=false, minorticks=false)
+
+	axislegend(ax_scl_sigma, position=:lt)
+
+	rowgap!(fig.layout, 0)
+	colgap!(fig.layout, 0)
+
+
+	rowsize!(fig.layout, 1, Aspect(1, 1))
+
+	resize_to_layout!()
+	fig
+
+end
+
 # ╔═╡ e8edd587-dcd4-4943-9149-a94b567329be
 scl_stars = get_stars_final(modelnames["scl_smallperi"]..., "initial.fits")
 
@@ -414,6 +425,7 @@ scatter(midpoints(prof[1]), log10.(prof[4]))
 # ╠═4abe36c0-d10e-4d9b-8786-8a7f7aea593a
 # ╠═b9ba3889-b77a-406d-b488-2c7bd7db00e0
 # ╠═2be156ef-6a65-473a-b89e-b9fa8d0e83e6
+# ╠═2a382105-9db1-48fd-96c5-6c3922d3c4c7
 # ╠═e8edd587-dcd4-4943-9149-a94b567329be
 # ╠═8814b79f-d296-4750-9d46-98971b654b84
 # ╠═5be6fd0a-ad4e-44ef-8532-6e371fcd3550
