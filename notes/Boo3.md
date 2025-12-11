@@ -1,12 +1,20 @@
+Boötes III (Boo3) is an unusual system. Boo3 is one of few MW satellites wish
+
+
+
+Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellites, and is among the largest and most diffuse faint dwarf galaxies known. While having a small Milky Way pericentre (<10 kpc), Boo3 remains spare in the literature and has no resolved stream stars reported. Here, we will characterize the tidal disruption of Boo3 with idealized N-body simulations. Specifically, we investigate the impact of Boo3's orbit, the dwarf's initial structure, and the inner MW potential. We then assess the observational characteristics of disruption in Boo3 under each scenario and predict the properties of a possible stellar stream. 
+
+
+
+
+
 # Bootes III
 
+## History of the BooIII
 
+Boo III was discovered in @grillmair2009 through matched filter method. 
 
-This is a bit of a strange galaxy. Boo3 is a large, diffuse local dwarf with relatively little attention. 
-
-There is some controversy including the Styx stream, allegedly associated with the galaxy, but appears to be disconfirmed (@jensen+2025). Additionally, the velocity dispersion measurement is likely unreliable, but more investigation is required to address these questions. 
-
-
+@carlin+sand2018 present a sample of 15 RV members, first measuring the velocity dispersion, 
 
 
 
@@ -38,6 +46,7 @@ There is some controversy including the Styx stream, allegedly associated with t
 | halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma_{vx, \rm best}$ | $h  / {\rm kpc}$ |
 | ------- | -------------------- | ------------- | ----------------------- | ---------------- |
 | average | 22                   | 3.9           |                         |                  |
+| better  | 35                   | 3.0           | 15?                     |                  |
 
 
 
