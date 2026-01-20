@@ -1,6 +1,6 @@
 While written by my hand, I cannot pretend that I alone created this work. I am ever thankful and greatly indebted to the multitude of people who have supported, inspired, and nurtured me as a human being. 
 
-To my supervisor, Julio Navarro, for being the critical eye and guiding reason to this work. I will always approach research differently now.
+To my supervisor, Julio Navarro, for being the critical eye and guiding reason to this work. I will always approach research differently now. To Giuseppina for your helpful feedback and questions during my defence. 
 
 To Raphaël, who has helped inspire and direct this project, and to everyone who has shared ideas and opportunities along the way: Isabel, Jens, Eduardo, Jorge, David, Justin, Eugene, Azi, José, and many others.
 
@@ -16,7 +16,7 @@ To the Victoria performing arts community and Fierce Brosnan, our local legend.
 
 To my fellow fibre friends and crafters: Leise, Wes, Ashley, Sabrina, Sarah. To the graduate student society for continuing to connect us across departments. 
 
-To the international community, and my international friends---Marcela, Bernardo, Daniel, Victor, Mehrab, and many others. 
+To the international community, and my international friends---Marcela, Bernardo, Danny, Victor, Mehrab, and many others. 
 
 To Erica. To my students and everyone working with outreach here. I love being able to pass on our knowledge to the wider world. 
 
@@ -28,7 +28,7 @@ To my past advisors, James who has continued to support me long after our paths 
 
 To my past roommates, Matthew, Josh, and Bryn, for putting up with my chaos and our shared time together. 
 
-To my long-time friends---Nikola, Eric, Mikey, Anthony, Anya, Kaia, Alyssa, Aahliyah, Cameron---may we continue to stay in touch.
+To my long-time friends---Nikola, Eric, Mikey, Anthony, Anya, Kaia, Alyssa, Aaliyah, Cameron---may we continue to stay in touch.
 
 To my parents for their continuous support throughout this project. To my grandparents for always being there. To Nolan and Olivia, always a joy to see each other. To Bridget and Gretchen. To my extended family. And to my siblings for always being a source of joy. 
 

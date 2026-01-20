@@ -178,8 +178,8 @@ conditions. Initially, starting with low-resolution runs, we adjust the
 cylindrical actions of the initial orbit by the final difference in
 actions at the end of orbital evolution. After the initial actions have
 converged (2 iterations), we change the initial action angles by the
-final difference in action angles. This method converges within 4
-iterations to an orbit agreeing with the observed kinematics of Ursa
+final difference in action angles (2 more iterations). This method
+converges to an orbit agreeing with the observed kinematics of Ursa
 Minor. Since Sculptor's orbit is less strongly affected by tides, we do
 not carry out this correction for Sculptor.
 
@@ -369,8 +369,8 @@ We use a shrinking-spheres centre method inspired by \citet{power+2003}.
 First, we start with an initial centre estimate using all bound
 particles from the previous snapshot. Then, we calculate the distance of
 all particles from the centre, remove particles with a distance beyond
-the 0.975 quantile of the centre, and recalculate the centre of mass.
-The procedure is repeated until the selection radius is less than
+the 0.95 quantile of the centre, and recalculate the centre of mass. The
+procedure is repeated until the selection radius is less than
 \textasciitilde1kpc or fewer than 0.1\% of particles remain. We then
 remove all unbound particles based on the \gadget{} calculated potential
 of the halo and recalculate the centre. For all future timesteps, we

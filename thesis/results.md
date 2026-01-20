@@ -51,7 +51,7 @@ This result implies that Scl's extended profile cannot be reproduced by Galactic
 
 The Jacobi and break radii further support the conclusion that tidal effects should not be apparent. As calculated for this model (see [@tbl:scl_sim_results; @tbl:scl_sim_stars_results]), the break and Jacobi radii both fall outside $\gtrsim 100$ arcminutes, beyond the reach of our data. Indeed, the stellar component only begins to deviate from an exponential profile around the break radius ([@fig:scl_smallperi_i_f; @fig:scl_smallperi_plummer_i_f]). Since no orbits of Scl produce significantly smaller break or Jacobi radii,  it is unlikely that any orbit would produce an observable density excess.
 
-@tbl:scl_sim_stars_results quantifies the evolution of stellar properties. The stellar velocity dispersion decreases by only $\sim1\,\kms$ and the half-light radius expands by $\sim 10\%$. This is consistent with adiabatic expansion due to the reduction of the total mass [e.g., @stucker+2023]. Altogether, Galactic tides negligibly impact Scl's stellar component. 
+@tbl:scl_sim_stars_results quantifies the evolution of stellar properties. We calculate the velocity dispersion using all particles within $1\,\kpc$ of the dwarf's centre. The stellar velocity dispersion decreases by only $\sim1\,\kms$ and the half-light radius expands by $\sim 10\%$. This is consistent with adiabatic expansion due to the reduction of the total mass [e.g., @stucker+2023]. Altogether, Galactic tides negligibly impact Scl's stellar component. 
 
 ![Sculptor initial and final density profiles](figures/scl_smallperi_i_f.pdf){#fig:scl_smallperi_i_f}
 
@@ -280,7 +280,7 @@ Motivated by @fig:scl_orbit_lmc_uncert, we examine an extreme pericentre of $4\,
 
 ![Long term orbital uncertainties](/Users/daniel/thesis/figures/scl_lmc_orbits_mass_effect.png){#fig:scl_orbit_lmc_uncert width=100%}
 
-Figure: The long-term orbital history of Sculptor (**top**) and Ursa Minor (**bottom**) is uncertain. In both panels, light, transparent lines represent randomly sampled orbits of the satellites (following @sec:scl_smallperi) in three different LMC/MW mass models from @vasiliev2024. The LMC orbits are in solid, thick lines of the corresponding colour. The L2M11 has a lighter LMC mass, and the L3M10 model has a lighter MW mass than our fiducial L3M11 LMC model. 
+Figure: The long-term orbital history of Sculptor (**top**) and Ursa Minor (**bottom**) is uncertain. In both panels, light, transparent lines represent randomly sampled orbits of the satellites (following @sec:scl_smallperi) in three different LMC/MW mass models from @vasiliev2024. The LMC orbits are in solid, thick lines of the corresponding colour. The `L2M11` has a lighter LMC mass, and the `L3M10` model has a lighter MW mass than our fiducial `L3M11` LMC model. 
 
 
 
