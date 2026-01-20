@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -361,10 +361,10 @@ end
 
 
 # ╔═╡ 05db5836-70fa-454e-b465-329a26dbdec0
-plot_closest_orbits(traj, calc_relative_radii, "sculptor")
+@savefig "scl_nearby_galaxies" plot_closest_orbits(traj, calc_relative_radii, "sculptor")
 
 # ╔═╡ b9e3b6c0-f373-4aec-8116-006701aa9dd3
-compare_tidal_forces(traj, "sculptor")
+@savefig "scl_nearby_tides" compare_tidal_forces(traj, "sculptor")
 
 # ╔═╡ 118314b2-fa8c-42d0-88ab-583769678eb6
 compare_tidal_forces(traj_fric, "sculptor")
@@ -375,10 +375,10 @@ md"""
 """
 
 # ╔═╡ 2a32dae8-e9bf-4784-b6bb-291e0c81bfc7
-plot_closest_orbits(traj, calc_relative_radii, "ursa_minor")
+@savefig "umi_nearby_galaxies" plot_closest_orbits(traj, calc_relative_radii, "ursa_minor")
 
 # ╔═╡ 98e0e70b-0721-4c02-826e-d7949c0a21c4
-compare_tidal_forces(traj, "ursa_minor")
+@savefig "umi_nearby_tidal_forces" compare_tidal_forces(traj, "ursa_minor")
 
 # ╔═╡ 6c7bbc07-9e24-48a3-b02e-594b8a4db9c7
 compare_tidal_forces(traj_fric, "ursa_minor")

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -30,7 +30,7 @@ R_h = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/obser
 
 # ╔═╡ 65d3653d-5734-40ec-a057-aaa1e509968a
 prof_expected = let
-	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/density_profiles/jax_2c_eqw_profile.toml") |> LilGuys.filter_empty_bins
+	prof = SurfaceDensityProfile(ENV["DWARFS_ROOT"] * "/observations/ursa_minor/density_profiles/fiducial_profile.toml") |> LilGuys.filter_empty_bins
 
 	
 	prof = LilGuys.scale(prof, 1/R_h, 1)
@@ -61,9 +61,6 @@ function get_r_b(haloname, orbitname, starsname)
 	r_b = LilGuys.break_radius(σv / V2KMS, dt / T2GYR)
 	return LilGuys.kpc2arcmin(r_b, props["distance_f"])	 / R_h
 end
-
-# ╔═╡ 43c973e6-ad30-4bf8-93b3-4924bc498927
-readdir("/cosma/home/durham/dc-boye1/data/dwarfs/analysis/sculptor/1e7_V31_r3.2/orbit_mean/stars/")
 
 # ╔═╡ f875e0e9-2f05-4420-8f40-76284be58e03
 function get_normalization(prof)
@@ -97,7 +94,7 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 	end
 
 	if !isnothing(break_height)
-		annotation!(0, 60, log10(r_b), break_height, 
+		annotation!(0, 80, text=" ", log10(r_b), break_height, 
 					color=COLORS[2], 
 					linewidth=theme(:linewidth)[],  
 					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=theme(:markersize)[])),
@@ -114,7 +111,7 @@ function compare_profiles(prof_i, prof, r_b; break_height=-6, norm_shift = 0, r_
 	end	
 
 	if !isnothing(r_j)
-		annotation!(0, 60, log10(r_j), break_height, 
+		annotation!(0, 80,  text=" ", log10(r_j), break_height, 
 					color=:black, 
 					linewidth=theme(:linewidth)[],  
 					style=Ann.Styles.LineArrow(head = Ann.Arrows.Head(length=theme(:markersize)[])),
@@ -173,7 +170,6 @@ end
 # ╠═65d3653d-5734-40ec-a057-aaa1e509968a
 # ╠═8d90a98b-09df-4834-ab9d-0aed44d6206b
 # ╠═dd8a0445-8c94-4f43-b22a-1146a7f55d63
-# ╠═43c973e6-ad30-4bf8-93b3-4924bc498927
 # ╠═f875e0e9-2f05-4420-8f40-76284be58e03
 # ╠═89cc7dd4-6643-463d-9fa3-bfc2859476f2
 # ╠═64073fad-7ebd-484b-ba95-c740186f02d7
