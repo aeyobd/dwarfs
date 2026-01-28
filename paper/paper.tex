@@ -39,8 +39,8 @@
 }
 
 
-% extra commands
-\newcommand{\V}{{\rm v}}
+% custom commands
+\newcommand{\V}{\textrm{v}}
 \newcommand{\vmax}{\V_\text{max}}
 \newcommand{\vcirc}{\V_\text{circ}}
 \newcommand{\rmax}{r_\text{max}}
@@ -50,11 +50,12 @@
 \newcommand{\masyr}{\mathrm{mas\,yr^{-1}}}
 \newcommand{\Mo}{\mathrm{M}_\odot}
 
-\newcommand{\agama}{{\tt Agama}}
-\newcommand{\gadget}{{\tt Gadget-4}}
+\newcommand{\agama}{\texttt{Agama}}
+\newcommand{\gadget}{\texttt{Gadget-4}}
 \newcommand{\LCDM}{$\Lambda$CDM}
 
 
+% editing commands
 \newcommand{\red}{\color{Thistle}}
 \newcommand{\dbnote}[1]{{\red (DB: #1)}}
 \newcommand{\dbadd}[1]{{\red #1}}
@@ -79,28 +80,16 @@
 
 \begin{document}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% if you use custom commands in your title,
-% ensure to check your title when submitting!
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Could tides explain the extended stellar densities of the Sculptor and Ursa Minor dwarfs?}
+\title{Galactic tides and the outer stellar structure of the Sculptor and Ursa Minor dwarf galaxies}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% % Please separate each author with the \and command
 %
 % Please do not include ORCIDs next to author names.
-% Only ORCIDs authenticated by individual authors in EDPS
-% editorial system will be taken into account.
-% ORCIDs included here will be removed.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%Ursa Minor has also shown evidence for possible inner substructure, such
-%as stellar or kinematic `clumps'
-%\citep[e.g.,][]{olszewski+aaronson1985, demers+1995, kleyna+1998, battinelli+demers1999, bellazzini+2002}.
-%While one clump was re-detected kinematically in \citet{pace+2014},
-%\citet{munoz+2018} find no evidence of substructure with modern
-%photometry. 
-   \author{D. A. Boyea\inst{1}
-        \and others
+   \author{Daniel A. Boyea\inst{1}
+       \and Julio F. Navarro\inst{1}
+       \and others
         }
 
         \institute{%
@@ -113,18 +102,21 @@
 
 % \abstract{}{}{}{}{}
 % 5 {} token are mandatory
- 
-  \abstract
+   \abstract{
   % context heading (optional)
-   {Most dwarf spheroidals (dSph) of the Milky Way have surface density profiles following an exponential law, with a sharply declining outer density. However, the Sculptor (Scl) and Ursa Minor (UMi) dSphs show an excess of stars at large radii.}
+       Most dwarf spheroidals (dSph) of the Milky Way have surface density profiles following an exponential law, with a sharply declining outer density. However, the Sculptor (Scl) and Ursa Minor (UMi) dSphs host an excess of stars at large radii. Individual members have recently been identified out to ${\sim}10$ effective radii in each galaxy.
+       The origin of these extended profiles is unclear and may arise from Galactic tides or intrinsic properties.
   % aims heading (mandatory)
-   {We investigate how tides may affect the outer density structure of Scl and UMi.}
+   In this paper, we evaluate whether tides shape the outer density structure of Scl and UMi.
   % methods heading (mandatory)
-   {We conduct idealized N-body simulations of both galaxies in the tidal field of the Milky Way with an optional time-evolving Large Magellanic Cloud (LMC). We explore the range of orbits consistent with observed kinematics and the evolution of cored, flattened, and anisotropic models. }
+   We conduct idealized N-body simulations of both galaxies in the tidal field of the Milky Way. 
   % results heading (mandatory)
-   {Tides affect neither galaxy strongly. Including the LMC reshapes Scl's orbit, reducing the number of pericentres and Scl's tidal evolution. With the LMC, Scl's dark matter evolves little and the stellar component is nearly unchanged. UMi loses about 95\% of its dark matter mass, but the stars should also appear unaffected and including the LMC only weakens UMi's tidal history. }
+   Neither galaxy experiences tides sufficient to affect their stellar distribution. While Scl's orbit is strongly influenced by the LMC, we still find that the combined LMC and MW tides are unable to significantly perturb Scl's stellar component.
+   We also test the evolution of cored, flattened, and anisotropic models, finding similar results in all cases.
   % conclusions heading (optional), leave it empty if necessary
-   {The outer stellar density excess in Scl and UMi are unlikely of tidal origin. Instead, these features may be innate, possibly explained by past merger or star formation episodes. }
+  The outer stellar density excess in Scl and UMi are unlikey to be of tidal origin. Instead, these features may be innate, possibly explained by past mergers or episodic star formation histories.
+}
+
 
    \keywords{Galaxies: dwarf --
        Galaxies: kinematics and dynamics --
@@ -144,24 +136,32 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-The outer structure of dwarf galaxies holds potential clues to their
-evolutionary histories. Extended stellar populations may form from tidal
-interactions, episodic star formation, or past dwarf mergers \citep[see
-discussion in Section~\ref{sec:discussion} and, e.g., ][]{penarrubia+2009,
-genina+2019, deason+2022}. If a galaxy hosts such an extended stellar population, determining whether the population arises from tides may provide crucial physical insight. Tidally disrupting dwarf galaxies can constrain the Milky Way (MW) potential and dark matter properties on small scales \citep[e.g.,][]{penarrubia+2010, cartonzeng+2024}. On the other hand, non-tidal extended populations may reveal a rare glimpse into conditions in the early universe or the hierarchical assembly of dwarf galaxies.
+The outer structure of a dwarf galaxy holds clues to its
+evolutionary history.
+Most nearby dwarf spheroidals (dSph) are well-described by an exponential
+surface density profile \citep[e.g.,][]{mateo1998, mcconnachie+irwin2006, kowalczyk+2013, martin+2016, cicuendez+2018, munoz+2018}. 
+However, several notable dwarfs have an relative excess of distant stars.
+For example, \citet{chiti+2021} find an extended distribution of stars around Tucana II, which later studies have suggested formed from a past merger \citep{tarumi+yoshida+frebel2021, querci+2025}. Alternatively, Sagittarius and Tucana III dSphs show evidence of tidal disruption with streams extending far from the centres of a dwarf galaxy \citep[e.g.,][]{ibata+gilmore+irwin1994, li+2018}. 
 
-Most dwarf spheroidals (dSph) are well-described by an exponential
-surface density profile \citep[e.g.,][]{binggeli+sandage+tarenghi1984,
-mateo1998, mcconnachie+irwin2006, cicuendez+2018, kowalczyk+2013, martin+2016}. However, Scl and UMi have a excess of stars at large radii relative to an exponential (see Section~\ref{sec:gaia}; e.g., \citealt{eskridge1988, IH1995,
-martinez-delgado+2001, walcher+2003, palma+2003}). 
-Using \textit{Gaia} proper-motion informed stellar candidates from \citet[see also Section~\ref{sec:gaia}]{jensen+2024}, \citet{sestito+2023a, sestito+2023b} spectroscopically confirmed distant members out to ${\sim}10$ half-light radii ($R_h$) from the centre of each dwarf. If these galaxies were described by exponential profiles, fewer than $1/10^6$ stars should fall outside $10\,R_h$. 
-While tidal interactions are suspected to produce these distant stars \citep[e.g.][]{innanen+papp1979, walcher+2003, sestito+2023a}, few works have dynamically modelled Scl and UMi specifically.
+Among classical dwarf galaxies, the Sculptor (Scl)  and Ursa Minor (UMi) display a significance overabundance of distant stars (see Section~\ref{sec:gaia}). \citet{innanen+papp1979} first noted that RR Lyrae candidate members in Scl appeared to extend out to $180'$, or well over 10 half-light radii.
+Later density profile determinations frequently found an apparent outer density excess \citep{eskridge1988, IH1995,
+martinez-delgado+2001, walcher+2003, palma+2003, westfall+2006}. 
+Moreover, \citet{sestito+2023a, sestito+2023b} used \citepos{jensen+2024} catalogue of \textit{Gaia} candidates to spectroscopically confirm distant members out to ${\sim}10$ half-light radii ($R_h$) from the centre of Sculptor (Scl) and Ursa Minor (UMi). If these galaxies were described by exponential profiles, fewer than $1/10^6$ stars should fall outside $10\,R_h$. 
+While the excess was often speculated to originate from tides \citep[e.g.][]{innanen+papp1979, walcher+2003, sestito+2023a}, the formation of Scl and UMi's extended stellar distributions remains unclear.
+%These distant stars are often believed to indicate ongoing tidal stripping  or sometimes evidence of a dwarf stellar `halo' \citep{westfall+2006}. More recently, \citep{jensen+2024} searched for stellar halos around dwarfs of the Milky Way, finding Scl and UMi were the only classical dwarf galaxies with evidence for a stellar excess (see also Section~\ref{sec:gaia}). \citet{sestito+2023a, sestito+2023b} since suggested that these outer density excesses are due to Galactic tides. 
 
-Cosmological simulations struggle to resolve tidal effects on dwarfs, which are 
+
+If a galaxy hosts an extended stellar population, determining whether the population arises from tides may provide crucial physical insight. Tidally disrupting dwarf galaxies can constrain the Milky Way (MW) potential and dark matter properties on small scales \citep[e.g.,][]{penarrubia+2010, cartonzeng+2024}. On the other hand, non-tidal extended populations may reveal a rare glimpse into conditions in the early universe or the hierarchical assembly of dwarf galaxies \citep[e.g.,][]{genina+2019, deason+2022}. This paper aims to assess the possibility of a tidal or intrinsic origin for the stellar distribution of Sculptor and Ursa Minor.
+
+
+Accurate modelling of tidal interactions often requires idealized simulations. Cosmological simulations struggle to resolve tidal effects on dwarfs, which are 
 often near the resolution limit and vulnerable to artificial disruption
 \citep[e.g.,][]{PNM2008, vandenbosch+2018, EP2020, santos-santos+2025}. To overcome
 these challenges, idealized simulations model a single subhalo\footnote{A `halo' is a gravitationally self-bound overdensity of dark matter. A subhalo is a halo gravitationally bound to a larger halo.} in an
-analytic host potential, achieving excellent numerical convergence \citep[e.g.,][]{hayashi+2003, bullock+johnston2005, klimentowski+2009, penarrubia+2010, ogiya+2019, EN2021}. Several recent studies have modeled specific galaxies and generally find that classical dwarfs experience weak Galactic tides \citep{battaglia+sollima+nipoti2015, borukhovetskaya+2022, dicintio+2024, tchiorniy+genina2025}. Most relevantly, \citet{iorio+2019} simulate Scl, also finding little tidal evolution. However, no studies since have fully explored tidal effects on Scl and UMi using updated structural and kinematic properties or accounted for orbital and tidal effects from the Large Magellanic Cloud (LMC). 
+analytic host potential, achieving excellent numerical convergence \citep[e.g.,][]{hayashi+2003, bullock+johnston2005, klimentowski+2009, penarrubia+2010, ogiya+2019, EN2021}. 
+
+
+Several recent studies have used idealized simulations to investigate the tidal evolution of classical dSphs. For instance, \citet{battaglia+sollima+nipoti2015, borukhovetskaya+2022, dicintio+2024} all model the Fornax dwarf spheroidal, finding this dwarf is not strongly affected by tides. Most relevantly, \citet{iorio+2019} simulate Scl, also finding little tidal evolution. \citet{tchiorniy+genina2025} model the tidal evolution Scl, UMi, Fornax, Carina, and Draco but for the aim of understanding the tidal effects on central dark matter densities. No studies have fully explored tidal effects on Scl and UMi using updated structural and kinematic properties or accounted for orbital and tidal effects from the Large Magellanic Cloud (LMC). 
 
 Given recent confirmation of an outer excess of stars in Sculptor and
 Ursa Minor, we revisit whether tides may affect the outskirts of Scl and UMi. We aim to model tidal effects with galaxy-tailored, idealized N-body simulations in both a Milky Way and evolving MW+LMC potential.
@@ -171,7 +171,7 @@ In Section~\ref{sec:gaia}, we describe our density profile data. Section~\ref{se
 
 Measuring the light profile of a resolved galaxy requires careful
 consideration of whether any given star belongs to the system or not.
-Without removing contamination from foreground/background sources, faint
+Without removing contamination from foreground or background sources, faint
 features may be lost in the noise or be of uncertain association. \textit{Gaia} \citep{gaiacollaboration+2023} now provides stellar parallaxes and proper motions, improving membership precision.
 
 Here, we use the \citepos[hereafter J+24]{jensen+2024} membership
@@ -184,7 +184,7 @@ member stars. J+24 extended
 the algorithm presented in \citet{MV2020a, MV2020b} by additionally
 including a secondary, extended spatial component.\footnotemark{} With this addition, J+24 detected
 candidate members out to ${\sim}10$ half-light radii ($R_h$) from the
-centres of some galaxies . Similar recent work includes
+centres of some galaxies. Similar recent work includes
 \citet{pace+li2019}; \citet{battaglia+2022}; \citet{pace+erkal+li2022};
 \citet{qi+2022}.
 
@@ -220,7 +220,7 @@ described by an exponential profile in the inner regions.\footnote{
     across all dwarfs.} 
 In the outer regions, however, Scl and UMi deviate and show a clear outer excess over an exponential law. The deviation from an exponential grows outwards
 and may reach 2 orders of magnitude at $8 R_h$. 
-Instead, a Plummer law (dashed black line) better describes Scl and UMi. This paper aims to determine whether tides Scl and UMi's density excess.
+Instead, a Plummer law (dashed black line) better describes Scl and UMi. This paper aims to determine whether tides may produce Scl and UMi's density excess.
 
 \begin{figure}
     \centering
@@ -232,7 +232,7 @@ Instead, a Plummer law (dashed black line) better describes Scl and UMi. This pa
         line) and Plummer density profiles (dashed black line). For other
         classical dwarfs, we include Fornax, Leo I, Leo II, Carina, Draco,
         Canes Venatici I, Sextans I, and Crater II. We excluding Sagittarius and
-        Antlia II due to high foreground/background. Density
+        Antlia II due to high foreground. Density
         profiles are plotted in terms of the logarithm of elliptical radius
         scaled by the half-light radius from \citet{munoz+2018}, and the
         logarithmic stellar density scaled by the density at half-light
@@ -388,7 +388,7 @@ $\V_{z,\,i} / \kms$ & -57.29 & 52.09 & -114.08\\
 \end{table}
 
 To explore the possible orbits of a dwarf galaxy, we perform a Monte Carlo
-sampling of the present-day observables. From the position and velocities and their uncertainties in Tables~\ref{tbl:scl_obs_props}, \ref{tbl:umi_obs_props}) for Scl and UMi, we draw coordinates assuming Normal distributions and not accounting for covariance. 
+sampling of the present-day observables. From the position and velocities and their uncertainties in Tables~\ref{tbl:scl_obs_props}, \ref{tbl:umi_obs_props} for Scl and UMi, we draw coordinates assuming Normal distributions without covariance. 
 We then integrate each sampled position/velocity back in time for 10 Gyr using \agama{}
 \citep{agama}. Dynamical friction is not expected to impact orbits
 substantially, so we assume a single point-mass particle for the backwards
@@ -459,7 +459,7 @@ We adopt a softening length of
 \begin{equation}\label{eq:softening_length}
     h_\text{grav} = 0.014\,\text{kpc}\left(\frac{r_\text{max}}{6.0\,\text{kpc}}\right)\left(\frac{N}{10^7}\right)^{-1/2},
 \end{equation} 
-for a halo with $N$ particles. While our softening choice is about 3 times smaller than \citep{power+2003}, we find this choice best balances convergence and computational efficiency.
+for a halo with $N$ particles. While our softening choice is about 3 times smaller than \citep{power+2003}, we find this choice best balances convergence and computational efficiency for our simulations.
 We use $10^7$ particles, a relative accuracy criterion of $\alpha=0.005$, and an integration accuracy of $\eta=0.01$.\footnote{i.e., tree nodes open if $M\,l/r^3 < \alpha |a|$ for node mass $M$, side-length $l$, distance $r$, and particle acceleration $a$; and particles must take time-steps smaller than $\sqrt{2\,\eta\,h_\text{grav}}$.}
 
 To ensure that the initial conditions of the simulation are dynamically
@@ -645,6 +645,19 @@ significantly from true satellite orbits in cosmological simulations
 Indeed, UMi may have even been bound to the LMC more than $5\,\Gyr$ ago \citep{vasiliev2024}. 
 While we cannot constrain the long-term histories of these dwarfs, our results
 indicate that \textit{recent tidal effects} are likely not be observable in Scl and UMi.
+
+\subsection{The tidal radii of classical satellites}
+
+Fig.~\ref{fig:classical_jacobi} shows the mean enclosed density within the half-light radius verses the pericentre of classical satellites. We calculate the mean density using the \citet{wolf+2010} mass estimator, and pericentres are for the mean orbits in our adopted MW and MW+LMC potentials. The Saggitarius, Antlia II, and Crater II dSphs fall within the region of likely tidal disruption. Saggitarius has a prominant stream, and recent observations demonstrate that Crater II and Antlia II's may show signs of tidal disruption \citep{vivas+2026, ji2025}. Otherwise, the other classical dSphs, including Scl and UMi, have pericentres likely too large for tidal effects to reach the stellar component. Tides appear to generaly play a minor role in the evolution of most MW classicals.
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/rho_mean_pericentre.pdf}
+    \caption{The mean density enclosed with the half-light radius verses pericentre for classical Milky Way dwarf galaxies in a MW-only (filled circles) and MW+LMC potential (empty circles). The black line represents 3 times the enclosed density of the Milky Way, below which the Jacobi radius would be within a satellites half-light radius and a satellite would be vulnerable to disruption. Only Sagittarius, Crater II, and Antlia II fall within the region of likely tidal disruption. See also \citet{pace+erkal+li2022}. 
+    }
+    \label{fig:classical_jacobi}
+\end{figure}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion \& Conclusions} \label{sec:discussion}
