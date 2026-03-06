@@ -23,7 +23,7 @@ using DataFrames, CSV
 include("./paper_style.jl")
 
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
-galaxyname = "ursa_minor"
+galaxyname = "sculptor"
 
 # ╔═╡ 34c0f4f8-ef34-4b58-bcdd-7de69b58db2d
 import DensityEstimators
@@ -253,6 +253,9 @@ function plot_both(snap; kwargs...)
 	fig
 end
 
+# ╔═╡ 447c05ad-d5fc-4502-a2bc-27beeb931904
+purple = Makie.colorant"#c274ff"
+
 # ╔═╡ bfa1ee5a-473d-4f21-ac37-4665ca1eade6
 function to_transparent_cmap(color)
 	return ([Makie.RGBAf(color.r, color.g, color.b, alpha) for alpha in LinRange(0, 1., 100)])
@@ -268,7 +271,7 @@ end
 
 
 # ╔═╡ 124f1c38-3d15-42c3-a48c-dbdf14aba497
-colormap_dm = (to_black_cmap(COLORS[5]))
+colormap_dm = (to_black_cmap(purple))
 
 # ╔═╡ 666eff06-c57a-4219-ac5e-e68e6b860882
 function plot_xy_density!(snap)
@@ -421,6 +424,7 @@ promote(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
 # ╠═f3da6ca5-e988-4f6b-8efa-18fe32887dab
 # ╠═51d13973-739e-4697-9f18-4b25334213a6
 # ╠═cffa0546-2adc-42a0-ae0d-beab2809f1f0
+# ╠═447c05ad-d5fc-4502-a2bc-27beeb931904
 # ╠═124f1c38-3d15-42c3-a48c-dbdf14aba497
 # ╠═5ace10dd-3d95-4a30-bfd0-1c7e846af2c7
 # ╠═bfa1ee5a-473d-4f21-ac37-4665ca1eade6

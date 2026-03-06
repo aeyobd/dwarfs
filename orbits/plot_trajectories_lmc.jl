@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -61,6 +61,9 @@ The most important variable is to set the modelname to the appropriate directory
 
 # ╔═╡ 3aa52225-a8f6-4c50-98b2-a96605935bf0
 @bind galaxyname TextField(18, default="sculptor") |> confirm
+
+# ╔═╡ aede5671-cde4-47dd-b15c-4402e3ccdba7
+modelname_no = "vasiliev24_M11"
 
 # ╔═╡ 5ca2096b-6eb9-4325-9c74-421f3e0fdea2
 module OrbitUtils
@@ -154,11 +157,6 @@ pot_mw = Agama.Potential(file=joinpath(galaxyname, modelname, "potential_mw_init
 
 # ╔═╡ 7ac315f4-8d01-45ee-9a02-0c7854f3a7ad
 pot_lmc = Agama.Potential(file=joinpath(galaxyname, modelname, "potential_lmc.ini"))
-
-# ╔═╡ aede5671-cde4-47dd-b15c-4402e3ccdba7
-if modelname ∈ ["vasiliev24_L3M11", "vasiliev24_L3M11_noreflex"]
-	modelname_no = "vasiliev24_M11"
-end
 
 # ╔═╡ 2da68601-f24d-4499-b072-3bd4d9237a4e
 pot_no = Agama.Potential(file=joinpath(galaxyname, modelname_no, "agama_potential.ini"))
@@ -487,6 +485,7 @@ end
 # ╟─2b9d49c6-74cc-4cce-b29e-04e94776863f
 # ╠═6ca3fe17-3f13-43fe-967b-881078135ead
 # ╠═3aa52225-a8f6-4c50-98b2-a96605935bf0
+# ╠═aede5671-cde4-47dd-b15c-4402e3ccdba7
 # ╠═5ca2096b-6eb9-4325-9c74-421f3e0fdea2
 # ╠═f311c4d6-88a4-48a4-a0a0-8a6a6013897c
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
@@ -515,7 +514,6 @@ end
 # ╠═61c5e886-4c54-4080-8111-122765405ffe
 # ╠═cba42f30-bf44-4926-abd5-40282b049539
 # ╠═7ac315f4-8d01-45ee-9a02-0c7854f3a7ad
-# ╠═aede5671-cde4-47dd-b15c-4402e3ccdba7
 # ╠═2da68601-f24d-4499-b072-3bd4d9237a4e
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
 # ╠═89c45144-deb3-4d30-b119-bba0ea729e91

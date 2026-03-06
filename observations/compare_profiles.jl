@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -151,10 +151,19 @@ function plot_profiles(profiles_eq; jitter=0.005, markersize=markersize)
 	fig
 end
 
+# ╔═╡ 41d2dbae-7c38-460a-8036-c2d43a1f83cd
+let 
+	profs = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
+	add_profile!(profs, "fiducial_profile.toml", label="fiducial")
+	add_profile!(profs, "jax_LLR_0_eqw_sub_profile.toml", label="LL cut - bkg")
+	add_profile!(profs, "jax_LLR_0_eqw_profile.toml", label="LL cut")
+	plot_profiles(profs)
+end
+
 # ╔═╡ 5295c0da-f77f-45b9-84bf-e174e2d5a521
 begin
 	profiles = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
-	add_profile!(profiles, "jax_eqw_profile.toml", label="fiducial")
+	add_profile!(profiles, "fiducial_profile.toml", label="fiducial")
 	add_profile!(profiles, "jax_2c_profile.toml", label="2exp")
 	add_profile!(profiles, "jax_LLR_0_sub_profile.toml", label="LL cut")
 	add_profile!(profiles, "simple_sub_profile.toml", label="simple")
@@ -282,6 +291,7 @@ end
 # ╠═e1c0f486-2917-4c3f-a909-f0091ee27c58
 # ╠═abead192-161f-4375-899f-2c769d40cbfb
 # ╠═cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
+# ╠═41d2dbae-7c38-460a-8036-c2d43a1f83cd
 # ╠═898d2c8b-b761-4a69-b561-658a644f44df
 # ╠═ad174507-779f-4117-9d71-10843d42981d
 # ╠═cc9ac531-ef25-4573-9d35-4e4a25418adc

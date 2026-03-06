@@ -130,33 +130,33 @@ end
 end
 
 # ╔═╡ 83f2045f-97f1-43ed-84c6-75518ed2beeb
-@savefig "density_i_f_2exp" let
-	fig = Figure(size=(3.5, 3.5) .* 72)
+# @savefig "density_i_f_2exp" let
+# 	fig = Figure(size=(3.5, 3.5) .* 72)
 
 
-	ax_scl = compare_density(fig[1,1], modelnames["scl_smallperi"], modelname_plummer=modelnames["scl_smallperi_2exp"])
-	hidexdecorations!(ticks=false, minorticks=false)
+# 	ax_scl = compare_density(fig[1,1], modelnames["scl_smallperi"], modelname_plummer=modelnames["scl_smallperi_2exp"])
+# 	hidexdecorations!(ticks=false, minorticks=false)
 	
 
 
-	ax_umi = compare_density(fig[1, 2], modelnames["umi_smallperi"], modelname_plummer=modelnames["umi_smallperi_2exp"])
-	hidedecorations!(ticks=false, minorticks=false)
+# 	ax_umi = compare_density(fig[1, 2], modelnames["umi_smallperi"], modelname_plummer=modelnames["umi_smallperi_2exp"])
+# 	hidedecorations!(ticks=false, minorticks=false)
 
 	
-	linkaxes!(ax_scl, ax_umi)
+# 	linkaxes!(ax_scl, ax_umi)
 
-	axislegend(ax_scl, position=:lb)
+# 	axislegend(ax_scl, position=:lb)
 
-	Label(fig[:, 0], "log surface density", rotation=π/2)
-	rowgap!(fig.layout, 0)
-	colgap!(fig.layout, 0)
+# 	Label(fig[:, 0], "log surface density", rotation=π/2)
+# 	rowgap!(fig.layout, 0)
+# 	colgap!(fig.layout, 0)
 
-	rowsize!(fig.layout, 1, Aspect(1, 1))
+# 	rowsize!(fig.layout, 1, Aspect(1, 1))
 
-	resize_to_layout!()
-	fig
+# 	resize_to_layout!()
+# 	fig
 
-end
+# end
 
 # ╔═╡ d26db585-3e68-4870-99da-bb5d9182c923
 @savefig "scl_lmc_density_i_f" let

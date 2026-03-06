@@ -65,8 +65,34 @@ function get_peri(galaxyname, potname="EP2020", colname="pericentre")
 	LilGuys.Measurement(m, m-l, h-m)
 end
 
+# ╔═╡ c8a8d5d8-1d50-4bac-8f4f-30d064ef158b
+function get_err(dict, key)
+	if key * "_err" in keys(dict)
+		return dict[key * "_err"] / dict[key]
+	else
+		return max(dict[key * "_em"], dict[key * "_ep"]) / dict[key]
+	end
+end
+
 # ╔═╡ ce0a518e-1cc9-4b3c-a9a6-b465830ddcea
 α_3d_2d = LilGuys.r_h(LilGuys.Exp2D()) / LilGuys.R_h(LilGuys.Exp2D())
+
+# ╔═╡ 354a9bba-93c0-4c02-8cdc-9fb20063780a
+function get_rho_mean_h_uncert(galaxyname)
+	props = get_obs_props(galaxyname)
+	σv = props["sigma_v"] / LilGuys.V2KMS
+	r_h = LilGuys.arcmin2kpc(props["R_h"], props["distance"]) * α_3d_2d
+	M_h_over_r_h = 3 / LilGuys.G * σv^2 # times r_h normally
+
+	R_h_err = get_err(props, "R_h")
+	d_err = get_err(props, "distance")
+	σv_err = get_err(props, "sigma_v")
+	rel_err = 2R_h_err + 2d_err + 2σv_err
+
+	val =  M_h_over_r_h / (4π/3 * r_h^2) * LilGuys.M2MSUN
+
+	return Measurement(val, val * (rel_err))
+end
 
 # ╔═╡ 475816ca-baa6-4b51-a4b1-aeeec13ff105
 function get_rho_mean_h(galaxyname)
@@ -77,6 +103,40 @@ function get_rho_mean_h(galaxyname)
 
 	return M_h_over_r_h / (4π/3 * r_h^2) * LilGuys.M2MSUN
 end
+
+# ╔═╡ 0c08a41a-b21f-4168-82fe-b0ff3da6111e
+classical_labels = Dict(
+	"sagittarius" => "Sagittarius",
+	"fornax" => "Fornax",
+	"leo1" => "Leo I", 
+	"sculptor" => "Sculptor", 
+	"antlia2" => "Antlia II",
+	"leo2" => "Leo II",
+	"carina" => "Carina", 
+	"draco" => "Draco",
+	"ursa_minor" => "Ursa Minor", 
+	"canes_venatici1" => "Canes Venatici I",
+	"sextans1" => "Sextans I",
+	"crater2" => "Crater II"
+)
+
+# ╔═╡ f3f2f788-ce44-4390-b7c5-fdcd862aff49
+pot_mw = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama/potentials/EP2020.ini"))
+
+# ╔═╡ 1ded763d-8f25-44ab-be6f-935f6d26e8c4
+pot_lmc = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama/potentials/vasiliev24/L3M11/potential_lmc_init.ini"))
+
+# ╔═╡ 99c6b883-f7ed-46e7-855b-23e234e1fae4
+pot_mw_lmc = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama/potentials/vasiliev24/L3M11/potential_mw_init.ini"))
+
+# ╔═╡ 1aea04a4-a1bf-4e04-b73e-2fb9afd052f5
+function get_MW_mean_density(pot=pot_mw, radii=LinRange(7, 150, 10000); units=Agama.AgamaUnits())
+	Ms = Agama.enclosed_mass(pot, radii, units)
+	return radii, Ms ./ (4π/3 * radii .^3) * M2MSUN
+end
+
+# ╔═╡ 7e063f49-0b32-4aff-9a0d-4cac8251fbb3
+markers = theme(:palette)[:marker][]
 
 # ╔═╡ aadbdcc6-1695-431d-92de-c08e86e1c1f0
 classicals = [
@@ -94,67 +154,90 @@ classicals = [
 	"crater2"
 ]
 
-# ╔═╡ 0c08a41a-b21f-4168-82fe-b0ff3da6111e
-classical_labels = Dict(
-	"sagittarius" => "Sagittarius",
-	"fornax" => "Fornax",
-	"leo1" => "Leo I", 
-	"sculptor" => "Sculptor", 
-	"antlia2" => "Antlia2",
-	"leo2" => "Leo2",
-	"carina" => "Carina", 
-	"draco" => "Draco",
-	"ursa_minor" => "Ursa Minor", 
-	"canes_venatici1" => "Canes Venatici I",
-	"sextans1" => "Sextans I",
-	"crater2" => "Crater II"
-)
+# ╔═╡ 3a4ee436-3a33-468e-9ede-d3ed45356432
+for name in classicals
+	println(name)
+	println(get_rho_mean_h(name))
+	println(get_rho_mean_h_uncert(name))
+end
 
 # ╔═╡ ef6af06e-492d-44dd-b68e-cf71b3b07347
 pericentres = [get_peri(galaxyname) for galaxyname in classicals]
 
 # ╔═╡ 7b09fdb3-6edb-4eaf-994b-c2f508112c02
-# pericentres_lmc = [get_peri(galaxyname, "vasiliev24_L3M11") for galaxyname in classicals]
+pericentres_v24_lmc = [get_peri(galaxyname, "vasiliev24_L3M11", "pericentre_lmc") for galaxyname in classicals]
+
+# ╔═╡ 7e79a3b3-b231-47bb-a984-f35049174f66
+pericentres_v24 = [get_peri(galaxyname, "vasiliev24_L3M11") for galaxyname in classicals]
 
 # ╔═╡ 0a237127-8ebd-4400-b6b5-57f4cee8febc
 ρ_bar = [get_rho_mean_h(galaxyname) for galaxyname in classicals]
 
-# ╔═╡ f3f2f788-ce44-4390-b7c5-fdcd862aff49
-pot_mw = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama/potentials/EP2020.ini"))
+# ╔═╡ 6deb29ed-e2f0-4d54-ae61-f8b8bb0d700c
+aligns = Dict(
+	"carina" => (:left, :center),
+	"sculptor" => (:left, :center),
+	"sagittarius" => (:left, :center),
+	"leo2" => (:left, :top),
+	"draco" => (:left, :bottom),
+)
 
-# ╔═╡ 1ded763d-8f25-44ab-be6f-935f6d26e8c4
-pot_lmc = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama/potentials/vasiliev24/L3M11/potential_lmc_init.ini"))
+# ╔═╡ 34d39ebc-cc90-427b-a492-a556ec0455be
+colors = [
+	1
+	3
+	4
+	1
+	5
+	2
+	1
+	3
+	5
+	4
+	2
+	3
+	]
 
-# ╔═╡ 99c6b883-f7ed-46e7-855b-23e234e1fae4
-pot_mw_lmc = Agama.Potential(file=joinpath(ENV["DWARFS_ROOT"], "agama/potentials/vasiliev24/L3M11/potential_mw_init.ini"))
+# ╔═╡ d9606d05-c279-43c6-8662-8eced5bdfc64
+offsets = Dict(
+	"leo1" => (-15, 0),
+	"draco" => (2, 2),
+	"leo2" => (0, -6),
+	"carina" => (3, 0),
+	"sculptor" => (3, 0),
+	"sagittarius" => (7, 0),
+	"crater2" => (-3, -8),
+	"antlia2" => (-2, 9),
+	"fornax" => (2, -4),
 
-# ╔═╡ 1aea04a4-a1bf-4e04-b73e-2fb9afd052f5
-function get_MW_mean_density(radii=LinRange(7, 150, 10000))
-	Ms = Agama.enclosed_mass(pot_mw, radii)
-	return radii, Ms ./ (4π/3 * radii .^3) * M2MSUN
-end
+)
+
+# ╔═╡ 7533ef4c-38f1-4c12-9953-3a7d4c0cefe1
+
 
 # ╔═╡ ec7d88d3-7503-4c18-9088-04319c6f2e98
 smallfontsize=0.8 * theme(:fontsize)[]
 
-# ╔═╡ 697e49e7-0d4a-4109-95a1-e7602d7cfd70
+# ╔═╡ 09ed0ae8-4189-4057-8bb2-78acad543a44
 let
 	fig = Figure()
 	ax = Axis(fig[1, 1],
-			 xlabel = "pericentre / kpc",
+			 xlabel = "lmc pericentre / kpc",
 			 ylabel = L"$\bar{\rho}_h$ / $\textrm{M}_\odot\,\textrm{kpc}^{-3}$", yscale=log10, 
 			  xscale = log10,
 			  yticks=[1e6, 1e7, 1e8],
-			 limits =(10, 150, 3e5, 3e8)
+			  xticks = [10, 30, 100, 200],
+			  xminorticks = 10:10:150,
+			 limits =(10, 300, 3e5, 3e8)
 			 )
 
 
-	x, y = get_MW_mean_density()
+	x, y = get_MW_mean_density(pot_lmc, units=Agama.VASILIEV_UNITS)
 	lines!(x, 3y, color="black")
 
-	x = middle.(pericentres)
+	x = middle.(pericentres_v24_lmc)
 	y = middle.(ρ_bar)
-	xerr = error_interval.(pericentres)
+	xerr = error_interval.(pericentres_v24_lmc)
 	yerr = error_interval.(ρ_bar)
 	scatter!(x, y)
 	errorscatter!(x, y, xerror=xerr, yerror=yerr)
@@ -167,6 +250,62 @@ end
 
 # ╔═╡ 6c106a00-445b-4e0f-9168-66a9aeb35767
 smalllinewidth=theme(:linewidth)[]/2
+
+# ╔═╡ 697e49e7-0d4a-4109-95a1-e7602d7cfd70
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1],
+			 xlabel = "pericentre / kpc",
+			 ylabel = L"$\bar{\rho}_h$ / $\textrm{M}_\odot\,\textrm{kpc}^{-3}$", yscale=log10, 
+			  xscale = log10,
+			  xticks = [10, 30, 100, 130],
+			  xminorticks = 10:10:150,
+			  yticks=[1e6, 1e7, 1e8],
+			 limits =(10, 150, 3e5, 3e8)
+			 )
+
+
+	x, y = get_MW_mean_density()
+	lines!(x, 3y, color="black", label=L"3\bar{\rho}_\textrm{MW}")
+	text!(15, 2e7, text="likely tidal disruption", fontsize=smallfontsize, rotation=-0.6)
+	band!(x, y*1e-3, 3y, color="black", alpha=0.1)
+
+	for i in eachindex(classicals)
+		x1 = middle(pericentres[i])
+		x2 = middle(pericentres_v24[i])
+		y = middle(ρ_bar[i])
+
+	
+
+		color = COLORS[colors[i]]
+		marker = :circ# markers[i % length(markers) + 1]
+		lines!([x1, x2], 
+			   fill(y, 2), linewidth=smalllinewidth, color=color
+			  )
+		
+		errorscatter!([x1, x2], [y, y], yerror=fill(error_interval(ρ_bar[i]), 2),
+				 color=color, marker=marker, strokewidth=0)
+		scatter!([x2], [y], 
+					  color="white", strokecolor=color, strokewidth=smalllinewidth, marker=marker)
+
+		offset = get(offsets, classicals[i], (-5,0))
+		align = get(aligns, classicals[i], (:right, :center) )
+		text!((x1), y, text=classical_labels[classicals[i]], color=color, align=align, fontsize=smallfontsize * 0.8, offset=offset)
+
+	end
+	
+	# hideydecorations!(ticks=false, minorticks=false)
+
+	# linkyaxes!(ax, ax2)
+
+
+	scatter!([NaN], [NaN], color=:black, marker=:circ, label="MW-only")
+	scatter!([NaN], [NaN], color=:white, strokecolor=:black, strokewidth=smalllinewidth, marker=:circ, label="MW+LMC")
+	axislegend(position=:rb)
+
+	@savefig "rho_mean_pericentre"
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -182,17 +321,27 @@ smalllinewidth=theme(:linewidth)[]/2
 # ╠═50839b67-9514-47b9-add2-0c84d05f12da
 # ╟─43dad299-d8d2-4146-8320-c90a62f3a3f0
 # ╠═0dbc4770-fd1d-4a57-9825-3576900dd7a3
+# ╠═354a9bba-93c0-4c02-8cdc-9fb20063780a
+# ╠═c8a8d5d8-1d50-4bac-8f4f-30d064ef158b
+# ╠═3a4ee436-3a33-468e-9ede-d3ed45356432
 # ╠═475816ca-baa6-4b51-a4b1-aeeec13ff105
 # ╠═ce0a518e-1cc9-4b3c-a9a6-b465830ddcea
-# ╠═aadbdcc6-1695-431d-92de-c08e86e1c1f0
 # ╠═0c08a41a-b21f-4168-82fe-b0ff3da6111e
 # ╠═ef6af06e-492d-44dd-b68e-cf71b3b07347
 # ╠═7b09fdb3-6edb-4eaf-994b-c2f508112c02
+# ╠═7e79a3b3-b231-47bb-a984-f35049174f66
 # ╠═0a237127-8ebd-4400-b6b5-57f4cee8febc
 # ╠═f3f2f788-ce44-4390-b7c5-fdcd862aff49
 # ╠═1ded763d-8f25-44ab-be6f-935f6d26e8c4
 # ╠═99c6b883-f7ed-46e7-855b-23e234e1fae4
 # ╠═1aea04a4-a1bf-4e04-b73e-2fb9afd052f5
+# ╠═7e063f49-0b32-4aff-9a0d-4cac8251fbb3
+# ╠═aadbdcc6-1695-431d-92de-c08e86e1c1f0
+# ╠═6deb29ed-e2f0-4d54-ae61-f8b8bb0d700c
+# ╠═34d39ebc-cc90-427b-a492-a556ec0455be
+# ╠═d9606d05-c279-43c6-8662-8eced5bdfc64
+# ╠═7533ef4c-38f1-4c12-9953-3a7d4c0cefe1
 # ╠═697e49e7-0d4a-4109-95a1-e7602d7cfd70
+# ╠═09ed0ae8-4189-4057-8bb2-78acad543a44
 # ╠═ec7d88d3-7503-4c18-9088-04319c6f2e98
 # ╠═6c106a00-445b-4e0f-9168-66a9aeb35767

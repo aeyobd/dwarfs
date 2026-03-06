@@ -1,0 +1,5 @@
+log_Sigma = nan
+log_Sigma_err = +inf
+log_R_bg = []
+n_points_bg = 0
+n_points_skip = 0

@@ -1,0 +1,12 @@
+# isolation models
+#iso_1e4 = ["isolation", "1e4_new/fiducial", "stars"]
+#iso_1e5 = ["isolation", "1e5_new/fiducial", "stars"]
+#iso_1e6 = ["isolation", "1e6_new/fiducial", "stars"]
+#iso_1e7 = ["isolation", "1e7_new/fiducial", "stars"]
+
+# orbits
+mw_orbits = ["bootes3", "EP2020"]
+mw_lmc_orbits = ["bootes3", "vasiliev24_L3M11"]
+
+# results models
+bootes3 = ["bootes3", "1e6_v35_r3.0/orbit_5Gyr_largeperi/", "exp2d_rs0.20"]

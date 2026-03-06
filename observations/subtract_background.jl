@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
@@ -125,6 +125,9 @@ begin
 	)
 end
 
+# ╔═╡ 4a345e50-fe13-41a2-9f1d-d4a4652ca412
+prof_sub.log_R_bins[end]
+
 # ╔═╡ 33a4d4a2-8f2b-4339-9e89-cf3919c56918
 log_r_label = L"$\log\,R$ /  arcmin"
 
@@ -217,6 +220,7 @@ end
 # ╠═7557d9c9-891a-4bce-88d6-f04e06e81738
 # ╠═fe484bae-bd19-41c0-9d9d-7a6446b99039
 # ╠═cb844ce4-334c-45ce-8343-d38722ec185b
+# ╠═4a345e50-fe13-41a2-9f1d-d4a4652ca412
 # ╠═8a1b3f9e-4a88-4527-b9ee-ebb97b3cfc8d
 # ╠═02612c68-042b-11f0-2f84-e9431cc0ee83
 # ╠═4a985c25-0077-4eae-b2f9-9e7d4caa3c28

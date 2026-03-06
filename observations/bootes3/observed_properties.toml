@@ -8,9 +8,10 @@ dec_em = 0.0
 dec_ep = 0.0
 dec_ref = "grillmair2009"
 
-distance = 46.55860935229591
-distance_em = 0.42685189625800035
-distance_ep = 0.43080150822559915
+distance = 46.6
+# inflated uncertainty
+distance_em = 2.0
+distance_ep = 2.0
 distance_modulus = 18.34
 distance_modulus_em = 0.02
 distance_modulus_ep = 0.02
