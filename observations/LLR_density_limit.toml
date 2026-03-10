@@ -1,0 +1,14 @@
+# this file contains the outer density limits 
+# derived from the local background of CMD + PM 
+# selected stars
+sculptor = 1.8812998393788796
+
+ursa_minor = 1.8161065617136105
+crater2 = 1.7807520004717239
+sextans1 =  1.9373934546778329
+canes_venatici1 = 1.376664173722464
+draco = 1.6200338329256896
+carina = 1.7441384337352812
+leo2 = 0.9200338329256893
+leo1 = 1.1538160503122366
+fornax = 1.9939965448294046
