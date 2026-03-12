@@ -14,6 +14,7 @@ nfw*.txt
 *.log
 core.*
 
+*.dvi
 *.pdf
 *.mp4
 *.gif

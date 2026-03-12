@@ -1,0 +1,43 @@
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathmorphing,arrows.meta,calc}
+
+\begin{document}
+\begin{tikzpicture}[>=Stealth]
+
+% Spiral galaxy (curvilinear line art)
+\begin{scope}[shift={(-6,0)}]
+    % Spiral arms (smooth curves)
+    \draw[line width=1.2pt, smooth] 
+        plot[domain=0:360, samples=100] 
+        ({0.003*\x*cos(\x)}, {0.003*\x*sin(\x)});
+    \draw[line width=1.2pt, smooth] 
+        plot[domain=0:360, samples=100] 
+        ({0.003*\x*cos(\x+180)}, {0.003*\x*sin(\x+180)});
+    
+\end{scope}
+
+% Spheroidal dwarf galaxy (flat design)
+\begin{scope}[shift={(3,0)}]
+    % Dwarf galaxy outline
+    \draw[orange!70, line width=1.5pt, fill=gray!15] (0,0) ellipse (0.5 and 0.5);
+    
+    
+\end{scope}
+
+% Differential force arrows (tidal stretching)
+\begin{scope}[shift={(3,0)}]
+    % Vertical compression
+    \draw[->, line width=1.5pt, blue!70, smooth] (0,1.5) -- (0,1) 
+        node[pos=0, above, font=\small] {compression};
+    \draw[->, line width=1.5pt, blue!70, smooth] (0,-1.5) -- (0,-1);
+    
+    % Horizontal stretching
+    \draw[->, line width=1.5pt, blue!70, smooth] (1,0) -- (2,0) 
+        node[pos=1, right, font=\small] {stretching};
+    \draw[->, line width=1.5pt, blue!70, smooth] (-1,0) -- (-2,0);
+\end{scope}
+
+
+\end{tikzpicture}
+\end{document}
