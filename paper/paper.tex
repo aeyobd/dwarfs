@@ -38,6 +38,7 @@
     citecolor=blue,
 }
 
+\usepackage{bm}
 
 % custom commands
 \newcommand{\V}{\textrm{v}}
@@ -187,7 +188,7 @@ at the probability threshold of 0.2, the purity of line-of-sight velocity member
 high (${\sim}90\%$, J+24).
 
 Fig.~\ref{fig:observed_density_profiles} compares the density
-profiles of Scl, UMi, and eight other classical dSphs. \dbadd{The density profiles are shown out to the radius where the surface density reaches that of background stars with satellite-consistent proper motion and position in a colour-magnitude diagram.} 
+profiles of Scl, UMi, and eight other classical dSphs. The density profiles are shown out to the radius where the surface density reaches that of background stars with satellite-consistent proper motion and position in a colour-magnitude diagram. 
 
 All classical dwarfs are well described by an exponential profile in the inner regions.
 In the outer regions, however, Scl and UMi deviate and show a clear  excess of stars over an exponential law. The deviation from an exponential grows outwards and  reaches ${\sim}2$ orders of magnitude at $8 R_h$. A simple characterization of this excess is provided by a Plummer profile (dashed black line, see Eq.~\ref{EqPlummer}), where the outer region of the profile  approximates a power law rather than an exponential truncation. 
@@ -263,8 +264,8 @@ MW-only potential.
 
 \begin{table}[t]
 \centering
-\caption[Observed Properties of Sculptor]{Observed properties of Sculptor. \dbadd{In order, the properties are right ascension ($\alpha$), declination ($\delta$), distance modulus, distance, corrected proper motion in right ascension ($\mu_{\alpha*}=\mu_\alpha\cos\delta$), proper motion in declination ($\mu_\delta$), line-of-sight systemic velocity ($\V_\text{los}$), line-of-sight velocity dispersion ($\sigma_\V$), the half-light radius ($R_h$), ellipticity, position angle, and absolute V-band magnitude ($M_V$).}
-References are: (1) Muñoz et al. (2018, Sérsic fit), (2) Tran et al. (2022, RR lyrae distance), (3) Alan W. McConnachie and Venn (2020b), (4) Arroyo-Polonio et al. (2024). }
+\caption[Observed Properties of Sculptor]{Observed properties of Sculptor. In order, the properties are right ascension ($\alpha$), declination ($\delta$), distance modulus, distance, corrected proper motion in right ascension ($\mu_{\alpha*}=\mu_\alpha\cos\delta$), proper motion in declination ($\mu_\delta$), line-of-sight systemic velocity ($\V_\text{los}$), line-of-sight velocity dispersion ($\sigma_\V$), the half-light radius ($R_h$), ellipticity, position angle, and absolute V-band magnitude ($M_V$).}
+References are: (1) Muñoz et al. (2018, Sérsic fit), (2) Tran et al. (2022, RR lyrae distance), (3) Alan W. McConnachie and Venn (2020b), (4) Arroyo-Polonio et al. (2024). 
 \label{tbl:scl_obs_props}
 \begin{tabular}{lll}
 \hline
@@ -352,29 +353,11 @@ our selected orbit. We take the first apocentre after a look-back time of 10 Gyr
 
 For the Scl MW+LMC model, we select instead the $6\sigma$ smallest pericentre with respect to the LMC (by doubling the observed uncertainties) because we do not account for uncertainties in the LMC trajectory. We only integrate this model backwards for $2\,\Gyr$ because, in the presence of the LMC, Scl is likely completing its first orbit around the Milky Way and was possibly outside the MW virial boundary before then. 
 
-UMi's N-body model deviates from a point-particle orbit due to dynamical self-friction \citep[e.g.,][]{white1983, miller+2020}. To better match the present-day position and velocity, we iteratively adjust UMi's initial conditions. Initially, starting with low-resolution runs, we shift
-the cylindrical actions of the initial orbit by the final difference in actions
-after tidal evolution. Once the initial actions have converged (2
-iterations), we change the initial action angles by the final difference in
-action angles (2 more iterations). This method converges to an orbit agreeing
-with the observed kinematics of UMi.
-% ??I think that it would be worthwhile to spell out excplicitly how this iterative correction model works, in an Appendix?? I think that a lot of people would be interested...
+UMi's N-body model deviates from a point-particle orbit due to dynamical self-friction \citep[e.g.,][]{white1983, miller+2020}. To better match the present-day position and velocity, we iteratively adjust UMi's initial conditions using the action-angle based method presented in Appendix~\ref{sec:action_correction}. This method converges to an orbit agreeing
+with the observed kinematics of UMi after 4 iterations.
 Since Scl's orbit is less
 strongly affected by tides, we do not carry out this correction for Scl.
 
-
-\begin{figure}
-    \centering
-    \includegraphics{figures/orbits.pdf}
-    \caption{
-        The orbits of Scl (left) and UMi (right) in the  MW-only potential (light blue lines) and the MW+LMC
-        potential (light orange lines). Black lines show our selected N-body models and
-        the green dashed line shows the LMC trajectory. The top panels show orbits in the $y$--$z$ plane and the bottom panels show orbits in terms of Galactocentric radius and time.
-}
-
-    \label{fig:orbits}
-\end{figure}
-%?? I am unsure what the "N-body" label on the solid black lines mean. Is this the small-pericentre  orbit chosen for the N-body run?? It would be good to state so explicitly in the caption...
 
 
 
@@ -481,16 +464,28 @@ Note that the stellar component is about $10\times$ more compact than the dark m
     \caption{
        The initial circular velocity profiles in terms of radius
         for Sculptor and Ursa Minor for the MW-only models with exponential
-        stars. The contribution of the stellar component is shown in orange(??); the total circular velocity profile is shown in magenta(??). We plot the models after 5\,Gyr of evolution in isolation, which are nearly identical to the initial conditions. The vertical grey line marks the Jacobi radius (Eq.~\ref{eq:r_jacobi}), and the green dot marks the observed velocity dispersion and half-light radius of each dwarf at $z=0$.        
+        stars. The contribution of the stellar component is shown in orange; the total circular velocity profile is shown in magenta. We plot the models after 5\,Gyr of evolution in isolation, which are nearly identical to the initial conditions. The vertical grey line marks the Jacobi radius (Eq.~\ref{eq:r_jacobi}), and the green dot marks the observed velocity dispersion and half-light radius of each dwarf at $z=0$.        
     }
     \label{fig:initial_halos}
 \end{figure}
-%??Should the order of Fig. 2 and 3 be reversed? I think that you quote and discuss Fig3 before Fig. 2, which should be changed??
 
 
 \section{Results} \label{sec:results}
 
 \subsection{Orbits of Sculptor and Ursa Minor}
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/orbits.pdf}
+    \caption{
+        The orbits of Scl (left) and UMi (right) in the  MW-only potential (light blue lines) and the MW+LMC
+        potential (light orange lines). Black lines show the \dbadd{orbits of our N-body runs} and
+        the green dashed line shows the LMC trajectory. The top panels show orbits in the $y$--$z$ plane and the bottom panels show orbits in terms of Galactocentric radius and time.
+}
+
+    \label{fig:orbits}
+\end{figure}
+
 Fig.~\ref{fig:orbits} shows orbits of Scl and UMi in the MW-only and MW+LMC potentials. In the MW-only potential, both galaxies follow relatively well-constrained orbits consistent with long-term MW satellites. Scl experiences three pericentric passages over the past 5 Gyr reaching a distance of $53\pm 3\,\kpc$ from the centre. Over the same time, UMi experiences four smaller pericentric passages, reaching a distance of $37\pm3\,\kpc$.  
 
 Including the LMC dramatically modifies Scl's orbit, making it likely that Scl is coming into the Milky Way for the first time, and has just completed its first pericentric passage. Scl has also passed close to the LMC about 100\,Myr ago, making the LMC potentially an important source of tidal stress. As we discuss later, the LMC-induced modification to Scl's orbit has the net effect of reducing the todal tidal effect, mainly because it reduces the number of pericentric passages around the Milky Way.
@@ -560,7 +555,6 @@ since pericentre, $\Delta t$,
     R_\text{break} = C\,\sigma_{v}\,\Delta t,
 \end{equation} 
 where the empirical constant is $C \approx 0.55$  \citep{penarrubia+2009}.
-%??Note that I changed r_break to R_break because it is a projected radius in eq.9. Please check that there are no further instances of r_break that remain unchanged??
 
 Both the Jacobi and break radii are marked in Fig.~\ref{fig:stellar_model_density}, and indicate that tidal effects should only  be apparent outside ${\sim}100$ arcminutes in either galaxy. 
 
@@ -606,12 +600,9 @@ Such distinct populations could indicate past accretion events or multiple gener
 
 We explore this idea in Fig.~\ref{fig:metallicity_gradient}, where we assume that Scl and UMi's density profiles results from the overlap of two distinct populations with different mass and radial extent.  The blue and red curves in the top panels of the figure show one such possible decomposition, where we have assumed that the outer component starts to dominate over the inner one at $20$ arcmin and at $31$ arcmin from the centre in the case of Scl and UMi, respectively. (Details on the decomposition are provided in Appendix \ref{sec:double_exp_fits}.) These two populations should have different velocity dispersions, as shown in the bottom panel of Fig.~\ref{fig:metallicity_gradient}. The main prediction from this decomposition is that the velocity dispersion of both Scl and UMi should increase in the outer regions, as the outer, dynamically hotter component starts to dominate. There is a hint in the observed velocity dispersion profile that this prediction might be observed, but this suggestion should be confirmed by a more detailed study.
 
-\dbadd{
 This is because, without further constraints, many different decompositions into discrete populations are possible. For example, \citet{arroyo-polonio+2024} find two populations for Scl with (sphericalized) half-light radii of $6.2$ and $13$ arcminutes and with 66\% of stars in the outer population. We instead find two populations with half-light radii of 7.85 and 17.1 arcminutes, with only 31\% of stars in the outer population. As such, both  \citepos{arroyo-polonio+2024} populations would correspond to our inner population. If these population are indeed real, it may well be that Scl may be best described with three separate components, also suggested in \citet{arroyo-polonio+2024}.
 
-In comparison, \citep{pace+2020} find two populationsin Umi(??), with half-light radii of 11.4 and 23.2 arcminutes (for MMT??) and with 24\% of stars in the outer component. Our two populations are similar: with half-light radii of 10.6 and 30 arcminutes, with 25\% of stars in the outer component. Therefore, UMi's extended density profile likely reflects this transition between an inner and outer stellar population.
-}
-%??I am not sure what MMT stands for in the previous paragraph??
+In comparison, \citet{pace+2020} find two populations in UMi, with half-light radii of 11.4 and 23.2 arcminutes (for the Multiple Mirror Telescope/Hectochelle sample from \citealt{spencer+2018}) and with 24\% of stars in the outer component. Our two populations are similar: with half-light radii of 10.6 and 30 arcminutes, with 25\% of stars in the outer component. Therefore, UMi's extended density profile likely reflects this transition between an inner and outer stellar population.
 
 Another observation that may be used to constrain the two-component model is the presence of a metallicity gradient, which would arise naturally if each component had different average metallicities. Assuming that Scl's two components have metallicities $\mathrm{[Fe/H]}=-1.67$ (inner) and $-1.92$ (outer) we are able to fit the observed mean metallicity gradient in Scl (left-middle panel in Fig.~\ref{fig:metallicity_gradient}). The same is true for UMi, where the inner and outer components are assumed to have $\mathrm{[Fe/H]} = -2.15$ and $-2.52$ respectively. The success of this simple model at accounting for the main trends in the velocity dispersion and metallicity profiles of these galaxies suggests that a further, more detailed study of this possibility is warranted. 
 
@@ -631,7 +622,7 @@ Another observation that may be used to constrain the two-component model is the
     \caption{
         \textbf{Top:} Density profiles of Sculptor (top left) and Ursa Minor (top
         right) with double exponential fits (see
-        appendix~\ref{sec:double_exp_fits}). Blue, orange(??), and magenta(??) lines
+        appendix~\ref{sec:double_exp_fits}). Blue, rust, and magenta lines
         represent the inner, outer, and combined profiles, respectively.
         \textbf{Middle:} The metallicities of member stars in both galaxies as a function of radius
         radius. For Sculptor, we plot stars from
@@ -764,7 +755,7 @@ apparent gradient induced by the dwarf's proper motion
 correction from both effects induces an apparent gradient of about
 $1.3\,\mathrm{km\,s^{-1}\,deg^{-1}}$ for Sculptor and less for Ursa Minor. 
 
-Using the spectroscopic samples, we derive the velocity dispersion profiles in the GSR frame through a Bayesian fit to stars within bins of 0.10 dex in $\log R$. We solve for both the systemic velocity and velocity dispersion in each bin, accounting for the uncertainties of each individual star using a No-U Turn Sampler. For priors, we assume the systemic velocity is drawn from a normal distribution with mean 0 and standard deviation 100\,$\kms$, and the velocity dispersion is drawn from a uniform distribution between 0 and $20\,\kms$. 
+Using the spectroscopic samples, we derive the velocity dispersion profiles in the GSR frame through a Bayesian fit to stars within bins of 0.10 dex in $\log R_\textrm{ell}$. We solve for both the systemic velocity and velocity dispersion in each bin, accounting for the uncertainties of each individual star using a No-U Turn Sampler. For priors, we assume the systemic velocity is drawn from a normal distribution with mean 0 and standard deviation 100\,$\kms$, and the velocity dispersion is drawn from a uniform distribution between 0 and $20\,\kms$. 
 
 
 \subsection{Density profile fits} \label{sec:double_exp_fits}
@@ -775,7 +766,7 @@ For the double exponential fits, we extend \citet{jensen+2024} to fit a double e
 
 To fit the metallicity gradient, we instead assume that the density profile follows the double exponential fit above, and then fit a mixture model of the metallicity gradient as a sum of two Gaussian distributions. The four free parameters of this model are the mean and metallicity dispersion of the inner and outer components. 
 
-Table~\ref{tbl:double_exp_fits} contain the derived parameters and quantile uncertainties for both Scl and UMi. We find strong evidence for multiple populations with different mean metallicities. Our outer population scale radius is smaller than in \citet{jensen+2024} for Scl but is similar for Ursa Minor. 
+Table~\ref{tbl:double_exp_fits} contain the derived parameters and quantile uncertainties for both Scl and UMi. We find strong evidence for multiple populations with different mean metallicities. Our outer population scale radius is smaller than in \citet{jensen+2024} for Scl but is similar for UMi. 
 
 
 \begin{table}
@@ -810,9 +801,74 @@ $\sigma_\text{[Fe/H]}$ (dex)  & $0.347^{+0.015}_{-0.014}$     & $0.505^{+0.067}_
 
 
 
-\section{Correcting the initial conditions of N-body simulations}
-In this section, we outline our method to correct the initial positions for a
+\section{Correcting the initial conditions of N-body simulations}\label{sec:action_correction}
+In this section, we outline our method to correct the initial position and velocity to attain a specified final position for an N-body simulation by using differences in actions and action-angles.
+
+Actions, $\bm{J}$, are three integrals of motion which also form canonical momenta for a Hamiltonian \citep[see, e.g.,][section 3.5]{BT2008}. The corresponding canonical positions are action-angles, $\bm\theta$, which vary from $0$ to $2\pi$.  Together, actions and action-angles form a canonical coordinate system for a Hamiltonian. 
+While actions are invariant in time ($\dot{\bm\theta} = 0$), action-angles increase linearly with time according to a corresponding frequency: $\bm\theta(t) = \bm\theta(0) + \bm \Omega\,t$ where $\bm\Omega = \partial H / \partial \bm J$ for a Hamiltonian $H$. 
+
+\agama{} provides utilities for converting between position-velocity space and action/angle space. To compute actions and angles, \agama{} uses the St\"ackel fudge, which assumes the potential is well-approximated by a St\"ackel potential. The inverse problem, converting to position-velocity space is calculated through the `torus mapping' code from \citet{binney+mcmillan2016}. While neither transformation is exact, the precision is sufficient for our needs.
+
+In order to correct the initial positions, we make two approximations. First, a change to the initial actions $\bm J_i$ results in approximately the same change in the final, N-body evolved actions $\bm J_f$. Second, if the initial actions are unchanged ($\Delta \bm J_i = 0$),  then a change to the initial action-angles $\bm \theta_i$ results in commensurate change to the final action angles $\bm \theta_f$. 
+
+With these approximations, our procedure for adjusting the initial conditions is as follows:
+\begin{enumerate}
+    \item Compute the action and angles of the centre of the N-body subhalo at the beginning and end of the simulation: $(\bm \theta_i, \bm J_i)$ and $(\bm \theta_f, \bm J_f$). Compute as well the target final actions and angles, $(\bm \theta_t, \bm J_t)$. 
+    \item If the final actions are substantially different from the intended actions, adjust the initial actions based on the final deviation in actions: $\Delta \bm J_i = \gamma(\bm J_t - \bm J_f)$, where $\gamma \in (0, 1]$ is a scale factor to aid convergence as needed.
+    \item If the final actions have converged to near the target values, adjust the initial angles based on the final deviation in action-angles $\Delta \bm \theta_i = \gamma(\bm \theta_t - \bm \theta_f)$. 
+    \item Convert the final actions back into positions/velocities and rerun the simulation. 
+\end{enumerate}
+
+Fig.~\ref{fig:action_corrections} illustrates this procedure as applied to our UMi simulation. As UMi mostly orbits in the $y$--$z$ plane, $J_z$ is the highest action and also changes the most due to the dissipation of energy through dynamical self-friction. Note that besides the dissipation in the action values due to mass loss, there is also an inherent variation in the actions over time due to the limitations of the St\"ackel fudge and numerical noise from the simulation. 
+We begin by using lower-resolution $10^5$ particle simulations. Indeed, by shifting the initial actions by the final difference (black arrows), the next iteration achieves near the target actions. For the third iteration, we increase the resolution again (simulation 3 vs 3b), which changes the evolution slightly and motivates one additional action correction.  
+After this correction (the fourth iteration), the final actions are nearly exactly the target actions. 
+
+While the evolution of actions is primarily described by a translation of the original curve, the action-angle evolution depends on the initial actions since the frequencies $\Omega_i$ describing the evolution of $\theta_i$ depend on the values of the actions. As such, the curves in the first four iterations all appear slightly different. However, when the actions are left unchanged (for the last iteration), the action-angle evolution curve simply translates and results in near-perfect final conditions. 
+
+Fig.~\ref{fig:obs_action_corrections} shows the final observed coordinates and velocities for each iteration as compared to the target. The final position agrees nearly perfectly (within uncertainties) with the intended final position of the simulation.
 
 
+
+
+\begin{table}[]
+    \caption{The derived shifts to actions ($J_r$, $J_z$, $J_\phi$) or action angles ($\theta_r$, $\theta_z$, $\theta_\phi$) and the number of particles for each iteration of UMi's orbit.}
+    \centering
+    \begin{tabular}{l r r r r}
+    \hline
+    iteration & 1 & 2 & 3 & 4 \\
+    \hline
+    $\Delta J_r / \mathrm{kpc\ km\ s^{-1}}$  & $+75$  &      $+19$  &     $-15$  &       --  \\
+    $\Delta J_z / \mathrm{kpc\ km\ s^{-1}}$     & $+431$  &      $+52$  &     $-62$  &       --  \\
+    $\Delta J_\phi / \mathrm{kpc\ km\ s^{-1}}$  & $-143$  &     $-20$  &      $+52$  &       --  \\
+    $\Delta \theta_R$ & --  &       --  &       --  &      $-0.22$  \\
+    $\Delta \theta_z$ & --  &       --  &       --  &      $-0.10$  \\
+    $\Delta \theta_\phi$ & --  &       --  &       --  &       $+0.09$  \\
+    particles & $10^5$ & $10^5$ & $10^6$ & $10^6$ \\
+     \hline
+     \end{tabular}
+    \label{tab:action_shifts}
+\end{table}
+
+
+
+\begin{figure*}
+    \centering
+    \includegraphics{figures/action_corrections.pdf}
+    \caption{The evolution of initial actions (left) and relative action angles (right) over time for each iteration of the simulation for Ursa Minor for $r$ (top row), $z$ (middle row), and $\phi$ (bottom row). 
+    The black arrows show the changes to actions or action-angles to the initial conditions, and the coloured lines show the actions or action angles for each timestep of each simulation. 
+    The action-angle panels subtract out the expected evolution of the actions for the target point-particle orbit ($\Delta \theta_i(t) = \Omega_i\, t$).
+    The 3b model is the same initial conditions as 3 but increasing the resolution. Note that the preferred final position is one snapshot later, causing the slight shift in the relative action-angles.
+    }
+    \label{fig:action_corrections}
+\end{figure*}
+
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/observed_action_corrections.pdf}
+    \caption{The final sky positions (top), proper motions (middle), and distance and line-of-sight velocities (bottom) for each iteration of the UMi simulation. The black point with error bars shows the target final position with the observed uncertainties, using the half-light radius for the position uncertainties. The colour points are labeled by the iteration, with the 5th iteration as our final, presented simulation.
+    }
+    \label{fig:obs_action_corrections}
+\end{figure}
 \end{document}
 
