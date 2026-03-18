@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -94,6 +94,9 @@ end
 
 # ╔═╡ 5ec475a1-14bb-40f6-856a-69fa9efe087a
 ⊕ = RVUtils.:⊕
+
+# ╔═╡ 12ce6511-38d0-4c7e-abb7-40f2ef2dc749
+
 
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
@@ -255,6 +258,10 @@ df_gsr = DataFrame(samples_gsr)
 # ╔═╡ 1f251e67-7fed-4375-8bed-697704302e43
 summary_vz = RVUtils.summarize(samples_gsr)
 
+# ╔═╡ a3d469bb-562d-4d5e-8af9-dc417693ce5c
+±
+
+
 # ╔═╡ a5f1a339-6093-49ea-bd10-b513688d668c
 median(df_gsr.μ) + Δv_gsr
 
@@ -264,14 +271,19 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = histogram(Float64.(memb_stars.vz), 6, normalization=:pdf)
-	
-	RVUtils.plot_samples!(df_gsr, LinRange(200, 250, 100), thin=160)
+	h = histogram(Float64.(memb_stars.vz), 5, normalization=:pdf)
+
+	stephist!(Float64.(memb_stars.vz), bins=5, normalization=:pdf)
+	RVUtils.plot_samples!(df_gsr, LinRange(210, 260, 100), thin=160)
 	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	@savefig "RV_hist_mcmc"
 	fig
 end
+
+# ╔═╡ 6dd003db-bd29-4872-94f2-445f5c4536ba
+stephist(Float64.(memb_stars.vz), bins=9, normalization=:)
+
 
 # ╔═╡ c1cf3a80-1c26-4417-9ddf-1046f3f5f608
 CSV.write("processed/mcmc_samples_vz$FIGSUFFIX.csv", samples_gsr)
@@ -614,6 +626,7 @@ end
 # ╠═bd6dfd17-02ee-4855-be37-fecfdab6776f
 # ╠═2ab0018f-1628-4f5e-b7da-370eb20c00d0
 # ╠═5ec475a1-14bb-40f6-856a-69fa9efe087a
+# ╠═12ce6511-38d0-4c7e-abb7-40f2ef2dc749
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═66c35421-f6d3-4b2d-86e4-319f5476b222
@@ -651,8 +664,10 @@ end
 # ╠═f8904d41-c448-417c-bbe9-6626a6283b67
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 # ╠═1f251e67-7fed-4375-8bed-697704302e43
+# ╠═a3d469bb-562d-4d5e-8af9-dc417693ce5c
 # ╠═a5f1a339-6093-49ea-bd10-b513688d668c
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
+# ╠═6dd003db-bd29-4872-94f2-445f5c4536ba
 # ╠═c1cf3a80-1c26-4417-9ddf-1046f3f5f608
 # ╠═433d1d51-4b2f-4bc0-807a-813eb215231a
 # ╠═b32a6521-dae5-4d2a-89ab-6e8b3bc43be3

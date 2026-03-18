@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -66,6 +66,9 @@ raw_table = CSV.read("../data/deimos_velocities.txt", DataFrame, ignorerepeated=
 	header=["system", "ra", "dec", "r_mag", "g_r", "nmask", "texp", "SN", "RV",
 			"RV_err", "WECaT", "EWCaT_err", "FE_H", "FE_H_err", "Var", "P_SAT_deimos"]
 					)
+
+# ╔═╡ 0272cf3b-4299-488a-9d63-4262813c617e
+hist(raw_table.Var)
 
 # ╔═╡ d5e1fc38-9b93-4024-9259-c9253914c72a
 boo3_deimos = raw_table[raw_table[!, "system"] .== Ref("Boo3"), :]
@@ -214,11 +217,8 @@ end
 # ╔═╡ d3440c3e-be84-403f-a04d-68a237375b62
 σ = obs_properties["sigma_v"]
 
-# ╔═╡ 33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
-filt_memb = μ - 3σ .< boo3_deimos.RV .<  μ + 3σ
-
-# ╔═╡ 98167648-091f-42a1-aac2-70f985f06e09
-filt_memb
+# ╔═╡ afc161e5-8cd7-4c33-b8bc-40cf23a5e284
+filt_memb = (boo3_deimos.P_SAT_deimos .> 0.5) .& (boo3_deimos.Var .<= 0)
 
 # ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
 boo3_members = boo3_deimos[filt_memb, :]
@@ -333,6 +333,7 @@ RVUtils.plot_samples(boo3_carlin_memb, samples_carlin, bins=5)
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╠═d6a2ebb4-f125-4f28-9009-fc67d5dda5a1
+# ╠═0272cf3b-4299-488a-9d63-4262813c617e
 # ╠═d5e1fc38-9b93-4024-9259-c9253914c72a
 # ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═0137b308-f0c6-4e73-afa6-346797b6f304
@@ -363,11 +364,10 @@ RVUtils.plot_samples(boo3_carlin_memb, samples_carlin, bins=5)
 # ╠═c0c02bce-e0f9-4fa0-bba6-a5360a825e23
 # ╠═d3e682ee-0dab-4aa5-9f3e-423a9d2f92b0
 # ╠═c873ccf2-8ecf-4a85-a152-76acd1c1fc62
-# ╠═98167648-091f-42a1-aac2-70f985f06e09
 # ╠═344f3c29-0873-4180-9025-51aeaeb2c681
 # ╠═fe505b23-c610-4e44-98f4-fb4c9ffe0388
 # ╠═d3440c3e-be84-403f-a04d-68a237375b62
-# ╠═33d34e7e-0c0a-4c49-b0c1-0116c8ef7a38
+# ╠═afc161e5-8cd7-4c33-b8bc-40cf23a5e284
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
 # ╟─214ed7f8-f338-4186-8f6d-870498486c0a
 # ╠═af916274-d081-45dd-ba62-626f7d409ebe
