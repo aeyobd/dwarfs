@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -67,26 +67,8 @@ Nmax = 100 # number of orbits to plot
 # ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
 modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits",)
 
-# ╔═╡ b919812e-2232-470d-9a42-f61f37fbc5ae
-
-
-# ╔═╡ 9efc0091-ea97-439a-bbf4-5c8b5f1127fc
-modeldir_no = joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor", "vasiliev24_M11")
-
-# ╔═╡ fd7246ec-212c-4255-a658-61bd82b9b7e0
-
-
-# ╔═╡ 453d7f2e-91a4-46b5-9697-a4548f145cec
-
-
 # ╔═╡ ff6522d0-84cb-4521-8400-61c02973d535
 lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11")) |> reverse
-
-# ╔═╡ e201e22e-bab4-4da9-8273-a59ce73f83a3
-# lmc_orbit_L10 = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/L3M10")) |> reverse
-
-# ╔═╡ 9028c3ec-c8fd-4b2b-a76d-4c16682e24db
-# lmc_orbit_light = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/L2M11")) |> reverse
 
 # ╔═╡ cb4788e1-5b01-4387-9188-745890b48217
 function plot_yz!(ax, positions::AbstractMatrix;
@@ -192,14 +174,14 @@ sw = @lift $(theme(:linewidth)) / 2
 function plot_yz_sun!(;kwargs...)
     X_SUN = [-8.1219733661223, 0.0, 0.0208]
 
-    scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="the Sun", strokewidth=sw, kwargs...)
+    scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="The Sun", strokewidth=sw, strokecolor=:black, kwargs...)
 end
 
 # ╔═╡ 51b371cc-6ba6-4cd5-8060-42261971cf91
-kwargs_mw_only = (; color=COLORS[1], alpha=0.05, linestyle=:solid, label="Dwarf: MW-only" => (; alpha=0.5), time_min=t_min)
+kwargs_mw_only = (; color=COLORS[1], alpha=0.05, linestyle=:solid, label="Point-particle: MW-only" => (; alpha=0.5), time_min=t_min)
 
 # ╔═╡ 7ef18abc-99ff-466a-8f68-88dc8cdefb31
-kwargs_mw_lmc = (; color=COLORS[2], alpha=0.05, linestyle=:solid, label="Dwarf: MW+LMC" => (; alpha=0.5), time_min=t_min)
+kwargs_mw_lmc = (; color=COLORS[2], alpha=0.05, linestyle=:solid, label="Point-particle: MW+LMC" => (; alpha=0.5), time_min=t_min)
 
 # ╔═╡ 4ca15028-782c-4480-afae-258d92d5e772
 kwargs_lmc = (; color=COLORS[3],  label="LMC", time_min=t_min, linewidth=sw[]*3, linestyle=:dash, rasterize=rasterize)
@@ -212,7 +194,7 @@ kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, raste
 
 # ╔═╡ 9340b2c1-bf46-4959-8d48-9117926bbc1f
 let
-	fig = Figure(size=(3.5*72, 4*72))
+	fig = Figure(size=(5*72, 5*72))
 
 	ax_scl = Axis(fig[1,1],
 		title = "Sculptor",
@@ -223,12 +205,16 @@ let
 		yticks = -200:200:200,
 
 )	
+	# lines!([NaN], [NaN], color=:black, label="N-body: MW-only")
+
+	# lines!([NaN], [NaN], color=:black, label="N-body: MW+LMC", linestyle=:dot)
+	# axislegend(position=:lb)
 	plot_yz!(ax_scl, orbits_scl; kwargs_mw_only...)
 	plot_yz!(ax_scl, orbits_scl_lmc; kwargs_mw_lmc...)
 	plot_yz!(ax_scl, best_scl; kwargs_best...)
 	plot_yz!(ax_scl, best_scl_lmc; kwargs_best_lmc...)
 	plot_yz!(ax_scl, lmc_orbit; kwargs_lmc...)
-	plot_yz_sun!()
+	# plot_yz_sun!()
 
 	ax_scl_t = Axis(fig[2,1],
 		xlabel = "time / Gyr",
@@ -257,7 +243,7 @@ let
 	plot_yz!(ax_umi, orbits_umi_lmc; kwargs_mw_lmc...)
 	plot_yz!(ax_umi, best_umi; kwargs_best...)
 	plot_yz!(ax_umi, lmc_orbit; kwargs_lmc...)
-	plot_yz_sun!()
+	# plot_yz_sun!()
 
 	ax_umi_t = Axis(fig[2,2],
 		limits=(-9.5, 0.5, 0, 150),
@@ -298,14 +284,8 @@ end
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
-# ╠═b919812e-2232-470d-9a42-f61f37fbc5ae
-# ╠═9efc0091-ea97-439a-bbf4-5c8b5f1127fc
-# ╠═fd7246ec-212c-4255-a658-61bd82b9b7e0
-# ╠═453d7f2e-91a4-46b5-9697-a4548f145cec
 # ╠═49cca906-53e3-4531-a936-119d8b372c61
 # ╠═ff6522d0-84cb-4521-8400-61c02973d535
-# ╠═e201e22e-bab4-4da9-8273-a59ce73f83a3
-# ╠═9028c3ec-c8fd-4b2b-a76d-4c16682e24db
 # ╠═cb4788e1-5b01-4387-9188-745890b48217
 # ╠═185947eb-012f-4c7e-ae2a-fd04ef58e8f7
 # ╠═6c1b2974-df12-4b7c-a504-8223f893c50c

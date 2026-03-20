@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -299,7 +299,7 @@ let
 	bins, counts, err = lguys.histogram(apos)
 	scatter!(lguys.midpoints(bins), counts)
 
-	scatter!(props_special.apocentre, zeros(Norb), color=orbit_colors, strokewidth=1)
+	scatter!(props_special.apocentre, zeros(Norb), color=orbit_colors, strokewidth=0, marker=:star5, markersize=ms_special)
 
 	fig
 end
@@ -316,7 +316,9 @@ let
 	bins, counts, err = lguys.histogram(df_props.time_last_peri .* lguys.T2GYR, bins)
 	scatter!(lguys.midpoints(bins), counts)
 	
-	scatter!(props_special.time_last_peri * T2GYR, zeros(Norb), color=orbit_colors, strokewidth=1)
+	scatter!(props_special.time_last_peri * T2GYR, zeros(Norb), color=orbit_colors, strokewidth=0, marker=:star5, markersize=ms_special)
+
+
 
 	fig
 end
@@ -458,7 +460,7 @@ let
 	fig = Figure()
 	ax = Axis(fig[1,1],
 		xlabel="time / Gyr",
-		ylabel="Scl–MW distance / kpc"
+		ylabel="Sat–MW distance / kpc"
 	)
 
 	for i in eachindex(orbits)
@@ -662,7 +664,7 @@ begin
 		@printf "pericentre:\t %0.1f\n" peris_special[i]
 		@printf "apocentre: \t %0.1f\n" props_special.apocentre[i]
 
-		@printf "time initial\t%f \n" times[i][end] - times[1][t]
+		@printf "time initial\t%f \n" times[i][end] - times[i][1]
 		@printf "radius initial\t%f\n" rs[i][t]
 		@printf "intial position: [%f, %f, %f]\n" positions[i][:, t]...
 		@printf "intial velocity: [%f, %f, %f]\n" -1* velocities[i][:, t]...
@@ -736,8 +738,8 @@ end
 # ╟─50baf5a6-fb5b-494e-95f3-53414a9f1cc0
 # ╠═ca1c236e-795a-408b-845b-9c13bc838619
 # ╠═56ad8584-37bc-4c06-a1a4-6044fe1b1a2b
-# ╟─46b4242b-8af7-4233-8ecf-d86740b4c884
-# ╟─5a903509-e2cc-4bac-9c59-d1689ccc408e
+# ╠═46b4242b-8af7-4233-8ecf-d86740b4c884
+# ╠═5a903509-e2cc-4bac-9c59-d1689ccc408e
 # ╠═92aac8e8-d599-4a1e-965e-e653bc54c509
 # ╠═471a5501-bc7b-4114-be1a-9088b4e674cd
 # ╠═68b0383a-3d5a-4b94-967c-f0e31e8a0ce1

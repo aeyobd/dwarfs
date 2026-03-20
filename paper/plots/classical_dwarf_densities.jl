@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -134,12 +134,24 @@ end
 
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 let
-	fig = Figure()
+	fig = Figure(size=(3.5, 3) .* 72)
 
+	ax_lin = Axis(fig[1,1], 
+				 xaxisposition=:top,
+				 xscale = log10,
+				 limits=((10^-1.5, 10^1), nothing),
+				  xticks = [0.1, 1, 10],
+				  xtickformat = x -> ["0.1", "1", "10"],
+				  xticksmirrored = false,
+				 xlabel = L"R_\textrm{ell}\ / \ R_h",)
+	hideydecorations!()
+	
 	ax = Axis(fig[1,1], 
 		ylabel = L"\log\,\Sigma\ / \ \Sigma_h",
 				xticks = -2:1:1,
-		limits=(-1.5, nothing, -4.2, 1.1)
+		limits=(-1.5, nothing, -4.2, 1.1),
+		xaxisposition=:bottom,
+			  xticksmirrored = false
 
 	)
 

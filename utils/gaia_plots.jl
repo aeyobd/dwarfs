@@ -3,6 +3,8 @@ using Makie
 using Measurements
 using KernelDensity
 
+using OrderedCollections
+
 red = COLORS[6]
 
 const plot_labels = OrderedDict(

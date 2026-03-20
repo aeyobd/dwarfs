@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -53,6 +53,9 @@ end
 
 # ╔═╡ cb844ce4-334c-45ce-8343-d38722ec185b
 @bind n_bins_cut confirm(NumberField(0:1:100))
+
+# ╔═╡ 56b046a3-4e9f-43ef-a248-e77972b9ea34
+import NaNMath
 
 # ╔═╡ 4a985c25-0077-4eae-b2f9-9e7d4caa3c28
 import NaNMath as nm
@@ -113,7 +116,7 @@ Sigma_bg_u = LilGuys.Measurement(Sigma_bg, Sigma_bg_err)
 # ╔═╡ a0b6e938-be54-45e1-9433-3f68f2cbb8da
 begin
 	Sigma_sub = 10 .^ prof.log_Sigma .- 10 .^ Sigma_bg_u
-	log_Sigma_sub = log10.(Sigma_sub[1:end-n_bins_bg-n_bins_cut])
+	log_Sigma_sub = NaNMath.log10.(Sigma_sub[1:end-n_bins_bg-n_bins_cut])
 	prof_sub = LilGuys.SurfaceDensityProfile(
 		R_units=prof.R_units,
 		log_R=prof.log_R[1:end-n_bins_bg-n_bins_cut],
@@ -220,6 +223,7 @@ end
 # ╠═7557d9c9-891a-4bce-88d6-f04e06e81738
 # ╠═fe484bae-bd19-41c0-9d9d-7a6446b99039
 # ╠═cb844ce4-334c-45ce-8343-d38722ec185b
+# ╠═56b046a3-4e9f-43ef-a248-e77972b9ea34
 # ╠═4a345e50-fe13-41a2-9f1d-d4a4652ca412
 # ╠═8a1b3f9e-4a88-4527-b9ee-ebb97b3cfc8d
 # ╠═02612c68-042b-11f0-2f84-e9431cc0ee83

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -153,62 +153,6 @@ function get_profiles(df, dist=nothing)
 	return prof, prof_outer
 end
 
-# ╔═╡ 8bbf2aa6-0804-4f18-b5e6-4b919635663e
-function plot_median_profile(gs, df, prof_obs)
-	ax = Axis(gs, xlabel = "log R / arcmin", ylabel = L"log $\Sigma_\star$ / arcmin$^{-2}$")
-	
-	errorscatter!(prof_obs.log_R, (prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma), color=:black, markersize=4)
-
-	
-	x = LinRange(-1, 2.5, 1000)
-
-	R = 10 .^ x
-	
-	prof, prof_outer = get_profiles(df)
-	prof_double = LilGuys.DoubleExp2D(prof.M, prof.R_s, prof_outer.M, prof_outer.R_s)
-
-
-	scale = sum(prof_obs.counts)
-	y = @. log10(LilGuys.surface_density(prof, R) * scale)
-	y2 = @. log10(LilGuys.surface_density(prof_outer, R) * scale)
-	y3 = @. log10(LilGuys.surface_density(prof_double, R) * scale)
-	lw = theme(:linewidth)[]/2
-	lines!(x, y, color=COLORS[1], linewidth=lw)
-	lines!(x, y2, color=COLORS[4], linewidth=lw)
-	lines!(x, y3, color=COLORS[5], linewidth=lw)
-
-	
-	ylims!(-6, 3)
-
-	ax
-
-end
-
-# ╔═╡ 4f9e9a52-9846-4307-aa7b-9cfc9583737f
-function plot_mixture!(df, y_low, y_high)
-	
-	x = LinRange(-1, 2.5, 1000)
-	R = 10 .^ x
-	prof, prof_outer = get_profiles(df)
-	
-	y1 = @. (LilGuys.surface_density(prof, R))
-	y2 = @. (LilGuys.surface_density(prof_outer, R))
-
-	y = (y1 .* y_high .+ y2 * y_low) ./ (y1 .+ y2)
-	lines!(x, y, color=COLORS[5], linewidth=1)
-
-	ylims!(-6, 3)
-
-end
-
-# ╔═╡ 23f21352-f175-414c-8f21-e6a27f73d634
-styles = Dict(
-	"S+23" => (;markersize=5, color=COLORS[2], marker=:star5),
-	"T+23" => (;),
-	"apogee" => (;color=COLORS[3], marker=:rect),
-	"p+20" => (;)
-)
-
 # ╔═╡ f1bc7e02-0ee8-46e1-bd7a-0d833ab306b4
 df_scl = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/velocities/processed/vz_r_ell_binned.rv_combined_x_wide_2c_psat_0.2.csv"), DataFrame)
 
@@ -264,37 +208,6 @@ function sigma_los(halo::LilGuys.SphericalProfile, prof, R)
 	return sqrt(Sigma_sigma2 / LilGuys.surface_density(prof, R))
 end
 
-# ╔═╡ 8a757f44-0ef3-4ed2-bf90-f9edbda8d102
-function plot_mixture_sigma!(df, halo, galaxyname; plot_components=false, color=COLORS[5])
-	
-	x = LinRange(-0.5, 2.5, 100)
-	R = 10 .^ x
-	
-	dist = get_obs_props(galaxyname)["distance"]
-
-	R_kpc = LilGuys.arcmin2kpc.(R, dist)
-	x_kpc = log10.(R_kpc)
-	prof, prof_outer = get_profiles(df, dist)
-	prof_double = LilGuys.DoubleExp2D(prof.M, prof.R_s, prof_outer.M, prof_outer.R_s)
-
-
-	σ = sigma_los.(halo, prof_double, R_kpc)
-
-
-	lines!(x, σ * V2KMS, color=color, linewidth=1)
-	
-	if plot_components
-		σ1 = sigma_los.(halo, prof, R_kpc)
-		σ2 = sigma_los.(halo, prof_outer, R_kpc)
-
-		lines!(x, σ1*V2KMS, color=COLORS[1], linewidth=1)
-		lines!(x, σ2*V2KMS, color=COLORS[4], linewidth=1)
-	end
-
-	ylims!(-6, 3)
-
-end
-
 # ╔═╡ 0b722f4c-368c-4308-abcb-2584252f595f
 sigma_los(halo_scl, get_profiles(fit_scl, get_obs_props("sculptor")["distance"])[1], 0.2) * V2KMS
 
@@ -313,6 +226,111 @@ fit_umi
 # ╔═╡ 45f1bb15-dd49-4fcf-bd16-5d0bfe939f8c
 smallfontsize = 0.8 * theme(:fontsize)[]
 
+# ╔═╡ 958182b7-e59d-4ad0-980f-96e8572de2c6
+COLORS
+
+# ╔═╡ 5f3a7a29-f879-4cc2-a2a1-23eefcb247b9
+color_inner = COLORS[1]
+
+# ╔═╡ 32ace91f-f9e9-4a93-b951-6d0229611fda
+color_outer = COLORS[2]
+
+# ╔═╡ 47f1b731-d934-48c5-ac29-a092c2b0dfc9
+color_combined = COLORS[5]
+
+# ╔═╡ 8bbf2aa6-0804-4f18-b5e6-4b919635663e
+function plot_median_profile(gs, df, prof_obs)
+	ax = Axis(gs, xlabel = "log R / arcmin", ylabel = L"log $\Sigma_\star$ / arcmin$^{-2}$")
+	
+	errorscatter!(prof_obs.log_R, (prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma), color=:black, markersize=4)
+
+	
+	x = LinRange(-1, 2.5, 1000)
+
+	R = 10 .^ x
+	
+	prof, prof_outer = get_profiles(df)
+	prof_double = LilGuys.DoubleExp2D(prof.M, prof.R_s, prof_outer.M, prof_outer.R_s)
+
+
+	scale = sum(prof_obs.counts)
+	y = @. log10(LilGuys.surface_density(prof, R) * scale)
+	y2 = @. log10(LilGuys.surface_density(prof_outer, R) * scale)
+	y3 = @. log10(LilGuys.surface_density(prof_double, R) * scale)
+	lw = theme(:linewidth)[]/2
+	lines!(x, y, color=color_inner, linewidth=lw)
+	lines!(x, y2, color=color_outer, linewidth=lw)
+	lines!(x, y3, color=color_combined, linewidth=lw)
+
+	
+	ylims!(-6, 3)
+
+	ax
+
+end
+
+# ╔═╡ 4f9e9a52-9846-4307-aa7b-9cfc9583737f
+function plot_mixture!(df, y_low, y_high)
+	
+	x = LinRange(-1, 2.5, 1000)
+	R = 10 .^ x
+	prof, prof_outer = get_profiles(df)
+	
+	y1 = @. (LilGuys.surface_density(prof, R))
+	y2 = @. (LilGuys.surface_density(prof_outer, R))
+
+	y = (y1 .* y_high .+ y2 * y_low) ./ (y1 .+ y2)
+	lines!(x, y, color=color_combined, linewidth=1)
+
+	ylims!(-6, 3)
+
+end
+
+# ╔═╡ 8a757f44-0ef3-4ed2-bf90-f9edbda8d102
+function plot_mixture_sigma!(df, halo, galaxyname; plot_components=false)
+	
+	x = LinRange(-0.5, 2.5, 100)
+	R = 10 .^ x
+	
+	dist = get_obs_props(galaxyname)["distance"]
+
+	R_kpc = LilGuys.arcmin2kpc.(R, dist)
+	x_kpc = log10.(R_kpc)
+	prof, prof_outer = get_profiles(df, dist)
+	prof_double = LilGuys.DoubleExp2D(prof.M, prof.R_s, prof_outer.M, prof_outer.R_s)
+
+
+	σ = sigma_los.(halo, prof_double, R_kpc)
+
+
+	lines!(x, σ * V2KMS, color=color_combined, linewidth=1)
+	
+	if plot_components
+		σ1 = sigma_los.(halo, prof, R_kpc)
+		σ2 = sigma_los.(halo, prof_outer, R_kpc)
+
+		lines!(x, σ1*V2KMS, color=color_inner, linewidth=1)
+		lines!(x, σ2*V2KMS, color=color_outer, linewidth=1)
+	end
+
+	ylims!(-6, 3)
+
+end
+
+# ╔═╡ 4bc986df-5798-4928-8ac8-a3baf1767d08
+color_survey = COLORS[3]
+
+# ╔═╡ 76a3fe79-9504-4f32-8f77-d1040fe9f968
+color_sestito = COLORS[4]
+
+# ╔═╡ 23f21352-f175-414c-8f21-e6a27f73d634
+styles = Dict(
+	"S+23" => (;markersize=5, color=color_sestito, marker=:star5),
+	"T+23" => (; color=color_survey),
+	"apogee" => (; color=color_survey),
+	"p+20" => (; color=color_survey)
+)
+
 # ╔═╡ c2b44dcf-cc5e-4630-b4c7-46fcb1725b66
 let
 	fig = Figure(size=(3.5, 4) .* 72)
@@ -325,13 +343,13 @@ let
 	ax_scl = Axis(fig[2,1], ylabel="[Fe/H]", xlabel=L"$\log\, R_\textrm{ell}$ / arcmin")
 	for study in ["T+23", "apogee", "S+23"]
 		df = metals_scl[metals_scl.study .== study, :]
-		label_key = Dict("T+23" => "T+23/P+20", "apogee"=>"APOGEE", "S+23"=>"S+23a/b")
+		label_key = Dict("T+23" => L"$\textrm{v}_\textrm{los}$ members" => (; markersize=3), "apogee"=>nothing, "S+23"=>"S+23a/b")
 		scatter!(log10.(df.R_ell), df.fe_h, markersize=2; label=label_key[study], styles[study]...)
 	end
 
-	lines!([NaN], [NaN], color=COLORS[1], label="inner model", linewidth=1)
-	lines!([NaN], [NaN], color=COLORS[4], label="outer",  linewidth=1)
-	lines!([NaN], [NaN], color=COLORS[5], label="combined",  linewidth=1)
+	lines!([NaN], [NaN], color=color_inner, label="inner model", linewidth=1)
+	lines!([NaN], [NaN], color=color_outer, label="outer model",  linewidth=1)
+	lines!([NaN], [NaN], color=color_combined, label="inner+outer",  linewidth=1)
 	
 	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err)
 	# vlines!(r_trans_scl, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
@@ -409,7 +427,7 @@ let
 	# rowsize!(fig.layout, 2, Aspect(1, 1))
 
 
-	Legend(fig[4, :], ax_scl, nbanks=3, tellheight=true)
+	Legend(fig[4, :], ax_scl, nbanks=2, tellheight=true)
 	resize_to_layout!()
 
 
@@ -671,6 +689,12 @@ end
 # ╠═c6e078aa-47d4-4d97-8d8a-c5e1c1ebb473
 # ╠═c0e693c4-f960-4cff-896d-2e80d9fb9a7a
 # ╠═8b84197b-45fd-4df4-8733-053730354319
+# ╠═958182b7-e59d-4ad0-980f-96e8572de2c6
+# ╠═5f3a7a29-f879-4cc2-a2a1-23eefcb247b9
+# ╠═32ace91f-f9e9-4a93-b951-6d0229611fda
+# ╠═47f1b731-d934-48c5-ac29-a092c2b0dfc9
+# ╠═4bc986df-5798-4928-8ac8-a3baf1767d08
+# ╠═76a3fe79-9504-4f32-8f77-d1040fe9f968
 # ╠═c2b44dcf-cc5e-4630-b4c7-46fcb1725b66
 # ╠═2d8f1d30-72de-4f64-bf3a-b79c66dfeee3
 # ╟─22598e4a-b7bb-4ed3-a71b-e3e29b37e58a

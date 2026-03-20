@@ -1,37 +1,37 @@
-ra = 209.3
-ra_em = 0.0
-ra_ep = 0.0
-ra_ref = "grillmair2009"
+ra = 209.5
+ra_em = 0.1
+ra_ep = 0.1
+ra_ref = "this work"
 
-dec = 26.8
-dec_em = 0.0
-dec_ep = 0.0
-dec_ref = "grillmair2009"
+dec = 26.7
+dec_em = 0.1
+dec_ep = 0.1
+dec_ref = "this work"
 
-distance = 46.6
-# inflated uncertainty
-distance_em = 2.0
-distance_ep = 2.0
+distance = 46.55860935229591
+distance_em = 3.9006574721366363
+distance_ep = 4.257334903760167
 distance_modulus = 18.34
-distance_modulus_em = 0.02
-distance_modulus_ep = 0.02
-distance_modulus_sys = 0.09
-distance_ref = "Carlin2018ApJ...865....7C"
-distance_notes = "suggest larger distance uncertainty of 2.0 kpc"
+distance_modulus_em = 0.19
+distance_modulus_ep = 0.19
+distance_ref = "Vivas+2020"
 
-pmra = -1.160
-pmra_em = 0.037
-pmra_ep = 0.037
-pmra_ref = "jensen+24"
+
+pmra = -1.16
+pmra_em = 0.03
+pmra_ep = 0.03
+# including gaia systematic
+pmra_ref = "battaglia+2022"
+
 pmdec = -0.88
-pmdec_em = 0.035
-pmdec_ep = 0.035
-pmdec_ref = "jensen+24...940..136P"
+pmdec_em = 0.02
+pmdec_ep = 0.02
+pmdec_ref = "battaglia+2022"
 
-radial_velocity = 189
-radial_velocity_em = 2
-radial_velocity_ep = 2
-radial_velocity_ref = "Me"
+radial_velocity = 190
+radial_velocity_em = 1.8
+radial_velocity_ep = 1.8
+radial_velocity_ref = "Geha+2026"
 
 sigma_v = 7.4
 sigma_v_em = 2

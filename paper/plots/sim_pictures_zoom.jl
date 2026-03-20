@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -22,8 +22,11 @@ using DataFrames, CSV
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
 
+# ╔═╡ 3ad8154b-9c07-4666-8b0c-b123276fae7e
+include(joinpath(ENV["DWARFS_ROOT"], "orbits/orbit_utils.jl"))
+
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
-galaxyname = "sculptor"
+galaxyname = "sculptor_lmc"
 
 # ╔═╡ 34c0f4f8-ef34-4b58-bcdd-7de69b58db2d
 import DensityEstimators
@@ -48,6 +51,9 @@ modelname = if galaxyname == "sculptor"
 	joinpath(modelnames["scl_smallperi"][1:2]...)
 elseif galaxyname == "ursa_minor"
 	joinpath(modelnames["umi_smallperi"][1:2]...)
+elseif galaxyname == "sculptor_lmc"
+	joinpath(modelnames["scl_lmc"][1:2]...)
+
 end
 
 # ╔═╡ 0f71807d-d698-4164-9f30-49af8dd8ba55
@@ -61,17 +67,22 @@ starsname = if galaxyname == "sculptor"
 	modelnames["scl_smallperi"][3]
 elseif galaxyname == "ursa_minor"
 	modelnames["umi_smallperi"][3]
+elseif galaxyname == "sculptor_lmc"
+	modelnames["scl_lmc"][3]
 end
 
 # ╔═╡ 32db23d9-7959-41ac-aff4-b63df5e4b94a
 figname = Dict(
 	"sculptor" => "scl",
-	"ursa_minor" => "umi"
+	"ursa_minor" => "umi",
+	"sculptor_lmc" => "scl_lmc"
 )[galaxyname]
 
 # ╔═╡ 21d0e542-08ea-4f56-a07d-f1a8e7e69019
 figtitle = Dict(
 	"sculptor" => "Sculptor",
+	"sculptor_lmc" => "Sculptor (MW+LMC)",
+
 	"ursa_minor" => "Ursa Minor"
 )[galaxyname]
 
@@ -187,6 +198,25 @@ function get_zoom_histogram(snap, bins=nothing; weights=nothing, plotrange=plotr
 
 	return hist
 end
+
+# ╔═╡ cec9cbd6-9e8f-4375-9105-8ced9089dd5e
+smallfontsize = 0.8 * theme(:fontsize)[]
+
+# ╔═╡ 13137339-95c2-4a23-b775-6eecb59c2ce6
+function plot_lmc_orbit!(galaxyname)
+	if galaxyname == "sculptor_lmc"
+		lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11")) 
+
+		filt = lmc_orbit.times * T2GYR .> -3
+		lines!(lmc_orbit.positions[2, filt], lmc_orbit.positions[3, filt], color=COLORS[3], )
+
+		scatter!(lmc_orbit.positions[2, end], lmc_orbit.positions[3, end], color=COLORS[3])
+		text!(lmc_orbit.positions[2, end], lmc_orbit.positions[3, end], text="LMC", color=COLORS[3], align=(:right, :center), offset=(-smallfontsize/2, 0), fontsize=smallfontsize)
+
+	end
+
+end
+		
 
 # ╔═╡ 3178e7d1-151b-4c67-9fe9-57742ca01802
 md"""
@@ -307,7 +337,8 @@ end
 let
 	fig = Figure()
 
-	ax = Axis(fig[1, 1], backgroundcolor=:black)
+	ax = Axis(fig[1, 1], backgroundcolor=:black, 
+			 limits = (extrema(bins), extrema(bins)))
 
 	idx = orbit_props["idx_f"]
 
@@ -328,7 +359,8 @@ let
 
 	lines!([x1,x2,x2,x1,x1], [y1,y1,y2,y2,y1], color=fg_color, linewidth=theme(:linewidth)[]/2)
 
-
+	plot_lmc_orbit!(galaxyname)
+	
 	# legend
 	text!(0.95, 0.05, text="stars", color=:white, space=:relative, align=(:right, :center), offset=(0, 10))
 	text!(0.95, 0.05, text="dark matter", color=COLORS[5], space=:relative, align=(:right, :center))
@@ -348,6 +380,7 @@ let
 	ax_final = inset_axis(fig[1,1], halign=0.95, valign=0.95)
 	plot_both(ax_final, snap_f)
 	text!(0.1, 0.9, text="final", color=:white, space=:relative, fontsize=8, align=(:left, :top))
+	plot_scalebar!(1, 2*plotrange)
 
 	rowsize!(fig.layout, 1, Aspect(1, 1))
 
@@ -355,7 +388,7 @@ let
 
 	resize_to_layout!(fig)
 
-	@savefig "umi_zoom_image"
+	@savefig "$(figname)_zoom_image"
 
 	fig
 end
@@ -409,6 +442,9 @@ promote(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
 # ╠═d5591e1b-ec3d-46fc-856e-ce8d1cf6bb03
 # ╠═c689f2b1-eded-4284-9b40-67c72016de8c
 # ╠═c98b7028-73ca-4fda-8ac9-15ace0af0b6c
+# ╠═3ad8154b-9c07-4666-8b0c-b123276fae7e
+# ╠═13137339-95c2-4a23-b775-6eecb59c2ce6
+# ╠═cec9cbd6-9e8f-4375-9105-8ced9089dd5e
 # ╠═f251ed8f-c908-47b8-96ca-174ecc73f30f
 # ╠═2c745440-049c-4a15-b4ca-ade29b9e69db
 # ╠═3178e7d1-151b-4c67-9fe9-57742ca01802
