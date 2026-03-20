@@ -74,7 +74,7 @@ function combine_properties(MV20, pace)
 
     best = copy(MV20)
 
-    for key in ["sigma_v", "mv", "metallicity", "distance_modulus"]
+    for key in ["sigma_v", "mv", "metallicity", "distance_modulus", "radial_velocity"]
         if is_better_measurement(best, pace, key)
             println("\tupdating $key")
             @printf("\t\tMV20: %8.4f + %8.4f - %8.4f\n", best[key], best["$(key)_ep"], best["$(key)_em"])

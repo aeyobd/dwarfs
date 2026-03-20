@@ -8,7 +8,7 @@ Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellit
 
 
 
-# Bootes III
+# Introduction
 
 ## History of the BooIII
 
@@ -42,28 +42,56 @@ Boo III was discovered in @grillmair2009 through matched filter method. In their
 
 
 
+# The observational status of Boötes III
+
+## Survey Data
+
+To derive observed properties in what follows, we use three data sources: *Gaia* photometry and astrometry, DELVE photometry, and the Geha+2026 catalogue of radial velocities and metallicities. 
+
+Our *Gaia* observations are processed based on an expansion of Jensen+2026. While their algorithm is able to detect 
 
 
 
+## Structural properties
 
-| parameter                | value                               | Source          |
-| ------------------------ | ----------------------------------- | --------------- |
-| $\alpha$                 | 209.3                               | Grillmair2009   |
-| $\delta$                 | 26.8                                | Grillmair2009   |
-| distance                 | $46.5 \pm 0.4 \pm 2_\text{sys}$ kpc | Carlin+sand2018 |
-| distance modulus         | 18.34 \pm 0.10                      | Carlin+sand2018 |
-| $\mu_\alpha \cos \delta$ | $-1.160 \pm 0.037$ mas yr$^{-1}$    | battaglia+2022  |
-| $\mu_\delta$             | $-0.88 \pm 0.037$ mas yr$^{-1}$     | battaglia+2022* |
-| RV                       | $197.1\pm3.6$ km/s                  | Carlin+sand2018 |
-| $\sigma_v$               | $10.7\pm3.5$ km/s                   | Carlin+sand2018 |
-| $r_h$ (sphericalized)    | $27.04\pm$ arcminc                  | MW2020          |
-| ell                      | $0.33\pm0.09$                       | MW2020          |
-| PA                       | $-81\pm8$                           | MW2020          |
-| $M_V$                    | $-5.8\pm0.5$                        | Correnti+2009   |
+Using both photometric catalogues
 
 
 
+## Proper motions
 
+- Consistent with past works
+
+
+
+## Velocity models
+
+- Refit the velocity dispersion
+
+
+
+| parameter                | value                                     | Source                        |
+| ------------------------ | ----------------------------------------- | ----------------------------- |
+| $\alpha$                 | $209.5 \pm 0.1$                           | This work                     |
+| $\delta$                 | $26.7 \pm 0.1$                            | This work                     |
+| distance modulus         | $18.34 \pm 0.19$                          | Vivas+2020                    |
+| distance                 | $46.5 \pm 4$ kpc                          | Vivas+2020                    |
+| $\mu_\alpha \cos \delta$ | $-1.16 \pm 0.02 \pm 0.017$ mas yr$^{-1}$  | battaglia+2022                |
+| $\mu_\delta$             | $-0.88  \pm 0.02 \pm 0.017$ mas yr$^{-1}$ | battaglia+2022*               |
+| RV                       | $190 \pm 1.8$ km/s                        | Geha+2026                     |
+| $\sigma_v$               | $7.5_{-1.5}^{+2.0}$ km/s                  | This work                     |
+| $r_h$ (sphericalized)    | $27\pm2$ arcmin                           | MW2020                        |
+| ell                      | $0.33\pm0.09$                             | MW2020                        |
+| PA                       | $-81\pm8$                                 | MW2020                        |
+| $M_V$                    | $-5.8\pm0.5$                              | Correnti+2009 (will rederive) |
+
+
+
+# Simulation methods
+
+- Agama
+
+  
 
 ### Haloes
 
