@@ -88,7 +88,7 @@ function plot_yz!(ax, orbit::Orbit; time_min=-Inf, plot_today=true, kwargs...)
 
 	if plot_today
 
-		scatter!(ax, orbit.positions[2, 1], orbit.positions[3, 1]; color=kwargs[:color])
+		scatter!(ax, orbit.positions[2, 1], orbit.positions[3, 1]; color=kwargs[:color], marker=:circle)
 	end
 end
 
@@ -98,7 +98,7 @@ function plot_rt_point!(ax, orbit::Orbit; time_min=-Inf, plot_today=true, kwargs
     plot_rt!(ax, orbit.times[time_filt]*T2GYR, radii(orbit)[time_filt]; kwargs...)
 
 	if plot_today
-		scatter!(ax, orbit.times[1]*T2GYR, radii(orbit)[1]; color=kwargs[:color])
+		scatter!(ax, orbit.times[1]*T2GYR, radii(orbit)[1]; color=kwargs[:color], marker=:circle)
 	end
 end
 
@@ -154,6 +154,15 @@ best_scl = OrbitUtils.load_best_orbit(modelnames["scl_smallperi"][1:2]...) |> re
 # ╔═╡ 782e9dae-b15f-40fd-9d75-9a334810aa81
 best_umi = OrbitUtils.load_best_orbit(modelnames["umi_smallperi"][1:2]...) |> reverse
 
+# ╔═╡ 4ee69fe0-ab61-457e-86f3-e6b4b3228527
+function plot_yz_sun!(;kwargs...)
+    X_SUN = [-8.1219733661223, 0.0, 0.0208]
+
+    # scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="The Sun", strokewidth=sw, strokecolor=:black, kwargs...)
+
+	scatter!(0, 0, color=:grey, marker=:+, alpha=0.5)
+end
+
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
 # Plots
@@ -169,13 +178,6 @@ t_min = -5 / T2GYR
 
 # ╔═╡ 123584a9-e9b4-4c48-acb5-655bd60aaeb6
 sw = @lift $(theme(:linewidth)) / 2
-
-# ╔═╡ 4ee69fe0-ab61-457e-86f3-e6b4b3228527
-function plot_yz_sun!(;kwargs...)
-    X_SUN = [-8.1219733661223, 0.0, 0.0208]
-
-    scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="The Sun", strokewidth=sw, strokecolor=:black, kwargs...)
-end
 
 # ╔═╡ 51b371cc-6ba6-4cd5-8060-42261971cf91
 kwargs_mw_only = (; color=COLORS[1], alpha=0.05, linestyle=:solid, label="Point-particle: MW-only" => (; alpha=0.5), time_min=t_min)
@@ -194,7 +196,7 @@ kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, raste
 
 # ╔═╡ 9340b2c1-bf46-4959-8d48-9117926bbc1f
 let
-	fig = Figure(size=(5*72, 5*72))
+	fig = Figure(size=(7*72, 4.5*72))
 
 	ax_scl = Axis(fig[1,1],
 		title = "Sculptor",
@@ -258,7 +260,7 @@ let
 	plot_rt_point!(ax_umi_t, lmc_orbit; kwargs_lmc...)
 
 
-	Legend(fig[3, :], ax_scl, tellwidth=false, tellheight=true, nbanks=2)
+	Legend(fig[:, 3], ax_scl, nbanks=1)
 
 	
 	rowsize!(fig.layout, 1, Aspect(1, 1))

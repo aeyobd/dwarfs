@@ -72,6 +72,7 @@ end
 function compare_profiles(gs, prof_i, prof, r_b; 
         logdensityrange, galaxyname=nothing, break_height=0, 
         r_j=false, plot_final=true, modelname, lmc=false,
+        break_label_visible=true, jacobi_label_visible = true
     )
 	ax = Axis(gs, 
 		xlabel = "log Radius / arcmin",
@@ -97,7 +98,7 @@ function compare_profiles(gs, prof_i, prof, r_b;
     if isnothing(break_height)
         break_height = logdensityrange[1]
     end
-    plot_r_break_arrow!(r_b, break_height)
+    plot_r_break_arrow!(r_b, break_height, break_label_visible)
 
 	if r_j
 		r_j = get_r_j(galaxyname, modelname, lmc=lmc)
@@ -106,7 +107,7 @@ function compare_profiles(gs, prof_i, prof, r_b;
         r_j = nothing
     end
 
-    plot_r_jacobi_arrow!(r_j, break_height)
+    plot_r_jacobi_arrow!(r_j, break_height, jacobi_label_visible)
     if !isnothing(galaxyname)
         R_h = get_R_h(galaxyname)
         plot_R_h_arrow!(R_h, logdensityrange[1])
@@ -136,20 +137,23 @@ function plot_expected_profile!(galaxyname)
 end
 
 
-function plot_r_break_arrow!(r_b, break_height)
+function plot_r_break_arrow!(r_b, break_height, label_visible)
 	if !isnothing(break_height)
-		annotation!(0, 30, log10(r_b), break_height, 
-					color=COLORS[3], text=" ",
-				   )
+		# annotation!(0, 30, log10(r_b), break_height, 
+		# 			color=COLORS[3], text=" ",
+		# 		   )
+        vlines!(log10(r_b), color=COLORS[3], linewidth=1, alpha=0.2)
 		
-		text!(log10(r_b), break_height, 
-			  text="break", 
-			  rotation=π/2, 
-			  offset=(0., 20.), 
-			  color=COLORS[3], 
-			  align=(:left, :center), 
-			  fontsize=0.8 * theme(:fontsize)[]
-			)
+        if label_visible 
+            text!(log10(r_b), break_height, 
+                  text="break", 
+                  rotation=π/2, 
+                  offset=(-5., 20.), 
+                  color=COLORS[3], 
+                  align=(:left, :center), 
+                  fontsize=0.8 * theme(:fontsize)[]
+                )
+        end
 	end
 end
 
@@ -165,20 +169,23 @@ function plot_R_h_arrow!(R_h, height)
 end
 
 
-function plot_r_jacobi_arrow!(r_j, break_height)
+function plot_r_jacobi_arrow!(r_j, break_height, label_visible=true)
 	if isnothing(r_j)
         return
     end
 
-    annotation!(0, 30, log10(r_j), break_height, text=" ")
+    #annotation!(0, 30, log10(r_j), break_height, text=" ")
+    vlines!(log10(r_j), linewidth=1, alpha=0.2, color=:black)
 
-    text!(log10(r_j), break_height, 
-          text="Jacobi", 
-          rotation=π/2, 
-          offset=(0., 20.), 
-          align=(:left, :center),
-          fontsize=0.8 * theme(:fontsize)[]
-         )
+    if label_visible
+        text!(log10(r_j), break_height, 
+              text="Jacobi", 
+              rotation=π/2, 
+              offset=(-5., 0.), 
+              align=(:left, :center),
+              fontsize=0.8 * theme(:fontsize)[]
+             )
+    end
 end
 
 
