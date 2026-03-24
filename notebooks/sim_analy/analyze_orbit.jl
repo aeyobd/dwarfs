@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -745,7 +745,7 @@ let
 			"theta0" => θ0,
 	
 			"chi2_best" => χ2[idx_f],
-			"chi2_best_interp" => χ2[idx_f],
+			"chi2_best_interp" => χ2_best_interp,
 		)
 
 		merge!(orbital_properties, orbital_properties_today)

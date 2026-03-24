@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -63,7 +63,7 @@ end
 theme(:Lines)[:cycle][] = Cycle([[:color] => :color, [:linestyle] => :linestyle], true)
 
 # ╔═╡ 7d8f9954-0bbc-4fc0-ba21-aad54b3aaee4
-function compare_boundmass(modelnames; legend_position=:rb)
+function compare_tidal_track(modelnames; legend_position=:rb)
 	
 	fig = Figure()
 
@@ -117,6 +117,54 @@ function compare_boundmass(modelnames; legend_position=:rb)
 	fig
 end
 
+# ╔═╡ f06150d9-2c43-4414-98de-d657c873e4cc
+function compare_boundmass(modelnames; legend_position=:rb)
+	
+	fig = Figure()
+
+	ax = Axis(fig[1,1], 
+		xlabel = "simulation time / Gyr",
+		ylabel = L"log bound mass / $10^{10}\,\textrm{M}_\odot$",
+		# yticks=[0.1, 1],
+		# yminorticks=10:1:60,
+	)
+
+	
+	for (label, modelname) in modelnames
+		df = get_scalars(modelname)
+
+		y = df.bound_mass .|> log10	
+		lines!(df.time * T2GYR, y, label=label)
+	end
+
+
+	ax2 = Axis(fig[1,2], 
+		xlabel = L"$r_\textrm{max}$ / kpc",
+		xscale = log10,
+		xticks=[1; 2:1:8],
+		xminorticks=[1:0.1:2; 2:0.5:8],
+		yticks=10:5:60,
+		yminorticks=10:1:60,
+		ylabel = L"$\textrm{v}_\textrm{max}$ / km\,s$^{-1}$",
+		yscale = log10
+	)
+
+	
+	for (label, modelname) in modelnames
+		df = get_scalars(modelname)
+
+		y = (df.v_circ_max * V2KMS)
+		
+		lines!(df.r_circ_max, y, label=label)
+	end
+
+	Legend(fig[2, :], ax, tellwidth=false, tellheight=true, nbanks=3)
+
+
+	resize_to_layout!()
+	fig
+end
+
 # ╔═╡ 93ba7c53-81c3-40e8-9171-626c04c834ff
 modelnames = TOML.parsefile("model_key.toml")
 
@@ -127,24 +175,24 @@ modelnames = TOML.parsefile("model_key.toml")
 	"cored" => modelnames["cored"],
 	"anisotropic" =>  modelnames["anisotropic"],
 	# "MW-impact" => modelnames["mw_impact"],
-	"oblate" => modelnames["oblate"],
+	# "oblate" => modelnames["oblate"],
 ),
 				 )
 
 # ╔═╡ faff05dd-31b7-47bf-b6da-32d94ca80514
-compare_boundmass(OrderedDict(
-	"heavier halo" => modelnames["heavier"],
-	"heavier, new orbit" => modelnames["heavier_new_orbit"],
-	"lighter halo" => modelnames["lighter"],
-),
-				 )
+# compare_boundmass(OrderedDict(
+# 	"heavier halo" => modelnames["heavier"],
+# 	"heavier, new orbit" => modelnames["heavier_new_orbit"],
+# 	"lighter halo" => modelnames["lighter"],
+# ),
+# 				 )
 
 # ╔═╡ ffad6fd8-a767-459e-aa3d-e9fd6741a47f
-compare_boundmass(OrderedDict(
-	"fiducial" => modelnames["scl_smallperi"],
-	"mean orbit" => modelnames["scl_mean"],
+# compare_boundmass(OrderedDict(
+# 	"fiducial" => modelnames["scl_smallperi"],
+# 	"mean orbit" => modelnames["scl_mean"],
 
-))
+# ))
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
@@ -157,6 +205,7 @@ compare_boundmass(OrderedDict(
 # ╠═f49c9325-4319-4435-ac33-a8980e1c4f7f
 # ╠═3400e874-28f2-496d-9493-1624de9e7fdc
 # ╠═7d8f9954-0bbc-4fc0-ba21-aad54b3aaee4
+# ╠═f06150d9-2c43-4414-98de-d657c873e4cc
 # ╠═93ba7c53-81c3-40e8-9171-626c04c834ff
 # ╠═f99c5233-a05c-46e9-b7ac-6f8076377419
 # ╠═faff05dd-31b7-47bf-b6da-32d94ca80514

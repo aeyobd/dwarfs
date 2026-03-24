@@ -15,3 +15,10 @@ scl_lmc_plummer = ["sculptor", "1e7_new_v25_r2.5/smallperilmc", "plummer_rs0.20"
 umi_smallperi = ["ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "exp2d_rs0.10"]
 umi_smallperi_plummer = ["ursa_minor", "1e7_new_v38_r4.0/orbit_smallperi.5", "plummer_rs0.20"]
 
+
+# extra models
+
+heavier = ["sculptor", "1e6_new_v43_r7/orbit_smallperi", "exp2d_rs0.10"]
+cored = ["sculptor", "1e6_Ms0.54_rs1.08_c1/orbit_smallperi", "exp2d_rs0.10"]
+anisotropic = ["sculptor", "1e6_v43_r5_beta0.2_a4/orbit_smallperi", "exp2d_rs0.10"]
+oblate = ["sculptor", "1e6_v48_r7_oblate_0.5/orbit_smallperi", "exp2d_rs0.10"]

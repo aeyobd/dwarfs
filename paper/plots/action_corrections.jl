@@ -39,12 +39,18 @@ modelnames = [
 	"ursa_minor/1e5_new_v38_r4.0/orbit_smallperi.3",
 	"ursa_minor/1e6_new_v38_r4.0/orbit_smallperi.3",
 	"ursa_minor/1e6_new_v38_r4.0/orbit_smallperi.4",
+	"ursa_minor/1e6_new_v38_r4.0/orbit_smallperi.5",
 	"ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5",
 ]
 
-# ╔═╡ b8835ba8-6139-4d7d-9ffc-c23bde492345
-modelnames_lowres = [
-]
+# ╔═╡ e7f58e8b-6af1-467f-98d6-c934e2ae257f
+model_labels = ["1", "2", "3", "3-mr", "4-mr", "5-mr", "5-hr"]
+
+# ╔═╡ c8739cdd-aac9-4aa5-a8b8-c620ec41302b
+model_offsets = 1:length(modelnames)
+
+# ╔═╡ 5450d97c-9d37-48fd-8bed-e5980c3159ef
+resolutions = [1, 1, 1, 2, 2, 2, 4]
 
 # ╔═╡ da848ea2-beb0-4c60-8230-ca4ba604827e
 md"""
@@ -68,6 +74,17 @@ end
 function get_target_coord(modelname)
 	return LilGuys.transform(Galactocentric, ICRS(get_orbit_props(modelname)))
 end
+
+# ╔═╡ 1c669e57-c252-4ec3-85a3-1d1c91071f00
+function get_chi2(modelname)
+	props = TOML.parsefile(joinpath(anadir, modelname, "orbital_properties.toml"))
+
+	println(keys(props))
+	return props["chi2_best"], props["chi2_best_interp"]
+end
+
+# ╔═╡ 994ef5f0-1712-4e79-adac-4caf63a5a31f
+get_chi2(modelnames[1])
 
 # ╔═╡ 0d88f27b-6c0b-4277-8aff-bd5681a0691a
 function get_idx_f(modelname)
@@ -101,6 +118,9 @@ end
 function get_action_angle_change(modelname)
 	props = get_orbit_props(modelname)
 
+	if "dJ_R" ∉ keys(props)
+		return [NaN, NaN, NaN], [NaN, NaN, NaN]
+	end
 	actions = [props["dJ_R"], props["dJ_z"], props["dJ_phi"]]
 	angles = [props["dtheta_R"], props["dtheta_z"], props["dtheta_phi"]]
 
@@ -243,12 +263,6 @@ md"""
 # Plotting
 """
 
-# ╔═╡ e7f58e8b-6af1-467f-98d6-c934e2ae257f
-model_labels = ["1", "2", "3", "3-mr", "4-mr", "5-hr"]
-
-# ╔═╡ c8739cdd-aac9-4aa5-a8b8-c620ec41302b
-model_offsets = 1:length(modelnames)
-
 # ╔═╡ 90288fdc-ad5c-4384-ae4c-5accf20cb12b
 target_coord = get_target_coord(modelnames[5])
 
@@ -322,9 +336,6 @@ frequencies = Agama.actions_angles(action_finder, LilGuys.position(target_coord)
 # ╔═╡ 5c141c94-71c8-448b-84c3-2fb971c66e05
 9 * frequencies
 
-# ╔═╡ 5450d97c-9d37-48fd-8bed-e5980c3159ef
-resolutions = [1, 1, 1, 2, 2, 3]
-
 # ╔═╡ dfba0c75-3c10-42de-b372-3d8cc634c4f7
 lw = theme(:linewidth)[]
 
@@ -347,7 +358,7 @@ obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor
 r_h = obs_props["r_h"] / 60
 
 # ╔═╡ f3ca8188-d9a2-4e71-9e07-14aa8b153457
-model_colors = COLORS[[1, 2, 3, 3, 4, 5]]
+model_colors = COLORS[[1, 2, 3, 3, 4, 5, 5]]
 
 # ╔═╡ c436fbb4-8d37-4e6d-9a8a-392926bc4c90
 let
@@ -483,17 +494,6 @@ md"""
 # Action table
 """
 
-# ╔═╡ 212dab6b-2afd-4b6b-b75e-2a42e7b273f7
-function print_row(name, args...)
-	@printf "%16s" name
-	for arg in args
-		s = @sprintf "\$%0.2f\$" arg
-
-		@printf "  & %12s" s
-	end
-
-end
-
 # ╔═╡ ac79f899-142e-4ad6-8518-80ead6aa0772
 function get_all_props(modelname)
 	df = OrderedDict()
@@ -509,15 +509,17 @@ function get_all_props(modelname)
 		df[sym] = getproperty(final_icrs, sym)
 	end
 
-	# for i in (1:3)
-	# 	coord = ["x", "y", "z"][i]
-	# 	df[Symbol("$(coord)_i")] = LilGuys.position(initial_coords)[i]
-	# end
+	df[:chi2], df[:chi2_interp] = get_chi2(modelname)
 
-	# for i in (1:3)
-	# 	coord = ["x", "y", "z"][i]
-	# 	df[Symbol("v_$(coord)_i")] = LilGuys.velocity(initial_coords)[i]
-	# end
+	for i in (1:3)
+		coord = ["x", "y", "z"][i]
+		df[Symbol("$(coord)_i")] = LilGuys.position(initial_coords)[i]
+	end
+
+	for i in (1:3)
+		coord = ["x", "y", "z"][i]
+		df[Symbol("v_$(coord)_i")] = LilGuys.velocity(initial_coords)[i]
+	end
 
 
 	# for i in (1:3)
@@ -569,8 +571,11 @@ end
 # ╔═╡ 1bd7c8cb-538c-4a6d-a30f-d3393933a9d9
 get_all_props(modelnames[5])
 
+# ╔═╡ 4b9e72f2-6f1c-4adc-ab86-08163d4fd93c
+modelnames[5]
+
 # ╔═╡ f73f7c85-2a13-4e03-9439-08056c9a8b06
-df_out = get_all_props.(modelnames[2:end])
+df_out = get_all_props.(modelnames)
 
 # ╔═╡ 7604f735-4f00-4ab7-9210-29d229933b03
 df_target = let 
@@ -603,12 +608,48 @@ df_target = let
 	df
 end
 
-# ╔═╡ ec2e14ed-c42e-4869-a82c-aa968f417d27
+# ╔═╡ 7fd40021-8689-464a-9c85-c47105e00a84
+keys(df_out[1])
 
+# ╔═╡ 212dab6b-2afd-4b6b-b75e-2a42e7b273f7
+function print_row(name, args...)
+	@printf "%32s" name
+	for arg in args
+		s = @sprintf "\$%0.2f\$" arg
+
+		@printf "  & %12s" s
+	end
+
+end
+
+# ╔═╡ ec2e14ed-c42e-4869-a82c-aa968f417d27
+nice_names = OrderedDict(
+	# :ra => raw"$\alpha\ / \ ^\circ$",
+	# :dec => raw"$\delta\ / \ ^\circ$",
+	# :distance => raw"distance / $\kpc$",
+	# :pmra => raw"$\mu_{\alpha*}\ / \ \masyr$",
+	# :pmdec => raw"$\mu_{\delta} \ / \ \masyr$",
+	# :radial_velocity => raw"$\V_textrm{los} \ / \ \kms$",
+	:dJ_R_i => raw"$\Delta J_r\ / \ \kpc\ \kms$",
+	:dJ_z_i => raw"$\Delta J_z\ / \ \kpc\ \kms$",
+	:dJ_phi_i => raw"$\Delta J_\phi\ / \ \kpc\ \kms$",
+	:dtheta_R_i => raw"$\Delta \theta_r$",
+	:dtheta_z_i => raw"$\Delta \theta_z$",
+	:dtheta_phi_i => raw"$\Delta \theta_\phi$",
+	:x_i => raw"$\Delta x_i\ / \ \kpc$",
+	:y_i => raw"$\Delta y_i\ / \ \kpc$",
+	:z_i => raw"$\Delta z_i\ / \ \kpc$",
+	:v_x_i => raw"$\Delta \V_{x, i} \ / \ \kms$",
+	:v_y_i => raw"$\Delta \V_{y, i} \ / \ \kms$",
+	:v_z_i => raw"$\Delta \V_{z, i} \ / \ \kms$",
+	:chi2 => raw"$\tilde\chi^2$",
+	:chi2_interp => raw"$\tilde\chi^2_\textrm{interp}$",
+
+)
 
 # ╔═╡ 2a57ffbb-f521-4039-b73e-ff9716b6d1cc
-for name in keys(df_out[1])
-	print_row(string(name), [df[name] for df in df_out]...,)
+for (name, label) in nice_names
+	print_row(label, [df[name] for df in df_out]...,)
 	println("  \\\\")
 end
 
@@ -619,12 +660,16 @@ end
 # ╠═4f8ee02f-10f4-43c3-aa0d-f279cec5615d
 # ╠═e60a0096-0df9-4cf3-b559-b905324a9c04
 # ╠═bb062773-2ae7-43ae-b522-e11ea0a46d7a
-# ╠═b8835ba8-6139-4d7d-9ffc-c23bde492345
+# ╠═e7f58e8b-6af1-467f-98d6-c934e2ae257f
+# ╠═c8739cdd-aac9-4aa5-a8b8-c620ec41302b
+# ╠═5450d97c-9d37-48fd-8bed-e5980c3159ef
 # ╟─da848ea2-beb0-4c60-8230-ca4ba604827e
 # ╠═62f4b647-5351-4c8a-8fa1-191313662485
 # ╠═617140da-db2e-418c-b128-d5896b009866
 # ╠═71cd9e1c-f498-48dc-8ee1-a6a7a4c4d4a1
 # ╠═3339aef6-09e5-4a81-81f7-ff7de3fedf7c
+# ╠═1c669e57-c252-4ec3-85a3-1d1c91071f00
+# ╠═994ef5f0-1712-4e79-adac-4caf63a5a31f
 # ╠═0d88f27b-6c0b-4277-8aff-bd5681a0691a
 # ╠═bab03f4a-e1eb-4f47-9030-df6ec6779fda
 # ╠═26c75b36-bf51-4b5f-ab09-5a94ad00e410
@@ -648,8 +693,6 @@ end
 # ╠═a51612d1-8d83-4c27-9275-35f29fd7f0c7
 # ╠═4390a009-1238-4515-9faf-61923c827798
 # ╠═25d6000f-b6ce-455c-bbd3-79e5e4558d60
-# ╠═e7f58e8b-6af1-467f-98d6-c934e2ae257f
-# ╠═c8739cdd-aac9-4aa5-a8b8-c620ec41302b
 # ╠═90288fdc-ad5c-4384-ae4c-5accf20cb12b
 # ╠═0030b7ce-a59f-479b-b109-d6e6da3c34c1
 # ╠═ff9e7006-bf70-4b83-a34c-f8f8bc2d2e0e
@@ -660,7 +703,6 @@ end
 # ╠═b9cc963c-9c1a-478c-af52-54584201ec85
 # ╠═59e455f2-4bab-433f-9470-1f62456ce9e5
 # ╠═5c141c94-71c8-448b-84c3-2fb971c66e05
-# ╠═5450d97c-9d37-48fd-8bed-e5980c3159ef
 # ╠═dfba0c75-3c10-42de-b372-3d8cc634c4f7
 # ╠═a8f098d0-2f48-4476-a7c6-bc28d6d39e8a
 # ╠═06990077-03b7-47f6-a263-9050f2046f46
@@ -673,11 +715,13 @@ end
 # ╠═53c6a042-baae-46fd-958d-66cf377df43f
 # ╟─4b129935-7707-4e36-86f0-fe35bc537cdb
 # ╠═f373ca79-fcba-45fe-851b-5166af77caf8
-# ╠═212dab6b-2afd-4b6b-b75e-2a42e7b273f7
 # ╠═0a983127-d215-4257-a0f3-f01bed02fd8f
 # ╠═ac79f899-142e-4ad6-8518-80ead6aa0772
 # ╠═1bd7c8cb-538c-4a6d-a30f-d3393933a9d9
+# ╠═4b9e72f2-6f1c-4adc-ab86-08163d4fd93c
 # ╠═f73f7c85-2a13-4e03-9439-08056c9a8b06
 # ╠═7604f735-4f00-4ab7-9210-29d229933b03
+# ╠═7fd40021-8689-464a-9c85-c47105e00a84
+# ╠═212dab6b-2afd-4b6b-b75e-2a42e7b273f7
 # ╠═ec2e14ed-c42e-4869-a82c-aa968f417d27
 # ╠═2a57ffbb-f521-4039-b73e-ff9716b6d1cc

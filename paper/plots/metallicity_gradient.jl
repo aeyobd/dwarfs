@@ -115,13 +115,14 @@ md"""
 # Plots
 """
 
+# ╔═╡ 469b454a-989c-4679-afd6-42ed41683331
+
+
 # ╔═╡ ca1d0e3b-5b47-44a4-9ee0-f7583615908c
 import StatsBase: median, mean, sem
 
 # ╔═╡ fc5aaacc-72b1-41b1-9816-bd0ac47fff55
-function median_plot!(x, y, y_err; num_bins=20, kwargs...)
-	num_per_bin = length(x) ÷ num_bins
-	bins = LilGuys.bins_equal_number(x, nothing,  num_per_bin=num_per_bin)
+function median_plot!(x, y, y_err; bins, kwargs...)
 	Nb = length(bins) - 1
 
 	x_m = midpoints(bins)
@@ -159,6 +160,12 @@ df_scl = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/sculptor/velocities
 # ╔═╡ e4076fb8-6d7a-4bfb-883d-25f452d935e0
 df_umi = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/ursa_minor/velocities/processed/vz_r_ell_binned.rv_combined_x_2c_psat_0.2.csv"), DataFrame)
 
+# ╔═╡ 94f79815-263c-4d42-8069-ad98c773db6e
+bins_scl = log10.([df_scl.x_low; df_scl.x_high[end]])
+
+# ╔═╡ 85a8e80c-d7f1-40f3-9003-03f0c21343d7
+bins_umi = log10.([df_umi.x_low; df_umi.x_high[end]])
+
 # ╔═╡ 23bcdc62-1c21-47b3-b8a3-f616ed779bd3
 function plot_σv_obs!(galaxyname)
 	if galaxyname == "sculptor"
@@ -167,7 +174,7 @@ function plot_σv_obs!(galaxyname)
 		df = df_umi
 	end
 
-	errorscatter!(log10.(df.x), (df.σ), yerror=df.σ_em, color=:black, markersize=6)
+	errorscatter!(log10.(df.x), (df.σ), yerror=df.σ_em, color=:black, markersize=4)
 end
 
 # ╔═╡ bd656734-acb8-4653-9fb8-684272bc2ce5
@@ -211,18 +218,6 @@ end
 # ╔═╡ 0b722f4c-368c-4308-abcb-2584252f595f
 sigma_los(halo_scl, get_profiles(fit_scl, get_obs_props("sculptor")["distance"])[1], 0.2) * V2KMS
 
-# ╔═╡ d8bb89ad-c76c-4a28-b818-b12b782b9966
-scatter(log10.(df_umi.x), df_umi.σ)
-
-# ╔═╡ 39208d87-5247-4469-942d-d0f471b990c8
-r_h_arroyo_polonio24 = [0.129, 0.27] * 60 * sqrt(1 - 0.36)# spherical plummer models...
-
-# ╔═╡ 8ec3d740-3de4-4c31-b4d7-0e6c86d08a34
-r_h_pace20 = [11.444078065902497, 23.159557192656436] # their MMT models converted to arcmin given their adopted distance
-
-# ╔═╡ be67b463-4a63-4f2c-98bb-5298bf1b1faa
-fit_umi
-
 # ╔═╡ 45f1bb15-dd49-4fcf-bd16-5d0bfe939f8c
 smallfontsize = 0.8 * theme(:fontsize)[]
 
@@ -233,41 +228,10 @@ COLORS
 color_inner = COLORS[1]
 
 # ╔═╡ 32ace91f-f9e9-4a93-b951-6d0229611fda
-color_outer = COLORS[2]
+color_outer = COLORS[4]
 
 # ╔═╡ 47f1b731-d934-48c5-ac29-a092c2b0dfc9
 color_combined = COLORS[5]
-
-# ╔═╡ 8bbf2aa6-0804-4f18-b5e6-4b919635663e
-function plot_median_profile(gs, df, prof_obs)
-	ax = Axis(gs, xlabel = "log R / arcmin", ylabel = L"log $\Sigma_\star$ / arcmin$^{-2}$")
-	
-	errorscatter!(prof_obs.log_R, (prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma), color=:black, markersize=4)
-
-	
-	x = LinRange(-1, 2.5, 1000)
-
-	R = 10 .^ x
-	
-	prof, prof_outer = get_profiles(df)
-	prof_double = LilGuys.DoubleExp2D(prof.M, prof.R_s, prof_outer.M, prof_outer.R_s)
-
-
-	scale = sum(prof_obs.counts)
-	y = @. log10(LilGuys.surface_density(prof, R) * scale)
-	y2 = @. log10(LilGuys.surface_density(prof_outer, R) * scale)
-	y3 = @. log10(LilGuys.surface_density(prof_double, R) * scale)
-	lw = theme(:linewidth)[]/2
-	lines!(x, y, color=color_inner, linewidth=lw)
-	lines!(x, y2, color=color_outer, linewidth=lw)
-	lines!(x, y3, color=color_combined, linewidth=lw)
-
-	
-	ylims!(-6, 3)
-
-	ax
-
-end
 
 # ╔═╡ 4f9e9a52-9846-4307-aa7b-9cfc9583737f
 function plot_mixture!(df, y_low, y_high)
@@ -321,7 +285,7 @@ end
 color_survey = COLORS[3]
 
 # ╔═╡ 76a3fe79-9504-4f32-8f77-d1040fe9f968
-color_sestito = COLORS[4]
+color_sestito = COLORS[2]
 
 # ╔═╡ 23f21352-f175-414c-8f21-e6a27f73d634
 styles = Dict(
@@ -331,9 +295,52 @@ styles = Dict(
 	"p+20" => (; color=color_survey)
 )
 
+# ╔═╡ df2e12ef-ced9-4bd1-8d96-5212b705afa3
+color_j24 = :black
+
+# ╔═╡ 8bbf2aa6-0804-4f18-b5e6-4b919635663e
+function plot_median_profile(gs, df, prof_obs)
+	ax = Axis(gs, xlabel = "log R / arcmin", ylabel = L"log $\Sigma_\star$ / arcmin$^{-2}$")
+	
+	errorscatter!(prof_obs.log_R, (prof_obs.log_Sigma), yerror=error_interval.(prof_obs.log_Sigma), color=color_j24, markersize=4, marker=:rect)
+
+	
+	x = LinRange(-1, 2.5, 1000)
+
+	R = 10 .^ x
+	
+	prof, prof_outer = get_profiles(df)
+	prof_double = LilGuys.DoubleExp2D(prof.M, prof.R_s, prof_outer.M, prof_outer.R_s)
+
+
+	scale = sum(prof_obs.counts)
+	y = @. log10(LilGuys.surface_density(prof, R) * scale)
+	y2 = @. log10(LilGuys.surface_density(prof_outer, R) * scale)
+	y3 = @. log10(LilGuys.surface_density(prof_double, R) * scale)
+	lw = theme(:linewidth)[]/2
+	lines!(x, y, color=color_inner, linewidth=lw)
+	lines!(x, y2, color=color_outer, linewidth=lw)
+	lines!(x, y3, color=color_combined, linewidth=lw)
+
+	
+	ylims!(-6, 3)
+
+	ax
+
+end
+
+# ╔═╡ a963839a-8e31-43ad-bc8d-6e26752ce38d
+bins_scl
+
+# ╔═╡ 5244b2ff-d2e2-4635-a353-f439488040ce
+theme(:size)
+
+# ╔═╡ d5eca64a-fea9-4197-a3d5-0daf7c867814
+254.88/72
+
 # ╔═╡ c2b44dcf-cc5e-4630-b4c7-46fcb1725b66
 let
-	fig = Figure(size=(3.5, 4) .* 72)
+	fig = Figure(size=(3.54, 4) .* 72)
 
 	ax_scl_dens = plot_median_profile(fig[1, 1], fit_scl,Utils.load_expected_density_profile("sculptor") )
 
@@ -347,11 +354,13 @@ let
 		scatter!(log10.(df.R_ell), df.fe_h, markersize=2; label=label_key[study], styles[study]...)
 	end
 
+	errorscatter!(NaN, NaN, color=:black, markersize=4, label="J+24", marker=:rect)
+	errorscatter!(NaN, NaN, color=:black, markersize=4, label="binned")
 	lines!([NaN], [NaN], color=color_inner, label="inner model", linewidth=1)
 	lines!([NaN], [NaN], color=color_outer, label="outer model",  linewidth=1)
 	lines!([NaN], [NaN], color=color_combined, label="inner+outer",  linewidth=1)
-	
-	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err)
+
+	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err, bins=bins_scl)
 	# vlines!(r_trans_scl, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
 	plot_mixture!(fit_scl, get_param(multipop_scl, "mu_fe_b"), get_param(multipop_scl, "mu_fe_a"))
 
@@ -379,7 +388,7 @@ let
 	ax_umi.yticklabelsvisible = false
 	# axislegend(position=:lt)
 
-	median_plot!(log10.(metals_umi.R_ell), metals_umi.fe_h, metals_umi.fe_h_err)
+	median_plot!(log10.(metals_umi.R_ell), metals_umi.fe_h, metals_umi.fe_h_err, bins=bins_umi)
 	# vlines!(r_trans_umi, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
 	plot_mixture!(fit_umi, get_param(multipop_umi, "mu_fe_b"), get_param(multipop_umi, "mu_fe_a"))
 
@@ -427,7 +436,7 @@ let
 	# rowsize!(fig.layout, 2, Aspect(1, 1))
 
 
-	Legend(fig[4, :], ax_scl, nbanks=2, tellheight=true)
+	Legend(fig[4, :], ax_scl, nbanks=3, tellheight=true)
 	resize_to_layout!()
 
 
@@ -455,7 +464,7 @@ let
 	lines!([NaN], [NaN], color=COLORS[4], label="outer",  linewidth=1)
 	lines!([NaN], [NaN], color=COLORS[5], label="combined",  linewidth=1)
 	
-	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err)
+	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err, bins=bins_scl)
 	# vlines!(r_trans_scl, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
 	plot_mixture!(fit_scl, get_param(multipop_scl, "mu_fe_b"), get_param(multipop_scl, "mu_fe_a"))
 
@@ -481,7 +490,7 @@ let
 	ax_umi.yticklabelsvisible = false
 	# axislegend(position=:lt)
 
-	median_plot!(log10.(metals_umi.R_ell), metals_umi.fe_h, metals_umi.fe_h_err)
+	median_plot!(log10.(metals_umi.R_ell), metals_umi.fe_h, metals_umi.fe_h_err, bins=bins_umi)
 	# vlines!(r_trans_umi, color=COLORS[2], linewidth=theme(:linewidth)[]/2)
 	plot_mixture!(fit_umi, get_param(multipop_umi, "mu_fe_b"), get_param(multipop_umi, "mu_fe_a"))
 
@@ -591,53 +600,6 @@ LilGuys.mean(metals_scl.fe_h[metals_scl.R_ell .< r_trans_scl], 1 ./ metals_scl.f
 # ╔═╡ d3a907cc-241e-49d8-8d91-2fd9061e520b
 α_exp = LilGuys.R_h(LilGuys.Exp2D())
 
-# ╔═╡ 1acb5e4c-c089-40c0-8928-0dc259ab5134
-r_h_scl = [get_param(fit_scl, "R_s"), get_param(fit_scl, "R_s_outer")] * α_exp
-
-# ╔═╡ 83a5e344-86df-4d19-bbda-636b6b6a13b0
-function scl_density_arrows!()
-	annotation!(0, 30, log10.(r_h_arroyo_polonio24[1]), -3.5, text=L"$R_h$ (AP+24)", fontsize=smallfontsize, color="black")
-	annotation!(0, 30, log10.(r_h_arroyo_polonio24[2]), -3.5, text=" ", color="black")
-
-	annotation!(0, 30, log10.(r_h_scl[1]), 1, text=" ", color=COLORS[1])
-	annotation!(0, 30, log10.(r_h_scl[2]), 0.5, text=" ", color=COLORS[4])
-end
-
-# ╔═╡ c0e693c4-f960-4cff-896d-2e80d9fb9a7a
-let 
-fig = Figure()
-	plot_median_profile(fig[1,1], fit_scl,Utils.load_expected_density_profile("sculptor") )
-
-	scl_density_arrows!()
-	ylims!(-3, 2)
-
-	fig
-end
-
-
-# ╔═╡ 4efb6764-696a-49c0-9066-794ca3ec8fb8
-r_h_umi = [get_param(fit_umi, "R_s"), get_param(fit_umi, "R_s_outer")] * α_exp
-
-# ╔═╡ c6e078aa-47d4-4d97-8d8a-c5e1c1ebb473
-function umi_density_arrows!()
-	annotation!(0, 30, log10.(r_h_pace20[1]), -3.5, text=L"$R_h$ (P+20)", fontsize=smallfontsize, color="black")
-	annotation!(0, 30, log10.(r_h_pace20[2]), -3.5, text=" ", color="black")
-
-	annotation!(0, 30, log10.(r_h_umi[1]), 0.3, text=" ", color=COLORS[1])
-	annotation!(0, 30, log10.(r_h_umi[2]), -0.7, text=" ", color=COLORS[4])
-end
-
-# ╔═╡ 8b84197b-45fd-4df4-8733-053730354319
-let 
-fig = Figure()
-	plot_median_profile(fig[1,1], fit_scl,Utils.load_expected_density_profile("ursa_minor") )
-	umi_density_arrows!()
-	ylims!(-3, 2)
-
-	fig
-end
-
-
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═7564bff6-1ba9-4255-a94a-606450085eba
@@ -658,6 +620,7 @@ end
 # ╠═8366afbb-c528-40cc-8035-18927f77ca3b
 # ╠═689bb4f2-c1f7-4ec8-a11f-4b4078160bc5
 # ╠═9b6781e0-7490-45dd-b807-4f49309eb8ca
+# ╠═469b454a-989c-4679-afd6-42ed41683331
 # ╠═ca1d0e3b-5b47-44a4-9ee0-f7583615908c
 # ╠═fc5aaacc-72b1-41b1-9816-bd0ac47fff55
 # ╠═8bbf2aa6-0804-4f18-b5e6-4b919635663e
@@ -667,6 +630,8 @@ end
 # ╠═23f21352-f175-414c-8f21-e6a27f73d634
 # ╠═f1bc7e02-0ee8-46e1-bd7a-0d833ab306b4
 # ╠═e4076fb8-6d7a-4bfb-883d-25f452d935e0
+# ╠═94f79815-263c-4d42-8069-ad98c773db6e
+# ╠═85a8e80c-d7f1-40f3-9003-03f0c21343d7
 # ╠═23bcdc62-1c21-47b3-b8a3-f616ed779bd3
 # ╠═bd656734-acb8-4653-9fb8-684272bc2ce5
 # ╠═a7441217-1826-4d15-b579-766493009c4f
@@ -678,23 +643,17 @@ end
 # ╠═caf4a15e-6005-4d28-b76a-b0c519ec6f80
 # ╠═8a757f44-0ef3-4ed2-bf90-f9edbda8d102
 # ╠═0b722f4c-368c-4308-abcb-2584252f595f
-# ╠═d8bb89ad-c76c-4a28-b818-b12b782b9966
-# ╠═39208d87-5247-4469-942d-d0f471b990c8
-# ╠═8ec3d740-3de4-4c31-b4d7-0e6c86d08a34
-# ╠═1acb5e4c-c089-40c0-8928-0dc259ab5134
-# ╠═be67b463-4a63-4f2c-98bb-5298bf1b1faa
-# ╠═4efb6764-696a-49c0-9066-794ca3ec8fb8
 # ╠═45f1bb15-dd49-4fcf-bd16-5d0bfe939f8c
-# ╠═83a5e344-86df-4d19-bbda-636b6b6a13b0
-# ╠═c6e078aa-47d4-4d97-8d8a-c5e1c1ebb473
-# ╠═c0e693c4-f960-4cff-896d-2e80d9fb9a7a
-# ╠═8b84197b-45fd-4df4-8733-053730354319
 # ╠═958182b7-e59d-4ad0-980f-96e8572de2c6
 # ╠═5f3a7a29-f879-4cc2-a2a1-23eefcb247b9
 # ╠═32ace91f-f9e9-4a93-b951-6d0229611fda
 # ╠═47f1b731-d934-48c5-ac29-a092c2b0dfc9
 # ╠═4bc986df-5798-4928-8ac8-a3baf1767d08
 # ╠═76a3fe79-9504-4f32-8f77-d1040fe9f968
+# ╠═df2e12ef-ced9-4bd1-8d96-5212b705afa3
+# ╠═a963839a-8e31-43ad-bc8d-6e26752ce38d
+# ╠═5244b2ff-d2e2-4635-a353-f439488040ce
+# ╠═d5eca64a-fea9-4197-a3d5-0daf7c867814
 # ╠═c2b44dcf-cc5e-4630-b4c7-46fcb1725b66
 # ╠═2d8f1d30-72de-4f64-bf3a-b79c66dfeee3
 # ╟─22598e4a-b7bb-4ed3-a71b-e3e29b37e58a
