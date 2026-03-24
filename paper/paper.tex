@@ -55,12 +55,14 @@
 \newcommand{\gadget}{\texttt{Gadget-4}}
 \newcommand{\LCDM}{$\Lambda$CDM}
 
+\defcitealias{jensen+2024}{J+24}
+\newcommand{\jj}{\citetalias{jensen+2024}}
 
 % editing commands
 \newcommand{\red}{\color{Thistle}}
 \newcommand{\dbnote}[1]{{\red (DB: #1)}}
-\newcommand{\dbadd}[1]{{\red #1}}
-\newcommand{\dbstrike}[1]{{\red \sout{#1}}}
+%\newcommand{\dbadd}[1]{{\red #1}}
+%\newcommand{\dbstrike}[1]{{\red \sout{#1}}}
 
 
 %%% citepos command
@@ -110,7 +112,7 @@
    We use N-body simulations to study whether these outlier stars may have resulted from the effect of Galactic tides.  
   % methods heading (mandatory)
   % results heading (mandatory)
-   Our results indicate that, on their present orbit, neither galaxy has experienced  tidal forces strong enough to affect their stellar density profiles. This is because the observed velocity dispersion and size of Scl and UMi imply that they are simply too dense to have been affected by Galactic tides. This conclusion applies also when considering the effects of the Large Magellanic Cloud, which may have had a strong influence on Scl's orbit around the Milky Way. Our results are insensitive to assumptions about the detailed density profile of the dark matter halo around each of these galaxies, such as the presence of an inner core. 
+   Our results indicate that, on their present orbit, neither galaxy has experienced  tidal forces strong enough to affect their stellar density profiles. The observed velocity dispersion and size of Scl and UMi imply that they are simply too dense to have been affected by Galactic tides. This conclusion applies also when considering the effects of the Large Magellanic Cloud, which may have had a strong influence on Scl's orbit around the Milky Way. Our results are insensitive to assumptions about the detailed density profile of the dark matter halo around each of these galaxies, such as the presence of an inner core. 
   % conclusions heading (optional), leave it empty if necessary
   We conclude that the outlying stars in Scl or UMi are not of tidal origin, but, rather, innate features that possibly reflect  past merger events or the presence of multiple dynamical components.
 }
@@ -133,17 +135,16 @@ evolutionary history.
 Most nearby dwarf spheroidals (dSph) are well-described by an exponential
 surface density profile, with a sharp decline in the outer regions \citep[e.g.,][]{mateo1998, mcconnachie+irwin2006, kowalczyk+2013, martin+2016, cicuendez+2018, munoz+2018}. 
 However, a number of dwarfs show an  excess of distant stars relative to an exponential.
-For example, \citet{chiti+2021} find an extended distribution of stars around Tucana II, which later studies have suggested arose from a past merger \citep{tarumi+yoshida+frebel2021, querci+2025}. In addition, the Sagittarius and Tucana III dSphs show clear evidence of tidal disruption, with streams that extend far from the centre of each dwarf \citep[e.g.,][]{ibata+gilmore+irwin1994, li+2018}. 
+For example, \citet{chiti+2021} find an extended distribution of stars around Tucana II, which they suggested arose from a past merger \citep[see also][]{tarumi+yoshida+frebel2021, querci+2025}. In addition, the Sagittarius and Tucana III dSphs show clear evidence of tidal disruption, with streams that extend far from the centre of each dwarf \citep[e.g.,][]{ibata+gilmore+irwin1994, li+2018}. 
 
-Among classical dwarf galaxies (i.e., those with $M_V<-8$, or $M_*>10^5\, M_\odot$),  Sculptor (Scl)  and Ursa Minor (UMi) display a significant overabundance of distant stars (see Section~\ref{sec:gaia}). \citet{innanen+papp1979} first noted that RR Lyrae candidate members in Scl appeared to extend out to $180'$, or well over 10 half-light radii.
+Among classical dwarf galaxies (i.e., those with $M_V<-8$, or $M_*>10^5\, M_\odot$),  Sculptor (Scl)  and Ursa Minor (UMi) display a significant overabundance of distant stars (see Section~\ref{sec:gaia}). \citet{innanen+papp1979} first noted that RR Lyrae candidate members in Scl appeared to extend out to $180'$, or well over 15 half-light radii ($R_h = 9.79'$).\footnote{We use sphericalized half-light radii throughout this work, i.e. $R_h = a \sqrt{1 - e}$ where $a$ is the major axis of the ellipse containing a star and $e$ is the ellipticity.}
 Subsequent density profile measurements have repeatedly reported  an apparent outer density excess \citep{eskridge1988, IH1995,
 martinez-delgado+2001, walcher+2003, palma+2003, westfall+2006}. 
-More recently, \citet{sestito+2023a, sestito+2023b} used \citepos{jensen+2024} catalogue of \textit{Gaia} candidates to spectroscopically confirm distant members out to ${\sim}10$ half-light radii ($R_h$) from the centre of Scl and UMi. If these galaxies were well described by exponential profiles, fewer than one in a million stars should be found at distances greater than $10\,R_h$, which in practice means that no members should be found at such distance.
-
+More recently, \citet{sestito+2023a, sestito+2023b} used \citepos{jensen+2024} catalogue of \textit{Gaia} candidates to spectroscopically confirm distant members out to ${\sim}10$ half-light radii ($R_h$) from the centre of Scl and UMi. If these galaxies were well described by exponential profiles, fewer than one in a million stars should be found at distances greater than $10\,R_h$, which in practice means that no members should be found at such distance. 
 
 Galactic tides  provide a possible mechanism for stars to populate the far outskirts of Scl and UMi \citep[e.g.][]{innanen+papp1979, walcher+2003, sestito+2023a}; 
-however, there has been so far no convincing evidence for the presence of obvious tidal features, such as streams, tails or shells,  around either of these dwarfs. 
-The main goal of our study is to assess, via N-body simulations, whether Galactic tides are able to modify the outer regions of Scl and UMi so as to explain the presence of their far outlying members. 
+however, there has been so far no convincing evidence for the presence of obvious tidal features -- such as streams, tails or shells -- around either of these dwarfs. 
+The main goal of our study is to assess, via N-body simulations, whether Galactic tides influence the outer regions of Scl and UMi so as to explain the presence of their far outlying members. 
 
 Accurate modelling of tidal interactions often requires idealized simulations where the limitations of finite particle number or force/time resolution may be alleviated or tested. Cosmological simulations struggle to resolve tidal effects on dwarfs, which are 
 often near the resolution limit and vulnerable to artificial disruption
@@ -160,38 +161,41 @@ Our paper is organized as follows.  Section~\ref{sec:gaia}  describes the densit
 Measuring the light profile of a resolved galaxy requires careful
 consideration of whether any given star belongs to the system or not.
 Without removing contamination from foreground or background sources, faint
-features may be lost in the noise or be of uncertain association. Fortunately, the data gathered by the \textit{Gaia} satellite now provides stellar parallaxes and proper motions, which greatly improve  membership assignment \citep{gaiacollaboration+2023}.
+features may be hidden or of uncertain association. Fortunately, the data gathered by the \textit{Gaia} satellite now provides stellar parallaxes and proper motions, which greatly improve  membership assignment \citep{gaiacollaboration+2023}.
 
-Here, we use the \citepos[hereafter J+24]{jensen+2024} Gaia membership
-probabilities. J+24 used a Bayesian framework
+Here, we use the \citepos[hereafter \jj]{jensen+2024} Gaia membership
+probabilities. \jj{} used a Bayesian framework
 incorporating proper motion, colour--magnitude, and
 spatial information to determine the probability that a given star
-belongs to a satellite, $P_\text{sat}$. By accounting for proper motions, colors, magnitudes, and sky position, J+24 produced low contamination samples of candidate
-member stars. J+24 also extended
+belongs to a satellite, $P_\text{sat}$. By accounting for proper motions in particular, \jj{} produced low contamination samples of candidate
+member stars. \jj{} also extended
 the algorithm presented in \citet{MV2020a, MV2020b} by additionally
-including a secondary, extended spatial component\footnotemark{}. With this addition, J+24 detected
+including a secondary, extended spatial component.\footnotemark{} With this addition, \jj{} detected
 candidate members out to ${\sim}10$ half-light radii ($R_h$) from the
-centres of some galaxies. Similar recent work includes
+centres of some galaxies. Related work includes
 \citet{pace+li2019}; \citet{battaglia+2022}; \citet{pace+erkal+li2022};
 \citet{qi+2022}.
 
 \footnotetext{
 We use
 the $P_\textrm{sat}$ values from the elliptical 2-component runs if a
-galaxy shows evidence for an outer component, or from the 1-component run
+galaxy shows evidence for an outer component (i.e., Scl and UMi), or from the 1-component run
 otherwise. 
 }
 
 For our samples, we adopt a minimum probability of
 $P_\text{sat} = 0.2$. Most stars have $P_\text{sat}$ values which are nearly 0 or 1, so the exact choice of probability threshold has little effect on the resulting sample. Even
 at the probability threshold of 0.2, the purity of line-of-sight velocity members remains
-high (${\sim}90\%$, J+24).
+high (${\sim}90\%$, \jj{}).
 
 Fig.~\ref{fig:observed_density_profiles} compares the density
-profiles of Scl, UMi, and eight other classical dSphs. The density profiles are shown out to the radius where the surface density reaches that of background stars with satellite-consistent proper motion and position in a colour-magnitude diagram. 
+profiles of Scl, UMi, and eight other classical dSphs. We include Fornax, Leo I, Leo II, Carina, Draco,
+Canes Venatici I, Sextans I, and Crater II. We exclude Sagittarius and
+Antlia II due to high foreground density of stars.
+The density profiles are shown out to the radius where the surface density reaches the background density of stars, as calculated from a sample of stars selected to have the product of the satellite to background likelihood ratios in CMD and PM space greater than one.
 
-All classical dwarfs are well described by an exponential profile in the inner regions.
-In the outer regions, however, Scl and UMi deviate and show a clear  excess of stars over an exponential law. The deviation from an exponential grows outwards and  reaches ${\sim}2$ orders of magnitude at $8 R_h$. A simple characterization of this excess is provided by a Plummer profile (dashed black line, see Eq.~\ref{EqPlummer}), where the outer region of the profile  approximates a power law rather than an exponential truncation. 
+All classical dwarfs are well described by an exponential profile in the inner regions, as shown in Fig.~\ref{fig:observed_density_profiles}.
+In the outer regions, however, Scl and UMi deviate and show a clear  excess of stars over an exponential law. The deviation from an exponential grows outwards and  reaches over an order of magnitude at $6 R_h$. A Plummer profile better characterizes this excess (dashed black line, see Eq.~\ref{EqPlummer}), where the outer region of the profile approximates a power law rather than an exponential law. 
 
 \begin{figure}
     \centering
@@ -200,12 +204,9 @@ In the outer regions, however, Scl and UMi deviate and show a clear  excess of s
         The density profiles of
         Sculptor (orange squares), Ursa Minor (green triangles), and other
         classical dwarfs (blue lines) compared to 2D exponential (solid black
-        line) and Plummer density profiles (dashed black line). For other
-        classical dwarfs, we include Fornax, Leo I, Leo II, Carina, Draco,
-        Canes Venatici I, Sextans I, and Crater II. We exclude Sagittarius and
-        Antlia II due to high foreground. Density
+        line) and Plummer density profiles (dashed black line).  Density
         profiles are plotted as a function of the elliptical radius
-        scaled to the half-light radius from \citet{munoz+2018}, and the
+        scaled to the half-light radius adopted in \citet{MV2020a} for each dwarf, and the
          stellar density scaled to the density at half-light
         radius. We use bins of 0.05 dex width in $\log R$, and  residuals (lower
         panel) are with respect to the 2D exponential. 
@@ -218,7 +219,7 @@ In the outer regions, however, Scl and UMi deviate and show a clear  excess of s
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methods} \label{sec:methods}
 
-The aim of this paper is to assess whether the outer excess of stars seen in Scl and UMi could plausibly be due to Galactic tides. Since both of these galaxies are dark matter dominated, we use N-body simulations to evolve a dark matter halo model in the potential of the Milky Way over $10$ Gyr. We choose an orbit consistent with the present day position and velocity of a dwarf, and assume that the Galactic potential does not evolve with time. We shall also consider a model which includes a time-evolving potential motivated by the recent accretion of the Magellanic Clouds into the Galactic halo.  We provide below details on our assumed Galactic potential, orbital modelling and initial conditions, as well as the particle-tagging method used to track the evolution of the stellar component of the satellites.
+This paper aims to assess whether the outer excess of stars seen in Scl and UMi may arise from Galactic tides. Since both galaxies are dark-matter dominated, we use N-body simulation which assume the evolution is well-represented by the evolution of collisionless particles within a single dark-matter subhalo under a specified Milky Way potential. We choose an orbit consistent with the present-day position and velocity of a dwarf. We shall also consider a model which includes a time-evolving potential motivated by the recent accretion of the Magellanic Clouds into the Galactic halo.  We provide below details on our assumed Galactic potentials, orbital modelling and initial conditions, as well as the particle-tagging method used to track the evolution of the stellar component of the satellites.
 
 \subsection{Galactic potential and reference frame}\label{milky-way-potential}
 
@@ -228,9 +229,9 @@ coordinates, we use the Astropy v4 right-handed Cartesian Galactocentric frame
 \citep{astropycollaboration+2022}. In this frame, $x$ is the direction that joins the Sun and the Galactic centre, $y$ is the direction of the motion of the Local
 Standard of Rest, and $z$ is the direction perpendicular to the
 Galactic plane. The solar position is
-$[-8.122 \pm 0.033, 0, 0.0208 \pm 0.003]\, \kpc$
+$[-8.12, 0.00, 0.0208]\, \kpc$
 \citep{gravitycollaboration+2018, bennett+bovy2019} and the solar
-velocity is $\V_\odot = [-12.9 \pm 3.0, 245.6 \pm 1.4, 7.78 \pm 0.08]\ \kms$
+velocity is $\V_\odot = [-12.9, 245.6, 7.78]\ \kms$
 \citep{reid+brunthaler2004, drimmel+poggio2018, gravitycollaboration+2018}.
 The uncertainties in this reference frame are generally smaller than the
 uncertainty in a dwarf galaxy's distance and/or tangential velocity.
@@ -243,7 +244,7 @@ The NFW density profile is defined as,
 \rho/\rho_s= \frac{1}{(r/r_s)(1+r/r_s)^2},
 }\end{equation}
 where $r_s$ and $\rho_s$ are a scaling radius and  density, respectively. The NFW halo can also be parametererized in terms of $\vmax$ and $\rmax$, the maximum circular velocity of a halo and the radius where the circular velocity peaks.  
-For the Milky Way, we adopt $\rmax = 43.7\,$kpc and $\vmax = 191\,\kms$. Equivalently, the dark matter halo has a virial mass  $M_{200} = 126.6\times 10^{10}\,\Mo$ and $r_s=20.2\,\kpc$.
+For the Milky Way, we adopt $\rmax = 43.7\,$kpc and $\vmax = 191\,\kms$. Equivalently, the dark matter halo has a virial mass  $M_{200} = 1.266\times 10^{12}\,\Mo$ and $r_s=20.2\,\kpc$.
 %\footnotetext{We measure ``virial" quantities of a halo at the radius where the mean enclosed density equals 200 times the critical density for closure.}
 
 
@@ -254,67 +255,59 @@ multipole approximation of an N-body simulation including a live MW and
 LMC dark matter halo. The potential includes a static MW bulge and disk,
 evolving MW and LMC halos, and the MW reflex motion. In their
 simulation, the MW was initially a NFW halo with $r_s=16.5\,$kpc and
-$M_{200}= 98.4\times10^{10}\Mo$, and the LMC is modeled as an NFW halo with
-$r_s=11.7$ and $M_{200} = 24.6 \times 10^{10} \Mo$. Note that the total
+$M_{200}= 9.84\times10^{11}\Mo$, and the LMC is modeled as an NFW halo with
+$r_s=11.7$ and $M_{200} = 2.46 \times 10^{11} \Mo$. Note that the total
 \texttt{L3M11} MW mass is slightly less massive than our initial \citet{EP2020}
 MW-only potential.
 
 
 \subsection{Orbits}\label{sec:scl_smallperi}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\caption[Observed Properties of Sculptor]{Observed properties of Sculptor. In order, the properties are right ascension ($\alpha$), declination ($\delta$), distance modulus, distance, corrected proper motion in right ascension ($\mu_{\alpha*}=\mu_\alpha\cos\delta$), proper motion in declination ($\mu_\delta$), line-of-sight systemic velocity ($\V_\text{los}$), line-of-sight velocity dispersion ($\sigma_\V$), the half-light radius ($R_h$), ellipticity, position angle, and absolute V-band magnitude ($M_V$).}
-References are: (1) Muñoz et al. (2018, Sérsic fit), (2) Tran et al. (2022, RR lyrae distance), (3) Alan W. McConnachie and Venn (2020b), (4) Arroyo-Polonio et al. (2024). 
-\label{tbl:scl_obs_props}
-\begin{tabular}{lll}
+\caption[Observed Properties of Sculptor]{Observed properties of Sculptor. In order, the properties are right ascension ($\alpha$), declination ($\delta$), distance modulus, distance, corrected proper motion in right ascension ($\mu_{\alpha*}=\mu_\alpha\cos\delta$), proper motion in declination ($\mu_\delta$), line-of-sight systemic velocity ($\V_\text{los}$), line-of-sight velocity dispersion ($\sigma_\V$), the half-light radius ($R_h$), ellipticity, position angle, absolute V-band magnitude ($M_V$), stellar V-band mass-to-light ratio, and derived stellar mass.
+
+References are: (1) \citet[Sérsic fit]{munoz+2018}, (2) \citet[RR lyrae distance]{tran+2022}, (3) \citet{MV2020b}, (4) \citet{arroyo-polonio+2024}, (5) \citep{garofalo+2025}, (6) \citet{pace+2020}, average of their MMT and Keck results with systematic uncertainty based on the difference between the MMT and Keck means, (7) \citet{woo+courteau+dekel2008}.
+}
+\label{tbl:obs_props}
+\begin{tabular}{lllll}
 \hline
-parameter & value & reference\\
+parameter & Sculptor & reference & Ursa Minor & reference \\
 \hline
-$\alpha\  /\  ^\circ$ & $15.0183 \pm 0.0012$ & 1\\
-$\delta\  /\  ^\circ$ & $-33.7186 \pm 0.0007$ & 1\\
-distance modulus & $19.60 \pm 0.05$ & 2\\
-distance / kpc & $83.2 \pm 2$ & 2\\
-$\mu_{\alpha*}\ /\ \masyr$  & $0.099 \pm 0.002_\text{stat} \pm 0.017_\text{sys}$ & 3\\
-$\mu_\delta\ /\ \masyr$ & $-0.160 \pm 0.002_\text{stat} \pm 0.017_\text{sys}$  & 3\\
-$\V_\text{los}\ /\ \kms$ & $111.2 \pm 0.3\ $ & 4\\
-$\sigma_\V\ /\ \kms$ & $9.7\pm0.2\ $ & 4\\
-$R_h\ /\ '$ & $9.79 \pm 0.04$ & 1\\
-ellipticity & $0.37 \pm 0.01$ & 1\\
-position angle / $^\circ$ & $94\pm1$ & 1\\
-$M_V$ & $-10.82\pm0.14$ & 1\\
+$\alpha\  /\  ^\circ$       & $15.0183 \pm 0.0012$ & 1 
+                            & $ 227.2420 \pm 0.0045$ & 1\\
+$\delta\  /\  ^\circ$       & $-33.7186 \pm 0.0007$ & 1
+                            & $67.2221 \pm 0.0016$ & 1\\
+distance modulus            & $19.60 \pm 0.05$ & 2 
+                            & $19.23 \pm 0.11$ & 5\\
+distance / kpc              & $83.2 \pm 2$ & 2 
+                            & $70.1 \pm 3.6$ & 5\\
+$\mu_{\alpha*}\ /\ \masyr$  & $0.099 \pm 0.002_\text{stat} \pm 0.017_\text{sys}$ & 3 
+                            & $-0.124 \pm 0.004 \pm 0.017$ & 3\\
+$\mu_\delta\ /\ \masyr$     & $-0.160 \pm 0.002_\text{stat} \pm 0.017_\text{sys}$  & 3
+                            & $0.078 \pm 0.004_\text{stat} \pm 0.017_\text{sys}$ & 3\\
+$\V_\text{los}\ /\ \kms$    & $111.2 \pm 0.3\ $ & 4
+                            & $-245.9 \pm 0.3_\text{stat} \pm 1_\text{sys}$ & 6\\
+$\sigma_\V\ /\ \kms$        & $9.7\pm0.2\ $ & 4
+                            & $8.6 \pm 0.3$ & 6\\
+$R_h\ /\ '$                 & $9.79 \pm 0.04$ & 1
+                            & $11.62 \pm 0.1$ & 1\\
+ellipticity                 & $0.37 \pm 0.01$ & 1
+                            & $0.55 \pm 0.01$ & 1\\
+position angle / $^\circ$   & $94\pm1$ & 1
+                            & $50 \pm 1$ & 1\\
+$M_V$                       & $-10.82\pm0.14$ & 1
+                            & $-9.03 \pm 0.05$ & 1\\
+$M_\star/L_\star$           & $1.7$ & 7 &  $1.9$  & 7 \\
+$M_\star$                   & $3\times10^6$ & -- &  $7\times 10^5$  & --\\
 \hline
 \end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption[Observed Properties of Ursa Minor]{Observed properties of Ursa Minor. References are: (1) Muñoz et al. (2018, Sérsic fit), (2) Garofalo et al. (2025, RR lyrae distance), (3) Alan W. McConnachie and Venn (2020a), (4) Pace et al. (2020), average of MMT and Keck results with systematic uncertainty based on the difference between the MMT and Keck means. }
-\label{tbl:umi_obs_props}
-\begin{tabular}{lll}
-\hline
-parameter & value & reference\\
-\hline
-$\alpha\ /\ ^\circ$ & $ 227.2420 \pm 0.0045$ & 1\\
-$\delta\ /\ ^\circ$ & $67.2221 \pm 0.0016$ & 1\\
-distance modulus & $19.23 \pm 0.11$ & 2\\
-distance / kpc & $70.1 \pm 3.6$ & 2\\
-$\mu_\alpha*\ /\ \masyr$  & $-0.124 \pm 0.004 \pm 0.017$ & 3\\
-$\mu_\delta\ / \ \masyr$   & $0.078 \pm 0.004_\text{stat} \pm 0.017_\text{sys}$ & 3\\
-$\V_\text{los}\ / \ \kms$  &$-245.9 \pm 0.3_\text{stat} \pm 1_\text{sys}$ & 4\\
-$\sigma_\V$ & $8.6 \pm 0.3$ & 4\\
-$R_h\ / \ '$ & $11.62 \pm 0.1$ & 1\\
-ellipticity & $0.55 \pm 0.01$ & 1\\
-position angle / $^\circ$ & $50 \pm 1$ & 1\\
-$M_V$ & $-9.03 \pm 0.05$ & 1\\
-\hline
-\end{tabular}
-\end{table}
+\end{table*}
 
 
 \begin{table}[t]
+\caption{The present-day observed properties and pericentes of the selected point-particle orbits for Scl and UMi. }
 \centering
-\caption{The initial conditions for models presented in this work. The first four properties are derived only from point-particle orbits and deviate slightly from the N-body final positions. Instead, the position and velocity vectors $(x_i, y_i, z_i)$ and $(\V_{x,i}, \V_{y,i}, \V_{z,i})$ represent the initial conditions for the actual N-body model. }
 \label{tbl:orbit_ics}
 \begin{tabular}{llll}
 \hline
@@ -324,12 +317,18 @@ distance $/$ kpc            & $82.6$    & $73.1$    & $64.6$\\
 $\mu_{\alpha*}\ /\ \masyr$    & $0.134$   & $0.137$   & $-0.158$\\
 $\mu_\delta\ /\ \masyr$       & $-0.198$  & $-0.156$  & $0.050$\\
 $\V_\text{los}\ / \ \kms$  & $111.2$   & $111.2$   & $-245.75$\\
-\hline
 pericentre / kpc & 42 & 39 & 31 \\
-$\vmax\ /\ \kms$ & 31 & 25 & 38 \\
-$\rmax\ /\ \kpc$ & 3.2 & 2.5 & 4.0 \\
-$R_{h, \rm exp} /\ \kpc$ & 0.168 & 0.168 & 0.168 \\
-$R_{h, \rm Plummer}\ / \ \kpc$ & 0.200 & 0.200 & 0.200 \\
+\end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+\centering
+\caption{The initial conditions for the N-body simulations presented in this work.   The position and velocity vectors $(x_i, y_i, z_i)$ and $(\V_{x,i}, \V_{y,i}, \V_{z,i})$ represent the initial conditions for the actual N-body model. }
+\label{tbl:nbody_ics}
+\begin{tabular}{llll}
+\hline
+Property & Scl: MW& Scl: MW+LMC & UMi: MW\\
 \hline
 $t_i\ /\ \Gyr$        & $-9.17$   & $-2.0$    & $-9.67$\\
 ${x}_{i}\ /\ \kpc$    & $-2.49$   & $4.30$    & $-17.40$\\
@@ -339,21 +338,28 @@ $\V_{x,\,i}\ /\ \kms$ & $-20.56$  & $6.89$    & $14.27$\\
 $\V_{y,\,i}\ /\ \kms$ & $-114.83$ & $-56.83$  & $48.62$\\
 $\V_{z,\,i}\ /\ \kms$ & $-57.29$  & $52.09$   & $-114.08$\\
 \hline
+$\vmax\ /\ \kms$ & 31 & 25 & 38 \\
+$\rmax\ /\ \kpc$ & 3.2 & 2.5 & 4.0 \\
+$R_{h, \rm exp} /\ \kpc$ & 0.168 & 0.168 & 0.168 \\
+$R_{h, \rm Plummer}\ / \ \kpc$ & 0.200 & 0.200 & 0.200 \\
+\hline
 \end{tabular}
 \end{table}
 
-To explore the possible orbits of a dwarf galaxy, we perform a Monte Carlo
-sampling of its present-day position and velocity, including uncertainties, as listed in Tables~\ref{tbl:scl_obs_props}, \ref{tbl:umi_obs_props} for Scl and UMi, respectively. In practice, we draw coordinates assuming Normal distributions without covariance. 
+To explore the possible orbits of Scl and UMi, we perform a Monte Carlo
+sampling of their present-day positions and velocities from Table~\ref{tbl:obs_props}, including uncertainties. In practise, we draw coordinates assuming Normal distributions without covariance. 
 We then integrate each sampled position/velocity back in time for 10 Gyr using \agama{}
-\citep{agama}. Dynamical friction is not expected to impact orbits
-substantially, so we assume a single point-mass particle and integrate the orbit backwards in time.
+\citep{agama}. Since we find \citet{chandrasekhar1943} dynamical friction does not impact orbits substantially (not shown), we calculate point-mass particle orbits.
 
-To maximize tidal effects, we select an orbit with the ${\sim}3\sigma$ smallest pericentre among all possible orbits integrated backwards for $10\,\Gyr$. We achieve this by selecting the median parameters of all orbits with a pericentre smaller than the 0.0027th quantile pericentre, which yields a pericentre of 43 kpc for Scl and 30 kpc for UMi. Given  current observations, it is unlikely that either dwarf has had a significantly smaller pericentre than
-our selected orbit. We take the first apocentre after a look-back time of 10 Gyr as the initial conditions for our models of Scl and UMi, as listed in Table~\ref{tbl:orbit_ics}.
+Tidal evolution most strongly depends on pericentre, so we select orbits with near the smallest observationally-consistent pericentre.
+We determine these orbital properties by taking the median present-day observed properties for orbits with near the $3\sigma$ smallest pericentre\footnotemark{}, resulting in the properties in Table~\ref{tbl:orbit_ics}. Given current observations, it is unlikely that either dwarf has had a significantly smaller pericentre than
+our selected orbits. To reduce an unphysical jump in tidal force, we initialize the simulations at the first apocentre of the selected orbit. The derived initial positions, velocities, and times of our simulations are in Table~\ref{tbl:nbody_ics}.
+\footnotetext{Specifically, the median of orbits with a pericentre less than the 0.027th percentile pericentre. 
+}
 
-For the Scl MW+LMC model, we select instead the $6\sigma$ smallest pericentre with respect to the LMC (by doubling the observed uncertainties) because we do not account for uncertainties in the LMC trajectory. We only integrate this model backwards for $2\,\Gyr$ because, in the presence of the LMC, Scl is likely completing its first orbit around the Milky Way and was possibly outside the MW virial boundary before then. 
+For the Scl MW+LMC model, we instead select for the smallest pericentre with respect to the LMC to test the possible influence of the LMC. Results are similar when selecting an orbit with the smallest MW pericentre instead. We also double Scl's present-day position and velocity errors when sampling point-particle orbits, as we do not account for uncertainties in the LMC trajectory. We only integrate this model backwards for $2\,\Gyr$ because, in the presence of the LMC, Scl is possibly completing its first orbit around the Milky Way and may have been outside the MW virial boundary before then (see Section~\ref{sec:results_orbits} below). 
 
-UMi's N-body model deviates from a point-particle orbit due to dynamical self-friction \citep[e.g.,][]{white1983, miller+2020}. To better match the present-day position and velocity, we iteratively adjust UMi's initial conditions using the action-angle based method presented in Appendix~\ref{sec:action_correction}. This method converges to an orbit agreeing
+UMi's N-body model deviates from a point-particle orbit due to dynamical self-friction \citep[e.g.,][]{white1983, miller+2020}. To better match the present-day position and velocity, we iteratively adjust UMi's initial conditions using an action-angle based method presented in Appendix~\ref{sec:action_correction}. This method converges to an orbit agreeing
 with the observed kinematics of UMi after 4 iterations.
 Since Scl's orbit is less
 strongly affected by tides, we do not carry out this correction for Scl.
@@ -362,7 +368,7 @@ strongly affected by tides, we do not carry out this correction for Scl.
 
 
 
-\subsection{Initial conditions}\label{initial-conditions}
+\subsection{N-body initial conditions}\label{initial-conditions}
 
 We use \agama{} \citep{agama} to generate the initial N-body dark matter
 halo, assuming it is well approximated by a spherical, isotropic 
@@ -375,29 +381,28 @@ where we set the truncation radius at $r_t = 20 \, r_s$.
 We derive total stellar masses using the absolute magnitudes of \citet{munoz+2018} and the stellar mass-to-light ratios from \citet{woo+courteau+dekel2008}, which imply that Scl and UMi have stellar masses of $3\times10^6$ and $7\times10^5\,\Mo$, respectively.
 
 We select cosmologically-motivated values for the scaling parameters of the dark matter halos. Using the stellar mass--$\vmax$ relation from \citet{fattahi+2018} and the mass-concentration relation from \citet{ludlow+2016}, we would expect that Scl
-and UMi's halos should have $\vmax \approx 31 \,\kms$, $\rmax\approx6\,\kpc$ and
-$\vmax \approx 27\,\kms$, $\rmax\approx5\,\kpc$, respectively. 
+and UMi's halos would presently have $\vmax \approx 31 \,\kms$, $\rmax\approx6\,\kpc$ and
+$\vmax \approx 27\,\kms$, $\rmax\approx5\,\kpc$, respectively (ignoring tidal evolution). 
 
-These parameters, however, do not match the observed velocity dispersion of Scl and UMi after tidal evolution. We therefore adopt  $\vmax = 31\,\kms$ and $\rmax=3.2\,\kpc$ for Scl in the MW-only potential, $\vmax=25\,\kms$ and $\rmax=2.5\,\kpc$ for Scl in the MW+LMC potential, and
-$\vmax=38\,\kms$ and $\rmax=4\,\kpc$ for UMi. Our initial dark matter halos are within  2--3$\sigma$ of the mean values expected from \citet{ludlow+2016, fattahi+2018}.
+The cosmological-mean halos, however, result in a velocity dispersion smaller than observed for Scl and UMi after tidal evolution. We therefore adopt  $\vmax = 31\,\kms$ and $\rmax=3.2\,\kpc$ for Scl in the MW-only potential, $\vmax=25\,\kms$ and $\rmax=2.5\,\kpc$ for Scl in the MW+LMC potential, and
+$\vmax=38\,\kms$ and $\rmax=4\,\kpc$ for UMi. Our initial dark matter halos are within  2--3$\sigma$ of the mean values expected from \citet{ludlow+2016} and \citet{fattahi+2018}.
 
 \subsection{N-body methods}\label{isolation-runs-and-simulation-parameters}
 
-We use \gadget{}, with an \agama{} external potential plugin, for our N-body simulations. 
+We use \gadget{}, with an \agama{} external potential plug-in, for our N-body simulations. 
 We adopt a Plummer-equivalent softening length of
 \begin{equation}\label{eq:softening_length}
     h_\text{grav} = 0.014\,\text{kpc}\left(\frac{r_\text{max}}{6.0\,\text{kpc}}\right)\left(\frac{N}{10^7}\right)^{-1/2},
 \end{equation} 
-for a halo with $N$ particles. While our softening choice is about 3 times smaller than the values suggested by \citep{power+2003}, we find this choice best balances convergence and computational efficiency for our simulations.
+for a halo with $N$ particles. While our softening choice is about 3 times smaller than the values suggested by \citet{power+2003}, we find this choice best balances convergence and computational efficiency for our simulations.
 We use $10^7$ particles, a relative accuracy criterion of $\alpha=0.005$, and an integration accuracy of $\eta=0.01$.\footnote{i.e., tree nodes open if $M\,l/r^3 < \alpha |a|$ for node mass $M$, side-length $l$, distance $r$, and particle acceleration $a$; and particles must take time-steps smaller than $\sqrt{2\,\eta\,h_\text{grav}}$.}
 
 To ensure that the initial conditions of the simulation are dynamically
-relaxed, we run a halo first in isolation. We use the same isolation run
-for all models and rescale the results to the desired initial halo. Our isolation halo was run for 5 Gyr assuming $\rmax=6\,\kpc$ and $\vmax=31\,\kms$ based on Scl's cosmological-mean halo.
+relaxed, we run a halo first in isolation. We use the same isolation run for all models to save computational time, since gravity is scale-free. Our isolation halo was run for 5 Gyr assuming $\rmax=6\,\kpc$ and $\vmax=31\,\kms$, based on Scl's cosmologically-mean halo from above.
 This model is converged down to a radius $r\approx 150\,\text{pc}$, where the enclosed mass changes by less than 2\% over $5\,\Gyr$ (see also the convergence radius from \citealt{power+2003}).
 
 Next, we evolve the halo in the Galactic potential. We rescale and shift the
-isolation-relaxed halo to our initial conditions (see Table~\ref{tbl:orbit_ics}). 
+isolation-relaxed halo to our initial conditions (see Table~\ref{tbl:nbody_ics}). 
 We then evolve the full N-body NFW model in the Galactic
 potential until the present time, when the halo is closest to the present-day observed position of the selected dwarf in the MW
 halo.\footnote{Specifically, the snapshot which best agrees (as measured
@@ -420,13 +425,11 @@ consider only particles retained from the previous iteration.
 components}\label{sec:painting_stars}
 
 
-We ``paint" stars onto dark matter particles using the particle-tagging
-method \citep[e.g.,][]{bullock+johnston2005}, assuming spherical
-symmetry. We briefly describe the
+To simulate the evolution of a stellar component, we ``paint" stars onto dark matter particles using the particle-tagging
+method \citep[e.g.,][]{bullock+johnston2005}. We assume spherical symmetry and assign stellar weights to the model after 1 Gyr of evolution in isolation (i.e., after the central region has relaxed). We briefly describe the
 procedure next, but refer interested readers to \citet{EP2020} for details.
 
-If we
-know the distribution function\footnote{i.e., the phase-space density of
+If we know the distribution function\footnote{i.e., the phase-space density of
   particles. Note that since $f$ is formally defined in 6D phase
   space, there is an additional `density of states' term in order to
   calculate the histogram of particles with ${\cal E}$,
@@ -445,15 +448,16 @@ ${\cal E}$ the binding energy, ${\cal E} = \Psi - 1/2 \V^2$
 \citep[see eq. 4-140b in][]{BT1987}. We
 take $\Psi$ and $\rho$ from the assumed analytic density profiles, calculating $\rho_\star$ from $\Sigma_\star$ via the inverse Abel transform.
 
-We consider initially a (projected) 2D-exponential stellar profile, 
+For stellar components, we consider both a more compact exponential profile and an extended Plummer profile \citep{plummer1911}.  A (projected) 2D-exponential profile is given by 
 \begin{equation}\label{eq:exponential_law}
 \Sigma_\text{exp} = \Sigma_0\exp(-\alpha\,R / R_h),
 \end{equation}
 with central surface density $\Sigma_0$, half-light radius $R_h$, and $\alpha \approx 1.6783$.
-We also consider a more extended Plummer profile \citep{plummer1911}, 
+For a Plummer law, the density is,
 \begin{equation}
 \Sigma_\text{Pl} = \frac{\Sigma_0}{(1 + (R/R_h)^2)^2}. \label{EqPlummer}
 \end{equation}
+We select the initial half-light radii (in Table~\ref{tbl:nbody_ics}) to best match the observed density profiles at the end of the simulation.
 
 Fig.~\ref{fig:initial_halos} shows the initial circular velocity profiles of the dark matter used in our simulations. 
 Note that the stellar component is about $10\times$ more compact than the dark matter. The mass is dominated by dark matter across the galaxy, which implies that our assumption that  stars do not contribute to the gravitational potential is reasonable.
@@ -472,70 +476,69 @@ Note that the stellar component is about $10\times$ more compact than the dark m
 
 \section{Results} \label{sec:results}
 
-\subsection{Orbits of Sculptor and Ursa Minor}
+\subsection{Orbits of Sculptor and Ursa Minor} \label{sec:results_orbits}
 
-\begin{figure}
+\begin{figure*}
     \centering
     \includegraphics{figures/orbits.pdf}
     \caption{
         The orbits of Scl (left) and UMi (right) in the  MW-only potential (light blue lines) and the MW+LMC
-        potential (light orange lines). Black lines show the \dbadd{orbits of our N-body runs} and
+        potential (light orange lines). Black lines show the orbits of our N-body runs and
         the green dashed line shows the LMC trajectory. The top panels show orbits in the $y$--$z$ plane and the bottom panels show orbits in terms of Galactocentric radius and time.
 }
 
     \label{fig:orbits}
-\end{figure}
+\end{figure*}
 
-Fig.~\ref{fig:orbits} shows orbits of Scl and UMi in the MW-only and MW+LMC potentials. In the MW-only potential, both galaxies follow relatively well-constrained orbits consistent with long-term MW satellites. Scl experiences three pericentric passages over the past 5 Gyr reaching a distance of $53\pm 3\,\kpc$ from the centre. Over the same time, UMi experiences four smaller pericentric passages, reaching a distance of $37\pm3\,\kpc$.  
+Fig.~\ref{fig:orbits} shows point-particle orbits of Scl and UMi in the MW-only and MW+LMC potentials. In the MW-only potential, both galaxies follow relatively well-constrained orbits consistent with long-term MW satellites. Scl experiences three pericentric passages over the past 5 Gyr, reaching a minimum Galactocentric distance of $53\pm 3\,\kpc$. Over the same time, UMi experiences four smaller pericentric passages of Galactocentric radii $37\pm3\,\kpc$.  
 
-Including the LMC dramatically modifies Scl's orbit, making it likely that Scl is coming into the Milky Way for the first time, and has just completed its first pericentric passage. Scl has also passed close to the LMC about 100\,Myr ago, making the LMC potentially an important source of tidal stress. As we discuss later, the LMC-induced modification to Scl's orbit has the net effect of reducing the todal tidal effect, mainly because it reduces the number of pericentric passages around the Milky Way.
+Including the LMC dramatically modifies Scl's orbit -- Scl is possibly coming into the Milky Way for the first time and recently completed its first pericentric passage. Scl has also passed close to the LMC about 100\,Myr ago, making the LMC potentially an important source of tidal stress. As we discuss later, the LMC-induced modification to Scl's orbit has the net effect of reducing the total tidal effect, mainly because it reduces the number of pericentric passages around the Milky Way.
 
-In contrast, UMi's  pericentre  increases to $\approx 45\,\kpc$ when including the LMC, reducing tidal forces overall.\footnote{Note that our MW-only model has a heavier MW mass than the MW+LMC model, but the qualitative effects on each galaxy's orbit are largely similar when using the same MW model in each case.}
+In contrast, including the LMC increases UMi's pericentre to $\approx 45\,\kpc$ and lengthens the orbital period, reducing tidal forces overall.\footnote{Note that our MW-only model has a heavier MW mass than the MW+LMC model, but the qualitative effects on each galaxy's orbit are largely similar when using the same MW model in each case.} Regardless, the orbit is qualitatively similar to the MW-only case.
 
-The black lines in Fig.~\ref{fig:orbits} show our selected N-body model orbits for Scl and UMi. We adopt these orbits as representatives of their tidal history, with the caveat that we have chosen the smallest possible pericentres in order to emphasize  tidal effects. 
+For comparison, the black lines in Fig.~\ref{fig:orbits} show the orbits of our N-body models for Scl and UMi. We adopt these orbits as representatives of their tidal history, with the caveat that we have chosen the smallest possible pericentres in order to emphasize tidal effects. 
 
 \subsection{Tidal effects}
 
 \begin{figure}
     \centering
-    \includegraphics[width=9cm]{figures/umi_zoom_image.png}
+    \includegraphics[width=9cm]{figures/ursa_minor_zoom_image.png}
     \caption{
-        The final dark matter and stellar distribution for the Ursa Minor MW-only model in the $y$--$z$ (near-orbital) plane. Dark matter is in purple with stars in white, each colour-range spanning 5 orders of magnitude from the peak value. The grey dotted line shows the past orbit and the insets zoom into the grey box in the main figure. 
+        The final dark matter and stellar distribution for the Ursa Minor MW-only model with exponential stars in the $y$--$z$ (near-orbital) plane. Dark matter is in purple with stars in white, each colour-range spanning 5 orders of magnitude from the peak value. The grey dotted line shows the past orbit up until the previous apocentre, and the insets zoom into the grey box in the main figure. 
+        See Fig.~\ref{fig:scl_sim_images} for similar images for the Scl N-body models.
     }
     \label{fig:umi_sim_image}
 \end{figure}
 
-\begin{figure}
+\begin{figure*}
     \centering
-    \includegraphics{figures/density_i_f.pdf}
+    \includegraphics{figures/density_i_f_w_lmc.pdf}
+    
     \caption{
         The stellar density profile of each model before (dotted) and after
-        (solid) tidal evolution as compared to the observed density profile
+        (solid) tidal evolution as compared to the observed density profile from \jj{} members
         (solid points). The top panels show 2D exponential initial stellar
         profiles and the bottom show Plummer initial profiles. We mark the
         half-light ($R_h$), the Jacobi radius, and break
         radius with arrows. 
 }
     \label{fig:stellar_model_density}
-\end{figure}
+\end{figure*}
 
 
-\begin{figure}
-    \centering
-    \includegraphics{figures/scl_lmc_density_i_f.pdf}
-    \caption{
-        Similar to Fig.~\ref{fig:stellar_model_density} except for Scl in the combined MW and LMC potential. The left and right panels show results for exponential and Plummer initial stellar profiles, respectively.
-    }
-    \label{fig:stellar_model_density_lmc}
-\end{figure}
 
-Because of its smaller pericentric distance, UMi is more affected by Galactic tides than Sculptor. Fig.~\ref{fig:umi_sim_image} shows the final distribution of dark matter and stars for Ursa Minor. More than 95\% of UMi's initial dark matter mass has been  lost by the present day. However, the stellar component remains almost entirely bound and spherical, only expanding slightly over time due to the reduction in the galaxy's total mass. 
+Next, we consider the tidal evolution of our N-body models. Because of its smaller pericentre, UMi is more strongly affected by Galactic tides than Scl (also discussed below). Fig.~\ref{fig:umi_sim_image} shows the final distribution of dark matter and stars for our N-body simulation of UMi. More than 95\% of UMi's initial dark matter mass has been  lost by the present day. However, the stellar component remains almost entirely bound and spherical, only expanding slightly over time due to the reduction in the galaxy's total mass (see insets of Fig.~\ref{fig:umi_sim_image}). 
 
-Fig.~\ref{fig:stellar_model_density} shows the initial and final stellar
-density profiles of each galaxy in the MW-only potential compared to observations (shown as black circles). The top panels assume that the initial stellar density profile of each dwarf is exponential, the bottom panels assume a Plummer profile instead. The final profiles resemble the initial ones over the full radial range accessible to observations. UMi experiences the strongest evolution, with the stars expanding slightly and flattening past 100 arcminutes. 
+The left two panels of Fig.~\ref{fig:stellar_model_density} shows the initial and final stellar
+density profiles of each galaxy in the MW-only potential compared to observations (shown as black circles). The top panels assume that the initial stellar density profile of each dwarf is exponential, the bottom panels assume a Plummer profile instead. The final profiles resemble the initial profiles over the full radial range observed in \jj{}. UMi's exponential stellar model experiences the strongest evolution, with the stars expanding slightly and flattening past 100 arcminutes. 
 
-Note that this is true regardless of whether we model the initial profile as an exponential or a Plummer model. Both profiles remain nearly unchanged during
+Whether the initial profiles are an exponential or a Plummer model, the tidal evolution of stars is small. Both profiles remain nearly unchanged during
 tidal evolution. To detect tidal disturbances, observations would likely need to be able to search for features at least two magnitudes fainter (in surface brightness) than the limits reached at present ($\approx 0.01$ \textit{Gaia}-detected stars per arcmin$^2$). We conclude that the tidal effects are so slight that they are unlikely to be observable in the near future.
+
+Does this conclusion change when accounting for the effect of the LMC? We only consider Scl in what follows, since the UMi's orbit primarily expands in radius when including the LMC, implying weaker tidal evolution.
+The right panel of Fig.~\ref{fig:stellar_model_density} shows the tidal effects on Scl in the LMC+MW potential.
+Because of the reduced number of pericentres,
+the stellar profiles evolve even less than in the MW-only case. Our conclusion is quite robust to reasonable changes in LMC mass and orbits. Our selected LMC model is already quite massive ($M_{200} \approx 3\times10^{11}\,\Mo$), and a numerical exploration of other possible LMC orbit (not shown) also supports our conclusion that accounting for the LMC potential only weakens the overall tidal effect on Scl.
 
 Tidal effects imprint two characteristic radii on an orbiting satellite. One is
 the pericentric \textbf{Jacobi radius}, $r_\text{J}$, which roughly delineates  the radius where stars become unbound in a galaxy.\footnote{ 
@@ -549,7 +552,7 @@ If $r_J$ is comparable to
 the visible extent of a galaxy, we should expect to find clear signs of
 tidal disturbance.
 
-The other characteristic radius is the  \textbf{break radius}, $R_{\rm break}$, which delineates the extent of the dynamically-relaxed self-bound remnant after a pericentric passage \citep{aguilar+white1986, navarro1989}. Outside this radius, stars are still radially mixing, leading to the presence of a transient and outward-moving ``bump" in the outer dentiy profile. The position of the break radius depends on the velocity dispersion, $\sigma_v$, and the time elapsed
+The other characteristic radius is the  \textbf{break radius}, $R_{\rm break}$, which delineates the extent of the dynamically-relaxed, self-bound remnant after a pericentric passage \citep{aguilar+white1986, navarro1989}. Outside this radius, stars are still radially mixing, leading to the presence of a transient and outward-moving ``bump" in the outer density profile. The position of the break radius depends on the velocity dispersion, $\sigma_v$, and the time elapsed
 since pericentre, $\Delta t$, 
 \begin{equation}\label{eq:r_break}
     R_\text{break} = C\,\sigma_{v}\,\Delta t,
@@ -557,33 +560,25 @@ since pericentre, $\Delta t$,
 where the empirical constant is $C \approx 0.55$  \citep{penarrubia+2009}.
 
 Both the Jacobi and break radii are marked in Fig.~\ref{fig:stellar_model_density}, and indicate that tidal effects should only  be apparent outside ${\sim}100$ arcminutes in either galaxy. 
-
 These radii fall outside the range of the observed density profile. Given these estimates, it would be surprising to observe any tidal effects without substantially deeper data. We conclude from this discussion that tides have not affected substantially the stellar density profiles of either Scl or UMi on their present orbits.
 
-Does this conclusion change when accounting for the effect of the LMC? We only consider Scl in what follows, since the UMi's orbit is essentially unaffected by the inclusion of the LMC.
-Fig.~\ref{fig:stellar_model_density_lmc} shows the tidal effects on Scl in the LMC+MW potential.
-Again both characteristic radii are outside of the region where density profiles are well constrained observationally.  In
-addition, because of the reduced number of pericentres,
-the stellar profiles evolve even less than in the MW-only case. Our conclusion is quite robust to reasonable changes in LMC mass and orbits. Our selected LMC model is already quite massive ($M_{200} \approx 3\times10^{11}\,\Mo$), and a numerical exploration of other possible LMC orbit (not shown) also supports our conclusion that accounting for the LMC potential only weakens the overall tidal effect on Scl.
 
-Although we donot discuss them here, we have also explored whether our conclusion changes when considering other modifications to our assumptions about the adopted structure of the dark matter halo in our models. We have tested cored, anisotropic, and flattened models, finding that these halos evolve similarly over time. This is because, given the observed velocity dispersion and size of the stellar components of Scl and UMi, alternative dark matter structures still require a similar total mass within $R_h$ at the present day. Reasonable changes to the dark matter structure have little effect on our results or conclusions.
+In Appendix~\ref{sec:extra_nbody}, we also explored whether our conclusion changes when considering other modifications to our assumptions about the adopted structure of the dark matter halo in our models. We have tested cored, more extended, and anisotropic models, finding that these halos evolve similarly over time. As the observed velocity dispersion and observed half-light radii of Scl and UMi constrain the mean density interior to $R_h$, alternative dark matter structures still require initial conditions resulting in a similar final dark matter content. 
 
 One key caveat is our assumption that the long-term orbits of UMi and Scl have not evolved dramatically. Our model neglects possible evolution that may arise from halo triaxiality, the presence of the Galactic bar, the evolution of the MW potential with time, as well as perturbations from substructure
-\citep[e.g.,][]{dsouza+bell2022, santistevan+2023}. We expect that the consequences of these effects should be fairly mild, but it is prudent to qualify our conclusions to emphasize that our results depend on our assumption that Scl and UMi have not experienced in the past pericentric passages much smaller than expected given their present-day positions and velocities.
-%Indeed, UMi may have even been bound to the LMC more than $5\,\Gyr$ ago \citep{vasiliev2024}. 
-%While we cannot constrain the long-term histories of these dwarfs, our results indicate that \textit{recent tidal effects} are likely not be observable in Scl and UMi.
+\citep[e.g.,][]{dsouza+bell2022, santistevan+2023}. We expect that the consequences of such effects should be mild, but we note that we assume Scl and UMi have not experienced pericentric passages much smaller than explored here.
 
-\subsection{Tidal effects on classical dSph satellites of the Milky Way}
+\subsection{Expected tidal effects on the classical dSph satellites of the Milky Way}
 
 As discussed above, the lack of obvious tidal effects on the stellar components of Scl and UMi is not surprising given their high density compared with the host density at pericentre. We show this more explicitly in 
-Fig.~\ref{fig:classical_jacobi}, where we compare the mean inner (i.e., within $R_h$) density of all classical dSph satellites with the mean density of the Galaxy enclosed within the pericentre of their orbit. Mean densities ($\rho_h$) are computed using the \citet{wolf+2010} mass estimator, and pericentres are for the mean orbits in our adopted MW and MW+LMC potentials. We show two points for each satellite, corresponding to pericentric distances in the MW-only or MW+LMC potentials. 
+Fig.~\ref{fig:classical_jacobi}, where we compare the mean inner (i.e., within $R_h$) density of all classical dSph satellites with the mean density of the Galaxy enclosed within the pericentre of their orbit (see also \citealt{pace+erkal+li2022}). Mean densities ($\bar\rho_h$) are computed using the \citet{wolf+2010} mass estimator. Pericentres are calculated from the mean orbits integrated backwards over 5 Gyr in our adopted MW and MW+LMC potentials using parameters in Table~\ref{tab:obs_props_other}. We show two points for each satellite, corresponding to pericentric distances in the MW-only or MW+LMC potentials. 
 
 It is clear from this plot that only Saggitarius, Antlia II, and Crater II fall within the region of likely tidal disruption. This is confirmed by the fact that Saggitarius has a prominant stream, and that recent observations demonstrate that Crater II and Antlia II's show signs of tidal disruption \citep{vivas+2026, ji2025}. The other classical dSphs, including Scl and UMi, have densities too high for tidal effects to reach the stellar component. Tides do not appear to  play a major role in the evolution of most MW classical dSphs.
 
 \begin{figure}
     \centering
     \includegraphics{figures/rho_mean_pericentre.pdf}
-    \caption{The mean density enclosed with the half-light radius versus pericentric radius for classical Milky Way dwarf spheroidal galaxies in a MW-only (filled circles) and MW+LMC potential (empty circles). The black line represents 3 times the enclosed density of the Milky Way, below which the Jacobi radius would be within a satellites half-light radius and a satellite would be vulnerable to disruption. Only Sagittarius, Crater II, and Antlia II fall within the region of likely tidal disruption. See also \citet{pace+erkal+li2022}. 
+    \caption{The mean density enclosed with the half-light radius versus pericentric radius for classical Milky Way dwarf spheroidal galaxies in a MW-only (filled circles) and MW+LMC potential (empty circles). The black line represents 3 times the enclosed density of the Milky Way, below which the Jacobi radius would be within a satellites half-light radius and a satellite would be vulnerable to disruption. Only Sagittarius, Crater II, and Antlia II fall within the region of likely tidal disruption. 
     }
     \label{fig:classical_jacobi}
 \end{figure}
@@ -594,18 +589,9 @@ It is clear from this plot that only Saggitarius, Antlia II, and Crater II fall 
 
 \subsection {Two-component models}
 
-If tides do not explain the outer profiles of  Scl and UMi, then why do they differ from other classical dSphs? One clue may be that Scl and UMi display other peculiarities, which may hold clues to their formation. Both galaxies host at least two distinct chemodynamic populations \citep{tolstoy+2004, battaglia+2008, pace+2020}.\footnotemark{} The inner population is younger, higher metallicity, and dynamically colder, whereas the outer
+Since we demonstrate tides are insufficient to affect the outer profiles of  Scl and UMi, why do they differ from other classical dSphs? One clue to their formation may be that Scl and UMi host at least two distinct chemodynamic populations \citep{tolstoy+2004, battaglia+2008, pace+2020}.\footnotemark{} The inner population is younger, higher metallicity, and dynamically colder, whereas the outer
 population is older, lower metallicity, and dynamically hotter.
 Such distinct populations could indicate past accretion events or multiple generations of star formation, processes which may have had a role in the origin of their extended outer profiles.
-
-We explore this idea in Fig.~\ref{fig:metallicity_gradient}, where we assume that Scl and UMi's density profiles results from the overlap of two distinct populations with different mass and radial extent.  The blue and red curves in the top panels of the figure show one such possible decomposition, where we have assumed that the outer component starts to dominate over the inner one at $20$ arcmin and at $31$ arcmin from the centre in the case of Scl and UMi, respectively. (Details on the decomposition are provided in Appendix \ref{sec:double_exp_fits}.) These two populations should have different velocity dispersions, as shown in the bottom panel of Fig.~\ref{fig:metallicity_gradient}. The main prediction from this decomposition is that the velocity dispersion of both Scl and UMi should increase in the outer regions, as the outer, dynamically hotter component starts to dominate. There is a hint in the observed velocity dispersion profile that this prediction might be observed, but this suggestion should be confirmed by a more detailed study.
-
-This is because, without further constraints, many different decompositions into discrete populations are possible. For example, \citet{arroyo-polonio+2024} find two populations for Scl with (sphericalized) half-light radii of $6.2$ and $13$ arcminutes and with 66\% of stars in the outer population. We instead find two populations with half-light radii of 7.85 and 17.1 arcminutes, with only 31\% of stars in the outer population. As such, both  \citepos{arroyo-polonio+2024} populations would correspond to our inner population. If these population are indeed real, it may well be that Scl may be best described with three separate components, also suggested in \citet{arroyo-polonio+2024}.
-
-In comparison, \citet{pace+2020} find two populations in UMi, with half-light radii of 11.4 and 23.2 arcminutes (for the Multiple Mirror Telescope/Hectochelle sample from \citealt{spencer+2018}) and with 24\% of stars in the outer component. Our two populations are similar: with half-light radii of 10.6 and 30 arcminutes, with 25\% of stars in the outer component. Therefore, UMi's extended density profile likely reflects this transition between an inner and outer stellar population.
-
-Another observation that may be used to constrain the two-component model is the presence of a metallicity gradient, which would arise naturally if each component had different average metallicities. Assuming that Scl's two components have metallicities $\mathrm{[Fe/H]}=-1.67$ (inner) and $-1.92$ (outer) we are able to fit the observed mean metallicity gradient in Scl (left-middle panel in Fig.~\ref{fig:metallicity_gradient}). The same is true for UMi, where the inner and outer components are assumed to have $\mathrm{[Fe/H]} = -2.15$ and $-2.52$ respectively. The success of this simple model at accounting for the main trends in the velocity dispersion and metallicity profiles of these galaxies suggests that a further, more detailed study of this possibility is warranted. 
-
 
 \footnotetext{Other examples of galaxies with multiple populations
   include Carina \citep{battaglia+2012, fabrizio+2016, kordopatis+2016},
@@ -616,50 +602,66 @@ Another observation that may be used to constrain the two-component model is the
   Andromeda II
   \citep{mcconnachie+arimoto+irwin2007, ho+2012, delpino+2017}.}
 
+We explore this idea in Fig.~\ref{fig:metallicity_gradient}, where we assume that Scl and UMi's density profiles result from the overlap of two distinct populations with different masses and radial extents. In Appendix~\ref{sec:double_exp_fits}, we describe a method to fit the \textit{Gaia} distribution of stars in Scl and UMi with a two-component exponential density profile. The blue and rust curves in the top panels of the figure illustrate our best-fitting profiles, where the outer component dominates the inner one at $20$ arcmin and at $31$ arcmin from the centre in the case of Scl and UMi, respectively. 
+However, without further constraints, many different decompositions into discrete populations are possible.
+
+As an example, \citet{arroyo-polonio+2024} fit the populations of Scl using spatial positions, metallicities, and velocities of stars. They find Scl may be described by two chemodynamically distinct populations with (sphericalized) half-light radii of $6.2$ and $13$ arcminutes and with 66\% of stars in the outer population. We instead find two populations with half-light radii of 7.85 and 17.1 arcminutes, with only 31\% of stars in the outer population. As such, the \citepos{arroyo-polonio+2024} decompose Scl into a somewhat different structure, but they use Plummer density profiles instead of the exponential profiles here (see Appendix~\ref{sec:double_exp_fits} for a more detailed comparison). Scl may be best described with three separate components, as suggested in \citet{arroyo-polonio+2024}.
+
+For UMi, \citet{pace+2020} find two populations with half-light radii of 11.4 and 23.2 arcminutes (for the Multiple Mirror Telescope/Hectochelle sample from \citealt{spencer+2018}) and with 24\% of stars in the outer component. Our two populations are similar: with half-light radii of 10.6 and 30 arcminutes, with 25\% of stars in the outer component. Therefore, UMi's extended density profile likely reflects this transition between an inner and outer stellar population.
+
+When assuming the stellar density profile $\rho_\star$ and gravitational potential $\Phi$ of a galaxy, the velocity dispersion profile follows from the Jean's equation for a spherical, isotropic system:
+\begin{equation}\label{eq:jeans}
+    \frac{d(\rho_\star \sigma_{\V,\,\textrm{los}}^2)}{dr} = - \rho_\star \frac{d\Phi}{dr},
+\end{equation}
+\citep[section 4.2]{BT1987}.
+The resulting dispersion profiles are shown in the bottom panel of Fig.~\ref{fig:metallicity_gradient}, assuming a NFW potential with
+($\rmax=2.5\,\kpc$, $\vmax=25\,\kms$) for Scl and ($\rmax=5\,\kpc$, $\vmax=27\,\kms$) for UMi.
+For our best-fit double-exponential density profile, the velocity dispersion of both Scl and UMi should increase in the outer regions, as the outer, dynamically hotter component starts to dominate. There is a hint in the observed velocity dispersion profile indeed increases with radius, but our suggestion should be confirmed by a more detailed study. While tidally-affected galaxies should also show an increasing velocity dispersion, the velocity profile only deviates from the equilibrium case outside the break radius. Thus, the velocity dispersion profiles currently observed should not be affected by transient tidal features, and we simply assume a cosmologically-motivated NFW profile reproducing the present-day velocity dispersion, similar to the argument in Section~\ref{sec:methods}. 
+
+
+Another observation that may be used to constrain the two-component model is the presence of a metallicity gradient, which would arise naturally if each component had different average metallicities. Assuming that Scl's two components have metallicities $\mathrm{[Fe/H]}=-1.67$ (inner) and $-1.92$ (outer) we are able to fit the observed mean metallicity gradient in Scl (left-middle panel in Fig.~\ref{fig:metallicity_gradient}, parameters derived from Appendix~\ref{sec:double_exp_fits}). The same is true for UMi, where the inner and outer components are assumed to have $\mathrm{[Fe/H]} = -2.15$ and $-2.52$ respectively. The relative success of this simple model at accounting for the main trends in the velocity dispersion and metallicity profiles of these galaxies suggests that a further, more detailed study of this possibility is warranted as further spectroscopic observations become available \citep[e.g., 4MOST,][]{skuladottir+2023}.
+
+
+
 \begin{figure}
     \includegraphics{figures/scl_umi_fe_h_gradient.pdf}
 
     \caption{
-        \textbf{Top:} Density profiles of Sculptor (top left) and Ursa Minor (top
-        right) with double exponential fits (see
-        appendix~\ref{sec:double_exp_fits}). Blue, rust, and magenta lines
-        represent the inner, outer, and combined profiles, respectively.
-        \textbf{Middle:} The metallicities of member stars in both galaxies as a function of radius
+        \textbf{Top:} Density profiles of Sculptor (top left) and Ursa Minor (top right) from \jj{} data (black points) with double exponential fits (see
+        Appendix~\ref{sec:double_exp_fits}). Blue, orange, and magenta lines
+        represent the inner, outer, and combined profiles, respectively, and the observed density profile is derived from \jj{} as in Fig.~\ref{fig:observed_density_profiles}.
+        \textbf{Middle:} The metallicities of member stars in both galaxies as a function of 
         radius. For Sculptor, we plot stars from
-        APOGEE (green circles), \citet[][blue squares]{tolstoy+2023}, and
+        APOGEE, \citet{tolstoy+2023}, and
         \citet[][orange stars]{sestito+2023a}. For Ursa Minor, we
-        plot stars from APOGEE (green circles), \citet[blue
-        squares]{pace+2020}, and \citet[red stars]{sestito+2023b}. Black points
-        represent median bins, and the pink line
+        plot stars from APOGEE, \citet{pace+2020}, and \citet[orange stars]{sestito+2023b}. Black points represent median metallicities of observed stars from the radial velocity sample in bins of $R_\textrm{ell}$. The magenta line
         represent a simple mixture model of metallicity, transitioning from
         higher to lower metallicity based on the relative inner and outer
         component densities (see Table~\ref{tbl:double_exp_fits}). 
         \textbf{Bottom:} The velocity dispersion profiles of our radial velocity
         sample (black points) as compared to the velocity dispersion profile
-        for exponential profiles. We calculate the velocity dispersion of the
-        model through the Jean's equations assuming a NFW dark halo of
-        ($\rmax=2.5\,\kpc$, $\vmax=25\,\kms$) for Scl and ($\rmax=5\,\kpc$, $\vmax=27\,\kms$) for UMi.
+        for exponential profiles (see text), with colours the same as the top panel.
     }
     \label{fig:metallicity_gradient}
 \end{figure}
 
 \subsection{Alternative scenarios} \label{SecAltScen}
 
-We consider next  other ideas for the possible origin of the outer density excess in Scl and UMi. 
+As we demonstrated a tidal origin is unlikely to explain the outer density excess in Scl and UMi, we next consider other possable explanations.
 
 \textbf{Episodic star formation.} Star formation may quench and
 reignite in dwarfs, creating successive stellar generations with possibly different
 distributions. External star formation triggers include tidal
 compression \citep{mayer+2001a, dong+lin+murray2003}, collisions with
-gaseous filaments or mergers \citep{genina+2019}, perturbations from dark halos
+gaseous filaments or dwarf galaxies \citep{genina+2019}, perturbations from dark halos
 \citep{starkenburg+helmi+sales2016}, or shocks with the MW corona
 \citep{wright+2019}.\footnote{More common mechanisms, like feedback or
 reionization-driven quenching, may also form multiple stellar
 generations
 \citep{kawata+2006, benitez-llambay+2015, revaz+jablonka2018}. However,
 such processes would not explain why extended stellar populations appear
-to be non-universal.} In this case, the star formation history should
-contain evidence of a corresponding burst.
+to be non-universal.} Dwarfs with episodic star formation history should
+contain evidence of corresponding star formation bursts.
 
 \textbf{Major mergers.} In a dwarf merger, stars from
 the lower-mass galaxy are preferentially dispersed, forming an extended
@@ -671,7 +673,7 @@ Andromeda II, and Phoenix
 If a galaxy has accreted other systems, it should harbour multiple stellar populations with distinct origin.
 
 \textbf{Tidal preprocessing}. Some dwarf galaxies may have been tidally
-`preprocessed' by a massive satellite like the LMC
+`preprocessed' by a massive satellite like \textit{Gaia}-Sausage-Enceladus
 \citep[e.g.,][]{santistevan+2023, riley+2024}. Tidal preprocessing
 redistributes already-present stellar populations and may mimic a
 stellar halo. Key evidence suggestive of preprocessing may include
@@ -688,17 +690,17 @@ dark matter interference fringes \citep[e.g.,][]{el-zant+2020,
 duttachowdhury+2023}. However, most of these processes should operate similarly
 across dwarf galaxies, failing to explain why Scl and UMi have unusual density profiles.
 
-Although current data does not allow us to distinguish between or rule out some of these scenarios, it is useful to consider them as further data are collected or as improvements are made in our understanding of the orbital evolution of Milky Way satellites and in the modelling of dark mater-dominated dwarfs.
+Although current data does not allow us to distinguish between or rule out some of these scenarios, it is useful to consider them as further data are collected or as improvements are made in our understanding of the orbital evolution of Milky Way satellites and in the cosmological modelling of dark mater-dominated dwarfs.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions } \label{SecConcl}
 
-We have used N-body simulations to explore whether tides from the Milky Way or LMC may explain the extended outer density profiles  of Scl and UMi. Even adopting orbits with  pericentres  as small as allowed by uncertainties in their present-day position and velocity, we find that tides are unable to influence the stellar light profile of either galaxy. We also find the LMC strongly perturbs Scl's orbit, but adding the LMC changes the orbits in a way that  weakens the total tidal effect on both Scl and UMi. We conclude the observed density excess in Sculptor and Ursa Minor is not tidal in origin.
+We have used N-body simulations to explore whether tides from the Milky Way or LMC may explain the extended outer density profiles  of Scl and UMi. Even adopting orbits with  pericentres  as small as allowed by uncertainties in their present-day position and velocity, we find that tides are unable to influence the stellar light profile of either galaxy. We also find the LMC strongly perturbs Scl's orbit, but adding the LMC changes the orbits in a way that  weakens the total tidal effect on both Scl and UMi. We conclude the observed density excess in Sculptor and Ursa Minor is not tidal in origin. 
 
-If the outer excess in Scl and UMi is not tidal in origin, then it is likely an innate feature of each galaxy which reflects some peculiarity of its formation history. While a number of scenarios may in principle explain an extended outer stellar density (see the discussion in Sec,~\ref{SecAltScen}), future
-observations hold the promise to discriminate between different alternatives.  Precise chemistry, for example,  can test if an extended stellar population was accreted and could constrain properties of merged satellites or the star formation history.  Deep photometry and precise kinematics may find or rule out signs of dynamical
+If the outer excess in Scl and UMi is not tidal in origin, then it is likely an innate feature of each galaxy which reflects some peculiarity of its formation history. We showed that a two-component model fit to the density profile of Scl and UMi alone reproduces some features of their observed metallicity and velocity dispersion profiles. While a number of scenarios may in principle explain an extended outer stellar density (see the discussion in Sec,~\ref{SecAltScen}), future
+observations hold the promise to discriminate between different alternatives.  Precise chemistry from WEAVE and 4MOST \citep{skuladottir+2023} or extremely large telescopes \citep{jagourel+2018}, can test if an extended stellar population was accreted and could constrain properties of merged satellites or the star formation history. Deep photometry (from, e.g., Euclid \citealt{euclidcollaboration+2025} or the Rubin Observatory \citealt{ivezic+2019}) and precise kinematics may find or rule out signs of dynamical
 disequilibrium and tidal tails and constrain the presence of tidally induced features around dwarf galaxies.
 Finally, star formation histories may differentiate scenarios that rely on sudden variation in the star formation history, such as strong bursts. Both upcoming observatories and novel simulation methods will be instrumental to uncover the clues to the formation histories of Sculptor and Ursa Minor encoded in their outer density profiles.
 
@@ -714,7 +716,7 @@ Finally, star formation histories may differentiate scenarios that rely on sudde
 
 \appendix
 
-\section{Fits to density profiles and metallicity gradients}
+\section{Additional observational constraints}
 
 \subsection{Spectroscopic sample selection} \label{sec:velocity_sample}
 To create a sample of spectroscopic members, we compile line-of-sight (LOS) velocities from
@@ -723,7 +725,7 @@ Sculptor, we combine \citet{tolstoy+2023}; \citet{walker+2009};
 \citet{sestito+2023a}; and APOGEE \citep[DR17,][]{abdurrouf+2022}. For
 Ursa Minor, we combine \citet{spencer+2018}; \citet{pace+2020};
 \citet{sestito+2023b}; and APOGEE. We then cross-match all catalogues to
-J+24 Gaia stars. If a study did not report \textit{Gaia} DR3 source IDs,
+\jj{} Gaia stars. If a study did not report \textit{Gaia} DR3 source IDs,
 we match to the nearest star within 1--3 arcseconds. We combine
 measurements of the same star using inverse-variance weighting. To
 reduce likely binaries, we remove stars which are significant outliers in velocity.\footnote{Specifically, using that
@@ -731,17 +733,17 @@ reduce likely binaries, we remove stars which are significant outliers in veloci
   $\chi^2$ larger than the 99.9th percentile of the $\chi^2$
   distribution with $N-1$ measurements.}
 
-We build on J+24's likelihood by adding multiplicative terms in the
+We build on \jj{}'s likelihood by adding multiplicative terms in the
 total likelihood for the velocity consistency. We assume that the satellite and
 background $v_\text{los, gsr}$ distributions are Gaussian in the
 Galactic Standard of Rest (GSR, i.e., same location as ICRS but
 velocities relative to the Galactic centre). For the satellite, we adopt
 a mean and standard deviation based on
-Tables~\ref{tbl:scl_obs_props}, \ref{tbl:umi_obs_props}, and, for the
+Table~\ref{tbl:obs_props}, and, for the
 background, mean $0\,\kms$ and dispersion
 $\sigma_\text{halo} = 100\,\kms$ \citep[e.g.][]{brown+2010}. We select
 stars with velocity-informed satellite membership probabilities of
-greater than 0.2. For Scl, we find 1918 unique members and 831 for UMi.
+greater than 0.2. For Scl, we find 1918 velocity member stars and 831 for UMi.
 
 For UMi, we shifted the velocities of \citet{spencer+2018}
 ($-1.1\,\kms$) and \citet{pace+2020} ($+1.1\,\kms$) to account for
@@ -750,24 +752,24 @@ similar velocity scale.
 
 We correct the velocities for the solar motion and the on-sky size of
 the galaxy. We transform the velocities into the GSR and correct for the
-apparent gradient induced by the dwarf's proper motion
-\citep[see,][]{WMO2008, strigari2010}. The
+apparent gradient induced by the dwarf's proper motion assuming all stars are at the distance of the dwarf \citep[see,][]{WMO2008, strigari2010}. The
 correction from both effects induces an apparent gradient of about
 $1.3\,\mathrm{km\,s^{-1}\,deg^{-1}}$ for Sculptor and less for Ursa Minor. 
 
-Using the spectroscopic samples, we derive the velocity dispersion profiles in the GSR frame through a Bayesian fit to stars within bins of 0.10 dex in $\log R_\textrm{ell}$. We solve for both the systemic velocity and velocity dispersion in each bin, accounting for the uncertainties of each individual star using a No-U Turn Sampler. For priors, we assume the systemic velocity is drawn from a normal distribution with mean 0 and standard deviation 100\,$\kms$, and the velocity dispersion is drawn from a uniform distribution between 0 and $20\,\kms$. 
+Using the spectroscopic samples, we derive the velocity dispersion profiles in the GSR frame through a Bayesian fit to stars within bins of 0.10 dex in $\log R_\textrm{ell}$. We solve for both the systemic velocity and velocity dispersion in each bin, accounting for the uncertainties of each individual star, using a No-U-Turn Sampler \citep[NUTS, an adaptive Hamiltonian Monte Carlo method][]{NUTS} as implemented in Turing \citep{ge+xu+ghahramani2018}. For priors, we assume the systemic velocity is drawn from a normal distribution with mean 0 and standard deviation 100\,$\kms$, and the velocity dispersion is drawn from a uniform distribution between 0 and $20\,\kms$. 
 
 
 \subsection{Density profile fits} \label{sec:double_exp_fits}
 
 Here, we describe our fitting procedure to derive the double exponential fits and metallicity gradients in Fig.~\ref{fig:metallicity_gradient}.
 
-For the double exponential fits, we extend \citet{jensen+2024} to fit a double exponential with free inner and outer parameters. Specifically, we use a similar likelihood formulation except we hold the proper motion likelihood fixed, and allow the inner and outer density components to include free position angle, ellipticity, scale radius, and fit for the relative total mass of the outer component $f_\text{outer}$. We perform the fits using the No-U Turn Sampler (an adaptive Hamilton-Monte Carlo algorithm), assuming uniform priors for position angle and ellipticity, and log-uniform priors for scale radius.
+We extend \jj{}'s methodology to fit a double exponential with free inner and outer parameters. Specifically, we use a similar likelihood formulation except we hold the proper motion likelihood fixed, and allow the inner and outer density components to include free parameters for position angle, ellipticity, scale radius, and fraction of stars in the outer component ($f_\text{outer}$). We perform the fits using the No-U-Turn Sampler, assuming uniform priors for position angle, ellipticity, and $f_\text{outer}$, and log-uniform priors for scale radius.
 
 To fit the metallicity gradient, we instead assume that the density profile follows the double exponential fit above, and then fit a mixture model of the metallicity gradient as a sum of two Gaussian distributions. The four free parameters of this model are the mean and metallicity dispersion of the inner and outer components. 
 
-Table~\ref{tbl:double_exp_fits} contain the derived parameters and quantile uncertainties for both Scl and UMi. We find strong evidence for multiple populations with different mean metallicities. Our outer population scale radius is smaller than in \citet{jensen+2024} for Scl but is similar for UMi. 
+Table~\ref{tbl:double_exp_fits} contain the derived parameters and 16-84th quantile uncertainties for both Scl and UMi. We find strong evidence for multiple populations with different mean metallicities. Our outer population scale radius is smaller than in \citet{jensen+2024} for Scl but is similar for UMi. 
 
+Finally, Fig.~\ref{fig:decomposition_comparison} compares our best-fitting double-exponential density profile to the multiple chemodynamical populations of \citet{arroyo-polonio+2024} and \citet{pace+2020}. As discussed in the main text, our decomposition does not directly agree with \citepos{arroyo-polonio+2024}. They find more stellar mass in the outer (second) component, and both components have a more similar inner density. The transition between their two components occurs at a smaller radius of $R_\text{ell} \approx 5'$  compared to our transition location of $R_\text{ell} \approx 20'$. \citet{arroyo-polonio+2024} also tentatively detect a third population, however the scale radius is relatively unconstrained. 
 
 \begin{table}
 \centering
@@ -782,8 +784,8 @@ parameter & inner & outer \\
 $R_h$ (arcmin)                & $7.85^{+0.32}_{-0.33}$        & $17.1^{+1.3}_{-1.2}$         \\
 position angle ($^\circ$)     & $98.8^{+4.2}_{-4.0}$          & $91.8^{+3.0}_{-3.1}$         \\
 ellipticity                   & $0.243^{+0.031}_{-0.034}$     & $0.383^{+0.035}_{-0.036}$    \\
-$f_\text{outer}$              & ---                           & $0.315^{+0.058}_{-0.052}$    \\
-$R_\text{trans}$ (arcmin)     & ---                           & $20.2^{+3.0}_{-2.9}$    \\
+$f_\text{outer}$              & --                           & $0.315^{+0.058}_{-0.052}$    \\
+$R_\text{trans}$ (arcmin)     & --                           & $20.2^{+3.0}_{-2.9}$    \\
 $\mu_\text{[Fe/H]}$ (dex)     &  $-1.671^{+0.021}_{-0.021}$   &  $-1.982^{+0.024}_{-0.024}$  \\
 $\sigma_\text{[Fe/H]}$ (dex)  & $0.574^{+0.016}_{-0.015}$     & $0.336^{+0.019}_{-0.018}$    \\
 \hline
@@ -791,8 +793,8 @@ $\sigma_\text{[Fe/H]}$ (dex)  & $0.574^{+0.016}_{-0.015}$     & $0.336^{+0.019}_
 $R_h$ (arcmin)                & $10.58^{+0.52}_{-0.42}$       & $29.7^{+3.4}_{-3.2}$\\
 position angle ($^\circ$)     & $50.4^{+1.7}_{-1.6}$          & $74.0^{+68.0}_{-45.0}$ \\
 ellipticity                   & $0.598^{+0.025}_{-0.029}$     &  $0.087^{+0.086}_{-0.059}$ \\
-$f_\text{outer}$              & ---                           & $0.249^{+0.043}_{-0.041}$ \\
-$R_\text{trans}$ (arcmin)     & ---                           & $31.1^{+3.5}_{-3.2}$ \\
+$f_\text{outer}$              & --                           & $0.249^{+0.043}_{-0.041}$ \\
+$R_\text{trans}$ (arcmin)     & --                           & $31.1^{+3.5}_{-3.2}$ \\
 $\mu_\text{[Fe/H]}$ (dex)     & $-2.147^{+0.02}_{-0.02}$      & $-2.523^{+0.095}_{-0.087}$ \\
 $\sigma_\text{[Fe/H]}$ (dex)  & $0.347^{+0.015}_{-0.014}$     & $0.505^{+0.067}_{-0.066}$ \\
 \hline
@@ -801,74 +803,284 @@ $\sigma_\text{[Fe/H]}$ (dex)  & $0.347^{+0.015}_{-0.014}$     & $0.505^{+0.067}_
 
 
 
+\begin{figure}
+    \centering
+    \includegraphics{figures/decomposition_comparison.pdf}
+    \caption{A comparison of the density decompositions in this work and the results from \citet{pace+2020} and \citet{arroyo-polonio+2024}. We plot the \jj{} density profiles (black points), the inner component (blue lines), the outer component (orange dashed lines), the transition radius where the outer component begins to dominate (grey vertical line), and the third component of \citet{arroyo-polonio+2024} (green dotted line). The left and right panels show Scl and UMi respectively, and the top and bottom show the results from this work and the literature respectively.
+    }
+    \label{fig:decomposition_comparison}
+\end{figure}
+
+
+\subsection{Initial conditions for point-particle orbits of classical satellites}
+
+Table~\ref{tab:obs_props_other} contains the observed positions, kinematics, and distances of satellites besides Scl and UMi used for the orbits in Fig.~\ref{fig:classical_jacobi}. Our parameters are primarily similar to \citet{MV2020a} for consistency, but updating values of kinematics and distances when available from \citepos{pace2024} Local Volumne Database.
+
+
+\begin{table*}
+    \caption{The position and velocities of classical satellites (excluding Scl and UMi) for orbit integration. References are
+  (1) \citet{MV2020a, MV2020b},
+(2) \citet{mcconnachie2012},
+(3) \citet{an+walker+pace2024},
+(4) \citet{vivas+2022},
+(5) \citet{ji+2021},
+(6) \citet{oakes+2022},
+(7) \citet{munoz+2018},
+(8) \citet{WMO2009},
+(9) \citet{stetson+2014},
+(10) \citet{mateo+olszewski+walker2008},
+(11) \citet{spencer+2017a},
+(12) \citet{karczmarek+2015},
+(13) \citet{bhardwaj+2024}, and
+(14) \citet{kuehn+2008}.   }
+    \centering
+    \begin{tabular}{llllllllll}
+         \hline
+         Galaxy & $\alpha$  & $\delta$  & DM  & $\mu_{\alpha*}$  & $\mu_{\delta *}$  & $\V_\textrm{los}$  & $R_h$  & $\sigma_\V$  & refs \\
+         & $^\circ$ & $^\circ$ & mag & $\masyr$ & $\masyr$ & $\kms$ & arcmin & $\kms$  & -- \\
+         \hline
+Sagittarius &   $284.0951$ &  $ -30.5499$ & $ 17.10\pm0.15$ &      $-2.68$ &      $-1.39$ &     $140.00$ & $ 342\pm12$ & $ 11.40\pm0.70$ & 2;3 \\
+       Antlia II &   $143.8867$ &  $ -36.7672$ & $ 20.47\pm0.09$ &      $-0.09$ &       $0.12$ &     $290.70$ & $ 76.20\pm7.20$ & $ 5.98\pm0.36$ & 1;4;5 \\
+          Fornax &    $39.9971$ &  $ -34.4492$ & $ 20.77\pm0.05$ &       $0.38$ &      $-0.36$ &      $55.30$ & $ 18.40\pm0.20$ & $ 12.10\pm0.20$ & 1;6;7;8 \\
+           Leo I &   $152.1171$ &  $ +12.3064$ & $ 22.06\pm0.08$ &      $-0.05$ &      $-0.11$ &     $282.50$ & $ 3.30\pm0.03$ & $ 9.20\pm0.40$ & 1;9;10 \\
+          Leo II &   $168.3700$ &  $ +22.1517$ & $ 21.84\pm0.13$ &      $-0.14$ &      $-0.12$ &      $78.00$ & $ 2.48\pm0.03$ & $ 7.40\pm0.40$ & 1;11 \\
+       Sextans I &   $153.2625$ &   $ -1.6147$ & $ 19.67\pm0.10$ &      $-0.41$ &       $0.04$ &     $224.20$ & $ 27.80\pm1.20$ & $ 7.90\pm1.30$ & 1 \\
+          Carina &   $100.4029$ &  $ -50.9661$ & $ 20.12\pm0.11$ &       $0.53$ &       $0.12$ &     $222.90$ & $ 11.43\pm0.12$ & $ 6.60\pm1.20$ & 1;12 \\
+           Draco &   $260.0517$ &  $ +57.9153$ & $ 19.56\pm0.04$ &       $0.04$ &      $-0.19$ &    $-291.00$ & $ 9.93\pm0.09$ & $ 9.10\pm1.20$ & 1;13 \\
+CnV I &   $202.0146$ &  $ +33.5558$ & $ 21.62\pm0.06$ &      $-0.11$ &      $-0.12$ &      $30.90$ & $ 8.90\pm0.40$ & $ 7.60\pm0.40$ & 1;14 \\
+       Crater II &   $177.3100$ &  $ -18.4131$ & $ 20.35\pm0.02$ &      $-0.07$ &      $-0.11$ &      $87.50$ & $ 31.20\pm2.50$ & $ 2.70\pm0.30$ & 1 \\
+       \hline
+       \end{tabular}
+    \label{tab:obs_props_other}
+\end{table*}
+
+
+
+
 \section{Correcting the initial conditions of N-body simulations}\label{sec:action_correction}
-In this section, we outline our method to correct the initial position and velocity to attain a specified final position for an N-body simulation by using differences in actions and action-angles.
 
-Actions, $\bm{J}$, are three integrals of motion which also form canonical momenta for a Hamiltonian \citep[see, e.g.,][section 3.5]{BT2008}. The corresponding canonical positions are action-angles, $\bm\theta$, which vary from $0$ to $2\pi$.  Together, actions and action-angles form a canonical coordinate system for a Hamiltonian. 
-While actions are invariant in time ($\dot{\bm\theta} = 0$), action-angles increase linearly with time according to a corresponding frequency: $\bm\theta(t) = \bm\theta(0) + \bm \Omega\,t$ where $\bm\Omega = \partial H / \partial \bm J$ for a Hamiltonian $H$. 
+In this section, we outline our method to correct the initial position and velocity to attain a specified final position for an N-body simulation by using differences in action-angles.
 
-\agama{} provides utilities for converting between position-velocity space and action/angle space. To compute actions and angles, \agama{} uses the St\"ackel fudge, which assumes the potential is well-approximated by a St\"ackel potential. The inverse problem, converting to position-velocity space is calculated through the `torus mapping' code from \citet{binney+mcmillan2016}. While neither transformation is exact, the precision is sufficient for our needs.
+Actions, $\bm{J}$, are integrals of motion which are also canonical momenta \citep[see, e.g.,][section 3.5]{BT2008}. The corresponding conjugate variables are the angles $\bm\theta$ which, together with $\bm J$, form a canonical coordinate system for a Hamiltonian $H$.
+Angle coordinates are periodic -- adding integer multiples of $2\pi$ to an angle variable represent equivalent phase-space coordinates.
+While actions are invariant in time ($\dot{\bm J} = 0$), action-angles increase linearly with time : $\bm\theta(t) = \bm\theta(0) + \bm \Omega\,t$ where $\bm\Omega = \partial H / \partial \bm J$ for a Hamiltonian $H$. 
+
+\agama{} provides utilities for converting between position-velocity space and action/angle space. To compute actions and angles, \agama{} uses the St\"ackel fudge, which assumes the potential is well-approximated by a St\"ackel potential. For the inverse problem, \agama{} converts actions-angles to position-velocity space with the `torus mapping' code from \citet{binney+mcmillan2016}. While neither transformation is exact, the precision is sufficient for our needs. 
 
 In order to correct the initial positions, we make two approximations. First, a change to the initial actions $\bm J_i$ results in approximately the same change in the final, N-body evolved actions $\bm J_f$. Second, if the initial actions are unchanged ($\Delta \bm J_i = 0$),  then a change to the initial action-angles $\bm \theta_i$ results in commensurate change to the final action angles $\bm \theta_f$. 
 
 With these approximations, our procedure for adjusting the initial conditions is as follows:
 \begin{enumerate}
     \item Compute the action and angles of the centre of the N-body subhalo at the beginning and end of the simulation: $(\bm \theta_i, \bm J_i)$ and $(\bm \theta_f, \bm J_f$). Compute as well the target final actions and angles, $(\bm \theta_t, \bm J_t)$. 
-    \item If the final actions are substantially different from the intended actions, adjust the initial actions based on the final deviation in actions: $\Delta \bm J_i = \gamma(\bm J_t - \bm J_f)$, where $\gamma \in (0, 1]$ is a scale factor to aid convergence as needed.
-    \item If the final actions have converged to near the target values, adjust the initial angles based on the final deviation in action-angles $\Delta \bm \theta_i = \gamma(\bm \theta_t - \bm \theta_f)$. 
-    \item Convert the final actions back into positions/velocities and rerun the simulation. 
+    \item While the final actions are significantly different from the target actions, adjust the initial actions based on the final deviation in actions: $\Delta \bm J_i = \gamma(\bm J_t - \bm J_f)$, where $\gamma > 0$ is a scale factor to aid convergence as needed. Holding $\bm \theta_i$ fixed, convert the initial actions and action-angles back into positions and velocities, and rerun the simulation.
+    \item Finally, adjust the initial angles based on the final deviation in action-angles $\Delta \bm \theta_i = \gamma(\bm \theta_t - \bm \theta_f)$, holding $\bm J_i$ fixed. Rerun the simulation until convergence. 
 \end{enumerate}
 
-Fig.~\ref{fig:action_corrections} illustrates this procedure as applied to our UMi simulation. As UMi mostly orbits in the $y$--$z$ plane, $J_z$ is the highest action and also changes the most due to the dissipation of energy through dynamical self-friction. Note that besides the dissipation in the action values due to mass loss, there is also an inherent variation in the actions over time due to the limitations of the St\"ackel fudge and numerical noise from the simulation. 
-We begin by using lower-resolution $10^5$ particle simulations. Indeed, by shifting the initial actions by the final difference (black arrows), the next iteration achieves near the target actions. For the third iteration, we increase the resolution again (simulation 3 vs 3b), which changes the evolution slightly and motivates one additional action correction.  
-After this correction (the fourth iteration), the final actions are nearly exactly the target actions. 
 
-While the evolution of actions is primarily described by a translation of the original curve, the action-angle evolution depends on the initial actions since the frequencies $\Omega_i$ describing the evolution of $\theta_i$ depend on the values of the actions. As such, the curves in the first four iterations all appear slightly different. However, when the actions are left unchanged (for the last iteration), the action-angle evolution curve simply translates and results in near-perfect final conditions. 
+Table~\ref{tab:action_shifts} records our shifts and iterations for UMi. 
 
-Fig.~\ref{fig:obs_action_corrections} shows the final observed coordinates and velocities for each iteration as compared to the target. The final position agrees nearly perfectly (within uncertainties) with the intended final position of the simulation.
+Fig.~\ref{fig:action_corrections} illustrates this procedure as applied to our UMi simulation. As UMi mostly orbits in the $y$--$z$ plane, $J_z$ is the highest action and also changes the most due to the dissipation of energy through dynamical self-friction. Besides the dissipation of the action values, there is also an inherent variation in the actions over time due to the limitations of the St\"ackel fudge and numerical noise from the simulation. 
+
+We begin by using lower-resolution $10^5$ particle simulations (simulation 1). Indeed, by shifting the initial actions by the final difference (black arrows), the next iteration achieves near the target actions (simulation 2). For the third iteration, we increase the resolution (simulation 3 compared to 3-mr), which changes the evolution slightly and motivates one additional action correction.  
+After this correction, the final actions are very near the expected values (simulation 4-mr). Finally, we adjust the angle variables and increase (simulation 5-hr)
+
+Fig.~\ref{fig:action_corrections} furthermore lets us check our assumptions. Indeed, shifting the initial actions predominately shifts the overall actions instead of modifying the evolutionary shape of the actions over time. As expected, shifts to the actions do change the evolution of the action-angles as the frequencies depend on the values of the actions. However, once the actions are left fixed, changing the action-angles results in a nearly uniform shift to the action-angle evolution curves. For the case of UMi, the assumptions above appear sufficiently reasonable to achieve the intended final position and velocity.
+
+While we have presented the above algorithm for one specific case, we have found success for simulations of other galaxies, so we anticipate this algorithm to work for satellites undergoing moderate to mild tidal disruption on halo orbits of axisymmetric potentials. Not shown here, we have also succeeded in extending this algorithm to mildly evolving potentials, by using the initial axisymmetric potential to compute actions and angles, and choosing intermediate times of the simulation to compare and adjust the initial actions, extrapolating in time through point-particle orbits. 
 
 
 
 
-\begin{table}[]
-    \caption{The derived shifts to actions ($J_r$, $J_z$, $J_\phi$) or action angles ($\theta_r$, $\theta_z$, $\theta_\phi$) and the number of particles for each iteration of UMi's orbit.}
+\begin{table*}
+    \caption{The derived shifts to actions ($J_r$, $J_z$, $J_\phi$) or action angles ($\theta_r$, $\theta_z$, $\theta_\phi$), the corresponding changes to initial positions and velocities, the final reduced $\chi^2$ of the motion of the halo centre compared to the observed properties, and the number of particles for each iteration of UMi's orbit.}
     \centering
-    \begin{tabular}{l r r r r}
+    \begin{tabular}{l r r r r r r r}
     \hline
-    iteration & 1 & 2 & 3 & 4 \\
+    iteration & 1 & 2 & 3 & 3-mr & 4-mr & 5-mr & 5-hr \\
     \hline
-    $\Delta J_r / \mathrm{kpc\ km\ s^{-1}}$  & $+75$  &      $+19$  &     $-15$  &       --  \\
-    $\Delta J_z / \mathrm{kpc\ km\ s^{-1}}$     & $+431$  &      $+52$  &     $-62$  &       --  \\
-    $\Delta J_\phi / \mathrm{kpc\ km\ s^{-1}}$  & $-143$  &     $-20$  &      $+52$  &       --  \\
-    $\Delta \theta_R$ & --  &       --  &       --  &      $-0.22$  \\
-    $\Delta \theta_z$ & --  &       --  &       --  &      $-0.10$  \\
-    $\Delta \theta_\phi$ & --  &       --  &       --  &       $+0.09$  \\
-    particles & $10^5$ & $10^5$ & $10^6$ & $10^6$ \\
+    particles & $10^5$ & $10^5$ & $10^5$ &  $\bm{10^6}$ & $10^6$  & $10^6$ & $\bm{10^7}$\\
+    $\Delta J_r\ / \ \kpc\ \kms$  & --       &       $74.66$  &      $18.67$  &      --     &     $-14.52$  &       --       &       --     \\
+    $\Delta J_z\ / \ \kpc\ \kms$  & --       &       $431.39$  &      $51.85$  &      --     &     $-62.22$  &       --       &       --     \\
+ $\Delta J_\phi\ / \ \kpc\ \kms$  & --       &      $-143.11$  &     $-20.74$  &     --      &      $51.85$  &       --       &       --   \\
+               $\Delta \theta_r$  &                  --    &       -- & --      &       --      &       --      &      $-0.22$  &       -- \\
+               $\Delta \theta_z$  &                  --    &       -- & --      &       --      &       --      &      $-0.10$  &       -- \\
+            $\Delta \theta_\phi$  &                  --    &       -- & --      &       --      &       --      &       $0.09$  &       -- \\
+          $x_i\ / \ \kpc$  &     $-16.36$  &     $-18.17$  &     $-18.36$  &    --         &     $-18.07$  &     $-17.40$  &    --         \\
+          $y_i\ / \ \kpc$  &      $70.19$  &      $74.99$  &      $75.74$  &    --         &      $74.80$  &      $74.51$  &    --         \\
+          $z_i\ / \ \kpc$  &      $20.19$  &      $20.73$  &      $20.89$  &    --         &      $20.61$  &      $21.34$  &    --         \\
+   $\V_{x, i} \ / \ \kms$  &      $17.17$  &      $17.40$  &      $17.45$  &    --         &      $17.13$  &      $14.28$  &    --         \\
+   $\V_{y, i} \ / \ \kms$  &      $36.21$  &      $35.00$  &      $34.86$  &    --         &      $34.78$  &      $48.62$  &    --         \\
+   $\V_{z, i} \ / \ \kms$  &    $-118.09$  &    $-117.69$  &    $-117.41$  &    --         &    $-117.66$  &    $-114.08$  &    --         \\
+                  %$\tilde\chi^2$  &     $232.86$  &     $108.30$  &      $59.97$  &      $11.87$  &      $89.79$  &      $13.71$  &       $0.16$  \\
+  $\tilde\chi^2$  &      $92$  &      $10$  &       $5.4$  &       $3.0$  &       $7.9$  &       $0.5$  &       $0.01$  \\
      \hline
      \end{tabular}
     \label{tab:action_shifts}
-\end{table}
+\end{table*}
 
 
 
 \begin{figure*}
     \centering
     \includegraphics{figures/action_corrections.pdf}
-    \caption{The evolution of initial actions (left) and relative action angles (right) over time for each iteration of the simulation for Ursa Minor for $r$ (top row), $z$ (middle row), and $\phi$ (bottom row). 
-    The black arrows show the changes to actions or action-angles to the initial conditions, and the coloured lines show the actions or action angles for each timestep of each simulation. 
-    The action-angle panels subtract out the expected evolution of the actions for the target point-particle orbit ($\Delta \theta_i(t) = \Omega_i\, t$).
-    The 3b model is the same initial conditions as 3 but increasing the resolution. Note that the preferred final position is one snapshot later, causing the slight shift in the relative action-angles.
+    \caption{The evolution of initial action (left) and relative angle variables (right) over time for each iteration of the simulation for Ursa Minor for $r$ (top row), $z$ (middle row), and $\phi$ (bottom row). 
+    Each coloured line shows the value of the action/angle over time from the initial conditions to the present-day, scaled arbitrarily in the $x$-axis (representing time). The black arrows show the adjustments made to the initial conditions of the next simulations based on the final deviation. 
+    The angle variables are relative to the expected evolution of the actions for the target point-particle orbit ($\Delta \theta_i(t) = \Omega_i\, t$).
+    The suffixes -mr and -hr indicate that the model was ran with $10^6$ or $10^7$ particles instead of $10^5$.
     }
     \label{fig:action_corrections}
 \end{figure*}
 
 
-\begin{figure}
+
+\section{Tidal evolution of subhalos with different dark matter structures} \label{sec:extra_nbody}
+
+This appendix contains models and figures not shown in the main text.
+
+Fig.~\ref{fig:scl_sim_images} is similar to Fig.~\ref{fig:umi_sim_image} except for the Scl MW-only and MW+LMC models. As expected, Scl is less disrupted in the MW-only model and evolves little in the MW+LMC model.
+
+Fig.~\ref{fig:extra_tracks} shows the evolution of the total subhalo bound mass (left) and $\vmax$ versus $\rmax$ for different initial halos for Scl on the MW-only model matching the present-day velocity dispersion. The heavier halo has $\vmax=43\,\kms$, $\rmax=7\,\kpc$, more than tripling the initial mass. We also exlopre a model with a dark matter core:
+\begin{equation}
+    \rho/\rho_s = \frac{1}{(1 + r/r_s)^2\ (r_c/r_s + r/r_s)},
+\end{equation}
+where $r_c$ is the core radius, and $r_s$ and $\rho_s$ are a scale radius and density, respectively.  We set $M_s=(4\pi/3)\, \rho_s\,r_s^3=0.54\times 10^{10}\,\Mo$ and $r_s=r_c = 1.08\,\kpc$ for the cored model, using the same truncation as our NFW model (Eq.~\ref{eq:trunc_nfw}). The cored model illustrates an extreme case of a core, and requires a significantly more massive halo to achieve the observed velocity dispersion. 
+
+We also consider a model with a radial velocity anisotropy. Velocity anisotropy is defined as $\beta = 1 - (\sigma_\phi^2 + \sigma_\theta^2) / 2\sigma_r^2$ where $\sigma^2$ is the velocity dispersion in the spherical $r$, $\phi$, or $\theta$ direction. Radial velocity anisotropy may cause halos to disrupt faster \citep[e.g.,][]{chiang+bosch+schive2024}. We initialize a model with an Osipkov-Merrit velocity anisotropy profile, $\beta(r) = (\beta_0 + (r/r_a)^2) / (1 + (r/r_a)^2)$ rising from $\beta_0=0.2$ at the centre to $\beta=1$ at infinity, with scale length $r_a= 4\,r_s$. We adopt $\vmax = 43\,\kms$ and $\rmax=5\,\kpc$ for the anisotropic model.
+
+In each of these cases, the evolution is similar. The final halo indeed has similar, or more mass for the cored model, than for our fiducial model. Additionally, the final halo $\vmax$ and $\rmax$ are remarkably similar to our fiducial model. The cored profile remains an outlier, but loses even less mass than our fiducial model since tidal evolution does not reach into the cored region. As a result, we find little stellar evolution as above since the mass contained within the inner regions remains similar.
+
+
+
+
+
+
+\begin{figure*}
     \centering
-    \includegraphics{figures/observed_action_corrections.pdf}
-    \caption{The final sky positions (top), proper motions (middle), and distance and line-of-sight velocities (bottom) for each iteration of the UMi simulation. The black point with error bars shows the target final position with the observed uncertainties, using the half-light radius for the position uncertainties. The colour points are labeled by the iteration, with the 5th iteration as our final, presented simulation.
+    \includegraphics[width=9cm]{figures/sculptor_zoom_image.png}
+    \includegraphics[width=9cm]{figures/scl_lmc_zoom_image.png}
+    
+    \caption{
+    Similar to Fig.~\ref{fig:umi_sim_image} except for Scl in the MW-only (left) and MW+LMC (right) potentials. We also denote the path of the LMC with a green line.
     }
-    \label{fig:obs_action_corrections}
+    \label{fig:scl_sim_images}
+\end{figure*}
+
+
+\begin{figure}
+    \includegraphics{figures/extra_tidal_tracks.pdf}
+    \caption{The tidal tracks for Scl models in the MW-only potential with various structural parameters. While different structural parameters may evolve further along the tidal track, none completely disrupts and all evolve to a similar final state (except the cored model).}
+    \label{fig:extra_tracks}
 \end{figure}
+
+
+
 \end{document}
+
+
+% extra pieces
+
+%\begin{table*}[t]
+%\centering
+%\caption{The orbital properties for Scl.}
+%\label{tbl:scl_orbit_props}
+%\begin{tabular}{llllllll}
+%\hline
+%Property & MW orbits & MW N-body & LMC orbits & LMC N-body \\
+%\hline
+%pericentre $/$ kpc & $53\pm3$ & 42 & $44 \pm 3$ & 39 \\
+%LMC pericentre $/$ kpc & -- & -- & $28.7^{+1.6}_{-1.6}$ & 20 \\
+%apocentre $/$ kpc & $102\pm3$ & 94 & $218 \pm 8$ & -- \\
+%time of last pericentre $/$ Gyr & $-0.45\pm0.2$ & $-0.47$ & $-0.38\pm0.01$ & $-0.33$ \\
+%time last peri LMC / Gyr & -- & -- & $-0.111\pm 0.003$ & -0.10 \\
+%number of pericentres & 5--6 & 6 & 1 & 1 \\
+%final heliocentric distance $/$ kpc & $83.2\pm2$ & 81.6 & --- & 72.9\\
+%\hline
+%Jacobi radius $/$ kpc & $4.5 \pm 0.3$ & 3.5 & $3.3\pm0.2$  & 2.8 \\
+%Jacobi radius $/$ arcmin & $186\pm12$ & 148 & $136 \pm 9$  & 132 \\
+%LMC Jacobi radius $/$ kpc & -- & -- &  $3.6\pm0.2$ & 2.6\\
+%LMC Jacobi radius $/$ arcmin & -- & -- &  $159\pm5$ & 121\\
+%\hline
+%break radius $/$ kpc & $-2.45\pm0.11$ & 2.6 & $-2.06\pm0.07$ & 1.82\\
+%break radius $/$ arcmin & $-101\pm4$ & 109 & $-85.1\pm2.1$ & 85 \\
+%LMC break radius $/$ kpc  & -- & -- & $-0.604^{+0.019}_{-0.019}$ & 0.56\\
+%LMC break radius $/$ arcmin & -- & -- & $-25\pm0.6$ & 27\\
+%\hline
+%\end{tabular}
+%\end{table*}
+
+
+%\begin{table*}[t]
+%\centering
+%\caption{Similar to Table~\ref{tbl:scl_orbit_props}, except for the orbital properties of UMi.}
+%\label{tbl:umi_orbit_props}
+%\begin{tabular}{llll}
+%\hline
+%Property &  MW orbits & MW N-body & LMC orbits\\
+%\hline
+%pericentre $/$ kpc & $37\pm3$ & 30 & $45.6^{+11.0}_{-8.2}$\\
+%LMC pericentre $/$ kpc & -- & -- & $118.1^{+3.7}_{-83.0}$ \\
+%apocentre $/$ kpc & $83\pm4$ & 75 &  $131.0^{+300.0}_{-18.0}$\\
+%time of last pericentre $/$ Gyr  & $-0.96\pm0.07$ & $-0.80$ & $-2.14^{+0.24}_{-0.29}$ \\
+%time of last peri LMC $/$ Gyr  & -- & -- & $-3.43^{+0.45}_{-0.71}$ \\
+%number of pericentres & 7--8 & 8 & $3\pm1$ \\
+%final heliocentric distance & $70.1\pm3.6$ & 64.7 & $70.1 \pm 3.6$\\
+%\hline
+%Jacobi radius $/$ kpc & $3.7\pm0.3$ & 2.9 & $5.2^{+1.3}_{-1.0}$ \\
+%Jacobi radius $/$ arcmin & $184\pm12$ & 156 & $259.0^{+54.0}_{-50.0}$ \\
+%LMC Jacobi radius $/$ kpc & -- & -- &  $22.2^{+0.71}_{-15.0}$ \\
+%LMC Jacobi radius $/$ arcmin & -- & -- & $1079.0^{+23.0}_{-730.0}$ \\
+%\hline
+%break radius $/$ kpc  & $-4.65^{+0.35}_{-0.39}$ & 3.9 &  $10.3^{+1.2}_{-1.5}$\\
+%break radius $/$ arcmin &  $-228.0^{+12.0}_{-13.0}$ & 206 & $507.0^{+45.0}_{-53.0}$ \\
+%LMC break radius $/$ kpc  & -- & -- & $16.6^{+2.3}_{-3.5}$ \\
+%LMC break radius $/$ arcmin & -- & -- &  $814.0^{+83.0}_{-130.0}$\\
+%\hline
+%\end{tabular}
+%\end{table*}
+
+
+%\begin{table}[t]
+%\centering
+%\caption{The simulation properties for Scl and UMi.}
+%\label{tbl:sim_results}
+%\begin{tabular}{llll}
+%\hline
+%Property & Scl MW & Scl LMC & UMi MW \\
+%\hline
+%$r_\textrm{max, f} / r_\textrm{max, i}$ & 0.406 & 0.763 & 0.249 \\
+%$\V_\textrm{max, f} / \V_\textrm{max, i}$ &  0.695 & 0.928 & 0.511 \\
+%$f_\text{lost, DM}$ & 0.917 & 0.451 & 0.965 \\
+%\hline
+%$R_{h, \rm exp, i} / \kpc$ &  0.168 & 0.186 & 0.168\\
+%$R_{h, \rm exp, f}/\kpc$ &  0.189 & 0.189 & 0.212\\
+%$\sigma_{h, \rm exp, i}/\kms$ & 9.8 & 9.0 & 11.0 \\
+%$\sigma_{h, \rm exp, f}/\kms$ & 8.8 & 8.8 & 8.8 \\
+%$f_\text{lost, exp}$ & $2.1\times 10^{-6}$ & $5\times10^{-13}$ & 0.0014\\
+%\hline
+%$R_{h, \rm Plummer, i}/\kpc$ & 0.202 & 0.201 & 0.201 \\
+%$R_{h, \rm Plummer, f}/\kpc$ & 0.227 & 0.205 & 0.257\\
+%$\sigma_{h, \rm Plummer, i}/\kms$ & 10.7 & 9.4 & 12.1\\
+%$\sigma_{h, \rm Plummer, f}/\kms$ & 9.4 & 9.2 & 9.1\\
+%$f_\text{lost, Plummer}$ & $0.024$ & 0.0013 & 0.068\\
+%\hline
+%\end{tabular}
+%\end{table}
+
+
+%\begin{figure}
+%    \centering
+%    \includegraphics{figures/observed_action_corrections_shifted.pdf}
+%    \caption{The final sky positions (top), proper motions (middle), and distance and line-of-sight velocities (bottom) for each iteration of the UMi simulation. The black point with error bars shows the target final position with the observed uncertainties, using the half-light radius for the uncertainty in sky position. The colour points are labelled by the simulation as in Fig.~\ref{fig:action_corrections}.
+%    }
+%    \label{fig:obs_action_corrections}
+%\end{figure}
+
+
+%\begin{figure}
+%    \centering
+%    \caption{
+%        Similar to Fig.~\ref{fig:stellar_model_density} except for Scl in the combined MW and LMC potential. The top and bottom panels show results for exponential and Plummer initial stellar profiles, respectively.
+%    }
+%    \label{fig:stellar_model_density_lmc}
+%\end{figure}
 
