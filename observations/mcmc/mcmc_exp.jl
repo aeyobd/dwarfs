@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -34,8 +34,11 @@ using DataFrames, CSV
 # ╔═╡ 08d97b62-2760-47e4-b891-8f446e858c88
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
+	Nt = 16
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	Nt = 1
+
+	@bind galaxy confirm(TextField(default="bootes3"))
 end
 
 # ╔═╡ 05517bcc-7967-4bc7-9396-c271e420665d
@@ -122,7 +125,7 @@ sampler = NUTS()
 mcmc_model = exp_model(data)
 
 # ╔═╡ 8f051c8a-def2-4a84-ab43-2ecc8b646b65
-samples = sample(mcmc_model, sampler, MCMCThreads(), 1000, 16) 
+samples = sample(mcmc_model, sampler, MCMCThreads(), 1000, Nt) 
 
 # ╔═╡ 36db7e1d-4b48-4510-99d5-7d567ac70d5d
 df_out = DataFrame(samples)

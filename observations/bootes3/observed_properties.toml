@@ -1,7 +1,10 @@
-ra = 209.5
+ra = 209.8
 ra_em = 0.1
 ra_ep = 0.1
 ra_ref = "this work"
+
+ra_original = 209.3
+dec_original = 26.8
 
 dec = 26.7
 dec_em = 0.1
@@ -57,12 +60,12 @@ mv_em = 0.5
 mv_ep = 0.5
 mv_ref = "MV2020"
 
-r_h = 33.03
-r_h_em = 2.50
-r_h_ep = 2.50
+r_h = 27
+r_h_em = 5
+r_h_ep = 6
 r_h_ref = "J+24"
 
-R_h = 27.04
+R_h = 27
 
 
 metallicity = -2.0999999046325684

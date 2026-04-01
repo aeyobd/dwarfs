@@ -21,7 +21,7 @@ using LilGuys
 
 # ╔═╡ 3a61088e-502c-46ca-b35f-e1ed9de03528
 adopted = Dict(
-	:radial_velocity => 190 ± 1.8,
+	:radial_velocity => 189 ± 1.8,
 	:sigma_v => Measurement(7.5, 1.5, 2.0),
 	:pmra => -1.160 ± 0.037,
 	:pmdec => -0.88 ± 0.037,

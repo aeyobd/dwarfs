@@ -46,7 +46,7 @@ begin
 end
 
 # ╔═╡ 7557d9c9-891a-4bce-88d6-f04e06e81738
-@bind profilename confirm(TextField(default="best_profile.toml"))
+@bind profilename confirm(TextField(default="example_profile.toml"))
 
 # ╔═╡ fe484bae-bd19-41c0-9d9d-7a6446b99039
 @bind n_bins_bg confirm(NumberField(1:1:100))
@@ -116,7 +116,17 @@ Sigma_bg_u = LilGuys.Measurement(Sigma_bg, Sigma_bg_err)
 # ╔═╡ a0b6e938-be54-45e1-9433-3f68f2cbb8da
 begin
 	Sigma_sub = 10 .^ prof.log_Sigma .- 10 .^ Sigma_bg_u
-	log_Sigma_sub = NaNMath.log10.(Sigma_sub[1:end-n_bins_bg-n_bins_cut])
+	log_Sigma_sub = []
+		
+	for Sigma in Sigma_sub[1:end-n_bins_bg-n_bins_cut]
+		if Sigma.middle - Sigma.lower > 0 
+			push!(log_Sigma_sub, log10.(Sigma))
+		elseif Sigma.middle > 0
+			push!(log_Sigma_sub, Measurement(log10.(Sigma.middle), NaN, log10.(Sigma.middle .+ Sigma.upper) .- log10(Sigma.middle)))
+		else
+			push!(log_Sigma_sub, Measurement(NaN, NaN))
+		end
+	end
 	prof_sub = LilGuys.SurfaceDensityProfile(
 		R_units=prof.R_units,
 		log_R=prof.log_R[1:end-n_bins_bg-n_bins_cut],

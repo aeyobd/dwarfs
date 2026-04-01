@@ -110,12 +110,19 @@ F_best = RVUtils.get_f_best.([j24], source_id)
 # ╔═╡ 412148d2-3b14-400a-b93b-f4aa18965d8d
 F_match = F_best .=== 1.
 
+# ╔═╡ d64de157-20ba-48a5-a22b-6a93b3939a47
+
+
 # ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
 df_out = let
 	df = copy(boo3_deimos)
 	df[!, :source_id] .= source_id
 	df[!, :F_match] = F_match
 	df[!, :F_scatter] .= true
+	# df[:, :RV_err_orig] = copy(df.RV_err)
+
+	# df[:, :RV_err] = @. sqrt(df.RV_err^2 *1.4^2 + 1.1^2 )
+
 	df
 end
 
@@ -221,7 +228,10 @@ end
 filt_memb = (boo3_deimos.P_SAT_deimos .> 0.5) .& (boo3_deimos.Var .<= 0)
 
 # ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
-boo3_members = boo3_deimos[filt_memb, :]
+boo3_members = let
+	df = boo3_deimos[filt_memb, :]
+	df
+end
 
 # ╔═╡ 5f71b8e9-5540-4431-8028-4ce14c8d7856
 let 
@@ -292,7 +302,7 @@ let
 	y_err = boo3_carlin[filt_xmatch_carlin, "RV_err"]
 	errorscatter!(x, y, xerror=x_err, yerror=y_err)
 
-	lines!([140, 220], [140, 220])
+	lines!([140, 220], [140, 220] .+ 11)
 	fig
 end
 
@@ -342,6 +352,7 @@ RVUtils.plot_samples(boo3_carlin_memb, samples_carlin, bins=5)
 # ╠═96e1413d-e4fd-48af-8cde-73a5fcb4976a
 # ╠═a6f7f1a1-2dad-4397-9565-7b2aaf1fa733
 # ╠═412148d2-3b14-400a-b93b-f4aa18965d8d
+# ╠═d64de157-20ba-48a5-a22b-6a93b3939a47
 # ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─4b8a45ce-4862-4842-8c60-bae9a64acd75

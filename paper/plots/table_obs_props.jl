@@ -9,7 +9,7 @@ include("table_utils.jl")
 
 
 function (@main)(ARGS)
-    print_all(["ra", "dec", "distance_modulus", "pmra", "pmdec", "radial_velocity", "r_h", "sigma_v"])
+    print_all(["ra", "dec", "distance_modulus", "pmra", "pmdec", "radial_velocity", "R_h", "sigma_v"])
     println()
     println()
     for (ref, idx) in short_refs
@@ -68,6 +68,10 @@ function print_all(keys)
             val = df[key]
             if key == "distance_modulus"
                 ref = df["distance" * "_ref"]
+            elseif key == "R_h"
+                ref = df["ellipticity" * "_ref"]
+                append!(refs, short_refs[ref])
+                ref = df["r_h" * "_ref"]
             else
                 ref = df[key * "_ref"]
             end
@@ -76,7 +80,7 @@ function print_all(keys)
                 sval = @sprintf "%0.4f" val
             elseif key == "dec"
                 sval = @sprintf " %+0.4f" val
-            elseif key == "r_h"
+            elseif key == "R_h"
                 err = get_err(df, key)
                 sval = @sprintf " %0.2f\\pm%0.2f" val err
             elseif key == "sigma_v"

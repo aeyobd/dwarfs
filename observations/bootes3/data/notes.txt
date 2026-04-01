@@ -7,3 +7,16 @@ and ra > 209.3 - 4
 and dec < 26.8 + 3
 and dec > 26.8 - 3
 ```
+
+```
+SELECT * FROM delve_dr2.objects 
+where mag_psf_g < 99
+and magerr_psf_g < 99
+and mag_psf_r < 99
+and magerr_psf_r < 99
+and q3c_radial_query(ra, dec, 209.3, 26.8, 6)
+```
+
+
+SELECT * FROM delve_dr3.coadd_objects
+where q3c_radial_query(ra, dec, 209.3, 26.8, 2)

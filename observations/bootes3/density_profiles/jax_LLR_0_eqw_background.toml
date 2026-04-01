@@ -1,1 +1,5 @@
-OrderedCollections.OrderedDict{String, Any}("log_Sigma" => -3.6338756310514393, "log_Sigma_err" => 0.37401940329451966, "log_R_bg" => [1.973385223206608])
+log_Sigma = -1.9247864431902841
+log_Sigma_err = 0.016021819740291238
+log_R_bg = [1.973385223206608, 2.073385223206608, 2.173385223206608]
+n_points_bg = 3
+n_points_skip = 1

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -148,6 +148,16 @@ let
 	plot_profiles(profs)
 end
 
+# ╔═╡ fb9d2db8-012c-4951-b58e-a9ba9fa80078
+let 
+	profs = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
+	add_profile!(profs, "mf_1_profile.toml", label="all")
+	add_profile!(profs, "mf_bhb_-2_profile.toml", label="BHB")
+	add_profile!(profs, "mf_rgb_1_profile.toml", label="RGB")
+	add_profile!(profs, "mf_ms_1_profile.toml", label="MS")
+	plot_profiles(profs)
+end
+
 # ╔═╡ 5295c0da-f77f-45b9-84bf-e174e2d5a521
 begin
 	profiles = OrderedDict{String, LilGuys.SurfaceDensityProfile}()
@@ -282,6 +292,7 @@ plot_profiles(profiles_mcmc)
 # ╠═abead192-161f-4375-899f-2c769d40cbfb
 # ╠═cec06b83-84de-4bb3-b41c-5dffcd6fe0f3
 # ╠═41d2dbae-7c38-460a-8036-c2d43a1f83cd
+# ╠═fb9d2db8-012c-4951-b58e-a9ba9fa80078
 # ╠═898d2c8b-b761-4a69-b561-658a644f44df
 # ╠═ad174507-779f-4117-9d71-10843d42981d
 # ╠═cc9ac531-ef25-4573-9d35-4e4a25418adc

@@ -1,0 +1,5 @@
+inherits = "bins_eqw.toml"
+
+filename = "../data/j24_1c.fits"
+LLR_min = 2.0
+

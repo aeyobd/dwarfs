@@ -1,0 +1,11 @@
+ra = 211.36371
+dec = 28.53444
+pmra = -5.41
+pmdec = -0.79
+distance = 16.9
+R_h = 2.30
+ellipticity = 0 # technically ~ 0.11
+position_angle = 0
+metallicity = -1.98
+
+reference="harris2010"

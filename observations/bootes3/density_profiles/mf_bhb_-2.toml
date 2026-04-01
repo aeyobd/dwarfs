@@ -1,0 +1,8 @@
+inherits = "bins_eqw.toml"
+filename = "../samples/delve_matched_filter_6deg.bhb.fits"
+
+LLR_min = -2
+
+cmd_x1 = "gmag"
+cmd_x2 = "rmag"
+cmd_y = "gmag"

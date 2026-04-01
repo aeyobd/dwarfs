@@ -121,9 +121,6 @@ R_h = obs_properties["R_h"]
 # ╔═╡ 84509e42-8484-410a-8a76-38473b9f4b71
 rv0 = obs_properties["radial_velocity"] .- Δv_gsr
 
-# ╔═╡ 9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
-θ_orbit = obs_properties["theta_pm_gsr"]
-
 # ╔═╡ 8b0d5ad4-2858-47dd-93c4-224fa9e016c8
 md"""
 # Data processing
@@ -226,10 +223,9 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = histogram(Float64.(memb_stars.RV), 6, normalization=:pdf)
-	
+
+	errorscatter!(memb_stars.RV, zeros(length(memb_stars.RV)) .+ 0.003*randn(length(memb_stars.vz)), xerror=memb_stars.RV_err,  color=COLORS[2])
 	RVUtils.plot_samples!(samples, LinRange(160, 220, 100), thin=150)
-	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	fig
 end
@@ -258,10 +254,6 @@ df_gsr = DataFrame(samples_gsr)
 # ╔═╡ 1f251e67-7fed-4375-8bed-697704302e43
 summary_vz = RVUtils.summarize(samples_gsr)
 
-# ╔═╡ a3d469bb-562d-4d5e-8af9-dc417693ce5c
-±
-
-
 # ╔═╡ a5f1a339-6093-49ea-bd10-b513688d668c
 median(df_gsr.μ) + Δv_gsr
 
@@ -271,18 +263,17 @@ let
 		xlabel=L"radial velocity / km s$^{-1}$",
 		ylabel="density"
 	)
-	h = histogram(Float64.(memb_stars.vz), 5, normalization=:pdf)
 
-	stephist!(Float64.(memb_stars.vz), bins=5, normalization=:pdf)
+	errorscatter!((memb_stars.vz), zeros(length(memb_stars.vz)) .+ 0.003*randn(length(memb_stars.vz)), xerror=memb_stars.vz_err,  color=COLORS[2])
+
 	RVUtils.plot_samples!(df_gsr, LinRange(210, 260, 100), thin=160)
-	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
 
 	@savefig "RV_hist_mcmc"
 	fig
 end
 
 # ╔═╡ 6dd003db-bd29-4872-94f2-445f5c4536ba
-stephist(Float64.(memb_stars.vz), bins=9, normalization=:)
+stephist(Float64.(memb_stars.vz), bins=9, normalization=:pdf)
 
 
 # ╔═╡ c1cf3a80-1c26-4417-9ddf-1046f3f5f608
@@ -633,7 +624,6 @@ end
 # ╠═00cd5ad7-ab0e-428f-ba00-05ef6fc86806
 # ╠═2d110151-f7f3-4b09-8684-a2fc4327814b
 # ╠═84509e42-8484-410a-8a76-38473b9f4b71
-# ╠═9e2420ea-8d47-4eab-a4bd-0caeb09d9ebb
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╟─8b0d5ad4-2858-47dd-93c4-224fa9e016c8
 # ╠═eac815ec-680c-42f9-aa40-fa8e87daf2b4
@@ -664,7 +654,6 @@ end
 # ╠═f8904d41-c448-417c-bbe9-6626a6283b67
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 # ╠═1f251e67-7fed-4375-8bed-697704302e43
-# ╠═a3d469bb-562d-4d5e-8af9-dc417693ce5c
 # ╠═a5f1a339-6093-49ea-bd10-b513688d668c
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
 # ╠═6dd003db-bd29-4872-94f2-445f5c4536ba

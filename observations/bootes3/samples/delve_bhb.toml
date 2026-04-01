@@ -1,0 +1,8 @@
+filename = "../data/delve_dr2_good_6deg.fits"
+cmd_x1 = "gmag"
+cmd_x2 = "rmag"
+cmd_y = "gmag"
+
+cmd_cut = [-0.25,18.79, -0.25,19.60, -0.11,19.14, 0.19,19.06, 0.19,18.54, -0.13,18.62]
+
+

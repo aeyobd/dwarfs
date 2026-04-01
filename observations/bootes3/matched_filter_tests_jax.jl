@@ -128,7 +128,7 @@ end
 iso_gaia_resampled = resample_iso(iso_gaia, cols=[:Gmag, :G_BPftmag, :G_RPmag]);
 
 # ╔═╡ e3d35c58-3fad-4603-b52f-64d727c6b3ad
-lines(diff(iso_gaia_resampled.Mini))
+(diff(iso_gaia_resampled.Mini))
 
 # ╔═╡ f63389bf-77fe-4495-9be5-b4f86f84dc57
 stars = let
@@ -210,7 +210,7 @@ lines(iso_new.gmag .- iso_new.rmag, iso_new.gmag .+ distance_modulus)
 lines(midpoints(iso.Mini), log10.(diff(iso.Mini)))
 
 # ╔═╡ 71dfe223-539a-4e2b-84b1-04811b2533a0
-color_range = (-0.8, 1.8)
+color_range = (-0.5, 2.5)
 
 # ╔═╡ 6dabd441-9f39-4e75-a651-7edba2da41e4
 """
@@ -252,9 +252,9 @@ function build_cmd_filter(
     color_uncertainty,           # callable: σ_c(mag)   -> Float64
     distance_uncertainty;        # callable: σ_μ(mag)   -> Float64
     color_range::Tuple{Real,Real} = color_range,
-    mag_range::Tuple{Real,Real}   = (15.0, 23.0),
+    mag_range::Tuple{Real,Real}   = (14.0, 24.0),
     n_color::Int = 200,
-    n_mag::Int   = 300,
+    n_mag::Int   = 200,
     imf = Utils.kroupa_imf,
 	mass_weight = true
 	
@@ -485,6 +485,9 @@ end
 # ╔═╡ 5fec3242-c0e2-480f-a941-d2540c7de79a
 plot_cmd(cmd_gaia, colorrange=(1e-4, 1),  colorscale=log10)
 
+# ╔═╡ a4159d32-8fd0-4577-ab14-8841ae328b52
+plot_cmd(cmd_sat)
+
 # ╔═╡ 8fc6ad6e-5cdd-48b6-94c4-97933d4d2d69
 plot_cmd(cmd_sat2)
 
@@ -523,9 +526,6 @@ plot_log_cmd(cmd_gaia3,)
 # ╔═╡ 7158c2e8-1af4-4bcf-bcd6-34222d3b9462
 plot_log_cmd(cmd_gaia4,)
 
-# ╔═╡ a4159d32-8fd0-4577-ab14-8841ae328b52
-plot_log_cmd(cmd_sat)
-
 # ╔═╡ aeb7f058-02a7-494b-b24d-07dc646ed200
 function plot_cmd_rel(cmd, cmd2; kwargs...)	
 	fig = Figure()
@@ -542,9 +542,6 @@ end
 
 # ╔═╡ 4b955d32-6e61-4d0d-a819-1eb307114015
 plot_cmd_rel(cmd_gaia3, cmd_gaia, colorscale=log10, colorrange=(0.1, 10))
-
-# ╔═╡ 0870f9ab-56aa-4208-964b-32257048f38d
-
 
 # ╔═╡ 65973035-10d5-4ece-8b21-c51de60daf90
 let
@@ -576,8 +573,200 @@ let
 	fig
 end
 
+# ╔═╡ 6288ddaf-517e-484a-ac6b-1838e828449e
+md"""
+# Testing against NGC 5466
+"""
+
+# ╔═╡ 44cab61f-1dcb-4ff4-8661-b8385ed0239e
+
+
+# ╔═╡ 02224588-b6f9-4939-9caa-0da3920c59c5
+obs_props_ngc5466 = Dict(
+	"ra" => 211.36371,
+	"dec" => 28.53444,
+	"pmra" => -5.41,
+	"pmdec" => -0.79,
+	"distance_modulus" => LilGuys.kpc2dm(16.9),
+	"R_h" => 10.72,
+	"ellipticity" => 0,
+	"position_angle" => 0,
+	"metallicity" => -2.0,
+)
+
+# ╔═╡ 56f74781-7f4c-4eac-b6a6-729826a2a311
+xi_ngc5466, eta_ngc5466 = 60 .* LilGuys.to_tangent(obs_props_ngc5466["ra"], obs_props_ngc5466["dec"], obs_props["ra"], obs_props["dec"])
+
+# ╔═╡ a7b93b84-72e5-4f43-80d6-f5177cacc381
+sample_ngc5466 = let
+	r_ngc = @. sqrt(
+		(stars.xi - xi_ngc5466)^2 
+		+ (stars.eta - eta_ngc5466) ^ 2
+	)
+
+	df = stars[r_ngc .< obs_props_ngc5466["R_h"] * 1, :]
+
+	df.xi .-= xi_ngc5466
+	df.eta .-= eta_ngc5466
+
+	df
+end
+
+# ╔═╡ 2a3f1432-0390-49b6-a539-e0b6c907da76
+let
+	fig = Figure()
+	ax = cmd_axis(fig[1,1], )
+	ax.title[] = "NGC 5466"
+	
+	scatter!(sample_ngc5466.gmag .- sample_ngc5466.rmag, sample_ngc5466.gmag, markersize=1, color=:black, alpha=0.1)
+
+	fig
+
+end
+
+# ╔═╡ 8ded2ee2-e4c2-406d-9f88-d0bb1592e663
+iso_ngc5466 = let 
+	iso = Utils.get_isochrone(-1.9, 12)
+	iso[iso.label .< 5, :] |> resample_iso
+end
+
+# ╔═╡ a60d65fd-da72-4dc8-bc7b-133d0bb7a51e
+
+
+# ╔═╡ cf2317a0-0a82-4957-a6cb-d5aff70cf53a
+cmd_ngc5466 = build_cmd_filter(
+	iso_ngc5466.gmag .- iso_ngc5466.rmag ,
+	iso_ngc5466.gmag .+ obs_props_ngc5466["distance_modulus"],
+	iso_ngc5466.Mini,
+	x -> @.(sqrt(color_err.(x)^2 + 0.03^2)),
+	x -> 0.05,
+	mag_range=(14, 21)
+)
+
+# ╔═╡ 8d52e45a-11bc-4334-bc51-2d9c7cc68e56
+
+
+# ╔═╡ 05118762-a483-4fed-ad77-6789a8a1d494
+function make_background_density(stars;    
+	color_range::Tuple{Real,Real} = color_range,
+    mag_range::Tuple{Real,Real}   = (14.0, 21.0),
+    n_color::Int = 200,
+	n_mag::Int = 200,
+								 kwargs...
+								 
+)
+
+	KernelDensity.kde((stars.gmag .- stars.rmag, stars.gmag), boundary=(color_range, mag_range), npoints=(n_color, n_mag),)
+end
+
+# ╔═╡ 4466fab1-8bc1-4b2f-b2e0-cb1cd6bb540f
+cmd_emperical_ngc5466 = make_background_density(sample_ngc5466, bandwidth=(0.025, 0.05))
+
+# ╔═╡ b89a98c7-8dd8-4ae1-82a1-a3501f423eca
+let
+	fig = Figure(
+		size = (6, 3) .* 72
+	)
+	
+	ax = cmd_axis(fig[1,1])
+	ax.title[] = "synthetic NGC 5466"
+	cmd =cmd_ngc5466
+	
+	y = (cmd[1] ./ maximum(cmd[1]))
+	
+	p = heatmap!(ax, cmd[2], cmd[3], y; )
+
+
+	ax2 = cmd_axis(fig[1,2])
+	ax2.title[] = "emperical NGC 5466"
+
+	heatmap!(cmd_emperical_ngc5466, colorrange=(0, maximum(cmd_emperical_ngc5466.density)))
+
+	Colorbar(fig[1,3], p, label="density (peak normalized)")
+
+
+	linkaxes!(ax, ax2)
+	xlims!(color_range...)
+	ylims!(14, 21)
+	ax2.yreversed[] = true
+	fig
+
+end
+
+# ╔═╡ 32d10087-2acc-4abb-be53-7e7ce03f8de0
+let
+	fig = Figure(
+		size = (6, 3) .* 72
+	)
+	
+	ax = cmd_axis(fig[1,1])
+	ax.title[] = "synthetic NGC 5466"
+	cmd =cmd_ngc5466
+	
+	y = (cmd[1] ./ maximum(cmd[1]))
+	
+	p = heatmap!(ax, cmd[2], cmd[3], y; colorrange=(1e-5, 1), colorscale=log10)
+
+
+	ax2 = cmd_axis(fig[1,2])
+	ax2.title[] = "emperical NGC 5466"
+
+	cmax = maximum(cmd_emperical_ngc5466.density)
+	heatmap!(cmd_emperical_ngc5466, colorrange=(1e-5*cmax, cmax), colorscale=log10)
+
+	Colorbar(fig[1,3], p, label="density (peak normalized)")
+
+
+	linkaxes!(ax, ax2)
+	xlims!(color_range...)
+	ylims!(14, 21)
+	ax2.yreversed[] = true
+	fig
+
+end
+
+# ╔═╡ 937a539d-f664-488a-8d6f-9d6fde9df0eb
+let
+	fig = Figure(size=(6, 2.5,) .* 72)
+	ax = Axis(fig[1,1],
+			  xlabel = "gmag",
+			  ylabel = "density",
+			  yscale = log10,
+			  limits=(12, 23, 0.001, 1.0),
+			  yticks = [0.01, 0.1, 1]
+			 )
+	x = midpoints(cmd_ngc5466[3])
+	y = sum(cmd_ngc5466[1], dims=1) |> vec
+
+	S = sum(diff(cmd_ngc5466[3]) .* y)
+	lines!(x, y ./ S, label="binned density map")
+
+
+
+	x = cmd_emperical_ngc5466.y
+	y = sum(cmd_emperical_ngc5466.density, dims=1) |> vec
+
+	S = sum(LilGuys.gradient(cmd_emperical_ngc5466.x) .* y)
+	lines!(x, y ./ S, label="binned density ")
+
+	println(LilGuys.mean(y ./ S))
+	println(LilGuys.mean(x))
+	
+	m = LinRange(0.75, maximum(iso.Mini), 10000)
+	w = Utils.kroupa_imf.(m)
+
+	f = LilGuys.lerp(iso.Mini, iso.gmag .+ obs_props_ngc5466["distance_modulus"])
+
+	stephist!(f.(m), bins=300, weights=w, normalization=:pdf, color=COLORS[2], label = "isochrone mag(kroupa IMF)")
+
+
+	axislegend( ax, position=:rb)
+	
+	fig
+end
+
 # ╔═╡ Cell order:
-# ╠═8fa62036-f19f-4f65-8f14-f0b1fb2ddc27
+# ╟─8fa62036-f19f-4f65-8f14-f0b1fb2ddc27
 # ╠═4c482a6f-9cd3-4704-b8ce-b23e0f1a293f
 # ╠═015eae5d-515c-4fa4-9a44-fc478692cd44
 # ╠═68cd2e80-a8d7-4fcd-87dd-a632818b77ac
@@ -649,5 +838,19 @@ end
 # ╠═109fdcda-b64e-477f-bfba-4f9588b7bf09
 # ╠═16d32bcb-6f43-499b-9c88-94db8464e63e
 # ╠═79bb12ce-2a31-47c6-9265-2c5ec9dffa48
-# ╠═0870f9ab-56aa-4208-964b-32257048f38d
 # ╠═65973035-10d5-4ece-8b21-c51de60daf90
+# ╠═6288ddaf-517e-484a-ac6b-1838e828449e
+# ╠═44cab61f-1dcb-4ff4-8661-b8385ed0239e
+# ╠═02224588-b6f9-4939-9caa-0da3920c59c5
+# ╠═56f74781-7f4c-4eac-b6a6-729826a2a311
+# ╠═a7b93b84-72e5-4f43-80d6-f5177cacc381
+# ╠═2a3f1432-0390-49b6-a539-e0b6c907da76
+# ╠═8ded2ee2-e4c2-406d-9f88-d0bb1592e663
+# ╠═a60d65fd-da72-4dc8-bc7b-133d0bb7a51e
+# ╠═cf2317a0-0a82-4957-a6cb-d5aff70cf53a
+# ╠═8d52e45a-11bc-4334-bc51-2d9c7cc68e56
+# ╠═05118762-a483-4fed-ad77-6789a8a1d494
+# ╠═4466fab1-8bc1-4b2f-b2e0-cb1cd6bb540f
+# ╠═b89a98c7-8dd8-4ae1-82a1-a3501f423eca
+# ╠═32d10087-2acc-4abb-be53-7e7ce03f8de0
+# ╠═937a539d-f664-488a-8d6f-9d6fde9df0eb

@@ -1,0 +1,5 @@
+filename = "../samples/delve_matched_filter_1.0.fits"
+
+cmd_x1 = "gmag"
+cmd_x2 = "rmag"
+cmd_y = "gmag"
