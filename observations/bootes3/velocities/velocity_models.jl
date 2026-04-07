@@ -37,7 +37,10 @@ md"""
 """
 
 # ╔═╡ 428c3d92-e49c-426e-b328-2d2a8d4c4159
-rv_file = "rv_deimos_x_2c_psat_0.2.fits"
+rv_file = let
+	"rv_deimos_geha_x_2c.fits"
+	"rv_deimos_x_2c_sigma_3.fits"
+end
 
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
 n_samples = 10_000
@@ -95,9 +98,6 @@ end
 # ╔═╡ 5ec475a1-14bb-40f6-856a-69fa9efe087a
 ⊕ = RVUtils.:⊕
 
-# ╔═╡ 12ce6511-38d0-4c7e-abb7-40f2ef2dc749
-
-
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 md"""
 # Loading data tables
@@ -129,8 +129,13 @@ md"""
 # ╔═╡ eac815ec-680c-42f9-aa40-fa8e87daf2b4
 rv_meas = read_fits("processed/$rv_file")
 
+# ╔═╡ 236e3900-4c55-49c0-ad5d-eaa06d292c5c
+if :PSAT_RV ∈ names(rv_meas)
+	@assert all([rv_meas.PSAT_RV .> 0.5, :])
+end
+
 # ╔═╡ cb511bb7-ee81-4c74-b07e-1d1b268305d8
-memb_stars = rv_meas[rv_meas.PSAT_RV .> 0.5, :]
+memb_stars = rv_meas
 
 # ╔═╡ 82d6afc3-50cc-4e85-924e-dc91ae14f4de
 sort(rv_meas, "ra")
@@ -173,9 +178,6 @@ prior_samples = DataFrame(
 # ╔═╡ ccbb694d-f973-40fd-bab7-a2aefbd9fb0b
 pairplot(prior_samples[:, [:μ, :σ]])
 
-# ╔═╡ 5496d15c-b228-4227-a732-207d0fb31829
-
-
 # ╔═╡ 74ad07df-f15c-436f-b390-ce95b27f7fab
 let
 	fig, ax = FigAxis(
@@ -195,21 +197,6 @@ end
 md"""
 # Full fits to data
 """
-
-# ╔═╡ 9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
-function fit_rv_sigma(rv, rv_err; μ_0_prior=0, N=3_000, p=0.16)
-	samples = DataFrame(sample(RVUtils.model_vel_1c(rv, rv_err, μ_0_prior=μ_0_prior), sampler, MCMCThreads(), N, n_threads))
-
-	μ = median(samples.μ)
-	μ_p = quantile(samples.μ, [p, 1-p]) 
-	μ_err = (μ - μ_p[1], μ_p[2] - μ)
-
-	σ = median(samples.σ)
-	σ_p = quantile(samples.σ, [p, 1-p])
-	σ_err = (σ - σ_p[1], σ_p[2] - σ)
-
-	return μ, σ, μ_err, σ_err
-end
 
 # ╔═╡ 318d29b9-4c84-4d38-af6d-048518952970
 samples = DataFrame(sample(RVUtils.model_vel_1c(memb_stars.RV, memb_stars.RV_err, μ_0_prior=Δv_gsr), sampler, MCMCThreads(), n_samples, n_threads))
@@ -617,7 +604,6 @@ end
 # ╠═bd6dfd17-02ee-4855-be37-fecfdab6776f
 # ╠═2ab0018f-1628-4f5e-b7da-370eb20c00d0
 # ╠═5ec475a1-14bb-40f6-856a-69fa9efe087a
-# ╠═12ce6511-38d0-4c7e-abb7-40f2ef2dc749
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╠═66c35421-f6d3-4b2d-86e4-319f5476b222
@@ -627,6 +613,7 @@ end
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 # ╟─8b0d5ad4-2858-47dd-93c4-224fa9e016c8
 # ╠═eac815ec-680c-42f9-aa40-fa8e87daf2b4
+# ╠═236e3900-4c55-49c0-ad5d-eaa06d292c5c
 # ╠═cb511bb7-ee81-4c74-b07e-1d1b268305d8
 # ╠═82d6afc3-50cc-4e85-924e-dc91ae14f4de
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
@@ -639,10 +626,8 @@ end
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
 # ╠═5cf336f6-e3eb-4668-b074-18b396f027be
 # ╠═ccbb694d-f973-40fd-bab7-a2aefbd9fb0b
-# ╠═5496d15c-b228-4227-a732-207d0fb31829
 # ╠═74ad07df-f15c-436f-b390-ce95b27f7fab
 # ╟─95ef12d2-174a-47c3-a106-9b4005b2a80d
-# ╠═9a99b3cb-90c0-4e5b-82c8-ae567ef6f7fa
 # ╠═318d29b9-4c84-4d38-af6d-048518952970
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
 # ╠═764b5306-20f9-4810-8188-1bdf9482260f

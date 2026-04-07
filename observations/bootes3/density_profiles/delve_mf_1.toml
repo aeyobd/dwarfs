@@ -1,0 +1,6 @@
+filename = "../samples/delve_matched_filter_6deg.g22.fits"
+
+cmd_x1 = "gmag"
+cmd_x2 = "rmag"
+cmd_y = "gmag"
+LLR_min = 1

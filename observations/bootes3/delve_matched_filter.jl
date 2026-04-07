@@ -29,7 +29,7 @@ iso_width = 0.05
 mock = false
 
 # ╔═╡ 7579731a-af68-4858-aa3d-08510fd4b5eb
-mode = "ms"
+mode = "g22"
 
 # ╔═╡ 015eae5d-515c-4fa4-9a44-fc478692cd44
 CairoMakie.activate!(type=:png)
@@ -44,6 +44,9 @@ end
 
 # ╔═╡ cfd3c3df-38b7-4f78-b798-a6cbc3bdceef
 if mode == "all"
+	mag_range = (15, 23.0)
+	color_range = (-0.7, 1.5)
+elseif mode == "g22"
 	mag_range = (15, 22.0)
 	color_range = (-0.7, 1.5)
 elseif mode == "bhb"
@@ -75,7 +78,7 @@ distance_modulus =  obs_props["distance_modulus"]
 if mock
 	ra0, dec0 = 205, 22
 else
-	ra0, dec0 = obs_props["ra"], obs_props["dec"]
+	ra0, dec0 = obs_props["ra_original"], obs_props["dec_original"]
 end
 
 # ╔═╡ 90a3ba08-28eb-4529-bfb7-c6d01b3dd979
@@ -370,29 +373,45 @@ end
 # ╔═╡ 7a9a905a-8b3c-490c-ab9a-c8b3c581d1a7
 kernel_mode(stars.gmag, bandwidth=0.05)
 
+# ╔═╡ 89f8f6de-4569-4b96-9f3c-15841e98b49f
+import StatsBase: median
+
+# ╔═╡ 8c90c029-aedc-4745-84ed-911efe78b8d5
+function five_sigma_depth(values)
+	mags = first.(values)
+	errs = last.(values)
+
+	magerr_0 = 0.2
+	magerr_w = 0.05
+	filt = magerr_0 - magerr_w .<= errs .<= magerr_0 + magerr_w
+	if sum(filt) == 0
+		return NaN
+	else
+		return median(mags[filt])
+	end
+end
+
+# ╔═╡ 7d1c5c26-0a44-42a6-b15b-c708dcd3a505
+five_sigma_depth(zip(stars.gmag, stars.magerr_psf_g))
+
+# ╔═╡ 0886ca9e-b31e-465a-aab9-fc46068ae91b
+five_sigma_depth(zip(stars.rmag, stars.magerr_psf_r))
+
 # ╔═╡ d28e2b85-79cd-4473-a735-6e46c77ec1eb
-function plot_spatial_mode(
-    df::DataFrame;
-    x_col::Symbol,
-    y_col::Symbol,
-    z_col::Symbol,
-    x_bins::Int=50,
-    y_bins::Int=50,
-    bandwidth::Real = 0.2,
-	kwargs...
-)
-    x_edges = range(minimum(df[!, x_col]), maximum(df[!, x_col]), length=x_bins + 1)
-    y_edges = range(minimum(df[!, y_col]), maximum(df[!, y_col]), length=y_bins + 1)
+function binned_stats(x, y, z, stat_func; x_bins=45, y_bins=45)
+    x_edges = range(minimum(x), maximum(x), length=x_bins + 1)
+    y_edges = range(minimum(y), maximum(y), length=y_bins + 1)
 
     mode_grid = fill(NaN, x_bins, y_bins)
 
     for i in 1:x_bins
         for j in 1:y_bins
-            mask = (df[!, x_col] .>= x_edges[i]) .& (df[!, x_col] .< x_edges[i+1]) .&
-                   (df[!, y_col] .>= y_edges[j]) .& (df[!, y_col] .< y_edges[j+1])
-            z_vals = df[mask, z_col]
+            mask = (x_edges[i] .<= x .< x_edges[i+1]) .&
+                   (y_edges[j] .<= y .< y_edges[j+1])
+            z_vals = z[mask]
+			
             if length(z_vals) >= 2
-                mode_grid[i, j] = kernel_mode(z_vals; bandwidth=bandwidth)
+                mode_grid[i, j] = stat_func(z_vals)
             end
         end
     end
@@ -400,30 +419,71 @@ function plot_spatial_mode(
     x_centers = collect(0.5 .* (x_edges[1:end-1] .+ x_edges[2:end]))
     y_centers = collect(0.5 .* (y_edges[1:end-1] .+ y_edges[2:end]))
 
-    fig = Figure(size=(700, 600))
-    ax = Axis(fig[1, 1];
-        xlabel=string(x_col),
-        ylabel=string(y_col),
-        title="Kernel Mode of $(z_col) (bandwidth=$(bandwidth))"
-    )
-
-    hm = heatmap!(ax, x_centers, y_centers, mode_grid, colormap=Reverse(Arya.get_arya_cmap()); kwargs...)
-    Colorbar(fig[1, 2], hm; label=string(z_col))
-
-    return fig
+    return Utils.DensityMap(x_centers, y_centers, mode_grid)
 end
 
-# ╔═╡ dc642b71-7277-4693-8161-22b59150c8a3
+# ╔═╡ f68df67c-50fc-4bf3-8a2a-d5a810f869be
+extrema(stars.eta)
 
+# ╔═╡ 341d33bf-fc9c-4264-8513-05d7fa4ee45b
+function plot_density_map(density_map; colorlabel="", kwargs...)
+	fig = Figure()
+
+	ax = Axis(fig[1,1],
+			 xlabel = "xi / arcmin",
+			 ylabel = "eta / arcmin",
+			 xreversed = true, 
+			 aspect=DataAspect())
+
+	p = heatmap!(density_map.x, density_map.y, density_map.density; kwargs...)
+
+	@info minimum(density_map.density[isfinite.(density_map.density)])
+	@info diff(density_map.x)[1]
+	Colorbar(fig[1,2], p, label=colorlabel)
+	fig
+end
+
+# ╔═╡ 021bc8cb-0449-4cae-898a-b7258bf7d6ef
+let 
+	modes = binned_stats(stars.xi, stars.eta, stars.gmag, x -> kernel_mode(x, bandwidth=0.2))
+		
+	plot_density_map(modes, colorrange=(23.4, 24) .- 0.2)
+end
 
 # ╔═╡ 1d94e532-d99e-47e1-ab62-8b3c5692f4ee
-plot_spatial_mode(stars, x_col=:xi, y_col=:eta, z_col=:gmag, colorrange=(23.3, 23.8), bandwidth=0.2)
+let
+	m = binned_stats(stars.xi, stars.eta, collect(zip(stars.gmag, stars.magerr_psf_g)), five_sigma_depth,)
+	
+	plot_density_map(m, colorlabel="5σ depth g",  colorrange=(23.5, 24))
+end
 
-# ╔═╡ 2358b308-77d6-481e-bd78-025b3dfe965e
-plot_spatial_mode(stars, x_col=:xi, y_col=:eta, z_col=:gmag, colorrange=(23.3, 23.8), bandwidth=0.1)
+# ╔═╡ 89f9f774-b1af-444c-bbba-059cdfe278e5
+let
+	m = binned_stats(stars.xi, stars.eta, collect(zip(stars.gmag, stars.magerr_psf_g)), five_sigma_depth)
 
-# ╔═╡ 87c32370-610e-430e-9afa-d069260a1a54
-plot_spatial_mode(stars, x_col=:xi, y_col=:eta, z_col=:gmag, colorrange=(23.3, 23.8), bandwidth=0.05)
+	hist(vec(m.density[isfinite.(m.density)]), bins=60)
+end
+
+# ╔═╡ bb2ec2cc-4e82-42c6-a0a4-f2abedfaf2ce
+let
+	m = binned_stats(stars.xi, stars.eta, collect(zip(stars.rmag, stars.magerr_psf_r)), five_sigma_depth)
+
+	hist(vec(m.density[isfinite.(m.density)]),  bins=60)
+end
+
+# ╔═╡ 0b1aab30-6042-4d59-bfef-e1ed7b17082e
+let
+	m = binned_stats(stars.xi, stars.eta, collect(zip(stars.rmag, stars.magerr_psf_r)), five_sigma_depth)
+
+	plot_density_map(m, colorlabel="5σ depth r", colorrange=(22.9, 23.5))
+end
+
+# ╔═╡ c0459b64-2393-45dd-aac0-9d193866134a
+let 
+	modes = binned_stats(stars.xi, stars.eta, stars.rmag, x -> kernel_mode(x, bandwidth=0.1), x_bins=30, y_bins=30)
+		
+	plot_density_map(modes, colorrange=(22.2, 23.5) .- 0.3)
+end
 
 # ╔═╡ Cell order:
 # ╠═6d3349e7-befc-40ca-981c-47ac3922c090
@@ -484,8 +544,16 @@ plot_spatial_mode(stars, x_col=:xi, y_col=:eta, z_col=:gmag, colorrange=(23.3, 2
 # ╠═c62a3752-30d6-425e-a8cd-13347bbf1983
 # ╠═72c9db08-0c9e-4188-a300-8f6034029c66
 # ╠═7a9a905a-8b3c-490c-ab9a-c8b3c581d1a7
+# ╠═89f8f6de-4569-4b96-9f3c-15841e98b49f
+# ╠═8c90c029-aedc-4745-84ed-911efe78b8d5
+# ╠═7d1c5c26-0a44-42a6-b15b-c708dcd3a505
+# ╠═0886ca9e-b31e-465a-aab9-fc46068ae91b
 # ╠═d28e2b85-79cd-4473-a735-6e46c77ec1eb
-# ╠═dc642b71-7277-4693-8161-22b59150c8a3
+# ╠═f68df67c-50fc-4bf3-8a2a-d5a810f869be
+# ╠═341d33bf-fc9c-4264-8513-05d7fa4ee45b
+# ╠═021bc8cb-0449-4cae-898a-b7258bf7d6ef
 # ╠═1d94e532-d99e-47e1-ab62-8b3c5692f4ee
-# ╠═2358b308-77d6-481e-bd78-025b3dfe965e
-# ╠═87c32370-610e-430e-9afa-d069260a1a54
+# ╠═89f9f774-b1af-444c-bbba-059cdfe278e5
+# ╠═bb2ec2cc-4e82-42c6-a0a4-f2abedfaf2ce
+# ╠═0b1aab30-6042-4d59-bfef-e1ed7b17082e
+# ╠═c0459b64-2393-45dd-aac0-9d193866134a

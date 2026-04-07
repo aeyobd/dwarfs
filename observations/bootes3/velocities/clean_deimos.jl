@@ -110,9 +110,6 @@ F_best = RVUtils.get_f_best.([j24], source_id)
 # ╔═╡ 412148d2-3b14-400a-b93b-f4aa18965d8d
 F_match = F_best .=== 1.
 
-# ╔═╡ d64de157-20ba-48a5-a22b-6a93b3939a47
-
-
 # ╔═╡ 28a22929-89f2-422d-9cf0-b06d7e45d9a4
 df_out = let
 	df = copy(boo3_deimos)
@@ -120,7 +117,6 @@ df_out = let
 	df[!, :F_match] = F_match
 	df[!, :F_scatter] .= true
 	# df[:, :RV_err_orig] = copy(df.RV_err)
-
 	# df[:, :RV_err] = @. sqrt(df.RV_err^2 *1.4^2 + 1.1^2 )
 
 	df
@@ -166,23 +162,9 @@ matched = j24[idx_xmatch, :]
 # ╔═╡ 7962908c-4150-46a8-8388-2f5283b1d0c4
 matched[matched.F_BEST .== 0.0, :]
 
-# ╔═╡ 34b1fcc3-7355-4d0d-b0aa-8af0541e8651
-mean(matched[matched.F_BEST .== 0.0, :F_CPAR])
-
-# ╔═╡ 08967635-801f-44dc-bb7e-62abbe0f86e4
-mean(matched[matched.F_BEST .== 0.0, :F_INGRID])
-
-# ╔═╡ 1853d75f-65e9-4ad0-8a5e-68603d4ecddf
-mean(matched[matched.F_BEST .== 0.0, :F_ASTROMETRIC])
-
 # ╔═╡ 4290a51e-961b-4b38-b954-1a65e946080c
 md"""
 # Plots
-"""
-
-# ╔═╡ 8a176998-016d-4932-946f-eca78eb53d2b
-md"""
-## Histograms / exporatory
 """
 
 # ╔═╡ cee182e1-5545-4b86-9152-b288a9b11d86
@@ -218,17 +200,9 @@ let
 	fig
 end
 
-# ╔═╡ fe505b23-c610-4e44-98f4-fb4c9ffe0388
-μ = obs_properties["radial_velocity"]
-
-# ╔═╡ d3440c3e-be84-403f-a04d-68a237375b62
-σ = obs_properties["sigma_v"]
-
-# ╔═╡ afc161e5-8cd7-4c33-b8bc-40cf23a5e284
-filt_memb = (boo3_deimos.P_SAT_deimos .> 0.5) .& (boo3_deimos.Var .<= 0)
-
 # ╔═╡ 344f3c29-0873-4180-9025-51aeaeb2c681
 boo3_members = let
+	filt_memb = (boo3_deimos.P_SAT_deimos .> 0.5) .& (boo3_deimos.Var .<= 0)
 	df = boo3_deimos[filt_memb, :]
 	df
 end
@@ -249,86 +223,8 @@ let
 	fig
 end
 
-# ╔═╡ 214ed7f8-f338-4186-8f6d-870498486c0a
-md"""
-## MCMC
-"""
-
-# ╔═╡ af916274-d081-45dd-ba62-626f7d409ebe
-model = RVUtils.model_vel_1c(boo3_members.RV, boo3_members.RV_err)
-
-# ╔═╡ cd34e5eb-c330-4476-b20a-fe74e67fe69c
-chain = sample(model, NUTS(), MCMCThreads(), 1000, 16)
-
-# ╔═╡ 68fd09a2-d2ca-44a1-b141-94fe9b968ce9
-pairplot(chain)
-
-# ╔═╡ 54c4c8b3-f9e3-4b85-afd6-5a5646f5eb79
-df_summary = RVUtils.summarize(chain)
-
-# ╔═╡ 0ae09680-cc34-492d-85bb-dec3ced936cf
-samples = DataFrame(chain)
-
-# ╔═╡ beb53bbc-0d2a-468d-a40c-2958df7e95ca
-RVUtils.plot_samples(boo3_members, samples, bins=6)
-
-# ╔═╡ 60f45b81-8beb-4eb0-8f55-db04c5368eee
-CSV.write("processed/mcmc_summary_uncorrected_deimos.csv", df_summary)
-
-# ╔═╡ 2cae0f08-20fe-4a83-ad7e-b7d644e6fb27
-md"""
-# Comparing against Carlin data
-"""
-
-# ╔═╡ 1c44bc59-27bc-40c1-a3c9-1148bca74545
-boo3_carlin = CSV.read("../data/carlin_sand2018.txt", DataFrame, ignorerepeated=true, delim=" ")
-
-# ╔═╡ 2bf0545e-9937-4917-9027-6ec864dd698a
-filt_xmatch_carlin, idx_xmatch_carlin = RVUtils.xmatch(boo3_carlin, boo3_deimos, 1)
-
-# ╔═╡ 197703f0-83b6-433a-9a3a-1cf89c8a7393
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-			  xlabel = "RV deimos",
-			  ylabel="RV carlin",
-			  aspect=DataAspect()
-			  
-			 )
-
-	x = boo3_deimos[idx_xmatch_carlin[filt_xmatch_carlin], "RV"]
-	y = boo3_carlin[filt_xmatch_carlin, "RV"]
-	x_err = boo3_deimos[idx_xmatch_carlin[filt_xmatch_carlin], "RV_err"]
-	y_err = boo3_carlin[filt_xmatch_carlin, "RV_err"]
-	errorscatter!(x, y, xerror=x_err, yerror=y_err)
-
-	lines!([140, 220], [140, 220] .+ 11)
-	fig
-end
-
-# ╔═╡ f0896659-acbe-48d5-b98b-b889eee4b30b
-boo3_carlin_memb = boo3_carlin[boo3_carlin.member .== Ref("Y"), :]
-
-# ╔═╡ 57b5826e-5cac-4977-9cb5-659b674e9544
-model_carlin = RVUtils.model_vel_1c(boo3_carlin_memb.RV, boo3_carlin_memb.RV_err)
-
-# ╔═╡ d9840d11-997f-4f98-aef5-a061e8befbe0
-chain_carlin = sample(model_carlin, NUTS(), MCMCThreads(), 1000, 16)
-
-# ╔═╡ e8af46ed-8fd7-4725-bbfa-8d942e30bdc2
-pairplot(chain_carlin)
-
-# ╔═╡ 5f4e35e3-fb36-4bf2-a69d-30e1008db2c8
-df_summary_carlin = RVUtils.summarize(chain_carlin)
-
-# ╔═╡ 2f40cf0f-ecc5-4f03-b2a8-43277cc33454
-samples_carlin = DataFrame(chain_carlin)
-
-# ╔═╡ 6b6fcc66-b6ac-4b3f-b877-ddd45092dddd
-RVUtils.plot_samples(boo3_carlin_memb, samples_carlin, bins=5)
-
 # ╔═╡ Cell order:
-# ╠═811c5da0-7e70-4393-b59d-c0fdb89523ca
+# ╟─811c5da0-7e70-4393-b59d-c0fdb89523ca
 # ╠═0ed1ac33-0537-4838-ae0b-200be73c501c
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
 # ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
@@ -352,7 +248,6 @@ RVUtils.plot_samples(boo3_carlin_memb, samples_carlin, bins=5)
 # ╠═96e1413d-e4fd-48af-8cde-73a5fcb4976a
 # ╠═a6f7f1a1-2dad-4397-9565-7b2aaf1fa733
 # ╠═412148d2-3b14-400a-b93b-f4aa18965d8d
-# ╠═d64de157-20ba-48a5-a22b-6a93b3939a47
 # ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─4b8a45ce-4862-4842-8c60-bae9a64acd75
@@ -366,36 +261,10 @@ RVUtils.plot_samples(boo3_carlin_memb, samples_carlin, bins=5)
 # ╠═e11da237-4c8f-450f-bd41-b2c9cdf2f11d
 # ╠═9ac3364e-5532-457e-b29b-bfb10d32e845
 # ╠═7962908c-4150-46a8-8388-2f5283b1d0c4
-# ╠═34b1fcc3-7355-4d0d-b0aa-8af0541e8651
-# ╠═08967635-801f-44dc-bb7e-62abbe0f86e4
-# ╠═1853d75f-65e9-4ad0-8a5e-68603d4ecddf
 # ╟─4290a51e-961b-4b38-b954-1a65e946080c
-# ╟─8a176998-016d-4932-946f-eca78eb53d2b
 # ╠═cee182e1-5545-4b86-9152-b288a9b11d86
 # ╠═c0c02bce-e0f9-4fa0-bba6-a5360a825e23
 # ╠═d3e682ee-0dab-4aa5-9f3e-423a9d2f92b0
 # ╠═c873ccf2-8ecf-4a85-a152-76acd1c1fc62
 # ╠═344f3c29-0873-4180-9025-51aeaeb2c681
-# ╠═fe505b23-c610-4e44-98f4-fb4c9ffe0388
-# ╠═d3440c3e-be84-403f-a04d-68a237375b62
-# ╠═afc161e5-8cd7-4c33-b8bc-40cf23a5e284
 # ╠═5f71b8e9-5540-4431-8028-4ce14c8d7856
-# ╟─214ed7f8-f338-4186-8f6d-870498486c0a
-# ╠═af916274-d081-45dd-ba62-626f7d409ebe
-# ╠═cd34e5eb-c330-4476-b20a-fe74e67fe69c
-# ╠═68fd09a2-d2ca-44a1-b141-94fe9b968ce9
-# ╠═54c4c8b3-f9e3-4b85-afd6-5a5646f5eb79
-# ╠═0ae09680-cc34-492d-85bb-dec3ced936cf
-# ╠═beb53bbc-0d2a-468d-a40c-2958df7e95ca
-# ╠═60f45b81-8beb-4eb0-8f55-db04c5368eee
-# ╠═2cae0f08-20fe-4a83-ad7e-b7d644e6fb27
-# ╠═1c44bc59-27bc-40c1-a3c9-1148bca74545
-# ╠═2bf0545e-9937-4917-9027-6ec864dd698a
-# ╠═197703f0-83b6-433a-9a3a-1cf89c8a7393
-# ╠═f0896659-acbe-48d5-b98b-b889eee4b30b
-# ╠═57b5826e-5cac-4977-9cb5-659b674e9544
-# ╠═d9840d11-997f-4f98-aef5-a061e8befbe0
-# ╠═e8af46ed-8fd7-4725-bbfa-8d942e30bdc2
-# ╠═5f4e35e3-fb36-4bf2-a69d-30e1008db2c8
-# ╠═2f40cf0f-ecc5-4f03-b2a8-43277cc33454
-# ╠═6b6fcc66-b6ac-4b3f-b877-ddd45092dddd

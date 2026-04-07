@@ -82,8 +82,8 @@ Measurement(median(df_plummer.f_sat))
 # ╔═╡ 3902daf7-c819-4159-8b89-17abea4a7fcf
 R_max = GaiaFilters.calc_R_max(allstars.xi, allstars.eta, 0, 0)
 
-# ╔═╡ 28fbace6-a519-4292-b41c-e394e16f5584
-N_stars = 191_771
+# ╔═╡ 7ace8961-8ed4-4387-8518-07f4643da622
+N_stars = median(df_plummer.N_sat ./ df_plummer.f_sat)
 
 # ╔═╡ 1b470198-af01-4118-9d81-bcb4febcbee6
 N_stars / (π*R_max^2)
@@ -99,6 +99,15 @@ length(stars.R)
 
 # ╔═╡ 050a5206-f0d9-4811-9248-91f5e937bfaf
 log10(maximum(stars.R))
+
+# ╔═╡ 88980f89-b8f9-4e72-8b9e-7f5d668a2776
+# ╠═╡ disabled = true
+#=╠═╡
+prof_obs = LilGuys.SurfaceDensityProfile(stars.R, bins=(0:0.1:2.541), weights= LR) |> LilGuys.filter_empty_bins
+  ╠═╡ =#
+
+# ╔═╡ 9421bde9-41b4-4e67-8512-f094a75e5e1b
+prof_obs = LilGuys.SurfaceDensityProfile(stars.R, bins=(0:0.1:2.541), weights= LR) |> LilGuys.filter_empty_bins
 
 # ╔═╡ cd9df222-ac47-4dce-b74d-77d11486f31c
 function plot_sersic!(df_out)
@@ -197,7 +206,7 @@ let
 
 
 
-	plot_plummer_bkg!(df_plummer, N_stars/10; color=COLORS[2])
+	plot_plummer_bkg!(df_plummer, N_stars * 10^(2prof_shift.middle); color=COLORS[2])
 
 	# plot_sersic!(df_sersic)
 	plot_plummer!(df_plummer, color=COLORS[3])
@@ -240,15 +249,6 @@ function plot_plummer(df_out)
 
 end
 
-# ╔═╡ 88980f89-b8f9-4e72-8b9e-7f5d668a2776
-# ╠═╡ disabled = true
-#=╠═╡
-prof_obs = LilGuys.SurfaceDensityProfile(stars.R, bins=(0:0.1:2.541), weights= LR) |> LilGuys.filter_empty_bins
-  ╠═╡ =#
-
-# ╔═╡ 9421bde9-41b4-4e67-8512-f094a75e5e1b
-prof_obs = LilGuys.SurfaceDensityProfile(stars.R, bins=(0:0.1:2.541), weights= LR) |> LilGuys.filter_empty_bins
-
 # ╔═╡ Cell order:
 # ╠═8442396b-50ac-4614-becb-c7eb8bf041ff
 # ╠═61558ffd-4ccc-47b6-89e8-20861e7827d7
@@ -268,7 +268,7 @@ prof_obs = LilGuys.SurfaceDensityProfile(stars.R, bins=(0:0.1:2.541), weights= L
 # ╠═ddba7645-45d8-4fc1-9cd9-d33c486910ee
 # ╠═500057bf-c451-414b-a9bb-4b0138c6486b
 # ╠═3902daf7-c819-4159-8b89-17abea4a7fcf
-# ╠═28fbace6-a519-4292-b41c-e394e16f5584
+# ╠═7ace8961-8ed4-4387-8518-07f4643da622
 # ╠═ae519c10-c59e-4011-a4e0-798d1346137f
 # ╠═cd9df222-ac47-4dce-b74d-77d11486f31c
 # ╠═1b470198-af01-4118-9d81-bcb4febcbee6

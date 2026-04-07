@@ -1,14 +1,14 @@
-ra = 209.8
-ra_em = 0.1
-ra_ep = 0.1
+ra = 209.48
+ra_em = 0.10
+ra_ep = 0.10
 ra_ref = "this work"
 
 ra_original = 209.3
 dec_original = 26.8
 
-dec = 26.7
-dec_em = 0.1
-dec_ep = 0.1
+dec = 26.67
+dec_em = 0.05
+dec_ep = 0.05
 dec_ref = "this work"
 
 distance = 46.55860935229591
@@ -31,45 +31,47 @@ pmdec_em = 0.02
 pmdec_ep = 0.02
 pmdec_ref = "battaglia+2022"
 
-radial_velocity = 190
-radial_velocity_em = 1.8
-radial_velocity_ep = 1.8
-radial_velocity_ref = "Geha+2026"
+radial_velocity = 187
+radial_velocity_em = 2
+radial_velocity_ep = 2
+radial_velocity_ref = "this work"
 
-sigma_v = 7.4
-sigma_v_em = 2
+sigma_v = 7.5
+sigma_v_em = 1.5
 sigma_v_ep = 2
-sigma_v_ref = "Me"
+sigma_v_ref = "this work"
 
-position_angle = -81.0
-position_angle_em = 8.0
-position_angle_ep = 8.0
-postiion_angle_ref = "moskowitz+walker2020"
+position_angle = 93
+position_angle_em = 10
+position_angle_ep = 9
+postiion_angle_ref = "this work"
 
-ellipticity = 0.33
-ellipticity_em = 0.09
-ellipticity_ep = 0.09
-ellipticity_ref = "moskowitz+walker2020"
+ellipticity = 0.43
+ellipticity_em = 0.12
+ellipticity_ep = 0.12
+ellipticity_ref = "this work"
 
-Mv = -5.75
-Mv_em = 0.6
-Mv_ep = 0.6
+Mv = -5.5
+Mv_em = 0.3
+Mv_ep = 0.3
 
 mv = 12.6
 mv_em = 0.5
 mv_ep = 0.5
-mv_ref = "MV2020"
+mv_ref = "this work"
 
-r_h = 27
-r_h_em = 5
-r_h_ep = 6
-r_h_ref = "J+24"
+r_h = nan
+r_h_em = nan
+r_h_ep = nan
+r_h_ref = "this work"
 
-R_h = 27
+R_h = 34
+R_h_em = 4
+R_h_ep = 5
 
 
-metallicity = -2.0999999046325684
-metallicity_em = 0.20000000298023224
-metallicity_ep = 0.20000000298023224
-metallicity_ref = "MV2020"
+metallicity = -2.6
+metallicity_em = 0.2
+metallicity_ep = 0.2
+metallicity_ref = "this work"
 

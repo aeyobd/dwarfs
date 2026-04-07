@@ -10,23 +10,14 @@ begin
 	using Arya
 	using CairoMakie
 
-	import LilGuys as lguys
+	using LilGuys; FIGDIR = "figures"
+
+	using OrderedCollections
+	using PyFITS
+	import TOML
+
+	import StatsBase: quantile, mean, std, median, sem
 end
-
-# ╔═╡ 93838644-cad6-4df3-b554-208b7afeb3b8
-using PyFITS
-
-# ╔═╡ bd6dfd17-02ee-4855-be37-fecfdab6776f
-using LilGuys; FIGDIR = "figures"
-
-# ╔═╡ 72f1febc-c6ea-449a-8cec-cd0e49c4e20c
-using DataFrames
-
-# ╔═╡ d7d439be-b77b-4a3d-9fb6-7dd7583dc52e
-using OrderedCollections
-
-# ╔═╡ 035cdedb-da23-4cfd-aa19-a3aff089d3ac
-using Measurements
 
 # ╔═╡ 3ed8c28f-5908-42dc-a56b-24a9b2685a07
 md"""
@@ -61,29 +52,12 @@ md"""
 This notebook takes the dataset created from velocity_xmatch.jl and analyzes it using MCMC to estimate the velocity dispersion and search for any possible velocity gradients.
 """
 
-# ╔═╡ 34e43f4a-bcff-41cb-92c4-0c8d600fd053
-import CSV
-
-# ╔═╡ 9e9ba645-b780-4afa-b305-a2b1d8a97220
-import StatsBase: quantile, mean, std, median, sem
-
-# ╔═╡ d2888213-61e3-4a6f-872b-48a075640ef5
-import TOML
-
 # ╔═╡ b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ 2ab0018f-1628-4f5e-b7da-370eb20c00d0
 module RVUtils
 	include("../../rv_utils.jl")
-end
-
-# ╔═╡ 5ec475a1-14bb-40f6-856a-69fa9efe087a
-⊕ = RVUtils.:⊕
-
-# ╔═╡ 7e086680-983e-429b-a917-5330f88c7c55
-module GaiaFilters
-	include("../../../utils/gaia_filters.jl")
 end
 
 # ╔═╡ d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
@@ -94,11 +68,8 @@ md"""
 # ╔═╡ 3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
 obs_properties = TOML.parsefile(ENV["DWARFS_ROOT"] * "/observations/bootes3/observed_properties.toml")
 
-# ╔═╡ c4b08cab-0039-4782-8080-b9ef3a6f6d98
-filt_params = GaiaFilters.GaiaFilterParams(obs_properties, filename="../data/j24_$j24_sample.fits")
-
 # ╔═╡ feca883d-cbb9-435a-966d-89fefb69ca49
-j24 = GaiaFilters.read_gaia_stars(filt_params)
+j24 = RVUtils.read_gaia_stars("../data/j24_$j24_sample.fits", obs_properties)
 
 # ╔═╡ 1bc6b7f5-4884-479d-b4be-54f28c2e0a8a
 f_sat = TOML.parsefile("../j+24_fsat.toml")[j24_sample]["f_sat"]
@@ -121,35 +92,12 @@ rv_all = read_fits(joinpath(data_dir, rv_file))
 # ╔═╡ b20720ac-2787-4cf7-a44b-0cb5293a00b9
 @assert :L_PM_SAT ∉ names(rv_all)
 
-# ╔═╡ 097a102b-d6a6-444d-9761-ecb06d64d07f
-icrs0 = RVUtils.icrs(obs_properties)
-
-# ╔═╡ fc3ec4d1-5812-4177-90b8-29bbba72d720
-gsr0 = lguys.transform(GSR, icrs0)
-
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
-rv_meas = let
-	rv_meas = rv_all[.!ismissing.(rv_all.source_id), :]
-	disallowmissing!(rv_meas, :source_id)
-	leftjoin!(rv_meas, j24, on=:source_id, makeunique=true)
-	rv_meas = rv_meas[rv_meas.F_BEST .== 1.0, :]
+rv_meas = let 
+	df = RVUtils.xmatch_and_clean(rv_all, j24, obs_properties, require_match=true)
+	RVUtils.add_PSAT_RV!(df; sigma_v=σv, radial_velocity_gsr=rv0, f_sat=f_sat)
 
-	RVUtils.add_gsr!(rv_meas, 
-					 distance=obs_properties["distance"],
-					pmra=obs_properties["pmra"], pmdec=obs_properties["pmdec"])
-
-	Δrv = RVUtils.rv_correction(rv_meas.ra, rv_meas.dec, gsr0)
-
-	rv_meas[!, :delta_rv] = Measurements.value.(Δrv)
-	rv_meas[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
-
-	
-	rv_meas[:, :vz] .= rv_meas.radial_velocity_gsr .+ rv_meas.delta_rv
-	rv_meas[:, :vz_err] .= rv_meas.RV_err
-
-	RVUtils.add_PSAT_RV!(rv_meas; sigma_v=σv, radial_velocity_gsr=rv0, f_sat=f_sat)
-	
-	rv_meas
+	df
 end
 
 # ╔═╡ b76a094e-11a4-4d43-869b-27c7f0c2eaee
@@ -167,9 +115,6 @@ memb_filt = (rv_meas.PSAT_RV .> psat_min) .&
 
 # ╔═╡ cc6c65db-ef57-4745-8ada-e11427274a77
 memb_stars = rv_meas[memb_filt, :]
-
-# ╔═╡ 2c69332e-9341-4805-9066-10df38fa32fe
-"$(outname)_memb.fits"
 
 # ╔═╡ f9f5759a-9a4a-4765-81c8-d513c8a0a181
 write_fits(joinpath(data_dir, "$(outname).fits"), memb_stars, overwrite=true)
@@ -250,21 +195,10 @@ rv_all[rv_all.P_SAT_deimos .> 0.5, :]
 # ╟─7330c75e-1bf9-476a-8274-ebc86d555e6f
 # ╟─6bec7416-40c8-4e2b-9d3d-14aa19e5642d
 # ╠═04bbc735-e0b4-4f0a-9a83-e50c8b923caf
-# ╠═34e43f4a-bcff-41cb-92c4-0c8d600fd053
-# ╠═93838644-cad6-4df3-b554-208b7afeb3b8
-# ╠═bd6dfd17-02ee-4855-be37-fecfdab6776f
-# ╠═72f1febc-c6ea-449a-8cec-cd0e49c4e20c
-# ╠═d7d439be-b77b-4a3d-9fb6-7dd7583dc52e
-# ╠═9e9ba645-b780-4afa-b305-a2b1d8a97220
-# ╠═035cdedb-da23-4cfd-aa19-a3aff089d3ac
-# ╠═d2888213-61e3-4a6f-872b-48a075640ef5
 # ╠═b00b7e2b-3a72-466f-ac09-86cdda1e4a9c
 # ╠═2ab0018f-1628-4f5e-b7da-370eb20c00d0
-# ╠═5ec475a1-14bb-40f6-856a-69fa9efe087a
-# ╠═7e086680-983e-429b-a917-5330f88c7c55
 # ╟─d4eb6d0f-4fe0-4e9d-b617-7a41f78da940
 # ╠═3eb74a2e-ca74-4145-a2a4-7ffbe5fffe94
-# ╠═c4b08cab-0039-4782-8080-b9ef3a6f6d98
 # ╠═feca883d-cbb9-435a-966d-89fefb69ca49
 # ╠═1bc6b7f5-4884-479d-b4be-54f28c2e0a8a
 # ╠═019d1bfd-b6d0-4178-b644-cc6ca45b66ae
@@ -273,14 +207,11 @@ rv_all[rv_all.P_SAT_deimos .> 0.5, :]
 # ╠═84509e42-8484-410a-8a76-38473b9f4b71
 # ╠═66682e56-4ad9-4823-99da-fc599882eb41
 # ╠═b20720ac-2787-4cf7-a44b-0cb5293a00b9
-# ╠═fc3ec4d1-5812-4177-90b8-29bbba72d720
-# ╠═097a102b-d6a6-444d-9761-ecb06d64d07f
 # ╠═4dac920b-8252-48a7-86f5-b9f96de6aaa0
 # ╠═b76a094e-11a4-4d43-869b-27c7f0c2eaee
 # ╟─c28071fe-6077-43ad-b930-604483d5eb28
 # ╠═733fe42e-b7a5-4285-8c73-9a41e4488d40
 # ╠═cc6c65db-ef57-4745-8ada-e11427274a77
-# ╠═2c69332e-9341-4805-9066-10df38fa32fe
 # ╠═f9f5759a-9a4a-4765-81c8-d513c8a0a181
 # ╠═92f4c8b3-442d-4a56-b05f-1fc547231508
 # ╠═ea3d420f-00f8-4ca2-a49d-e26b48e50afd

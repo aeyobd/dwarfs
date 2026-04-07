@@ -7,6 +7,7 @@ import StatsBase: quantile
 FVEC = AbstractVector{<:Real}
 const LL_min = 1e-300
 const PVALUE = 0.16
+const α_exp = LilGuys.R_h(LilGuys.Exp2D())
 
 prior_f_sat = Uniform(0, 0.5)
 prior_R_h = LogNormal(log(30), 0.5)
@@ -20,6 +21,36 @@ Base.@kwdef struct GaiaData
     L_bg::Vector{Float64}
     "Prior Satellite probability"
     L_sat::Vector{Float64}
+end
+
+@model function exp_ell_model(data::GaiaData;
+        area_tot::Real,
+        prior_tangent = prior_tangent, 
+        prior_R_h = prior_R_h, 
+        prior_f_sat = prior_f_sat
+    )
+	d_xi  ~ prior_tangent
+	d_eta ~ prior_tangent
+	R_h ~ prior_R_h
+	f_sat ~ prior_f_sat
+
+	ellipticity ~ Uniform(0, 0.99)
+	position_angle ~ Uniform(0, 180)
+	
+	R = LilGuys.calc_R_ell(data.xi .- d_xi, data.eta .- d_eta, 
+                           ellipticity, position_angle)
+
+    prof = LilGuys.Exp2D(R_s=R_h/α_exp, M=1)
+
+	L_sat_space = @. LilGuys.surface_density.(prof, R) 
+	L_bg_space = 1 / area_tot
+
+    L = @. ((1-f_sat) * L_bg_space * data.L_bg
+            + f_sat *  L_sat_space * data.L_sat)
+    L = max.(L, LL_min)
+    LL = sum(log.(L))
+	
+	Turing.@addlogprob!(LL)
 end
 
 
@@ -67,7 +98,8 @@ end
 	position_angle ~ Uniform(0, 180)
 	
 
-	R = LilGuys.calc_R_ell(data.xi .- d_xi, data.eta .- d_eta, ellipticity, position_angle)
+	R = LilGuys.calc_R_ell(data.xi .- d_xi, data.eta .- d_eta, 
+                           ellipticity, position_angle)
 
 	prof = LilGuys.Plummer(r_s=R_h, M=1)
 	
@@ -101,7 +133,8 @@ end
 	
 
 	
-	R = LilGuys.calc_R_ell(data.xi .- d_xi, data.eta .- d_eta, ellipticity, position_angle)
+	R = LilGuys.calc_R_ell(data.xi .- d_xi, data.eta .- d_eta,
+                           ellipticity, position_angle)
 
 	b_n = LilGuys.guess_b_n(n)
 	prof = LilGuys.Sersic(n=n, R_h=R_h, _b_n=b_n)
@@ -201,10 +234,3 @@ function to_measurement(A::AbstractVector; pvalue=PVALUE)
 	return Measurement(m, m .- l, h .- m)
 end
 
-
-function to_frame(samples)
-	df = DataFrame(samples)
-	df[!, :N_memb] = N_stars * df.f_sat
-
-	df
-end

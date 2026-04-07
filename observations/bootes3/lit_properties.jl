@@ -44,7 +44,7 @@ grillmair09 = Dict(
 correnti09 = Dict(
 	:study => "Correnti+2009",
 	:M_V => -5.8 ± 0.5,
-	:ellipticity => 0.5,
+	:ellipticity => 0.5 ± 0,
 	:distance_modulus => 18.58 ± 0.15, 
 	:ra => 209.7 ± 1.4/√38,
 	:dec => 26.8 ± 0.6/√38,
@@ -102,12 +102,37 @@ geha26 = Dict(
 myobs = Dict(
 	:study => "This work",
 	:radial_velocity => 188.9 ± 2.1,
-	:sigma_v => Measurement(7.5, 1.5, 2.0)
+	:sigma_v => Measurement(7.5, 1.5, 2.0),
+	:ra => 209.5 ± 0.10,
+	:dec => 26.67 ± 0.05,
+	:R_h => 34 ± 5,
+	:ellipticity => 0.43 ± 0.12,
+
+)
+
+# ╔═╡ 0b2a067e-d4a4-42fd-b195-345987113f5f
+delve_bad = Dict(
+	:study => "DELVE",
+	:ra => 209.76 ± 0.07,
+	:dec => 26.67 ± 0.05,
+	:R_h => 33.2 ± 3.5,
+	:ellipticity => 0.36 ± 0.15
+
+)
+
+# ╔═╡ 19733508-f81a-4726-8cee-3610d7229ffe
+delve = Dict(
+	:study => "DELVE-bright",
+	:ra => 209.48 ± 0.15,
+	:dec => 26.7 ± 0.10,
+
 )
 
 # ╔═╡ dc3d22e8-f7cb-44cd-b0a8-bcd709d962c3
 obs = reverse([
 	myobs,
+	delve_bad,
+	delve,
 	geha26, 
 	pace,
 	vivas,
@@ -126,11 +151,67 @@ function get_properties(obs, key)
 	return studies, values
 end
 
-# ╔═╡ db9561ea-6cc5-4846-8b0a-58006cd7520b
-Arya.value(a::Measurement) = middle.(a)
+# ╔═╡ a0747cfe-0e00-43e5-af62-34d8609f0490
+LilGuys.error_interval(x) = (0, 0)
 
 # ╔═╡ f144cdae-f33a-4a15-81e7-3a31e37aee3f
 Arya.err(a::Measurement) = error_interval.(a)
+
+# ╔═╡ 2939159c-57a2-4b5d-83e7-86a488804a23
+let
+	fig = Figure(size=(4, 3) .* 72)
+ 
+	ax = Axis(fig[1,1], 
+		xlabel="RA / degrees", ylabel="Dec / degrees",
+		aspect=1/cosd(-33.72)
+	)
+
+	study, ra = get_properties(obs, :ra)
+	study, dec = get_properties(obs, :dec)
+	
+	N = length(ra)
+	for i in 1:N
+		x = [ra[i]]
+		y = [dec[i]]
+		errorscatter!(ax, x, y, 
+			yerror=LilGuys.error_interval.(y), xerror=LilGuys.error_interval.(x),
+			color=Arya.COLORS[i], label=study[i])
+	end
+
+	Legend(fig[1,2], ax)
+	fig
+end
+
+# ╔═╡ da62575c-3a2e-47e5-83b6-9c1c1b1479d5
+let
+	fig = Figure()
+ 
+	ax = Axis(fig[1,1], 
+		xlabel=L"\mu_{\alpha*}\;/\;\textrm{mas\,yr^{-1}}", ylabel=L"\mu_\delta\;/\;\textrm{mas\,yr^{-1}}",
+			  aspect = DataAspect()
+	)
+
+	study, pmra = get_properties(obs, :pmra)
+	study, pmdec = get_properties(obs, :pmdec)
+
+	N = length(pmra)
+	for i in 1:N
+		x = [pmra[i]]
+		y = [pmdec[i]]
+		errorscatter!(ax, x, y, 
+			yerror=error_interval.(y), xerror=error_interval.(x),
+			color=Arya.COLORS[i % 7 + 1], label=study[i])
+	end
+
+	axislegend(position=:lb)
+	fig
+end
+
+# ╔═╡ 1e4d9e7e-4535-427c-9611-0889661ac4c9
+LilGuys.middle(x) = x
+
+# ╔═╡ db9561ea-6cc5-4846-8b0a-58006cd7520b
+Arya.value(a::Measurement) = middle.(a)
 
 # ╔═╡ 78de8f2b-f62f-4644-b2b7-b19fac4cad8d
 function compare_measurements(key, label; units=1, kwargs...)
@@ -157,11 +238,11 @@ function compare_measurements(key, label; units=1, kwargs...)
 
 	tight_xticklabel_spacing!(ax)
 
-	errorscatter!(Arya.value.(y), xt, xerror=Arya.err.(y))
+	errorscatter!(LilGuys.middle.(y), xt, xerror=LilGuys.error_interval.(y))
 
 
 	if key ∈ keys(adopted)
-		x0 = Arya.value.(adopted[key] / units)
+		x0 = middle.(adopted[key] / units)
 		xl, xh = LilGuys.error_interval.(adopted[key] / units)
 		vlines!(x0, color=:black)
 		vspan!(x0-xl, x0+xh, color=(:black, 0.3))
@@ -193,6 +274,12 @@ compare_measurements(:pmra, "pmra")
 # ╔═╡ 718c4805-fa6f-4b61-b1e2-0725cb083b66
 compare_measurements(:pmdec, "pmdec")
 
+# ╔═╡ c6511a43-9b79-4e6b-8844-4960b827ccb0
+compare_measurements(:ellipticity, "ellipticity")
+
+# ╔═╡ f207c5bb-7d41-4409-b638-4bc0f52e8146
+compare_measurements(:R_h, "ellipticity")
+
 # ╔═╡ Cell order:
 # ╠═44b9fa1a-1e3b-11f1-aadc-dbbaf9c22418
 # ╠═1cdd4a53-5e25-42c3-9de4-15a5940cb305
@@ -208,11 +295,15 @@ compare_measurements(:pmdec, "pmdec")
 # ╠═54551965-b8e2-495f-ae7f-1f2cc2661b2c
 # ╠═ff20b3c9-4ceb-40d7-895f-386566750129
 # ╠═e234f57c-568d-4097-81ff-16570b1e47c1
+# ╠═0b2a067e-d4a4-42fd-b195-345987113f5f
+# ╠═19733508-f81a-4726-8cee-3610d7229ffe
 # ╠═dc3d22e8-f7cb-44cd-b0a8-bcd709d962c3
 # ╠═bdc03ed0-ac6e-429e-9d4b-3f1e810a5fe0
 # ╠═db9561ea-6cc5-4846-8b0a-58006cd7520b
 # ╠═f144cdae-f33a-4a15-81e7-3a31e37aee3f
 # ╠═78de8f2b-f62f-4644-b2b7-b19fac4cad8d
+# ╠═2939159c-57a2-4b5d-83e7-86a488804a23
+# ╠═da62575c-3a2e-47e5-83b6-9c1c1b1479d5
 # ╠═53952e84-27d5-4ceb-b594-85a5ac94d23a
 # ╠═15333b02-80df-479b-af9a-9ff5174eae36
 # ╠═2801bab1-86f5-4c57-9804-d1c5c230c159
@@ -220,3 +311,7 @@ compare_measurements(:pmdec, "pmdec")
 # ╠═a478b91a-3254-4acb-9242-5a48b8db1bea
 # ╠═b0a6f1af-fa48-4343-81b3-e3d7c6cd3426
 # ╠═718c4805-fa6f-4b61-b1e2-0725cb083b66
+# ╠═c6511a43-9b79-4e6b-8844-4960b827ccb0
+# ╠═f207c5bb-7d41-4409-b638-4bc0f52e8146
+# ╠═a0747cfe-0e00-43e5-af62-34d8609f0490
+# ╠═1e4d9e7e-4535-427c-9611-0889661ac4c9

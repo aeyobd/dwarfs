@@ -57,7 +57,7 @@ end
 # ╔═╡ 08d97b62-2760-47e4-b891-8f446e858c88
 if !@isdefined(PlutoRunner)
 	samplename = ARGS[1]
-	Nsamples = 1_000
+	Nsamples = 3_000
 	Nthreads = 16
 else
 

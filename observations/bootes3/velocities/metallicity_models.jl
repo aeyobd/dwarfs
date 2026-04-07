@@ -37,10 +37,10 @@ md"""
 rv_file = "rv_deimos_x_2c_psat_0.2.fits"
 
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
-n_samples = 1_000
+n_samples = 10_000
 
 # ╔═╡ 0b8f0193-f1e5-471e-8c34-498ac827be63
-n_threads = 11
+n_threads = 16
 
 # ╔═╡ ad79710a-0392-4b75-94ac-23881376a70b
 sampler = NUTS(0.65)
@@ -155,18 +155,6 @@ pairplot(samples)
 # ╔═╡ 1f251e67-7fed-4375-8bed-697704302e43
 summary = RVUtils.summarize(samples)
 
-# ╔═╡ 6dd003db-bd29-4872-94f2-445f5c4536ba
-
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], limits=(-3, -2, -1.1, 5))
-	RVUtils.plot_samples!(df_out, LinRange(-3, -2, 100), thin=100)
-
-	scatter!(memb_stars.FE_H, fill(-1, length(memb_stars.FE_H)))
-	
-	fig
-end
-
 # ╔═╡ c1cf3a80-1c26-4417-9ddf-1046f3f5f608
 CSV.write("processed/mcmc_samples_feh$FIGSUFFIX.csv", df_out)
 
@@ -174,6 +162,23 @@ CSV.write("processed/mcmc_samples_feh$FIGSUFFIX.csv", df_out)
 md"""
 # Writing Information
 """
+
+# ╔═╡ 2caad9ab-987c-455b-b78c-7877be0fcbbf
+memb_stars.FE_H
+
+# ╔═╡ 6dd003db-bd29-4872-94f2-445f5c4536ba
+
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], limits=(-3, -2, -1.1, 10), xlabel="[Fe/H]", ylabel="density")
+	RVUtils.plot_samples!(df_out, LinRange(-4, -2, 1000), thin=300)
+
+	N = length(memb_stars.FE_H)
+	errorscatter!(memb_stars.FE_H,  0.2*randn(N) .- 0.5,
+				 xerror=memb_stars.FE_H_err, color=COLORS[2])
+	
+	fig
+end
 
 # ╔═╡ Cell order:
 # ╟─3ed8c28f-5908-42dc-a56b-24a9b2685a07
@@ -216,6 +221,7 @@ md"""
 # ╠═9069d73b-2086-448d-8387-f8a8b8d8dcf9
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 # ╠═1f251e67-7fed-4375-8bed-697704302e43
-# ╠═6dd003db-bd29-4872-94f2-445f5c4536ba
 # ╠═c1cf3a80-1c26-4417-9ddf-1046f3f5f608
 # ╟─1acdc61b-fb5f-449d-ba86-46525c881a39
+# ╠═2caad9ab-987c-455b-b78c-7877be0fcbbf
+# ╠═6dd003db-bd29-4872-94f2-445f5c4536ba

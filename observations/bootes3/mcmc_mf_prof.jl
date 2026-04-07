@@ -54,6 +54,13 @@ else
 	md"run all models $(@bind run_all CheckBox())"
 end
 
+# ╔═╡ 169bf2de-db1e-417e-ad82-4e479a1c683d
+if !@isdefined(PlutoRunner)
+	write_models = true
+else
+	md"write results $(@bind write_models CheckBox())"
+end
+
 # ╔═╡ 08d97b62-2760-47e4-b891-8f446e858c88
 if !@isdefined(PlutoRunner)
 	samplename = ARGS[1]
@@ -107,6 +114,9 @@ CairoMakie.activate!(type=:png)
 
 # ╔═╡ 626846b5-156a-4883-8542-463e3a90faaa
 function write_samples_summary(samples, df_samples, model_suffix)
+	if !write_models
+		return
+	end
 	samplesout = joinpath(outdir, "samples.$samplename.mcmc_$model_suffix.csv")
 	summaryout = joinpath(outdir, "summary.$samplename.mcmc_$model_suffix.csv")
 	CSV.write(samplesout, df_samples)
@@ -117,6 +127,9 @@ end
 md"""
 # data loading
 """
+
+# ╔═╡ e6d2e26a-2175-48a7-8995-91e2c8d1a0e1
+obs_props_new = TOML.parsefile("observed_properties.toml")
 
 # ╔═╡ 7e8124ea-7bbe-465b-a9dc-4b14d268c39e
 obs_props = let
@@ -165,6 +178,30 @@ props_ngc5272 = TOML.parsefile("observed_properties_ngc5272.toml")
 # ╔═╡ efea8cbe-dd33-419a-9a49-e07a3424dbe3
 R_ngc5272 = n_R_h_gc*props_ngc5272["R_h"]
 
+# ╔═╡ 5c08af06-672f-490a-a224-9230d327144b
+LilGuys.to_tangent(props_ngc5272["ra"], props_ngc5272["dec"], ra_0, dec_0)
+
+# ╔═╡ fa5f1e29-450c-4214-afed-357147134ee4
+obs_props["ra_original"]
+
+# ╔═╡ 112fad56-4c2d-4942-9e29-3489a88bb649
+let
+	xi, eta = LilGuys.to_tangent(props_ngc5272["ra"], props_ngc5272["dec"], obs_props_new["ra"], obs_props_new["dec"]) 
+	R_ell = LilGuys.calc_R_ell(xi, eta, obs_props_new["ellipticity"], obs_props_new["position_angle"])
+	R_circ = sqrt(xi^2 + eta^2)
+
+	60R_ell, 60R_circ, R_ngc5272
+end
+
+# ╔═╡ 19c68991-c464-46ff-869a-611db9a71aaf
+let
+	xi, eta = LilGuys.to_tangent(props_ngc5272["ra"], props_ngc5272["dec"], obs_props["ra"], obs_props["ra"])
+	R_ell = LilGuys.calc_R_ell(xi, eta, obs_props["ellipticity"], obs_props["position_angle"])
+	R_circ = sqrt(xi^2 + eta^2)
+
+	R_ell, R_circ
+end
+
 # ╔═╡ d17c50db-ce94-4aad-92e2-6355b3b3a91b
 props_ngc5466 = TOML.parsefile("observed_properties_ngc5466.toml")
 
@@ -173,6 +210,15 @@ R_ngc5466 = n_R_h_gc*props_ngc5466["R_h"]
 
 # ╔═╡ 36784213-6393-4e33-8fb9-c4ef5b1fbc48
 area_tot = π * (R_max^2 - R_ngc5272^2 - R_ngc5466^2)  
+
+# ╔═╡ 187089c1-d29f-4375-bc71-a760a04c7b31
+let
+	xi, eta = LilGuys.to_tangent(props_ngc5466["ra"], props_ngc5466["dec"], obs_props_new["ra"], obs_props_new["dec"]) 
+	R_ell = LilGuys.calc_R_ell(xi, eta, obs_props_new["ellipticity"], obs_props_new["position_angle"])
+	R_circ = sqrt(xi^2 + eta^2)
+
+	60R_ell, 60R_circ, R_ngc5466
+end
 
 # ╔═╡ 61793e5e-6435-492a-85d4-383dc9cf4f01
 function excise_gcs(stars)
@@ -454,6 +500,7 @@ end
 # ╔═╡ Cell order:
 # ╟─0a974ff8-7c22-49dd-98f4-738537175d20
 # ╟─dce2754b-b345-404f-a564-c26438cc835f
+# ╠═169bf2de-db1e-417e-ad82-4e479a1c683d
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═90c12d18-f1c5-4813-8289-8c030be49ab3
 # ╠═17689578-56d6-44a2-955c-be934d41c7b8
@@ -471,6 +518,7 @@ end
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
 # ╠═626846b5-156a-4883-8542-463e3a90faaa
 # ╟─04053b71-bd55-40d7-885d-6df67035e3d6
+# ╠═e6d2e26a-2175-48a7-8995-91e2c8d1a0e1
 # ╠═7e8124ea-7bbe-465b-a9dc-4b14d268c39e
 # ╠═398e5019-006b-4d4d-922c-7ce244470e8e
 # ╠═4acaad09-7d87-444e-b5ec-7fcf79f895ef
@@ -482,6 +530,11 @@ end
 # ╠═ea690a36-512e-4a80-a258-faece76c299c
 # ╠═efea8cbe-dd33-419a-9a49-e07a3424dbe3
 # ╠═82a0c53a-989f-4e0d-81ad-1c49d4f7050e
+# ╠═5c08af06-672f-490a-a224-9230d327144b
+# ╠═fa5f1e29-450c-4214-afed-357147134ee4
+# ╠═112fad56-4c2d-4942-9e29-3489a88bb649
+# ╠═187089c1-d29f-4375-bc71-a760a04c7b31
+# ╠═19c68991-c464-46ff-869a-611db9a71aaf
 # ╠═61793e5e-6435-492a-85d4-383dc9cf4f01
 # ╠═d17c50db-ce94-4aad-92e2-6355b3b3a91b
 # ╠═4aac4483-6f0e-4b73-8c64-cfd3e9995b59
@@ -505,7 +558,7 @@ end
 # ╠═61e9d125-a0d6-4956-bc78-9ca507598e94
 # ╠═1eb86ece-0fc7-453a-aa4e-f8e50cc81229
 # ╠═4b1d12dc-ed81-46b2-bfc3-53feab3829d4
-# ╠═23c01f4f-7cce-4b15-bcc6-fa0601addf84
+# ╟─23c01f4f-7cce-4b15-bcc6-fa0601addf84
 # ╠═32e5278a-8674-45fc-af41-a93f009fc008
 # ╠═725a1902-2c48-4b14-a3c2-a87afcefa080
 # ╠═7819e763-cebe-476b-86ec-641f035bf910

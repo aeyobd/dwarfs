@@ -1,0 +1,5 @@
+log_Sigma = -0.951516385796378
+log_Sigma_err = 0.005629076534188315
+log_R_bg = [2.3927600011785373]
+n_points_bg = 1
+n_points_skip = 0
