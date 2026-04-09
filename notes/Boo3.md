@@ -1,7 +1,5 @@
 Boötes III (Boo3) is an unusual system. Boo3 is one of few MW satellites wish
 
-
-
 Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellites, and is among the largest and most diffuse faint dwarf galaxies known. While having a small Milky Way pericentre (<10 kpc), Boo3 remains spare in the literature and has no resolved stream stars reported. Here, we will characterize the tidal disruption of Boo3 with idealized N-body simulations. Specifically, we investigate the impact of Boo3's orbit, the dwarf's initial structure, and the inner MW potential. We then assess the observational characteristics of disruption in Boo3 under each scenario and predict the properties of a possible stellar stream. 
 
 
@@ -44,54 +42,163 @@ Boo III was discovered in @grillmair2009 through matched filter method. In their
 
 # The observational status of Boötes III
 
-## Survey Data
+While the distance and proper motions of Bootes III appear to reasonably well-characterized, we revisit the structural and line-of-sight velocity properties of the galaxy. 
 
-To derive observed properties in what follows, we use three data sources: *Gaia* photometry and astrometry, DELVE photometry, and the Geha+2026 catalogue of radial velocities and metallicities. 
+
+
+| parameter                       | value                                     | Source         |
+| ------------------------------- | ----------------------------------------- | -------------- |
+| $\alpha$                        | $209.47\pm0.11$                           | @struct_params |
+| $\delta$                        | $26.68\pm0.06$                            | @struct_params |
+| distance modulus                | $18.34 \pm 0.19$                          | vivas+2020     |
+| distance                        | $46.5 \pm 4$ kpc                          | vivas+2020     |
+| $\mu_\alpha \cos \delta$        | $-1.16 \pm 0.02 \pm 0.017$ mas yr$^{-1}$  | battaglia+2022 |
+| $\mu_\delta$                    | $-0.88  \pm 0.01 \pm 0.017$ mas yr$^{-1}$ | battaglia+2022 |
+| RV                              | $188 \pm 2.2$ km/s                        | @kin_params    |
+| $\sigma_v$                      | $7.7_{-1.5}^{+2.0}$ km/s                  | @kin_params    |
+| $R_h$ (Plummer, sphericalized)* | $44_{-6}^{+7}$                            | @struct_params |
+| ell                             | $0.42_{-0.14}^{+0.11}$z                   | @struct_params |
+| PA                              | $89\pm9$                                  | @struct_params |
+| $M_V$                           | $-5.1\pm0.24$                             | @luminosity    |
+| $M_\star / \mathrm{M}_\odot$    | $(14\pm3) \times10^3$                     | @luminosity    |
+| [Fe/H]                          | $-2.5\pm0.1$                              | @kin_params    |
+
+
+
+## Survey Data {#gaia_data}
+
+To derive observed properties in what follows, we use three data sources: *Gaia* photometry and astrometry, and the Geha+2026 catalogue of radial velocities and metallicities. 
 
 Our *Gaia* observations are processed based on an expansion of Jensen+2026. While their algorithm is able to detect 
 
-
+In the appendix, we rederive parameters using DELVE instead of *Gaia* with similar results. While DELVE is deeper, the background is also higher and DELVE does not have proper motions to reduce background. As a result, the foreground in *Gaia* is at least 10 times lower than for DELVE, and we consider the *Gaia* parameters more reliable and less subject to systemics on varying incompletenesses of ground-based surveys
 
 ## Structural properties
 
-Using both photometric catalogues
+We derive structural parameters using a Monte-Carlo Markov Chain (MCMC) model to fit an assumed density structure of the dwarf galaxy. 
+
+The total likelihood is a mixture of the satellite likelihood ( $\mathcal L_\text{sat}$) and background likelihood ($\mathcal L_\text{bg}$) for each star:
+$$
+\mathcal{L} =  f\,\mathcal{L}_\text{sat} + (1-f) \mathcal{L}_\text{bg}
+$$
+where $f$ represents the fraction of stars in the current field belonging to the satellite. 
+
+Following J+24, each likelihood is a product of a CMD, PM, and Spatial likelihood. 
+$$
+\mathcal L = \mathcal L_\text{CMD}\ \mathcal L_\text{PM}\ \mathcal L_\text{S}
+$$
+The CMD and PM likelihoods are fixed from J+24. The spatial likelihood is instead one of a Plummer or Sérsic density profiles 
+$$
+\Sigma_P(R) = \frac{1}{\pi R_h^2} \left(1 + \frac{R^2}{R_h^2}\right)^{-2}
+$$
+
+$$
+\Sigma_S(R) = \Sigma_h\exp(-b_n (R/R_h)^{1/n})
+$$
+
+We also consider both circular and elliptical profiles. The circular $R$ is the Euclidian distance, and elliptical $R$ is the sphericalized coordinates given an ellipticity $e$ and position angle $\theta$.  **verify these**
+
+For the priors, we assume 
+$$
+\begin{cases}
+\Delta \xi \sim N(0, 15)' \\
+\Delta \eta \sim N(0, 15)' \\
+\ln R_h  \sim N(\ln 30, 1)' \\
+f_\text{sat} \sim U(0, 0.5)
+\end{cases}
+$$
+We also consider extensions of the base model, including an elliptical model with 
+$$
+\begin{cases}
+e \sim U(0, 0.99) \\
+\theta \sim U(0, 180)^\circ
+\end{cases}
+$$
+In addition, we consider a Sérsic model, where $n\sim U(0.4, 12)$. 
+
+While two (much brighter) globular clusters are in the same field, excluding these regions has a negligible impact on our derived parameters, likely because our priors constrain the location of the fitted object. From the @harris2010 database, NGC 5272 is at 205.54842, +28.37728 and of size 2.31', NGC 5466 is at 211.36371, 28.53444 and of size 2.30'. These correspond to elliptical (circular) radii of about 200' (230) and 170' (150'), so radial bins between about 140-230 are contaiminated with cluster. 
 
 
 
-## Proper motions
+| model       | $\Delta \xi/'$ | $\Delta \eta/'$ | $e$                    | $\theta / \deg$  | $R_h\ /\ '$      | $n_\text{S\'ersic}$ | $N_\text{sat}$ |
+| ----------- | -------------- | --------------- | ---------------------- | ---------------- | ---------------- | ------------------- | -------------- |
+| Plummer     | $9.0\pm5.7$    | $-7.2 \pm 3.4$  | $0.42_{-0.11}^{+0.14}$ | $88.5\pm9.5$     | $43.8_{-6}^{+7}$ | --                  | $112 \pm 15$   |
+| Exponential | $9.4\pm6$      | $-6.1\pm5$      |                        |                  |                  |                     | $130 \pm20$    |
+| Sérsic      | $12\pm4$       | $-9_{-3}^{+4}$  | $0.23\pm0.14$          | $93^{+20}_{-19}$ | $67_{-15}^{+23}$ | $2.9_{-0.7}^{+0.9}$ | $57_{-7}^{+8}$ |
 
-- Consistent with past works
+## Density profiles
 
-
-
-## Velocity models
-
-- Refit the velocity dispersion
-
-
-
-| parameter                | value                                     | Source                        |
-| ------------------------ | ----------------------------------------- | ----------------------------- |
-| $\alpha$                 | $209.5 \pm 0.1$                           | This work                     |
-| $\delta$                 | $26.7 \pm 0.1$                            | This work                     |
-| distance modulus         | $18.34 \pm 0.19$                          | Vivas+2020                    |
-| distance                 | $46.5 \pm 4$ kpc                          | Vivas+2020                    |
-| $\mu_\alpha \cos \delta$ | $-1.16 \pm 0.02 \pm 0.017$ mas yr$^{-1}$  | battaglia+2022                |
-| $\mu_\delta$             | $-0.88  \pm 0.02 \pm 0.017$ mas yr$^{-1}$ | battaglia+2022*               |
-| RV                       | $190 \pm 1.8$ km/s                        | Geha+2026                     |
-| $\sigma_v$               | $7.5_{-1.5}^{+2.0}$ km/s                  | This work                     |
-| $r_h$ (sphericalized)    | $27\pm2$ arcmin                           | MW2020                        |
-| ell                      | $0.33\pm0.09$                             | MW2020                        |
-| PA                       | $-81\pm8$                                 | MW2020                        |
-| $M_V$                    | $-5.8\pm0.5$                              | Correnti+2009 (will rederive) |
+While the likelihoods above can provide a membership list of stars, using this to then derive a density profile of the satellite risks "double fitting" the surface density. Instead, we derive density profiles by taking a sample of stars selected based on the likelihood of the foreground to background ratios, excluding the spatial likelihood terms. The resulting density profiles, and comparison MCMC parameterized density profiles, are shown in Fig. X
 
 
+
+![image-20260401172540713](/Users/daniel/Library/Application Support/typora-user-images/image-20260401172540713.png)
+
+## Luminosity
+
+The only existing estimate of Boo III's luminosity is from @corenneti+2018 which simply count the number of HB stars and determine that $M_V \sim -5.8 \pm 0.5$. 
+
+With a characterization of the number of stars in Gaia data with $G < 21$, we can determine an approximate luminosity of Boo III as follows (see also @munoz+2018).
+
+To sample stars from the IMF, we use the following procedure: 
+
+- Sample observed properties of Boo III
+  - number observed stars ~ MCMC samples from above
+  - [Fe/H] ~ N(-2, 0.2)
+  - age ~ U(8, 12)
+  - distance ~ N(46.5, 0.5)
+- Draw stars from Kroupa IMF until we reach the target of "observed" stars (i.e. magnitudes above the threshold)
+  - including quadratic fits to log observed magnitude uncertainties, normal distributions...
+- sum up masses, luminosities, and total numbers of stars
+
+### Does the luminosity depend on the magnitude cutoff?
+
+- Run simple MCMC models with Plummer profile to derive Nmemb
+- try different cuts
+  - absolute cuts in LLR
+  - Truncating magnitude cuts (Naïve)
+  - Regeneration of likelihood maps under different magnitude ranges. 
+
+
+
+
+
+| Model          | observed # stars  | abs magnitude  | stellar mass          |
+| -------------- | ----------------- | -------------- | --------------------- |
+|                | number            | $M_V$ mag      | $\times10^3\,M_\odot$ |
+| Plummer-bright | $62_{-19}^{+26}$  | $-5.0\pm0.5$   | $13_{-4}^{+7}$        |
+| Plummer        | $112\pm15$        | $-5.1\pm0.2$   | $14\pm3$              |
+| Exp            | $130 \pm 19$      | $-5.3 \pm 0.2$ | $17_{-3}^{+4}$        |
+| Sérsic         | $148_{-17}^{+19}$ | $-5.4 \pm 0.2$ | $19_{-3}^{+4}$        |
+| DELVE          | $185\pm40$        | $-4.8\pm0.4$   | $11\pm4$              |
+
+Table: The results from our derivations of the absolute magnitude. 
+
+
+
+## Kinematics
+
+Given the range of literature values of velocity dispersions, we re-derive the velocity dispersion. 
+
+We use the suggested sample of members from @geha+2026 with membership probabilities greater than 0.5. (We have also tried using sigma-clipping and a probabilistic mixture model extending J+24 with similar final membership lists). This list contains 19 likely members. 
+
+We then fit the velocity dispersion using the following model following @walker++2008?:
+$$
+\ln {\cal L} = \sum_i -\frac{1}{2}\frac{(\text v_i - \mu)^2}{(\delta\text v_i)^2 + \sigma^2} + -\frac{1}{2} \ln2\pi \sigma^2
+$$
+where $\text v_i$ is the perspective-motion corrected velocity of the $i$-th star, for each star, $\delta \text v_i$ is the velocity uncertainty, $\mu$ is the systemic velocity, and $\sigma$ is the velocity dispersion. We adopt a prior of $\mu \sim N(0, 100)$ for km/s in the GSR frame, and $\sigma \sim U(0, 20)$. 
+
+We use a NUTS sampler with 16 chains 10,000 steps each. The resulting distributions are shown in @fig:velocity_dispersion. Compared to @geha+2026, our velocity dispersion is slightly higher and we have
+
+![image-20260407165057367](/Users/daniel/Library/Application Support/typora-user-images/image-20260407165057367.png)
+
+Figure: the resulting velocity dispersion fits. 
+
+
+
+![image-20260402110023952](/Users/daniel/Library/Application Support/typora-user-images/image-20260402110023952.png)
 
 # Simulation methods
-
-- Agama
-
-  
 
 ### Haloes
 
@@ -135,9 +242,98 @@ Orbits
 
 # Appendix
 
-DELVE selection
+## Structural parameters in DELVE
+
+However, with a cut on mag < 23, the total number of main sequence stars is ~ 151. 
+
+
+
+For DELVE (DR2), we select all stars within 6 arcminutes of BooIII's literature centre (209.3, 26.8).[^DELVE DR3 has incomplete coverage near Boo3. ] We require the sources to further satisfy:  
+
+- g and r PSF magnitudes and their errors are defined
+- g and r PSF magnitudes greater than the 5-$\sigma$ PSF depth (24.3, and 23.9)
+  - In the field, these are 23.6 and 23.0 for the minimum around Boo III
+  - As the turnover occurs at lower magnitudes, our reliable depth is limited to $r\sim 22$. 
+- likely star source (extended_class_g <= 1).
+
+In total, this returns 558,046 sources. We then correct the magnitudes for dust extinction using the @SFD dustmap with coefficients from @aboot+2018 with the dustmaps package. 
+
+
+
+## Creating a matched filter
+
+We use the matched-filter method to appropriately weight stars by their likelihood of belonging to the galaxy according to the matched filter
+
+For the model of Boo III's CMD, we adopt a Padova isochrone of age 12 Gyr and metallicity -2.1, and weighted by a Kroupa (2001) IMF.  The isochrone is then convolved with a gaussian in magnitude of 0.19 mag (the distance modulus uncertainty) and a gaussian  in colour of width 0.05 mag plus the typical colour uncertainty added in quadrature [^colour_uncertainty]
+
+[^colour_uncertainty]: We determine the typical colour uncertainty to a least-squares fit of the g-r colour uncertainty with g-magnitude assuming a exponential-quadratic formula, i.e. *fill in*] 
+
+Fig. X shows the resulting distribution. Most of the stellar mass is in the MS as expected, with a fainter RGB and HB. 
+
+The background density is derived from all stars between 5 and 6 degrees from the centre adopting a bandwidth of (0.05, 0.1) mag in colour and g-magnitude. 
+
+The matched filter is calculated over a range from 23 to 15 mag and -0.8 to 1.7 in colour, with 200 colour bins and 300 magnitude bins. 
+
+Finally, the likelihood ratio is calculated from the ratio of these two maps, and interpolated as appropriate. The right-hand panel of Fig. 1 illustrates this map. The HB and MS are the most critical regions for identifying the galaxy.
+
+
+
+![image-20260327135427018](/Users/daniel/Library/Application Support/typora-user-images/image-20260327135427018.png)
+
+Figure: The creation of a matched filter for Boo III in the *g-r* CMD.  In all cases, the colours are linear and arbitrarily scaled. **Left:** The expected density of stars belonging to Boo III based on our isochrone model. **Middle:** An empirical estimate of the background density of 
+
+
 
 select * 
 FROM delve_dr3.coadd_objects
 WHERE 
 q3c_radial_query(ra, dec, 209.3, 26.8, 3)
+
+
+
+## Selecting isochrone subsets
+
+To create isochrone subsets, we can apply three distinct methods:
+
+1.  Emperically select overdense features appearing in the central region of the field. This method is challenging to use in Boo III since the galaxy is so diffuse, but we can pick out a faint RGB and a definite BHB
+2. Derive selections based on isochrones. Of course, limited by systematics in assumptions of isochrones.
+3. Derive selections based on GCs. In particular, we can use the features of NGC 5466 to  create appropriate selections for boo III, shifting by the difference in distance moduli. Limited by the match of NGC 5466 to Boo III (which is likely more metal poor) and does not account for the higher magnitude errors on Boo III stars due to the higher distance
+
+- RGB stars
+  - URGB *Gaia* by eye: (0.89,18.91, 0.98,18.02, 1.20,16.31, 1.54,15.13, 1.80,14.60, 1.92,15.12, 1.36,16.99, 1.18,18.77, 1.08,19.71
+  - URGB *Gaia* Padova: (1.07,17.61, 1.16,16.43, 1.39,15.24, 1.57,14.91, 2.19,15.56, 1.55,15.98, 1.33,16.59)
+- BHB stars
+  - *Gaia* eye: (0.540,18.68, 0.280,18.71, -0.043,19.12, -0.046,19.42, 0.177,19.25, 0.280,18.99, 0.526,18.93)
+  - *Gaia* Padova: (0.50,18.42, -0.18,18.14, -0.21,19.41, 0.48,19.10)
+  - DELVE eye: (-0.25,18.79, -0.25,19.60, -0.11,19.14, 0.19,19.06, 0.19,18.54, -0.13,18.62)
+
+
+
+While we explore BHB subsets (e.g. corenneti+), we find a total of about $51\pm10$ BHB stars in *Gaia*. We would like to improve on these statistics. 
+
+## 
+
+
+
+NGC 5466 under different CMD assumptions:
+
+- g-r seems to be the best choice: redder filters cause the RGB to be more vertical and has the best depth / coverage. 
+- i is very incomplete: so gr is indeed a good choice. 
+
+
+
+Selection regions of NGC 5466:
+
+- BHB: (-0.256,16.52, -0.254,16.77, -0.002,16.59, -0.035,16.25)
+- RGB: (0.373,19.19, 0.411,18.78, 0.504,17.17, 0.632,15.84, 0.690,15.33, 0.789,14.73, 0.842,14.86, 0.719,15.58, 0.562,17.18, 0.516,17.81, 0.454,19.20)
+- SGB (0.201,19.64, 0.248,19.83, 0.280,19.64, 0.437,19.24, 0.387,19.14, 0.245,19.48)
+- MS (0.20,19.66, 0.15,20.10, 0.20,21.28, 0.35,21.28, 0.26,20.42, 0.25,19.96, 0.26,19.74)
+
+
+
+
+
+
+
+
+
