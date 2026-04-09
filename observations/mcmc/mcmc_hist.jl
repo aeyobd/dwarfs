@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -39,7 +39,7 @@ if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 	paramfile = ARGS[2]
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	@bind galaxy confirm(TextField(default="example"))
 	@bind paramfile confirm(TextField(default="hist_params.toml"))
 end
 
@@ -138,7 +138,7 @@ log_Sigma_prior = Uniform(-12, 6)
 	L_sat_space = MCMCUtils.Σ_hist(radii, params.bins, 10 .^ log_Sigma)
 
 	f_sat = @. L_sat_space  / (1 + L_sat_space)
-	LL = sum(@. log10.(
+	LL = sum(@. log.(
 		(1-f_sat) * data.P_bg 
 		+ f_sat * data.P_sat
 	))

@@ -1,14 +1,12 @@
-ra = 209.48
-ra_em = 0.10
-ra_ep = 0.10
+ra = 209.47
+ra_err = 0.11
 ra_ref = "this work"
 
 ra_original = 209.3
 dec_original = 26.8
 
-dec = 26.67
-dec_em = 0.05
-dec_ep = 0.05
+dec = 26.68
+dec_err = 0.06
 dec_ref = "this work"
 
 distance = 46.55860935229591
@@ -20,10 +18,10 @@ distance_modulus_ep = 0.19
 distance_ref = "Vivas+2020"
 
 
+# including gaia systematic
 pmra = -1.16
 pmra_em = 0.03
 pmra_ep = 0.03
-# including gaia systematic
 pmra_ref = "battaglia+2022"
 
 pmdec = -0.88
@@ -36,38 +34,42 @@ radial_velocity_em = 2
 radial_velocity_ep = 2
 radial_velocity_ref = "this work"
 
-sigma_v = 7.5
+sigma_v = 7.7
 sigma_v_em = 1.5
 sigma_v_ep = 2
 sigma_v_ref = "this work"
 
-position_angle = 93
+position_angle = 89
 position_angle_em = 10
-position_angle_ep = 9
+position_angle_ep = 10
 postiion_angle_ref = "this work"
 
-ellipticity = 0.43
-ellipticity_em = 0.12
-ellipticity_ep = 0.12
+ellipticity = 0.42
+ellipticity_em = 0.14
+ellipticity_ep = 0.11
 ellipticity_ref = "this work"
 
-Mv = -5.5
-Mv_em = 0.3
-Mv_ep = 0.3
+Mv = -5.1
+Mv_em = 0.2
+Mv_ep = 0.2
+Mv_ref = "this work"
 
-mv = 12.6
-mv_em = 0.5
-mv_ep = 0.5
+mv = 13.3
+mv_em = 0.2
+mv_ep = 0.2
 mv_ref = "this work"
+
+M_star = 14e3
+M_star_err = 3e3
 
 r_h = nan
 r_h_em = nan
 r_h_ep = nan
 r_h_ref = "this work"
 
-R_h = 34
-R_h_em = 4
-R_h_ep = 5
+R_h = 44
+R_h_em = 6
+R_h_ep = 7
 
 
 metallicity = -2.6

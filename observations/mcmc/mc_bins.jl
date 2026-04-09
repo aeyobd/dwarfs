@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -63,9 +63,6 @@ end
 # ╔═╡ 11756aee-a4be-46d8-ad0e-3e2fc0089d2d
 num_per_bin = 20
 
-# ╔═╡ e53cdf92-f17d-40ae-9785-c00b7e33aeba
-PSAT_min = 0.2
-
 # ╔═╡ d1de613c-c3bb-4843-859e-7b8df54bafe0
 import TOML
 
@@ -85,6 +82,9 @@ log_r_label = L"$\log\,R_\textrm{ell}$ / arcmin"
 
 # ╔═╡ 36ef5f0d-3a14-4e5d-a2fb-f6626a941d5f
 log_Sigma_label = L"$\log\,\Sigma$"
+
+# ╔═╡ 3305217b-1b18-494f-82b2-88cec15d5618
+PSAT_min = 0.2
 
 # ╔═╡ 04053b71-bd55-40d7-885d-6df67035e3d6
 md"""
@@ -257,7 +257,6 @@ LilGuys.struct_to_dict(
 # ╠═08d97b62-2760-47e4-b891-8f446e858c88
 # ╠═11756aee-a4be-46d8-ad0e-3e2fc0089d2d
 # ╠═62d39b10-f078-4cd3-b4c6-0945386ac507
-# ╠═e53cdf92-f17d-40ae-9785-c00b7e33aeba
 # ╠═a955c503-c834-4719-89d0-a0004c33ea15
 # ╠═f9ea040c-0d80-4ccc-a990-010d72a5647e
 # ╠═da4218ef-34ed-4464-81ad-fb8fa216fb9a
@@ -276,6 +275,7 @@ LilGuys.struct_to_dict(
 # ╠═066c7b30-f818-4e4a-8db8-c8bac469f558
 # ╠═0aa44389-f320-4274-abdd-0d7f88006a4d
 # ╠═36ef5f0d-3a14-4e5d-a2fb-f6626a941d5f
+# ╠═3305217b-1b18-494f-82b2-88cec15d5618
 # ╟─04053b71-bd55-40d7-885d-6df67035e3d6
 # ╠═e06cd77a-cd95-40f1-997f-d2e90adcba67
 # ╠═b9cf2c23-6c9a-44f5-9740-22caf4959831

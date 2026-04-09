@@ -1,6 +1,6 @@
 import DensityEstimators: histogram 
 using DataFrames
-import LilGuys as lguys
+import LilGuys
 using Turing
 using CairoMakie
 using Arya
@@ -12,8 +12,15 @@ import Measurements
 
 P_CHI2_MIN = 0.001
 
+# only used for reading in the Gaia stars
+module GaiaFilters
+    include(joinpath(@__DIR__, "../utils/gaia_filters.jl"))
+end
+
+
 @doc raw"add a and b in quadrature: $sqrt(a^2 + b^2)$"
 ⊕(a, b) = sqrt(a^2 + b^2)
+
 
 
 """
@@ -25,7 +32,7 @@ the closest entry in df2 to each row in df1.
 """
 function xmatch(df1::DataFrame, df2::DataFrame, max_sep=2)
 	max_sep = max_sep / 3600
-	dists = lguys.angular_distance.(df1.ra, df1.dec, df2.ra', df2.dec')
+	dists = LilGuys.angular_distance.(df1.ra, df1.dec, df2.ra', df2.dec')
 
 	idxs = [i[2] for i in dropdims(argmin(dists, dims=2), dims=2)]
 
@@ -71,7 +78,7 @@ function plot_samples!(samples, x;
 
 	alpha = 1 / (size(samples, 1))^(1/3)
 	for sample in eachrow(samples)[1:thin:end]
-		y = lguys.gaussian.(x, sample.μ, sample.σ)
+		y = LilGuys.gaussian.(x, sample.μ, sample.σ)
 		lines!(x, y, color=color, alpha=alpha; kwargs...)
 	end
 end
@@ -158,12 +165,12 @@ Compute the correction to add to GSR radial velocities to calculate
 $v_z$, the velocity in the direction parallel to the RV of the centre.
 """
 function rv_correction(ra, dec, ra0, dec0, pmra, pmdec, distance)
-    vra = lguys.pm2kms(pmra, distance)
-    vdec = lguys.pm2kms(pmdec, distance)
+    vra = LilGuys.pm2kms(pmra, distance)
+    vdec = LilGuys.pm2kms(pmdec, distance)
 
-    ϕ_pm = lguys.angular_distance.(ra, dec, ra0, dec0)
+    ϕ_pm = LilGuys.angular_distance.(ra, dec, ra0, dec0)
 
-    xi, eta = lguys.to_tangent(ra, dec, ra0, dec0)
+    xi, eta = LilGuys.to_tangent(ra, dec, ra0, dec0)
 
     θ_pm = @. atand(xi, eta) # PA relative to centre
     rv = 0 # want correction to vz
@@ -195,7 +202,7 @@ end
 Compute the correction to add to GSR velocities (if coord is GSR)
 or ICRS velocities (if coord is ICRS) to move to satellite $v_z$ frame.
 """
-function rv_correction(ra, dec, coord::lguys.AbstractSkyCoord)
+function rv_correction(ra, dec, coord::LilGuys.AbstractSkyCoord)
     ra0 = Measurements.value(coord.ra)
     dec0 = Measurements.value(coord.dec)
     return rv_correction(ra, dec, ra0, dec0, 
@@ -210,7 +217,7 @@ Compute the apparent radial velocity of a stationary object at ra0, dec0
 due to the solar motion.
 """
 function rv_gsr_shift(ra0::Real, dec0::Real)
-    rv_offset = lguys.transform(lguys.ICRS, lguys.GSR(ra=ra0, dec=dec0, radial_velocity=0)).radial_velocity
+    rv_offset = LilGuys.transform(LilGuys.ICRS, LilGuys.GSR(ra=ra0, dec=dec0, radial_velocity=0)).radial_velocity
 end
 
 
@@ -273,13 +280,13 @@ end
 Add the GSR corrected proper motions and radial velocities to the dataframe.
 Requires columns `ra`, `dec`, `RV`.
 """
-function add_gsr!(df::DataFrame; distance, pmra, pmdec)
-    obs = [lguys.ICRS(ra=row.ra, dec=row.dec, distance=distance,
+function add_gsr!(df::DataFrame; distance)
+    obs = [LilGuys.ICRS(ra=row.ra, dec=row.dec, distance=distance,
                       pmra=row.pmra, pmdec=row.pmdec, radial_velocity=row.RV)
            for row in eachrow(df)
           ]
 
-    obs_gsr = lguys.to_frame(lguys.transform.(lguys.GSR, obs))
+    obs_gsr = LilGuys.to_frame(LilGuys.transform.(LilGuys.GSR, obs))
 
 
     df[!, :pmra_gsr] = obs_gsr.pmra
@@ -304,7 +311,7 @@ function _new_pm(rv_meas, obs_props)
         xs = [row.pmra, obs_props["pmra"]]
         ws = [1/row.pmra_err^2, 1/σ_ra^2 * row.PSAT_RV]
 
-        m = lguys.mean(xs, we)
+        m = LilGuys.mean(xs, we)
         err = 1/sqrt(sum(ws))
         return m ± err
     end
@@ -314,7 +321,7 @@ function _new_pm(rv_meas, obs_props)
         xs = [row.pmdec, obs_props["pmdec"]]
         ws = [1/row.pmdec_err^2, 1/σ_dec^2 * row.PSAT_RV]
 
-        m = lguys.mean(xs, we)
+        m = LilGuys.mean(xs, we)
         err = 1/sqrt(sum(ws))
         return m ± err
     end
@@ -350,7 +357,7 @@ This formulation is most helpful for this analysis where we
 assume a constant PM for the satellite
 """
 function icrs(df::AbstractDict; add_sigma_pm_int=true)
-    σ_pm = lguys.kms2pm(df["sigma_v"], df["distance"])
+    σ_pm = LilGuys.kms2pm(df["sigma_v"], df["distance"])
     @info "σ_pm = $σ_pm"
 
     kwargs = Dict(
@@ -363,7 +370,7 @@ function icrs(df::AbstractDict; add_sigma_pm_int=true)
         end
     end
 
-    return lguys.ICRS(;kwargs...)
+    return LilGuys.ICRS(;kwargs...)
 end
 
 
@@ -440,9 +447,9 @@ function safe_weighted_mean(values, errors, sigmas, counts)
 	x = disallowmissing(values[filt])
 	n = disallowmissing(counts[filt])
 
-	x_mean = lguys.mean(x, w)
+	x_mean = LilGuys.mean(x, w)
     std_err = sem_inv_var_weights(w)
-	sigma = lguys.std(x, w)
+	sigma = LilGuys.std(x, w)
 	counts_tot = sum(n)
 	
 	return x_mean, std_err, sigma, counts_tot 
@@ -653,4 +660,47 @@ function get_f_best(j24, source_id)
 		return missing
 	end
 	return j24.F_BEST[j24.source_id .== source_id] |> only
+end
+
+
+function xmatch_and_clean(rv_all, j24, obs_properties; require_match=true)
+    icrs0 = icrs(obs_properties)
+
+    gsr0 = LilGuys.transform(LilGuys.GSR, icrs0)
+
+
+    if require_match
+        rv_all = rv_all[.!ismissing.(rv_all.source_id), :]
+    end
+
+	rv_meas = leftjoin(rv_all, j24, on=:source_id, makeunique=true, matchmissing=:equal)
+
+
+	rv_meas[ismissing.(rv_meas.pmra), [:pmra, :pmdec]] .= NaN
+	add_gsr!(rv_meas, distance=obs_properties["distance"])
+
+	Δrv = rv_correction(rv_meas.ra, rv_meas.dec, gsr0)
+    @info "typical uncertainty $(Measurements.uncertainty.(Δrv))"
+
+	rv_meas[!, :delta_rv] = Measurements.value.(Δrv)
+	rv_meas[!, :delta_rv_err] = Measurements.uncertainty.(Δrv)
+
+	
+	rv_meas[:, :vz] .= rv_meas.radial_velocity_gsr .+ rv_meas.delta_rv
+	rv_meas[:, :vz_err] .= rv_meas.RV_err .⊕ rv_meas.delta_rv_err
+
+    rv_meas
+end
+
+
+"""
+    read_gaia_stars(filename::String, obs_props::Dict)
+
+Reads in the gaia stars with the provided filename assuming the observed properties
+passed along (structural and distance).
+"""
+function read_gaia_stars(filename, obs_props)
+    filt_params = GaiaFilters.GaiaFilterParams(obs_props, filename=filename)
+
+    j24 = GaiaFilters.read_gaia_stars(filt_params)
 end

@@ -158,7 +158,12 @@ let
 end
 
 # ╔═╡ 5501db91-1c97-4b3a-b508-b7c14948acaa
-scatter(memb_stars.vz .+ Δv_gsr, memb_stars.RV .- (memb_stars.vz .+ Δv_gsr))
+errorscatter(memb_stars.RV,(memb_stars.vz .+ Δv_gsr) .- memb_stars.RV,
+			 yerror = memb_stars.RV_err,
+	   axis = (;
+			  xlabel = "RV (km/s)",
+			  ylabel = "RV' - RV", 
+			  aspect=DataAspect()))
 
 # ╔═╡ 6dd003db-bd29-4872-94f2-445f5c4536ba
 stephist(Float64.(memb_stars.vz), bins=9, normalization=:pdf)
@@ -170,9 +175,6 @@ CSV.write("mcmc/mcmc_samples_vz.csv", samples_gsr)
 md"""
 # Writing Information
 """
-
-# ╔═╡ ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
-df_summaries = summary_vz 
 
 # ╔═╡ a393eeca-c9a4-412f-ae86-35ee1aca4d51
 function OrderedCollections.OrderedDict(summary_vz::DataFrame)
@@ -188,9 +190,16 @@ function OrderedCollections.OrderedDict(summary_vz::DataFrame)
 	df
 end
 
+# ╔═╡ ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
+df_summary = let
+	df = OrderedDict(summary_vz)
+	df["delta_v_gsr"] = [Δv_gsr, 0]
+	df
+end
+
 # ╔═╡ d71f6eba-7d64-4212-91c3-707a664c6b0b
 open("mcmc/mcmc_properties_vz.toml", "w") do f
-	TOML.print(f, OrderedDict(df_gsr))
+	TOML.print(f, df_summary)
 end
 
 # ╔═╡ Cell order:
@@ -230,6 +239,6 @@ end
 # ╠═6dd003db-bd29-4872-94f2-445f5c4536ba
 # ╠═c1cf3a80-1c26-4417-9ddf-1046f3f5f608
 # ╟─1acdc61b-fb5f-449d-ba86-46525c881a39
-# ╠═ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
 # ╠═a393eeca-c9a4-412f-ae86-35ee1aca4d51
+# ╠═ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
 # ╠═d71f6eba-7d64-4212-91c3-707a664c6b0b

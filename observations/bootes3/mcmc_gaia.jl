@@ -44,6 +44,7 @@ include(joinpath(ENV["DWARFS_ROOT"], "utils/pluto_utils.jl"))
 		simple = CheckBox(),
 		p_min = NumberField(default=0),
 		n_R_h_gc = NumberField(default=10),
+		G_max = NumberField(default=21),
 	))
 
 
@@ -105,10 +106,27 @@ end
 # ╔═╡ 133a025f-407f-49eb-9e02-0c620d5b77ba
 CairoMakie.activate!(type=:png)
 
+# ╔═╡ 78c1d057-93b3-46b7-91e1-9abb0634b11b
+sample_suffix = let
+	s = ""
+	if inputs.G_max != 21
+		s *= ".G_$(inputs.G_max)"
+	end
+	if simple 
+		s *= ".simple"
+	end
+
+	if p_min > 0 
+		s *= ".L_$p_min"
+	end
+
+	s
+end
+
 # ╔═╡ 626846b5-156a-4883-8542-463e3a90faaa
 function write_samples_summary(samples, df_samples, model_suffix)
-	samplesout = joinpath(outdir, "samples.$samplename.mcmc_$model_suffix.csv")
-	summaryout = joinpath(outdir, "summary.$samplename.mcmc_$model_suffix.csv")
+	samplesout = joinpath(outdir, "samples.$samplename$sample_suffix.mcmc_$model_suffix.csv")
+	summaryout = joinpath(outdir, "summary.$samplename$sample_suffix.mcmc_$model_suffix.csv")
 	CSV.write(samplesout, df_samples)
 	CSV.write(summaryout, MCMCUtils.summarize(samples))
 end
@@ -151,8 +169,14 @@ end
 # ╔═╡ 84708283-6f48-4ab8-88f8-10b2f9376466
 R_max = GaiaFilters.calc_R_max(allstars.xi, allstars.eta, 0, 0)
 
+# ╔═╡ 46751648-3efb-4e4a-b11d-3dbc3df12206
+extrema(allstars.xi)
+
 # ╔═╡ 1b77bc6a-0512-4d5e-a817-ce0eab032129
 @assert 60 < R_max < 12*60
+
+# ╔═╡ 23097d3f-9997-457b-8f1f-c8f50cabec94
+
 
 # ╔═╡ e33170f3-8c57-4672-b8a7-f083d69437c1
 md"""
@@ -160,10 +184,10 @@ md"""
 """
 
 # ╔═╡ ea690a36-512e-4a80-a258-faece76c299c
-# props_ngc5272 = TOML.parsefile("observed_properties_ngc5272.toml")
+props_ngc5272 = TOML.parsefile("observed_properties_ngc5272.toml")
 
 # ╔═╡ efea8cbe-dd33-419a-9a49-e07a3424dbe3
-# R_ngc5272 = 0*n_R_h_gc*props_ngc5272["R_h"]
+R_ngc5272 = n_R_h_gc*props_ngc5272["R_h"]
 
 # ╔═╡ d17c50db-ce94-4aad-92e2-6355b3b3a91b
 props_ngc5466 = TOML.parsefile("observed_properties_ngc5466.toml")
@@ -176,18 +200,18 @@ area_tot = π * (R_max^2 - R_ngc5466^2)
 
 # ╔═╡ 61793e5e-6435-492a-85d4-383dc9cf4f01
 function excise_gcs(stars)
-	# xi, eta = LilGuys.to_tangent(stars.ra, stars.dec, props_ngc5272["ra"], props_ngc5272["dec"])
-	# dist_ngc5272 = @. sqrt(xi^2 + eta^2) .* 60
+	xi, eta = LilGuys.to_tangent(stars.ra, stars.dec, props_ngc5272["ra"], props_ngc5272["dec"])
+	dist_ngc5272 = @. sqrt(xi^2 + eta^2) .* 60
 
-	# filt = dist_ngc5272 .> R_ngc5272
+	filt = dist_ngc5272 .> R_ngc5272
 
 
 	xi, eta = LilGuys.to_tangent(stars.ra, stars.dec, props_ngc5466["ra"], props_ngc5466["dec"])
 	dist_ngc5466 = @. sqrt(xi^2 + eta^2) .* 60
 
-	filt = dist_ngc5466 .> R_ngc5466
+	filt .&= dist_ngc5466 .> R_ngc5466
 
-	return stars[filt, :]
+	return filt
 end
 
 # ╔═╡ a736178a-ae01-4940-afa3-e7dc3522ec47
@@ -195,13 +219,15 @@ stars = let
 	df = copy(allstars)
 
  	
-	df[!, :R_ell] = @. sqrt(df.xi^2 + df.eta^2)
+	df[:, :R_ell] .= @. sqrt(df.xi^2 + df.eta^2)
 
 	filt = (df.R_ell .< R_max) .& (df.L_sat ./ df.L_bg .> p_min)
+	filt .&= df.G .< inputs.G_max
+	filt .&= excise_gcs(df)
+	
+
 	df = df[filt, :]
 
-	
-	df = excise_gcs(df)
 	if simple
 		df.L_sat .= 1
 		df.L_bg .= 1
@@ -209,8 +235,13 @@ stars = let
 	df
 end
 
+# ╔═╡ a2954df0-af01-44dc-b759-ca9d26c9a183
+hist(stars.R_ell)
+
 # ╔═╡ 4aac4483-6f0e-4b73-8c64-cfd3e9995b59
-scatter(stars.xi, stars.eta, markersize=0.5, alpha=0.3, color=:black)
+scatter(stars.xi, stars.eta, markersize=1, alpha=0.3, color=:black, 
+	   axis = (;
+			  aspect =DataAspect(), xreversed=true, xlabel="xi", ylabel="eta"))
 
 # ╔═╡ 0215620c-6193-4215-b018-6f775e31bb5c
 let
@@ -246,6 +277,9 @@ end
 md"""
 # Setup
 """
+
+# ╔═╡ 68e16352-b600-4d13-a201-cdcdfe43e24b
+prior_f_sat = Uniform(0, 1)
 
 # ╔═╡ fab117b3-53a7-48c8-a6a1-8f004d58a90d
 N_stars = size(stars, 1)
@@ -291,7 +325,7 @@ mcmc_data = MCMCUtils.GaiaData(
 )
 
 # ╔═╡ fe3d7c64-c3ff-431f-976a-9dab7e8e71b3
-mcmc_model_plummer = MCMCUtils.plummer_model(mcmc_data, area_tot=area_tot)
+mcmc_model_plummer = MCMCUtils.plummer_model(mcmc_data, area_tot=area_tot, prior_f_sat=prior_f_sat)
 
 # ╔═╡ 051f456b-5b6e-438f-8438-392456759ae6
 samples_plummer = sample(mcmc_model_plummer, sampler, MCMCThreads(), Nsamples, Nthreads) 
@@ -320,7 +354,7 @@ md"""
 """
 
 # ╔═╡ 32e5278a-8674-45fc-af41-a93f009fc008
-mcmc_model_ell = MCMCUtils.plummer_ell_model(mcmc_data, area_tot=area_tot)
+mcmc_model_ell = MCMCUtils.plummer_ell_model(mcmc_data, area_tot=area_tot, prior_f_sat=prior_f_sat)
 
 # ╔═╡ 725a1902-2c48-4b14-a3c2-a87afcefa080
 if run_all
@@ -477,15 +511,19 @@ end
 # ╠═066c7b30-f818-4e4a-8db8-c8bac469f558
 # ╠═5426e4db-6810-443a-a98b-6e1917fee397
 # ╠═133a025f-407f-49eb-9e02-0c620d5b77ba
+# ╠═78c1d057-93b3-46b7-91e1-9abb0634b11b
 # ╠═626846b5-156a-4883-8542-463e3a90faaa
 # ╟─04053b71-bd55-40d7-885d-6df67035e3d6
 # ╠═7e8124ea-7bbe-465b-a9dc-4b14d268c39e
 # ╠═398e5019-006b-4d4d-922c-7ce244470e8e
 # ╠═4acaad09-7d87-444e-b5ec-7fcf79f895ef
 # ╠═84708283-6f48-4ab8-88f8-10b2f9376466
+# ╠═46751648-3efb-4e4a-b11d-3dbc3df12206
+# ╠═a2954df0-af01-44dc-b759-ca9d26c9a183
 # ╠═1b77bc6a-0512-4d5e-a817-ce0eab032129
 # ╠═a736178a-ae01-4940-afa3-e7dc3522ec47
 # ╠═36784213-6393-4e33-8fb9-c4ef5b1fbc48
+# ╠═23097d3f-9997-457b-8f1f-c8f50cabec94
 # ╟─e33170f3-8c57-4672-b8a7-f083d69437c1
 # ╠═ea690a36-512e-4a80-a258-faece76c299c
 # ╠═efea8cbe-dd33-419a-9a49-e07a3424dbe3
@@ -497,6 +535,7 @@ end
 # ╠═23a250b8-a7aa-4d0b-b838-a5e4436b0bc1
 # ╠═fb28f68a-4893-4feb-aa29-5cc6acd7d2a8
 # ╟─24a65d65-6e0b-4108-8041-79fee06cd28a
+# ╠═68e16352-b600-4d13-a201-cdcdfe43e24b
 # ╠═fab117b3-53a7-48c8-a6a1-8f004d58a90d
 # ╠═14ac9c2a-b218-43c5-a129-3eda0774608a
 # ╠═8fa15363-191e-4875-95f1-3ce87762e582

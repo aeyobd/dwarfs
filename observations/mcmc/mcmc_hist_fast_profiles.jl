@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -201,7 +201,7 @@ let
 	
 	for h in profiles[1:skip:end]
 		filt = isfinite.(h.log_Sigma)
-		scatter!(h.log_R[filt] .+ jitter * randn(sum(filt)), h.log_Sigma[filt], color=:black, alpha=0.03, markersize=1)
+		scatter!(h.log_R[filt] .+ jitter * randn(sum(filt)), h.log_Sigma[filt], color=:black, alpha=0.03, markersize=1, marker=:circle, strokewidth=0)
 	end
 
 	@savefig "scatter_profiles"
@@ -225,7 +225,7 @@ let
 		Gamma = LilGuys.gradient(middle.(h.log_Sigma), h.log_R)
 		filt = isfinite.(Gamma)
 
-		scatter!(h.log_R[filt].+ jitter*randn(sum(filt)), Gamma[filt], color=:black, alpha=0.1, markersize=1)
+		scatter!(h.log_R[filt].+ jitter*randn(sum(filt)), Gamma[filt], color=:black, alpha=0.1, markersize=1, marker=:circle, strokewidth=0)
 	end
 
 	ax2 = Axis(fig[1,2],
@@ -240,7 +240,7 @@ let
 		Gamma = LilGuys.gradient(middle.(h.log_Sigma), h.log_R)
 		filt = isfinite.(Gamma)
 
-		scatter!(10 .^ (h.log_R[filt].+ jitter*randn(sum(filt))), Gamma[filt], color=:black, alpha=0.03, markersize=1)
+		scatter!(10 .^ (h.log_R[filt].+ jitter*randn(sum(filt))), Gamma[filt], color=:black, alpha=0.03, markersize=1, marker=:circle, strokewidth=0)
 	end
 
 	linkyaxes!(ax, ax2)

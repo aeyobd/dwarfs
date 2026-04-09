@@ -67,14 +67,8 @@ raw_table = CSV.read("../data/deimos_velocities.txt", DataFrame, ignorerepeated=
 			"RV_err", "WECaT", "EWCaT_err", "FE_H", "FE_H_err", "Var", "P_SAT_deimos"]
 					)
 
-# ╔═╡ 0272cf3b-4299-488a-9d63-4262813c617e
-hist(raw_table.Var)
-
 # ╔═╡ d5e1fc38-9b93-4024-9259-c9253914c72a
 boo3_deimos = raw_table[raw_table[!, "system"] .== Ref("Boo3"), :]
-
-# ╔═╡ 77e7884c-0360-4b7f-b9ad-e81be2516552
-obs_properties = TOML.parsefile("../observed_properties.toml")
 
 # ╔═╡ 0137b308-f0c6-4e73-afa6-346797b6f304
 j24 = read_fits("$data_dir/j24_2c.fits") 
@@ -129,6 +123,9 @@ write_fits("processed/rv_deimos.fits", df_out, overwrite=true)
 md"""
 ### Sanity checks with sourceid matching
 """
+
+# ╔═╡ 0272cf3b-4299-488a-9d63-4262813c617e
+hist(raw_table.Var)
 
 # ╔═╡ 423e446b-3cf6-4150-8b94-c4d7388fceb4
 @assert length(unique(skipmissing(df_out.source_id))) == sum(filt_xmatch)
@@ -239,9 +236,7 @@ end
 # ╠═3e0eb6d1-6be4-41ec-98a5-5e9167506e61
 # ╟─c470c2b9-093d-42ab-b96d-9dac231ccabc
 # ╠═d6a2ebb4-f125-4f28-9009-fc67d5dda5a1
-# ╠═0272cf3b-4299-488a-9d63-4262813c617e
 # ╠═d5e1fc38-9b93-4024-9259-c9253914c72a
-# ╠═77e7884c-0360-4b7f-b9ad-e81be2516552
 # ╠═0137b308-f0c6-4e73-afa6-346797b6f304
 # ╠═2c4eabb0-3af9-4b6f-b15d-9ed3b4290040
 # ╠═d321c481-0ceb-4e3b-b5fc-12af735155e3
@@ -251,6 +246,7 @@ end
 # ╠═28a22929-89f2-422d-9cf0-b06d7e45d9a4
 # ╠═f71152ad-d576-4205-bece-92c85783c089
 # ╟─4b8a45ce-4862-4842-8c60-bae9a64acd75
+# ╠═0272cf3b-4299-488a-9d63-4262813c617e
 # ╠═423e446b-3cf6-4150-8b94-c4d7388fceb4
 # ╠═011700b8-5dcc-409b-807c-952ea9726992
 # ╠═70729597-2e50-4773-89ad-87e97f7bdad6

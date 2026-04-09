@@ -39,7 +39,8 @@ md"""
 # ╔═╡ 428c3d92-e49c-426e-b328-2d2a8d4c4159
 rv_file = let
 	"rv_deimos_geha_x_2c.fits"
-	"rv_deimos_x_2c_sigma_3.fits"
+	# "rv_deimos_x_2c_sigma_3.fits"
+	# "rv_deimos_x_2c_psat_0.2.fits"
 end
 
 # ╔═╡ 8b3ad5b9-0ab3-4349-90d0-013ac96ff6b1
@@ -266,281 +267,10 @@ stephist(Float64.(memb_stars.vz), bins=9, normalization=:pdf)
 # ╔═╡ c1cf3a80-1c26-4417-9ddf-1046f3f5f608
 CSV.write("processed/mcmc_samples_vz$FIGSUFFIX.csv", samples_gsr)
 
-# ╔═╡ 433d1d51-4b2f-4bc0-807a-813eb215231a
-md"""
-# Rell sigma
-"""
-
-# ╔═╡ b32a6521-dae5-4d2a-89ab-6e8b3bc43be3
-model_Rell = RVUtils.model_vel_sigma_R(memb_stars.vz, memb_stars.vz_err, memb_stars.R_ell)
-
-# ╔═╡ 93ee52ad-2c6d-4eac-85cd-ad2a88a70428
-samples_Rell = sample(model_Rell, sampler, MCMCThreads(), n_samples_extra, n_threads)
-
-# ╔═╡ b983cbd3-a90f-4ed1-b0a7-fd21e903f81d
-summary_Rell = RVUtils.summarize(samples_Rell)
-
-# ╔═╡ 527ccde2-64db-40f5-9b77-8898a92b3b6a
-df_Rell = DataFrame(samples_Rell)
-
-# ╔═╡ 820b82a1-63a4-4a83-8d6e-5659ef75ce2d
-@savefig "sigma_Rell_corner" pairplot(samples_Rell)
-
-# ╔═╡ 924369b0-aff6-46e4-a0bf-c6766ff93cbf
-median(df_Rell.μ) + Δv_gsr
-
-# ╔═╡ 137bbc9c-1e02-4f78-acd1-0e30cf982615
-bf_sigma_Rell = RVUtils.bayes_evidence(model_Rell, df_Rell, "dlσ_dlR")
-
-# ╔═╡ 3b7cb3ea-3684-4df9-b9e6-919fa11e9ffa
-kde_Rell = KernelDensity.kde(df_Rell.dlσ_dlR)
-
-# ╔═╡ f8cc1ebb-617a-46a0-ab22-2f84d75da2ea
-md"""
-In the plot below, we just want to make sure that the KDE density estimate looks reasonable at zero
-"""
-
-# ╔═╡ 9158e64f-5a8d-48bf-8043-8e93d41bd626
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		yscale=log10, 
-		yticks = Makie.automatic,
-		ylabel = "density",
-		xlabel = "dlσ/dlR"
-	)
-		
-	
-	lines!(kde_Rell)
-	vlines!(0, color=:black)
-
-	x = df_Rell.dlσ_dlR[df_Rell.dlσ_dlR .< quantile(df_Rell.dlσ_dlR, 0.001)]
-	scatter!(x, 10^-6 .* (1 .+ rand(length(x))), color=COLORS[2], markersize=1)
-	text(0.1, 0.9, text=string(round(bf_sigma_Rell, sigdigits=2)), space=:relative)
-	fig
-end
-
-# ╔═╡ 4a83224a-1f2a-4f7c-b670-6a694fc8826a
-KernelDensity.default_bandwidth(df_Rell.dlσ_dlR)
-
-# ╔═╡ d051635b-123c-45e2-94da-6511f179a2bb
-CSV.write("processed/mcmc_samples_Rell_sigma$FIGSUFFIX.csv", df_Rell)
-
-# ╔═╡ 062994bc-fb0c-4f08-b7f7-7cc6714bad1e
-md"""
-## Gradient
-"""
-
-# ╔═╡ 25d9799f-5e89-4ec3-995c-a7309efb798f
-model_gradient = RVUtils.model_vel_gradient(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta)
-
-# ╔═╡ cb440be7-1f0e-4a20-b15a-82b1820d1ced
-samples_gradient = sample(model_gradient, sampler, MCMCThreads(), n_samples_extra, n_threads)
-
-# ╔═╡ e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
-@savefig "gradient_corner" pairplot(samples_gradient)
-
-# ╔═╡ 184b4a5d-cbab-44b2-9620-bf928ad81d0e
-df_gradient = let
-	df = DataFrame(samples_gradient)
-	df[:, :A]
-	df[:, :B]
-	df[!, :r_grad] = @. 60 * (df.A ⊕ df.B )
-	df[!, :Θ_grad] = @. atand(df.A, df.B) 
-
-	df
-end
-
-# ╔═╡ e79d9d82-84cd-4bc5-9ea8-be6b07cacf6d
-@savefig "gradient_cyl_corner" pairplot(df_gradient[:, [:μ, :σ, :r_grad, :Θ_grad]])
-
-# ╔═╡ f2aa15e2-824b-4f0e-8ad0-42611abe06da
-median(df_gradient.μ) + Δv_gsr
-
-# ╔═╡ ad607c95-0aea-4d84-8f18-e5b929b9bfca
-bf_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
-
-# ╔═╡ 65f7b7e0-2439-477e-8036-a28a6903955f
-θs = mod1.(df_gradient.Θ_grad, 360.) .- 360
-
-# ╔═╡ 96b41e0b-b9f3-41ba-bc56-f3febd8833d3
-θ_err = quantile(θs, [0.16, 0.5, 0.84]) .- median(θs)
-
-# ╔═╡ cbf50d46-219b-489d-b359-6b473b85735d
-median(θs)
-
-# ╔═╡ 4d7e7b96-74a0-4066-88cf-739c043c7f47
-summary_gradient = RVUtils.summarize(samples_gradient)
-
-# ╔═╡ 8555e608-53c1-40d3-b21e-413af8953c30
-md"""
-code below validates induced PM gradient (should be approx 2).
-"""
-
-# ╔═╡ 7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
-θ_m = median(df_gradient.Θ_grad)
-
-# ╔═╡ 3195286d-d85f-43a3-aa25-dae2134f570b
-xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m) .* 60
-
-
-# ╔═╡ 88f2918e-e126-420a-96a2-5746a8010f73
-icrs0 = lguys.ICRS(obs_properties)
-
-# ╔═╡ c48bb30d-1186-4940-b061-91f53e8335e1
-vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
-
-# ╔═╡ af0d2050-b42e-4a7f-aabb-5b08d23381e9
-lguys.transform(ICRS, lguys.GSR(ra=icrs0.ra + 2/vec_pm[1] *cos(icrs0.dec), dec=icrs0.dec + 2/vec_pm[2], distance=icrs0.distance, radial_velocity=0)).radial_velocity  .- Δv_gsr
-
-# ╔═╡ 4a473039-79f0-4d77-aa0c-681e2fba4f4c
-gsr0 = lguys.transform(lguys.GSR, icrs0)
-
-# ╔═╡ ed35eb68-74f7-4009-9b68-dfca2ea547af
-pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
-
-# ╔═╡ f523cf48-82bf-4b20-9d7c-215bbe10a193
-kde = KernelDensity.kde((df_gradient.A, df_gradient.B))
-
-# ╔═╡ 2b88915c-7222-44be-a483-b967ea131b80
-log(pdf(kde, 0, 0) ./ lguys.gaussian(0, 0., 0.1)^2)
-
-# ╔═╡ b827e765-646c-4928-9f66-c64e7a20539f
-mean(df_gradient.A .> 0)
-
-# ╔═╡ 4b5263d4-0f97-491c-b911-46273510f600
-mean(df_gradient.B .> 0)
-
-# ╔═╡ 6371d804-cc73-4ce1-9b36-79fa61780d75
-median(atand.(df_gradient.B ./ df_gradient.A))
-
-# ╔═╡ 70a22ef4-2eb1-4094-94e3-5a13fb51b9e6
-median(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2)) * 60
-
-# ╔═╡ 183f572a-bc0f-435b-a656-2ee2a3057559
-quantile(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2), [0.16, 0.5, 0.84]) * 60
-
-# ╔═╡ d3fb7136-7600-4782-ba97-f2f785fb3c0a
-quantile(atand.(df_gradient.B ./ df_gradient.A), [0.16, 0.5, 0.84]) 
-
-# ╔═╡ 51c7c22e-405b-4a47-beb1-b0fcf3efa391
-KernelDensity.default_bandwidth((df_gradient.A, df_gradient.B))
-
-# ╔═╡ 39bb4bb9-8445-4ee1-a3af-639d8fa96f65
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-		
-	
-	contour!(kde.x, kde.y, asinh.(kde.density ./ 1e-5), levels=100,)
-
-	scatter!(0, 0, color=:black)
-
-
-	fig
-end
-
-# ╔═╡ 3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
-let
-	fig, ax = FigAxis(
-		xlabel=L"radial velocity / km s$^{-1}$",
-		ylabel="density"
-	)
-	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 6, normalization=:pdf)
-	
-	RVUtils.plot_samples!(DataFrame(samples_gradient), LinRange(220, 250, 100), thin=30)
-	errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
-
-	fig
-end
-
-# ╔═╡ 7fce47a1-16be-4dad-afb5-0fb04bd91355
-CSV.write("processed/mcmc_samples_gradient$FIGSUFFIX.csv", df_gradient)
-
-# ╔═╡ 9e23fdbf-79ae-47a1-a499-2a23927b0590
-md"""
-# Both model
-"""
-
-# ╔═╡ 59eb4919-61cb-4a1e-919f-580a3eea2d67
-model_both = RVUtils.model_vel_gradient_both(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta, memb_stars.R_ell, R_h=R_h)
-
-# ╔═╡ bfddda5b-e3c1-4a0a-b191-17b22ae8fba2
-samples_both = sample(model_both, sampler, MCMCThreads(), n_samples_extra, n_threads)
-
-# ╔═╡ 96c6a648-f918-4b1c-b35c-3ad9dbd7d3c6
-df_both = let
-	df = DataFrame(samples_both)
-	df[:, :A]
-	df[:, :B]
-	df[!, :r_grad] = @. 60 * (df.A ⊕ df.B )
-	df[!, :Θ_grad] = @. atand(df.A, df.B) 
-
-	df
-end
-
-# ╔═╡ 0ca7dc1b-3b41-4089-9c89-20c6e48213ea
-@savefig "v_gradient_derived" let
-	fig = Figure()
-
-	ax=Axis(fig[1,1];
-		  limits=(-10, 10, -10, 10), 
-		  aspect=DataAspect(),
-		  xlabel = L"$\partial \,v_z / \partial\, \xi$ / km\,s$^{-1}$\,degree$^{-1}$",
-		  ylabel = L"$\partial \,v_z / \partial\, \eta$ / km\,s$^{-1}$\,degree$^{-1}$",
-		xreversed=true
-		 )
-	
-	scatter!(60df_gradient.A, 60df_gradient.B, alpha=0.1, markersize=1, 
-
-	   )
-
-	scatter!(60df_both.A, 60df_both.B, alpha=0.1, markersize=1, )
-
-
-	scatter!(0, 0, color=:black)
-	arrows!([0], [0], [vec_pm[1]], [vec_pm[2]])
-
-	fig
-end
-
-# ╔═╡ 8d0ec0fc-888b-489b-976a-6d5c899d939e
-@savefig "both_corner" pairplot(samples_both)
-
-# ╔═╡ 72e0cc55-0e1d-4037-895f-cd81b9c42282
-summary_both = RVUtils.summarize(samples_both)
-
-# ╔═╡ 786e5aa7-35ce-49e2-a31d-a2d9978cdba6
-bf_gradient_both = RVUtils.bayes_evidence(model_both, df_both, ["A", "B"])
-
-# ╔═╡ 43c7905c-0673-4e2d-9be0-d797c3e5f3e5
-bf_Rell_both = RVUtils.bayes_evidence(model_both, df_both, "dlσ_dlR")
-
-# ╔═╡ 8077c5c1-1e53-465a-a83c-175e6aa112a7
-CSV.write("processed/mcmc_samples_both$FIGSUFFIX.csv", df_both)
-
-# ╔═╡ 8c6ba5e8-3814-4253-87fa-30c2fad02957
-θs_both = mod1.(df_both.Θ_grad, 360.) .- 360
-
-# ╔═╡ 8cc98785-1dcb-408e-965f-27a475847a00
-θ_m_both= median(θs_both)
-
-# ╔═╡ aed46019-4199-4a51-8b28-eab8904b4f4c
-θ_both_err = quantile(θs_both, [0.16, 0.5, 0.84]) .- median(θs_both)
-
-# ╔═╡ b3c83ae8-c7e1-487d-b5a7-b78ef989ea28
-r_grad_m_both = median(df_both.r_grad)
-
-# ╔═╡ ff721c52-b23c-47d0-8b4b-ae31f1863329
-r_grad_both_err = quantile(df_both.r_grad, [0.16, 0.5, 0.84]) .- r_grad_m_both
-
 # ╔═╡ 1acdc61b-fb5f-449d-ba86-46525c881a39
 md"""
 # Writing Information
 """
-
-# ╔═╡ 280ad72b-b4f9-4082-8795-3de522acfbf1
-r_grad_m = median(df_gradient.r_grad)
 
 # ╔═╡ a393eeca-c9a4-412f-ae86-35ee1aca4d51
 function OrderedCollections.OrderedDict(summary_vz::DataFrame)
@@ -559,19 +289,19 @@ end
 # ╔═╡ ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
 df_summaries = OrderedDict(
 	"vz" => summary_vz |> OrderedDict, 
-	"gradient" => summary_gradient |> OrderedDict,
-	"rell" => summary_Rell |> OrderedDict,
-	"both" => summary_both |> OrderedDict,
-	"bf_gradient" => bf_gradient,
-	"bf_rell" => bf_sigma_Rell,
-	"bf_gradient_both" => bf_gradient_both,
-	"bf_rell_both" => bf_Rell_both,
-	"R_grad_median" => r_grad_m_both,
-	"R_grad_el" => r_grad_both_err[1],
-	"R_grad_ep" => r_grad_both_err[end],
-	"theta_grad_median" => θ_m_both,
-	"theta_grad_el" => -θ_both_err[1],
-	"theta_grad_ep" => θ_both_err[3]
+	# "gradient" => summary_gradient |> OrderedDict,
+	# "rell" => summary_Rell |> OrderedDict,
+	# "both" => summary_both |> OrderedDict,
+	# "bf_gradient" => bf_gradient,
+	# "bf_rell" => bf_sigma_Rell,
+	# "bf_gradient_both" => bf_gradient_both,
+	# "bf_rell_both" => bf_Rell_both,
+	# "R_grad_median" => r_grad_m_both,
+	# "R_grad_el" => r_grad_both_err[1],
+	# "R_grad_ep" => r_grad_both_err[end],
+	# "theta_grad_median" => θ_m_both,
+	# "theta_grad_el" => -θ_both_err[1],
+	# "theta_grad_ep" => θ_both_err[3]
 )
 
 # ╔═╡ d71f6eba-7d64-4212-91c3-707a664c6b0b
@@ -643,69 +373,8 @@ end
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
 # ╠═6dd003db-bd29-4872-94f2-445f5c4536ba
 # ╠═c1cf3a80-1c26-4417-9ddf-1046f3f5f608
-# ╠═433d1d51-4b2f-4bc0-807a-813eb215231a
-# ╠═b32a6521-dae5-4d2a-89ab-6e8b3bc43be3
-# ╠═93ee52ad-2c6d-4eac-85cd-ad2a88a70428
-# ╠═b983cbd3-a90f-4ed1-b0a7-fd21e903f81d
-# ╠═527ccde2-64db-40f5-9b77-8898a92b3b6a
-# ╠═820b82a1-63a4-4a83-8d6e-5659ef75ce2d
-# ╠═924369b0-aff6-46e4-a0bf-c6766ff93cbf
-# ╠═137bbc9c-1e02-4f78-acd1-0e30cf982615
-# ╠═3b7cb3ea-3684-4df9-b9e6-919fa11e9ffa
-# ╠═f8cc1ebb-617a-46a0-ab22-2f84d75da2ea
-# ╠═9158e64f-5a8d-48bf-8043-8e93d41bd626
-# ╠═4a83224a-1f2a-4f7c-b670-6a694fc8826a
-# ╠═d051635b-123c-45e2-94da-6511f179a2bb
-# ╟─062994bc-fb0c-4f08-b7f7-7cc6714bad1e
-# ╠═25d9799f-5e89-4ec3-995c-a7309efb798f
-# ╠═cb440be7-1f0e-4a20-b15a-82b1820d1ced
-# ╠═e16274c0-3b5a-4dc5-9330-f4f1fa06fa87
-# ╠═184b4a5d-cbab-44b2-9620-bf928ad81d0e
-# ╠═e79d9d82-84cd-4bc5-9ea8-be6b07cacf6d
-# ╠═f2aa15e2-824b-4f0e-8ad0-42611abe06da
-# ╠═ad607c95-0aea-4d84-8f18-e5b929b9bfca
-# ╠═65f7b7e0-2439-477e-8036-a28a6903955f
-# ╠═96b41e0b-b9f3-41ba-bc56-f3febd8833d3
-# ╠═cbf50d46-219b-489d-b359-6b473b85735d
-# ╠═2b88915c-7222-44be-a483-b967ea131b80
-# ╠═4d7e7b96-74a0-4066-88cf-739c043c7f47
-# ╠═0ca7dc1b-3b41-4089-9c89-20c6e48213ea
-# ╠═c48bb30d-1186-4940-b061-91f53e8335e1
-# ╟─8555e608-53c1-40d3-b21e-413af8953c30
-# ╠═af0d2050-b42e-4a7f-aabb-5b08d23381e9
-# ╠═7a9d2e0f-4dcb-4b69-9f68-d43d6dde8bf2
-# ╠═3195286d-d85f-43a3-aa25-dae2134f570b
-# ╠═4a473039-79f0-4d77-aa0c-681e2fba4f4c
-# ╠═88f2918e-e126-420a-96a2-5746a8010f73
-# ╠═ed35eb68-74f7-4009-9b68-dfca2ea547af
-# ╠═f523cf48-82bf-4b20-9d7c-215bbe10a193
-# ╠═b827e765-646c-4928-9f66-c64e7a20539f
-# ╠═4b5263d4-0f97-491c-b911-46273510f600
-# ╠═6371d804-cc73-4ce1-9b36-79fa61780d75
-# ╠═70a22ef4-2eb1-4094-94e3-5a13fb51b9e6
-# ╠═183f572a-bc0f-435b-a656-2ee2a3057559
-# ╠═d3fb7136-7600-4782-ba97-f2f785fb3c0a
-# ╠═51c7c22e-405b-4a47-beb1-b0fcf3efa391
-# ╠═39bb4bb9-8445-4ee1-a3af-639d8fa96f65
-# ╠═3a9fee80-3ba2-4dc7-9c2a-c57cc11678e9
-# ╠═7fce47a1-16be-4dad-afb5-0fb04bd91355
-# ╟─9e23fdbf-79ae-47a1-a499-2a23927b0590
-# ╠═59eb4919-61cb-4a1e-919f-580a3eea2d67
-# ╠═bfddda5b-e3c1-4a0a-b191-17b22ae8fba2
-# ╠═96c6a648-f918-4b1c-b35c-3ad9dbd7d3c6
-# ╠═8d0ec0fc-888b-489b-976a-6d5c899d939e
-# ╠═72e0cc55-0e1d-4037-895f-cd81b9c42282
-# ╠═786e5aa7-35ce-49e2-a31d-a2d9978cdba6
-# ╠═43c7905c-0673-4e2d-9be0-d797c3e5f3e5
-# ╠═8077c5c1-1e53-465a-a83c-175e6aa112a7
-# ╠═8c6ba5e8-3814-4253-87fa-30c2fad02957
-# ╠═8cc98785-1dcb-408e-965f-27a475847a00
-# ╠═aed46019-4199-4a51-8b28-eab8904b4f4c
-# ╠═b3c83ae8-c7e1-487d-b5a7-b78ef989ea28
-# ╠═ff721c52-b23c-47d0-8b4b-ae31f1863329
 # ╟─1acdc61b-fb5f-449d-ba86-46525c881a39
 # ╠═0532010e-7832-44d4-a7ee-5a6f6ee9d7da
-# ╠═280ad72b-b4f9-4082-8795-3de522acfbf1
 # ╠═ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
 # ╠═a393eeca-c9a4-412f-ae86-35ee1aca4d51
 # ╠═d71f6eba-7d64-4212-91c3-707a664c6b0b

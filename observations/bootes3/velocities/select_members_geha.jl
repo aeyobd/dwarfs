@@ -82,7 +82,11 @@ rv_all = read_fits(joinpath(data_dir, rv_file))
 @assert :L_PM_SAT ∉ names(rv_all)
 
 # ╔═╡ 4dac920b-8252-48a7-86f5-b9f96de6aaa0
-rv_meas = RVUtils.xmatch_and_clean(rv_all, j24, obs_properties, require_match=false)
+rv_meas = let
+	df = RVUtils.xmatch_and_clean(rv_all, j24, obs_properties, require_match=false)
+	df[!, :xi], df[!, :eta] = 60 .* LilGuys.to_tangent(df.ra, df.dec, obs_properties["ra"], obs_properties["dec"])
+	df
+end
 
 # ╔═╡ c28071fe-6077-43ad-b930-604483d5eb28
 md"""
@@ -169,6 +173,16 @@ let
 
 end
 
+# ╔═╡ 598e674e-f1d1-4e06-95bb-0f4cffe4ff78
+sum(radii([memb_stars.xi memb_stars.eta]') .< 60)
+
+# ╔═╡ 75ff7001-d14b-4814-8cde-3bd834a5a49e
+let
+	xi, eta = LilGuys.to_tangent(memb_stars.ra, memb_stars.dec, 209.3, 26.8) .* 60
+	R_ell = LilGuys.calc_R_ell(xi, eta, 0.33, 279.0)
+	R_ell
+end
+
 # ╔═╡ Cell order:
 # ╟─3114c0ba-3332-4da2-aba5-f6e9108e6215
 # ╟─3ed8c28f-5908-42dc-a56b-24a9b2685a07
@@ -205,3 +219,5 @@ end
 # ╠═fb52ac04-1483-471f-a164-9bbe15464378
 # ╠═6493a62d-cdb7-4831-9da6-25035e3cb7c5
 # ╠═9e23b685-8a84-421e-8539-e5c1ae87d53b
+# ╠═598e674e-f1d1-4e06-95bb-0f4cffe4ff78
+# ╠═75ff7001-d14b-4814-8cde-3bd834a5a49e

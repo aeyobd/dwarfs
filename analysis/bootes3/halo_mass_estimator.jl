@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -487,6 +487,9 @@ end
 # ╔═╡ 4e1290b5-171e-4715-a87b-28a2cfcb4325
 samples.Ms * 1e4
 
+# ╔═╡ 11a9799f-85d6-4c04-a0f3-27b243712736
+10^1.34
+
 # ╔═╡ 7d1ba57d-4332-4d6e-872b-42925c14ecfb
 c_mean = [h.c for h in halo_mean]
 
@@ -914,6 +917,7 @@ LilGuys.G * LilGuys.M200(halo_in) / LilGuys.R200(halo_in)^2
 # ╠═7fd48721-749d-4e99-91cc-5ffde830487d
 # ╠═4e1290b5-171e-4715-a87b-28a2cfcb4325
 # ╠═9fe20cff-b7a0-4e1d-ac7c-f9a94bba9a0a
+# ╠═11a9799f-85d6-4c04-a0f3-27b243712736
 # ╠═7d1ba57d-4332-4d6e-872b-42925c14ecfb
 # ╠═d2616939-fba8-42ff-921a-8b0bcaf7acb9
 # ╠═4c0c93ad-5471-45d4-b44a-2d15a782491b

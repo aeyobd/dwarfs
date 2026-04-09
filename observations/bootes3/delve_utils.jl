@@ -11,30 +11,55 @@ struct DensityMap
     density::Matrix{Float64}
 end
 
-ISO_HEADER = "Zini     MH   logAge Mini        int_IMF         Mass   logL    logTe  logg  label   McoreTP C_O  period0  period1  period2  period3  period4  pmode  Mloss  tau1m   X   Y   Xc  Xn  Xo  Cexcess  Z 	 mbolmag  umag    gmag    rmag    imag    zmag    Ymag"
-
-
 """
-    get_isochrone(M_H::Real, age::Real=12)
-
-Loads and filters a Padova isochrone of a given metallicity and age.
-Returns a DataFrame containing stellar evolution quantities and magnitudes.
+	Retrieves the header of a Padova (PARSEC) formatted isochrone file.
+Assumes that the header is the last row in the block of rows begining with 
+`#` at the start of the file, with the columns seperated by spaces.
 """
-function get_isochrone(M_H::Real, age::Real=12; stage_max=4)
-    iso_columns = string.(split(ISO_HEADER, r"\s+"))
+function read_padova_header(filename)
+	header = ""
+	header_max = 30
+	open(filename, "r") do f
+		lastline = readline(f)
+		for i in 1:header_max
+			line = readline(f)
+			if (line[1] != '#') && (lastline[1] == '#')
+				header = lastline[3:end] # ignore comment character
+				break
+			end
+			lastline = line
+		end
+	end
+	header_vec = string.(split(header, r"\s+"))
+end
 
-    all_isochrones = CSV.read(joinpath(ENV["DWARFS_ROOT"], "observations/padova/isochrone.decam.$(age)Gyrs.dat"),DataFrame,
-					  comment="#", ignorerepeated=true, delim = ' ', header=iso_columns)
+function read_mist_file(filename)
+	header = read_padova_header(filename)
 
+	df = CSV.read(filename, DataFrame,
+					comment="#", ignorerepeated=true, delim = ' ', header=header)
+	return df
+end
+
+
+function get_isochrone(isochrones, age::Real, M_H::Real; stage_max::Integer=5)
+
+	if age ∉ keys(isochrones)
+		throw(KeyError("$age not in available ages"))
+	end
 	
-	M_Hs = unique(all_isochrones.MH)
+	isos = isochrones[age]
+	if (M_H < minimum(isos.MH)) || (M_H > maximum(isos.MH))
+		throw(DomainError(M_H, "metallicity out of isochrone range: $(extrema(isos.MH))"))
+	end
+
+	M_Hs = unique(isos.MH)
 	M_H_adopted = M_Hs[argmin(abs.(M_H .- M_Hs))]
-	@info "using isochrone with metallicity $M_H_adopted, age $age"
 
-	filt = isapprox.(all_isochrones.MH, M_H_adopted)
-	filt .&= all_isochrones.label .<= stage_max # only keep through HB
+	filt = isapprox.(isos.MH, M_H_adopted)
+	filt .&= isos.label .<= stage_max # only keep through HB
 
-	all_isochrones[filt, :]
+	return isos[filt, :]
 end
 
 
@@ -241,3 +266,20 @@ delve_g_err(gmag) = 10 ^ err_model(gmag, [-2.12775, -0.296242, 0.0147927])
 delve_gr_err(gmag) = 10 ^ err_model(gmag, [-1.94422, -0.295023, 0.0146445])
 gaia_G_err(gmag) =  10 ^ err_model(gmag, [3.1882, -0.927664, 0.0324749])
 gaia_bp_rp_err(gmag) =  10 ^ err_model(gmag, [-3.5957, -0.137531, 0.0132695])
+
+
+
+function create_kroupa_sampler(mass_max; mass_min=0.08)
+	masses = LinRange(mass_min, mass_max, 10_000)
+	imf =  kroupa_imf.(masses)
+	N_cdf = cumsum(imf)
+	x = N_cdf .- N_cdf[1]
+	x ./= x[end]
+	mass_func =  LilGuys.lerp(x, masses)
+
+	function sampler()
+		u = rand()
+		return mass_func(u)
+	end
+
+end

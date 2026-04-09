@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -38,7 +38,7 @@ using DataFrames, CSV
 if !@isdefined(PlutoRunner)
 	galaxy = ARGS[1]
 else
-	@bind galaxy confirm(TextField(default="leo2"))
+	@bind galaxy confirm(TextField(default="example"))
 end
 
 # ╔═╡ af1d827c-bb7e-4875-936e-cfec7578f7db
@@ -109,7 +109,7 @@ bins = struct_params.bins
 	Σ = 10 .^ log_Σ
 
 	f = Σ / (1 + Σ)
-	LL = sum(@. log10(f*Lsat + (1-f) * Lbkd) )
+	LL = sum(@. log(f*Lsat + (1-f) * Lbkd) )
 	
 	Turing.@addlogprob!(LL)
 end
@@ -225,12 +225,12 @@ df_out = let
 	df_out = DataFrame()
 	df_out[!, "iteration"] = DataFrame(all_chains[1])[!, "iteration"]
 	df_out[!, "chain"] = DataFrame(all_chains[1])[!, "chain"]
-	df_out[!, "lp"] .= 0
+	df_out[!, "logjoint"] .= 0
 
 	for i in eachindex(all_chains)
 		df = DataFrame(all_chains[i])
 		df_out[!, "params[$i]"] = df[!, "log_Σ"]
-		df_out[!, "lp"] .+= df.lp
+		df_out[!, "logjoint"] .+= df.logjoint
 		@assert df_out.chain == df.chain
 		@assert df_out.iteration == df.iteration
 	end
