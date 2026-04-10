@@ -51,7 +51,7 @@ While the distance and proper motions of Bootes III appear to reasonably well-ch
 | $\alpha$                        | $209.47\pm0.11$                           | @struct_params |
 | $\delta$                        | $26.68\pm0.06$                            | @struct_params |
 | distance modulus                | $18.34 \pm 0.19$                          | vivas+2020     |
-| distance                        | $46.5 \pm 4$ kpc                          | vivas+2020     |
+| distance                        | $46.56 \pm 4$ kpc                         | vivas+2020     |
 | $\mu_\alpha \cos \delta$        | $-1.16 \pm 0.02 \pm 0.017$ mas yr$^{-1}$  | battaglia+2022 |
 | $\mu_\delta$                    | $-0.88  \pm 0.01 \pm 0.017$ mas yr$^{-1}$ | battaglia+2022 |
 | RV                              | $188 \pm 2.2$ km/s                        | @kin_params    |
@@ -132,7 +132,9 @@ While the likelihoods above can provide a membership list of stars, using this t
 
 
 
-![image-20260401172540713](/Users/daniel/Library/Application Support/typora-user-images/image-20260401172540713.png)
+![image-20260408203004227](/Users/daniel/Library/Application Support/typora-user-images/image-20260408203004227.png)
+
+Figure: The density profiles of Boo III using a sample of *Gaia* stars as selected based on their combined CMD+PM likelihood. 
 
 ## Luminosity
 
@@ -140,26 +142,17 @@ The only existing estimate of Boo III's luminosity is from @corenneti+2018 which
 
 With a characterization of the number of stars in Gaia data with $G < 21$, we can determine an approximate luminosity of Boo III as follows (see also @munoz+2018).
 
-To sample stars from the IMF, we use the following procedure: 
+To sample stars from the IMF, we use the following procedure:
 
-- Sample observed properties of Boo III
-  - number observed stars ~ MCMC samples from above
-  - [Fe/H] ~ N(-2, 0.2)
-  - age ~ U(8, 12)
-  - distance ~ N(46.5, 0.5)
-- Draw stars from Kroupa IMF until we reach the target of "observed" stars (i.e. magnitudes above the threshold)
-  - including quadratic fits to log observed magnitude uncertainties, normal distributions...
-- sum up masses, luminosities, and total numbers of stars
-
-### Does the luminosity depend on the magnitude cutoff?
-
-- Run simple MCMC models with Plummer profile to derive Nmemb
-- try different cuts
-  - absolute cuts in LLR
-  - Truncating magnitude cuts (Naïve)
-  - Regeneration of likelihood maps under different magnitude ranges. 
+1. Draw a new number of observed stars and distance modulus. In practice, we use the MCMC samples from the Plummer fit for the observed number of stars.
+2. Draw stars from Kroupa IMF until we reach the target of "observed" stars (i.e. magnitudes above the threshold), using an isochrone (PADOVA Fe/H=-2.19, age=12Gyr) to convert masses into magnitudes.
+3. Sum the total mass of all drawn stars and their luminosity. 
 
 
+
+Our results for the magnitude uncertainties are in @tab:luminosity. We find magnitudes consistent with uncertainties (with the exp and Sérsic profiles favouring more stars). 
+
+*Gaia* may not be complete to magnitude $G=21$. To verify our results, we also compute the absolute magnitude for stars in gaia selected to have a likelihood ratio (CMD+PM) of at least 0.01 and $G < 20$. While the number of observed stars is fewer than before, the absolute magnitude is consistent with the $G=21$ sample. We conclude that incompleteness towards fainter magnitudes (which should make the galaxy appear fainter) appears to be slight. 
 
 
 
