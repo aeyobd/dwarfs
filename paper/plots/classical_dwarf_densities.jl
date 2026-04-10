@@ -132,6 +132,12 @@ plummer = let
 	prof = LilGuys.Plummer(M = 1/Σ_0)
 end
 
+# ╔═╡ 76d51ea5-8b21-4a4f-b2e5-c0adcc673df3
+mlw = 2/3 * theme(:linewidth)[]
+
+# ╔═╡ 17113383-254e-44e2-b7c3-2900dec2cd7d
+smallfontsize =  0.8*theme(:fontsize)[]
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 let
 	fig = Figure(size=(3.5, 3) .* 72)
@@ -155,14 +161,6 @@ let
 
 	)
 
-    x = LinRange(-1.4, 1, 1000)
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y, color=:black, label="2D exponential")
-    
-
-    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
-    lines!(x, y, color=:black, label="Plummer", linestyle=:dash)
-
 
 	for (galaxy, prof) in profiles
 		lines!(prof.log_R, prof.log_Sigma, color=COLORS[1], alpha=0.5, label="classical dwarfs",  linestyle=:solid)
@@ -172,6 +170,16 @@ let
 	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma, color=COLORS[2], label="Sculptor", marker=:rect, linestyle=:solid )
 	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma, color=COLORS[3], label="Ursa Minor", marker=:utriangle, linestyle=:solid)
 
+
+    x = LinRange(-1.4, 1, 1000)
+    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
+    lines!(x, y, color=:black, label="2D exponential", linewidth=mlw)
+    
+
+    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
+    lines!(x, y, color=:black, label="Plummer", linestyle=:dash, linewidth=mlw)
+
+	
 	axislegend(position=:lb, merge=true, unique=true, patchsize=(24, 6))
 
 
@@ -184,14 +192,10 @@ let
 		limits=(-1.5, 1, -1.2, 2.2)
 	)
 
+	text!(0, 1, space=:relative, align=(:left, :top), text="residual against 2D exponential", fontsize=smallfontsize, offset=(smallfontsize, -smallfontsize/2))
+
 	f(x) = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
 	
-    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Exp2D", linestyle=:solid)
-    
-
-    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
-    lines!(x, y .- f(x), color=:black, label="Plummer", linestyle=:dash)
 
 	
 	for (galaxy, prof) in profiles
@@ -200,6 +204,13 @@ let
 
 	scatterlines!(prof_scl.log_R, prof_scl.log_Sigma .- f(prof_scl.log_R), color=COLORS[2], marker=:rect,  linestyle=:solid)
 	scatterlines!(prof_umi.log_R, prof_umi.log_Sigma .- f(prof_umi.log_R), color=COLORS[3], marker=:utriangle, linestyle=:solid)
+
+    y = log10.(LilGuys.surface_density.(LilGuys.Sersic(n=1), exp10.(x)))
+    lines!(x, y .- f(x), color=:black, label="Exp2D", linestyle=:solid, linewidth=mlw)
+    
+
+    y = log10.(LilGuys.surface_density.(plummer, exp10.(x)))
+    lines!(x, y .- f(x), color=:black, label="Plummer", linestyle=:dash, linewidth=mlw)
 
 
 	linkxaxes!(ax, ax_res)
@@ -229,4 +240,6 @@ end
 # ╠═7af0a20a-fe29-4f0f-ac46-e2bc4655082a
 # ╠═07e1390f-2789-4e20-80d6-b2cb4631be5c
 # ╠═dea5ec9f-7f31-42eb-b8f7-6ca5d22e9f0b
+# ╠═76d51ea5-8b21-4a4f-b2e5-c0adcc673df3
+# ╠═17113383-254e-44e2-b7c3-2900dec2cd7d
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -114,9 +114,6 @@ end
 md"""
 # Plots
 """
-
-# ╔═╡ 469b454a-989c-4679-afd6-42ed41683331
-
 
 # ╔═╡ ca1d0e3b-5b47-44a4-9ee0-f7583615908c
 import StatsBase: median, mean, sem
@@ -619,8 +616,7 @@ LilGuys.mean(metals_scl.fe_h[metals_scl.R_ell .< r_trans_scl], 1 ./ metals_scl.f
 # ╠═1a95a435-acdc-45d9-8eb4-5d8edaaa98cf
 # ╠═8366afbb-c528-40cc-8035-18927f77ca3b
 # ╠═689bb4f2-c1f7-4ec8-a11f-4b4078160bc5
-# ╠═9b6781e0-7490-45dd-b807-4f49309eb8ca
-# ╠═469b454a-989c-4679-afd6-42ed41683331
+# ╟─9b6781e0-7490-45dd-b807-4f49309eb8ca
 # ╠═ca1d0e3b-5b47-44a4-9ee0-f7583615908c
 # ╠═fc5aaacc-72b1-41b1-9816-bd0ac47fff55
 # ╠═8bbf2aa6-0804-4f18-b5e6-4b919635663e

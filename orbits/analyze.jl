@@ -242,9 +242,6 @@ peris_special
 # ╔═╡ 66b320d8-cefb-470b-9ea1-a10080f0c2b8
 	props_special = hcat(OrbitUtils.orbital_properties(pot, reverse.(orbits); agama_units=agama_units), LilGuys.to_frame(icrs0), DataFrame("label" => orbit_labels))
 
-# ╔═╡ 44601adf-f70b-4770-b701-ce75346231e8
-
-
 # ╔═╡ 8a73ae22-fecf-4c07-a333-3e5159c8b570
 @assert isapprox(props_special.pericentre, peris_special)
 
@@ -354,13 +351,10 @@ PlotUtils.plot_correlations(df_props, props_special, Nmax=Nmax)
 PlotUtils.plot_correlations(df_props, props_special, :apocentre, Nmax=Nmax)
 
 # ╔═╡ e921f174-c61d-45e8-bb5a-e1cf0df3275c
-props_special[!, :apocentre]
+props_special[!, :period]
 
 # ╔═╡ 120bcc8b-76f7-4ae5-8880-dd480a6e802e
 PlotUtils.plot_correlations(df_props, props_special, :period, Nmax=Nmax)
-
-# ╔═╡ 0dc7846e-497d-4704-a095-a2be6ef45db2
-
 
 # ╔═╡ 69e77193-29cc-4304-98a1-44828eaedf9f
 md"""
@@ -730,7 +724,6 @@ end
 # ╠═4d60e861-f315-4c62-90f0-73dda8f6c4d4
 # ╠═bbf3f229-fc3c-46ae-af28-0f8bd81e7d32
 # ╠═66b320d8-cefb-470b-9ea1-a10080f0c2b8
-# ╠═44601adf-f70b-4770-b701-ce75346231e8
 # ╠═8a73ae22-fecf-4c07-a333-3e5159c8b570
 # ╠═24290bc9-4596-41af-becc-bf1487f763a7
 # ╠═39d35e5a-abc2-4c84-9308-b84c6c1ff5a5
@@ -749,7 +742,6 @@ end
 # ╠═1944f355-7e9b-4c56-84b8-56479c4aefb9
 # ╠═e921f174-c61d-45e8-bb5a-e1cf0df3275c
 # ╠═120bcc8b-76f7-4ae5-8880-dd480a6e802e
-# ╠═0dc7846e-497d-4704-a095-a2be6ef45db2
 # ╟─69e77193-29cc-4304-98a1-44828eaedf9f
 # ╟─89b81ed0-82a1-4a81-a7fd-b6be0644a79d
 # ╠═ede3836c-740d-4ac7-bbc7-3165981a1878

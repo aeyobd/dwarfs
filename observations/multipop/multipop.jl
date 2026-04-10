@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.20
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
@@ -25,14 +25,84 @@ using PairPlots
 # ╔═╡ e070940a-d1e5-45f6-8737-a61431f29d58
 using CSV, DataFrames
 
+# ╔═╡ fc38836b-9f74-4ba4-81b6-5511a8bb7534
+using KernelDensity
+
 # ╔═╡ 7daee39d-f973-4a0b-aaf7-5e308e79b45c
 using Turing
 
 # ╔═╡ a662b1b4-5314-40d2-990f-28db38d21bf3
-galaxyname = "ursa_minor"
+galaxyname = "sculptor"
 
 # ╔═╡ 902876ac-2f5c-4fe3-9233-9ddace247d41
 import TOML
+
+# ╔═╡ 25e3c178-8771-427b-97c7-d822d594ae6c
+import Random
+
+# ╔═╡ 436f47c7-c161-4e85-ba87-462377b1705c
+import Interpolations
+
+# ╔═╡ f5392cbf-93a9-404b-bd4d-a26b080de5c6
+md"""
+# KDE distributions
+"""
+
+# ╔═╡ 0c5b69c6-9656-4e2d-ac60-5562dd2fb727
+begin 
+	struct InterpKDEDistribution{T<:Real,K<:KernelDensity.InterpKDE} <: ContinuousUnivariateDistribution
+	    kde::K
+	end
+	function InterpKDEDistribution(k::KernelDensity.InterpKDE)
+	    T = eltype(k.kde.x)
+	    return InterpKDEDistribution{T,typeof(k)}(k)
+	end
+	function InterpKDEDistribution(k::KernelDensity.UnivariateKDE)
+	    return InterpKDEDistribution(KernelDensity.InterpKDE(k))
+	end
+	
+	function Distributions.minimum(d::InterpKDEDistribution)
+	    return first(only(Interpolations.bounds(d.kde.itp.itp)))
+	end
+	
+	function Distributions.maximum(d::InterpKDEDistribution)
+	    return last(only(Interpolations.bounds(d.kde.itp.itp)))
+	end
+	
+	function Distributions.pdf(d::InterpKDEDistribution, x::Real)
+	    return pdf(d.kde, x)
+	end
+	
+	function Distributions.logpdf(d::InterpKDEDistribution, x::Real)
+	    return log(pdf(d, x))
+	end
+	
+	# need to at least have a very rough implementation of this
+	# much better/more efficient implementation is possible,
+	# but this will only be called once when sampling starts 
+	function Random.rand(rng::Random.AbstractRNG, d::InterpKDEDistribution)
+	    (; kde) = d
+	    knots = Interpolations.knots(kde.itp.itp).knots
+	    cdf = cumsum(pdf.(Ref(kde), knots) .* LilGuys.gradient(knots))
+	    u = rand(rng)
+		if u >= maximum(cdf)
+			return knots[end]
+		elseif u <= minimum(cdf)
+			return knots[1]
+		end
+	    return knots[findlast(u .> cdf)]
+	end
+
+end
+
+# ╔═╡ d32e12a3-1bd6-42d7-8614-68f5ad4f69c9
+function get_kde(samples, param)
+	x = samples[!, param]
+	k = kde(x, boundary=extrema(x))
+	@info InterpKDE(k).kde.x
+	@info Interpolations.bounds(InterpKDE(k).itp.itp)
+	return InterpKDEDistribution(k)
+end
 
 # ╔═╡ b92892ce-3bf8-4e60-95da-9776e59f75cb
 md"""
@@ -51,29 +121,8 @@ starsfile = Dict(
 # ╔═╡ 06ec245d-129c-4187-aec2-875da4faa2ca
 stars = read_fits(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/velocities/processed/" * starsfile)
 
-# ╔═╡ ad2bed21-f45b-48fa-9dc9-e9bcff981d56
-exp_fit = CSV.read(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/mcmc/summary.mcmc_2exp.csv", DataFrame)
-
-# ╔═╡ 70632fc8-71d9-4dc8-acde-381cb5fd9dde
-function get_param(exp_fit, param)
-	idx = only(findall(exp_fit.parameters .== [param]))
-	return exp_fit.median[idx]
-end
-
-# ╔═╡ 4cbf1e33-7f7a-4d26-ae39-83cd28c52ff5
-R_s_a = get_param(exp_fit, "R_s")
-
-# ╔═╡ a3a48158-2930-46d2-815f-3855e62a709a
-R_s_b = get_param(exp_fit, "R_s_outer")
-
-# ╔═╡ af6f3c41-4c47-441a-94fc-63dcec90cc35
-f_outer = get_param(exp_fit, "f_outer")
-
-# ╔═╡ 080c0ea5-4ab5-4499-9909-a4338f9fdacb
-minimum(stars.PSAT_RV)
-
-# ╔═╡ 8483b37a-4751-427d-9e66-4ff2fd6ccfdc
-hist(stars.vz)
+# ╔═╡ c0b8d74a-fd7b-467e-b891-c5cb28f6ed37
+exp_samples = CSV.read(ENV["DWARFS_ROOT"] * "/observations/$galaxyname/mcmc/samples.mcmc_2exp.csv", DataFrame)
 
 # ╔═╡ ec5a8eb5-3c3f-4a81-b3b3-9f4aca18bd69
 function combine_fe_h(stars)
@@ -107,120 +156,62 @@ end
 # ╔═╡ ce4a09ec-8a88-48a0-bde2-8ceec99c7431
 fe_h, fe_h_err, xi_fe, eta_fe = combine_fe_h(stars)
 
-# ╔═╡ 34116c3f-d06a-4bbc-8c4d-148e6701f611
-R_ell_a = LilGuys.calc_R_ell(xi_fe, eta_fe, get_param(exp_fit, "ellipticity"), get_param(exp_fit, "position_angle"))
-
-# ╔═╡ 66a1cf59-627b-454b-b3b3-1cf6afe20cf7
-R_ell_b = LilGuys.calc_R_ell(xi_fe, eta_fe, get_param(exp_fit, "ellipticity_outer"), get_param(exp_fit, "position_angle_outer"))
-
-# ╔═╡ 65a50351-ae87-4675-91ff-ed23c0261c9b
-hist(collect(skipmissing(fe_h)))
-
-# ╔═╡ cf87677d-6ba1-4a0b-b51c-ff7dc3cccef5
-scatter(stars.xi, stars.eta)
-
-# ╔═╡ 25154575-f5ee-42b5-a35a-314770c158e7
-hist(stars.R_ell)
-
-# ╔═╡ 3ca15c01-f7f3-4779-b333-99b0c40529fa
-scatter(log10.(R_ell_a), log10.(R_ell_b ./ R_ell_a))
-
 # ╔═╡ fd5a1fd7-49a9-4cba-94d7-610a4333d1a4
 md"""
 # Model fit
 """
 
-# ╔═╡ 8382e25e-1f2f-4365-89fa-da3f58a8d09c
-halo = NFW(r_circ_max = 3.2, v_circ_max=31/V2KMS)
-
-# ╔═╡ 02bf4164-da27-49f2-a659-c5a8d1b199a3
-function rho_sigma2_r(halo, prof, r)
-	integrand(r) = LilGuys.density(prof, r) * LilGuys.mass(halo, r) / r^2
-
-	return LilGuys.integrate(integrand, r, Inf)
-end
-
-# ╔═╡ 081b662e-a3e7-4656-a859-9aad29ab6af1
-function sigma_los(halo::LilGuys.SphericalProfile, prof, R)
-	integrand(r) = rho_sigma2_r(halo, prof, r) * r / sqrt(r^2 - R^2)
-
-	Sigma_sigma2 = 2*LilGuys.integrate(integrand, R* (1+1e-10), Inf)
-
-	return sqrt(Sigma_sigma2 / LilGuys.surface_density(prof, R))
-end
-
-# ╔═╡ 7383bfb2-6209-4ee9-8408-39042bfaa519
-function sigma_los(halo, prof)
-	R = logspace(0.01, 10, 1000)
-	y = sigma_los.(halo, prof, R)
-
-	return LilGuys.lerp(R, y)
-end
-
-# ╔═╡ cfdac012-a052-4f17-b5eb-fcf6969500ab
-@model function two_pop_vel_model(v, v_err, R_ell, fe_h, fe_h_err, R_ell_fe)
-	mu_fe_a ~ Normal(-2, 1)
-	sigma_fe_a ~ Uniform(0, 3)
-	mu_fe_b ~ Normal(-2, 1)
-	sigma_fe_b ~ Uniform(0, 3)
-
-
-	mu_vel_a ~ Normal(0, 100)
-	sigma_vel_a ~ Uniform(0, 30)
-	mu_vel_b ~ Normal(0, 100)
-	sigma_vel_b ~ Uniform(0, 30)
-
-
-	prof = LilGuys.Exp2D(R_s=R_s_a, M=1 - f_outer)
-	prof_outer = LilGuys.Exp2D(R_s=R_s_b, M=f_outer)
-
-	f_b = @. surface_density(prof_outer, R_ell) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell))
-
-	dist_vel_a = Normal(mu_vel_a, sigma_vel_a)
-	dist_vel_b = Normal(mu_vel_b, sigma_vel_b)
-	dist_fe_a = Normal(mu_fe_a, sigma_fe_a)
-	dist_fe_b = Normal(mu_fe_b, sigma_fe_b)
-
-	for i in eachindex(v)
-		v[i] ~ MixtureModel([dist_vel_a, dist_vel_b], [1-f_b[i], f_b[i]])
-	end
-
-
-	f_b_fe = @. surface_density(prof_outer, R_ell_fe) / (surface_density(prof, R_ell_fe) + surface_density(prof_outer, R_ell_fe))
-
-	for i in eachindex(fe_h)
-		fe_h[i] ~ MixtureModel([dist_fe_a, dist_fe_b], [1-f_b_fe[i], f_b_fe[i]])
-	end
-	
-end
-
 # ╔═╡ bb23fb9c-d8c5-4119-9223-f0aad311b9fc
-@model function two_pop_model( fe_h, fe_h_err, R_ell, R_ell_outer)
+@model function two_pop_model( fe_h, fe_h_err, xi_fe, eta_fe;
+							 prior_R_s = get_kde(exp_samples, "R_s"),
+							 prior_R_s_outer = get_kde(exp_samples, "R_s_outer"),
+							 prior_f_outer = get_kde(exp_samples, "f_outer"),
+							 prior_ell = get_kde(exp_samples, "ellipticity"),
+							 prior_ell_outer = get_kde(exp_samples, "ellipticity_outer"),
+							 prior_PA = get_kde(exp_samples, "position_angle"),
+							 prior_PA_outer = get_kde(exp_samples, "position_angle_outer"),
+							 )
 	mu_fe_a ~ Normal(-2, 1)
 	sigma_fe_a ~ Uniform(0, 3)
 	mu_fe_b ~ Normal(-2, 1)
 	sigma_fe_b ~ Uniform(0, 3)
 
 
-	prof = LilGuys.Exp2D(R_s=R_s_a, M=1 - f_outer)
-	prof_outer = LilGuys.Exp2D(R_s=R_s_b, M=f_outer)
+	f_outer ~ prior_f_outer
+	R_s ~ prior_R_s
+	R_s_outer ~ prior_R_s_outer
+	ell ~ prior_ell
+	ell_outer ~ prior_ell_outer
+	PA ~ prior_PA
+	PA_outer ~ prior_PA_outer
 
-	f_b = @. surface_density(prof_outer, R_ell_outer) / (surface_density(prof, R_ell) + surface_density(prof_outer, R_ell_outer))
+	R_ell = LilGuys.calc_R_ell.(xi_fe, eta_fe, ell, PA)
+	R_ell_outer = LilGuys.calc_R_ell.(xi_fe, eta_fe, ell_outer, PA_outer)
+	@assert all(R_ell .> 0) && all(R_ell_outer .> 0)
+
+	
+	prof = LilGuys.Exp2D(R_s=R_s, M=1 - f_outer)
+	prof_outer = LilGuys.Exp2D(R_s=R_s_outer, M=f_outer)
+
+	Σ_out = surface_density.(prof_outer, R_ell_outer)
+	Σ_in = surface_density.(prof, R_ell)
+	
+	f_in = @.  Σ_in/(Σ_in + Σ_out)
 
 	dist_fe_a = Normal(mu_fe_a, sigma_fe_a)
 	dist_fe_b = Normal(mu_fe_b, sigma_fe_b)
 
 	for i in eachindex(fe_h)
-		fe_h[i] ~ MixtureModel([dist_fe_a, dist_fe_b], [1-f_b[i], f_b[i]])
+		fe_h[i] ~ MixtureModel([dist_fe_a, dist_fe_b], [f_in[i], 1 - f_in[i]])
 	end
 	
 end
 
 # ╔═╡ 62182131-faae-4b8b-ac15-697895c1e3c2
-model = two_pop_model(fe_h, fe_h_err, R_ell_a, R_ell_b)
+model = two_pop_model(fe_h, fe_h_err, xi_fe, eta_fe)
 
 # ╔═╡ 6ce1df6c-a64c-424c-83d5-d6e2443d8a98
-samples = sample(model, NUTS(), MCMCThreads(), 1000, 16)
+samples = sample(model, NUTS(), MCMCThreads(), 1000, 2)
 
 # ╔═╡ c33a2b82-596c-423a-b4b0-abf2f3df941d
 pairplot(samples)
@@ -291,6 +282,22 @@ let
 	fig
 end
 
+# ╔═╡ 250674e8-f676-40a2-b66a-59d8e5392e1c
+let
+	var = :f_outer
+	fig = Figure()
+	dist = get_kde(exp_samples, var)
+
+	ax = Axis(fig[1,1])
+
+	lines!(dist)
+	stephist!(exp_samples[!, var], bins=100, normalization=:pdf)
+
+	x = rand(dist, 10_000)
+	stephist!(x, bins=100, normalization=:pdf)
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╠═a662b1b4-5314-40d2-990f-28db38d21bf3
 # ╠═7d781874-b684-11f0-a926-e3f86a82519c
@@ -298,32 +305,21 @@ end
 # ╠═902876ac-2f5c-4fe3-9233-9ddace247d41
 # ╠═5fabb947-3f85-4b81-b92d-43f58ae55973
 # ╠═e070940a-d1e5-45f6-8737-a61431f29d58
+# ╠═fc38836b-9f74-4ba4-81b6-5511a8bb7534
+# ╠═25e3c178-8771-427b-97c7-d822d594ae6c
+# ╠═436f47c7-c161-4e85-ba87-462377b1705c
+# ╠═7daee39d-f973-4a0b-aaf7-5e308e79b45c
+# ╟─f5392cbf-93a9-404b-bd4d-a26b080de5c6
+# ╠═0c5b69c6-9656-4e2d-ac60-5562dd2fb727
+# ╠═d32e12a3-1bd6-42d7-8614-68f5ad4f69c9
 # ╟─b92892ce-3bf8-4e60-95da-9776e59f75cb
 # ╠═9c369fe4-d8c6-4890-95ec-fbc43eb80769
 # ╠═e49b4ca6-1376-4cc5-a43d-859b4db6482d
 # ╠═06ec245d-129c-4187-aec2-875da4faa2ca
-# ╠═ad2bed21-f45b-48fa-9dc9-e9bcff981d56
-# ╠═70632fc8-71d9-4dc8-acde-381cb5fd9dde
-# ╠═4cbf1e33-7f7a-4d26-ae39-83cd28c52ff5
-# ╠═a3a48158-2930-46d2-815f-3855e62a709a
-# ╠═af6f3c41-4c47-441a-94fc-63dcec90cc35
-# ╠═080c0ea5-4ab5-4499-9909-a4338f9fdacb
-# ╠═8483b37a-4751-427d-9e66-4ff2fd6ccfdc
+# ╠═c0b8d74a-fd7b-467e-b891-c5cb28f6ed37
 # ╠═ec5a8eb5-3c3f-4a81-b3b3-9f4aca18bd69
 # ╠═ce4a09ec-8a88-48a0-bde2-8ceec99c7431
-# ╠═34116c3f-d06a-4bbc-8c4d-148e6701f611
-# ╠═66a1cf59-627b-454b-b3b3-1cf6afe20cf7
-# ╠═65a50351-ae87-4675-91ff-ed23c0261c9b
-# ╠═cf87677d-6ba1-4a0b-b51c-ff7dc3cccef5
-# ╠═25154575-f5ee-42b5-a35a-314770c158e7
-# ╠═3ca15c01-f7f3-4779-b333-99b0c40529fa
 # ╟─fd5a1fd7-49a9-4cba-94d7-610a4333d1a4
-# ╠═7daee39d-f973-4a0b-aaf7-5e308e79b45c
-# ╠═8382e25e-1f2f-4365-89fa-da3f58a8d09c
-# ╠═02bf4164-da27-49f2-a659-c5a8d1b199a3
-# ╠═081b662e-a3e7-4656-a859-9aad29ab6af1
-# ╠═7383bfb2-6209-4ee9-8408-39042bfaa519
-# ╠═cfdac012-a052-4f17-b5eb-fcf6969500ab
 # ╠═bb23fb9c-d8c5-4119-9223-f0aad311b9fc
 # ╠═62182131-faae-4b8b-ac15-697895c1e3c2
 # ╠═6ce1df6c-a64c-424c-83d5-d6e2443d8a98
@@ -337,3 +333,4 @@ end
 # ╠═7c87c114-3e83-4382-8975-1eab0205329f
 # ╟─bd7dc274-a1aa-49e0-a517-160c63c9de63
 # ╠═965cbbd8-f79c-48a0-a168-1a383d9d31dd
+# ╠═250674e8-f676-40a2-b66a-59d8e5392e1c
