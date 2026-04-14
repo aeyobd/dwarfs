@@ -22,9 +22,6 @@ using OrderedCollections
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl"); scale_theme_element!(:linewidth, 0.5)
 
-# ╔═╡ eb4a5051-43b6-4afa-bf42-5a74125cf60a
-
-
 # ╔═╡ ed8867fb-ca90-4577-905d-0ad93ec37097
 import TOML
 
@@ -67,9 +64,12 @@ obs_props_boo3 = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", "bo
 # ╔═╡ b4bd8f82-ec5d-490b-8be2-08a70f311e24
 ⊕(x, y) = sqrt(x^2 + y^2)
 
+# ╔═╡ 1e43350b-ebae-42a5-ad9e-778da7087732
+dlog_Ms = 2
+
 # ╔═╡ f5794260-7b09-492b-a7e3-0f9559ce0d35
-function derived_properties(obs_props)
-	log_Ms = log10(obs_props["M_star"])
+function derived_properties(obs_props; dlog_Ms=0)
+	log_Ms = log10(obs_props["M_star"]) + dlog_Ms
 	log_Ms_err = obs_props["M_star_err"] / obs_props["M_star"] / log(10)
 
 	v_0 =  LilGuys.find_zero(x -> log10(LilGuys.M_s_from_vel_fattahi(x)) + 10 - log_Ms, [0.01, 0.3])
@@ -108,6 +108,9 @@ end
 
 # ╔═╡ 4f4dd26d-3b93-49fe-9d9a-472f504e365d
 der_props_boo3 = derived_properties(obs_props_boo3)
+
+# ╔═╡ cc422906-8ec9-43ec-9c34-3ccad2509e74
+der_props_boo3_100Ms = derived_properties(obs_props_boo3, dlog_Ms=2)
 
 # ╔═╡ e2a2e7b0-fe92-4abc-9b52-842e07138bcc
 10 ^(Measurement(der_props_boo3.log_v_0, der_props_boo3.log_v_0_err)) * V2KMS
@@ -153,15 +156,17 @@ end
 smallfontsize = @lift 0.8 * $(theme(:fontsize))
 
 # ╔═╡ e9ccfc08-12c7-43af-a372-7f8c04017462
-function plot_fattahi!(log_v_0, log_v_0_err; label="Fattahi+18")
+function plot_fattahi!(log_v_0, log_v_0_err; label="Fattahi+18", shade=false)
 	
 	v_0 = V2KMS * 10^log_v_0
 	v_l, v_h = V2KMS .* 10 .^ ((log_v_0 - log_v_0_err), (log_v_0 + log_v_0_err))
 	color = COLORS[3]
 
-	hspan!(v_l, v_h, color=(color, 0.1))
-	hlines!(v_0, color=(color, 0.5))
-	text!(10, v_0, text=label, color=color, fontsize=smallfontsize)
+	if shade
+		hspan!(v_l, v_h, xmax=0.2, color=(color, 0.1))
+	end
+	hlines!(v_0, color=(color, 0.5), xmax=0.2)
+	text!(0.1, v_0, text=label, color=color, fontsize=smallfontsize)
 end
 
 # ╔═╡ 4ff87ef7-2132-4be9-9b71-15510fe3345a
@@ -175,7 +180,7 @@ end
 function plot_sigma_v!(σv; R_h, x0=15, rf=1, vmax = solve_v_from_dispersion_simple, kwargs...)
 	color = COLORS[2]
 	
-	x = LinRange(1, 30, 100)
+	x = LinRange(0.1, 30, 300)
 	y = vmax.(x, σv, R_h) * V2KMS
 	lines!(x, y; color=color, kwargs...)
 
@@ -234,6 +239,9 @@ function rotation_factor(ax, log=false)
 	return correction_factor
 end
 
+# ╔═╡ 4bf130aa-7cc4-470b-bbe6-bdc86f831683
+LilGuys.mean_density(NFW(r_circ_max=1, v_circ_max=0.001), der_props_boo3.R_h*R2r)
+
 # ╔═╡ 7d36f094-70bc-4114-b920-3655f73dc75f
 function plot_halo_constraints(gs, der_props, halos)
 	ax = Axis(gs,
@@ -241,8 +249,9 @@ function plot_halo_constraints(gs, der_props, halos)
 		xlabel=L"$\,r_\textrm{max}$ / kpc",
 		xscale=log10,
 		yscale=log10,
-		limits=(1, 30, 12, 80),
-		xminorticks = [1:10; 10:10:30]
+		limits=(0.1, 30, 10, 80),
+		xminorticks = [0.1:0.1:1; 1:10; 10:10:30],
+			  xticks = [0.1, 1, 10],
 	)
 
 	rf = rotation_factor(ax, true)
@@ -250,39 +259,124 @@ function plot_halo_constraints(gs, der_props, halos)
 
 	plot_mass_concentration!(rf=rf)
 	R_h = der_props.R_h
-	plot_sigma_v!(12; x0=1.2, rf=rf, linestyle=:dot, R_h=R_h)
-	plot_sigma_v!(10; x0=1.45, rf=rf, linestyle=:dash, R_h=R_h)
-	plot_sigma_v!(8; x0 = 2, rf=rf, R_h=R_h)
+	plot_sigma_v!(7.7; x0 = 1, rf=rf, R_h=R_h)
+	plot_sigma_v!(7.7-1.5; x0 = 1, rf=rf, R_h=R_h)
+	plot_sigma_v!(7.7+2; x0 = 1, rf=rf, R_h=R_h)
 
 
-	plot_fattahi!(der_props.log_v_0, der_props.log_v_0_err, label="Fattahi+18")
+	plot_fattahi!(der_props.log_v_0, der_props.log_v_0_err)
 
 	
-	for (label, halo) in halos
-		y = LilGuys.v_circ_max(halo) * V2KMS
-		x = LilGuys.r_circ_max(halo) 
-		scatter!((x), (y), label=string(label))
-	end
+	# for (label, halo) in halos
+	# 	y = LilGuys.v_circ_max(halo) * V2KMS
+	# 	x = LilGuys.r_circ_max(halo) 
+	# 	scatter!((x), (y), label=string(label))
+	# end
 
 	
 
 	ax
 end
 
+# ╔═╡ 391d2ecc-424e-4e81-adc8-0d4b03ed9a40
+function plot_tidal_track!(v0, r0)
+	x, y = LilGuys.EN21_tidal_track(r0, v0/V2KMS, x_min=0.01)
+
+	lines!(x, y*V2KMS, color=COLORS[5], alpha=0.5)
+end
+
+# ╔═╡ 8f8eb577-5af9-4d08-ac50-77130a8fa880
+import Agama
+
+# ╔═╡ 5e1388e9-1674-4fbc-865c-d1eb9ee74445
+pot = Agama.Potential(file = joinpath(ENV["DWARFS_ROOT"], "agama/potentials/EP2020.ini"))
+
+# ╔═╡ 14ceb32c-19bb-44ec-b795-c807fad60525
+function plot_jacobi!(pericentre)
+	ρ_mean = Agama.enclosed_mass(pot, pericentre) / (4π/3 * pericentre^3)
+
+
+	r = logrange(0.1, 30, 100)
+
+	v = [LilGuys.find_zero(v -> LilGuys.mean_density(NFW(r_circ_max=rr, v_circ_max=v, c=100), der_props_boo3.R_h*R2r) - 3ρ_mean, [1e-2, 1]) for rr in r]
+
+	lines!(r, v*V2KMS, color=COLORS[1])
+	idx = argmin(abs.(r .- 3))
+	@info r[idx], v[idx] * V2KMS
+
+	text!(r[idx], v[idx]*V2KMS, text="peri = $pericentre", color=COLORS[1])
+	
+end
+
+# ╔═╡ 7ecee6bf-69b3-4570-aa70-8491b96a46b3
+Agama.enclosed_mass(pot, 14) / (4π/3 * 14^3)
+
+# ╔═╡ ec8c28f1-b6d6-4616-a6b3-302d8dae1d6d
+(9.7/V2KMS)^2/ (4π/3 * der_props_boo3.R_h^2)
+
+# ╔═╡ a12a2cfb-d94c-44ec-9a27-782e0120ac97
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], 
+			 # yscale=log10,
+			 # yticks=[1, 10, 100],
+			 xlabel = "pericentre / kpc",
+			 ylabel = L"Jacob $\sigma_\text{v,\ \star}$ (km/s)")
+
+	x = LinRange(0.5, 30, 1000)
+
+	ρ_mean = @. Agama.enclosed_mass(pot, x) / (4π/3 * x^3)
+	r_h = der_props_boo3.R_h * R2r
+
+	v = @. sqrt(3ρ_mean * 4π/3*r_h^2)
+	lines!(x, v*V2KMS / sqrt(3))
+	ylims!(6, 30)
+	fig
+end
+
+
+# ╔═╡ 8b287edc-bcbc-4ce2-b355-1d174bc9dc7a
+let
+	x = 20
+	ρ_mean = @. Agama.enclosed_mass(pot, x) / (4π/3 * x^3)
+	r_h = der_props_boo3.R_h * R2r
+
+	v = @. sqrt(3ρ_mean * 4π/3*r_h^2)
+	v * V2KMS / sqrt(3)
+end
+
+# ╔═╡ d800f480-3847-43fd-a458-aaaece1d9dcd
+LilGuys.Ludlow.solve_rmax(30/V2KMS, 0.0)
+
 # ╔═╡ a15dbc88-8dbf-48d4-8a72-1881151c8e26
 let
-	fig = Figure(size=(5, 3) .* 72)
+	fig = Figure(size=(4, 3) .* 72)
 
 	plot_halo_constraints(fig[1,1], der_props_boo3, halos_boo3)
 
 
-	axislegend()
+	for (v, δc) in [(30, 0), (30, 3*σ_ludlow), (25, 0.3), (30, 0.15)]
+		r = LilGuys.Ludlow.solve_rmax(v/V2KMS, δc)
+		plot_tidal_track!(v, r)
+	end
+
+	annotation!(0, 30, der_props_boo3.R_h, 10, text=L"R_h")
+	plot_fattahi!(der_props_boo3_100Ms.log_v_0, der_props_boo3_100Ms.log_v_0_err, label="100x M⋆", shade=true)
+	# plot_jacobi!(10)
+
+	# plot_jacobi!(18)
+	ylims!(10, 40)
+
+	plot_sigma_v!(15; x0 = 1, R_h=der_props_boo3.R_h)
+
 	@savefig "initial_halo_selection"
 	fig
 end
 
+# ╔═╡ b6c4be74-0368-4d9d-b6ae-198a26e2a84d
+annotation(0, 20, 0, der_props_boo3.R_h, text="R_h")
+
 # ╔═╡ Cell order:
-# ╠═eb4a5051-43b6-4afa-bf42-5a74125cf60a
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
 # ╠═ed8867fb-ca90-4577-905d-0ad93ec37097
 # ╠═f653a17a-8062-4898-9d0c-168a13dfbf6f
@@ -296,8 +390,10 @@ end
 # ╠═22629f89-3d2a-457d-b80a-7df412b9c791
 # ╠═f6178d1d-3687-4538-80e7-4f2efe93ab54
 # ╠═b4bd8f82-ec5d-490b-8be2-08a70f311e24
+# ╠═1e43350b-ebae-42a5-ad9e-778da7087732
 # ╠═f5794260-7b09-492b-a7e3-0f9559ce0d35
 # ╠═4f4dd26d-3b93-49fe-9d9a-472f504e365d
+# ╠═cc422906-8ec9-43ec-9c34-3ccad2509e74
 # ╠═e2a2e7b0-fe92-4abc-9b52-842e07138bcc
 # ╠═27425538-2104-46fe-8fc9-e6c28c0c6041
 # ╠═0ec48582-0a73-4b57-87bc-24c19f79209a
@@ -310,5 +406,16 @@ end
 # ╠═4ff87ef7-2132-4be9-9b71-15510fe3345a
 # ╠═12177747-6d65-42d4-be9f-c4a86d37e65e
 # ╠═2f97e7db-b2d5-44af-9c03-72e78f3edcde
+# ╠═14ceb32c-19bb-44ec-b795-c807fad60525
+# ╠═4bf130aa-7cc4-470b-bbe6-bdc86f831683
 # ╠═7d36f094-70bc-4114-b920-3655f73dc75f
+# ╠═391d2ecc-424e-4e81-adc8-0d4b03ed9a40
+# ╠═8f8eb577-5af9-4d08-ac50-77130a8fa880
+# ╠═5e1388e9-1674-4fbc-865c-d1eb9ee74445
+# ╠═7ecee6bf-69b3-4570-aa70-8491b96a46b3
+# ╠═ec8c28f1-b6d6-4616-a6b3-302d8dae1d6d
+# ╠═a12a2cfb-d94c-44ec-9a27-782e0120ac97
+# ╠═8b287edc-bcbc-4ce2-b355-1d174bc9dc7a
+# ╠═d800f480-3847-43fd-a458-aaaece1d9dcd
 # ╠═a15dbc88-8dbf-48d4-8a72-1881151c8e26
+# ╠═b6c4be74-0368-4d9d-b6ae-198a26e2a84d

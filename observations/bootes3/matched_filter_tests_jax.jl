@@ -45,173 +45,6 @@ md"""
 # utilitis
 """
 
-# ╔═╡ 7eab2c84-6335-475b-be25-e8c2fce07776
-let
-	m = LinRange(0.01, 4, 1000)
-	lines(log10.(m), log10.(Utils.kroupa_imf.(m)),
-		 axis=(; 
-			  xlabel="mass",
-			  ylabel="IMF",
-			 ))
-end
-
-# ╔═╡ b2befe17-f705-44f2-bd2d-bddc3874b115
-md"""
-# Gaia: Sculptor
-"""
-
-# ╔═╡ 7f3a5c3f-fe9d-4a10-ae7d-b70bbdfccfcc
-dm_scl = 19.67
-
-# ╔═╡ 9d3d4d9f-72ef-48a8-8e95-41059f67e758
-dm_err_scl = 0.14
-
-# ╔═╡ 0a8c2527-6812-4293-b60e-8d91bed66712
-iso_gaia = let
-	df = GaiaUtils.get_isochrone(-1.68, 12)
-	df[df.label .< 4, :]
-end
-
-# ╔═╡ c9b72c30-a6a8-45d0-8b89-86174370ccce
-stars_gaia = let
-	df = read_fits("data/j24_1c.fits")
-
-	df[df.F_BEST .== 1, :]
-end
-
-# ╔═╡ df5e5629-8d6b-4cb7-92bf-bf4467b6c2f2
-err_gaia = Utils.fit_color_err(stars_gaia.phot_g_mean_mag, stars_gaia.dBP)
-
-# ╔═╡ a79f6e5d-f8bb-4710-b7a4-4d33326ef15e
-md"""
-# Delve
-"""
-
-# ╔═╡ e8c0e80d-336e-4f23-b826-278d90d732d1
-import TOML
-
-# ╔═╡ 8369d4f8-922b-4a64-8e56-d309e1ca491b
-obs_props_scl = TOML.parsefile("../sculptor/observed_properties.toml")
-
-# ╔═╡ be0654ee-4c84-49e5-a459-ce1f36a1f359
-obs_props_scl["metallicity"]
-
-# ╔═╡ 6ed9796f-b522-4e62-82b5-62f0297c1e35
-obs_props = TOML.parsefile("observed_properties.toml")
-
-# ╔═╡ 6c55e84e-39a9-444b-a067-95a3e3826cbd
-distance_modulus = obs_props["distance_modulus"]
-
-# ╔═╡ feceea26-7bc7-4789-9f4b-4df4c5c4c27a
-iso_gaia
-
-# ╔═╡ ef15705f-2390-40d5-b6d7-50064ca333ec
-LilGuys.kpc2dm(LilGuys.Measurement(26.56, 0.25))
-
-# ╔═╡ 53a1dd27-bcd8-481b-abd7-160da5dc643d
-function resample_iso(iso; N=1000_000, cols=[:gmag, :rmag])
-	massrange = extrema(iso.Mini)
-
-	interps = Dict(col => LilGuys.lerp(iso.Mini, iso[!, col]) for col in cols)
-	masses = LinRange(massrange..., N)
-	df =  DataFrame(
-		:Mini => masses,
-	)
-
-	for col in cols
-		df[:, col] = interps[col].(masses)
-	end
-	df
-end
-
-# ╔═╡ 52792fb8-d9cf-4b2c-81f8-e3d3940c2250
-iso_gaia_resampled = resample_iso(iso_gaia, cols=[:Gmag, :G_BPftmag, :G_RPmag]);
-
-# ╔═╡ e3d35c58-3fad-4603-b52f-64d727c6b3ad
-(diff(iso_gaia_resampled.Mini))
-
-# ╔═╡ f63389bf-77fe-4495-9be5-b4f86f84dc57
-stars = let
-	df = read_fits("data/delve_dr2_good.fits")
-	df[!, :bp_rp] = df.gmag .- df.rmag
-	df[!, :G] = df.gmag
-
-	df[!, :xi], df[!, :eta] = 60 .* LilGuys.to_tangent(df.ra, df.dec, obs_props["ra"], obs_props["dec"])
-	df[!, :R] = @. sqrt(df.xi^2 + df.eta^2)
-	df
-end
-
-# ╔═╡ baccd40f-4128-4031-973b-1389845f2972
-stars_cen = stars[stars.R .< 30, :]
-
-# ╔═╡ 4e7dacb3-366e-46f4-84f4-fd6206961c4e
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-		
-	hexbin!(stars.xi, stars.eta, bins=300)
-
-	arc!((0,0), 30, 0, 2π)
-
-	arc!((0,0), 5*obs_props["R_h"], 0, 2π)
-	arc!((0,0), 7*obs_props["R_h"], 0, 2π)
-	fig
-end
-
-# ╔═╡ 90a3ba08-28eb-4529-bfb7-c6d01b3dd979
-R_h = obs_props["R_h"]
-
-# ╔═╡ 22934ab9-2750-4826-b916-a51ecee71f68
-stars_bkg = stars[stars.R .> 5R_h, :]
-
-# ╔═╡ 88a5e8a3-00dd-47b3-ba2f-ab3ffc483c25
-hexbin(stars_bkg.xi, stars_bkg.eta, bins=300)
-
-# ╔═╡ c94244bd-31f0-4838-8495-05fc8be234e8
-hist(stars.gmag)
-
-# ╔═╡ bb0600b7-cf8a-484b-9d4a-7dab2c963da6
-err_model(x, params) = @. (params[1] + x*params[2] + x^2 * params[3])
-
-# ╔═╡ 764be90a-e602-44d8-9956-d407ee2a0d4e
-gr_err = @. sqrt(stars.magerr_psf_g^2 + stars.magerr_psf_r^2)
-
-# ╔═╡ 39d177ca-6402-4216-b503-c12f83f91d56
-popt, covt = LilGuys.curve_fit(err_model, stars.gmag, log10.(gr_err), [0., 1., 1.])
-
-# ╔═╡ 48993623-e10e-45c7-97df-93e3e0200007
-color_err = Utils.fit_color_err(stars)
-
-# ╔═╡ 3b521894-468e-4cad-bb0f-394567adcbdf
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-
-	scatter!(stars.gmag, color_err.(stars.gmag))
-	fig
-end
-
-# ╔═╡ bf0e16fe-94cd-41fd-a107-4a814dd448f4
-color_err_gaia = Utils.fit_color_err(stars)
-
-# ╔═╡ 080d5e15-dd13-423a-815c-e22edfc73dcc
-iso = let 
-	iso = Utils.get_isochrone(-2.1, 12)
-	iso[iso.label .< 4, :]
-end
-
-# ╔═╡ 78b5414f-8961-4446-bfb7-9c0e852dd5b7
-iso_new = resample_iso(iso)
-
-# ╔═╡ eaa3ee0b-6b8f-4da5-a230-596613bbfa76
-lines(iso_new.gmag .- iso_new.rmag, iso_new.gmag .+ distance_modulus)
-
-# ╔═╡ 740afb89-f49d-4079-ac9e-f77a872bfc2c
-lines(midpoints(iso.Mini), log10.(diff(iso.Mini)))
-
-# ╔═╡ 71dfe223-539a-4e2b-84b1-04811b2533a0
-color_range = (-0.5, 2.5)
-
 # ╔═╡ 6dabd441-9f39-4e75-a651-7edba2da41e4
 """
     build_cmd_filter(
@@ -333,6 +166,43 @@ function build_cmd_filter(
     return density, collect(color_edges), collect(mag_edges)
 end
 
+# ╔═╡ 7eab2c84-6335-475b-be25-e8c2fce07776
+let
+	m = LinRange(0.01, 4, 1000)
+	lines(log10.(m), log10.(Utils.kroupa_imf.(m)),
+		 axis=(; 
+			  xlabel="mass",
+			  ylabel="IMF",
+			 ))
+end
+
+# ╔═╡ b2befe17-f705-44f2-bd2d-bddc3874b115
+md"""
+# Gaia: Sculptor
+"""
+
+# ╔═╡ 7f3a5c3f-fe9d-4a10-ae7d-b70bbdfccfcc
+dm_scl = 19.67
+
+# ╔═╡ 9d3d4d9f-72ef-48a8-8e95-41059f67e758
+dm_err_scl = 0.14
+
+# ╔═╡ 0a8c2527-6812-4293-b60e-8d91bed66712
+iso_gaia = let
+	df = GaiaUtils.get_isochrone(-1.68, 12)
+	df[df.label .< 4, :]
+end
+
+# ╔═╡ c9b72c30-a6a8-45d0-8b89-86174370ccce
+stars_gaia = let
+	df = read_fits("data/j24_1c.fits")
+
+	df[df.F_BEST .== 1, :]
+end
+
+# ╔═╡ df5e5629-8d6b-4cb7-92bf-bf4467b6c2f2
+err_gaia = Utils.fit_color_err(stars_gaia.phot_g_mean_mag, stars_gaia.dBP)
+
 # ╔═╡ 836339de-1267-4b14-aef9-56c37a62b0de
 cmd_gaia = build_cmd_filter(
 	iso_gaia.G_BPftmag .- iso_gaia.G_RPmag ,
@@ -342,18 +212,6 @@ cmd_gaia = build_cmd_filter(
 	x -> dm_err_scl,
 	mag_range=(16, 28),
 	color_range=(-0.5, 2.5)
-)
-
-# ╔═╡ 777fb53b-a9d7-4218-9026-401c370bb415
-cmd_gaia5 = build_cmd_filter(
-	iso_gaia_resampled.G_BPftmag .- iso_gaia_resampled.G_RPmag ,
-	iso_gaia_resampled.Gmag .+ dm_scl,
-	iso_gaia_resampled.Mini,
-	x -> @.(sqrt(err_gaia.(x)^2 + 0.1^2)),
-	x -> dm_err_scl,
-	mag_range=(16, 28),
-	color_range=(-0.5, 2.5),
-
 )
 
 # ╔═╡ a7d83f97-159b-404f-b2f2-b595a9fe9ee7
@@ -367,6 +225,66 @@ cmd_gaia2 = build_cmd_filter(
 	color_range=(-0.5, 2.5),
 	mass_weight=false,
 )
+
+# ╔═╡ a79f6e5d-f8bb-4710-b7a4-4d33326ef15e
+md"""
+# Delve
+"""
+
+# ╔═╡ e8c0e80d-336e-4f23-b826-278d90d732d1
+import TOML
+
+# ╔═╡ 8369d4f8-922b-4a64-8e56-d309e1ca491b
+obs_props_scl = TOML.parsefile("../sculptor/observed_properties.toml")
+
+# ╔═╡ be0654ee-4c84-49e5-a459-ce1f36a1f359
+obs_props_scl["metallicity"]
+
+# ╔═╡ 6ed9796f-b522-4e62-82b5-62f0297c1e35
+obs_props = TOML.parsefile("observed_properties.toml")
+
+# ╔═╡ 6c55e84e-39a9-444b-a067-95a3e3826cbd
+distance_modulus = obs_props["distance_modulus"]
+
+# ╔═╡ feceea26-7bc7-4789-9f4b-4df4c5c4c27a
+iso_gaia
+
+# ╔═╡ ef15705f-2390-40d5-b6d7-50064ca333ec
+LilGuys.kpc2dm(LilGuys.Measurement(26.56, 0.25))
+
+# ╔═╡ 53a1dd27-bcd8-481b-abd7-160da5dc643d
+function resample_iso(iso; N=1000_000, cols=[:gmag, :rmag])
+	massrange = extrema(iso.Mini)
+
+	interps = Dict(col => LilGuys.lerp(iso.Mini, iso[!, col]) for col in cols)
+	masses = LinRange(massrange..., N)
+	df =  DataFrame(
+		:Mini => masses,
+	)
+
+	for col in cols
+		df[:, col] = interps[col].(masses)
+	end
+	df
+end
+
+# ╔═╡ 52792fb8-d9cf-4b2c-81f8-e3d3940c2250
+iso_gaia_resampled = resample_iso(iso_gaia, cols=[:Gmag, :G_BPftmag, :G_RPmag]);
+
+# ╔═╡ 777fb53b-a9d7-4218-9026-401c370bb415
+cmd_gaia5 = build_cmd_filter(
+	iso_gaia_resampled.G_BPftmag .- iso_gaia_resampled.G_RPmag ,
+	iso_gaia_resampled.Gmag .+ dm_scl,
+	iso_gaia_resampled.Mini,
+	x -> @.(sqrt(err_gaia.(x)^2 + 0.1^2)),
+	x -> dm_err_scl,
+	mag_range=(16, 28),
+	color_range=(-0.5, 2.5),
+
+)
+
+# ╔═╡ e3d35c58-3fad-4603-b52f-64d727c6b3ad
+(diff(iso_gaia_resampled.Mini))
 
 # ╔═╡ 53fc7954-4d68-4c78-bf8c-75ad7577b0e6
 cmd_gaia3 = build_cmd_filter(
@@ -393,6 +311,88 @@ cmd_gaia4 = build_cmd_filter(
 	imf = x->1,
 
 )
+
+# ╔═╡ f63389bf-77fe-4495-9be5-b4f86f84dc57
+stars = let
+	df = read_fits("data/delve_dr2_good.fits")
+	df[!, :bp_rp] = df.gmag .- df.rmag
+	df[!, :G] = df.gmag
+
+	df[!, :xi], df[!, :eta] = 60 .* LilGuys.to_tangent(df.ra, df.dec, obs_props["ra"], obs_props["dec"])
+	df[!, :R] = @. sqrt(df.xi^2 + df.eta^2)
+	df
+end
+
+# ╔═╡ baccd40f-4128-4031-973b-1389845f2972
+stars_cen = stars[stars.R .< 30, :]
+
+# ╔═╡ 4e7dacb3-366e-46f4-84f4-fd6206961c4e
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+		
+	hexbin!(stars.xi, stars.eta, bins=300)
+
+	arc!((0,0), 30, 0, 2π)
+
+	arc!((0,0), 5*obs_props["R_h"], 0, 2π)
+	arc!((0,0), 7*obs_props["R_h"], 0, 2π)
+	fig
+end
+
+# ╔═╡ 90a3ba08-28eb-4529-bfb7-c6d01b3dd979
+R_h = obs_props["R_h"]
+
+# ╔═╡ 22934ab9-2750-4826-b916-a51ecee71f68
+stars_bkg = stars[stars.R .> 5R_h, :]
+
+# ╔═╡ 88a5e8a3-00dd-47b3-ba2f-ab3ffc483c25
+hexbin(stars_bkg.xi, stars_bkg.eta, bins=300)
+
+# ╔═╡ c94244bd-31f0-4838-8495-05fc8be234e8
+hist(stars.gmag)
+
+# ╔═╡ bb0600b7-cf8a-484b-9d4a-7dab2c963da6
+err_model(x, params) = @. (params[1] + x*params[2] + x^2 * params[3])
+
+# ╔═╡ 764be90a-e602-44d8-9956-d407ee2a0d4e
+gr_err = @. sqrt(stars.magerr_psf_g^2 + stars.magerr_psf_r^2)
+
+# ╔═╡ 39d177ca-6402-4216-b503-c12f83f91d56
+popt, covt = LilGuys.curve_fit(err_model, stars.gmag, log10.(gr_err), [0., 1., 1.])
+
+# ╔═╡ 48993623-e10e-45c7-97df-93e3e0200007
+color_err = Utils.fit_color_err(stars)
+
+# ╔═╡ 3b521894-468e-4cad-bb0f-394567adcbdf
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+	scatter!(stars.gmag, color_err.(stars.gmag))
+	fig
+end
+
+# ╔═╡ bf0e16fe-94cd-41fd-a107-4a814dd448f4
+color_err_gaia = Utils.fit_color_err(stars)
+
+# ╔═╡ 080d5e15-dd13-423a-815c-e22edfc73dcc
+iso = let 
+	iso = Utils.get_isochrone(-2.1, 12)
+	iso[iso.label .< 4, :]
+end
+
+# ╔═╡ 78b5414f-8961-4446-bfb7-9c0e852dd5b7
+iso_new = resample_iso(iso)
+
+# ╔═╡ eaa3ee0b-6b8f-4da5-a230-596613bbfa76
+lines(iso_new.gmag .- iso_new.rmag, iso_new.gmag .+ distance_modulus)
+
+# ╔═╡ 740afb89-f49d-4079-ac9e-f77a872bfc2c
+lines(midpoints(iso.Mini), log10.(diff(iso.Mini)))
+
+# ╔═╡ 71dfe223-539a-4e2b-84b1-04811b2533a0
+color_range = (-0.5, 2.5)
 
 # ╔═╡ 13896043-e020-409f-99fb-8d1254b994d2
 

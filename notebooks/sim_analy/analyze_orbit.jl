@@ -161,7 +161,7 @@ obs_today = let
 		end
 	end
 
-	rh = TOML.parsefile(obs_file)["r_h"]
+	rh = TOML.parsefile(obs_file)["R_h"]
 
 	obs_today["ra_err"] = rh / 60 
 	obs_today["dec_err"] = rh / 60
@@ -247,9 +247,6 @@ obs_c = LilGuys.to_gaia(snap_cen, add_centre=false)
 
 # ╔═╡ 71ef4c9b-1284-4451-bcdd-eff79d334539
 
-
-# ╔═╡ 5ec062c3-3815-4cf7-b45a-f97332d1b800
-snap_cen.masses
 
 # ╔═╡ a179323f-4878-4021-b8d4-69ca733658cb
 function calc_χ2s(obs_c, obs_today)
@@ -707,7 +704,7 @@ md"""
 """
 
 # ╔═╡ e4700e4d-213b-470a-b6f7-ca9e8825a6e7
-if length(idx_apos) > 0
+if length(idx_apos) > 1
 	r_apo = r[last(idx_apos[idx_apos .< idx_f])]
 else
 	r_apo = NaN
@@ -816,7 +813,6 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═64e558da-2928-4815-ad5a-7528516311f9
 # ╠═defc4184-2613-4480-9adf-fa135f168382
 # ╠═71ef4c9b-1284-4451-bcdd-eff79d334539
-# ╠═5ec062c3-3815-4cf7-b45a-f97332d1b800
 # ╠═a179323f-4878-4021-b8d4-69ca733658cb
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9

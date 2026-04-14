@@ -121,7 +121,7 @@ md"""
 	L_bg_space = 1 / (π*R_max^2)
 
 	f_sat ~ Uniform(0, 1)
-	LL = sum(@. log10.(
+	LL = sum(@. log.(
 		(1-f_sat) * data.L_bg * L_bg_space
 		+ f_sat * data.L_sat * L_sat_space
 	))

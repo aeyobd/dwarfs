@@ -29,7 +29,7 @@ pmdec_em = 0.02
 pmdec_ep = 0.02
 pmdec_ref = "battaglia+2022"
 
-radial_velocity = 187
+radial_velocity = 188
 radial_velocity_em = 2
 radial_velocity_ep = 2
 radial_velocity_ref = "this work"

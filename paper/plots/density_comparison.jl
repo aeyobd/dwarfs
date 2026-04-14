@@ -86,7 +86,7 @@ modelnames = TOML.parsefile("model_key.toml")
 
 # ╔═╡ fc0a118f-f8b7-425e-aacf-c8c7630d61a5
 function model_label!(text)
-	text!(1, 1, space=:relative, text=text, align=(:right, :top), offset=(-4, -4), fontsize=8)
+	text!(0, 1, space=:relative, text=text, align=(:left, :top), offset=(4, -4), fontsize=8)
 end
 
 # ╔═╡ 8c2d254f-7443-4ff1-ae5e-55b3bd0df766
@@ -119,7 +119,7 @@ end
 
 	axislegend(ax_scl_plummer, position=:lb)
 
-	Label(fig[:, 0], L"log $\Sigma$ / stars arcmin$^{-2}$", rotation=π/2)
+	Label(fig[:, 0], L"log $\Sigma_\star$ / arcmin$^{-2}$", rotation=π/2)
 
 
 
@@ -178,7 +178,7 @@ end
 
 	axislegend(ax_scl_plummer, position=:lb)
 
-	Label(fig[:, 0], L"log $\Sigma$ / stars arcmin$^{-2}$", rotation=π/2)
+	Label(fig[:, 0], L"log $\Sigma_\star$ / arcmin$^{-2}$", rotation=π/2)
 	rowgap!(fig.layout, 0)
 	colgap!(fig.layout, 0)
 
@@ -241,7 +241,7 @@ end
 	axislegend(ax_scl_plummer, position=:lb)
 
 
-	Label(fig[:, 0], L"log $\Sigma$ / stars arcmin$^{-2}$", rotation=π/2, fontsize=10)
+	Label(fig[:, 0], L"log $\Sigma_\star$ / arcmin$^{-2}$", rotation=π/2, fontsize=10)
 	Label(fig[0, :], "Sculptor: MW+LMC", font=:bold, fontsize=1.2 * theme(:fontsize)[])
 	rowgap!(fig.layout, 0)
 	colgap!(fig.layout, 0)
