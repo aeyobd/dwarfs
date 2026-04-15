@@ -191,39 +191,90 @@ Figure: the resulting velocity dispersion fits.
 
 ![image-20260402110023952](/Users/daniel/Library/Application Support/typora-user-images/image-20260402110023952.png)
 
-# Simulation methods
+# N-body methods
 
-### Haloes
+## Point particle orbits
 
-| halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma_{vx, \rm best}$ | $h  / {\rm kpc}$ |
-| ------- | -------------------- | ------------- | ----------------------- | ---------------- |
-| average | 22                   | 3.9           |                         |                  |
-| better  | 35                   | 3.0           | 15?                     |                  |
+- Astropy v4.0 Galactocentric frame
+- @EP2020 potential
+- Agama: 100,000 orbits by sampling observed properties from Table @tbl:obs_props
+- Selected orbits 
 
+We use Agama to calculate 100,000 orbits in the EP2020 potential. 
 
-
-
-
-Orbits
-
-| Orbit      | 1      | 2    | 3    |
-| ---------- | ------ | ---- | ---- |
-| ra         | 209.3  | ''   | ''   |
-| dec        | 26.8   | ''   | ''   |
-| dist       | 46.56  |      |      |
-| pm ra      | -1.160 |      |      |
-| pm_dec     | -0.88  |      |      |
-| rv         | 197.5  |      |      |
-| pericentre | 7.0    | 4.0  | 10.4 |
-| apocentre  | 104.1  |      |      |
-| $x_0$      | -10.33 |      |      |
-| $y_0$      | -43.98 |      |      |
-| $z_0$      | -93.79 |      |      |
-| $v_{x,0}$  | 7.03   |      |      |
-| $v_{y,0}$  | 29.78  |      |      |
-| $v_{z,0}$  | -13.41 |      |      |
+Orbits selected from quantile method, median properties of near $\pm2\sigma$ pericentre. 
 
 
+
+| Orbit      |          | small | large |
+| ---------- | -------- | ----- | ----- |
+| ra         | 209.47pm | ''    | ''    |
+| dec        | 26.68 pm | ''    | ''    |
+| dist       | 46.56 pm | 39.1  | 55.5  |
+| pm ra      | -1.16 pm | -1.15 | -1.17 |
+| pm_dec     | -0.88 pm | -0.88 | -0.88 |
+| rv         | 188 pm   | 188.1 | 187.9 |
+| pericentre | 7.0 pm   | 1.5   | 18    |
+| apocentre  | 104.1 pm | 74    | 149   |
+
+
+
+
+
+## Initial conditions
+
+Based on 
+
+| halo          | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
+| ------------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
+| average       | 22                   | 3.9           | 0              |                           |                  |                 |
+| heavy         | 30                   | 5.7           | 0              |                           |                  |                 |
+| moderate      | 30                   | 4.2           | +1             |                           |                  |                 |
+| compact       | 30                   | 3.0           | +2             | 15?                       |                  |                 |
+| heavier       | 35                   | 6.9           | 0              |                           |                  |                 |
+| heavy compact | 35                   | 3.7           | +2             |                           |                  |                 |
+
+
+
+## Simulations
+
+Same methods as my Scl & UMi paper. Action-angle corrections as described in Appendix X.
+
+
+
+low-res
+
+- v22_r3.9
+- v30_r2.2
+  - mean
+  - 1 smallperi
+  - largeperi_long
+
+# Results
+
+## Orbits
+
+- Distance dominates pericentre budget
+- A result of direct correlation to angular momentum
+  - $L \approx d \,\mathrm v_\text{tan} \approx d^2 \,\mu_\text{tan}$, which directly correlates with pericentre if $E$ is fixed
+- Large pericentric range, varies from 1 - 20 kpc
+- LMC only slightly changes orbital period and pericentre due to combined reflex motion and gravitational tug
+
+
+
+## N-body results (guess)
+
+- Small pericentric models disrupt quickly, can likely only survive *one* pericentre!
+- Moderate pericentres undergoe heavy tidal stripping and cannot survive long either
+- Requires large pericentre to be long-term satellite
+- regardless of orbit, heavy mass loss
+- total mass near the scale length of Boo III
+- Stream density faint but within reach of future observatories?
+- Consistent with LCDM galaxy formation
+
+
+
+# Discussion & Conclusions
 
 
 
