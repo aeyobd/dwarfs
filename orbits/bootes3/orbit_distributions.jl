@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -22,8 +22,10 @@ using OrderedCollections
 # ╔═╡ 0b36910e-a8ac-46c1-8a43-09c54aa3f885
 CairoMakie.activate!(type=:png)
 
-# ╔═╡ c6134a0e-12c9-40e6-8d88-0c6d019bf359
-
+# ╔═╡ eca3a9ec-1e40-434c-a7db-5826c76c8598
+md"""
+# Loading samples
+"""
 
 # ╔═╡ c46210a2-a330-463d-aecd-6f3df17c8785
 function load_samples(orbitname)
@@ -33,10 +35,16 @@ end
 # ╔═╡ 42d0dbbb-2cfe-4bfe-a9f3-e13451fc0774
 orbit_props = OrderedDict(
 	"EP2020" => load_samples("EP2020"),
+	"EP2020_frames" => load_samples("EP2020_frames"),
 	"M11" => load_samples("vasiliev24_M11"),
 	"L3M11" => load_samples("vasiliev24_L3M11"),
 	"L2M10" => load_samples("vasiliev24_L2M10"),
 )
+
+# ╔═╡ 6799142e-61e9-4a95-811f-1d5fadd68f2f
+md"""
+# Comparison plots
+"""
 
 # ╔═╡ e58bd8fe-1528-4f03-abe4-b06b4b1b73a8
 let
@@ -241,10 +249,11 @@ end
 # ╠═ef5f301c-23b7-11f1-befa-6f29a56e80d0
 # ╠═b24c494a-f632-49e6-ac64-58ff9002db5c
 # ╠═0b36910e-a8ac-46c1-8a43-09c54aa3f885
-# ╠═c6134a0e-12c9-40e6-8d88-0c6d019bf359
+# ╟─eca3a9ec-1e40-434c-a7db-5826c76c8598
 # ╠═c46210a2-a330-463d-aecd-6f3df17c8785
 # ╠═bef4b575-9fb6-4007-9be2-88af0e10ddb6
 # ╠═42d0dbbb-2cfe-4bfe-a9f3-e13451fc0774
+# ╠═6799142e-61e9-4a95-811f-1d5fadd68f2f
 # ╠═e58bd8fe-1528-4f03-abe4-b06b4b1b73a8
 # ╠═a1edc0f2-a30e-44ac-8ca1-0aaa0ba6668b
 # ╠═efc8c6c2-193d-469f-a397-61385277ea11

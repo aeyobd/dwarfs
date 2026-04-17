@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -75,8 +75,7 @@ end
 
 # ╔═╡ d3bd61d8-1e90-4787-b892-d90717f6be6e
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="bootes3"),
-	modelname = TextField(60, default="1e6_v35_r3.0/orbit_"),
+	modelname = TextField(60, default="bootes3/1e5_v30_r2.2/orbit_"),
 ))
 
 # ╔═╡ 9c4d9492-64bc-4212-a99d-67cc507e99e0
@@ -85,7 +84,7 @@ Inputs
 """
 
 # ╔═╡ 3db38875-fe22-4cfd-8c5a-47f4a0fa7f3a
-model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.galaxyname, inputs.modelname)
+model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", inputs.modelname)
 
 # ╔═╡ 1b87d662-da3c-4438-98eb-72dc93e32f6a
 FIGDIR = joinpath(model_dir, "figures")
@@ -137,17 +136,14 @@ snap_i = out[idx_i]
 # ╔═╡ 8d127679-401c-439d-913d-e2020df1c600
 snap_f = out[idx_f]
 
-# ╔═╡ 8dae2e01-652b-4afc-b040-dd2ba1c6eedb
-prof_i = profiles[1]
-
-# ╔═╡ b64c1caf-9ee0-4633-bd52-0258557b8847
-prof_f = profiles[end]
+# ╔═╡ 04a07b4f-b747-4738-9d0f-18eae2f85baf
+Rvir = LilGuys.R200(halo)
 
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
 
 # ╔═╡ 193e78d7-e902-4b6b-8eae-43bae7e5722b
-df_scalars.time
+
 
 # ╔═╡ f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
 let
@@ -169,8 +165,8 @@ function enclosed_mass(profile, r)
 	return f(r)
 end
 
-# ╔═╡ 04a07b4f-b747-4738-9d0f-18eae2f85baf
-Rvir = LilGuys.R200(halo)
+# ╔═╡ eb776236-7c54-4f9e-9311-ecc54889ece2
+theme(:size)[] ./ 72
 
 # ╔═╡ 0fa11815-3ab0-4b19-9be7-186b7c2c1063
 let
@@ -188,7 +184,7 @@ let
 	for r in [37, 10, 3, 1, 0.3, 0.1, 0.03]
 		M_dm_h = enclosed_mass.(profiles, [r])
 		@info M_dm_h[end] ./ M_dm_h[1]
-		lines!(df_scalars.time, M_dm_h ./ M_dm_h[1], label="$r")
+		lines!(df_scalars.time * T2GYR, M_dm_h ./ M_dm_h[1], label="$r")
 	end
 	
 	Legend(fig[1, 2], ax, "r/kpc")
@@ -206,6 +202,12 @@ md"""
 
 # Evolution of circular Velocity
 """
+
+# ╔═╡ 8dae2e01-652b-4afc-b040-dd2ba1c6eedb
+prof_i = profiles[1]
+
+# ╔═╡ b64c1caf-9ee0-4633-bd52-0258557b8847
+prof_f = profiles[end]
 
 # ╔═╡ e6fc3297-c1b7-40a4-b2bb-98490a42604a
 v_max = df_scalars.v_circ_max
@@ -298,15 +300,36 @@ let
 	fig
 end
 
+# ╔═╡ 6f7eaf57-4ada-4995-9b88-52c984573b13
+obs_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", split(inputs.modelname, "/")[1], "observed_properties.toml"))
+
+# ╔═╡ c73ebaa4-16d9-428c-9967-6f8e67cdc680
+α_exp = LilGuys.R_h(LilGuys.Exp2D())
+
+# ╔═╡ 54e28676-c63d-4802-9a6f-4706654f3972
+obs_props["distance"]
+
+# ╔═╡ 41db9740-1767-4e1c-80e1-37ed96031d02
+prof_stars = LilGuys.Exp2D(R_s=LilGuys.arcmin2kpc(obs_props["R_h"] / α_exp, orbit_props["distance_f"]) )
+
+# ╔═╡ 1630a217-a6c5-439b-a79b-10b9a098ea29
+LilGuys.σv_1d(snap_f) * V2KMS
+
+# ╔═╡ cabdac5e-9a2c-47f6-ba7f-c408b3af0f3d
+halos = [LilGuys.TruncNFW(r_circ_max=r_max[i], v_circ_max=v_max[i], trunc=20, xi=3) for i in eachindex(r_max)]
+
+# ╔═╡ 90f916db-3390-460e-8639-d5d02603aede
+σv_predicted = LilGuys.σv_star_mean.(halos, [prof_stars])
+
 # ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"v_\text{circ} / \text{km\,s^{-1}}",
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel=L"\mathrm{v} / \text{km\,s^{-1}}",
 	limits=(nothing, (0, nothing)))
 	x = out.times[snap_idx]
-	lines!(x*T2GYR, v_max * V2KMS, label=L"maximum $v_\text{circ}$")
-	#scatter!(x, v_h, label=L"r=r_h")
-	#axislegend(ax)
+	lines!(x*T2GYR, v_max * V2KMS, label="max")
+
+	lines!(x * T2GYR, σv_predicted * V2KMS, label="stellar dispersion")
 
 	@savefig "v_circ_time"
 
@@ -376,7 +399,7 @@ let
 end
 
 # ╔═╡ 15eecc05-c7fb-4424-94ac-819450e4f6ec
-df_scalars.bound_mass[idx_f]
+
 
 # ╔═╡ 48e54b34-4b22-4609-8928-ba6d8d027370
 let 
@@ -435,9 +458,6 @@ let
 
 	fig
 end
-
-# ╔═╡ f7f8ed80-c715-43db-bebe-e62b14173ac6
-
 
 # ╔═╡ 4cd952f3-555d-401b-aa31-8b79a23ca42e
 let 
@@ -556,22 +576,30 @@ end
 # ╠═7e3df305-9678-447e-a48e-f102cf6ebced
 # ╠═9c3f79ee-89db-4fe1-aa62-4e706bdd73f8
 # ╠═8d127679-401c-439d-913d-e2020df1c600
-# ╠═8dae2e01-652b-4afc-b040-dd2ba1c6eedb
-# ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
+# ╠═04a07b4f-b747-4738-9d0f-18eae2f85baf
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
 # ╠═193e78d7-e902-4b6b-8eae-43bae7e5722b
 # ╠═f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
 # ╠═485eab53-43ec-4591-a3af-9e4cbfefbbe2
 # ╠═4c042ef0-21a9-4a54-9562-05dc891f1dbf
-# ╠═04a07b4f-b747-4738-9d0f-18eae2f85baf
+# ╠═eb776236-7c54-4f9e-9311-ecc54889ece2
 # ╠═0fa11815-3ab0-4b19-9be7-186b7c2c1063
 # ╠═ef2274ba-0220-49f5-8478-d5eac824c3ee
 # ╟─e14fa4a1-6175-4b9f-ad01-525c1617fe63
+# ╠═8dae2e01-652b-4afc-b040-dd2ba1c6eedb
+# ╠═b64c1caf-9ee0-4633-bd52-0258557b8847
 # ╠═e6fc3297-c1b7-40a4-b2bb-98490a42604a
 # ╠═d57501a1-4764-4b23-962f-2d37547d7bcc
 # ╠═04ca92d1-f64b-4d2c-a079-30f89866fda9
 # ╠═db320665-f46d-4aed-a2b2-4b39bcb605c5
 # ╠═c068c177-e879-4b8e-b1af-18690af9b334
+# ╠═6f7eaf57-4ada-4995-9b88-52c984573b13
+# ╠═c73ebaa4-16d9-428c-9967-6f8e67cdc680
+# ╠═54e28676-c63d-4802-9a6f-4706654f3972
+# ╠═41db9740-1767-4e1c-80e1-37ed96031d02
+# ╠═1630a217-a6c5-439b-a79b-10b9a098ea29
+# ╠═cabdac5e-9a2c-47f6-ba7f-c408b3af0f3d
+# ╠═90f916db-3390-460e-8639-d5d02603aede
 # ╠═245721a6-01aa-43e7-922d-ed5da02207c1
 # ╟─c5796d82-013b-4cdc-a625-31249b51197d
 # ╠═3aa62ecf-495a-434b-8008-02783bd5b56e
@@ -583,7 +611,6 @@ end
 # ╠═15eecc05-c7fb-4424-94ac-819450e4f6ec
 # ╠═48e54b34-4b22-4609-8928-ba6d8d027370
 # ╟─4801ff80-5761-490a-801a-b263b90d63fd
-# ╠═f7f8ed80-c715-43db-bebe-e62b14173ac6
 # ╠═4cd952f3-555d-401b-aa31-8b79a23ca42e
 # ╠═7c6f7fc7-e692-44a1-9ad0-a9377b0a5cdf
 # ╠═e385f8cf-faa1-49bf-88c9-15c3d2489f90

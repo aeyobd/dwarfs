@@ -1,4 +1,24 @@
 [[orbits]]
+name = "peri_1.5"
+ra = 209.47
+dec = 26.68
+distance = 39.1
+pmra = -1.15
+pmdec = -0.88
+radial_velocity = 188.1
+
+
+[[orbits]]
+name = "peri_4"
+ra = 209.47
+dec = 26.68
+distance = 42.68
+pmra = -1.15
+pmdec = -0.88
+radial_velocity = 188.0
+
+
+[[orbits]]
 name = "mean"
 ra = 209.47
 dec = 26.68
@@ -9,17 +29,17 @@ radial_velocity = 188
 
 
 [[orbits]]
-name = "smallperi"
+name = "peri_12"
 ra = 209.47
 dec = 26.68
-distance = 39.1
-pmra = -1.15
+distance = 50.79
+pmra = -1.17
 pmdec = -0.88
-radial_velocity = 188.1
+radial_velocity = 188.0
 
 
 [[orbits]]
-name = "largeperi"
+name = "peri_18"
 ra = 209.47
 dec = 26.68
 distance = 55.5
@@ -27,3 +47,12 @@ pmra = -1.17
 pmdec = -0.88
 radial_velocity = 187.9
 
+
+[[orbits]]
+name = "peri_26"
+ra = 209.47
+dec = 26.68
+distance = 60.76
+pmra = -1.17
+pmdec = -0.88
+radial_velocity = 187.6

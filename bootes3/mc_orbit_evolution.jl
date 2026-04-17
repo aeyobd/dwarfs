@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -47,6 +47,11 @@ function get_slope(f, x0, h=1e-8x0)
 	return (f(x0 + h) - f(x0)) / h
 end
 
+# ╔═╡ e5d68f88-0863-4824-89ae-db211b3de68a
+module Rapha
+	include(joinpath(ENV["DWARFS_ROOT"], "utils/rapha_utils.jl"))
+end
+
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 md"""
 # Setup
@@ -66,6 +71,9 @@ halos_boo3 = OrderedDict(
 
 # ╔═╡ f6178d1d-3687-4538-80e7-4f2efe93ab54
 obs_props_boo3 = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "observations", "bootes3", "observed_properties.toml"))
+
+# ╔═╡ 567d0e17-9749-405c-9c51-f3d58629d4b6
+
 
 # ╔═╡ b4bd8f82-ec5d-490b-8be2-08a70f311e24
 ⊕(x, y) = sqrt(x^2 + y^2)
@@ -142,6 +150,11 @@ function solve_v_from_dispersion_simple(r0, σv, R_h)
 	f(v) = LilGuys.v_circ(NFW(r_circ_max=r0, v_circ_max=v), R_h*R2r)/sqrt(3) - σv/V2KMS
 	
 	return LilGuys.find_zero(f, [0.01, 0.5])
+end
+
+# ╔═╡ dc0add50-5003-4e6e-a814-32ca84aaf187
+function σv_wolf(halo, R_h)
+	return LilGuys.v_circ(halo, R_h*R2r)/sqrt(3)
 end
 
 # ╔═╡ a0e7532b-2aaf-4fb3-af00-1d0912787c35
@@ -248,8 +261,8 @@ end
 # ╔═╡ 4bf130aa-7cc4-470b-bbe6-bdc86f831683
 LilGuys.mean_density(NFW(r_circ_max=1, v_circ_max=0.001), der_props_boo3.R_h*R2r)
 
-# ╔═╡ 7d36f094-70bc-4114-b920-3655f73dc75f
-function plot_halo_constraints(gs, der_props, halos)
+# ╔═╡ c66ed3b6-4d1c-43ad-ac22-eced49adc811
+function tidal_track_axis(gs)
 	ax = Axis(gs,
 		ylabel=L"$\,\textrm{v}_\textrm{max}$ / km\,s$^{-1}$",
 		xlabel=L"$\,r_\textrm{max}$ / kpc",
@@ -259,6 +272,11 @@ function plot_halo_constraints(gs, der_props, halos)
 		xminorticks = [0.1:0.1:1; 1:10; 10:10:30],
 			  xticks = [0.1, 1, 10],
 	)
+end
+
+# ╔═╡ 7d36f094-70bc-4114-b920-3655f73dc75f
+function plot_halo_constraints(gs, der_props, halos)
+	ax = tidal_track_axis(gs)
 
 	rf = rotation_factor(ax, true)
 
@@ -390,24 +408,6 @@ orbit_props = read_fits(joinpath(ENV["DWARFS_ROOT"], "orbits/bootes3/EP2020/orbi
 # ╔═╡ 3ca351f9-1eae-4889-a2d9-282926407f1c
 LilGuys.enumerate
 
-# ╔═╡ 04e58792-7236-460c-82f2-04695f31795d
-t_max_to_r_max_rel(t_max_rel) = LilGuys.find_zero(r_max_rel -> r_max_rel / LilGuys.v_circ_EN21(r_max_rel) - t_max_rel, (1e-10, 1))
-
-# ╔═╡ cdd9e0fb-8668-416a-ae1a-6031da99cad5
-t_max_to_r_max_rel(0.5)
-
-# ╔═╡ 5d3fbe9f-9af9-4a88-bb1d-31dd30434e44
-7.68 * 2π / LilGuys.v_circ_EN21(7.65)
-
-# ╔═╡ 06fe6b66-2298-46e2-941b-ba37e7ae3950
-LilGuys.v_circ_EN21(0.279)
-
-# ╔═╡ 662eb6ac-3a8c-43e0-80a4-853723c99c43
-0.55 / 0.2796
-
-# ╔═╡ 26e66dca-2a4e-442d-ba8b-4775c67ba10e
-V0 = 0.78
-
 # ╔═╡ ea79f8e0-64db-46e8-bf1e-2c9791db1c2a
 Agama.circular_velocity(pot, 14)
 
@@ -426,37 +426,11 @@ Agama.circular_velocity(pot, 14)
 # ╔═╡ 0f71ca27-5f0d-479d-a605-77a3945f2b92
 f_ecc_e(10)
 
+# ╔═╡ 655df646-ac13-4bf3-83af-789197230f26
+n_scale = 1.5
+
 # ╔═╡ 9ed586d5-34ad-48a1-a98a-1b31b089e049
-function rapha_final_halo(r_max, v_max, peri, apo, n = 0; V0=1)
-	f_ecc = (2*apo/peri / (apo/peri + 1))^3.2
-	t_ecc = n / f_ecc
 
-	T_max_0 = 2π*r_max / v_max
-	T_peri = 2π * peri / V0
-
-	if T_max_0 / T_peri > 2/3
-
-		T_asy = 0.22 * T_peri
-		τ_asy = 0.65 # units of T_orb, but divided by n anyways
-		
-		Y_0 = (T_max_0 - T_asy) / T_peri
-		τ = τ_asy / Y_0
-
-		η = 1 - exp(-2.5Y_0)
-	else
-		T_asy = T_max_0  / (1 + T_max_0/T_peri)^2.2
-		τ = 1.2 * (T_max_0/T_peri)^-0.5 
-		η = 0.67 
-		Y_0 = (T_max_0 - T_asy) / T_peri
-	
-	end
-	Y = Y_0 * ( 1 + (t_ecc/τ)^η )^(-1/η)
-	T_max = T_peri * Y + T_asy
-	r_max_rel = t_max_to_r_max_rel(T_max / T_max_0)
-	v_max_rel = LilGuys.v_circ_EN21(r_max_rel)
-
-	return r_max_rel * r_max, v_max_rel * v_max
-end
 
 # ╔═╡ 39de689f-d4da-464e-ab53-5d5a37e4f792
 model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "bootes3", "1e5_v30_r2.2")
@@ -483,17 +457,19 @@ scalars = OrderedDict(
 # ╔═╡ dc1bd69d-df94-4399-bb35-a150085fbd0d
 let
 	fig = Figure()
-	ax = Axis(fig[1,1], xscale=log10, yscale=log10)
+	ax = tidal_track_axis(fig[1,1])
 
 	props = scalars["largeperi+"]
 	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.5)
 
 	for n in 0:10
 		
-		r_max, v_max = rapha_final_halo(2.2, 30/V2KMS, 18, 150, n * 1.5, V0=1.1)
+		r_max, v_max = Rapha.rapha_final_halo(2.2, 30/V2KMS, 18, 150, n, V0=1.1, )
 		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
 		text!(r_max, v_max * V2KMS, text="$n")
 	end
+	ylims!(10, 35)
+	xlims!(0.3, 3)
 
 	fig
 
@@ -502,17 +478,39 @@ end
 # ╔═╡ 5e775547-f4e7-4134-84d0-d61d4e0bf11e
 let
 	fig = Figure()
-	ax = Axis(fig[1,1])
+	ax = tidal_track_axis(fig[1,1])
+	ax.title = "default"
 
 	props = scalars["mean"]
 	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.3)
 
 	for n in 0:10
-		r_max, v_max = rapha_final_halo(2.2, 30/V2KMS, 7, 97, n * 1.5, V0=1.1)
+		r_max, v_max = Rapha.rapha_final_halo(2.2, 30/V2KMS, 7, 97, n, V0=1.1, n_scale=1)
 		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
 		text!(r_max, v_max * V2KMS, text="$n")
 
 	end
+
+	ylims!(5, 35)
+	xlims!(0.1, 3)
+
+
+
+	ax = tidal_track_axis(fig[1,2])
+
+	props = scalars["mean"]
+	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.3)
+
+	for n in 0:10
+		r_max, v_max = Rapha.rapha_final_halo(2.2, 30/V2KMS, 7, 97, n, V0=1.1, n_scale=n_scale)
+		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
+		text!(r_max, v_max * V2KMS, text="$n")
+
+	end
+
+	ylims!(5, 35)
+	xlims!(0.1, 3)
+	hideydecorations!(ticks=false, minorticks=false)
 
 	fig
 
@@ -521,19 +519,19 @@ end
 # ╔═╡ 2ff4d25a-4e1a-4069-86fd-d54c0b500d38
 let
 	fig = Figure()
-	ax = Axis(fig[1,1])
+	ax = tidal_track_axis(fig[1,1])
 
 	props = scalars["scl"]
 	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.2)
 
 	for n in 0:10
-		r_max, v_max = rapha_final_halo(3.2, 31/V2KMS, 43, 96, n*1, V0=1.03)
+		r_max, v_max = Rapha.rapha_final_halo(3.2, 31/V2KMS, 43, 96, n, V0=1.03, n_scale=1.5)
 		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
 		text!(r_max, v_max * V2KMS, text="$n")
-		# r_max, v_max = rapha_final_halo(2.2, 30/V2KMS, 18, 150, n, V0=0.79)
-		# scatter!(r_max, v_max * V2KMS, color=COLORS[n+1])
-
 	end
+
+	xlims!(0.6, 6)
+	ylims!(15, 35)
 
 	fig
 
@@ -544,21 +542,23 @@ md"""
 # MCMC samples
 """
 
-# ╔═╡ 897e105c-c2e3-4b12-9d3c-679b82e67499
-
+# ╔═╡ 56095498-3113-46b5-afb9-2e5e2d501ff1
+α_exp_cusp = LilGuys.r_circ_max(LilGuys.ExpCusp())
 
 # ╔═╡ 1aa9e317-2f53-43bc-af7d-9294da42b607
 samples = let
 	df = DataFrame()
 
 
-	N = 10_000
+	N = 100_000
 	vmax = rand(Uniform(20, 35), N) / V2KMS
 
-	rmax = [LilGuys.Ludlow.solve_rmax(v, abs(randn()) * 0.1) for v in vmax]
+	lc = abs.(randn(N)) * 0.1
+	rmax = [LilGuys.Ludlow.solve_rmax(v, c) for (v, c) in zip(vmax, lc)]
 
 	df[!, :v_circ_max] = vmax
 	df[!, :r_circ_max] = rmax
+	df[!, :delta_log_c] = lc
 
 	peri = rand(LogNormal(7, 0.3), N)
 
@@ -567,20 +567,48 @@ samples = let
 	df[!, :period] = -orbit_props.period[1:N]
 	df[!, :n_peri] = ceil.(df.t_end ./ df.period)
 
-	vr_end = [rapha_final_halo(rmax[i], vmax[i], orbit_props.pericentre[i], orbit_props.apocentre[i], df.n_peri[i] * 1.5)
+	vr_end = [Rapha.rapha_final_halo(rmax[i], vmax[i], orbit_props.pericentre[i], orbit_props.apocentre[i], df.n_peri[i])
 					for i in 1:N]
 
 	df[!, :v_circ_end] = last.(vr_end)
 	df[!, :r_circ_end] = first.(vr_end)
 
+
+
+	r_s = df.r_circ_end ./ α_exp_cusp
+	v0 = LilGuys.v_circ_max.(LilGuys.ExpCusp.(1, r_s))
+	M = @. (df.v_circ_end/v0)^2
+	halos_final_samples = LilGuys.ExpCusp.(M, r_s)
+
+	
+	df[!, :M] = [LilGuys.mass(LilGuys.TruncNFW(r_circ_max=rmax[i], v_circ_max=vmax[i], trunc=20, xi=3)) for i in eachindex(rmax)]
+	df[!, :M_end] = M
+	df[!, :r_s_end] = r_s
+	df[!, :sigma_v] = σv_wolf.(halos_final_samples, der_props_boo3.R_h)
+
+	
 	df
 end
 
-# ╔═╡ 3101643b-d47e-4afc-95b4-560beb35c425
-10 ./ (orbit_props.period * T2GYR) 
+# ╔═╡ fa0b0f0b-4efe-43f4-b879-572bd3197dbb
+let
+	fig = Figure(size=(4, 3) .* 72)
 
-# ╔═╡ c6782ee3-5271-4a46-815f-5a0dbba6acc1
-samples.r_circ_end, samples.v_circ_end
+	plot_halo_constraints(fig[1,1], der_props_boo3, halos_boo3)
+
+
+	annotation!(0, 30, der_props_boo3.R_h, 10, text=L"R_h")
+	plot_fattahi!(der_props_boo3_100Ms.log_v_0, der_props_boo3_100Ms.log_v_0_err, label="100x M⋆", shade=true)
+
+	ylims!(10, 40)
+
+	plot_sigma_v!(15; x0 = 1, R_h=der_props_boo3.R_h)
+
+	scatter!(samples.r_circ_max, samples.v_circ_max*V2KMS, markersize=1)
+
+
+	fig
+end
 
 # ╔═╡ a09669c6-72fd-418d-957c-ffa2f6434c07
 let
@@ -596,15 +624,45 @@ let
 
 	plot_sigma_v!(15; x0 = 1, R_h=der_props_boo3.R_h)
 
-	scatter!(samples.r_circ_max, samples.v_circ_max*V2KMS, markersize=3)
+	scatter!(samples.r_circ_max, samples.v_circ_max*V2KMS, markersize=1)
 
-	p = scatter!(samples.r_circ_end, samples.v_circ_end*V2KMS, markersize=1, color=log10.(samples.peri))
+	p = scatter!(samples.r_circ_end, samples.v_circ_end*V2KMS, markersize=1, color=log10.(samples.peri), colorrange=(0, 1.3))
 
 	Colorbar(fig[1,2], p, label="log peri")
 
 	@savefig "initial_halo_selection"
 	fig
 end
+
+# ╔═╡ d8e7b34f-4938-4ea1-a4c2-cecad0f3e5e5
+filt_samples = obs_props_boo3["sigma_v"] - obs_props_boo3["sigma_v_em"] .< samples.sigma_v * V2KMS .< obs_props_boo3["sigma_v"] + obs_props_boo3["sigma_v_ep"]
+
+# ╔═╡ 8faefce1-f32a-4119-8e1c-9dcc13293da6
+let
+	fig = Figure(size=(4, 3) .* 72)
+
+	plot_halo_constraints(fig[1,1], der_props_boo3, halos_boo3)
+
+
+	annotation!(0, 30, der_props_boo3.R_h, 10, text=L"R_h")
+	plot_fattahi!(der_props_boo3_100Ms.log_v_0, der_props_boo3_100Ms.log_v_0_err, label="100x M⋆", shade=true)
+
+	ylims!(10, 40)
+
+	plot_sigma_v!(15; x0 = 1, R_h=der_props_boo3.R_h)
+
+	scatter!(samples.r_circ_max[filt_samples], samples.v_circ_max[filt_samples]*V2KMS, markersize=1)
+
+	p = scatter!(samples.r_circ_end[filt_samples], samples.v_circ_end[filt_samples]*V2KMS, markersize=1, color=log10.(samples.peri[filt_samples]), colorrange=(0, 1.3))
+
+	Colorbar(fig[1,2], p, label="log peri")
+
+	@savefig "initial_halo_selection"
+	fig
+end
+
+# ╔═╡ 990172f0-6303-4cdb-8637-845dd60ce2e0
+LilGuys.mean(filt_samples)
 
 # ╔═╡ 6158b971-e5fb-4ef7-84e6-e0cae6072686
 hist(samples.n_peri)
@@ -616,39 +674,147 @@ hist(samples.n_peri[samples.v_circ_end*V2KMS .> 10])
 hist(samples.t_end[samples.v_circ_end*V2KMS .> 10])
 
 # ╔═╡ cca4b599-298e-4033-b9aa-36f9c5ba85e2
-hist(samples.v_circ_max[samples.v_circ_end*V2KMS .> 10] * V2KMS)
+hist(samples.v_circ_max[filt_samples] * V2KMS)
 
 # ╔═╡ ffcd3315-5e32-47cb-b831-7a19cb1c2162
 hist(samples.v_circ_max*V2KMS)
 
 # ╔═╡ bcf8c8ae-cf45-4269-b6cf-c197147ff6ba
-hist(samples.r_circ_max[samples.v_circ_end*V2KMS .> 10])
+hist(samples.r_circ_max[filt_samples])
 
 # ╔═╡ bd0d8191-841c-4dcb-abf0-6f9f1728a761
 hist(samples.r_circ_max)
 
+# ╔═╡ a136ee90-aad1-4bca-a40e-554ba921e90e
+
+let
+	fig = Figure()
+
+	ax = Axis(fig[1,1], xlabel="r max", ylabel = "sigma v stars end / km/s")
+		
+	scatter!(samples.r_circ_max, samples.sigma_v * V2KMS, markersize=1, alpha=0.1, color=samples.n_peri,)
+
+
+	ax = Axis(fig[1,2], xlabel = "v max")
+
+	scatter!(samples.v_circ_max * V2KMS, samples.sigma_v * V2KMS, markersize=1, alpha=0.1, color=samples.peri, colorrange=(0, 20))
+
+	fig
+end
+
+# ╔═╡ f79760a9-8fb7-4249-994f-29f54f5c4c3c
+let
+	filt = filt_samples	
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+			 xlabel = "pericentre",
+			 ylabel= "# pericentres",
+			 yticks=0:7, 
+			 yminorticksvisible=false)
+
+	
+	p = scatter!(samples.peri[filt] ./ samples.n_peri[filt] .^ 0.0, samples.n_peri[filt] .+ 0.1*randn(sum(filt)), markersize=1, alpha=1, color=samples.v_circ_max[filt] * V2KMS)
+
+	for i in 1:maximum(samples.n_peri[filt])
+		filt_n = (samples.n_peri .== i ) .& filt
+		peri_med = median(samples.peri[filt_n])
+		peri_low, peri_high = quantile(samples.peri[filt_n], [0.16, 0.84])
+		errorscatter!([peri_med], [i], xerror =[(peri_med-peri_low, peri_high-peri_med)], color=:black, alpha=0.5)
+		@info peri_med, peri_low, peri_high
+	end
+	
+	
+
+	Colorbar(fig[1,2], p, label="vmax")
+	fig
+end
+
+# ╔═╡ 0555a067-17ac-43a4-82b8-440f0de638a6
+let
+	filt = filt_samples	
+
+	fig = Figure()
+	ax = Axis(fig[1,1],
+			 xlabel = "pericentre",
+			 ylabel= "# pericentres",
+			 yticks=0:7, 
+			 yminorticksvisible=false)
+
+	
+	p = scatter!(samples.peri[filt] ./ samples.n_peri[filt] .^ 0.0, samples.n_peri[filt] .+ 0.1*randn(sum(filt)), markersize=1, alpha=1, color=samples.delta_log_c[filt] * 10)
+
+	for i in 1:maximum(samples.n_peri[filt])
+		filt_n = (samples.n_peri .== i ) .& filt
+		peri_med = median(samples.peri[filt_n])
+		peri_low, peri_high = quantile(samples.peri[filt_n], [0.16, 0.84])
+		errorscatter!([peri_med], [i], xerror =[(peri_med-peri_low, peri_high-peri_med)], color=:black, alpha=0.5)
+		@info peri_med, peri_low, peri_high
+	end
+	
+	
+
+	Colorbar(fig[1,2], p, label="concentration (sigma)")
+	fig
+end
+
+# ╔═╡ 933e9188-ec1f-4ae8-81ef-7e51adff262a
+scatter(samples.r_circ_max[filt_samples], samples.v_circ_max[filt_samples]*V2KMS, alpha=1, markersize=1, color=samples.n_peri[filt_samples])
+
+# ╔═╡ 3426557d-074d-471d-b8b8-f18be83a5d78
+scatter(samples.v_circ_max[filt_samples], samples.peri[filt_samples], alpha=0.5, markersize=1)
+
+# ╔═╡ 70a701b3-68e5-45d8-a7ba-c8bff151e8a6
+scatter(samples.delta_log_c[filt_samples], samples.peri[filt_samples], alpha=0.5, markersize=1)
+
 # ╔═╡ aa5f86a8-b35d-4849-af2c-b9d68fb53d77
 let
-	filt = samples.v_circ_end*V2KMS .> 10
-	
-	f = scatter(samples.peri[filt] ./ samples.n_peri[filt] .^ 0.0, samples.n_peri[filt] .+ 0.1*randn(sum(filt)), markersize=1)
+	filt = filt_samples	
 
-	lines!([0, 10], [0, 10])
+	fig = Figure()
+	ax = Axis(fig[1,1],
+			 xlabel = "pericentre",
+			 ylabel= "# pericentres",
+			 yticks=0:7, 
+			 yminorticksvisible=false,
+			 limits=(0, 30, nothing, nothing)
+			  
+)
+
+	
+	p = scatter!(samples.peri[filt] ./ samples.n_peri[filt] .^ 0.0, samples.n_peri[filt] .+ 0.1*randn(sum(filt)), markersize=1, alpha=1, color=samples.sigma_v[filt]*V2KMS)
+
+	for i in 1:maximum(samples.n_peri[filt])
+		filt_n = (samples.n_peri .== i ) .& filt
+		peri_med = median(samples.peri[filt_n])
+		peri_low, peri_high = quantile(samples.peri[filt_n], [0.16, 0.84])
+		errorscatter!([peri_med], [i], xerror =[(peri_med-peri_low, peri_high-peri_med)], color=:black, alpha=0.5)
+		@info peri_med, peri_low, peri_high
+	end
+	
+	
+
+	Colorbar(fig[1,2], p, label="σv / (km/s)")
+	fig
+end
+
+# ╔═╡ 42f779b7-a1d1-4ed9-bd41-42a59143bc01
+let
+	f = scatter(samples.peri, samples.n_peri .+ 0.1*randn(sum(samples.v_circ_end*V2KMS .> 0)), markersize=1, alpha=0.05)
+
+		lines!([0, 15] .+ 2.5, [0, 15] .* 0.5)
+
 	f
 end
 
 # ╔═╡ 0bda0872-7566-4199-a85e-673e241783dc
 let
-	filt = samples.v_circ_end*V2KMS .> 10
 	
-	f = scatter(samples.peri[filt], samples.t_end[filt]*T2GYR, markersize=1)
+	f = scatter(samples.peri[filt_samples], samples.t_end[filt_samples]*T2GYR, markersize=1)
 
 	lines!([0, 10], [0, 10])
 	f
 end
-
-# ╔═╡ 42f779b7-a1d1-4ed9-bd41-42a59143bc01
-scatter(samples.peri, samples.n_peri .+ 0.1*randn(sum(samples.v_circ_end*V2KMS .> 0)), markersize=1, alpha=0.5)
 
 # ╔═╡ 697b83ce-1787-484a-aa8a-12b91d112d88
 let
@@ -686,11 +852,13 @@ end
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═be9e982a-904d-497c-949a-1fd265fcb67a
+# ╠═e5d68f88-0863-4824-89ae-db211b3de68a
 # ╟─3c032178-8d48-4f9c-bcec-9bf704718ea9
 # ╠═c515f500-27c5-403d-b50f-f0f25c7850cd
 # ╠═d10fb6a6-6bd1-4748-9c7f-b69cccabe176
 # ╠═22629f89-3d2a-457d-b80a-7df412b9c791
 # ╠═f6178d1d-3687-4538-80e7-4f2efe93ab54
+# ╠═567d0e17-9749-405c-9c51-f3d58629d4b6
 # ╠═b4bd8f82-ec5d-490b-8be2-08a70f311e24
 # ╠═1e43350b-ebae-42a5-ad9e-778da7087732
 # ╠═f5794260-7b09-492b-a7e3-0f9559ce0d35
@@ -701,6 +869,7 @@ end
 # ╠═0ec48582-0a73-4b57-87bc-24c19f79209a
 # ╠═1f74ca1b-ac53-425c-8f89-1afe361525cd
 # ╠═38712f63-8f52-4b1c-8da1-788101798f55
+# ╠═dc0add50-5003-4e6e-a814-32ca84aaf187
 # ╠═a0e7532b-2aaf-4fb3-af00-1d0912787c35
 # ╠═5106a242-4fe5-47d8-94f7-45c12053c882
 # ╠═21c57d80-3dda-412f-a912-0248a2f6d600
@@ -710,6 +879,7 @@ end
 # ╠═2f97e7db-b2d5-44af-9c03-72e78f3edcde
 # ╠═14ceb32c-19bb-44ec-b795-c807fad60525
 # ╠═4bf130aa-7cc4-470b-bbe6-bdc86f831683
+# ╠═c66ed3b6-4d1c-43ad-ac22-eced49adc811
 # ╠═7d36f094-70bc-4114-b920-3655f73dc75f
 # ╠═391d2ecc-424e-4e81-adc8-0d4b03ed9a40
 # ╠═8f8eb577-5af9-4d08-ac50-77130a8fa880
@@ -724,12 +894,6 @@ end
 # ╠═9821e893-507b-45c3-b833-6de6c7445ee1
 # ╠═273d1aae-1b1e-42b8-85e4-efdcbcd04d06
 # ╠═3ca351f9-1eae-4889-a2d9-282926407f1c
-# ╠═04e58792-7236-460c-82f2-04695f31795d
-# ╠═cdd9e0fb-8668-416a-ae1a-6031da99cad5
-# ╠═5d3fbe9f-9af9-4a88-bb1d-31dd30434e44
-# ╠═06fe6b66-2298-46e2-941b-ba37e7ae3950
-# ╠═662eb6ac-3a8c-43e0-80a4-853723c99c43
-# ╠═26e66dca-2a4e-442d-ba8b-4775c67ba10e
 # ╠═dc1bd69d-df94-4399-bb35-a150085fbd0d
 # ╠═5e775547-f4e7-4134-84d0-d61d4e0bf11e
 # ╠═ea79f8e0-64db-46e8-bf1e-2c9791db1c2a
@@ -739,17 +903,19 @@ end
 # ╠═398a19f7-92a7-416f-bde6-4c95e7d63324
 # ╠═427b60f6-31ab-4435-a73d-d7e2f312e6cb
 # ╠═0f71ca27-5f0d-479d-a605-77a3945f2b92
+# ╠═655df646-ac13-4bf3-83af-789197230f26
 # ╠═9ed586d5-34ad-48a1-a98a-1b31b089e049
 # ╠═39de689f-d4da-464e-ab53-5d5a37e4f792
 # ╠═7fa8da92-8514-4c0c-8068-4cdb04e95bfa
 # ╠═3e48878f-0563-4757-ab95-9b47294eeef4
 # ╠═079fae18-072c-4a1c-b18b-016421d3efbe
 # ╠═7d1e9712-1f02-4713-a1f1-a61cebe6d741
-# ╠═897e105c-c2e3-4b12-9d3c-679b82e67499
 # ╠═1aa9e317-2f53-43bc-af7d-9294da42b607
-# ╠═3101643b-d47e-4afc-95b4-560beb35c425
-# ╠═c6782ee3-5271-4a46-815f-5a0dbba6acc1
+# ╠═fa0b0f0b-4efe-43f4-b879-572bd3197dbb
 # ╠═a09669c6-72fd-418d-957c-ffa2f6434c07
+# ╠═8faefce1-f32a-4119-8e1c-9dcc13293da6
+# ╠═d8e7b34f-4938-4ea1-a4c2-cecad0f3e5e5
+# ╠═990172f0-6303-4cdb-8637-845dd60ce2e0
 # ╠═6158b971-e5fb-4ef7-84e6-e0cae6072686
 # ╠═c263e88e-58db-4273-943e-593e43070a02
 # ╠═5433f056-2a84-4439-85f1-1f4786162f5d
@@ -757,8 +923,15 @@ end
 # ╠═ffcd3315-5e32-47cb-b831-7a19cb1c2162
 # ╠═bcf8c8ae-cf45-4269-b6cf-c197147ff6ba
 # ╠═bd0d8191-841c-4dcb-abf0-6f9f1728a761
+# ╠═a136ee90-aad1-4bca-a40e-554ba921e90e
+# ╠═f79760a9-8fb7-4249-994f-29f54f5c4c3c
+# ╠═0555a067-17ac-43a4-82b8-440f0de638a6
+# ╠═933e9188-ec1f-4ae8-81ef-7e51adff262a
+# ╠═3426557d-074d-471d-b8b8-f18be83a5d78
+# ╠═70a701b3-68e5-45d8-a7ba-c8bff151e8a6
 # ╠═aa5f86a8-b35d-4849-af2c-b9d68fb53d77
-# ╠═0bda0872-7566-4199-a85e-673e241783dc
 # ╠═42f779b7-a1d1-4ed9-bd41-42a59143bc01
+# ╠═0bda0872-7566-4199-a85e-673e241783dc
+# ╠═56095498-3113-46b5-afb9-2e5e2d501ff1
 # ╠═697b83ce-1787-484a-aa8a-12b91d112d88
 # ╠═03a263f1-b2f2-43a9-96c8-7895eac5632b
