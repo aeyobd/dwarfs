@@ -11,31 +11,26 @@ begin
 	FIGDIR = "figures"
 
 	using LilGuys
-	using CairoMakie
-	using Arya
 
+	import PyCall
+	import PyPlot as plt
+
+	import Agama
+	import TOML
+	using PyFITS
 end
-
-# ╔═╡ df4f20bf-97d9-408a-859e-e4070edcd0ef
-using PyFITS
-
-# ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
-include("./paper_style.jl")
-
-# ╔═╡ 11cc55a3-d166-4bf3-b147-1c789d690f90
-import Agama
-
-# ╔═╡ b74a4535-1e12-422e-a524-135db4d8a9f7
-import TOML
 
 # ╔═╡ 191b6df6-0fa4-4393-b69d-2aefeb3f9373
 import StatsBase: quantile
 
+# ╔═╡ 53a732df-3076-465a-97b9-089da190d73e
+PyCall.@pyimport arya
+
+# ╔═╡ 282c8c5c-e6f5-4b4e-b4f3-d6df8cb32bf0
+arya.init("apj")
+
 # ╔═╡ d41f4781-5063-48c0-aade-fcd3980e19e7
 modelnames = TOML.parsefile("model_key.toml")
-
-# ╔═╡ 20c338e3-3d10-41f4-b8ee-d0eda4e755bd
-CairoMakie.activate!(type=:png)
 
 # ╔═╡ a4c87a6e-976d-4af6-868e-09cb85e3d424
 module Utils
@@ -78,7 +73,7 @@ function calc_velocity_profile(snap)
 		σv[i] = σ
 	end
 
-	10 .^ midpoints(bins), σv, bins, Ns
+	10 .^ LilGuys.midpoints(bins), σv, bins, Ns
 end
 
 # ╔═╡ d66619f4-de41-45f4-9be1-4b938b9a959c
@@ -137,67 +132,51 @@ pot = Agama.Potential(file = joinpath(ENV["DWARFS_ROOT"], "agama/potentials/EP20
 α_3d = LilGuys.r_h(LilGuys.Exp2D()) / LilGuys.R_h(LilGuys.Exp2D()) 
 
 # ╔═╡ 6c106a00-445b-4e0f-9168-66a9aeb35767
-smalllinewidth=theme(:linewidth)[]/2
+smalllinewidth=1
 
 # ╔═╡ ec7d88d3-7503-4c18-9088-04319c6f2e98
-smallfontsize=0.8 * theme(:fontsize)[]
+smallfontsize=0.8 * 10
 
 # ╔═╡ fb3dd9fe-2f1b-45fd-9d2d-3996859645b3
-function vcirc_axis(gs)
-	ax = Axis(gs, 
-		xlabel = "radius / kpc",
-		ylabel = L"circular velocity / km\,s$^{-1}$",
-			  xscale = log10,
-			  yscale = log10,
-			  xticks = [0.1, 1, 10],
-			  yticks = [1; 10:10:40],
-			  yminorticks=[1:10; 10:5:20; 20:5:40],
-			  limits=(0.03, 100, 1, 40)
+function vcirc_axis(ax)
+	ax.set(
+		xlabel = raw"radius $/$ kpc",
+		ylabel = raw"circular velocity $/$ km\,s$^{-1}$",
+		xscale = "log",
+		yscale = "log",
+		xticks = [0.1, 1, 10],
+		yticks = [1; 10],
+		# yminorticks=[1:10; 10:5:20; 20:5:40],
+		xlim = (0.03, 100),
+		ylim = (1, 40),
 	)
 end
-
-# ╔═╡ 910bf7c0-f53b-49e8-bbc8-4cfc224f76a8
-
 
 # ╔═╡ 50751c0d-1b4e-4d56-bb6a-6ce6b2cfef3c
 function plot_prof!(prof; text=nothing, color=nothing, kwargs...)
 	x = radii(prof)
 	y = middle.(LilGuys.circular_velocity(prof) * V2KMS)
-	lines!(x, y; color=color, kwargs...)
+	plt.plot(x, y; color=color, kwargs...)
 
 	if !isnothing(text)
-		Utils.text_along_line_log!(x, y, 0.05, text=text, color=color, align=(:left, :bottom), fontsize=smallfontsize)
+		# Utils.text_along_line_log!(x, y, 0.05, text=text, color=color, align=(:left, :bottom), fontsize=smallfontsize)
+		idx = argmin(abs.(x .- 0.05))
+		plt.annotate(text, (x[idx], y[idx]), color=color, 
+					 xytext=(0, smallfontsize/sqrt(2)),
+					 textcoords = "offset points",
+				ha="left", va="bottom", rotation=35, fontsize=smallfontsize)
 	end
 
 end
 
 # ╔═╡ 7034614b-eb03-4333-bf69-c3fb64a5c0fc
-function plot_i_f!(profs; kwargs...)
+function plot_f!(profs; kwargs...)
 	plot_prof!(profs.dm_f;text="dark matter", kwargs...)
 end
 
 # ╔═╡ ee01807c-785e-43b8-a8bd-b093aacbf281
-function plot_i_f_stars!(profs; kwargs...)
+function plot_f_stars!(profs; kwargs...)
 	plot_prof!(profs.stars_f; text="stars", kwargs...)
-end
-
-# ╔═╡ ebf4a089-0459-4241-b05d-69e1c514a4a5
-function plot_sigma_v!(galaxy)
-	obs_props = get_obs_props(galaxy) |> LilGuys.collapse_errors
-
-	R_h = [LilGuys.arcmin2kpc(obs_props["R_h"], obs_props["distance"])]
-	σv = [obs_props["sigma_v"]]
-	
-	errorscatter!(middle.(R_h), middle.(σv), 
-				  xerror = error_interval.(R_h), 
-				  yerror=error_interval.(σv), 
-				  linewidth=smalllinewidth, color=COLORS[3], markersize=0)
-	
-	text!(middle.(R_h), middle.(σv), 
-		  align=(:left, :center), 
-		  offset=(theme(:fontsize)[]/2, 0), 
-		  text=L"($\sigma_\textrm{v}$, $R_h$)",
-		  color=COLORS[3], fontsize=smallfontsize)
 end
 
 # ╔═╡ da1a2d1b-d32c-42c6-957d-82e39fcda005
@@ -211,13 +190,13 @@ function plot_density_line!(ρ, ρ_el, ρ_ep)
 	
 	r = 10 .^ LinRange(-2, 2, 10)
 	v = ρ_to_v(3ρ, r)
-	lines!(r, v*V2KMS, color=:black, linewidth=smalllinewidth)
+	plt.plot(r, v*V2KMS, color="k", linewidth=smalllinewidth)
 	
 	v_l = ρ_to_v(3ρ + 3ρ_el, r)
 	v_h = ρ_to_v(3ρ + 3ρ_ep, r)
-	band!(r, v_l*V2KMS, v_h*V2KMS, alpha=0.5, color=:black)
+	plt.fill_between(r, v_l*V2KMS, v_h*V2KMS, alpha=0.5, color="k")
 
-	Utils.text_along_line_log!(r, v*V2KMS, 2, text=L"3\bar\rho_\textrm{MW,\ peri}", align=(:center, :bottom), fontsize=smallfontsize)
+	Utils.text_along_line_log!(r, v*V2KMS, 2, text=raw"3\bar\rho_\textrm{MW,\ peri}", align=(:center, :bottom), fontsize=smallfontsize)
 end
 
 # ╔═╡ 961f2851-8ebb-49ac-9459-5e6f543f80f4
@@ -236,8 +215,12 @@ function plot_r_J(halo, ρ_host)
 	ms = 4
 	# arrows2d!([r_J], [v1], [0], [v0 - v1], color=:grey,minshaftlength=0, shaftwidth=smalllinewidth, tiplength=ms, tipwidth=ms * 2/sqrt(3))
 
-	vlines!(r_J, color=:grey, linewidth=smalllinewidth,  linestyle=:dot)
-	text!(r_J, v1, text=L"R_J", fontsize=smallfontsize, align=(:left, :center), color=:grey,)
+	plt.axvline(r_J, color=:grey, linewidth=smalllinewidth,  ls=":")
+	plt.annotate(raw"$r_J$", (r_J, v1), fontsize=smallfontsize, ha="left",
+			 va="center", color=(0.5, 0.5, 0.5),
+				   xytext=(smallfontsize/2, 0),
+				   textcoords = "offset points",
+				  )
 end
 
 # ╔═╡ 6720afb1-9968-42e3-a22c-c9232309f586
@@ -266,8 +249,8 @@ end
 
 # ╔═╡ 62407923-e1ba-445c-8726-2d72121a4ed2
 function set_limits!(maxes)
-	xlims!(0.03, maxes.r_circ_max * 10^1)
-	ylims!(maxes.v_circ_max*V2KMS* 10^-1.9, maxes.v_circ_max*V2KMS * 10^0.1)
+	plt.xlim(0.03, maxes.r_circ_max * 10^1)
+	plt.ylim(maxes.v_circ_max*V2KMS* 10^-1.9, maxes.v_circ_max*V2KMS * 10^0.1)
 
 end
 
@@ -276,21 +259,58 @@ md"""
 # The plot
 """
 
+# ╔═╡ f653954b-26b1-43f9-bed0-6ba9ab7e9456
+COLORS = arya.COLORS
+
+# ╔═╡ ebf4a089-0459-4241-b05d-69e1c514a4a5
+function plot_sigma_v!(galaxy)
+	obs_props = get_obs_props(galaxy) |> LilGuys.collapse_errors
+
+	R_h = [LilGuys.arcmin2kpc(obs_props["R_h"], obs_props["distance"])]
+	σv = [obs_props["sigma_v"]]
+	
+	plt.scatter(middle.(R_h), middle.(σv), 
+				  # xerror = error_interval.(R_h), 
+				  # yerror=error_interval.(σv), 
+				 # fmt="o",
+				  # linewidth=smalllinewidth, 
+				color=COLORS[3], 
+				# markersize=0
+			   )
+	
+	plt.annotate(raw"($\sigma_\textrm{v}$, $R_h$)",
+				 (middle(R_h[1]), middle(σv[1])),
+				 va="center",
+		  xytext=(smallfontsize/2, 0), 
+				 textcoords = "offset points",
+		  color=COLORS[3], fontsize=smallfontsize,
+				  )
+end
+
 # ╔═╡ 1443385e-6d9b-4ddc-805c-2c12fb1c9067
 scl_max = LilGuys.fit_v_r_circ_max(radii(scl_profs[1]), middle.(LilGuys.circular_velocity(scl_profs[1])))
 
 # ╔═╡ 195582cf-83e3-44c8-9efe-b7d98f092c3c
 umi_max = LilGuys.fit_v_r_circ_max(radii(umi_profs[1]), middle.(LilGuys.circular_velocity(umi_profs[1])))
 
-# ╔═╡ 7b2c0281-dba8-4e17-9e11-ef8acdc2eba6
-@savefig "initial_velocity_nosigma" let
-	fig = Figure(size=(3.5, 2) .*72)
+# ╔═╡ 2e729ef4-8a9e-431e-84a0-41c4b766c870
+rcParams = plt.PyDict(plt.matplotlib."rcParams")
 
-	ax = vcirc_axis(fig[1,1])
-	ax.title="Sculptor"
+
+# ╔═╡ da8eb034-320d-411c-8ded-33275de623f9
+rcParams["axes.titlesize"] = 10
+
+# ╔═╡ 7b2c0281-dba8-4e17-9e11-ef8acdc2eba6
+let
+	fig, axs = plt.subplots(1, 2, sharey=true, gridspec_kw=Dict("wspace" => 0), 
+						   figsize = (3.333, 3.333*2/4))
+
+	vcirc_axis(axs[1])
+	plt.sca(axs[1])
+	axs[1].set_title(raw"\textbf{Sculptor}")
 	
-	plot_i_f!(scl_profs, color=COLORS[5], label="Scl DM")
-	plot_i_f_stars!(scl_profs, 
+	plot_f!(scl_profs, color=arya.COLORS[5], label="Scl DM")
+	plot_f_stars!(scl_profs, 
 				   color=COLORS[2], label="Scl stars",  linewidth=smalllinewidth)
 
 	plot_r_J(NFW(r_circ_max=3.2, v_circ_max=31/V2KMS), get_mean_density("sculptor")[1])
@@ -300,20 +320,23 @@ umi_max = LilGuys.fit_v_r_circ_max(radii(umi_profs[1]), middle.(LilGuys.circular
 	set_limits!(scl_max)
 
 	
-	ax_umi = vcirc_axis(fig[1,2])
-	ax_umi.title = "Ursa Minor"
-	
-	plot_i_f!(umi_profs, color=COLORS[5], label="UMi DM")
-	plot_i_f_stars!(umi_profs,
+	vcirc_axis(axs[2])
+	plt.sca(axs[2])
+	axs[2].set_title(raw"\textbf{Ursa Minor}")
+	axs[2].set_ylabel("")
+
+	plot_f!(umi_profs, color=COLORS[5], label="UMi DM")
+	plot_f_stars!(umi_profs,
 				   color=COLORS[2], label="UMi stars", linewidth=smalllinewidth)
 
 	plot_r_J(NFW(r_circ_max=4, v_circ_max=38/V2KMS), get_mean_density("ursa_minor")[1])
 
 	plot_sigma_v!("ursa_minor")
-	hideydecorations!(ticks=false, minorticks=false)
 
 
 	set_limits!(umi_max)
+
+	plt.savefig("figures/initial_velocity_nosigma.pdf")
 
 
 	fig
@@ -321,13 +344,10 @@ end
 
 # ╔═╡ Cell order:
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
-# ╠═11cc55a3-d166-4bf3-b147-1c789d690f90
-# ╠═b74a4535-1e12-422e-a524-135db4d8a9f7
-# ╠═df4f20bf-97d9-408a-859e-e4070edcd0ef
 # ╠═191b6df6-0fa4-4393-b69d-2aefeb3f9373
+# ╠═53a732df-3076-465a-97b9-089da190d73e
+# ╠═282c8c5c-e6f5-4b4e-b4f3-d6df8cb32bf0
 # ╠═d41f4781-5063-48c0-aade-fcd3980e19e7
-# ╠═20c338e3-3d10-41f4-b8ee-d0eda4e755bd
-# ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═a4c87a6e-976d-4af6-868e-09cb85e3d424
 # ╠═50839b67-9514-47b9-add2-0c84d05f12da
 # ╠═5ac62ad0-6413-4d5f-a48f-080590ac862e
@@ -347,7 +367,6 @@ end
 # ╠═cd74f6a3-5d9c-497e-b4e5-6c7693c62bca
 # ╠═7034614b-eb03-4333-bf69-c3fb64a5c0fc
 # ╠═ee01807c-785e-43b8-a8bd-b093aacbf281
-# ╠═910bf7c0-f53b-49e8-bbc8-4cfc224f76a8
 # ╠═50751c0d-1b4e-4d56-bb6a-6ce6b2cfef3c
 # ╠═ebf4a089-0459-4241-b05d-69e1c514a4a5
 # ╠═da1a2d1b-d32c-42c6-957d-82e39fcda005
@@ -357,6 +376,9 @@ end
 # ╠═6b0b3b07-6adf-497b-a513-9ecfa47d97c6
 # ╠═62407923-e1ba-445c-8726-2d72121a4ed2
 # ╟─5ddbbeb3-08d1-4092-9d73-bba36cd18e1b
+# ╠═f653954b-26b1-43f9-bed0-6ba9ab7e9456
 # ╠═1443385e-6d9b-4ddc-805c-2c12fb1c9067
 # ╠═195582cf-83e3-44c8-9efe-b7d98f092c3c
+# ╠═2e729ef4-8a9e-431e-84a0-41c4b766c870
+# ╠═da8eb034-320d-411c-8ded-33275de623f9
 # ╠═7b2c0281-dba8-4e17-9e11-ef8acdc2eba6

@@ -109,9 +109,6 @@ halo.r_s
 # ╔═╡ 54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
 lguys.mass(halo, (1))
 
-# ╔═╡ 020bbb15-235d-468c-bc02-01f3b75708e9
-LilGuys.expint(Complex(-0.01))
-
 # ╔═╡ 9104ed25-9bc8-4582-995b-37595b539281
 begin 
 	println("loading model from $model_dir")
@@ -429,6 +426,31 @@ end
 # ╔═╡ 3e94b33f-35a9-4ccc-a90e-340b6beb310d
 t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 
+# ╔═╡ c386d338-b0ca-4b78-b620-1a9a3a463720
+md"""
+# Orbit
+"""
+
+# ╔═╡ 8490a10f-f924-42d0-8cd0-a5c46009e546
+import Agama
+
+# ╔═╡ 13ad6613-9227-4fe3-9468-18a720e5636e
+pot = Agama.Potential(file = joinpath(model_dir, "agama_potential.ini"))
+
+# ╔═╡ 288cc13f-182c-4c15-9e37-73a0fa656927
+orbit = LilGuys.agama_orbit(pot, Galactocentric(snap.x_cen, snap.v_cen * V2KMS), timerange=(0, 10/T2GYR))
+
+# ╔═╡ abc0b33c-7ee4-45f7-9251-227fbf920324
+orbit.pericenter, orbit.apocenter
+
+# ╔═╡ 55e3651b-caa2-4eed-b806-f3efbd6ce8d8
+LilGuys.plot_xyz(orbit.positions)
+
+# ╔═╡ 3ee53034-1f4c-4676-9e99-52b7879faa3e
+lines(orbit.times * T2GYR, radii(orbit), axis=(; 
+											  xlabel = "time / Gyr", 
+											  ylabel = "r / kpc"))
+
 # ╔═╡ Cell order:
 # ╟─f979f2a8-3420-4ede-a739-7d727dfdf818
 # ╠═21080ba9-d6df-4ba3-b4f9-e97f8d850dc6
@@ -451,7 +473,6 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═5ebe92b8-602e-42be-8751-58898b7323b0
 # ╠═c9cd2c2f-90b7-4d1c-8c48-586c1dac0257
 # ╠═54a2a708-d8ba-4c5c-9e67-ac656dd8e9f4
-# ╠═020bbb15-235d-468c-bc02-01f3b75708e9
 # ╠═9104ed25-9bc8-4582-995b-37595b539281
 # ╠═14e3b593-17b9-4acd-a9cb-d5923662a02c
 # ╠═0d9f39fa-acfb-4408-806b-924c7b177c05
@@ -494,3 +515,10 @@ t_max = lguys.r_circ_max(halo) / lguys.v_circ_max(halo)
 # ╠═c0fd9958-2ba9-45d4-87d0-0a401939811b
 # ╠═5798f8f8-32ce-4e9e-8489-4a165f6d240c
 # ╠═3e94b33f-35a9-4ccc-a90e-340b6beb310d
+# ╠═c386d338-b0ca-4b78-b620-1a9a3a463720
+# ╠═8490a10f-f924-42d0-8cd0-a5c46009e546
+# ╠═13ad6613-9227-4fe3-9468-18a720e5636e
+# ╠═288cc13f-182c-4c15-9e37-73a0fa656927
+# ╠═abc0b33c-7ee4-45f7-9251-227fbf920324
+# ╠═55e3651b-caa2-4eed-b806-f3efbd6ce8d8
+# ╠═3ee53034-1f4c-4676-9e99-52b7879faa3e

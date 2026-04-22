@@ -397,145 +397,8 @@ let
 	fig
 end
 
-# ╔═╡ 49cf2db8-f534-4b42-8fde-90c24fa9a122
-md"""
-# Tidal track machinery
-"""
-
 # ╔═╡ 273d1aae-1b1e-42b8-85e4-efdcbcd04d06
 orbit_props = read_fits(joinpath(ENV["DWARFS_ROOT"], "orbits/bootes3/EP2020/orbital_properties.fits"))
-
-# ╔═╡ 3ca351f9-1eae-4889-a2d9-282926407f1c
-LilGuys.enumerate
-
-# ╔═╡ ea79f8e0-64db-46e8-bf1e-2c9791db1c2a
-Agama.circular_velocity(pot, 14)
-
-# ╔═╡ 58fe9f0d-94c7-4aa7-9fa0-89ef5e69b145
-(0.1*2 / (0.1 + 1))^3.2
-
-# ╔═╡ cd0bdb07-bdf9-4c58-bcde-4da52a1fe620
-2π * (104/2) / V0 * T2GYR
-
-# ╔═╡ 398a19f7-92a7-416f-bde6-4c95e7d63324
-1.2 * (2/3)^-0.5
-
-# ╔═╡ 427b60f6-31ab-4435-a73d-d7e2f312e6cb
- f_ecc_e(x) = (2*x / (x + 1))^3.2
-
-# ╔═╡ 0f71ca27-5f0d-479d-a605-77a3945f2b92
-f_ecc_e(10)
-
-# ╔═╡ 655df646-ac13-4bf3-83af-789197230f26
-n_scale = 1.5
-
-# ╔═╡ 9ed586d5-34ad-48a1-a98a-1b31b089e049
-
-
-# ╔═╡ 39de689f-d4da-464e-ab53-5d5a37e4f792
-model_dir = joinpath(ENV["DWARFS_ROOT"], "analysis", "bootes3", "1e5_v30_r2.2")
-
-# ╔═╡ 7fa8da92-8514-4c0c-8068-4cdb04e95bfa
-function read_scalars(name)
-	read_fits(joinpath(model_dir, name, "profiles_scalars.fits"))
-end
-
-# ╔═╡ 3e48878f-0563-4757-ab95-9b47294eeef4
-scalars = OrderedDict(
-	"largeperi+" => read_scalars("orbit_largeperi_long.1"),
-
-	"mean" => read_scalars("orbit_mean.1"),
-	"smallperi" => read_scalars("orbit_smallperi.1"),
-	"scl" => read_scalars("../../sculptor/1e7_new_v31_r3.2/orbit_smallperi"),
-	# "largeperi" => read_scalars("orbit_largeperi.1"),
-
-	# "one mean" => read_scalars("one_peri.1"),
-	# "one smallperi" => read_scalars("one_smallperi.1"),
-
-)
-
-# ╔═╡ dc1bd69d-df94-4399-bb35-a150085fbd0d
-let
-	fig = Figure()
-	ax = tidal_track_axis(fig[1,1])
-
-	props = scalars["largeperi+"]
-	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.5)
-
-	for n in 0:10
-		
-		r_max, v_max = Rapha.rapha_final_halo(2.2, 30/V2KMS, 18, 150, n, V0=1.1, )
-		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
-		text!(r_max, v_max * V2KMS, text="$n")
-	end
-	ylims!(10, 35)
-	xlims!(0.3, 3)
-
-	fig
-
-end
-
-# ╔═╡ 5e775547-f4e7-4134-84d0-d61d4e0bf11e
-let
-	fig = Figure()
-	ax = tidal_track_axis(fig[1,1])
-	ax.title = "default"
-
-	props = scalars["mean"]
-	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.3)
-
-	for n in 0:10
-		r_max, v_max = Rapha.rapha_final_halo(2.2, 30/V2KMS, 7, 97, n, V0=1.1, n_scale=1)
-		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
-		text!(r_max, v_max * V2KMS, text="$n")
-
-	end
-
-	ylims!(5, 35)
-	xlims!(0.1, 3)
-
-
-
-	ax = tidal_track_axis(fig[1,2])
-
-	props = scalars["mean"]
-	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.3)
-
-	for n in 0:10
-		r_max, v_max = Rapha.rapha_final_halo(2.2, 30/V2KMS, 7, 97, n, V0=1.1, n_scale=n_scale)
-		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
-		text!(r_max, v_max * V2KMS, text="$n")
-
-	end
-
-	ylims!(5, 35)
-	xlims!(0.1, 3)
-	hideydecorations!(ticks=false, minorticks=false)
-
-	fig
-
-end
-
-# ╔═╡ 2ff4d25a-4e1a-4069-86fd-d54c0b500d38
-let
-	fig = Figure()
-	ax = tidal_track_axis(fig[1,1])
-
-	props = scalars["scl"]
-	scatter!(props.r_circ_max, props.v_circ_max * V2KMS, alpha=0.2)
-
-	for n in 0:10
-		r_max, v_max = Rapha.rapha_final_halo(3.2, 31/V2KMS, 43, 96, n, V0=1.03, n_scale=1.5)
-		scatter!(r_max, v_max * V2KMS, marker=:circ, color=COLORS[2], strokewidth=0)
-		text!(r_max, v_max * V2KMS, text="$n")
-	end
-
-	xlims!(0.6, 6)
-	ylims!(15, 35)
-
-	fig
-
-end
 
 # ╔═╡ 079fae18-072c-4a1c-b18b-016421d3efbe
 md"""
@@ -890,24 +753,8 @@ end
 # ╠═8b287edc-bcbc-4ce2-b355-1d174bc9dc7a
 # ╠═d800f480-3847-43fd-a458-aaaece1d9dcd
 # ╠═a15dbc88-8dbf-48d4-8a72-1881151c8e26
-# ╟─49cf2db8-f534-4b42-8fde-90c24fa9a122
 # ╠═9821e893-507b-45c3-b833-6de6c7445ee1
 # ╠═273d1aae-1b1e-42b8-85e4-efdcbcd04d06
-# ╠═3ca351f9-1eae-4889-a2d9-282926407f1c
-# ╠═dc1bd69d-df94-4399-bb35-a150085fbd0d
-# ╠═5e775547-f4e7-4134-84d0-d61d4e0bf11e
-# ╠═ea79f8e0-64db-46e8-bf1e-2c9791db1c2a
-# ╠═2ff4d25a-4e1a-4069-86fd-d54c0b500d38
-# ╠═58fe9f0d-94c7-4aa7-9fa0-89ef5e69b145
-# ╠═cd0bdb07-bdf9-4c58-bcde-4da52a1fe620
-# ╠═398a19f7-92a7-416f-bde6-4c95e7d63324
-# ╠═427b60f6-31ab-4435-a73d-d7e2f312e6cb
-# ╠═0f71ca27-5f0d-479d-a605-77a3945f2b92
-# ╠═655df646-ac13-4bf3-83af-789197230f26
-# ╠═9ed586d5-34ad-48a1-a98a-1b31b089e049
-# ╠═39de689f-d4da-464e-ab53-5d5a37e4f792
-# ╠═7fa8da92-8514-4c0c-8068-4cdb04e95bfa
-# ╠═3e48878f-0563-4757-ab95-9b47294eeef4
 # ╠═079fae18-072c-4a1c-b18b-016421d3efbe
 # ╠═7d1e9712-1f02-4713-a1f1-a61cebe6d741
 # ╠═1aa9e317-2f53-43bc-af7d-9294da42b607

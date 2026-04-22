@@ -108,7 +108,10 @@ haloname = inputs.haloname
 orbitname =  inputs.orbitname
 
 # ╔═╡ 94344455-d1d2-4ef9-af11-2d79ee4729ee
-t_min = inputs.t_min
+t_min = inputs.t_min / T2GYR
+
+# ╔═╡ 5f9652ec-30bc-4b1a-82c1-3daca696fe87
+t_max = inputs.t_max / T2GYR
 
 # ╔═╡ dd56b7ec-be11-447f-acc1-12750d82879b
 md"""
@@ -176,10 +179,10 @@ gc0 = LilGuys.transform(Galactocentric, icrs0)
 
 # ╔═╡ b250bf10-c228-4b14-938a-35561ae871d7
 h5open(centresfile, "r") do  f
-	global x_cen, v_cen, t
+	global x_cen, v_cen, times
 	x_cen = read(f["positions"])
 	v_cen = read(f["velocities"])
-	t = read(f["times"])
+	times = read(f["times"])
 end
 
 # ╔═╡ bb0cb8c2-2cbd-4205-a39e-4c4c0ff98b8a
@@ -212,25 +215,6 @@ LilGuys.plot_xyz(x_cen, x_cen_exp, labels=["n body", "point particle"], limits=(
 # ╔═╡ 5255c605-56ea-4eb3-bd20-5134e3a96705
 LilGuys.plot_xyz(v_cen, v_cen_exp, units=" / km/ s")
 
-# ╔═╡ 15293cb8-61d3-478d-a2ae-5a5b2006db44
-T2GYR = LilGuys.T2GYR
-
-# ╔═╡ f88b909f-c3dc-41e0-bdb1-25e229964d27
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = radii(x_cen)
-	lines!(t * T2GYR, r, label="n-body")
-	lines!(T2GYR*(orbit_expected.t .- orbit_expected.t[1] .+ t[1]), radii(x_cen_exp),
-		label="point particle"
-	)
-
-	axislegend(ax)
-
-	@savefig "centre_r_t"
-	fig
-end
-
 # ╔═╡ 7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
 md"""
 # Sky Properties
@@ -244,9 +228,6 @@ obs_c_gr = LilGuys.to_gaia(snap_cen, SkyFrame=LilGuys.GSR, add_centre=false)
 
 # ╔═╡ defc4184-2613-4480-9adf-fa135f168382
 obs_c = LilGuys.to_gaia(snap_cen, add_centre=false)
-
-# ╔═╡ 71ef4c9b-1284-4451-bcdd-eff79d334539
-
 
 # ╔═╡ a179323f-4878-4021-b8d4-69ca733658cb
 function calc_χ2s(obs_c, obs_today)
@@ -264,13 +245,26 @@ end
 χ2 = calc_χ2s(obs_c, obs_today)
 
 # ╔═╡ 319b905c-2d08-4a95-9d95-9cd26e2f5b1f
-times = t * T2GYR
+times_Gyr = times * T2GYR
+
+# ╔═╡ f88b909f-c3dc-41e0-bdb1-25e229964d27
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
+	r = radii(x_cen)
+	lines!(times_Gyr, r, label="n-body")
+	lines!(T2GYR*(orbit_expected.t .- orbit_expected.t[1] .+ times[1]), radii(x_cen_exp),
+		label="point particle"
+	)
+
+	axislegend(ax)
+
+	@savefig "centre_r_t"
+	fig
+end
 
 # ╔═╡ 9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
-t_end = times[inputs.t_max .> times .> t_min][argmin(χ2[inputs.t_max .> times .> t_min])]
-
-# ╔═╡ 7646ea5b-f1b1-4934-be68-330139f7f838
-length(χ2)
+t_end = times[t_max .> times .> t_min][argmin(χ2[t_max .> times .> t_min])]
 
 # ╔═╡ d9df3376-6ca1-4701-afb5-2df994bb3442
 idx_f = if isdefined(@__MODULE__, :obs_today)
@@ -316,13 +310,15 @@ let
 	x = x_cen[1, :]
 	y = x_cen[2, :]
 	z = x_cen[3, :]
-	R = @. sqrt(x^2 + y^2)
-	lines!(R, z, color=times)
+	if maximum(z) - minimum(z) > 1
+		R = @. sqrt(x^2 + y^2)
+		lines!(R, z, color=times)
+	
+		scatter!(R[idx_f], z[idx_f], color=COLORS[2])
+		scatter!(R[1], z[1], color = COLORS[3], marker=:rtriangle, )
+		@savefig "R_z_centre"
 
-	scatter!(R[idx_f], z[idx_f], color=COLORS[2])
-	scatter!(R[1], z[1], color = COLORS[3], marker=:rtriangle, )
-
-	@savefig "R_z_centre"
+	end
 	fig
 end
 
@@ -336,32 +332,17 @@ let
 			  yticks = Makie.automatic,
 	)
 	
-	lines!(t * T2GYR, χ2,)
-	scatter!(t[idx_f] * T2GYR, χ2[idx_f])
+	lines!(times_Gyr, χ2,)
+	scatter!(times_Gyr[idx_f], χ2[idx_f])
 
 	fig
 end
-
-# ╔═╡ cb601d4f-0fd6-4d1d-8bf0-910471c729c6
-χ2[idx_f]
-
-# ╔═╡ 3297c4d0-92f9-4f1b-80e6-84c8d787c37c
-
 
 # ╔═╡ 9530e936-1225-4cfc-aa9a-bf7644d612f5
 r = radii(x_cen)
 
 # ╔═╡ 6d0612d6-8609-4832-80ae-4e8e78c557cc
 minimum(r)
-
-# ╔═╡ 7a30bd90-946e-418c-8339-be64c37cda76
-vr = [dot(x_cen[:, i], v_cen[:, i]) / r[i] for i in 1:size(x_cen, 2)]
-
-# ╔═╡ 0c69519c-9650-46b9-89f9-cc37227f5b1a
-v_cen
-
-# ╔═╡ d95c457b-c9be-4570-bc90-b4bbb7de56e2
-plot(t, vr)
 
 # ╔═╡ 88a9bb2d-9f86-4a96-a3b8-7a057480c7c3
 """
@@ -389,9 +370,6 @@ end
 # ╔═╡ 8d1508af-1715-4ef6-aab9-e95a02265913
 idx_peris, idx_apos = find_all_peris(r)
 
-# ╔═╡ ddd74bbb-df27-4150-b497-b1df5243f518
-r[idx_apos]
-
 # ╔═╡ efcbae60-cf7c-4e74-aae4-39d19b74b6fa
 idx_peri = maximum(idx_peris[idx_peris .<= idx_f])
 
@@ -403,51 +381,19 @@ d_idx = 20
 
 # ╔═╡ 7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
 begin
-	peri_filt = idx_f-d_idx:idx_f
+	peri_filt = max(idx_f-d_idx, 1):idx_f
 	t_last_peri_arg = argmin(r[peri_filt])
-	t_last_peri = t[peri_filt[t_last_peri_arg]] * T2GYR
-	delta_t_peri = t[idx_f] * T2GYR - t_last_peri
+	t_last_peri = times[peri_filt[t_last_peri_arg]]
+	delta_t_peri = times[idx_f] - t_last_peri
 end
 
 # ╔═╡ f64dcd49-b0ca-4319-b615-5520b23d7818
 lcm
 
-# ╔═╡ 04d29fcb-70a0-414b-a487-7a18c44b9d58
-let
-	fig = Figure(size=(400, 150))
-	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
-	r = radii(x_cen)
-	lines!(t * T2GYR, r)
-	scatter!(t[idx_f] * T2GYR, r[idx_f], 
-		label="adpoted end", marker=:rect
-	)
-	scatter!(t[idx_f] * T2GYR, radii(LilGuys.position(gc0)),
-		marker=:+, markersize=6, label="expected", color=COLORS[4]
-	)
-	
-	scatter!(t[idx_peris] * T2GYR, r[idx_peris], 
-		label="pericentrs"
-	)
-
-	scatter!(t[idx_apos] * T2GYR, r[idx_apos], 
-		label="apocentres"
-	)
-	
-	scatter!(t[idx_peri] * T2GYR, r[idx_peri], 
-		label=" last pericentre"
-	)
-	
-	Legend(fig[1, 2], ax)
-
-	@savefig "r_t_orbit"
-
-	fig
-end
-
 # ╔═╡ af8a50bd-e761-4439-9fc9-80048c264d5b
 begin 
 	if idx_peri > 0
-		t_peri = T2GYR * t[idx_peri]
+		t_peri = times[idx_peri]
 		r_peri = r[idx_peri]
 
 	else 
@@ -458,21 +404,91 @@ begin
 end
 
 # ╔═╡ 73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
-t_f = t[idx_f] * T2GYR
-
-# ╔═╡ 8c28ac36-92c9-457e-8ccc-fb7551db883f
-t[idx_f] 
+t_f_Gyr = times_Gyr[idx_f] 
 
 # ╔═╡ 0031cce4-160b-4c02-9d14-94769901eaea
-diff(t)[idx_f]
+diff(times)[idx_f]
 
 # ╔═╡ 15e35190-0430-40f1-a752-a968b9ea35f6
--t_f / T2GYR + times[1]  / T2GYR
+-t_f_Gyr / T2GYR + times[1]  / T2GYR
+
+# ╔═╡ 3448ffc5-41e6-4208-b11f-2c00168bf50a
+md"""
+# Stream Coordinate frame
+"""
+
+# ╔═╡ 66435478-0619-47aa-a659-c06089951f72
+ra0 = obs_c_gr.ra[idx_f]
+
+# ╔═╡ 78271e36-12b7-4edc-bfb0-20ecc597ab20
+dec0 = obs_c_gr.dec[idx_f]
+
+# ╔═╡ 661ca87c-c8da-49b1-b8a3-72c81050590b
+θ0 = atand(obs_c_gr.pmra[idx_f], obs_c_gr.pmdec[idx_f])
+
+# ╔═╡ 77aa1d73-0c90-4f6c-9383-99e9e9f0379a
+sind(θ0), cosd(θ0)
+
+# ╔═╡ 2318b289-d6c4-44bf-b2ff-36f448faf97b
+obs_c_gr.pmra[idx_f], obs_c_gr.pmdec[idx_f]
+
+# ╔═╡ 31a11704-1dad-4007-b704-9312b81a5bad
+begin
+	dr = 0
+	dθ = 180
+	ra1 = ra0 + sind(θ0 + dθ) * dr / cosd(dec0)
+	dec1 = dec0 + cosd(θ0 + dθ) * dr
+
+	ra1 = round(ra1, digits=3)
+	dec1 = round(dec1, digits=3)
+end
+
+# ╔═╡ bc1a33f4-cf2e-44a6-a20b-1344f47e75c6
+md"""
+Blue point below is at 
+
+
+( $ra1, $dec1 )
+
+"""
+
+# ╔═╡ 2d1017a9-03a0-4aa2-829f-72174eaaa363
+θ0
+
+# ╔═╡ 5676b72f-a981-4efb-8328-c25d3c5d6fb0
+periods = [diff(times[idx_peris]); diff(times[idx_apos])]
+
+# ╔═╡ 592a18e9-ee9a-4638-9454-f0bda3a0a3f2
+period = LilGuys.mean(periods)
+
+# ╔═╡ 179c3c32-1368-4a58-b4b8-26d9d3f19f8c
+md"""
+## Identification of interesting locations to search....
+- for this project, want to find stars between 2 and 10 degrees away along stream path.
+"""
+
+# ╔═╡ 5704daca-a8c4-4292-a6c0-ea294f4373fd
+md"""
+## Saving
+"""
+
+# ╔═╡ e4700e4d-213b-470a-b6f7-ca9e8825a6e7
+if (length(idx_apos) > 1) && (sum(idx_apos .< idx_f) > 0)
+	r_apo = r[last(idx_apos[idx_apos .< idx_f])]
+else
+	r_apo = NaN
+end
+
+# ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
+write_fits(skyorbit_outfile, obs_c, overwrite=true)
 
 # ╔═╡ 14eebce8-04f7-493b-824a-7808c7fa35dd
 md"""
 # validating today
 """
+
+# ╔═╡ 1def5368-73c5-460f-9323-86f2c093e6d1
+idx_max = min(idx_f+2, length(times))
 
 # ╔═╡ 54cf5233-a955-4831-86ad-23b72f15789d
 for property in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
@@ -481,8 +497,37 @@ for property in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
 	@printf "%20s\t%8.4f\t%8.4f\t%8.4f\t%8.4f\n" property obs_today[property] obs_today[property * "_err"]  obs_c[idx_f, property]  dy
 end
 
-# ╔═╡ 1def5368-73c5-460f-9323-86f2c093e6d1
-idx_max = min(idx_f+2, length(t))
+# ╔═╡ 04d29fcb-70a0-414b-a487-7a18c44b9d58
+let
+	fig = Figure(size=(400, 150))
+	ax = Axis(fig[1,1], xlabel="time / Gyr", ylabel = "radius / kpc")
+	r = radii(x_cen)
+	lines!(times_Gyr, r)
+	scatter!(times_Gyr[idx_f], r[idx_f], 
+		label="adpoted end", marker=:rect
+	)
+	scatter!(times_Gyr[idx_f], radii(LilGuys.position(gc0)),
+		marker=:+, markersize=6, label="expected", color=COLORS[4]
+	)
+	
+	scatter!(times_Gyr[idx_peris], r[idx_peris], 
+		label="pericentrs"
+	)
+
+	scatter!(times_Gyr[idx_apos], r[idx_apos], 
+		label="apocentres"
+	)
+	
+	scatter!(times_Gyr[idx_peri], r[idx_peri], 
+		label=" last pericentre"
+	)
+	
+	Legend(fig[1, 2], ax)
+
+	@savefig "r_t_orbit"
+
+	fig
+end
 
 # ╔═╡ cdabdc7d-76a1-45f5-b83a-2454576d3964
 let
@@ -506,6 +551,27 @@ let
 	end
 
 	@savefig "skyorbit_agreement_today"
+	fig
+end
+
+# ╔═╡ 63d2d908-2f12-483b-bbad-833b2aecc4e3
+let
+	fig = Figure()
+	ax = Axis(fig[1,1],
+		xlabel="ra",
+		ylabel="dec",
+		xreversed=true
+	)
+	
+	idx = idx_f-10:idx_f
+
+	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=times_Gyr[idx])
+
+	arrows!([ra0], [dec0], [sind(θ0)], [cosd(θ0)])
+	scatter!(ra1, dec1)
+
+	Colorbar(fig[1, 2], h, label="time / Gyr")
+
 	fig
 end
 
@@ -533,9 +599,6 @@ let
 	@savefig "skyorbit_agreement_today"
 	fig
 end
-
-# ╔═╡ ca193997-61c3-4302-a200-4e7d4e777521
-Arya.UNITS_PER_INCH
 
 # ╔═╡ 293090a7-8ee0-442e-b70f-e6b7750ab319
 lerps = Dict(c => LilGuys.lerp(times, obs_c[:, c]) for c in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"])
@@ -571,6 +634,53 @@ let
 	hlines!(0)
 
 	f
+end
+
+# ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
+let
+	
+	orbital_properties = OrderedDict(
+		"pericentre" => r_peri,
+		"apocentre" => r_apo,
+		"pericentres" => r[idx_peris],
+		"apocentres" => r[idx_apos],
+		"period" => period,
+		"idx_peris" => idx_peris, 
+		"idx_apos" => idx_apos,
+		"t_peris" => times[idx_peris], 
+		"t_apos" => times[idx_apos],
+		
+	)
+
+	if @isdefined obs_today
+		orbital_properties_today = OrderedDict(
+			"idx_f" => idx_f,
+			"idx_peri" => idx_peri,
+			"t_last_peri" => times[idx_f] - t_peri,
+			# these three are for the final stream coordinate frame
+			"t_f_gyr" => t_f_Gyr,
+			"ra_f" => ra0,
+			"dec_f" => dec0,
+			"distance_f" => obs_c.distance[idx_f],
+			"pmra_f" => obs_c.pmra[idx_f],
+			"pmdec_f" => obs_c.pmdec[idx_f],
+			"radial_velocity_f" => obs_c.pmdec[idx_f],
+			"theta0" => θ0,
+	
+			"chi2_best" => χ2[idx_f],
+			"chi2_best_interp" => χ2_best_interp,
+		)
+
+		merge!(orbital_properties, orbital_properties_today)
+	end
+
+
+	open(outfile, "w") do f
+		TOML.print(f, orbital_properties)
+	end
+
+	println("saved properties to $outfile")
+	orbital_properties
 end
 
 # ╔═╡ 225a8adb-82ee-4479-806e-15796e2b08e2
@@ -619,147 +729,6 @@ Makie.spaces()
 # ╔═╡ a48b78df-588d-4f94-9252-badd27179deb
 obs_c
 
-# ╔═╡ 3448ffc5-41e6-4208-b11f-2c00168bf50a
-md"""
-# Stream Coordinate frame
-"""
-
-# ╔═╡ 66435478-0619-47aa-a659-c06089951f72
-ra0 = obs_c_gr.ra[idx_f]
-
-# ╔═╡ 78271e36-12b7-4edc-bfb0-20ecc597ab20
-dec0 = obs_c_gr.dec[idx_f]
-
-# ╔═╡ 661ca87c-c8da-49b1-b8a3-72c81050590b
-θ0 = atand(obs_c_gr.pmra[idx_f], obs_c_gr.pmdec[idx_f])
-
-# ╔═╡ 77aa1d73-0c90-4f6c-9383-99e9e9f0379a
-sind(θ0), cosd(θ0)
-
-# ╔═╡ 2318b289-d6c4-44bf-b2ff-36f448faf97b
-obs_c_gr.pmra[idx_f], obs_c_gr.pmdec[idx_f]
-
-# ╔═╡ afdb058a-ebbd-4f07-b0d8-a85bb1070737
-90 - atand(0, 1)
-
-# ╔═╡ 31a11704-1dad-4007-b704-9312b81a5bad
-begin
-	dr = 0
-	dθ = 180
-	ra1 = ra0 + sind(θ0 + dθ) * dr / cosd(dec0)
-	dec1 = dec0 + cosd(θ0 + dθ) * dr
-
-	ra1 = round(ra1, digits=3)
-	dec1 = round(dec1, digits=3)
-end
-
-# ╔═╡ bc1a33f4-cf2e-44a6-a20b-1344f47e75c6
-md"""
-Blue point below is at 
-
-
-( $ra1, $dec1 )
-
-"""
-
-# ╔═╡ 2d1017a9-03a0-4aa2-829f-72174eaaa363
-θ0
-
-# ╔═╡ 63d2d908-2f12-483b-bbad-833b2aecc4e3
-let
-	fig = Figure()
-	ax = Axis(fig[1,1],
-		xlabel="ra",
-		ylabel="dec",
-		xreversed=true
-	)
-	
-	idx = idx_f-10:idx_f
-
-	h = scatter!(obs_c[idx, :ra], obs_c[idx, :dec], color=t[idx] * T2GYR)
-
-	arrows!([ra0], [dec0], [sind(θ0)], [cosd(θ0)])
-	scatter!(ra1, dec1)
-
-	Colorbar(fig[1, 2], h, label="time / Gyr")
-
-	fig
-end
-
-# ╔═╡ 5676b72f-a981-4efb-8328-c25d3c5d6fb0
-periods = [diff(times[idx_peris]); diff(times[idx_apos])]
-
-# ╔═╡ 592a18e9-ee9a-4638-9454-f0bda3a0a3f2
-period = LilGuys.mean(periods)
-
-# ╔═╡ 179c3c32-1368-4a58-b4b8-26d9d3f19f8c
-md"""
-## Identification of interesting locations to search....
-- for this project, want to find stars between 2 and 10 degrees away along stream path.
-"""
-
-# ╔═╡ 5704daca-a8c4-4292-a6c0-ea294f4373fd
-md"""
-## Saving
-"""
-
-# ╔═╡ e4700e4d-213b-470a-b6f7-ca9e8825a6e7
-if length(idx_apos) > 1
-	r_apo = r[last(idx_apos[idx_apos .< idx_f])]
-else
-	r_apo = NaN
-end
-
-# ╔═╡ 76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
-let
-	
-	orbital_properties = OrderedDict(
-		"pericentre" => r_peri,
-		"apocentre" => r_apo,
-		"pericentres" => r[idx_peris],
-		"apocentres" => r[idx_apos],
-		"period" => period,
-		"idx_peris" => idx_peris, 
-		"idx_apos" => idx_apos,
-		"t_peris" => t[idx_peris], 
-		"t_apos" => t[idx_apos],
-		
-	)
-
-	if @isdefined obs_today
-		orbital_properties_today = OrderedDict(
-			"idx_f" => idx_f,
-			"idx_peri" => idx_peri,
-			"t_last_peri" => t_f - t_peri,
-			# these three are for the final stream coordinate frame
-			"t_f_gyr" => t_f,
-			"ra_f" => ra0,
-			"dec_f" => dec0,
-			"distance_f" => obs_c.distance[idx_f],
-			"pmra_f" => obs_c.pmra[idx_f],
-			"pmdec_f" => obs_c.pmdec[idx_f],
-			"radial_velocity_f" => obs_c.pmdec[idx_f],
-			"theta0" => θ0,
-	
-			"chi2_best" => χ2[idx_f],
-			"chi2_best_interp" => χ2_best_interp,
-		)
-
-		merge!(orbital_properties, orbital_properties_today)
-	end
-
-
-	open(outfile, "w") do f
-		TOML.print(f, orbital_properties)
-	end
-
-	println("saved properties to $outfile")
-	orbital_properties
-end
-
-# ╔═╡ fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
-write_fits(skyorbit_outfile, obs_c, overwrite=true)
-
 # ╔═╡ Cell order:
 # ╟─8b41af50-9ae0-475b-bacc-3799e2949b30
 # ╠═d94663e8-b30e-4712-8a3e-6ef7f954f141
@@ -778,6 +747,7 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═24ed3bc1-37c6-4601-b941-0780c53a9630
 # ╠═079afa70-c7dc-4347-9ae3-8459ba2fa941
 # ╠═94344455-d1d2-4ef9-af11-2d79ee4729ee
+# ╠═5f9652ec-30bc-4b1a-82c1-3daca696fe87
 # ╟─dd56b7ec-be11-447f-acc1-12750d82879b
 # ╠═bc6deac8-b70a-483b-9fd7-1413c6f17aa7
 # ╠═69d83e00-7eb6-4271-838f-80e4d1654dac
@@ -804,28 +774,19 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═ad1782db-17a2-4385-ab7b-0ce038600a0d
 # ╠═5255c605-56ea-4eb3-bd20-5134e3a96705
 # ╠═aa2c3a93-19a3-43d8-82de-ae6ed8c4b9f7
-# ╠═15293cb8-61d3-478d-a2ae-5a5b2006db44
-# ╠═ddd74bbb-df27-4150-b497-b1df5243f518
 # ╠═f88b909f-c3dc-41e0-bdb1-25e229964d27
 # ╠═6d0612d6-8609-4832-80ae-4e8e78c557cc
 # ╟─7d29a3bd-dc83-4eb3-ae65-fce5270ed8d5
 # ╠═f134b3ce-53f0-47e9-84e9-1e73064d5191
 # ╠═64e558da-2928-4815-ad5a-7528516311f9
 # ╠═defc4184-2613-4480-9adf-fa135f168382
-# ╠═71ef4c9b-1284-4451-bcdd-eff79d334539
 # ╠═a179323f-4878-4021-b8d4-69ca733658cb
 # ╠═ecf7c820-81a4-4cb7-a794-b7835c77811e
 # ╠═cdde517a-1b3e-4d96-9156-4a8f72b795e9
-# ╠═cb601d4f-0fd6-4d1d-8bf0-910471c729c6
 # ╠═319b905c-2d08-4a95-9d95-9cd26e2f5b1f
 # ╠═9d60d54b-70e8-4b3c-a7c7-7caaa2f94a1c
-# ╠═7646ea5b-f1b1-4934-be68-330139f7f838
 # ╠═d9df3376-6ca1-4701-afb5-2df994bb3442
-# ╠═3297c4d0-92f9-4f1b-80e6-84c8d787c37c
 # ╠═9530e936-1225-4cfc-aa9a-bf7644d612f5
-# ╠═7a30bd90-946e-418c-8339-be64c37cda76
-# ╠═0c69519c-9650-46b9-89f9-cc37227f5b1a
-# ╠═d95c457b-c9be-4570-bc90-b4bbb7de56e2
 # ╠═88a9bb2d-9f86-4a96-a3b8-7a057480c7c3
 # ╠═8d1508af-1715-4ef6-aab9-e95a02265913
 # ╠═efcbae60-cf7c-4e74-aae4-39d19b74b6fa
@@ -833,36 +794,19 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═a5ce5442-73ca-4aaf-915a-72fe9936e791
 # ╠═7e14d1c7-b37f-4c0c-8e2a-1ac7cce27aaa
 # ╠═f64dcd49-b0ca-4319-b615-5520b23d7818
-# ╠═04d29fcb-70a0-414b-a487-7a18c44b9d58
 # ╠═af8a50bd-e761-4439-9fc9-80048c264d5b
 # ╠═73bb2d61-37f3-4782-ae89-d36d1ff8f9ff
-# ╠═8c28ac36-92c9-457e-8ccc-fb7551db883f
 # ╠═0031cce4-160b-4c02-9d14-94769901eaea
 # ╠═15e35190-0430-40f1-a752-a968b9ea35f6
-# ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
-# ╠═9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
-# ╠═54cf5233-a955-4831-86ad-23b72f15789d
-# ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
-# ╠═891f31ed-5565-4f43-ab82-b8bc3a76c1cf
-# ╠═1def5368-73c5-460f-9323-86f2c093e6d1
-# ╠═ca193997-61c3-4302-a200-4e7d4e777521
-# ╠═225a8adb-82ee-4479-806e-15796e2b08e2
-# ╠═293090a7-8ee0-442e-b70f-e6b7750ab319
-# ╠═052fb31a-788a-485f-b8d2-1cf49f6ffb4b
-# ╠═e96a9789-22b8-433a-8a3c-182d7ec4e82a
-# ╠═5858e6d0-a501-43ee-9669-6a225a1df1c9
-# ╠═a48b78df-588d-4f94-9252-badd27179deb
 # ╟─3448ffc5-41e6-4208-b11f-2c00168bf50a
 # ╠═66435478-0619-47aa-a659-c06089951f72
 # ╠═78271e36-12b7-4edc-bfb0-20ecc597ab20
 # ╠═661ca87c-c8da-49b1-b8a3-72c81050590b
 # ╠═77aa1d73-0c90-4f6c-9383-99e9e9f0379a
 # ╠═2318b289-d6c4-44bf-b2ff-36f448faf97b
-# ╠═afdb058a-ebbd-4f07-b0d8-a85bb1070737
 # ╠═31a11704-1dad-4007-b704-9312b81a5bad
 # ╠═bc1a33f4-cf2e-44a6-a20b-1344f47e75c6
 # ╠═2d1017a9-03a0-4aa2-829f-72174eaaa363
-# ╠═63d2d908-2f12-483b-bbad-833b2aecc4e3
 # ╠═5676b72f-a981-4efb-8328-c25d3c5d6fb0
 # ╠═592a18e9-ee9a-4638-9454-f0bda3a0a3f2
 # ╟─179c3c32-1368-4a58-b4b8-26d9d3f19f8c
@@ -870,3 +814,17 @@ write_fits(skyorbit_outfile, obs_c, overwrite=true)
 # ╠═e4700e4d-213b-470a-b6f7-ca9e8825a6e7
 # ╠═76d5bed6-f1ba-4a2d-8425-ceb40d18abdc
 # ╠═fcf93f45-f4a1-4bec-bf4f-b4e515bf5d67
+# ╟─14eebce8-04f7-493b-824a-7808c7fa35dd
+# ╠═9e2cbc6b-58ec-45d0-9afa-568a7bc8a33e
+# ╠═1def5368-73c5-460f-9323-86f2c093e6d1
+# ╠═54cf5233-a955-4831-86ad-23b72f15789d
+# ╟─04d29fcb-70a0-414b-a487-7a18c44b9d58
+# ╠═cdabdc7d-76a1-45f5-b83a-2454576d3964
+# ╠═63d2d908-2f12-483b-bbad-833b2aecc4e3
+# ╠═891f31ed-5565-4f43-ab82-b8bc3a76c1cf
+# ╠═225a8adb-82ee-4479-806e-15796e2b08e2
+# ╠═293090a7-8ee0-442e-b70f-e6b7750ab319
+# ╠═052fb31a-788a-485f-b8d2-1cf49f6ffb4b
+# ╠═e96a9789-22b8-433a-8a3c-182d7ec4e82a
+# ╠═5858e6d0-a501-43ee-9669-6a225a1df1c9
+# ╠═a48b78df-588d-4f94-9252-badd27179deb

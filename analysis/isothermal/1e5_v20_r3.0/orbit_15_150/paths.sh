@@ -1,0 +1,3 @@
+source ../paths.sh
+
+export out_path="$DWARFS_SIMS/isothermal/1e5_v20_r3.0/orbit_15_150"

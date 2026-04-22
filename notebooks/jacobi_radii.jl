@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -27,7 +27,7 @@ begin
 	
 end
 
-# ╔═╡ 1374aa1e-ee19-4a17-b317-cf0be4196dfe
+# ╔═╡ 7f9e7fb8-442e-4a29-b8cf-1c10bc03ba45
 using PlutoUI
 
 # ╔═╡ ad687c7e-a9d9-4a80-b7d1-dc24f7be8a76
@@ -36,27 +36,8 @@ using PythonCall
 # ╔═╡ aff88239-9b72-44df-b895-3d3e0b6430dc
 using OrderedCollections
 
-# ╔═╡ 620d4b82-d277-46d1-b01c-329a65ca3626
-r_break_obs_arcmin = 25
-
 # ╔═╡ a0048a1f-e098-4cbf-898a-a9e94631e98e
-function notebook_inputs(; kwargs...)
-	return PlutoUI.combine() do Child
-		
-		user_inputs = [
-			md""" $(string(name)): $(
-				Child(name, obj)
-			)"""
-			
-			for (name, obj) in kwargs
-		]
-		
-		md"""
-		#### Inputs
-		$(user_inputs)
-		"""
-	end
-end
+include(joinpath(ENV["DWARFS_ROOT"], "utils/pluto_utils.jl"))
 
 # ╔═╡ f9d80bb9-0e61-4a3a-aa2f-6f9393a96fb7
 @bind inputs confirm(notebook_inputs(;
@@ -74,6 +55,9 @@ modelname = inputs.modelname
 
 # ╔═╡ 17c701ff-2620-42b7-b2f2-02e5cbe1900d
 vasiliev_units = inputs.vasiliev_units
+
+# ╔═╡ 620d4b82-d277-46d1-b01c-329a65ca3626
+r_break_obs_arcmin = 25
 
 # ╔═╡ c73efb23-ba43-43ba-952a-18ed7fec9e91
 lmc = inputs.lmc
@@ -369,6 +353,7 @@ end
 
 # ╔═╡ Cell order:
 # ╠═f9d80bb9-0e61-4a3a-aa2f-6f9393a96fb7
+# ╠═7f9e7fb8-442e-4a29-b8cf-1c10bc03ba45
 # ╠═26886e5c-546f-45ca-a882-2b354a962f07
 # ╠═cc2c7b51-5483-4693-bda6-40563ffb7289
 # ╠═17c701ff-2620-42b7-b2f2-02e5cbe1900d
@@ -376,7 +361,6 @@ end
 # ╠═c73efb23-ba43-43ba-952a-18ed7fec9e91
 # ╠═8bb2a7f2-97de-4f09-afdd-6cbebe9b86f5
 # ╠═a0048a1f-e098-4cbf-898a-a9e94631e98e
-# ╠═1374aa1e-ee19-4a17-b317-cf0be4196dfe
 # ╟─f7b10565-3af7-4fa3-8dbf-a34e82b044cb
 # ╟─bea952a4-e48a-489e-8f31-62dd8827e869
 # ╠═ca5f69e4-31c3-11f0-2b96-d3cead0ed832

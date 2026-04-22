@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -38,7 +38,9 @@ The goal of this script is to compare the initial and final simulation density p
 import HDF5
 
 # ╔═╡ b47c355b-48d3-499f-9333-e469878eb4f2
-lmc = false
+md"""
+use lmc? $(@bind lmc CheckBox())
+"""
 
 # ╔═╡ ce947244-6184-48a3-9635-5c5ec7734d6b
 md"""
@@ -66,10 +68,10 @@ end
 
 # ╔═╡ 2aba5629-9e59-489e-9831-45868365fbed
 @bind inputs confirm(notebook_inputs(;
-	galaxyname = TextField(default="sculptor"),
-	haloname = TextField(default="1e7_new_v31_r3.2"),
+	galaxyname = TextField(default="bootes3"),
+	haloname = TextField(default="1e6_v30_r3.0"),
 	orbitname = TextField(default="orbit_"),
-	starsname = TextField(default="exp2d_rs0.13"),
+	starsname = TextField(default="exp2d_rs0.20"),
 ))
 
 # ╔═╡ af83e902-3cdf-4fea-8a41-95daefe4e0df
@@ -101,7 +103,7 @@ end
 # ╔═╡ 9fecfed4-8aba-42f6-bcf2-1891e0b5f947
 prof_obs = LilGuys.SurfaceDensityProfile(
 joinpath(ENV["DWARFS_ROOT"], "observations", galaxyname, "density_profiles", "fiducial_profile.toml")
-) |> LilGuys.filter_empty_bins
+) 
 
 # ╔═╡ e3fe8cb2-fc6f-4bbd-86e9-d1cd1c296c15
 prof_sim_i = LilGuys.SurfaceDensityProfile(model_stars_dir *  "/initial_profile.toml") |> LilGuys.filter_empty_bins
@@ -203,7 +205,7 @@ let
 	ax = Axis(fig[1,1],
 		xlabel = "log R / arcmin",
 		ylabel = L"\log \Sigma / \Sigma_0",
-			  limits=(-1, 2.5, ymin, ymin+10)
+			  limits=(-1, 3, ymin, ymin+10)
 	)
 
 	lines!(log_radii(prof_sim_i), log_surface_density(prof_sim_i) .- norm_sim, label ="initial", color=COLORS[2], linestyle=:dot)

@@ -41,14 +41,16 @@ end
 # ╔═╡ 67580761-e143-4824-b829-64d34496675a
 import Agama
 
-# ╔═╡ 3295bf9e-760a-4db5-b760-d20dafea2dcd
-# pot = Agama.Potential(file=joinpath(dwarfs_dir, "agama/potentials/EP2020.ini"))
-
 # ╔═╡ a829e274-961f-456d-89e6-fc5f1014af1e
 pot = Agama.Potential(type="Logarithmic", v0=220/V2KMS, scaleRadius=0)
 
+# ╔═╡ 8f7c919f-b7d4-4a07-9061-cd2247af4962
+md"""
+The below cell sanity checks that the potential is isothermal (`v_circ` is constant)
+"""
+
 # ╔═╡ 4f64e911-e57c-4756-bdda-834cb4948d93
-Agama.circular_velocity(pot, [1e-10, 0.1, 1, 100, 10000])
+@assert all(Agama.circular_velocity(pot, [1e-10, 0.1, 1, 100, 10000]) ./ V0 .≈ 1)
 
 # ╔═╡ 54f2797a-ed34-41d2-b1c5-e23b7eb48f6f
 md"""
@@ -62,9 +64,6 @@ md"""
 
 # ╔═╡ 6b617252-7929-4421-bcad-d05c64bfc388
 T_peri = 2π * peri / V0
-
-# ╔═╡ d13cdc6b-49dd-4b01-b038-881e26fa1e4c
-Agama.circular_velocity(pot, 3) / V0
 
 # ╔═╡ 39aad1b7-080c-4d3e-89ad-12dfdd2ba27e
 md"""
@@ -141,20 +140,6 @@ let
 		filt = df.time .< 200 / T2GYR
 
 		lines!(df.t_rel[filt], log10.(df.t_max[filt] ./ T_peri), linewidth = 1 + log10(apo_rel))
-	end
-
-	fig
-end
-
-# ╔═╡ dd3afaa4-4e4a-4162-be20-2efd116d9a74
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-
-	for peri in [1, 5, 10, 20, 99] ./ 100
-		df = make_track(peri=apo * peri)
-		filt = df.M_max .> 0.3 * df.M_max[1]
-		lines!(df.time[filt] * T2GYR, log10.(df.t_max[filt] ./ T_peri))
 	end
 
 	fig
@@ -281,6 +266,55 @@ end
 
 
 
+# ╔═╡ a2865557-31d4-4bf0-9149-87b9a7b85fbd
+md"""
+# Extra
+"""
+
+# ╔═╡ 32b0e8fb-5b79-4e3f-97b2-837252ffa7dd
+
+
+# ╔═╡ b3724f59-d9ab-45d9-a0fb-de0217a4671c
+md"""
+## Does the `r_cut` work with the tidal tracks?
+"""
+
+# ╔═╡ 01296f19-9c0b-41ff-8961-ea53f14059ea
+LilGuys.r_circ_max(Rapha.TidalNFW(r_circ_max=1, v_circ_max=1, r_cut=0.3))
+
+# ╔═╡ 4c331187-8192-47ec-aea3-1060ec1f33ea
+LilGuys.v_circ_max(Rapha.TidalNFW(r_circ_max=1, v_circ_max=1, r_cut=0.3))
+
+# ╔═╡ 3fc349a5-5c33-4489-9c9b-54fd01f8b801
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+
+	x = LinRange(-2, 2, 1000)
+
+	nfw_i = NFW(r_circ_max=1, v_circ_max=1)
+	y = log10.(LilGuys.v_circ.(nfw_i, 10 .^ x))
+	lines!(x, y, color=:black, linewidth=2)
+
+	for M_rel in logrange(1, 1e-2, 30)
+		h = Rapha.final_halo(1, 1, M_rel)
+	
+		y = log10.(LilGuys.v_circ.(h, 10 .^ x))
+		lines!(x, y)
+		# r_max = LilGuys.solve_r_circ_max(h)
+		# scatter!(r_max, LilGuys.v_circ(h, r_max))
+		i = argmax(y)
+		scatter!(x[i], y[i])
+		r_rel, v_rel = Rapha.r_v_rel(M_rel)
+		@info r_rel, v_rel
+		scatter!(log10(r_rel), log10(v_rel), color=:black, marker=:circle, strokewidth=0)
+	end
+
+	
+
+	fig
+end
+
 # ╔═╡ Cell order:
 # ╠═35e39c2d-cac3-4686-8ac4-37027f5b56a2
 # ╠═95f28817-ec88-4e40-bf1d-f499f0217451
@@ -292,17 +326,15 @@ end
 # ╠═fddd99d4-fd2f-4f90-bf04-8f8d20c39c48
 # ╠═cc264eb9-65df-4fc0-9be1-26142ecd2690
 # ╠═67580761-e143-4824-b829-64d34496675a
-# ╠═3295bf9e-760a-4db5-b760-d20dafea2dcd
 # ╠═a829e274-961f-456d-89e6-fc5f1014af1e
+# ╠═8f7c919f-b7d4-4a07-9061-cd2247af4962
 # ╠═4f64e911-e57c-4756-bdda-834cb4948d93
 # ╟─54f2797a-ed34-41d2-b1c5-e23b7eb48f6f
 # ╟─929b599c-38a3-48ad-9a24-41e85e35ff3e
 # ╠═6702b75a-dfba-4894-8729-10af81b0034c
 # ╠═6b617252-7929-4421-bcad-d05c64bfc388
-# ╠═d13cdc6b-49dd-4b01-b038-881e26fa1e4c
 # ╟─39aad1b7-080c-4d3e-89ad-12dfdd2ba27e
 # ╠═4db3abf0-aa4a-4928-9806-687ee1a09a54
-# ╠═dd3afaa4-4e4a-4162-be20-2efd116d9a74
 # ╠═23ef0e79-15cd-4c23-80c5-8a10cd2341a2
 # ╠═a9bbb390-fbc9-475b-bbc1-1d557ad9c232
 # ╠═7d071e1f-9d49-48a2-b568-5772b662b8ad
@@ -325,4 +357,10 @@ end
 # ╠═97fd14cd-d84d-4390-9a76-531ee5b8cf13
 # ╠═70e9185f-a6f5-4c20-bf78-f28b7d68c832
 # ╟─f73db2cd-6c3c-462a-95bb-a590842e97dc
-# ╟─4dfa1123-6b47-47b7-be1e-8a8dee0e4779
+# ╠═4dfa1123-6b47-47b7-be1e-8a8dee0e4779
+# ╠═a2865557-31d4-4bf0-9149-87b9a7b85fbd
+# ╠═32b0e8fb-5b79-4e3f-97b2-837252ffa7dd
+# ╠═b3724f59-d9ab-45d9-a0fb-de0217a4671c
+# ╠═01296f19-9c0b-41ff-8961-ea53f14059ea
+# ╠═4c331187-8192-47ec-aea3-1060ec1f33ea
+# ╠═3fc349a5-5c33-4489-9c9b-54fd01f8b801
