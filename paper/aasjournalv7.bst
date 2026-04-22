@@ -1,25 +1,136 @@
-%% 2001/06/10 EDP Sciences
-%% APJ, corrected by hand to get results for A&A, using Natbib   
+%% aasjournalv7.bst March 4, 2025
+%%
+%% Revision 1.19: Aptara 
+%% Modified to include first initials for inline citations.
+%% Full titles can be called via that "longbib" style option in 
+%% aastex7.cls. This version should only be used with v7+.
+%%
+%% AASJournal.bst June 3, 2019
+%%
+%% Revision 1.18 2019/6/3 Amy Hendrickson
+%% Took out `v' preceding version number in @misc
+%%
+%% Rewrote format.pid to implement this precedence:
+%% if doi, print that, if eprint print that, if neither
+%% and there is a url, use the url
 
-%% 1998/08/12  J Baker
-%% Tweaked by hand to get correct results for ApJ.  Added functions from
-%% astrobib.
+%% Took out format.url output generally because it is included in format.pid,
+%% so undesirable to call for it a second time.
 
-%% $Log: apj.bst,v $
+%%
+%% Revision 1.17 2019/3/15 Amy Hendrickson
+%% Added DOI to every field where format.url was found. Kept format.url in case
+%% it is needed.
+%%
+
+%% Revision 1.16 2017/10/26 Amy Hendrickson
+%% `url' only active when used in misc
+%%
+%% `note' is disabled in all cases; as is adsnote and adsurl.
+%%
+%% Repair to @misc call to aaspublisher to prevent `, ,'
+%% when there is no publisher listed.
+%%
+%% Make correct hyperlinked content for doi, ascl, and arXiv;
+%% changed definition of FUNCTION {format.eprint} to compare
+%%  archivePrefix with "arXiv" and when they match do
+%%        ' {new.block "\doarXiv{" eprint * "}" * }
+%%                      otherwise do
+%%        ' {new.block "\doeprint{" eprint * "}" * }
+%%
+%% \dodoi, \doarXiv and \doeprint definitions are sent to the top of the .bbl file
+%% with commands found in FUNCTION {begin.bib}.
+%%
+%% bbl.version no longer used, could be deleted.
+%%
+%% Version number is added when author enters: version = {number}, only in `misc'
+%%
+%% Removed `format.doi output' in {article} because in 
+%% combination with { format.pid output } we could get double doi entries 
+%% in the bibliography. 
+%%
+%% Rewrote format.pid so that we can check to see if we have a doi number; in
+%% which case we use that and suppress the arXiv and eprint combination. However,
+%% we do Not eliminate the url field if the author has entered it.
+%%
+%% Deleted format.miscversion and made a simplified way to produce version in @misc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Revision 1.16 2024/02/01 Technology Team (Aptara)
+%% 1. Added first initial in text citation with author name i.e Donati,~J. {et~al.}(2020) instead of Donati,~J.-F. {et~al.}(2020)
+%% 2. Added Article title field in article type refernces.
+
+%% Revision 1.15 2016/10/5 Amy Hendrickson
+%% Changed bbl.version so that there is no longer a trailing `.'
+
+%% Revision 1.14 2016/9/14 Amy Hendrickson
+%% Added URL field 
+
+%% Revision 1.13 2016/8/9 Amy Hendrickson
+%% Change to presort and bibsort to get multiple entries with same author/year
+%% combination to be ordered in bibliography in same order as \cite{}s entered in text.
+
+%% Revision 1.12 2016/2/11 Amy Hendrickson
+%% Changes to @misc function to specifications by Dr. August Muench.
+%% Made comma appear between title and publisher whether or not there is a version number.
+
+%% Revision 1.11 2015/12/31 Amy Hendrickson
+%% Changes to @misc function to specifications by Dr. August Muench.
+%% Added version and publisher fields.
+
+%% Revision 1.10 2013/03/11 13:01:55 alberto
+%% Reworked code to use format.pid for articles without proper
+%% pagination which then leads the system to use either an eprint
+%% id or a DOI; this will solve most problems with citing early
+%% access articles (no volume of page available, but online).
+%% Removed bibliography count from preamble since it seems to
+%% confuse some versions of latex.
+%% 
+%% Revision 1.9 2013/2/19 Erik Tollerud <erik.tollerud@yale.edu> 
+%% fixes for spurious error messages due to rev 1.8 changes
+%% also fixed missing publisher field printing in "book"
+%%
+%% Revision 1.8  2013/01/10 16:31:34  alberto
+%% Added proper formatting of arXiv eprint entries output by ADS
+%% (these are article records, but the eprint id is printed only 
+%% if no traditional page number is available).  Also added support
+%% for ASCL entries under the "misc" category.
+%%
+%% Revision 1.7  2011/11/21 13:10:12  alberto
+%% Implemented new ApJ formatting rules: for papers with more than
+%% 5 authors, print first 3 followed by "et al."
+%%
+%% Revision 1.6  2009/05/18 15:13:02  alberto
+%% Fixed sorting of references with truncated lists of authors
+%% in sort.format.names
+%% Fix courtesy of Stephen Fegan <sfegan@llr.in2p3.fr>
+%%
+%% Revision 1.5  2009/03/19 13:15:11  alberto
+%% Truncate \bibitem entries with more than 8 authors.
+%% Fix courtesy of Craig Wiegert <wigie@alum.mit.edu>
+%% and Andrew R. Marble <amarble@as.arizona.edu>
+%%
+%% Revision 1.4  2002/06/18 16:37:48  alberto
+%% Add comma after first author in two-author reference
+%% Fix courtesy of Tim Robishaw <robishaw@astron.berkeley.edu>
+%%
 %% Revision 1.3  2000/04/20 22:17:50  jbaker
 %% Fixed INBOOK bug, now works essentially like BOOK.
 %%
 %% Revision 1.2  1998/08/30 22:35:45  jbaker
 %% Added RCS keywords.
 %%
+%% 1998/08/12  J Baker
+%% Tweaked by hand to get correct results for ApJ.  Added functions from
+%% astrobib.
+
 
 %%
-%% This is file `apj.bst',
+%% This originally was file `apj.bst',
 %% generated with the docstrip utility.
 %%
 %% The original source files were:
 %%
-%% merlin.mbs  (with options: `,ay,nat,nm-rev,nmdash,dt-beg,yr-per,note-yr,atit-u,jtit-x,jttl-rm,thtit-a,vnum-x,volp-com,jpg-1,pp-last,btit-rm,add-pub,pub-par,pre-edn,edby,edbyx,blk-com,fin-bare,ppx,ed,abr,ord,jabr,eprint,amper,em-x')
+%% merlin.mbs  (with options: `,ay,nat,nm-rev,nmdash,dt-beg,yr-per,note-yr,atit-u,jtit-x,jttl-rm,thtit-a,vnum-x,volp-com,jpg-1,pp-last,btit-rm,add-pub,pub-par,pre-edn,edby,edbyx,blk-com,fin-bare,ppx,ed,abr,ord,jabr,amper,em-x')
 %% ----------------------------------------
 %% *** Bibliographic Style for ApJ ***
 %% 
@@ -68,19 +179,19 @@
 
 ENTRY
   { address
-    archiveprefix                   %EDP Sciences le 30/11/2014
+    archivePrefix
     author
     booktitle
     chapter
+    doi
     edition
     editor
+    eprint
     howpublished
     institution
-    eprint                    %EDP Sciences le 30/11/2014
     journal
     key
     month
-    note
     number
     organization
     pages
@@ -88,9 +199,12 @@ ENTRY
     school
     series
     title
+    misctitle
     type
     volume
     year
+    version
+    url
   }
   {}
   { label extra.label sort.label short.list }
@@ -127,44 +241,12 @@ FUNCTION {output.nonnull}
   s
 }
 
-%EDP Sciences le 30/11/2014
-FUNCTION {output.eprint}
-{ 's :=
-  output.state mid.sentence =
-    { " " * write$ }
-    { output.state after.block =
-        { add.period$ write$
-          newline$
-          "\newblock " write$
-        }
-        { output.state before.all =
-            'write$
-            { add.period$ " " * write$ }
-          if$
-        }
-      if$
-      mid.sentence 'output.state :=
-    }
-  if$
-  s
-}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 FUNCTION {output}
 { duplicate$ empty$
     'pop$
     'output.nonnull
   if$
 }
-
-%EDP Sciences le 30/11/2014
-FUNCTION {outputeprint}
-{ duplicate$ empty$
-    'pop$
-    'output.eprint
-  if$
-}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FUNCTION {output.check}
 { 't :=
@@ -203,6 +285,10 @@ FUNCTION {new.sentence}
 FUNCTION {add.blank}
 {  " " * before.all 'output.state :=
 }
+
+FUNCTION {add.comma}
+{  "," * }
+
 
 FUNCTION {date.block}
 {
@@ -243,6 +329,54 @@ FUNCTION {field.or.null}
   if$
 }
 
+FUNCTION {remove.irrelevant.period.comma}
+{ 's :=
+  s empty$
+    { "" }
+    { s #-1 #3 substring$ "?,'" =
+      s #-1 #3 substring$ "?.'" = or
+        { s #-3 global.max$ substring$ "'" * }
+        { s #-1 #4 substring$ "?,''" =
+          s #-1 #4 substring$ "?.''" = or
+            { s #-4 global.max$ substring$ "''" * }
+            { s #-1 #2 substring$ "?," =
+              s #-1 #2 substring$ "?." = or
+                { s #-2 global.max$ substring$ "" * }
+                { s #-1 #3 substring$ "?,~" =
+                  s #-1 #3 substring$ "?.~" = or
+                    { s #-4 global.max$ substring$ "?~" * }
+                    's
+                  if$
+                }
+              if$
+            }
+          if$
+        }
+      if$
+    }
+  if$
+}
+
+FUNCTION {bibinfo.check}
+{ swap$
+  duplicate$ missing$
+    {
+      pop$ pop$
+      ""
+    }
+    { duplicate$ empty$
+        {
+          swap$ pop$
+        }
+        { swap$
+          "\bibinfo{" swap$ * "}{" * swap$ * "}" *
+        }
+      if$
+    }
+  if$
+}
+
+
 FUNCTION {emphasize}
 { skip$ }
 
@@ -273,6 +407,9 @@ FUNCTION {bbl.edition}
 FUNCTION {bbl.volume}
 { "Vol." }
 
+FUNCTION {bbl.version}
+{ "" }
+
 FUNCTION {bbl.of}
 { "of" }
 
@@ -293,7 +430,6 @@ FUNCTION {bbl.page}
 
 FUNCTION {bbl.chapter}
 { "Ch." }
-%{ "chap." }
 
 FUNCTION {bbl.techrep}
 { "Tech. Rep." }
@@ -376,109 +512,57 @@ FUNCTION {eng.ord}
    if$
 }
 
-MACRO {acmcs} {"ACM Comput. Surv."}
-
-MACRO {acta} {"Acta Inf."}
-
-MACRO {cacm} {"Commun. ACM"}
-
-MACRO {ibmjrd} {"IBM J. Res. Dev."}
-
-MACRO {ibmsj} {"IBM Syst.~J."}
-
-MACRO {ieeese} {"IEEE Trans. Softw. Eng."}
-
-MACRO {ieeetc} {"IEEE Trans. Comput."}
-
-MACRO {ieeetcad}
- {"IEEE Trans. Comput.-Aided Design Integrated Circuits"}
-
-MACRO {ipl} {"Inf. Process. Lett."}
-
-MACRO {jacm} {"J.~ACM"}
-
-MACRO {jcss} {"J.~Comput. Syst. Sci."}
-
-MACRO {scp} {"Sci. Comput. Programming"}
-
-MACRO {sicomp} {"SIAM J. Comput."}
-
-MACRO {tocs} {"ACM Trans. Comput. Syst."}
-
-MACRO {tods} {"ACM Trans. Database Syst."}
-
-MACRO {tog} {"ACM Trans. Gr."}
-
-MACRO {toms} {"ACM Trans. Math. Softw."}
-
-MACRO {toois} {"ACM Trans. Office Inf. Syst."}
-
-MACRO {toplas} {"ACM Trans. Prog. Lang. Syst."}
-
-MACRO {tcs} {"Theoretical Comput. Sci."}
-
-INTEGERS { nameptr namesleft numnames }
+INTEGERS { nameptr namesleft numnames numtrunc }
 
 FUNCTION {format.names}
 { 's :=
+  #0 'numtrunc :=
   #1 'nameptr :=
   s num.names$ 'numnames :=
   numnames 'namesleft :=
-    { namesleft #0 > }
-    { s nameptr
-      "{vv~}{ll}{, jj}{, f.}" format.name$
+  numnames #5 > 
+    { #3 'numtrunc := }
+    {}
+  if$
+  { namesleft #0 > }
+  { s nameptr
+    "{vv~}{ll}{, jj}{, f.}" format.name$
     't :=
+    nameptr #1 >
+      {
+	nameptr #1 - numtrunc = 
+	  { 
+	    #1 'namesleft :=
+	    "others" 't :=
+	  }
+	  {}
+	if$
 
-numnames #5 >
-	{
-      nameptr #1 >
-        {
-	      nameptr #4 =
-                {
-                  ", {et~al.}" *
-                }
-				{
-      				nameptr #4 >
-					{ "" * }
-					{ ", " * t * }
-					if$
-				}
-				if$
-
-        }
-        't
-      if$
-	}
-	{
-      nameptr #1 >
-        {
-          namesleft #1 >
-            { ", " * t * }
-            {
-              numnames #2 >
-                { "," * }
-                'skip$
-              if$
-              s nameptr "{ll}" format.name$ duplicate$ "others" =
-                { 't := }
-                { pop$ }
-              if$
-              t "others" =
-                {
-                  " {et~al.}" *
-                }
-                { " \& " * t * }
-              if$
-            }
-          if$
-        }
-        't
-      if$
-	} if$
-
-      nameptr #1 + 'nameptr :=
-      namesleft #1 - 'namesleft :=
-    }
+        namesleft #1 >
+          { ", " * t * }
+          {
+            numnames #1 >
+              { "," * }
+              'skip$
+            if$
+            s nameptr "{ll}" format.name$ duplicate$ "others" =
+              { 't := }
+              { pop$ }
+            if$
+            t "others" =
+              {
+                " {et~al.}" *
+              }
+              { " \& " * t * }
+            if$
+          }
+        if$
+      }
+      't
+    if$
+    nameptr #1 + 'nameptr :=
+    namesleft #1 - 'namesleft :=
+  }
   while$
 }
 
@@ -556,44 +640,19 @@ FUNCTION {format.in.editors}
   if$
 }
 
-FUNCTION {format.note}
-{ note empty$
-    { "" }
-    { note #1 #1 substring$
-      duplicate$ "{" =
-        'skip$
-        { output.state mid.sentence =
-          { "l" }
-          { "u" }
-        if$
-        change.case$
-        }
-      if$
-      note #2 global.max$ substring$ *
-    }
-  if$
-}
 
-%EDP Sciences le 30/11/2014
-FUNCTION {format.eprint}
-{ eprint duplicate$ empty$
-    'skip$
-    { "[\eprint" 
-      archiveprefix empty$
-        'skip$
-        { "[" * archiveprefix * "]" * }
-      if$
-      "{" * swap$ * "}]" *
-    }
-  if$
-}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FUNCTION {format.title}
 { title empty$
     { "" }
-    { title
-    }
+    { title  add.comma remove.irrelevant.period.comma "title" bibinfo.check }
+  if$
+}
+
+FUNCTION {format.title.misc}
+{ title empty$
+    { "" }
+    { title  add.comma remove.irrelevant.period.comma }
   if$
 }
 
@@ -688,6 +747,8 @@ FUNCTION {make.full.names}
 
 FUNCTION {output.bibitem}
 { newline$
+  "% type= " write$  type$ write$
+  newline$
   "\bibitem[{" write$
   label write$
   ")" make.full.names duplicate$ short.list =
@@ -700,6 +761,54 @@ FUNCTION {output.bibitem}
   newline$
   ""
   before.all 'output.state :=
+}
+
+
+FUNCTION {format.url}
+{ url empty$
+    { "" }
+    { new.block "\url{" url * "}" * }
+  if$
+}
+
+FUNCTION {format.eprint}
+{ eprint empty$
+    { "" }
+    { archivePrefix empty$
+        { "" }
+        { archivePrefix "arXiv" =
+        {new.block "\doarXiv{" eprint * "}" * }
+        {new.block "\doeprint{" eprint * "}" * }
+        if$}
+      if$
+    }
+  if$
+}
+
+% Formats a persistent identifier (PID)
+% (typically a DOI or an eprint id)
+% You can easily swap the order of which PID
+% gets picked
+%
+
+FUNCTION {format.doi}
+{ doi empty$
+    { "" }
+    { "\dodoi{" doi * "}" * }
+  if$
+}
+
+FUNCTION {format.pid}
+{ doi empty$
+{eprint empty$ 
+     { url empty$ 
+       { "" }
+       { format.url }
+     if$}
+     { format.eprint }
+    if$}
+  { format.doi }
+  if$
 }
 
 FUNCTION {n.dashify}
@@ -906,8 +1015,7 @@ FUNCTION {first.page}
 
 FUNCTION {format.journal.pages}
 { pages empty$
-    { format.eprint outputeprint                   %EDP Sciences le 30/11/2014
-    }
+    'skip$
     { duplicate$ empty$
         { pop$ format.pages }
         {
@@ -918,6 +1026,7 @@ FUNCTION {format.journal.pages}
     }
   if$
 }
+
 
 FUNCTION {format.vol.num.pages}
 { volume field.or.null
@@ -1027,21 +1136,50 @@ FUNCTION {format.publisher}
   output
 }
 
+FUNCTION {format.aaspublisher}
+{ publisher empty$
+    { "empty publisher in " cite$ * warning$ }
+     'skip$
+  if$
+  ""
+  address empty$ publisher empty$ and
+    'skip$
+    {
+      add.blank "" *
+      address empty$
+        'skip$
+        { address * }
+      if$
+      publisher empty$
+        'skip$
+        { address empty$
+            'skip$
+            { ": " * }
+          if$
+          publisher *
+        }
+      if$
+      "" *
+    }
+  if$
+  output
+}
+
+
+
 STRINGS {oldname}
 
-%%%%%%%% To repeat the same authors
-
-%FUNCTION {name.or.dash}
-%{ 's :=
-%   oldname empty$
-%     { s 'oldname := s }
-%     { s oldname =
-%         { "---" }
-%         { s 'oldname := s }
-%       if$
-%     }
-%   if$
-%}
+FUNCTION {name.or.dash}
+{ 's :=
+   oldname empty$
+     { s 'oldname := s }
+     { s oldname =
+         { "---" }
+         { s 'oldname := s }
+       if$
+     }
+   if$
+}
 
 %%%%%%%%  Functions added from astrobib
 
@@ -1107,21 +1245,24 @@ FUNCTION {article}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
-%%%%%  name.or.dash
-  format.date "year" output.check
-  date.block
+ % name.or.dash
+  format.date "year" output.check 
+  format.title "title" output.check
+  add.blank
   crossref missing$
     { journal
       "journal" output.check
-      format.vol.num.pages output
-    }
-    { format.article.crossref output.nonnull
-      format.pages output
-    }
+       format.vol.num.pages output
+     }
+     { format.article.crossref output.nonnull
+       format.pages output
+     }
   if$
-  format.journal.pages
-  format.note output
-  %format.eprint outputeprint                      %EDP Sciences le 30/11/2014
+  pages empty$
+    'skip$
+    { format.journal.pages }
+  if$
+  format.pid output
   fin.entry
 }
 
@@ -1130,10 +1271,10 @@ FUNCTION {book}
   author empty$
     { format.editors "author and editor" output.check
       editor format.key output
-%%%%%      name.or.dash
+      %name.or.dash
     }
     { format.authors output.nonnull
-%%%%%      name.or.dash
+      %name.or.dash
       crossref missing$
         { "author and editor" editor either.or.check }
         'skip$
@@ -1155,7 +1296,7 @@ FUNCTION {book}
 %    }
 %  if$
   format.pages output
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1163,13 +1304,13 @@ FUNCTION {booklet}
 { output.bibitem
   format.authors output
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
   format.title "title" output.check
   howpublished output
   address output
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1178,10 +1319,10 @@ FUNCTION {inbook}
   author empty$
     { format.editors "author and editor" output.check
       editor format.key output
-%%%%%      name.or.dash
+      %name.or.dash
     }
     { format.authors output.nonnull
-%%%%%      name.or.dash
+      %name.or.dash
       crossref missing$
         { "author and editor" editor either.or.check }
         'skip$
@@ -1206,7 +1347,7 @@ FUNCTION {inbook}
 %    }
 %  if$
   format.pages "pages" output.check
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1214,9 +1355,11 @@ FUNCTION {incollection}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
-%%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
+  format.title "title" output.check
+  add.blank
   bbl.in " " * booktitle format.full.book.spec * output
 %  crossref missing$
 %    { format.in.ed.booktitle "booktitle" output.check
@@ -1231,7 +1374,7 @@ FUNCTION {incollection}
 %    }
 %  if$
   format.pages "pages" output.check
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1241,6 +1384,8 @@ FUNCTION {inproceedings}
   author format.key output            % added
   format.date "year" output.check
   date.block
+  format.title "title" output.check
+  add.blank
   bbl.in " " * booktitle format.full.book.spec * output
 %  crossref missing$
 %    { format.in.ed.booktitle "booktitle" output.check
@@ -1259,24 +1404,25 @@ FUNCTION {inproceedings}
 %    }
 %  if$
   format.pages output
-  format.note output
+  format.pid output
   fin.entry
 }
 
 FUNCTION {conference} { inproceedings }
 
+
 FUNCTION {manual}
 { output.bibitem
   format.authors output
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
   format.btitle "title" output.check
   format.edition output
   organization output
   address output
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1284,27 +1430,38 @@ FUNCTION {mastersthesis}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
 %  format.title "title" output.check
   bbl.mthesis format.thesis.type output.nonnull
   school "school" output.check
   address output
-  format.note output
+  format.pid output
   fin.entry
 }
 
 FUNCTION {misc}
-{ output.bibitem
+{output.bibitem
   format.authors output
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
-  format.title output
-  howpublished output
-  format.note output
+%% new
+  format.title.misc output
+%% new
+  version empty$
+    'skip$
+    {add.blank bbl.version version * output}
+  if$
+%%
+   howpublished output
+    publisher empty$
+    {add.blank}
+    {format.aaspublisher}
+    if$
+   format.pid output
   fin.entry
 }
 
@@ -1312,14 +1469,15 @@ FUNCTION {phdthesis}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
-%  format.title "title" output.check
+  format.title "title" output.check
+  add.blank
   bbl.phdthesis format.thesis.type output.nonnull
   school "school" output.check
   address output
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1332,7 +1490,7 @@ FUNCTION {proceedings}
   if$
 %  format.editors output
 %  editor format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
   title format.full.book.spec output
@@ -1352,7 +1510,7 @@ FUNCTION {proceedings}
 %  organization output
 %  publisher output
   format.pages output
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1360,14 +1518,15 @@ FUNCTION {techreport}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
-  format.title "title" output.check
+  format.title.misc "title" output.check
+  add.blank
   format.tr.number output.nonnull
   institution "institution" output.check
   address output
-  format.note output
+  format.pid output
   fin.entry
 }
 
@@ -1375,11 +1534,12 @@ FUNCTION {unpublished}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
-%%%%%  name.or.dash
+  %name.or.dash
   format.date "year" output.check
   date.block
-%  format.title "title" output.check
-  format.note "note" output.check
+  format.title "title" output.check
+  add.blank
+  format.pid output
   fin.entry
 }
 
@@ -1403,9 +1563,41 @@ FUNCTION {chop.word}
   if$
 }
 
+STRINGS {z}
+
+
+FUNCTION {first.initial}
+{ 'z :=
+  ""
+    { z empty$ not z #1 #1 substring$ "." = not and }
+    { z #1 #1 substring$ *  
+      z #2 global.max$ substring$ 'z :=
+    }
+  while$ 
+  z empty$
+  'skip$
+  { add.period$ "~" * }
+  if$
+}
+
+
+FUNCTION {forname.format.string}
+{ "{f.}"  }
+
+FUNCTION {surname.format.string}
+{ "{vv~}{ll}" } 
+
+
+FUNCTION {jnrname.format.string}
+{ "{, jj}" }
+
+INTEGERS { labnameptr }
+
 FUNCTION {format.lab.names}
 { 's :=
-  s #1 "{vv~}{ll}" format.name$
+  #1 'labnameptr :=
+  s labnameptr forname.format.string format.name$ add.blank%first.initial 
+  s labnameptr surname.format.string format.name$  *   
   s num.names$ duplicate$
   #2 >
     { pop$
@@ -1417,7 +1609,10 @@ FUNCTION {format.lab.names}
             {
               " {et~al.}" *
             }
-            { " \& " * s #2 "{vv~}{ll}" format.name$
+            { " \& " * 
+	      #2 'labnameptr :=
+	      s labnameptr forname.format.string format.name$ add.blank%first.initial  
+	      s labnameptr surname.format.string format.name$  *  
               * }
           if$
         }
@@ -1495,25 +1690,35 @@ FUNCTION {sort.format.names}
   #1 'nameptr :=
   ""
   s num.names$ 'numnames :=
-  numnames 'namesleft :=
-    { namesleft #0 > }
+  numnames #8 >
     { s nameptr
       "{vv{ } }{ll{ }}{  f{ }}{  jj{ }}"
       format.name$ 't :=
-      nameptr #1 >
-        {
-          "   "  *
-          namesleft #1 = t "others" = and
-            { "zzzzz" * }
-            { t sortify * }
-          if$
-        }
-        { t sortify * }
-      if$
-      nameptr #1 + 'nameptr :=
-      namesleft #1 - 'namesleft :=
+      t sortify *
+      "   "  *
+      "zzzzz" *
     }
-  while$
+    { numnames 'namesleft :=
+      { namesleft #0 > }
+      { s nameptr
+        "{vv{ } }{ll{ }}{  f{ }}{  jj{ }}"
+        format.name$ 't :=
+        nameptr #1 >
+          {
+            "   "  *
+            namesleft #1 = t "others" = and
+              { "zzzzz" * }
+              { t sortify * }
+            if$
+          }
+          { t sortify * }
+        if$
+        nameptr #1 + 'nameptr :=
+        namesleft #1 - 'namesleft :=
+      }
+    while$
+    }
+  if$
 }
 
 FUNCTION {sort.format.title}
@@ -1591,9 +1796,14 @@ FUNCTION {presort}
   *
   "    "
   *
-  title field.or.null
-  sort.format.title
-  *
+%% August 2016
+%% commenting out this combination gets the cites right but references wrong
+%%  title field.or.null
+%%  sort.format.title
+%%  *
+%%
+%% with only this line on, we get cites right but references wrong
+ sort.format.title
   #1 entry.max$ substring$
   'sort.key$ :=
 }
@@ -1655,9 +1865,11 @@ FUNCTION {bib.sort.order}
   *
   "    "
   *
-  title field.or.null
-  sort.format.title
-  *
+%% Commented out August 2016, so that multiple indentical author/year
+%% combinations are entered in the order that \cite{}s are found in text.
+%  title field.or.null
+%  sort.format.title
+%  *
   #1 entry.max$ substring$
   'sort.key$ :=
 }
@@ -1671,11 +1883,20 @@ FUNCTION {begin.bib}
     'skip$
     { preamble$ write$ newline$ }
   if$
-  "\begin{thebibliography}{" number.label int.to.str$ * "}" *
+  "\begin{thebibliography}{}"
   write$ newline$
   "\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi"
   write$ newline$
+  "\providecommand{\url}[1]{\href{#1}{#1}}"
+  write$ newline$
+  "\providecommand{\dodoi}[1]{doi:~\href{http://doi.org/#1}{\nolinkurl{#1}}}"
+  write$ newline$
+  "\providecommand{\doeprint}[1]{\href{http://ascl.net/#1}{\nolinkurl{http://ascl.net/#1}}}"
+  write$ newline$
+  "\providecommand{\doarXiv}[1]{\href{https://arxiv.org/abs/#1}{\nolinkurl{https://arxiv.org/abs/#1}}}"
+  write$ newline$
 }
+
 
 EXECUTE {begin.bib}
 
@@ -1691,5 +1912,4 @@ FUNCTION {end.bib}
 EXECUTE {end.bib}
 %% End of customized bst file
 %%
-%% End of file `apj.bst'.
-
+%% End of file `aasjournal.bst'.

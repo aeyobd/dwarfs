@@ -1,0 +1,166 @@
+
+\def\fileversion{5.2}
+\def\filedate{1995/08/16}
+\def\docdate {1995/03/12}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{apjfonts}[\filedate{} Times + math package]
+
+\let\rold\r
+\def\AA{\rold A}
+\RequirePackage[T1]{fontenc} \let\r\relax
+
+\DeclareOption{onecolumn}{
+\relax   % this style is often used as \usepackage{emulateapj,timesfonts}
+}
+\ExecuteOptions{}
+\ProcessOptions
+
+\renewcommand{\sfdefault}{phv}
+\renewcommand{\rmdefault}{ptm}
+\renewcommand{\ttdefault}{pcr}
+
+\DeclareSymbolFont{cmoperators}   {OT1}{cmr}{m}{n}
+\DeclareSymbolFont{cmitoperators} {OT1}{cmr}{m}{it}
+\DeclareSymbolFont{operators}     {OT1}{ptm}{m}{n}
+%\DeclareSymbolFont{ptmoperators}  {OT1}{ptmcm}{m}{n}
+\DeclareSymbolFont{letters}       {OML}{ptmcm}{m}{it}
+%\DeclareSymbolFont{rusletters}    {OML}{petersburg}{m}{it}
+\DeclareSymbolFont{ptmletters}    {OML}{ptmcm}{m}{it}
+\DeclareSymbolFont{cmletters}     {OML}{cmm}{m}{it}
+\DeclareSymbolFont{symbols}       {OMS}{cmsy}{m}{n}
+\DeclareSymbolFont{ptmsymbols}    {U}{psy}{m}{n}
+\DeclareSymbolFont{largesymbols}  {OMX}{cmex}{m}{n}
+\DeclareSymbolFont{bold}          {OT1}{ptm}{bx}{n}
+\DeclareSymbolFont{italic}        {OT1}{ptm}{m}{it}
+
+\SetSymbolFont{cmoperators}   {bold}{OT1}{cmr}{b}{n}
+\SetSymbolFont{cmitoperators} {bold}{OT1}{cmr}{bx}{it}
+\SetSymbolFont{operators}     {bold}{OT1}{ptm}{bx}{n}
+%\SetSymbolFont{ptmoperators}  {bold}{OT1}{ptmCM}{b}{n}
+\SetSymbolFont{letters}       {bold}{OML}{ptmCM}{b}{it}
+%\SetSymbolFont{rusletters}    {bold}{OML}{petersburg}{bx}{it}
+\SetSymbolFont{ptmletters}    {bold}{OML}{ptmCM}{b}{it}
+\SetSymbolFont{cmletters}     {bold}{OML}{cmm}{b}{it}
+\SetSymbolFont{symbols}       {bold}{OMS}{cmsy}{b}{n}
+\SetSymbolFont{largesymbols}  {bold}{OMX}{cmex}{m}{n}
+\SetSymbolFont{bold}          {bold}{OT1}{ptm}{bx}{n}
+\SetSymbolFont{italic}        {bold}{OT1}{ptm}{b}{it}
+
+
+\DeclareMathAlphabet{\mathbf}{OT1}{ptm}{bx}{n}
+\DeclareMathAlphabet{\mathit}{OT1}{ptm}{m}{it}
+\DeclareMathAlphabet{\mathbit}{OT1}{ptm}{bx}{it}
+
+\DeclareMathSymbol{\omicron}{0}{operators}{`\o}
+
+\thinmuskip=2mu 
+\medmuskip=2.5mu plus 1mu minus 1mu
+\thickmuskip=4mu plus 1.5mu minus 1mu
+
+% \everydisplay {\thinmuskip=2mu \medmuskip=2.5mu plus 1mu minus 1mu%
+%       \thickmuskip=4mu plus 1.5mu minus 1mu}
+% \thinmuskip=2mu 
+% \medmuskip=2mu  minus 1mu
+% \thickmuskip=2mu  minus 1mu
+
+% % \def\boldmath{%
+% %    \@warning{there is no bold Symbol font}%
+% %    \global\let\boldmath=\relax
+% % }
+
+
+%\DeclareMathSymbol{/}   {\mathord}{cmletters}{'075}
+%\DeclareMathSymbol{=}   {\mathrel}{cmoperators}{'075}
+%\DeclareMathSymbol{+}   {\mathbin}{cmoperators}{'053}
+%\DeclareMathSymbol{(}   {\mathopen}{cmoperators}{'050}
+%\DeclareMathSymbol{)}   {\mathclose}{cmoperators}{'051}
+
+%\DeclareMathSymbol{>}   {\mathrel}{ptmsymbols}{62}
+%\DeclareMathSymbol{<}   {\mathrel}{ptmsymbols}{60}
+\DeclareMathSymbol{-}   {\mathbin}{ptmsymbols}{45}
+\DeclareMathSymbol{+}   {\mathbin}{ptmsymbols}{43}
+%\DeclareMathSymbol{/}   {\mathord}{ptmsymbols}{164}
+
+\DeclareMathSymbol{\alpha}   {\mathord}{cmletters}{'013}
+\DeclareMathSymbol{\beta}    {\mathord}{cmletters}{'014}
+\DeclareMathSymbol{\gamma}   {\mathord}{cmletters}{'015}
+\DeclareMathSymbol{\delta}   {\mathord}{cmletters}{'016}
+\DeclareMathSymbol{\epsilon} {\mathord}{cmletters}{'017}
+\DeclareMathSymbol{\zeta}    {\mathord}{cmletters}{'020}
+\DeclareMathSymbol{\eta}     {\mathord}{cmletters}{'021}
+\DeclareMathSymbol{\theta}   {\mathord}{cmletters}{'022}
+\DeclareMathSymbol{\iota}    {\mathord}{cmletters}{'023}
+\DeclareMathSymbol{\kappa}   {\mathord}{cmletters}{'024}
+\DeclareMathSymbol{\lambda}  {\mathord}{cmletters}{'025}
+\DeclareMathSymbol{\mu}      {\mathord}{cmletters}{'026}
+\DeclareMathSymbol{\nu}      {\mathord}{cmletters}{'027}
+\DeclareMathSymbol{\xi}      {\mathord}{cmletters}{'030}
+%%% \DeclareMathSymbol{o}        {\mathord}{cmletters}{'157}
+\DeclareMathSymbol{\pi}      {\mathord}{cmletters}{'031}
+\DeclareMathSymbol{\rho}     {\mathord}{cmletters}{'032}
+\DeclareMathSymbol{\sigma}   {\mathord}{cmletters}{'033}
+\DeclareMathSymbol{\tau}     {\mathord}{cmletters}{'034}
+\DeclareMathSymbol{\upsilon} {\mathord}{cmletters}{'035}
+\DeclareMathSymbol{\phi}     {\mathord}{cmletters}{'036}
+\DeclareMathSymbol{\chi}     {\mathord}{cmletters}{'037}
+\DeclareMathSymbol{\psi}     {\mathord}{cmletters}{'040}
+\DeclareMathSymbol{\omega}   {\mathord}{cmletters}{'041}
+
+
+
+\DeclareMathSymbol{\varepsilon}   {\mathord}{cmletters}{'042}
+\DeclareMathSymbol{\vartheta}     {\mathord}{cmletters}{'043}
+\DeclareMathSymbol{\varomega}     {\mathord}{cmletters}{'044}
+\DeclareMathSymbol{\varrho}       {\mathord}{cmletters}{'045}
+\DeclareMathSymbol{\varsigma}     {\mathord}{cmletters}{'046}
+\DeclareMathSymbol{\varphi}       {\mathord}{cmletters}{'047}
+
+\DeclareMathSymbol{\partial}   {\mathord}{cmletters}{'100}
+% Partial - from russian fonts
+% \DeclareMathSymbol{\partial}   {\mathord}{rusletters}{"C4} % correct for WIN
+                                                        % enc + reencoding
+
+\DeclareMathSymbol{\ell}       {\mathord}{cmletters}{'140}
+\DeclareMathSymbol{\ell}       {\mathord}{cmletters}{'140}
+\def\hbar{{\raise-0.15truept\hbox{$\mkern-0.5mu\barbar$}\mkern-8.5muh}}
+
+
+\DeclareMathSymbol\Gamma    {\mathord}{cmoperators}{"00}
+\DeclareMathSymbol\Delta    {\mathord}{cmoperators}{"01}
+\DeclareMathSymbol\Theta    {\mathord}{cmoperators}{"02}
+\DeclareMathSymbol\Lambda   {\mathord}{cmoperators}{"03}
+\DeclareMathSymbol\Xi       {\mathord}{cmoperators}{"04}
+\DeclareMathSymbol\Pi       {\mathord}{cmoperators}{"05}
+\DeclareMathSymbol\Sigma    {\mathord}{cmoperators}{"06}
+\DeclareMathSymbol\Upsilon  {\mathord}{cmoperators}{"07}
+\DeclareMathSymbol\Phi      {\mathord}{cmoperators}{"08}
+\DeclareMathSymbol\Psi      {\mathord}{cmoperators}{"09}
+\DeclareMathSymbol\Omega    {\mathord}{cmoperators}{"0A}
+
+
+
+
+\DeclareMathSymbol\varGamma    {\mathord}{cmletters}{"00}
+\DeclareMathSymbol\varDelta    {\mathord}{cmletters}{"01}
+\DeclareMathSymbol\varTheta    {\mathord}{cmletters}{"02}
+\DeclareMathSymbol\varLambda   {\mathord}{cmletters}{"03}
+\DeclareMathSymbol\varXi       {\mathord}{cmletters}{"04}
+\DeclareMathSymbol\varPi       {\mathord}{cmletters}{"05}
+\DeclareMathSymbol\varSigma    {\mathord}{cmletters}{"06}
+\DeclareMathSymbol\varUpsilon  {\mathord}{cmletters}{"07}
+\DeclareMathSymbol\varPhi      {\mathord}{cmletters}{"08}
+\DeclareMathSymbol\varPsi      {\mathord}{cmletters}{"09}
+\DeclareMathSymbol\varOmega    {\mathord}{cmletters}{"0A}
+
+\DeclareMathAccent{\acute}  {\mathalpha}{cmoperators}{'023}
+\DeclareMathAccent{\bar}    {\mathalpha}{cmoperators}{'026}
+\DeclareMathAccent{\breve}  {\mathalpha}{cmoperators}{'025}
+\DeclareMathAccent{\check}  {\mathalpha}{cmoperators}{'024}
+\DeclareMathAccent{\ddot}   {\mathalpha}{cmitoperators}{'177}
+\DeclareMathAccent{\dot}    {\mathalpha}{cmitoperators}{'137}
+\DeclareMathAccent{\grave}  {\mathalpha}{cmoperators}{'022}
+\DeclareMathAccent{\hat}    {\mathalpha}{cmoperators}{'136}
+\DeclareMathAccent{\tild}   {\mathalpha}{cmoperators}{'176}
+\DeclareMathAccent{\vec}    {\mathord}  {cmletters}  {"7E}
+
+\DeclareMathSymbol{\barbar}    {\mathalpha}{cmoperators}{'026}

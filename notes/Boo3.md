@@ -225,30 +225,46 @@ Orbits selected from quantile method, median properties of near $\pm2\sigma$ per
 
 Based on 
 
-| halo          | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
-| ------------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
-| average       | 22                   | 3.9           | 0              |                           |                  |                 |
-| heavy         | 30                   | 5.7           | 0              |                           |                  |                 |
-| moderate      | 30                   | 4.2           | +1             |                           |                  |                 |
-| compact       | 30                   | 3.0           | +2             | 15?                       |                  |                 |
-| heavier       | 35                   | 6.9           | 0              |                           |                  |                 |
-| heavy compact | 35                   | 3.7           | +2             |                           |                  |                 |
+| halo           | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
+| -------------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
+| average        | 22                   | 3.9           | 0              |                           |                  |                 |
+| heavy          | 30                   | 5.7           | 0              |                           |                  |                 |
+| compact        | 30                   | 3.0           | +2             | 15?                       |                  |                 |
+| ?              |                      |               |                |                           |                  |                 |
+| moderate?      | 30                   | 4.2           | +1             |                           |                  |                 |
+| heavier?       | 35                   | 6.9           | 0              |                           |                  |                 |
+| heavy compact? | 35                   | 3.7           | +2             |                           |                  |                 |
 
 
+
+
+
+| halo           | 26   | 18   | 12   | 7    | 4    | 1.5  |
+| -------------- | ---- | ---- | ---- | ---- | ---- | ---- |
+| average        | 3*   | 2    | 1*   | --   | --   | --   |
+| heavy          | 3    | 2-3  | 1    | 1    | --   | --   |
+| **compact**    | --   | 5*   | 3-4  | 2    | 1*   | --   |
+| ?              |      |      |      |      |      |      |
+| heavier??      | 3    | 2-3  | 2?   | 1    | --   | --   |
+| moderate??     | --   | 3-4  | 2    | 1    | --   | --   |
+| heavy compact? | --   | 5    | 4    | 2    | 1    | --   |
+
+Table: the number of pericentres which a given halo must experience to match the present day velocity dispersion under a specified pericentre. 
 
 ## Simulations
 
 Same methods as my Scl & UMi paper. Action-angle corrections as described in Appendix X.
 
+1. Compact halo; 5 x 18kpc peris (default 10 Gyr)
+   1. `bootes3/1e5_v30_r3.0/5_peri_18kpc`
+2. Compact halo; 1 x 4 kpc pericentre (1.5 Gyr sim)
+   1. `bootes3/1e5_v30_r3.0/5_peri_18kpc`
+3. Average halo: 3 x 26 kpc pericentre (default 10 Gyr)
+   1. `bootes3/1e5_v22_r3.9/3_peri_26kpc`
+4. Average halo: 1 x 12 kpc peri (1.5 Gyr)
+   1. `bootes3/1e5_v22_r3.9/1_peri_12kpc`
 
 
-low-res
-
-- v22_r3.9
-- v30_r2.2
-  - mean
-  - 1 smallperi
-  - largeperi_long
 
 # Results
 
@@ -375,9 +391,15 @@ Selection regions of NGC 5466:
 
 
 
+## Simulations
 
-
-
+- [ ] Isothermal
+  - [ ] isothermal/1e5_v20_r3.0/orbit_15_150
+  - [ ] isothermal/1e5_v40_r3.0/orbit_15_150
+  - [ ] isothermal/1e5_v30_r3.0/orbit_15_150
+  - [ ] isothermal/1e5_v10_r1.0/orbit_15_150
+  - [ ] 20_150
+  - [ ] 5_150
 
 
 
