@@ -6,6 +6,7 @@ using LilGuys
 using OrderedCollections
 
 
+include("orbit_utils.jl")
 
 function get_args()
     s = ArgParseSettings(
@@ -27,7 +28,7 @@ function get_args()
             arg_type = Float64
         "--num-timesteps"
             help = "number of timesteps to record for peri / apo"
-            default = 2048
+            default = 10_000
             arg_type = Int
     end
 
@@ -40,6 +41,7 @@ function get_args()
 
     return args
 end
+
 
 function get_coords(input)
     params = TOML.parsefile(joinpath(input, "initial_conditions.toml"))
@@ -54,62 +56,67 @@ function get_coords(input)
     return labels, coords
 end
 
-include("orbit_utils.jl")
+function get_time_max(input, time_max_default)
+    params = TOML.parsefile(joinpath(input, "initial_conditions.toml"))
+
+    time_maxes = Float64[]
+    for row in params["orbits"]
+        t = get(row, "time_max", time_max_default)
+        push!(time_maxes, t)
+    end
+
+    return time_maxes
+end
+
 
 function main(args)
     if isfile(args["output"])
         rm(args["output"])
     end
 
-    units = get_units(args["input"])
+    agama_units = get_units(args["input"])
     pot = get_potential(args["input"])
     obs_props = get_obs_props(args["input"], args["galaxy"])
 
     labels, coords = get_coords(args["input"])
+    time_maxes = get_time_max(args["input"], args["time-max"])
+    timerange = [(0, time_max) for time_max in time_maxes]
 
-    orbits = LilGuys.agama_orbit(pot, coords; timerange=(0, args["time-max"]), N=args["num-timesteps"], agama_units=units)
-    df_props = orbital_properties(pot, orbits, agama_units=units)
+    orbits = LilGuys.agama_orbit(pot, coords; timerange=timerange, 
+                                 N=args["num-timesteps"], agama_units=agama_units)
+    df_props = orbital_properties(pot, orbits, agama_units=agama_units)
 
     df_icrs = LilGuys.to_frame(coords)
 
-    gcs = LilGuys.transform.(Galactocentric, coords)
-    df_galcen = LilGuys.to_frame(gcs)
-
-    df_all = hcat(df_props, df_icrs, df_galcen)
+    df_all = hcat(df_props, df_icrs)
 
     df_all[!, "orbit_name"] = labels
 
     write_fits(args["output"], df_all)
 
+    write_individual_orbits(labels, coords, orbits; agama_units=agama_units, obs_props=obs_props, pot=pot)
+end
+
+function write_individual_orbits(labels, coords, orbits; agama_units, obs_props, pot)
     for i in eachindex(labels)
-        orbit = orbits[i]
+        idx_i = get_initial_apocentre(orbits[i])
+        orbit = orbits[i][1:idx_i]
 
-        @assert issorted(orbit.times, rev=true)
-        _, _, apos, idx_apos, _ = LilGuys.all_peris_apos(orbit)
-        if length(idx_apos) > 0
-            idx_i = idx_apos[end]
-        else
-            idx_i = length(orbit.times)
-        end
+        write(joinpath(args["input"], "orbit_$(labels[i]).csv"), LilGuys.reverse(orbit))
 
-        orbit_out = LilGuys.reverse(orbit[1:idx_i])
-
-        write(joinpath(args["input"], "orbit_$(labels[i]).csv"), orbit_out)
-
-        # save TOML
-        orbit_props = OrderedDict(k => df_all[i, k] for k in names(df_all))
-        orbit_props["x_i"] = orbit_out.positions[1, 1]
-        orbit_props["y_i"] = orbit_out.positions[2, 1]
-        orbit_props["z_i"] = orbit_out.positions[3, 1]
-        orbit_props["v_x_i"] = orbit_out.velocities[1, 1]
-        orbit_props["v_y_i"] = orbit_out.velocities[2, 1]
-        orbit_props["v_z_i"] = orbit_out.velocities[3, 1]
+        # recalculate on truncated orbit
+        df_props = orbital_properties(pot, [orbit], agama_units=agama_units)
+        orbit_props = OrderedDict{String, Any}(k => df_props[1, k] for k in names(df_props))
         orbit_props["idx_i"] = length(orbit) - idx_i + 1
-        orbit_props["t_i"] = orbit_out.times[1]
+
+        # add observation errors
         for key in ["ra", "dec", "distance", "pmra", "pmdec", "radial_velocity"]
+            orbit_props["$(key)"] = getproperty(coords[i], Symbol(key))
             orbit_props["$(key)_err"] = LilGuys.get_uncertainty(obs_props, key)
         end
+        orbit_props["orbit_name"] = labels[i]
 
+        # save TOML
         open(joinpath(args["input"], "orbit_$(labels[i]).toml"), "w") do f
             TOML.print(f, orbit_props)
         end
