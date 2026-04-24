@@ -352,7 +352,7 @@ end
 
 Get the jacobi radius of the specified model
 """
-function get_r_j(galaxyname::String, modelname::String; lmc=false)
+function get_r_j(galaxyname::String, modelname::String; lmc=false, key="r_J")
     modeldir = get_modeldir(galaxyname, modelname)
 
 	if lmc
@@ -361,7 +361,7 @@ function get_r_j(galaxyname::String, modelname::String; lmc=false)
         props = TOML.parsefile(joinpath(modeldir, "jacobi.toml"))
 	end
 
-	return props["r_J"] 
+	return props[key] 
 end
 
 

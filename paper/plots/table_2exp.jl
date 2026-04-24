@@ -33,6 +33,45 @@ function print_R_h(df, key)
     print_quantity(replace(rpad(key, 20), "R_s"=>"R_h"), get_param(df, key) * α)
 end
 
+
+function get_samples(galaxyname, filename="mcmc_2exp")
+    props = CSV.read( joinpath(ENV["DWARFS_ROOT"], "observations", 
+                                galaxyname, "mcmc", "samples.$filename.csv"),
+                    DataFrame)
+end
+
+function get_r_trans(prof, prof_outer)
+	r_trans = LilGuys.find_zero(r -> LilGuys.surface_density(prof, r) - LilGuys.surface_density(prof_outer, r), 10)
+    return r_trans
+end
+	
+
+
+function get_r_trans(df)
+	N = size(df, 1)
+	r_trans = zeros(N)
+
+	profs, prof_outer = get_profiles(df)
+    return get_r_trans.(profs, prof_outer)
+end
+
+function get_profiles(df, dist=nothing)
+    R_1 = df[!, "R_s"]
+    f_outer = df[!, "f_outer"]
+    R_2 =  df[!, "R_s_outer"]
+
+	if !isnothing(dist)
+		R_1 = LilGuys.arcmin2kpc(R_1, dist)
+		R_2 = LilGuys.arcmin2kpc(R_2, dist)
+	end
+	
+    prof = [LilGuys.Exp2D(R_s=R_1[i], M=(1-f_outer[i])) for i in eachindex(R_1)]
+    prof_outer = [LilGuys.Exp2D(R_s=R_2[i], M=f_outer[i]) for i in eachindex(R_1)]
+
+	return prof, prof_outer
+end
+
+
 function print_galaxy(galaxyname)
     println(galaxyname)
     println("-"^30)
@@ -48,6 +87,9 @@ function print_galaxy(galaxyname)
     print_param(df, "f_outer")
     print_param(df, "R_s_outer")
     print_R_h(df, "R_s_outer")
+    samples = get_samples(galaxyname)
+    r_trans = get_r_trans(samples)
+    print_quantity("R_trans", r_trans)
     print_param(df, "ellipticity_outer")
     print_param(df, "position_angle_outer")
 

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -28,14 +28,19 @@ include(joinpath(ENV["DWARFS_ROOT"], "orbits/orbit_utils.jl"))
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
 galaxyname = "sculptor_lmc"
 
-# ╔═╡ 34c0f4f8-ef34-4b58-bcdd-7de69b58db2d
-import DensityEstimators
+# ╔═╡ b2cdaa3a-1c20-4609-b6f7-5b0a5f572102
+import StatsBase
 
 # ╔═╡ bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 import TOML
 
 # ╔═╡ 280e0cef-896a-4c14-a1ac-a611418be57e
 modelnames = TOML.parsefile("model_key.toml")
+
+# ╔═╡ e62f58df-67fd-4cf6-a1a1-fc4a11ec334b
+md"""
+## Isodensity plots
+"""
 
 # ╔═╡ 4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
 xy_iso = CSV.read("resources/EP2020_iso_xy.csv", DataFrame, tasks=1)
@@ -97,9 +102,6 @@ orbit_props = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname,
 
 # ╔═╡ d50c120c-d72a-4fdc-b18a-9ec185c25c04
 orbit = Orbit(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname, "centres.hdf5"))
-
-# ╔═╡ b2cdaa3a-1c20-4609-b6f7-5b0a5f572102
-import StatsBase
 
 # ╔═╡ 5a40b893-021b-46e5-a115-0284e13ae7ae
 bins = LinRange(-150, 150, 512)
@@ -178,6 +180,30 @@ function plot_scalebar!(scale_length=50, plotrange=bins[end]-bins[1])
 	text!(x0, y0, text="$scale_length kpc", color=:white, space=:relative, fontsize=0.8 * theme(:fontsize)[], )
 end
 
+# ╔═╡ cec9cbd6-9e8f-4375-9105-8ced9089dd5e
+smallfontsize = 0.8 * theme(:fontsize)[]
+
+# ╔═╡ 13137339-95c2-4a23-b775-6eecb59c2ce6
+function plot_lmc_orbit!(galaxyname)
+	if galaxyname == "sculptor_lmc"
+		lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11")) 
+
+		filt = lmc_orbit.times * T2GYR .> -3
+		lines!(lmc_orbit.positions[2, filt], lmc_orbit.positions[3, filt], color=COLORS[3], )
+
+		scatter!(lmc_orbit.positions[2, end], lmc_orbit.positions[3, end], color=COLORS[3])
+		text!(lmc_orbit.positions[2, end], lmc_orbit.positions[3, end], text="LMC", color=COLORS[3], align=(:right, :center), offset=(-smallfontsize/2, 0), fontsize=smallfontsize)
+
+	end
+
+end
+		
+
+# ╔═╡ 2b4e16b0-059c-4dff-b2a9-55684a94134a
+md"""
+# Plot utils
+"""
+
 # ╔═╡ c98b7028-73ca-4fda-8ac9-15ace0af0b6c
 plotrange = 5
 
@@ -199,36 +225,6 @@ function get_zoom_histogram(snap, bins=nothing; weights=nothing, plotrange=plotr
 	return hist
 end
 
-# ╔═╡ cec9cbd6-9e8f-4375-9105-8ced9089dd5e
-smallfontsize = 0.8 * theme(:fontsize)[]
-
-# ╔═╡ 13137339-95c2-4a23-b775-6eecb59c2ce6
-function plot_lmc_orbit!(galaxyname)
-	if galaxyname == "sculptor_lmc"
-		lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11")) 
-
-		filt = lmc_orbit.times * T2GYR .> -3
-		lines!(lmc_orbit.positions[2, filt], lmc_orbit.positions[3, filt], color=COLORS[3], )
-
-		scatter!(lmc_orbit.positions[2, end], lmc_orbit.positions[3, end], color=COLORS[3])
-		text!(lmc_orbit.positions[2, end], lmc_orbit.positions[3, end], text="LMC", color=COLORS[3], align=(:right, :center), offset=(-smallfontsize/2, 0), fontsize=smallfontsize)
-
-	end
-
-end
-		
-
-# ╔═╡ 3178e7d1-151b-4c67-9fe9-57742ca01802
-md"""
-# Zoom 
-"""
-
-# ╔═╡ 65e70122-16ed-4242-b407-043e0d8276f2
-x_vec = [sind(0), cosd(0), 0]
-
-# ╔═╡ 93ae35f0-b6f6-4249-8355-e83731601c1e
-y_vec = [-sind(0), 0, cosd(0)]
-
 # ╔═╡ fa0a5bf8-7f96-4a53-82dc-a368c12c5241
 idx_f = orbit_props["idx_f"]
 
@@ -249,17 +245,6 @@ import LinearAlgebra: ⋅
 
 # ╔═╡ 385d0cee-6758-49ea-933d-82b654b9e1a0
 fg_color = :grey
-
-# ╔═╡ 2c745440-049c-4a15-b4ca-ade29b9e69db
-function inset_axis(gs; kwargs...)
-
-	ax = Axis(gs, width=Relative(0.2), height=Relative(0.2), backgroundcolor=:black, 
-				leftspinecolor=fg_color, rightspinecolor=fg_color, 
-			  bottomspinecolor=fg_color, topspinecolor=fg_color; kwargs...)
-
-	hidedecorations!()
-	ax
-end
 
 # ╔═╡ 14546575-917a-4799-a6eb-d84d8a890c89
 function plot_hist!(binshist; kwargs...)
@@ -333,6 +318,17 @@ function plot_both(ax, snap)
 	ax
 end
 
+# ╔═╡ 2c745440-049c-4a15-b4ca-ade29b9e69db
+function inset_axis(gs; kwargs...)
+
+	ax = Axis(gs, width=Relative(0.2), height=Relative(0.2), backgroundcolor=:black, 
+				leftspinecolor=fg_color, rightspinecolor=fg_color, 
+			  bottomspinecolor=fg_color, topspinecolor=fg_color; kwargs...)
+
+	hidedecorations!()
+	ax
+end
+
 # ╔═╡ f251ed8f-c908-47b8-96ca-174ecc73f30f
 let
 	fig = Figure()
@@ -393,26 +389,15 @@ let
 	fig
 end
 
-# ╔═╡ 51d13973-739e-4697-9f18-4b25334213a6
-plot_both(snap_i)
-
-# ╔═╡ cffa0546-2adc-42a0-ae0d-beab2809f1f0
-plot_both(snap_f)
-
-# ╔═╡ 0bf02f93-581b-4ffd-88a8-6f2236f7a62e
-RGBAf(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
-
-# ╔═╡ 37d40762-62b3-4211-8933-1c7cd1b8bc71
-promote(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
-
 # ╔═╡ Cell order:
 # ╠═913e0316-a04b-4270-ba31-0ba0f7fdd705
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
-# ╠═34c0f4f8-ef34-4b58-bcdd-7de69b58db2d
 # ╠═b0a0dddc-fb5a-4bb2-b048-a54859d0b703
+# ╠═b2cdaa3a-1c20-4609-b6f7-5b0a5f572102
 # ╠═bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═280e0cef-896a-4c14-a1ac-a611418be57e
+# ╠═e62f58df-67fd-4cf6-a1a1-fc4a11ec334b
 # ╠═4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
 # ╠═53cdcc20-96d4-4bd5-8028-df9a38af71ae
 # ╠═0f71807d-d698-4164-9f30-49af8dd8ba55
@@ -426,7 +411,6 @@ promote(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
 # ╠═df61eda6-6d70-4ce4-8f6b-6936dc12283d
 # ╠═a3be2d61-98eb-4037-afb4-4155ba24cc21
 # ╠═d50c120c-d72a-4fdc-b18a-9ec185c25c04
-# ╠═b2cdaa3a-1c20-4609-b6f7-5b0a5f572102
 # ╠═5a40b893-021b-46e5-a115-0284e13ae7ae
 # ╠═04c8c564-f768-4845-ac22-898173a10582
 # ╠═59c11f0e-798f-4102-a338-e1db7029d59c
@@ -441,15 +425,11 @@ promote(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
 # ╠═2e0655e6-1351-4495-b56c-bc70bc478d01
 # ╠═d5591e1b-ec3d-46fc-856e-ce8d1cf6bb03
 # ╠═c689f2b1-eded-4284-9b40-67c72016de8c
-# ╠═c98b7028-73ca-4fda-8ac9-15ace0af0b6c
 # ╠═3ad8154b-9c07-4666-8b0c-b123276fae7e
 # ╠═13137339-95c2-4a23-b775-6eecb59c2ce6
 # ╠═cec9cbd6-9e8f-4375-9105-8ced9089dd5e
-# ╠═f251ed8f-c908-47b8-96ca-174ecc73f30f
-# ╠═2c745440-049c-4a15-b4ca-ade29b9e69db
-# ╠═3178e7d1-151b-4c67-9fe9-57742ca01802
-# ╠═65e70122-16ed-4242-b407-043e0d8276f2
-# ╠═93ae35f0-b6f6-4249-8355-e83731601c1e
+# ╟─2b4e16b0-059c-4dff-b2a9-55684a94134a
+# ╠═c98b7028-73ca-4fda-8ac9-15ace0af0b6c
 # ╠═fa0a5bf8-7f96-4a53-82dc-a368c12c5241
 # ╠═903528cb-4e12-4659-9ccc-8377aa7250f9
 # ╠═35635766-eca4-495e-bde1-ba8fb151552d
@@ -458,12 +438,10 @@ promote(COLORS[1].r, COLORS[1].g, COLORS[1].b, 0.5)
 # ╠═14546575-917a-4799-a6eb-d84d8a890c89
 # ╠═e5d118a8-b0dc-4e4d-93b9-02b129c0fe1f
 # ╠═f3da6ca5-e988-4f6b-8efa-18fe32887dab
-# ╠═51d13973-739e-4697-9f18-4b25334213a6
-# ╠═cffa0546-2adc-42a0-ae0d-beab2809f1f0
 # ╠═447c05ad-d5fc-4502-a2bc-27beeb931904
 # ╠═124f1c38-3d15-42c3-a48c-dbdf14aba497
 # ╠═5ace10dd-3d95-4a30-bfd0-1c7e846af2c7
 # ╠═bfa1ee5a-473d-4f21-ac37-4665ca1eade6
 # ╠═d546247e-7c5c-4452-a1b6-60cbc9fd133f
-# ╠═0bf02f93-581b-4ffd-88a8-6f2236f7a62e
-# ╠═37d40762-62b3-4211-8933-1c7cd1b8bc71
+# ╠═2c745440-049c-4a15-b4ca-ade29b9e69db
+# ╠═f251ed8f-c908-47b8-96ca-174ecc73f30f

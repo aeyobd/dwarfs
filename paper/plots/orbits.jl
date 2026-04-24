@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -39,27 +39,19 @@ FIGDIR = "./figures"
 # ╔═╡ 00ba3075-c3e2-4965-acf3-00cda0ef320f
 import TOML
 
-# ╔═╡ ff577282-1d04-4f6a-bb4e-74cf5a8d51e3
-module OrbitUtils
-	include("orbit_utils.jl")
-end
-
-# ╔═╡ 4c70700e-a8dd-4585-b31d-598f05d615e8
-import .OrbitUtils: axes_xyz_flat, plot_xyz!, plot_rt!, plot_rt_today!
-
 # ╔═╡ a7111062-b025-43a9-bdb1-aee08deb60e9
 CairoMakie.activate!(type=:png, px_per_unit=2)
 
 # ╔═╡ 6b0b6c8f-eef9-4c45-8227-d1906fe6b80b
 scale_theme_element!(:linewidth, 1/2)
 
-# ╔═╡ 6aec88e1-68a9-41e9-93ce-655434904386
-modelnames = TOML.parsefile("model_key.toml")
-
 # ╔═╡ 16f4ac20-d8cf-4218-8c01-c15e04e567fb
 md"""
 # The example orbits
 """
+
+# ╔═╡ 6aec88e1-68a9-41e9-93ce-655434904386
+modelnames = TOML.parsefile("model_key.toml")
 
 # ╔═╡ 35ce583b-0938-429e-af5d-b17b399f6690
 Nmax = 100 # number of orbits to plot
@@ -69,6 +61,122 @@ modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits",)
 
 # ╔═╡ ff6522d0-84cb-4521-8400-61c02973d535
 lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/sculptor/vasiliev24_L3M11")) |> reverse
+
+# ╔═╡ eb337824-17eb-4595-bc95-d52aa60010ca
+function load_best_orbit(galaxyname, modelname)
+    modeldir = joinpath(ENV["DWARFS_ROOT"], "analysis", galaxyname, modelname)
+
+	best_orbit = LilGuys.Orbit(joinpath(modeldir, "centres.hdf5"))
+		
+	idx_f = TOML.parsefile(joinpath(modeldir, "orbital_properties.toml"))["idx_f"]
+	best_orbit.times .-= best_orbit.times[idx_f]
+
+	return best_orbit[best_orbit.times .<= 0]
+end
+
+# ╔═╡ 3d417fe3-a75d-476e-a4f9-8ce25914c473
+function read_orbits(modeldir)
+	structs = LilGuys.read_ordered_structs(joinpath(modeldir, "orbits.hdf5"), LilGuys.Orbit)
+
+	filt = 1:min(Nmax, length(structs))
+	
+	last.(structs)[filt]
+end
+
+# ╔═╡ 3f3df4af-3f2b-4803-b007-4302a029f988
+function read_orbits(galaxyname, modelname)
+	modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", galaxyname, modelname)
+	return read_orbits(modeldir)
+end
+
+# ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
+orbits_scl_lmc = read_orbits("sculptor", "vasiliev24_L3M11_9Gyr")
+
+# ╔═╡ 3575de4d-797d-4822-a28a-a4424281c277
+orbits_scl = read_orbits("sculptor", "EP2020")
+
+# ╔═╡ e96f758a-1cb9-436e-b351-cfa311520faa
+orbits_umi_lmc = read_orbits("ursa_minor", "vasiliev24_L3M11")
+
+# ╔═╡ b98a9e78-93f4-429c-beec-879bcabd06e1
+orbits_umi = read_orbits("ursa_minor", "EP2020")
+
+# ╔═╡ c63a1c4c-6171-4853-906a-54ba74fb0766
+best_scl_lmc = load_best_orbit(modelnames["scl_lmc"][1:2]...) |> reverse
+
+# ╔═╡ 538f7a29-6cf9-455a-ab56-de3c1aee8fc9
+best_scl = load_best_orbit(modelnames["scl_smallperi"][1:2]...) |> reverse
+
+# ╔═╡ 782e9dae-b15f-40fd-9d75-9a334810aa81
+best_umi = load_best_orbit(modelnames["umi_smallperi"][1:2]...) |> reverse
+
+# ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
+md"""
+# Plots
+"""
+
+# ╔═╡ c8430dc1-02cd-4f79-ae8e-3a5caf563b65
+function plot_rt_today!(ax_rt, orbit::Orbit, index=1; kwargs...)
+    x0 = orbit.positions[:, index]
+    v0 = orbit.velocities[:, index]
+    r0 = radii(x0)
+    t0 = orbit.times[index] * T2GYR
+
+    plot_rt_today!(ax_rt, t0, r0; kwargs...)
+end
+
+# ╔═╡ fd7be6cf-9c85-4ed2-89b5-67dd6dbefe1f
+function plot_rt_today!(ax_rt, orbits, index=1; kwargs...)
+    rs = [radii(o.positions[:, index]) for o in orbits]
+    r0 = mean(rs)
+    t0 = orbits[1].times[index] * T2GYR
+    return plot_rt_today!(ax_rt, t0, r0; kwargs...)
+end
+
+# ╔═╡ 09a1c6be-500c-48be-a87a-b0f81da401e3
+function plot_rt_today!(ax_rt, t0::Real, r0::Real; strokewidth=strokewidth, kwargs...)
+    scatter!(ax_rt, t0, r0; strokewidth=strokewidth, kwargs...)
+end
+
+# ╔═╡ eafe72f6-6435-4574-a838-ea08954077b9
+
+"""
+    plot_rt!(ax, times, rs; plot, kwargs...)
+
+Plots the radii at each given time onto the specified axes.
+"""
+function plot_rt!(axes, times, rs; plot=lines!, kwargs...)
+    plot(axes, times, rs; kwargs...)
+end
+
+
+
+
+# ╔═╡ dcfd2cc2-6096-4f52-af5b-301e9a13d1d7
+
+function plot_rt!(axes, orbits::AbstractVector{<:Orbit}; rasterize=true, time_min=-Inf, kwargs...)
+    rs = Float64[]
+    ts = Float64[]
+    for orbit in orbits
+        filt = orbit.times .> time_min
+        rs = vcat(rs, radii(orbit)[filt], NaN)
+        ts = vcat(ts, orbit.times[filt]*T2GYR, NaN)
+    end
+
+    plot_rt!(axes, ts, rs; rasterize=rasterize, kwargs...)
+end
+
+# ╔═╡ 35d282c6-8978-424a-b744-be4958666884
+
+"""
+    plot_rt!(ax, orbit(s); plot, kwargs...)
+
+Plots the radii for each timestep in the orbit(s). 
+"""
+function plot_rt!(axes, orbit::Orbit; time_min=-Inf, kwargs...)
+    filt = orbit.times  .> time_min
+    plot_rt!(axes, orbit.times[filt] * T2GYR, radii(orbit)[filt]; kwargs...)
+end
 
 # ╔═╡ cb4788e1-5b01-4387-9188-745890b48217
 function plot_yz!(ax, positions::AbstractMatrix;
@@ -102,8 +210,17 @@ function plot_rt_point!(ax, orbit::Orbit; time_min=-Inf, plot_today=true, kwargs
 	end
 end
 
+# ╔═╡ 4ee69fe0-ab61-457e-86f3-e6b4b3228527
+function plot_yz_sun!(;kwargs...)
+    X_SUN = [-8.1219733661223, 0.0, 0.0208]
+
+    # scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="The Sun", strokewidth=sw, strokecolor=:black, kwargs...)
+
+	scatter!(0, 0, color=:grey, marker=:+, alpha=0.5)
+end
+
 # ╔═╡ 82c764ab-1194-48d2-a7aa-1272dbe4682d
-rasterize = 4
+rasterize = 5
 
 # ╔═╡ 4da40bb0-18d7-4e79-b031-1319a3296207
 
@@ -117,61 +234,6 @@ function plot_yz!(axes, orbits::AbstractVector{<:Orbit}; time_min=-Inf, kwargs..
     plot_yz!(axes, positions; rasterize=rasterize, kwargs...)
 end
 
-
-# ╔═╡ 3d417fe3-a75d-476e-a4f9-8ce25914c473
-function read_orbits(modeldir)
-	structs = LilGuys.read_ordered_structs(joinpath(modeldir, "orbits.hdf5"), LilGuys.Orbit)
-
-	filt = 1:min(Nmax, length(structs))
-	
-	last.(structs)[filt]
-end
-
-# ╔═╡ 3f3df4af-3f2b-4803-b007-4302a029f988
-function read_orbits(galaxyname, modelname)
-	modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits", galaxyname, modelname)
-	return read_orbits(modeldir)
-end
-
-# ╔═╡ cc852a14-63de-4094-821b-b5ed81fd9b7e
-orbits_scl_lmc = read_orbits("sculptor", "vasiliev24_L3M11_9Gyr")
-
-# ╔═╡ 3575de4d-797d-4822-a28a-a4424281c277
-orbits_scl = read_orbits("sculptor", "EP2020")
-
-# ╔═╡ e96f758a-1cb9-436e-b351-cfa311520faa
-orbits_umi_lmc = read_orbits("ursa_minor", "vasiliev24_L3M11")
-
-# ╔═╡ b98a9e78-93f4-429c-beec-879bcabd06e1
-orbits_umi = read_orbits("ursa_minor", "EP2020")
-
-# ╔═╡ c63a1c4c-6171-4853-906a-54ba74fb0766
-best_scl_lmc = OrbitUtils.load_best_orbit(modelnames["scl_lmc"][1:2]...) |> reverse
-
-# ╔═╡ 538f7a29-6cf9-455a-ab56-de3c1aee8fc9
-best_scl = OrbitUtils.load_best_orbit(modelnames["scl_smallperi"][1:2]...) |> reverse
-
-# ╔═╡ 782e9dae-b15f-40fd-9d75-9a334810aa81
-best_umi = OrbitUtils.load_best_orbit(modelnames["umi_smallperi"][1:2]...) |> reverse
-
-# ╔═╡ 4ee69fe0-ab61-457e-86f3-e6b4b3228527
-function plot_yz_sun!(;kwargs...)
-    X_SUN = [-8.1219733661223, 0.0, 0.0208]
-
-    # scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="The Sun", strokewidth=sw, strokecolor=:black, kwargs...)
-
-	scatter!(0, 0, color=:grey, marker=:+, alpha=0.5)
-end
-
-# ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
-md"""
-# Plots
-"""
-
-# ╔═╡ 14c36202-66ca-46b3-b282-3895b72311fe
-md"""
-The plots below are designed to show the special orbits in a variety of frames.
-"""
 
 # ╔═╡ 59bb1f11-987d-4e2f-bb07-6905cd09a3f2
 t_min = -5 / T2GYR
@@ -198,32 +260,29 @@ kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, raste
 let
 	fig = Figure(size=(7*72, 4.5*72))
 
-	ax_scl = Axis(fig[1,1],
+	ax_scl = Axis(
+		fig[1,1],
 		title = "Sculptor",
 		limits = 300 .* (-1, 1, -1, 1),
 		xlabel = "y / kpc",
 		ylabel = "z / kpc",
 		xticks = -200:200:200,
 		yticks = -200:200:200,
+	)	
 
-)	
-	# lines!([NaN], [NaN], color=:black, label="N-body: MW-only")
-
-	# lines!([NaN], [NaN], color=:black, label="N-body: MW+LMC", linestyle=:dot)
-	# axislegend(position=:lb)
 	plot_yz!(ax_scl, orbits_scl; kwargs_mw_only...)
 	plot_yz!(ax_scl, orbits_scl_lmc; kwargs_mw_lmc...)
 	plot_yz!(ax_scl, best_scl; kwargs_best...)
 	plot_yz!(ax_scl, best_scl_lmc; kwargs_best_lmc...)
 	plot_yz!(ax_scl, lmc_orbit; kwargs_lmc...)
-	# plot_yz_sun!()
 
-	ax_scl_t = Axis(fig[2,1],
+	ax_scl_t = Axis(
+		fig[2,1],
 		xlabel = "time / Gyr",
 		ylabel = L"$r_\textrm{Galcen}$ / kpc",
 		limits=(-9.5, 0.5, 0, 350),
 		yticks=0:100:400,
-				   )	
+	)	
 
 	plot_rt!(ax_scl_t, orbits_scl; rasterize=rasterize, kwargs_mw_only...)
 	plot_rt!(ax_scl_t, orbits_scl_lmc; rasterize=rasterize, kwargs_mw_lmc...)
@@ -232,25 +291,24 @@ let
 	plot_rt_point!(ax_scl_t, lmc_orbit; kwargs_lmc...)
 
 
-	ax_umi = Axis(fig[1,2], 
+	ax_umi = Axis(
+		fig[1,2], 
 		title = "Ursa Minor",
 		limits = 150 .* (-1, 1, -1, 1),
 		xticks = -100:100:100,
 		yticks = -100:100:100,
 		xlabel = "y / kpc",
-
-				 )	
+	)	
 
 	plot_yz!(ax_umi, orbits_umi; kwargs_mw_only...)
 	plot_yz!(ax_umi, orbits_umi_lmc; kwargs_mw_lmc...)
 	plot_yz!(ax_umi, best_umi; kwargs_best...)
 	plot_yz!(ax_umi, lmc_orbit; kwargs_lmc...)
-	# plot_yz_sun!()
 
-	ax_umi_t = Axis(fig[2,2],
+	ax_umi_t = Axis(
+		fig[2,2],
 		limits=(-9.5, 0.5, 0, 150),
 		xlabel = "time / Gyr",
-
 	)	
 
 
@@ -277,22 +335,16 @@ end
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═f823e80a-f6db-440f-8d25-56860618c82f
 # ╠═00ba3075-c3e2-4965-acf3-00cda0ef320f
-# ╠═ff577282-1d04-4f6a-bb4e-74cf5a8d51e3
-# ╠═4c70700e-a8dd-4585-b31d-598f05d615e8
 # ╠═2bce531e-eaf1-4258-9ca7-9a05751cbd5b
+# ╠═49cca906-53e3-4531-a936-119d8b372c61
 # ╠═a7111062-b025-43a9-bdb1-aee08deb60e9
 # ╠═6b0b6c8f-eef9-4c45-8227-d1906fe6b80b
-# ╠═6aec88e1-68a9-41e9-93ce-655434904386
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
+# ╠═6aec88e1-68a9-41e9-93ce-655434904386
 # ╠═35ce583b-0938-429e-af5d-b17b399f6690
 # ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
-# ╠═49cca906-53e3-4531-a936-119d8b372c61
 # ╠═ff6522d0-84cb-4521-8400-61c02973d535
-# ╠═cb4788e1-5b01-4387-9188-745890b48217
-# ╠═185947eb-012f-4c7e-ae2a-fd04ef58e8f7
-# ╠═6c1b2974-df12-4b7c-a504-8223f893c50c
-# ╠═82c764ab-1194-48d2-a7aa-1272dbe4682d
-# ╠═4da40bb0-18d7-4e79-b031-1319a3296207
+# ╠═eb337824-17eb-4595-bc95-d52aa60010ca
 # ╠═3d417fe3-a75d-476e-a4f9-8ce25914c473
 # ╠═3f3df4af-3f2b-4803-b007-4302a029f988
 # ╠═cc852a14-63de-4094-821b-b5ed81fd9b7e
@@ -302,9 +354,19 @@ end
 # ╠═c63a1c4c-6171-4853-906a-54ba74fb0766
 # ╠═538f7a29-6cf9-455a-ab56-de3c1aee8fc9
 # ╠═782e9dae-b15f-40fd-9d75-9a334810aa81
-# ╠═4ee69fe0-ab61-457e-86f3-e6b4b3228527
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
-# ╟─14c36202-66ca-46b3-b282-3895b72311fe
+# ╠═c8430dc1-02cd-4f79-ae8e-3a5caf563b65
+# ╠═fd7be6cf-9c85-4ed2-89b5-67dd6dbefe1f
+# ╠═09a1c6be-500c-48be-a87a-b0f81da401e3
+# ╠═eafe72f6-6435-4574-a838-ea08954077b9
+# ╠═dcfd2cc2-6096-4f52-af5b-301e9a13d1d7
+# ╠═35d282c6-8978-424a-b744-be4958666884
+# ╠═cb4788e1-5b01-4387-9188-745890b48217
+# ╠═185947eb-012f-4c7e-ae2a-fd04ef58e8f7
+# ╠═6c1b2974-df12-4b7c-a504-8223f893c50c
+# ╠═4da40bb0-18d7-4e79-b031-1319a3296207
+# ╠═4ee69fe0-ab61-457e-86f3-e6b4b3228527
+# ╠═82c764ab-1194-48d2-a7aa-1272dbe4682d
 # ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2
 # ╠═123584a9-e9b4-4c48-acb5-655bd60aaeb6
 # ╠═51b371cc-6ba6-4cd5-8060-42261971cf91

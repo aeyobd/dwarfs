@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -167,12 +167,6 @@ final_coords = get_final_posvel.(modelnames)
 # ╔═╡ 78e0ecb9-6b37-4237-a25c-1add3045199c
 initial_actions_angles = to_action_angles.(initial_coords)
 
-# ╔═╡ 92132501-f261-4a01-9104-45e385dbff23
-# ╠═╡ disabled = true
-#=╠═╡
-final_action_angles = to_action_angles.(final_coords)
-  ╠═╡ =#
-
 # ╔═╡ a770f174-3a13-4116-94d4-eddb6391f50e
 initial_actions_2 = get_action_angle_ini.(modelnames[2:end])
 
@@ -278,52 +272,6 @@ target_actions = to_action_angles(target_coord)
 # ╔═╡ fe735338-9d73-4737-9df3-99182ba71dcc
 Niter = length(modelnames)
 
-# ╔═╡ 36f4647f-b471-4406-8b7d-e234ecfb59a3
-let
-	fig = Figure(size=(3.3, 2.7) .* 72)
-
-	local ax
-	for j in 1:2
-		for i in 1:3
-			ax = Axis(fig[j,i],
-					 xminorticksvisible=false, limits=((0.5, 5.5), nothing))
-			hlines!(target_actions[j][i], color=:black, label="target value")
-
-			y_f = [aa[j][i] for aa in final_action_angles]
-			y_i = [aa[j][i] for aa in initial_actions_angles]
-			scatter!(model_offsets, y_i, label="initial")
-			scatter!(model_offsets, y_f, label="final")
-			y = [aa[j][i] for aa in initial_actions_angles[1:4]]
-			dy = [aa[j][i] for aa in d_action_angles_2]
-			if j == 1
-				dy *= V2KMS
-			end
-			arrows2d!(model_offsets[1:Niter-1], y_f[1:Niter-1], zeros(), dy, shaftwidth=1, tiplength=3, tipwidth=3, color=COLORS[3], minshaftlength=0)
-			
-			if j == 1
-				ax.title = [L"R", L"z", L"\theta"][i]
-				ax.xticklabelsvisible = false
-				ylims!(target_actions[j][i]-2.5*V2KMS, target_actions[j][i]+2.5*V2KMS)
-
-			elseif j == 2
-				ax.xlabel = "simulation"
-				ylims!(target_actions[j][i]-1.5, target_actions[j][i]+1.5)
-
-			end
-			if (i == 1) && (j == 1)
-				ax.ylabel = L"action ($\textrm{kpc}\ \textrm{km}\ \textrm{s}^{-1}$)"
-			elseif (i==1) && (j==2)
-				ax.ylabel = "action angle"
-			end
-	
-		end
-	end
-
-	Legend(fig[3, 2], ax, tellwidth=false, tellheight=true, nbanks=3 )
-
-	fig
-end
-
 # ╔═╡ 940e61d2-5ffe-4611-8693-920459ec1c45
 all_actions_angles = get_all_actions.(modelnames)
 
@@ -363,7 +311,7 @@ model_colors = COLORS[[1, 2, 3, 3, 4, 5, 5]]
 # ╔═╡ c436fbb4-8d37-4e6d-9a8a-392926bc4c90
 let
 	fig = Figure(
-		size = (6, 4) .* 72
+		size = (7, 4) .* 72
 	)
 	xspan = 0.8
 	colors = model_colors
@@ -411,7 +359,7 @@ let
 			x = @. xspan * (ts - ts[1]) / (ts[end] - ts[1]) + t0
 
 			lines!(ax, x, V2KMS * acts[j, :], label="model", color=colors[i], linewidth=linewidths[i])
-			if i < 5
+			if i < length(model_offsets)
 				arrows2d!(ax, [model_offsets[i] + xspan], [final_action_angles[i][1][j]], 
 						  [0.0], [d_action_angles[i][1][j]], 
 						  shaftwidth=1, tiplength=3, tipwidth=3, minshaftlength=0, color=:black)
@@ -420,7 +368,7 @@ let
 
 
 			lines!(ax_2, x, mod.(angs[j, :] .- frequencies[j] .* (ts .- ts[end]), 2π), color=colors[i], linewidth=linewidths[i])
-			if i < 5
+			if i <  length(model_offsets)
 				arrows2d!(ax_2, [model_offsets[i] + xspan], [final_action_angles[i][2][j]], 
 						  [0.0], [d_action_angles[i][2][j]], shaftwidth=1, tiplength=3, tipwidth=3, minshaftlength=0, color=:black)
 			end
@@ -432,6 +380,55 @@ let
 
 	fig
 
+end
+
+# ╔═╡ 24985ba2-6c30-4168-a43f-1560f45c09b6
+
+
+# ╔═╡ 36f4647f-b471-4406-8b7d-e234ecfb59a3
+let
+	fig = Figure(size=(3.3, 2.7) .* 72)
+
+	local ax
+	for j in 1:2
+		for i in 1:3
+			ax = Axis(fig[j,i],
+					 xminorticksvisible=false, limits=((0.5, 5.5), nothing))
+			hlines!(target_actions[j][i], color=:black, label="target value")
+
+			y_f = [aa[j][i] for aa in final_action_angles]
+			y_i = [aa[j][i] for aa in initial_actions_angles]
+			scatter!(model_offsets, y_i, label="initial")
+			scatter!(model_offsets, y_f, label="final")
+			y = [aa[j][i] for aa in initial_actions_angles[1:4]]
+			dy = [aa[j][i] for aa in d_action_angles_2]
+			if j == 1
+				dy *= V2KMS
+			end
+			arrows2d!(model_offsets[1:Niter-1], y_f[1:Niter-1], zeros(), dy, shaftwidth=1, tiplength=3, tipwidth=3, color=COLORS[3], minshaftlength=0)
+			
+			if j == 1
+				ax.title = [L"R", L"z", L"\theta"][i]
+				ax.xticklabelsvisible = false
+				ylims!(target_actions[j][i]-2.5*V2KMS, target_actions[j][i]+2.5*V2KMS)
+
+			elseif j == 2
+				ax.xlabel = "simulation"
+				ylims!(target_actions[j][i]-1.5, target_actions[j][i]+1.5)
+
+			end
+			if (i == 1) && (j == 1)
+				ax.ylabel = L"action ($\textrm{kpc}\ \textrm{km}\ \textrm{s}^{-1}$)"
+			elseif (i==1) && (j==2)
+				ax.ylabel = "action angle"
+			end
+	
+		end
+	end
+
+	Legend(fig[3, 2], ax, tellwidth=false, tellheight=true, nbanks=3 )
+
+	fig
 end
 
 # ╔═╡ 53c6a042-baae-46fd-958d-66cf377df43f
@@ -656,6 +653,7 @@ end
 # ╔═╡ Cell order:
 # ╠═1fee9c80-2157-11f1-9d09-f949bf60fb6c
 # ╠═88b25ecb-99a4-4176-b1b7-c4cec818cc16
+# ╠═2e1c5867-6bd6-49df-8ed1-85d034a1f373
 # ╠═85e0ecf3-a3e1-4c66-9bd7-85b72091d30d
 # ╠═4f8ee02f-10f4-43c3-aa0d-f279cec5615d
 # ╠═e60a0096-0df9-4cf3-b559-b905324a9c04
@@ -675,14 +673,12 @@ end
 # ╠═26c75b36-bf51-4b5f-ab09-5a94ad00e410
 # ╠═4399c8f2-e1c6-4f4c-aa6d-605c3417f4c8
 # ╠═7f6d22fc-7234-48ee-8836-be4bfbaf7269
-# ╠═2e1c5867-6bd6-49df-8ed1-85d034a1f373
 # ╟─b4ffad22-96d0-414c-8629-d57c770f7903
 # ╠═3b5c2a7d-3f01-4ec2-a47c-e7b8ab957902
 # ╠═021af6f9-70a1-4197-b00f-d4bb5ac461f2
 # ╠═768868f9-4eb3-4332-bb90-963d09576da9
 # ╠═168dbab2-6202-439d-b846-fc9ba06ab352
 # ╠═78e0ecb9-6b37-4237-a25c-1add3045199c
-# ╠═92132501-f261-4a01-9104-45e385dbff23
 # ╠═a770f174-3a13-4116-94d4-eddb6391f50e
 # ╠═0ec1e13f-2914-4587-9d91-b34bf17df5a5
 # ╠═e9f2d926-0e9e-4fa6-9ff7-7b754002917e
@@ -698,7 +694,6 @@ end
 # ╠═ff9e7006-bf70-4b83-a34c-f8f8bc2d2e0e
 # ╠═e750f858-9bec-4b1c-b6d8-0cbf9884d6de
 # ╠═fe735338-9d73-4737-9df3-99182ba71dcc
-# ╠═36f4647f-b471-4406-8b7d-e234ecfb59a3
 # ╠═940e61d2-5ffe-4611-8693-920459ec1c45
 # ╠═b9cc963c-9c1a-478c-af52-54584201ec85
 # ╠═59e455f2-4bab-433f-9470-1f62456ce9e5
@@ -712,6 +707,8 @@ end
 # ╠═9df6995b-68ce-4621-9f4b-749eb2382bfb
 # ╠═6fa9de41-6efc-49c0-acd9-46829d4841ba
 # ╠═f3ca8188-d9a2-4e71-9e07-14aa8b153457
+# ╠═24985ba2-6c30-4168-a43f-1560f45c09b6
+# ╠═36f4647f-b471-4406-8b7d-e234ecfb59a3
 # ╠═53c6a042-baae-46fd-958d-66cf377df43f
 # ╟─4b129935-7707-4e36-86f0-fe35bc537cdb
 # ╠═f373ca79-fcba-45fe-851b-5166af77caf8

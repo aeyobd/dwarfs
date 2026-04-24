@@ -1,6 +1,6 @@
 using Arya
 using CairoMakie
-Arya.update_figsize!(3.54)
+Arya.update_figsize!(10/3)
 Arya.update_fontsize!(10)
 
 CairoMakie.update_theme!(

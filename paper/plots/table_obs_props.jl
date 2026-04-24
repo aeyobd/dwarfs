@@ -18,9 +18,9 @@ function (@main)(ARGS)
 end
 
 short_refs = OrderedDict(
-    "MV2020" => 1,
-    "McConnachie2012AJ....144....4M" => 2,
-    "An2024MNRAS.532.3713A" => 3,
+    "McConnachie2012AJ....144....4M" => 1,
+    "An2024MNRAS.532.3713A" => 2,
+    "MV2020" => 3,
     "Vivas2022ApJ...926...78V" => 4,
     "Ji2021ApJ...921...32J" => 5,
     "Oakes2022ApJ...929..116O" => 6,
