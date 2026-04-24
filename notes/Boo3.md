@@ -225,29 +225,21 @@ Orbits selected from quantile method, median properties of near $\pm2\sigma$ per
 
 Based on 
 
-| halo           | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
-| -------------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
-| average        | 22                   | 3.9           | 0              |                           |                  |                 |
-| heavy          | 30                   | 5.7           | 0              |                           |                  |                 |
-| compact        | 30                   | 3.0           | +2             | 15?                       |                  |                 |
-| ?              |                      |               |                |                           |                  |                 |
-| moderate?      | 30                   | 4.2           | +1             |                           |                  |                 |
-| heavier?       | 35                   | 6.9           | 0              |                           |                  |                 |
-| heavy compact? | 35                   | 3.7           | +2             |                           |                  |                 |
+| halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
+| ------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
+| average | 22                   | 3.9           | 0              |                           |                  |                 |
+| compact | 30                   | 3.0           | +2             | 15?                       |                  |                 |
+| heavy ? | 30                   | 5.7           | 0              |                           |                  |                 |
 
 
 
 
 
-| halo           | 26   | 18   | 12   | 7    | 4    | 1.5  |
-| -------------- | ---- | ---- | ---- | ---- | ---- | ---- |
-| average        | 3*   | 2    | 1*   | --   | --   | --   |
-| heavy          | 3    | 2-3  | 1    | 1    | --   | --   |
-| **compact**    | --   | 5*   | 3-4  | 2    | 1*   | --   |
-| ?              |      |      |      |      |      |      |
-| heavier??      | 3    | 2-3  | 2?   | 1    | --   | --   |
-| moderate??     | --   | 3-4  | 2    | 1    | --   | --   |
-| heavy compact? | --   | 5    | 4    | 2    | 1    | --   |
+| halo        | 26   | 18   | 12   | 7    | 4    | 1.5  |
+| ----------- | ---- | ---- | ---- | ---- | ---- | ---- |
+| average     | 3*   | 2    | 1*   | --   | --   | --   |
+| heavy       | 3    | 2-3  | 1    | 1    | --   | --   |
+| **compact** | --   | 5*   | 3-4  | 2    | 1*   | --   |
 
 Table: the number of pericentres which a given halo must experience to match the present day velocity dispersion under a specified pericentre. 
 
