@@ -21,7 +21,7 @@ modelname = let
 	# "sculptor/1e7_new_v31_r3.2/orbit_smallperi"
 	# "ursa_minor/1e7_new_v38_r4.0/orbit_smallperi.5"
 	# "ursa_minor/1e6_new_v38_r4.0/orbit_smallperi.5"
-	"isothermal/1e5_v30_r2.0/orbit_17_143"
+	"isothermal/1e5_v30_r3.0/orbit_15_150"
 end
 
 # ╔═╡ ff87ec65-2f65-48ad-9a51-32731d9cbeb7

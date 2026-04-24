@@ -47,6 +47,7 @@ end
 modelnames = Dict(
 	"1x12kpc" => ["bootes3", "1e6_v22_r3.9/1_peri_12kpc", "exp2d_rs0.20"],
 	"1x1.5kpc" => ["bootes3", "1e6_v30_r3.0/1_peri_1.5kpc", "exp2d_rs0.20"],
+	"2x7kpc" => ["bootes3", "1e6_v30_r3.0/2_peri_7kpc", "exp2d_rs0.20"],
 	"3x26kpc" => ["bootes3", "1e6_v22_r3.9/3_peri_26kpc", "exp2d_rs0.20"],
 	"5x18kpc" => ["bootes3", "1e6_v30_r3.0/5_peri_18kpc", "exp2d_rs0.20"],
 	"5x18kpc-P" => ["bootes3", "1e6_v30_r3.0/5_peri_18kpc", "plummer_rs0.30"],
@@ -67,11 +68,9 @@ md"""
 # Density Profiles...
 """
 
-# ╔═╡ f2ab2c69-3dec-4ffd-b851-9f3f141843e5
-allstars["3x26kpc"].xi
-
 # ╔═╡ a5b0c806-c46d-4d89-b709-334138c28278
-scatter(allstars["3x26kpc"].xi_p, allstars["3x26kpc"].eta_p, markersize=1, alpha=0.2)
+scatter(allstars["3x26kpc"].xi_p, allstars["3x26kpc"].eta_p, markersize=1, alpha=0.2,
+	   axis=(; aspect=DataAspect()))
 
 # ╔═╡ 16b6cfdd-6851-475e-96e0-1da503d4ffa9
 Ntot = 100
@@ -118,7 +117,7 @@ function plot_stars_hist(stars; limits=20 .* 60 .* (-1, 1, -1, 1), title="")
 			 )
 
 	p = plot_stars_hist!(stars; 
-						 limits=limits, colormap=:greys, bins=200, colorrange=2)
+						 limits=limits, colormap=:greys, bins=200, colorrange=5)
 
 	Colorbar(fig[1,2], p, label="log stellar density")
 	fig
@@ -136,6 +135,9 @@ plot_stars_hist(allstars["5x18kpc"], title="5x18kpc")
 
 # ╔═╡ a2839fc7-f76d-4710-a07f-8732ec8b7455
 plot_stars_hist(allstars["5x18kpc-P"], title="5x18kpc")
+
+# ╔═╡ 23de9dfc-77d1-42c6-9438-6d584fc1d5b6
+plot_stars_hist(allstars["2x7kpc"], title="2x7kpc")
 
 # ╔═╡ bd6ff7e3-5c4f-427a-aae8-2a8661e824af
 plot_stars_hist(allstars["3x26kpc"], title="3x26kpc")
@@ -186,11 +188,11 @@ end
 # ╠═01a9451b-c901-40ff-b25d-965b919138ef
 # ╠═7436f81b-52b0-4848-9aec-7af5a29e4b23
 # ╠═a74835c4-0128-4219-b72d-6637c9a3b5c0
+# ╠═23de9dfc-77d1-42c6-9438-6d584fc1d5b6
 # ╠═aae65219-08de-414d-8c59-4359896a5f77
 # ╠═a2839fc7-f76d-4710-a07f-8732ec8b7455
 # ╠═bd6ff7e3-5c4f-427a-aae8-2a8661e824af
-# ╠═9c31d05f-8c6e-4d5a-864e-83b640d13a5b
-# ╠═f2ab2c69-3dec-4ffd-b851-9f3f141843e5
+# ╟─9c31d05f-8c6e-4d5a-864e-83b640d13a5b
 # ╠═a5b0c806-c46d-4d89-b709-334138c28278
 # ╠═16b6cfdd-6851-475e-96e0-1da503d4ffa9
 # ╠═85f528f3-f79c-4c51-98f3-c90f55393be3

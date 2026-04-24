@@ -141,15 +141,9 @@ mlw = 2 * 2/3
 # ╔═╡ 17113383-254e-44e2-b7c3-2900dec2cd7d
 smallfontsize =  8
 
-# ╔═╡ 8cb377d6-3af4-4ada-8564-c7377dcf00d1
-arya.style.set_linewidths(1, 3)
-
-# ╔═╡ d4839472-efdd-4d97-b9df-e820990275d6
-
-
 # ╔═╡ 3c032178-8d48-4f9c-bcec-9bf704718ea9
 let
-	fig, (ax, ax_res) = plt.subplots(2, 1, figsize=(3.5, 3),
+	fig, (ax, ax_res) = plt.subplots(2, 1, figsize=(3.35, 3),
 	                              gridspec_kw=Dict("height_ratios" => [3, 1], 
 												  "hspace" => 0))
 		
@@ -264,6 +258,4 @@ end
 # ╠═dea5ec9f-7f31-42eb-b8f7-6ca5d22e9f0b
 # ╠═76d51ea5-8b21-4a4f-b2e5-c0adcc673df3
 # ╠═17113383-254e-44e2-b7c3-2900dec2cd7d
-# ╠═8cb377d6-3af4-4ada-8564-c7377dcf00d1
-# ╠═d4839472-efdd-4d97-b9df-e820990275d6
 # ╠═3c032178-8d48-4f9c-bcec-9bf704718ea9

@@ -1,0 +1,5 @@
+[TruncNFW]
+v_circ_max = 0.07232401157184185
+r_circ_max = 1.5
+trunc = 20
+xi = 3
