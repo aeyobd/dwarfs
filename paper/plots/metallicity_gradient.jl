@@ -322,7 +322,7 @@ end
 
 # ╔═╡ c2b44dcf-cc5e-4630-b4c7-46fcb1725b66
 let
-	fig = Figure(size=(3.54, 4) .* 72)
+	fig = Figure(size=(10/3, 4) .* 72)
 
 	ax_scl_dens = plot_median_profile(fig[1, 1], fit_scl,Utils.load_expected_density_profile("sculptor") )
 
@@ -339,7 +339,7 @@ let
 	errorscatter!(NaN, NaN, color=:black, markersize=4, label="J+24", marker=:rect)
 	errorscatter!(NaN, NaN, color=:black, markersize=4, label="binned")
 	lines!([NaN], [NaN], color=color_inner, label="inner model", linewidth=1)
-	lines!([NaN], [NaN], color=color_outer, label="outer model",  linewidth=1)
+	lines!([NaN], [NaN], color=color_outer, label="outer",  linewidth=1)
 	lines!([NaN], [NaN], color=color_combined, label="inner+outer",  linewidth=1)
 
 	median_plot!(log10.(metals_scl.R_ell), metals_scl.fe_h, metals_scl.fe_h_err, bins=bins_scl)

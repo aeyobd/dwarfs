@@ -16,9 +16,6 @@ begin
 
 end
 
-# ╔═╡ b0a0dddc-fb5a-4bb2-b048-a54859d0b703
-using DataFrames, CSV
-
 # ╔═╡ f5c22abc-2634-4774-8516-fbd07aa690aa
 include("./paper_style.jl")
 
@@ -28,25 +25,21 @@ include(joinpath(ENV["DWARFS_ROOT"], "orbits/orbit_utils.jl"))
 # ╔═╡ 913e0316-a04b-4270-ba31-0ba0f7fdd705
 galaxyname = "sculptor_lmc"
 
-# ╔═╡ b2cdaa3a-1c20-4609-b6f7-5b0a5f572102
-import StatsBase
-
 # ╔═╡ bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 import TOML
 
 # ╔═╡ 280e0cef-896a-4c14-a1ac-a611418be57e
 modelnames = TOML.parsefile("model_key.toml")
 
+# ╔═╡ a9023e51-4e24-4526-9e29-bd6e4bfa2b24
+module PictureUtils
+	include("picture_utils.jl")
+end
+
 # ╔═╡ e62f58df-67fd-4cf6-a1a1-fc4a11ec334b
 md"""
 ## Isodensity plots
 """
-
-# ╔═╡ 4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
-xy_iso = CSV.read("resources/EP2020_iso_xy.csv", DataFrame, tasks=1)
-
-# ╔═╡ 53cdcc20-96d4-4bd5-8028-df9a38af71ae
-xz_iso = CSV.read("resources/EP2020_iso_xz.csv", DataFrame, tasks=1)
 
 # ╔═╡ 5eaf3b50-886e-47ac-9a7c-80d693bc3c17
 CairoMakie.activate!(type=:png)
@@ -106,24 +99,6 @@ orbit = Orbit(joinpath(ENV["DWARFS_ROOT"], "analysis", modelname, "centres.hdf5"
 # ╔═╡ 5a40b893-021b-46e5-a115-0284e13ae7ae
 bins = LinRange(-150, 150, 512)
 
-# ╔═╡ 04c8c564-f768-4845-ac22-898173a10582
-function get_histogram(snap, bins=bins; weights=nothing)
-	x = snap.positions[2, :]
-	y = snap.positions[3, :]
-
-	if eltype(bins) <: Real
-		bins = (bins, bins)
-	end
-	
-	if weights === nothing                                                              
-        h1 = StatsBase.fit(StatsBase.Histogram, (x, y), bins)                                      
-    else                                                                          
-        h1 = StatsBase.fit(StatsBase.Histogram, (x, y), StatsBase.weights(weights), bins) 
-    end         
-	
-	return bins, StatsBase.normalize(h1, mode=:density).weights
-end
-
 # ╔═╡ 4ae004da-7e17-4f7c-a11d-6ad97dcbe6dd
 orbit_props["idx_apos"], orbit_props["idx_peris"]
 
@@ -165,19 +140,6 @@ function plot_orbit_trace!(orbit, idx; d_idx=10)
 	y = orbit.positions[3, idx_last:idx-1]
 	lines!(x, y, linewidth=theme(:linewidth)[]/2, color=(:white, 0.3), linestyle=:dot)
 
-	# x = orbit.positions[2, idx:idx_next-2]
-	# y = orbit.positions[3, idx:idx_next-2]
-	# lines!(x, y, linestyle=:dot, linewidth=theme(:linewidth)[]/2, color=(:white, 0.3))
-
-end
-
-# ╔═╡ c689f2b1-eded-4284-9b40-67c72016de8c
-function plot_scalebar!(scale_length=50, plotrange=bins[end]-bins[1])
-	length_relative = scale_length / plotrange
-
-	x0, y0 = 0.05, 0.05
-	lines!([x0, x0 + length_relative], [y0, y0], color=:white, space=:relative, linewidth=theme(:linewidth)[] / 2)
-	text!(x0, y0, text="$scale_length kpc", color=:white, space=:relative, fontsize=0.8 * theme(:fontsize)[], )
 end
 
 # ╔═╡ cec9cbd6-9e8f-4375-9105-8ced9089dd5e
@@ -205,25 +167,7 @@ md"""
 """
 
 # ╔═╡ c98b7028-73ca-4fda-8ac9-15ace0af0b6c
-plotrange = 5
-
-# ╔═╡ 59c11f0e-798f-4102-a338-e1db7029d59c
-function get_zoom_histogram(snap, bins=nothing; weights=nothing, plotrange=plotrange, N = 128)
-
-	xycen = snap.x_cen[2:3]
-	
-	if isnothing(bins)
-		
-		bins = (LinRange(xycen[1] - plotrange, xycen[1] + plotrange, N),
-				LinRange(xycen[2] - plotrange, xycen[2] + plotrange, N)
-			   )
-	end
-
-	
-	hist = get_histogram(snap, bins, weights=weights)
-
-	return hist
-end
+plotrange = PictureUtils.plotrange
 
 # ╔═╡ fa0a5bf8-7f96-4a53-82dc-a368c12c5241
 idx_f = orbit_props["idx_f"]
@@ -235,29 +179,36 @@ snap_f = out[idx_f]
 snap_i = out[1]
 
 # ╔═╡ 3b999809-7bf7-48f0-bd6e-f66be85ba314
-colorrange_dm = (-5, 0) .+ log10(maximum(get_zoom_histogram(snap_i)[2]))
+colorrange_dm = (-5, 0) .+ log10(maximum(PictureUtils.get_zoom_histogram(snap_i)[2]))
 
 # ╔═╡ 9cb67d7e-4c97-4d7f-8705-f737c8f19b88
-colorrange_stars = (-5, 0) .+ log10(maximum(get_zoom_histogram(snap_i, weights=snap_i.weights)[2]))
-
-# ╔═╡ 0e9e54b8-0f14-4bb0-8262-83f9b63955e7
-import LinearAlgebra: ⋅
+colorrange_stars = (-5, 0) .+ log10(maximum(PictureUtils.get_zoom_histogram(snap_i, weights=snap_i.weights)[2]))
 
 # ╔═╡ 385d0cee-6758-49ea-933d-82b654b9e1a0
 fg_color = :grey
 
-# ╔═╡ 14546575-917a-4799-a6eb-d84d8a890c89
-function plot_hist!(binshist; kwargs...)
-	bins, hist = binshist
-	image!(extrema.(bins)..., log10.(hist);  kwargs...)
+# ╔═╡ e5d118a8-b0dc-4e4d-93b9-02b129c0fe1f
+function plot_zoom(ax, snap)
+	hidedecorations!()
+	
+	hist = PictureUtils.get_zoom_histogram(snap)
+
+	p = PictureUtils.plot_hist!(hist, interpolate=true, colormap=PictureUtils.colormap_dm, colorrange=colorrange_dm)
+
+	hist = PictureUtils.get_zoom_histogram(snap, weights=snap.weights)
+
+	p = PictureUtils.plot_hist!(hist, interpolate=true, colormap=PictureUtils.colormap_stars,
+		colorrange=colorrange_stars)
+
+	ax
 end
 
 # ╔═╡ f3da6ca5-e988-4f6b-8efa-18fe32887dab
-function plot_both(snap; kwargs...)
+function plot_zoom(snap; kwargs...)
 	fig = Figure()
 	ax = Axis(fig[1,1], backgroundcolor=:black,)
 
-	plot_both(ax, snap; kwargs...)
+	plot_zoom(ax, snap; kwargs...)
 
 	hidedecorations!()
 
@@ -266,56 +217,6 @@ function plot_both(snap; kwargs...)
 	resize_to_layout!(fig)
 
 	fig
-end
-
-# ╔═╡ 447c05ad-d5fc-4502-a2bc-27beeb931904
-purple = Makie.colorant"#c274ff"
-
-# ╔═╡ bfa1ee5a-473d-4f21-ac37-4665ca1eade6
-function to_transparent_cmap(color)
-	return ([Makie.RGBAf(color.r, color.g, color.b, alpha) for alpha in LinRange(0, 1., 100)])
-end
-
-# ╔═╡ 5ace10dd-3d95-4a30-bfd0-1c7e846af2c7
-colormap_stars = to_transparent_cmap(RGBf(1., 1., 1.))
-
-# ╔═╡ d546247e-7c5c-4452-a1b6-60cbc9fd133f
-function to_black_cmap(color)
-	return ([Makie.RGBf(color.r*alpha, color.g*alpha, color.b*alpha) for alpha in LinRange(0, 1., 100)])
-end
-
-
-# ╔═╡ 124f1c38-3d15-42c3-a48c-dbdf14aba497
-colormap_dm = (to_black_cmap(purple))
-
-# ╔═╡ 666eff06-c57a-4219-ac5e-e68e6b860882
-function plot_xy_density!(snap)
-
-	h = get_histogram(snap)
-	plot_hist!(h, colorrange=colorrange_dm, colormap = colormap_dm)
-
-	h = get_histogram(snap, weights=snap.weights)
-	plot_hist!(h, colorrange=colorrange_stars, colormap = colormap_stars)
-
-end
-
-
-# ╔═╡ e5d118a8-b0dc-4e4d-93b9-02b129c0fe1f
-function plot_both(ax, snap)
-
-	hist = get_zoom_histogram(snap)
-
-	
-	hidedecorations!()
-
-	p = plot_hist!(hist, colormap=colormap_dm, colorrange=colorrange_dm)
-
-	hist = get_zoom_histogram(snap, weights=snap.weights)
-
-	p = plot_hist!(hist, colormap=colormap_stars,
-		colorrange=colorrange_stars)
-
-	ax
 end
 
 # ╔═╡ 2c745440-049c-4a15-b4ca-ade29b9e69db
@@ -329,24 +230,19 @@ function inset_axis(gs; kwargs...)
 	ax
 end
 
+# ╔═╡ 72493e30-56eb-4766-a7f5-b089edb2921b
+light_grey = RGBAf(0.8, 0.8, 0.8)
+
 # ╔═╡ f251ed8f-c908-47b8-96ca-174ecc73f30f
 let
-	fig = Figure()
 
-	ax = Axis(fig[1, 1], backgroundcolor=:black, 
-			 limits = (extrema(bins), extrema(bins)))
+	fig = PictureUtils.plot_frame(snap_f, colorrange_dm=colorrange_dm, colorrange_stars=colorrange_stars, legend=true, scalebar_color=light_grey)
+	plot_orbit_trace!(orbit, orbit_props["idx_f"])
+	plot_lmc_orbit!(galaxyname)
 
-	idx = orbit_props["idx_f"]
-
-	plot_xy_density!(snap_f)
-	plot_orbit_trace!(orbit, idx)
-	plot_scalebar!(50, bins[end]-bins[1])
-
-
-	# MW isocontour. same if using x or y
-	poly!(xz_iso.x, xz_iso.z, color=COLORS[8])
-
-
+	hidexdecorations!()
+	hideydecorations!()
+	
 	# zoom box
 	xycen = snap_f.x_cen[2:3]
 	x1 = xycen[1] - plotrange
@@ -355,30 +251,20 @@ let
 
 	lines!([x1,x2,x2,x1,x1], [y1,y1,y2,y2,y1], color=fg_color, linewidth=theme(:linewidth)[]/2)
 
-	plot_lmc_orbit!(galaxyname)
 	
-	# legend
-	text!(0.95, 0.05, text="stars", color=:white, space=:relative, align=(:right, :center), offset=(0, 10))
-	text!(0.95, 0.05, text="dark matter", color=COLORS[5], space=:relative, align=(:right, :center))
-
-
-	hidexdecorations!()
-	hideydecorations!()
 
 	ax_initial = inset_axis(fig[1,1], halign=0.05, valign=0.95)
-	plot_both(ax_initial, snap_i)
-	text!(0.1, 0.9, text="initial", color=:white, space=:relative, fontsize=8, align=(:left, :top))
-	plot_scalebar!(1, 2*plotrange)
+	plot_zoom(ax_initial, snap_i)
+	text!(0.1, 0.9, text="initial", color=light_grey, space=:relative, fontsize=8, align=(:left, :top))
+	PictureUtils.plot_scalebar!(1, 2*plotrange, color=light_grey)
 
 
 
 
 	ax_final = inset_axis(fig[1,1], halign=0.95, valign=0.95)
-	plot_both(ax_final, snap_f)
-	text!(0.1, 0.9, text="final", color=:white, space=:relative, fontsize=8, align=(:left, :top))
-	plot_scalebar!(1, 2*plotrange)
-
-	rowsize!(fig.layout, 1, Aspect(1, 1))
+	plot_zoom(ax_final, snap_f)
+	text!(0.1, 0.9, text="final", color=light_grey, space=:relative, fontsize=8, align=(:left, :top))
+	PictureUtils.plot_scalebar!(1, 2*plotrange, color=light_grey)
 
 
 
@@ -392,14 +278,11 @@ end
 # ╔═╡ Cell order:
 # ╠═913e0316-a04b-4270-ba31-0ba0f7fdd705
 # ╠═0125bdd2-f9db-11ef-3d22-63d25909a69a
-# ╠═b0a0dddc-fb5a-4bb2-b048-a54859d0b703
-# ╠═b2cdaa3a-1c20-4609-b6f7-5b0a5f572102
 # ╠═bf49209c-fbfc-4439-a7d8-cfad5ceba8cc
 # ╠═f5c22abc-2634-4774-8516-fbd07aa690aa
 # ╠═280e0cef-896a-4c14-a1ac-a611418be57e
-# ╠═e62f58df-67fd-4cf6-a1a1-fc4a11ec334b
-# ╠═4e5ddbe9-e90a-42cf-a0f1-fabb3d3f1675
-# ╠═53cdcc20-96d4-4bd5-8028-df9a38af71ae
+# ╠═a9023e51-4e24-4526-9e29-bd6e4bfa2b24
+# ╟─e62f58df-67fd-4cf6-a1a1-fc4a11ec334b
 # ╠═0f71807d-d698-4164-9f30-49af8dd8ba55
 # ╠═b593188f-1618-44d4-b38c-d5be448e927c
 # ╠═5eaf3b50-886e-47ac-9a7c-80d693bc3c17
@@ -412,9 +295,6 @@ end
 # ╠═a3be2d61-98eb-4037-afb4-4155ba24cc21
 # ╠═d50c120c-d72a-4fdc-b18a-9ec185c25c04
 # ╠═5a40b893-021b-46e5-a115-0284e13ae7ae
-# ╠═04c8c564-f768-4845-ac22-898173a10582
-# ╠═59c11f0e-798f-4102-a338-e1db7029d59c
-# ╠═666eff06-c57a-4219-ac5e-e68e6b860882
 # ╠═3b999809-7bf7-48f0-bd6e-f66be85ba314
 # ╠═9cb67d7e-4c97-4d7f-8705-f737c8f19b88
 # ╠═4ae004da-7e17-4f7c-a11d-6ad97dcbe6dd
@@ -424,7 +304,6 @@ end
 # ╠═800caee7-deee-4884-92f8-54ce6bb439f2
 # ╠═2e0655e6-1351-4495-b56c-bc70bc478d01
 # ╠═d5591e1b-ec3d-46fc-856e-ce8d1cf6bb03
-# ╠═c689f2b1-eded-4284-9b40-67c72016de8c
 # ╠═3ad8154b-9c07-4666-8b0c-b123276fae7e
 # ╠═13137339-95c2-4a23-b775-6eecb59c2ce6
 # ╠═cec9cbd6-9e8f-4375-9105-8ced9089dd5e
@@ -433,15 +312,9 @@ end
 # ╠═fa0a5bf8-7f96-4a53-82dc-a368c12c5241
 # ╠═903528cb-4e12-4659-9ccc-8377aa7250f9
 # ╠═35635766-eca4-495e-bde1-ba8fb151552d
-# ╠═0e9e54b8-0f14-4bb0-8262-83f9b63955e7
 # ╠═385d0cee-6758-49ea-933d-82b654b9e1a0
-# ╠═14546575-917a-4799-a6eb-d84d8a890c89
 # ╠═e5d118a8-b0dc-4e4d-93b9-02b129c0fe1f
 # ╠═f3da6ca5-e988-4f6b-8efa-18fe32887dab
-# ╠═447c05ad-d5fc-4502-a2bc-27beeb931904
-# ╠═124f1c38-3d15-42c3-a48c-dbdf14aba497
-# ╠═5ace10dd-3d95-4a30-bfd0-1c7e846af2c7
-# ╠═bfa1ee5a-473d-4f21-ac37-4665ca1eade6
-# ╠═d546247e-7c5c-4452-a1b6-60cbc9fd133f
 # ╠═2c745440-049c-4a15-b4ca-ade29b9e69db
+# ╠═72493e30-56eb-4766-a7f5-b089edb2921b
 # ╠═f251ed8f-c908-47b8-96ca-174ecc73f30f
