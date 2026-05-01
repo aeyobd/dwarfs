@@ -1,6 +1,4 @@
-Boötes III (Boo3) is an unusual system. Boo3 is one of few MW satellites wish
-
-Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellites, and is among the largest and most diffuse faint dwarf galaxies known. While having a small Milky Way pericentre (<10 kpc), Boo3 remains spare in the literature and has no resolved stream stars reported. Here, we will characterize the tidal disruption of Boo3 with idealized N-body simulations. Specifically, we investigate the impact of Boo3's orbit, the dwarf's initial structure, and the inner MW potential. We then assess the observational characteristics of disruption in Boo3 under each scenario and predict the properties of a possible stellar stream. 
+*Abstract*. Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellites, and is among the largest and most diffuse faint dwarf galaxies known. While having a small Milky Way pericentre (<10 kpc), Boo3 remains spare in the literature and has no resolved stream stars reported. Here, we will characterize the tidal disruption of Boo3 with idealized N-body simulations. Specifically, we investigate the impact of Boo3's orbit, the dwarf's initial structure, and the inner MW potential. We then assess the observational characteristics of disruption in Boo3 under each scenario and predict the properties of a possible stellar stream. 
 
 
 
@@ -8,21 +6,9 @@ Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellit
 
 # Introduction
 
-## History of the BooIII
+Only ${\sim}5$ dwarf galaxy satellites of the Milky Way show signs of tidal perturbations. While the Sagittarius dSph forms a stream wrapping across the entire sky (e.g., ) and the Large Magellanic Cloud (LMC)  has an extensive gas tail, the only other known tidal streams are from the Tucana III, Antlia II, and Crater II dwarf spheroidals (dSph). 
 
-Boo III was discovered in @grillmair2009 through matched filter method. In their paper, the only derived properties are the approximate distance (46 kpc or $18.35\pm0.01$ for distance modulus), the centroid (ra, dec = 209.3˚, 26.8˚), a density profile ($\Sigma \sim r^{-1}$). They discover the Styx stream and claim that Boo III might be associated (in the middle of the stream and at a similar distance). 
-
-
-
-@correnti+bellazzini+ferraro2009 follow up the initial detection and detect and analyze a possible population of Blue Horizontal Branch (BHB) stars. From this population,they derive a similar density profile, a centroid of ($209.7\pm1.4, 26.8\pm0.6$ degrees), a distance modulus $18.58\pm0.05 \pm 0.14$. By extrapolating from the number of BHB stars detected, they infer$M_V = -5.8\pm0.5$ and an approximate ellipticity of 0.5. 
-
-
-
-@carlin+2009 follow up the initial detection with MMT spectroscopy. They find 20 identified members (missing many due to high foreground). Their main results are a high velocity dispersion $\sigma_\text{v} = 14. 0 \pm 3.2$km/s, and the derived systemic velocity $\text{v} = 197.5\pm3.8$km/s. They also derive [Fe/H]$ \approx -2.1\pm0.2$, and a high metallicity dispersion. With a high dispersion, they interpret this system as likely undergoing active tidal disruption.
-
-
-
-@massari+helmi2018 use Gaia DR 2 to derive proper motions for seven ultra faint dwarf galaxies, including Boo III. Their results from 34 possible members are:$\pmra = −1.21 \pm0.13$, $\pmdec =  −0.92 \pm0.17$, covariance = 0.23 (not includingg the 0.035mas/yr systematic).
+Boötes III is the next most promising candidate for tidal disruption. With a pericentres of ${\sim} 7\,$kpc, Boo III should be tidally disrupting (e.g., ). Indeed, @carlin+sand2018 claim that Boo III's orbit is consistent with the formation of the Styx stellar stream, detected alongside Boo III in @grillmair2009. In addition, the high initial velocity dispersions reported for Boo III of $\gtrsim 10$ km/s (@calin+2009, @carlin+sand2018) would potentially be consistent with active tidal disruption contaiminating these measurements (most similar ultra-faint dwarfs have velocity dispersions $\lesssim 5$). 
 
 @carlin+sand2018 perform the first orbital modelling of Boo III. They derive a proper motion of (μα cos d, μδ)=(−1.14, −0.98)±(0.18, 0.20) mas yr−1 based on LOS velocity selected members. By excluding members from @carlin+2009 with inconsistent proper motions, they further re-derive the systematic velocity (197.1\pm3.6) and dispersion(10.7\pm3.5km/s). Based on their orbital analysis, the pericentre is 10-12\pm6 kpc and they assert that Boo III is likely disrupting and is consistent with the position of Styx.
 
@@ -42,28 +28,28 @@ Boo III was discovered in @grillmair2009 through matched filter method. In their
 
 # The observational status of Boötes III
 
-While the distance and proper motions of Bootes III appear to reasonably well-characterized, we revisit the structural and line-of-sight velocity properties of the galaxy. 
+We revisit the structural and line-of-sight velocity properties of the galaxy. @tbl:obs_props shows our recommended observational parameters for Boo III. 
 
 
 
-| parameter                       | value                                     | Source         |
-| ------------------------------- | ----------------------------------------- | -------------- |
-| $\alpha$                        | $209.47\pm0.11$                           | @struct_params |
-| $\delta$                        | $26.68\pm0.06$                            | @struct_params |
-| distance modulus                | $18.34 \pm 0.19$                          | vivas+2020     |
-| distance                        | $46.56 \pm 4$ kpc                         | vivas+2020     |
-| $\mu_\alpha \cos \delta$        | $-1.16 \pm 0.02 \pm 0.017$ mas yr$^{-1}$  | battaglia+2022 |
-| $\mu_\delta$                    | $-0.88  \pm 0.01 \pm 0.017$ mas yr$^{-1}$ | battaglia+2022 |
-| RV                              | $188 \pm 2.2$ km/s                        | @kin_params    |
-| $\sigma_v$                      | $7.7_{-1.5}^{+2.0}$ km/s                  | @kin_params    |
-| $R_h$ (Plummer, sphericalized)* | $44_{-6}^{+7}$                            | @struct_params |
-| ell                             | $0.42_{-0.14}^{+0.11}$z                   | @struct_params |
-| PA                              | $89\pm9$                                  | @struct_params |
-| $M_V$                           | $-5.1\pm0.24$                             | @luminosity    |
-| $M_\star / \mathrm{M}_\odot$    | $(14\pm3) \times10^3$                     | @luminosity    |
-| [Fe/H]                          | $-2.5\pm0.1$                              | @kin_params    |
+| parameter                | Units              | value                       | Reference      |
+| ------------------------ | ------------------ | --------------------------- | -------------- |
+| $\alpha$                 | deg                | $209.47\pm0.11$             | @struct_params |
+| $\delta$                 | deg                | $26.68\pm0.06$              | @struct_params |
+| distance modulus         | mag                | $18.34 \pm 0.19$            | vivas+2020     |
+| distance                 | mag                | $46.56 \pm 4$ kpc           | vivas+2020     |
+| $\mu_\alpha \cos \delta$ | mas yr$^{-1}$      | $-1.16 \pm 0.02 \pm 0.017$  | battaglia+2022 |
+| $\mu_\delta$             | mas yr$^{-1}$      | $-0.88  \pm 0.01 \pm 0.017$ | battaglia+2022 |
+| $\mathrm{v}_\text{los}$  | km s$^{-1}$        | $188 \pm 2.2$               | @kin_params    |
+| $\sigma_\mathrm{v}$      | km s$^{-1}$        | $7.7_{-1.5}^{+2.0}$ km/s    | @kin_params    |
+| $R_h$*                   | arcmin             | $44_{-6}^{+7}$              | @struct_params |
+| ellipticity              | --                 | $0.42_{-0.14}^{+0.11}$      | @struct_params |
+| position angle           | deg                | $89\pm9$                    | @struct_params |
+| $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity    |
+| $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity    |
+| [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params    |
 
-
+Table: Recommended and derived properties of Boo III. Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity. 
 
 ## Survey Data {#gaia_data}
 
@@ -120,19 +106,25 @@ While two (much brighter) globular clusters are in the same field, excluding the
 
 
 
+![image-20260429160516556](/Users/daniel/Library/Application Support/typora-user-images/image-20260429160516556.png)
+
+
+
 | model       | $\Delta \xi/'$ | $\Delta \eta/'$ | $e$                    | $\theta / \deg$  | $R_h\ /\ '$      | $n_\text{S\'ersic}$ | $N_\text{sat}$ |
 | ----------- | -------------- | --------------- | ---------------------- | ---------------- | ---------------- | ------------------- | -------------- |
 | Plummer     | $9.0\pm5.7$    | $-7.2 \pm 3.4$  | $0.42_{-0.11}^{+0.14}$ | $88.5\pm9.5$     | $43.8_{-6}^{+7}$ | --                  | $112 \pm 15$   |
 | Exponential | $9.4\pm6$      | $-6.1\pm5$      |                        |                  |                  |                     | $130 \pm20$    |
 | Sérsic      | $12\pm4$       | $-9_{-3}^{+4}$  | $0.23\pm0.14$          | $93^{+20}_{-19}$ | $67_{-15}^{+23}$ | $2.9_{-0.7}^{+0.9}$ | $57_{-7}^{+8}$ |
 
-## Density profiles
+## 
+
+
 
 While the likelihoods above can provide a membership list of stars, using this to then derive a density profile of the satellite risks "double fitting" the surface density. Instead, we derive density profiles by taking a sample of stars selected based on the likelihood of the foreground to background ratios, excluding the spatial likelihood terms. The resulting density profiles, and comparison MCMC parameterized density profiles, are shown in Fig. X
 
 
 
-![image-20260408203004227](/Users/daniel/Library/Application Support/typora-user-images/image-20260408203004227.png)
+![image-20260429155837759](/Users/daniel/Library/Application Support/typora-user-images/image-20260429155837759.png)
 
 Figure: The density profiles of Boo III using a sample of *Gaia* stars as selected based on their combined CMD+PM likelihood. 
 
@@ -185,51 +177,54 @@ We use a NUTS sampler with 16 chains 10,000 steps each. The resulting distributi
 
 ![image-20260407165057367](/Users/daniel/Library/Application Support/typora-user-images/image-20260407165057367.png)
 
-Figure: the resulting velocity dispersion fits. 
+Figure: The resulting velocity dispersion fits. Black curves illustrate sampled Gaussian fits to the distribution from the MCMC model, and the orange points with errorbars are the observed velocity member stars.
 
 
-
-![image-20260402110023952](/Users/daniel/Library/Application Support/typora-user-images/image-20260402110023952.png)
 
 # N-body methods
 
-## Point particle orbits
+## Potential and galactocentric frame
 
 - Astropy v4.0 Galactocentric frame
 - @EP2020 potential
+
+## Point particle orbits
+
 - Agama: 100,000 orbits by sampling observed properties from Table @tbl:obs_props
 - Selected orbits 
 
-We use Agama to calculate 100,000 orbits in the EP2020 potential. 
+  We use Agama to calculate 100,000 orbits in the EP2020 potential. 
 
-Orbits selected from quantile method, median properties of near $\pm2\sigma$ pericentre. 
-
-
-
-| Orbit      |          | small | large |
-| ---------- | -------- | ----- | ----- |
-| ra         | 209.47pm | ''    | ''    |
-| dec        | 26.68 pm | ''    | ''    |
-| dist       | 46.56 pm | 39.1  | 55.5  |
-| pm ra      | -1.16 pm | -1.15 | -1.17 |
-| pm_dec     | -0.88 pm | -0.88 | -0.88 |
-| rv         | 188 pm   | 188.1 | 187.9 |
-| pericentre | 7.0 pm   | 1.5   | 18    |
-| apocentre  | 104.1 pm | 74    | 149   |
-
-
+  Orbits selected from quantile method, median properties of near $\pm2\sigma$ pericentre. 
 
 
 
 ## Initial conditions
 
-Based on 
+
+
+| Orbit      | -2 (1.5 kpc) | -1 (4 kpc) | Mean (7kpc) | +1 (12kpc) | +2 (18kpc) | +3 (26kpc) |
+| ---------- | ------------ | ---------- | ----------- | ---------- | ---------- | ---------- |
+| ra         |              |            |             |            |            |            |
+| dec        |              |            |             |            |            |            |
+| dist       |              |            |             |            |            |            |
+| pm ra      |              |            |             |            |            |            |
+| pm_dec     |              |            |             |            |            |            |
+| rv         |              |            |             |            |            |            |
+| pericentre |              |            |             |            |            |            |
+| apocentre  |              |            |             |            |            |            |
+
+
+
+
+
+
 
 | halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
 | ------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
 | average | 22                   | 3.9           | 0              |                           |                  |                 |
 | compact | 30                   | 3.0           | +2             | 15?                       |                  |                 |
-| heavy ? | 30                   | 5.7           | 0              |                           |                  |                 |
+| heavy ? | 40                   | 3.0           | +3             |                           |                  |                 |
 
 
 
@@ -242,10 +237,6 @@ Based on
 | **compact** | --   | 5*   | 3-4  | 2    | 1*   | --   |
 
 Table: the number of pericentres which a given halo must experience to match the present day velocity dispersion under a specified pericentre. 
-
-## Simulations
-
-Same methods as my Scl & UMi paper. Action-angle corrections as described in Appendix X.
 
 1. Compact halo; 5 x 18kpc peris (default 10 Gyr)
    1. `bootes3/1e5_v30_r3.0/5_peri_18kpc`
@@ -260,31 +251,87 @@ Same methods as my Scl & UMi paper. Action-angle corrections as described in App
 
 # Results
 
+
+
 ## Orbits
 
-- Distance dominates pericentre budget
-- A result of direct correlation to angular momentum
-  - $L \approx d \,\mathrm v_\text{tan} \approx d^2 \,\mu_\text{tan}$, which directly correlates with pericentre if $E$ is fixed
-- Large pericentric range, varies from 1 - 20 kpc
-- LMC only slightly changes orbital period and pericentre due to combined reflex motion and gravitational tug
+@fig:orbits illustrates the range of possible orbits for Boo III
+
+@fig:pericentre_distance illustrates the tight correlation of pericentre with distance among our sampled orbits. In addition, the lower panel of @fig:pericentre_distance shows the tangental proper motion dependence on distance. WIth present uncertainties, the distance determines the pericentre. 
 
 
 
-## N-body results (guess)
+Appendix @sec:extra_orbits compares the effects of including a Large Magellanic Cloud and changing the Milky Way potential on the orbit of Boo III. Since Boo III is on the opposite side of the galaxy as the LMC, Boo III is very slightly affected by including the LMC. In addition, the uncertainties in the Milky Way potential are far less than the uncertainties due to the distance to Boo III.
 
-- Small pericentric models disrupt quickly, can likely only survive *one* pericentre!
-- Moderate pericentres undergoe heavy tidal stripping and cannot survive long either
-- Requires large pericentre to be long-term satellite
-- regardless of orbit, heavy mass loss
-- total mass near the scale length of Boo III
-- Stream density faint but within reach of future observatories?
-- Consistent with LCDM galaxy formation
+
+
+![image-20260429143711521](/Users/daniel/Library/Application Support/typora-user-images/image-20260429143711521.png)
+
+Figure: Orbits of Boo III with different pericentres. 
+
+
+
+![image-20260429150209385](/Users/daniel/Library/Application Support/typora-user-images/image-20260429150209385.png)
+
+Figure: The pericentre (top) and total angular momentum (bottom) as a function of heliocentric distance. Green points show the sampled MC orbits, and the large dots show the example orbits discussed in the text.
+
+
+
+![image-20260429151837975](/Users/daniel/Library/Application Support/typora-user-images/image-20260429151837975.png)
+
+Figure: The distribution of possible pericentres, with the examples considered here marked along the bottom.
+
+
+
+## Tidal evolution
+
+![image-20260430082213646](/Users/daniel/Library/Application Support/typora-user-images/image-20260430082213646.png)
+
+![image-20260430082322360](/Users/daniel/Library/Application Support/typora-user-images/image-20260430082322360.png)
+
+Figure: Two examples of the final dark matter and stellar distributions.
+
+
+
+![image-20260430081434832](/Users/daniel/Library/Application Support/typora-user-images/image-20260430081434832.png)
+
+
+
+![image-20260430081340817](/Users/daniel/Library/Application Support/typora-user-images/image-20260430081340817.png)
+
+Figure: The final distributions of stars for each model considered above. 
+
+
+
+Figure: The final stellar distribution of the cored model. Interestingly, a core of equal size does not strongly affect tidal evolution as the velocity dispersion constrains. 
+
+
+
+![image-20260430080733367](/Users/daniel/Library/Application Support/typora-user-images/image-20260430080733367.png)
+
+Figure: The along-stream density 
+
+
+
+
+
+# Models to run
+
+- Very extended initial stars
+- More compact halo
+- Low final velocity dispersion
+- More cored models
+
+
 
 
 
 # Discussion & Conclusions
 
 
+
+- Caveat about orbital evolution
+- More precise distance and velocity dispersion key to pinning down Boo III evolution—future/ongoing facilities.
 
 
 
@@ -336,62 +383,31 @@ Figure: The creation of a matched filter for Boo III in the *g-r* CMD.  In all c
 
 
 
-select * 
-FROM delve_dr3.coadd_objects
-WHERE 
-q3c_radial_query(ra, dec, 209.3, 26.8, 3)
+Figure: Matched filter of delve members
 
 
 
-## Selecting isochrone subsets
-
-To create isochrone subsets, we can apply three distinct methods:
-
-1.  Emperically select overdense features appearing in the central region of the field. This method is challenging to use in Boo III since the galaxy is so diffuse, but we can pick out a faint RGB and a definite BHB
-2. Derive selections based on isochrones. Of course, limited by systematics in assumptions of isochrones.
-3. Derive selections based on GCs. In particular, we can use the features of NGC 5466 to  create appropriate selections for boo III, shifting by the difference in distance moduli. Limited by the match of NGC 5466 to Boo III (which is likely more metal poor) and does not account for the higher magnitude errors on Boo III stars due to the higher distance
-
-- RGB stars
-  - URGB *Gaia* by eye: (0.89,18.91, 0.98,18.02, 1.20,16.31, 1.54,15.13, 1.80,14.60, 1.92,15.12, 1.36,16.99, 1.18,18.77, 1.08,19.71
-  - URGB *Gaia* Padova: (1.07,17.61, 1.16,16.43, 1.39,15.24, 1.57,14.91, 2.19,15.56, 1.55,15.98, 1.33,16.59)
-- BHB stars
-  - *Gaia* eye: (0.540,18.68, 0.280,18.71, -0.043,19.12, -0.046,19.42, 0.177,19.25, 0.280,18.99, 0.526,18.93)
-  - *Gaia* Padova: (0.50,18.42, -0.18,18.14, -0.21,19.41, 0.48,19.10)
-  - DELVE eye: (-0.25,18.79, -0.25,19.60, -0.11,19.14, 0.19,19.06, 0.19,18.54, -0.13,18.62)
+Figure: Density profile of DELVE stars
 
 
 
-While we explore BHB subsets (e.g. corenneti+), we find a total of about $51\pm10$ BHB stars in *Gaia*. We would like to improve on these statistics. 
+
+
+## The effects of the LMC and potential choice
+
+
+
+
+
+## Additional Models
 
 ## 
 
+![image-20260430075012123](/Users/daniel/Library/Application Support/typora-user-images/image-20260430075012123.png)
 
-
-NGC 5466 under different CMD assumptions:
-
-- g-r seems to be the best choice: redder filters cause the RGB to be more vertical and has the best depth / coverage. 
-- i is very incomplete: so gr is indeed a good choice. 
+Figure: The final distribution of dark matter for the x.x simulation. 
 
 
 
-Selection regions of NGC 5466:
-
-- BHB: (-0.256,16.52, -0.254,16.77, -0.002,16.59, -0.035,16.25)
-- RGB: (0.373,19.19, 0.411,18.78, 0.504,17.17, 0.632,15.84, 0.690,15.33, 0.789,14.73, 0.842,14.86, 0.719,15.58, 0.562,17.18, 0.516,17.81, 0.454,19.20)
-- SGB (0.201,19.64, 0.248,19.83, 0.280,19.64, 0.437,19.24, 0.387,19.14, 0.245,19.48)
-- MS (0.20,19.66, 0.15,20.10, 0.20,21.28, 0.35,21.28, 0.26,20.42, 0.25,19.96, 0.26,19.74)
-
-
-
-## Simulations
-
-- [ ] Isothermal
-  - [ ] isothermal/1e5_v20_r3.0/orbit_15_150
-  - [ ] isothermal/1e5_v40_r3.0/orbit_15_150
-  - [ ] isothermal/1e5_v30_r3.0/orbit_15_150
-  - [ ] isothermal/1e5_v10_r1.0/orbit_15_150
-  - [ ] 20_150
-  - [ ] 5_150
-
-
+![image-20260430075003149](/Users/daniel/Library/Application Support/typora-user-images/image-20260430075003149.png)
 
