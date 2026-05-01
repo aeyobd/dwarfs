@@ -142,9 +142,6 @@ Rvir = LilGuys.R200(halo)
 # ╔═╡ 4977303f-b958-4d24-9a04-0f2835137d37
 times = out.times * T2GYR
 
-# ╔═╡ 193e78d7-e902-4b6b-8eae-43bae7e5722b
-
-
 # ╔═╡ f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
 let
 	fig = Figure()
@@ -319,7 +316,7 @@ LilGuys.σv_1d(snap_f) * V2KMS
 halos = [LilGuys.TruncNFW(r_circ_max=r_max[i], v_circ_max=v_max[i], trunc=20, xi=3) for i in eachindex(r_max)]
 
 # ╔═╡ 90f916db-3390-460e-8639-d5d02603aede
-σv_predicted = LilGuys.σv_star_mean.(halos, [prof_stars])
+# σv_predicted = LilGuys.σv_star_mean.(halos, [prof_stars])
 
 # ╔═╡ 245721a6-01aa-43e7-922d-ed5da02207c1
 let
@@ -578,7 +575,6 @@ end
 # ╠═8d127679-401c-439d-913d-e2020df1c600
 # ╠═04a07b4f-b747-4738-9d0f-18eae2f85baf
 # ╠═4977303f-b958-4d24-9a04-0f2835137d37
-# ╠═193e78d7-e902-4b6b-8eae-43bae7e5722b
 # ╠═f3b1fd8e-0591-4d51-94ea-2b4eb65b6a71
 # ╠═485eab53-43ec-4591-a3af-9e4cbfefbbe2
 # ╠═4c042ef0-21a9-4a54-9562-05dc891f1dbf

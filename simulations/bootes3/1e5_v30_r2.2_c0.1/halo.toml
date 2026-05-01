@@ -1,0 +1,6 @@
+[CoredNFW]
+v_circ_max = 0.1446480231436837
+r_circ_max = 2.2
+core = 0.1
+xi = 3
+trunc = 20

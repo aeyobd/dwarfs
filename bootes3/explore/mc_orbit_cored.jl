@@ -502,6 +502,29 @@ let
 	fig
 end
 
+# ╔═╡ e9da5603-fb25-4609-9b68-5909cae0d6a4
+
+
+# ╔═╡ 093ef7d8-d289-4773-a60a-29b67d7cb26d
+let
+	fig = Figure(size=(4, 3) .* 72)
+
+	plot_halo_constraints(fig[1,1], der_props_boo3, halos_boo3)
+
+
+	annotation!(0, 30, der_props_boo3.R_h, 10, text=L"R_h")
+	plot_fattahi!(der_props_boo3_100Ms.log_v_0, der_props_boo3_100Ms.log_v_0_err, label="100x M⋆", shade=true)
+
+	ylims!(10, 40)
+
+	plot_sigma_v!(15; x0 = 1, R_h=der_props_boo3.R_h)
+
+	scatter!(samples.r_circ_max, samples.v_circ_max*V2KMS, markersize=1, color=samples.sigma_v_0 * V2KMS, colorrange=(7.5, 15))
+
+
+	fig
+end
+
 # ╔═╡ a09669c6-72fd-418d-957c-ffa2f6434c07
 let
 	fig = Figure(size=(4, 3) .* 72)
@@ -799,6 +822,8 @@ end
 # ╠═e422f8de-8254-4be0-aecb-dd9fa36f5e61
 # ╠═f7ff24ba-43af-42f5-b127-c66cc11c99cd
 # ╠═fa0b0f0b-4efe-43f4-b879-572bd3197dbb
+# ╠═e9da5603-fb25-4609-9b68-5909cae0d6a4
+# ╠═093ef7d8-d289-4773-a60a-29b67d7cb26d
 # ╠═a09669c6-72fd-418d-957c-ffa2f6434c07
 # ╠═8faefce1-f32a-4119-8e1c-9dcc13293da6
 # ╠═d8e7b34f-4938-4ea1-a4c2-cecad0f3e5e5

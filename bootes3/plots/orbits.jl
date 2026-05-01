@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -19,14 +19,14 @@ begin
 end
 
 
+# ╔═╡ 57db77a4-38a2-4f46-a89b-b48511664d5f
+using OrderedCollections
+
 # ╔═╡ f823e80a-f6db-440f-8d25-56860618c82f
 using LilGuys
 
 # ╔═╡ 2bce531e-eaf1-4258-9ca7-9a05751cbd5b
 include("paper_style.jl")
-
-# ╔═╡ 49cca906-53e3-4531-a936-119d8b372c61
-include(joinpath(ENV["DWARFS_ROOT"], "orbits/orbit_utils.jl"))
 
 # ╔═╡ 7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 md"""
@@ -58,39 +58,30 @@ md"""
 # The example orbits
 """
 
-# ╔═╡ 35ce583b-0938-429e-af5d-b17b399f6690
-Nmax = 100 # number of orbits to plot
-
-# ╔═╡ 15863916-6601-4f45-9f45-4cd303bbcc4d
-modeldir = joinpath(ENV["DWARFS_ROOT"], "orbits",)
-
-# ╔═╡ ff6522d0-84cb-4521-8400-61c02973d535
-# lmc_orbit = get_lmc_orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/bootes3/vasiliev24_L3M11")) |> reverse
-
 # ╔═╡ cb4788e1-5b01-4387-9188-745890b48217
 function plot_yz!(ax, positions::AbstractMatrix;
+				  x_direction=2, y_direction=3,
         plot=lines!, kwargs...)
 
-    # x = positions[1, :]
-    y = positions[2, :]
-    z = positions[3, :]
+    y = positions[x_direction, :]
+    z = positions[y_direction, :]
 
     plot(ax, y, z; kwargs...)
 end
 
 # ╔═╡ 185947eb-012f-4c7e-ae2a-fd04ef58e8f7
-function plot_yz!(ax, orbit::Orbit; time_min=-Inf, plot_today=true, kwargs...)
+function plot_yz!(ax, orbit::Orbit; x_direction=2, y_direction=3, time_min=-10/T2GYR, plot_today=false, kwargs...)
     time_filt = orbit.times .> time_min
-    plot_yz!(ax, orbit.positions[:, time_filt]; kwargs...)
+    plot_yz!(ax, orbit.positions[:, time_filt]; x_direction=x_direction, y_direction=y_direction, kwargs...)
 
 	if plot_today
 
-		scatter!(ax, orbit.positions[2, 1], orbit.positions[3, 1]; color=kwargs[:color])
+		scatter!(ax, orbit.positions[x_direction, 1], orbit.positions[y_direction, 1]; color=kwargs[:color])
 	end
 end
 
 # ╔═╡ 6c1b2974-df12-4b7c-a504-8223f893c50c
-function plot_rt_point!(ax, orbit::Orbit; time_min=-Inf, plot_today=true, kwargs...)
+function plot_rt_point!(ax, orbit::Orbit; time_min=-10/T2GYR, plot_today=false, kwargs...)
     time_filt = orbit.times .> time_min
     plot_rt!(ax, orbit.times[time_filt]*T2GYR, radii(orbit)[time_filt]; kwargs...)
 
@@ -130,14 +121,14 @@ function read_orbits(galaxyname, modelname)
 	return read_orbits(modeldir)
 end
 
-# ╔═╡ 3575de4d-797d-4822-a28a-a4424281c277
-orbits_boo3 = read_orbits("bootes3", "EP2020")
-
 # ╔═╡ 7463aada-bf2d-41df-8968-03d027b499a7
 modelnames = TOML.parsefile("model_key.toml")
 
-# ╔═╡ c63a1c4c-6171-4853-906a-54ba74fb0766
-best_mw = OrbitUtils.load_best_orbit(modelnames["bootes3"][1:2]...) |> reverse
+# ╔═╡ eb102600-d9b2-42f5-87ce-c9d5861dea96
+example_orbits = OrderedDict(
+	peri => Orbit(joinpath(ENV["DWARFS_ROOT"], "orbits/bootes3/EP2020_special_cases/orbit_$(peri).csv")) |> reverse
+	for peri in ["peri_1.5", "peri_4", "mean", "peri_12", "peri_18", "peri_26"]
+)
 
 # ╔═╡ 5ec0129c-3075-44f1-bcdf-7090484bcd8d
 md"""
@@ -150,62 +141,69 @@ The plots below are designed to show the special orbits in a variety of frames.
 """
 
 # ╔═╡ 59bb1f11-987d-4e2f-bb07-6905cd09a3f2
-t_min = -5 / T2GYR
+t_min = -3.5 / T2GYR
 
 # ╔═╡ 123584a9-e9b4-4c48-acb5-655bd60aaeb6
 sw = @lift $(theme(:linewidth)) / 2
 
-# ╔═╡ 4ee69fe0-ab61-457e-86f3-e6b4b3228527
-function plot_yz_sun!(;kwargs...)
-    X_SUN = [-8.1219733661223, 0.0, 0.0208]
-
-    scatter!(X_SUN[2], X_SUN[3]; marker=:star5, color=COLORS[9], label="the Sun", strokewidth=sw, kwargs...)
-end
-
-# ╔═╡ 51b371cc-6ba6-4cd5-8060-42261971cf91
-kwargs_mw_only = (; color=COLORS[1], alpha=0.05, linestyle=:solid, label="Dwarf: MW-only" => (; alpha=0.5), time_min=t_min)
-
-# ╔═╡ 7ef18abc-99ff-466a-8f68-88dc8cdefb31
-kwargs_mw_lmc = (; color=COLORS[2], alpha=0.05, linestyle=:solid, label="Dwarf: MW+LMC" => (; alpha=0.5), time_min=t_min)
-
-# ╔═╡ 4ca15028-782c-4480-afae-258d92d5e772
-kwargs_lmc = (; color=COLORS[3],  label="LMC", time_min=t_min, linewidth=sw[]*3, linestyle=:dash, rasterize=rasterize)
-
 # ╔═╡ 086494a3-a1d4-4558-bd1f-7ad3a3f21562
-kwargs_best = (; color=:black, label="N-body: MW-only", linestyle=:solid)
+kwargs_best = (; colorrange=(1, length(example_orbits)), linestyle=:solid, time_min=t_min)
 
 # ╔═╡ 833502cb-a187-4f14-8982-4ec9b215639f
-kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, rasterize=rasterize, plot_today=false)
+kwargs_best_lmc = (; color=:black, label="N-body: MW+LMC", linestyle=:dot, rasterize=rasterize, plot_today=false, time_min=t_min)
+
+# ╔═╡ 2a088b35-a974-4510-bd31-bdf25b0f781b
+labels = OrderedDict(
+	"peri_1.5" => "1.5",
+	"peri_4" => "4",
+	"mean" => "7 (mean)",
+	"peri_12" => "12",
+	"peri_18" => "18",
+	"peri_26" => "26",
+)
 
 # ╔═╡ 9340b2c1-bf46-4959-8d48-9117926bbc1f
 let
-	fig = Figure(size=(3.5*72, 2*72))
+	fig = Figure(size=(6*72, 3*72))
+	ax_xy = Axis(fig[1,1],
+		limits = 125 .* (-1, 1, -1, 1),
+		xlabel = "x / kpc",
+		ylabel = "y / kpc",
+)	
+	
+	for (i, (peri, orbit)) in enumerate(example_orbits)
+		plot_yz!(ax_xy, orbit; label=labels[peri], color=i, x_direction=1, y_direction=2, kwargs_best...)
+	end
 
-	ax_yz = Axis(fig[1,1],
-		limits = 150 .* (-1, 1, -1, 1),
+	
+	ax_yz = Axis(fig[1,2],
+		limits = 125 .* (-1, 1, -1, 1),
 		xlabel = "y / kpc",
 		ylabel = "z / kpc",
 )	
-	plot_yz!(ax_yz, orbits_boo3; kwargs_mw_only...)
-	plot_yz!(ax_yz, best_mw; kwargs_best...)
-	plot_yz_sun!()
+	for (i, (peri, orbit)) in enumerate(example_orbits)
+		plot_yz!(ax_yz, orbit; color=i, kwargs_best...)
+	end
 
-	ax_rt = Axis(fig[1,2],
+	ax_rt = Axis(fig[1,3],
 		xlabel = "time / Gyr",
 		ylabel = L"$r_\textrm{Galcen}$ / kpc",
-		limits=(-5.5, 0.5, 0, 150),
+		limits=(-4, 0.5, 0, 150),
+				 xticks=-4:1:0
 				   )	
 
-	plot_rt!(ax_rt, orbits_boo3; rasterize=rasterize, kwargs_mw_only...)
-	plot_rt!(ax_rt, best_mw; kwargs_best...)
+	for (i, (peri, orbit)) in enumerate(example_orbits)
+		plot_rt!(ax_rt, orbit; color=i, kwargs_best...)
+	end
 
-
-	# Legend(fig[1, 3], ax_scl, tellwidth=true, tellheight=false, nbanks=1)
 
 	
 	rowsize!(fig.layout, 1, Aspect(1, 1))
+
+	Legend(fig[2, :], ax_xy, "pericentre / kpc", tellwidth=false, tellheight=true, nbanks=6)
 	resize_to_layout!(fig)
 
+	@savefig "boo3_orbits"
 	fig
 
 end
@@ -213,6 +211,7 @@ end
 # ╔═╡ Cell order:
 # ╟─7edf0c89-cc4e-4dc2-b339-b95ad173d7e7
 # ╠═e9e2c787-4e0e-4169-a4a3-401fea21baba
+# ╠═57db77a4-38a2-4f46-a89b-b48511664d5f
 # ╠═46348ecb-ee07-4b6a-af03-fc4f2635f57b
 # ╠═f823e80a-f6db-440f-8d25-56860618c82f
 # ╠═00ba3075-c3e2-4965-acf3-00cda0ef320f
@@ -222,10 +221,6 @@ end
 # ╠═a7111062-b025-43a9-bdb1-aee08deb60e9
 # ╠═6b0b6c8f-eef9-4c45-8227-d1906fe6b80b
 # ╟─16f4ac20-d8cf-4218-8c01-c15e04e567fb
-# ╠═35ce583b-0938-429e-af5d-b17b399f6690
-# ╠═15863916-6601-4f45-9f45-4cd303bbcc4d
-# ╠═49cca906-53e3-4531-a936-119d8b372c61
-# ╠═ff6522d0-84cb-4521-8400-61c02973d535
 # ╠═cb4788e1-5b01-4387-9188-745890b48217
 # ╠═185947eb-012f-4c7e-ae2a-fd04ef58e8f7
 # ╠═6c1b2974-df12-4b7c-a504-8223f893c50c
@@ -233,17 +228,13 @@ end
 # ╠═4da40bb0-18d7-4e79-b031-1319a3296207
 # ╠═3d417fe3-a75d-476e-a4f9-8ce25914c473
 # ╠═3f3df4af-3f2b-4803-b007-4302a029f988
-# ╠═3575de4d-797d-4822-a28a-a4424281c277
 # ╠═7463aada-bf2d-41df-8968-03d027b499a7
-# ╠═c63a1c4c-6171-4853-906a-54ba74fb0766
-# ╠═4ee69fe0-ab61-457e-86f3-e6b4b3228527
+# ╠═eb102600-d9b2-42f5-87ce-c9d5861dea96
 # ╟─5ec0129c-3075-44f1-bcdf-7090484bcd8d
 # ╟─14c36202-66ca-46b3-b282-3895b72311fe
 # ╠═59bb1f11-987d-4e2f-bb07-6905cd09a3f2
 # ╠═123584a9-e9b4-4c48-acb5-655bd60aaeb6
-# ╠═51b371cc-6ba6-4cd5-8060-42261971cf91
-# ╠═7ef18abc-99ff-466a-8f68-88dc8cdefb31
-# ╠═4ca15028-782c-4480-afae-258d92d5e772
 # ╠═086494a3-a1d4-4558-bd1f-7ad3a3f21562
 # ╠═833502cb-a187-4f14-8982-4ec9b215639f
+# ╠═2a088b35-a974-4510-bd31-bdf25b0f781b
 # ╠═9340b2c1-bf46-4959-8d48-9117926bbc1f
