@@ -18,12 +18,10 @@ def main():
 
     set_defaults(args, params)
 
-    if args.resubmit == -1:
-        script = create_sbatch_script(args, 1)
-    elif args.resubmit is not None:
-        script = create_sbatch_script(args, f"2 {args.resubmit}")
+    if args.resubmit:
+        script = create_sbatch_script(args, "rerun.sh")
     else:
-        script = create_sbatch_script(args, "")
+        script = create_sbatch_script(args)
 
     submit_job(script)
 
@@ -39,8 +37,8 @@ def parse_args():
                         help='SLURM job name (default: based on directory name)')
     parser.add_argument('-p', '--param', type=str, default="param.txt", 
                         help='Gadget parameter file (default: param.txt)')
-    parser.add_argument('--resubmit', default=None, type=int, 
-                        help='if specified, then we are resubmitting a job. Options are -1 (for last restartfile) or a nonnegative integer for the snapshot to restart from.')
+    parser.add_argument('--resubmit', action="store_true",
+                        help='if specified, then we are resubmitting a job. Calls rerun.sh instead of run.sh')
     args = parser.parse_args()
 
     return args
@@ -59,7 +57,7 @@ def clean_dir(directory):
     os.makedirs(directory)
 
 
-def create_sbatch_script(args, resubmit):
+def create_sbatch_script(args, script_name="run.sh"):
     """
     Create a SLURM script for submitting a job.
     """
@@ -70,10 +68,10 @@ def create_sbatch_script(args, resubmit):
 #SBATCH --output            %j.out
 #SBATCH --time              {args.time}
 #SBATCH --nodes             {args.nodes}
-#SBATCH --ntasks-per-node   80
+#SBATCH --ntasks-per-node   192
 
 source {script_dir}/slurm_header.sh
-bash run.sh
+bash {script_name}
 
 scontrol show job $SLURM_JOB_ID
 """
