@@ -39,7 +39,7 @@ md"""
 CairoMakie.activate!(type=:png)
 
 # ╔═╡ b9600d93-5946-4380-a2ae-9b5f673bbaf5
-modelname = joinpath(modelnames["compact_5"][1:2]...)
+modelname = joinpath(modelnames["fiducial"][1:2]...)
 
 # ╔═╡ 0f71807d-d698-4164-9f30-49af8dd8ba55
 point_orbit = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "simulations", modelname, "orbit.toml"))
@@ -48,7 +48,7 @@ point_orbit = TOML.parsefile(joinpath(ENV["DWARFS_ROOT"], "simulations", modelna
 pos_final = LilGuys.position(LilGuys.transform(Galactocentric, ICRS(point_orbit)))
 
 # ╔═╡ 4adea59d-a467-4b64-a7f3-e1444c2b35c0
-starsname =	modelnames["compact_5"][3]
+starsname =	modelnames["fiducial"][3]
 
 # ╔═╡ 32db23d9-7959-41ac-aff4-b63df5e4b94a
 figname = "boo3"

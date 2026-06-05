@@ -52,13 +52,18 @@ end
 
 # ╔═╡ 7af7cf5a-d149-4fe0-9566-d23b293af3ec
 scalars = OrderedDict(
-	"compact: 1x1.5kpc" => read_scalars("1e6_v30_r3.0/1_peri_1.5kpc"),
-	"compact: 2x7kpc" => read_scalars("1e6_v30_r3.0/2_peri_7kpc"),
-	"compact: 5x18kpc" => read_scalars("1e6_v30_r3.0/5_peri_18kpc"),
+	"fiducial" => read_scalars("1e6_v30_r2.2/orbit_12kpc"),
+	"compacter: 7kpc" => read_scalars("1e5_v30_r1.0/orbit_7kpc"),
+	# "compact: 1x1.5kpc" => read_scalars("1e6_v30_r3.0/1_peri_1.5kpc"),
+	# "compact: 2x7kpc" => read_scalars("1e6_v30_r3.0/2_peri_7kpc"),
+	# "compact: 5x18kpc" => read_scalars("1e6_v30_r3.0/5_peri_18kpc"),
 	"mean: 1x12kpc" => read_scalars("1e6_v22_r3.9/1_peri_12kpc"),
 	"mean: 3x26kpc" => read_scalars("1e6_v22_r3.9/3_peri_26kpc"),
 
 )
+
+# ╔═╡ 2b50bcf6-05a4-4747-83a4-d33516b17121
+
 
 # ╔═╡ 76789b1e-022a-425c-ab8f-0e42f0e422f2
 let
@@ -185,6 +190,9 @@ md"""
 
 # ╔═╡ 69ad681c-bf5a-436c-b1a4-7148ec996666
 stars_tracks = OrderedDict(
+	"fiducial" => read_stars("1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.20"),
+	"fiducial: big" => read_stars("1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.40"),
+
 	"compact: 1x1.5kpc" => read_stars("1e6_v30_r3.0/1_peri_1.5kpc", "exp2d_rs0.20"),
 	"compact: 2x7kpc" => read_stars("1e6_v30_r3.0/2_peri_7kpc", "exp2d_rs0.20"),
 	"compact: 5x18kpc" => read_stars("1e6_v30_r3.0/5_peri_18kpc", "exp2d_rs0.20"),
@@ -288,6 +296,9 @@ plot_stars("mean: 3x26kpc")
 # ╔═╡ b3deb14d-83e8-481f-a35f-ded18fdcd8a7
 plot_stars("compact: 5x18kpc")
 
+# ╔═╡ 83704dfc-6147-470f-8ad5-062a23041da1
+plot_stars("fiducial")
+
 # ╔═╡ 6e1f98e2-a53a-448b-bcc1-8a3a73d94a73
 let
 	fig = Figure()
@@ -321,6 +332,7 @@ end
 # ╠═d8e2a511-8209-4a14-9692-0cd90d714d76
 # ╠═507c3285-04c0-4ce8-966a-3ad684d921ac
 # ╠═7af7cf5a-d149-4fe0-9566-d23b293af3ec
+# ╠═2b50bcf6-05a4-4747-83a4-d33516b17121
 # ╠═76789b1e-022a-425c-ab8f-0e42f0e422f2
 # ╠═7c7cf8cf-66e3-4a90-ba31-d41c993b2d81
 # ╠═2794a7c3-cbf8-4333-82e9-eb74ff9380fe
@@ -345,4 +357,5 @@ end
 # ╠═aa39b874-1fdf-42c4-b615-3de554296fc4
 # ╠═9c711002-3c5f-4943-a6b8-88d4728c3258
 # ╠═b3deb14d-83e8-481f-a35f-ded18fdcd8a7
+# ╠═83704dfc-6147-470f-8ad5-062a23041da1
 # ╠═6e1f98e2-a53a-448b-bcc1-8a3a73d94a73

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -303,7 +303,7 @@ compare_measurements(:R_h, "ellipticity")
 # ╠═f144cdae-f33a-4a15-81e7-3a31e37aee3f
 # ╠═78de8f2b-f62f-4644-b2b7-b19fac4cad8d
 # ╠═2939159c-57a2-4b5d-83e7-86a488804a23
-# ╠═da62575c-3a2e-47e5-83b6-9c1c1b1479d5
+# ╟─da62575c-3a2e-47e5-83b6-9c1c1b1479d5
 # ╠═53952e84-27d5-4ceb-b594-85a5ac94d23a
 # ╠═15333b02-80df-479b-af9a-9ff5174eae36
 # ╠═2801bab1-86f5-4c57-9804-d1c5c230c159

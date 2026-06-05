@@ -3,6 +3,9 @@ mw_orbits = ["bootes3", "EP2020"]
 mw_lmc_orbits = ["bootes3", "vasiliev24_L3M11"]
 
 # results models
+fiducial = ["bootes3", "1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.20"]
+fiducial_0_4 = ["bootes3", "1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.40"]
+
 compact_1 = ["bootes3", "1e6_v30_r3.0/1_peri_1.5kpc", "exp2d_rs0.20"]
 compact_2 = ["bootes3", "1e6_v30_r3.0/2_peri_7kpc", "exp2d_rs0.20"]
 compact_5 = ["bootes3", "1e6_v30_r3.0/5_peri_18kpc", "exp2d_rs0.20"]

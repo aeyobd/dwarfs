@@ -69,12 +69,17 @@ function compare_density(gs, modelname_exp; modelname_plummer=nothing, limits=(-
 	if isnothing(y_low)
 		y_low = limits[3]
 	end
-	r_b = ModelUtils.get_r_b(modelname_exp..., lmc=lmc)
-	ModelUtils.plot_r_break_arrow!(r_b, y_low, break_label_visible)
 
-	r_j = ModelUtils.get_r_j(modelname_exp[1:2]..., lmc=lmc)
-	ModelUtils.plot_r_jacobi_arrow!(r_j, y_low, jacobi_label_visible)
+	if break_label_visible
+		r_b = ModelUtils.get_r_b(modelname_exp..., lmc=lmc)
+		ModelUtils.plot_r_break_arrow!(r_b, y_low, break_label_visible)
+	end
 
+	if jacobi_label_visible
+		r_j = ModelUtils.get_r_j(modelname_exp[1:2]..., lmc=lmc)
+		ModelUtils.plot_r_jacobi_arrow!(r_j, y_low, jacobi_label_visible)
+	end
+	
 	R_h = ModelUtils.get_R_h(galaxy)
 	if isnothing(y_low_R_h)
 		y_low_R_h = limits[3]
@@ -104,12 +109,23 @@ end
 
 # ╔═╡ 8c2d254f-7443-4ff1-ae5e-55b3bd0df766
 modelnames = Dict(
+	"fiducial" => ["bootes3", "1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.20"],
+	"fiducial: big" => ["bootes3", "1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.40"],
+
 	"1x12kpc" => ["bootes3", "1e6_v22_r3.9/1_peri_12kpc", "exp2d_rs0.20"],
 	"1x1.5kpc" => ["bootes3", "1e6_v30_r3.0/1_peri_1.5kpc", "exp2d_rs0.20"],
 	"3x26kpc" => ["bootes3", "1e6_v22_r3.9/3_peri_26kpc", "exp2d_rs0.20"],
 	"5x18kpc" => ["bootes3", "1e6_v30_r3.0/5_peri_18kpc", "exp2d_rs0.20"],
 	"5x18kpc-P" => ["bootes3", "1e6_v30_r3.0/5_peri_18kpc", "plummer_rs0.30"],
 )
+
+# ╔═╡ 148da826-5d4f-4ff6-92e0-b0365098a525
+compare_density(modelnames["fiducial"], norm_shift_exp=0.3, title="fiducial",
+			   break_label_visible=false, jacobi_label_visible=false)
+
+# ╔═╡ f7ca513d-3eca-42fa-bf7c-5594a46ef394
+compare_density(modelnames["fiducial: big"],  norm_shift_exp=0.2, title="fiducial bigg",
+			   break_label_visible=false, jacobi_label_visible=false)
 
 # ╔═╡ f1443328-05ae-41be-8242-d92ed430908b
 compare_density(modelnames["1x12kpc"], norm_shift_exp=0.2, title="1x12kpc")
@@ -195,6 +211,8 @@ end
 # ╠═437ac44b-5440-4b3c-aa58-4bbd93be7174
 # ╠═fc0a118f-f8b7-425e-aacf-c8c7630d61a5
 # ╠═8c2d254f-7443-4ff1-ae5e-55b3bd0df766
+# ╠═148da826-5d4f-4ff6-92e0-b0365098a525
+# ╠═f7ca513d-3eca-42fa-bf7c-5594a46ef394
 # ╠═f1443328-05ae-41be-8242-d92ed430908b
 # ╠═080c9586-bb3d-4f80-b4ea-5bae53f174f4
 # ╠═d26db585-3e68-4870-99da-bb5d9182c923

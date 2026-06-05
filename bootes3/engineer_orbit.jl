@@ -97,6 +97,9 @@ vmax = vmax_kms / V2KMS
 # ╔═╡ ea9f5ca5-a77b-45a8-96cd-3ae6bfcb2284
 rmax = LilGuys.Ludlow.solve_rmax(vmax, delta_logc * σ_ludlow)
 
+# ╔═╡ 62d835cb-6d71-48e2-804b-1bb59e878d77
+rmax, vmax*V2KMS
+
 # ╔═╡ 9c76311e-a16d-4b4d-af0b-0c9e05a77fc5
 halo_boo3 = NFW(v_circ_max = vmax, r_circ_max = rmax)
 
@@ -350,7 +353,7 @@ let
 
 	annotation!(0, 30, der_props_boo3.R_h, 10, text=L"R_h")
 
-	ylims!(10, 40)
+	ylims!(5, 40)
 
 	for n in 0:n_peri_max
 		r, v = rapha_final_halo(rmax, vmax, pericentre, apocentre, n)
@@ -501,6 +504,7 @@ end
 # ╠═69205eb1-d9c8-4213-88ec-759424bf922a
 # ╠═daee353a-2283-4194-b7bf-83a64e59786d
 # ╠═fd8a09ed-e136-47d7-95bf-16a305055cba
+# ╠═62d835cb-6d71-48e2-804b-1bb59e878d77
 # ╠═bb75d21c-2e17-4781-89a0-4d074d8e4095
 # ╠═9bca0ddb-7b5c-49b6-bf9b-bd81fcff70e1
 # ╠═a2a49d4d-8f60-4479-bffb-7dd0d34eea08
