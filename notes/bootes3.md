@@ -313,90 +313,23 @@ Appendix @sec:extra_orbits compares the effects of including a Large Magellanic 
 
 # Appendix
 
-## Structural parameters in DELVE
-
-However, with a cut on mag < 23, the total number of main sequence stars is ~ 151. 
 
 
+# Halo by halo
 
-For DELVE (DR2), we select all stars within 6 arcminutes of BooIII's literature centre (209.3, 26.8).[^DELVE DR3 has incomplete coverage near Boo3. ] We require the sources to further satisfy:  
+## NFW
 
-- g and r PSF magnitudes and their errors are defined
-- g and r PSF magnitudes greater than the 5-$\sigma$ PSF depth (24.3, and 23.9)
-  - In the field, these are 23.6 and 23.0 for the minimum around Boo III
-  - As the turnover occurs at lower magnitudes, our reliable depth is limited to $r\sim 22$. 
-- likely star source (extended_class_g <= 1).
+### v30_r1.0
 
-In total, this returns 558,046 sources. We then correct the magnitudes for dust extinction using the @SFD dustmap with coefficients from @aboot+2018 with the dustmaps package. 
+### v30_r2.2
 
+### v30_r3.0
 
++2 sigma more concentrated than Ludlow+2016 at $z=0$. 
 
-## Creating a matched filter
+Relatively resilient, can survive
 
-We use the matched-filter method to appropriately weight stars by their likelihood of belonging to the galaxy according to the matched filter
-
-For the model of Boo III's CMD, we adopt a Padova isochrone of age 12 Gyr and metallicity -2.1, and weighted by a Kroupa (2001) IMF.  The isochrone is then convolved with a gaussian in magnitude of 0.19 mag (the distance modulus uncertainty) and a gaussian  in colour of width 0.05 mag plus the typical colour uncertainty added in quadrature [^colour_uncertainty]
-
-[^colour_uncertainty]: We determine the typical colour uncertainty to a least-squares fit of the g-r colour uncertainty with g-magnitude assuming a exponential-quadratic formula, i.e. *fill in*] 
-
-Fig. X shows the resulting distribution. Most of the stellar mass is in the MS as expected, with a fainter RGB and HB. 
-
-The background density is derived from all stars between 5 and 6 degrees from the centre adopting a bandwidth of (0.05, 0.1) mag in colour and g-magnitude. 
-
-The matched filter is calculated over a range from 23 to 15 mag and -0.8 to 1.7 in colour, with 200 colour bins and 300 magnitude bins. 
-
-Finally, the likelihood ratio is calculated from the ratio of these two maps, and interpolated as appropriate. The right-hand panel of Fig. 1 illustrates this map. The HB and MS are the most critical regions for identifying the galaxy.
-
-
-
-![image-20260327135427018](/Users/daniel/Library/Application Support/typora-user-images/image-20260327135427018.png)
-
-Figure: The creation of a matched filter for Boo III in the *g-r* CMD.  In all cases, the colours are linear and arbitrarily scaled. **Left:** The expected density of stars belonging to Boo III based on our isochrone model. **Middle:** An empirical estimate of the background density of 
-
-
-
-select * 
-FROM delve_dr3.coadd_objects
-WHERE 
-q3c_radial_query(ra, dec, 209.3, 26.8, 3)
-
-
-
-## Selecting isochrone subsets
-
-To create isochrone subsets, we can apply three distinct methods:
-
-1.  Emperically select overdense features appearing in the central region of the field. This method is challenging to use in Boo III since the galaxy is so diffuse, but we can pick out a faint RGB and a definite BHB
-2. Derive selections based on isochrones. Of course, limited by systematics in assumptions of isochrones.
-3. Derive selections based on GCs. In particular, we can use the features of NGC 5466 to  create appropriate selections for boo III, shifting by the difference in distance moduli. Limited by the match of NGC 5466 to Boo III (which is likely more metal poor) and does not account for the higher magnitude errors on Boo III stars due to the higher distance
-
-- RGB stars
-  - URGB *Gaia* by eye: (0.89,18.91, 0.98,18.02, 1.20,16.31, 1.54,15.13, 1.80,14.60, 1.92,15.12, 1.36,16.99, 1.18,18.77, 1.08,19.71
-  - URGB *Gaia* Padova: (1.07,17.61, 1.16,16.43, 1.39,15.24, 1.57,14.91, 2.19,15.56, 1.55,15.98, 1.33,16.59)
-- BHB stars
-  - *Gaia* eye: (0.540,18.68, 0.280,18.71, -0.043,19.12, -0.046,19.42, 0.177,19.25, 0.280,18.99, 0.526,18.93)
-  - *Gaia* Padova: (0.50,18.42, -0.18,18.14, -0.21,19.41, 0.48,19.10)
-  - DELVE eye: (-0.25,18.79, -0.25,19.60, -0.11,19.14, 0.19,19.06, 0.19,18.54, -0.13,18.62)
-
-
-
-While we explore BHB subsets (e.g. corenneti+), we find a total of about $51\pm10$ BHB stars in *Gaia*. We would like to improve on these statistics. 
-
-
-
-NGC 5466 under different CMD assumptions:
-
-- g-r seems to be the best choice: redder filters cause the RGB to be more vertical and has the best depth / coverage. 
-- i is very incomplete: so gr is indeed a good choice. 
-
-
-
-Selection regions of NGC 5466:
-
-- BHB: (-0.256,16.52, -0.254,16.77, -0.002,16.59, -0.035,16.25)
-- RGB: (0.373,19.19, 0.411,18.78, 0.504,17.17, 0.632,15.84, 0.690,15.33, 0.789,14.73, 0.842,14.86, 0.719,15.58, 0.562,17.18, 0.516,17.81, 0.454,19.20)
-- SGB (0.201,19.64, 0.248,19.83, 0.280,19.64, 0.437,19.24, 0.387,19.14, 0.245,19.48)
-- MS (0.20,19.66, 0.15,20.10, 0.20,21.28, 0.35,21.28, 0.26,20.42, 0.25,19.96, 0.26,19.74)
+## Cored
 
 
 

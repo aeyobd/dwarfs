@@ -32,22 +32,22 @@ We revisit the structural and line-of-sight velocity properties of the galaxy. @
 
 
 
-| parameter                | Units              | value                       | Reference      |
-| ------------------------ | ------------------ | --------------------------- | -------------- |
-| $\alpha$                 | deg                | $209.47\pm0.11$             | @struct_params |
-| $\delta$                 | deg                | $26.68\pm0.06$              | @struct_params |
-| distance modulus         | mag                | $18.34 \pm 0.19$            | vivas+2020     |
-| distance                 | mag                | $46.56 \pm 4$ kpc           | vivas+2020     |
-| $\mu_\alpha \cos \delta$ | mas yr$^{-1}$      | $-1.16 \pm 0.02 \pm 0.017$  | battaglia+2022 |
-| $\mu_\delta$             | mas yr$^{-1}$      | $-0.88  \pm 0.01 \pm 0.017$ | battaglia+2022 |
-| $\mathrm{v}_\text{los}$  | km s$^{-1}$        | $188 \pm 2.2$               | @kin_params    |
-| $\sigma_\mathrm{v}$      | km s$^{-1}$        | $7.7_{-1.5}^{+2.0}$ km/s    | @kin_params    |
-| $R_h$*                   | arcmin             | $44_{-6}^{+7}$              | @struct_params |
-| ellipticity              | --                 | $0.42_{-0.14}^{+0.11}$      | @struct_params |
-| position angle           | deg                | $89\pm9$                    | @struct_params |
-| $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity    |
-| $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity    |
-| [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params    |
+| parameter                | Units              | value                       | Reference       |
+| ------------------------ | ------------------ | --------------------------- | --------------- |
+| $\alpha$                 | deg                | $209.47\pm0.11$             | @struct_params  |
+| $\delta$                 | deg                | $26.68\pm0.06$              | @struct_params  |
+| distance modulus         | mag                | $18.34 \pm 0.19$            | @vivas+2020     |
+| distance                 | mag                | $46.56 \pm 4$ kpc           | @vivas+2020     |
+| $\mu_\alpha \cos \delta$ | mas yr$^{-1}$      | $-1.16 \pm 0.02 \pm 0.017$  | @battaglia+2022 |
+| $\mu_\delta$             | mas yr$^{-1}$      | $-0.88  \pm 0.01 \pm 0.017$ | @battaglia+2022 |
+| $\mathrm{v}_\text{los}$  | km s$^{-1}$        | $188 \pm 2.2$               | @kin_params     |
+| $\sigma_\mathrm{v}$      | km s$^{-1}$        | $7.7_{-1.5}^{+2.0}$ km/s    | @kin_params     |
+| $R_h$*                   | arcmin             | $44_{-6}^{+7}$              | @struct_params  |
+| ellipticity              | --                 | $0.42_{-0.14}^{+0.11}$      | @struct_params  |
+| position angle           | deg                | $89\pm9$                    | @struct_params  |
+| $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity     |
+| $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity     |
+| [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params     |
 
 Table: Recommended and derived properties of Boo III. Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity. 
 
@@ -108,6 +108,8 @@ While two (much brighter) globular clusters are in the same field, excluding the
 
 ![image-20260429160516556](/Users/daniel/Library/Application Support/typora-user-images/image-20260429160516556.png)
 
+Figure: The distribution of *Gaia* stars 
+
 
 
 | model       | $\Delta \xi/'$ | $\Delta \eta/'$ | $e$                    | $\theta / \deg$  | $R_h\ /\ '$      | $n_\text{S\'ersic}$ | $N_\text{sat}$ |
@@ -115,8 +117,6 @@ While two (much brighter) globular clusters are in the same field, excluding the
 | Plummer     | $9.0\pm5.7$    | $-7.2 \pm 3.4$  | $0.42_{-0.11}^{+0.14}$ | $88.5\pm9.5$     | $43.8_{-6}^{+7}$ | --                  | $112 \pm 15$   |
 | Exponential | $9.4\pm6$      | $-6.1\pm5$      |                        |                  |                  |                     | $130 \pm20$    |
 | Sérsic      | $12\pm4$       | $-9_{-3}^{+4}$  | $0.23\pm0.14$          | $93^{+20}_{-19}$ | $67_{-15}^{+23}$ | $2.9_{-0.7}^{+0.9}$ | $57_{-7}^{+8}$ |
-
-## 
 
 
 
@@ -183,10 +183,13 @@ Figure: The resulting velocity dispersion fits. Black curves illustrate sampled 
 
 # N-body methods
 
-## Potential and galactocentric frame
+Our N-body methods are the same as in @boyea+2026, we recount the main details here. 
 
-- Astropy v4.0 Galactocentric frame
-- @EP2020 potential
+We adopt the Astropy v4.0 Galactocentric frame. 
+
+For our MW-only model, we use the @EP2020 potential, an analytic approximation of @mcmillan2011. The potential consists of an Hernquist1990 buldge, a mw1995 thin and thick disk, and a NFW halo. 
+
+For simplicity, we do not include the LMC, which does not affect Boo III's recent orbit (see Appendix X for a discussion.)
 
 ## Point particle orbits
 
@@ -205,8 +208,6 @@ Figure: The resulting velocity dispersion fits. Black curves illustrate sampled 
 
 | Orbit      | -2 (1.5 kpc) | -1 (4 kpc) | Mean (7kpc) | +1 (12kpc) | +2 (18kpc) | +3 (26kpc) |
 | ---------- | ------------ | ---------- | ----------- | ---------- | ---------- | ---------- |
-| ra         |              |            |             |            |            |            |
-| dec        |              |            |             |            |            |            |
 | dist       |              |            |             |            |            |            |
 | pm ra      |              |            |             |            |            |            |
 | pm_dec     |              |            |             |            |            |            |
@@ -220,11 +221,12 @@ Figure: The resulting velocity dispersion fits. Black curves illustrate sampled 
 
 
 
-| halo    | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
-| ------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
-| average | 22                   | 3.9           | 0              |                           |                  |                 |
-| compact | 30                   | 3.0           | +2             | 15?                       |                  |                 |
-| heavy ? | 40                   | 3.0           | +3             |                           |                  |                 |
+| halo     | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
+| -------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
+| fiducial | 30                   | 2.2           |                |                           |                  |                 |
+| compact  | 30                   | 1.0           |                |                           |                  |                 |
+| average  | 22                   | 3.9           | 0              |                           |                  |                 |
+| less?    | 30                   | 3.0           | +2             | 15?                       |                  |                 |
 
 
 
@@ -255,13 +257,19 @@ Table: the number of pericentres which a given halo must experience to match the
 
 ## Orbits
 
-@fig:orbits illustrates the range of possible orbits for Boo III
+@fig:orbit_hist shows a histogram of randomly sampled point-particle orbits of Boo III. Boo III has a pericentre of 4--12 kpc (16-84th quantile) and anywhere from 1.5 -- 26 kpc (3-sigma range). 
 
-@fig:pericentre_distance illustrates the tight correlation of pericentre with distance among our sampled orbits. In addition, the lower panel of @fig:pericentre_distance shows the tangental proper motion dependence on distance. WIth present uncertainties, the distance determines the pericentre. 
+@fig:orbits illustrates the range of possible orbits for Boo III. Despite the wide variation, all orbits are radial and planar (projecting to a line in the $x$--$y$ plane). Increasing the pericentre increases the apocentre and orbital period. The orbital pericentre is likely the most important quantity in determining the tidal evolution of Boo III. 
+
+@fig:pericentre_distance illustrates the tight correlation of pericentre with distance among our sampled orbits. With present uncertainties, the distance determines the pericentre. The lower panel shows the relationship between total angular momentum today and distance. The total angular momentum nearly vanishes at heliocentric distances around 35kpc, resulting in a steep dependence of pericentre with assumed distance. This property results from the tangental velocity's dependence on heliocentric distance and since the solar motion nearly cancels the tangental motion at such a distance. Improving the distance measurement to Boo III will be key to improving our understanding of its orbital history. 
+
+Appendix @sec:extra_orbits compares the effects of including a Large Magellanic Cloud and changing the Milky Way potential on the orbit of Boo III. Since Boo III is on the opposite side of the galaxy as the LMC, Boo III is very slightly affected by including the LMC. In addition, the uncertainties in the Milky Way potential are inconsequential next to the pericentre's sensitivity to assumed distance. 
 
 
 
-Appendix @sec:extra_orbits compares the effects of including a Large Magellanic Cloud and changing the Milky Way potential on the orbit of Boo III. Since Boo III is on the opposite side of the galaxy as the LMC, Boo III is very slightly affected by including the LMC. In addition, the uncertainties in the Milky Way potential are far less than the uncertainties due to the distance to Boo III.
+![image-20260429151837975](/Users/daniel/Library/Application Support/typora-user-images/image-20260429151837975.png)
+
+Figure: The distribution of possible pericentres, with the examples considered here marked along the bottom.
 
 
 
@@ -277,19 +285,61 @@ Figure: The pericentre (top) and total angular momentum (bottom) as a function o
 
 
 
-![image-20260429151837975](/Users/daniel/Library/Application Support/typora-user-images/image-20260429151837975.png)
-
-Figure: The distribution of possible pericentres, with the examples considered here marked along the bottom.
-
-
-
 ## Tidal evolution
+
+Given the wide range of pericentres, we must assume an orbital history then explore the tidal evolution of select dark matter and stellar components on that tidal history. 
+
+Our fiducial model assumes Boo III follows mean orbit (12 kpc pericentre) for 9? Gyr. To acchieve a sufficiently close velocity dispersion, we require a high initial concentration, 3$\sigma$ from Ludlow+2016, and a high initial maximum circular velocity (30 km/s). Under this case, the final velocity dispersion is still below observations (7ish?? km/s) but is within the 2-sigma range which we find sufficient. We explore other orbital possibilities below.
+
+
+
+![image-20260605104424706](/Users/daniel/Library/Application Support/typora-user-images/image-20260605104424706.png)
+
+Figure: The final distribution of dark matter (purple) and stars (white) for the fiducial model in the $y$--$z$ Galactocentric plane. The density scale spans 5 orders of magnitude and is logarithmic??
+
+
+
+
+
+### Alternate orbits
+
+Instead of gradually loosing mass over 10 Gyr, it is possible that a massive perturber recently shifted Boo III's orbit to become small pericentre. 
+
+For our fiducial halo, orbits having two 4kpc pericentres also evolve to match the present-day velocity dispersion. 
+
+
+
+
+
+
+
+
 
 ![image-20260430082213646](/Users/daniel/Library/Application Support/typora-user-images/image-20260430082213646.png)
 
-![image-20260430082322360](/Users/daniel/Library/Application Support/typora-user-images/image-20260430082322360.png)
 
-Figure: Two examples of the final dark matter and stellar distributions.
+
+
+
+### Reducing the mass or concentration of the halo
+
+If Boo III has a less massive dark matter halo, than the galaxy would be more susceptiple to tides. However, the stellar velocity dispersion would also be lower. 
+
+Instead, the dark matter concentration plays a key role in the tidal evolution. More extended halos are more loosely bound and consequently lose mass more rapidly on the same orbit. To acchieve the observed velocity dispersion on a long-term orbit, a low-concentration halo must have a substantially higher pericentre than our fiducial model. We explore a low-concentration low-velocity dispersion halo (`mean` ) on a long-term orbit with a pericentre of *26* kpc!
+
+
+
+### Cored and other halo models. 
+
+
+
+
+
+### Comparison of present-day properties
+
+In all cases, we select models which roughly agree with the present-day properties of Boo III (half-light radius, velocity dispersion, sky position, distance, and kinematics).
+
+
 
 
 
@@ -307,6 +357,12 @@ Figure: The final stellar distribution of the cored model. Interestingly, a core
 
 
 
+
+
+Finally, we calculate the surface density of stars along the stream axis. 
+
+
+
 ![image-20260430080733367](/Users/daniel/Library/Application Support/typora-user-images/image-20260430080733367.png)
 
 Figure: The along-stream density 
@@ -317,12 +373,11 @@ Figure: The along-stream density
 
 # Models to run
 
-- Very extended initial stars
-- More compact halo
+
+
+- More compact halo (running)
 - Low final velocity dispersion
 - More cored models
-
-
 
 
 
@@ -400,8 +455,6 @@ Figure: Density profile of DELVE stars
 
 
 ## Additional Models
-
-## 
 
 ![image-20260430075012123](/Users/daniel/Library/Application Support/typora-user-images/image-20260430075012123.png)
 

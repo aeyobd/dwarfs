@@ -1,4 +1,4 @@
-@default_files=('paper.tex');
+@default_files=('paper_diff.tex');
 
 $out_dir = "build";
 

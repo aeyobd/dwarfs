@@ -1,0 +1,1 @@
+We would like all figures left unscaled if possible (they are designed to exactly fit the column width in most cases.)
