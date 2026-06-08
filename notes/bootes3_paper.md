@@ -371,14 +371,6 @@ Figure: The along-stream density
 
 
 
-# Models to run
-
-
-
-- More compact halo (running)
-- Low final velocity dispersion
-- More cored models
-
 
 
 # Discussion & Conclusions
