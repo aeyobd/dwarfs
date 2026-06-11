@@ -191,12 +191,13 @@ md"""
 # ╔═╡ 69ad681c-bf5a-436c-b1a4-7148ec996666
 stars_tracks = OrderedDict(
 	"fiducial" => read_stars("1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.20"),
-	"fiducial: big" => read_stars("1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.40"),
+	# "fiducial: big" => read_stars("1e6_v30_r2.2/orbit_12kpc", "exp2d_rs0.40"),
+	"tini: 7kpc" => read_stars("1e6_v30_r1.0/orbit_7kpc", "exp2d_rs0.20"),
 
-	"compact: 1x1.5kpc" => read_stars("1e6_v30_r3.0/1_peri_1.5kpc", "exp2d_rs0.20"),
-	"compact: 2x7kpc" => read_stars("1e6_v30_r3.0/2_peri_7kpc", "exp2d_rs0.20"),
+	# "compact: 1x1.5kpc" => read_stars("1e6_v30_r3.0/1_peri_1.5kpc", "exp2d_rs0.20"),
+	# "compact: 2x7kpc" => read_stars("1e6_v30_r3.0/2_peri_7kpc", "exp2d_rs0.20"),
 	"compact: 5x18kpc" => read_stars("1e6_v30_r3.0/5_peri_18kpc", "exp2d_rs0.20"),
-	"mean: 1x12kpc" => read_stars("1e6_v22_r3.9/1_peri_12kpc", "exp2d_rs0.20"),
+	# "mean: 1x12kpc" => read_stars("1e6_v22_r3.9/1_peri_12kpc", "exp2d_rs0.20"),
 	"mean: 3x26kpc" => read_stars("1e6_v22_r3.9/3_peri_26kpc", "exp2d_rs0.20"),
 
 )

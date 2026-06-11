@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -314,7 +314,7 @@ vec.(shift_actions(pot, pos_i_old, vel_i_old, dJ=zeros(3), dθ=zeros(3)))
 Agama.from_actions(am, get_actions(pot, pos_i_old, vel_i_old)...)
 
 # ╔═╡ 373cff92-1e12-4832-9427-47bc3922ba99
-Agama.from_actions(am, [2, 0, 0], [3.14, 1.85, 4.97], units)
+Agama.from_actions(am, [28, 40, 1], [3.14, 1.85, 4.97], units)
 
 # ╔═╡ 0cc89288-a915-49a5-a7f3-10abbc02b184
 af = Agama.ActionFinder(pot)
@@ -387,6 +387,12 @@ Theta_obs = [LilGuys.mean(x) ± LilGuys.std(x) for x in eachcol(df_coord_samples
 # ╔═╡ 8303b321-1b95-4c7c-8c4f-d4c6f4e1b344
 act_nbody, ang_nbody, act_err_nbody, ang_nbody_err = get_actions(af, x_cen, v_cen, x_cen_err, v_cen_err)
 
+# ╔═╡ bf77d95d-de5f-4cc1-bb56-fcd7c85b7629
+get_actions(pot, pos_i_old, vel_i_old)
+
+# ╔═╡ 38ca56dd-4095-4f1d-9f29-f25ec2968b52
+
+
 # ╔═╡ a1caf3e7-5b10-4872-a980-5b4fa8448f65
 md"""
 Note: actions are more important to adjust on initial iterations. Angle evolution changes depending on the actions, so this is best adjusted at the last step.
@@ -394,6 +400,9 @@ Note: actions are more important to adjust on initial iterations. Angle evolutio
 
 # ╔═╡ 571ae542-406c-4e62-9b8f-af34e777748f
 dθ_suggested = [Theta_obs[i] .- ang_nbody[i, idx_f] for i in 1:3]
+
+# ╔═╡ 7725d26d-8e92-4b79-80dc-90bc8a613c7b
+pos_i_old, vel_i_old
 
 # ╔═╡ 8ebf47fd-acd6-48d1-95df-d83a602e75f4
 J_f_mean = [LilGuys.mean((act_nbody .± act_err_nbody)[i, idx_f-window:idx_f]) for i in 1:3]
@@ -477,6 +486,9 @@ end
 
 # ╔═╡ b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
 get_actions(pot, pos_new, vel_new)
+
+# ╔═╡ d0e7726f-31d9-4bf3-a71d-028870d33331
+pos_new, vel_new
 
 # ╔═╡ b8f2475a-3588-4611-99ac-de156f25b853
 @savefig "actions_adjustment" let
@@ -705,7 +717,7 @@ md"""
 df_new = LilGuys.to_frame(orbit)
 
 # ╔═╡ 4fda883d-7173-49c0-a56e-6572ebc80ba4
-let write_ic
+if write_ic
 	@info "writing  to $modeldir/next_orbit.*"
 	
 	CSV.write("$modeldir/next_orbit.csv", df_new)
@@ -727,9 +739,9 @@ let write_ic
 			"x_i" => orbit.positions[1, 1],
 			"y_i" => orbit.positions[2, 1],
 			"z_i" => orbit.positions[3, 1],
-			"v_x_i" => orbit.velocities[1, 1] * V2KMS,
-			"v_y_i" => orbit.velocities[2, 1] * V2KMS,
-			"v_z_i" => orbit.velocities[3, 1] * V2KMS,
+			"v_x_i" => orbit.velocities[1, 1],
+			"v_y_i" => orbit.velocities[2, 1],
+			"v_z_i" => orbit.velocities[3, 1],
 		)
 
 		for k in ["ra", "dec", "pmra", "pmdec", "distance", "radial_velocity"]
@@ -828,12 +840,16 @@ end
 # ╠═8303b321-1b95-4c7c-8c4f-d4c6f4e1b344
 # ╠═3fa86c92-e6bd-41b6-bd64-cfd33f74b229
 # ╠═b39cbb71-b98f-4a6b-ba01-55d5b2bb2190
+# ╠═bf77d95d-de5f-4cc1-bb56-fcd7c85b7629
+# ╠═38ca56dd-4095-4f1d-9f29-f25ec2968b52
 # ╠═9da81ee9-5638-48dc-949e-603874b3f627
 # ╠═0fef057f-2f68-447d-9926-8704536cc7e5
 # ╟─a1caf3e7-5b10-4872-a980-5b4fa8448f65
 # ╠═b266eafd-debd-4942-a210-71102ba172ff
 # ╠═571ae542-406c-4e62-9b8f-af34e777748f
 # ╠═ae8f7bbd-46ee-4fcb-900a-557e5bb11088
+# ╠═d0e7726f-31d9-4bf3-a71d-028870d33331
+# ╠═7725d26d-8e92-4b79-80dc-90bc8a613c7b
 # ╠═b8f2475a-3588-4611-99ac-de156f25b853
 # ╠═b1439b38-6dad-487c-b78b-32736c8aa560
 # ╠═8ebf47fd-acd6-48d1-95df-d83a602e75f4

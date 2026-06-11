@@ -65,9 +65,11 @@ end
 
 function t_max_to_r_max_rel(t_max_rel) 
     # no 2π since both are relative quantities...
-    f(r_max_rel) = r_max_rel / LilGuys.v_circ_EN21(r_max_rel) - t_max_rel
+    f(r_max_rel) = 10^r_max_rel / LilGuys.v_circ_EN21(10^r_max_rel) - t_max_rel
 
-    LilGuys.find_zero(f, (1e-10, 1))
+    log_r_max_rel = LilGuys.find_zero(f, 0.3)
+
+    10^log_r_max_rel
 end
 
 
@@ -112,6 +114,9 @@ function rapha_final_halo(r_max, v_max, peri, apo, n = 0; V0=1, n_scale=1)
     # Inverting Eq. 10
 	T_max = T_peri * Y + T_asy
 
+    if !isfinite(T_max/T_max_0) 
+        @error "T_max is NaN. $T_peri, $Y, $T_asy, $T_max_0"
+    end
 	r_max_rel = t_max_to_r_max_rel(T_max / T_max_0)
 	v_max_rel = LilGuys.v_circ_EN21(r_max_rel)
 
