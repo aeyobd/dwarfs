@@ -71,6 +71,7 @@ R_h = 44
 R_h_em = 6
 R_h_ep = 7
 
+R_h_kpc = 0.4461730729827679
 
 metallicity = -2.6
 metallicity_em = 0.2
