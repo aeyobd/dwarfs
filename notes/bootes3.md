@@ -28,13 +28,59 @@ Boo III was originally discovered in @grillmair2009 through matched filter analy
 
 @Yang+2025, weird features/morphology in Boo III with new observations (photometry). 
 
+
+
 # Orbits of Boo III
 
 ## Effects of the MW potential
 
 ## Effects of the LMC
 
+
+
+
+
+# Methodological challenges
+
+The standard methodology to be published in my Scl / UMi paper is left nearly unchanged. 
+
+Unfortunately, Boo III requires a more careful treatment of actions to use with the iterative action adjustment code (appendix of BNJE2026) and Agama fails to reverse map actions. This is likely because Boo III is a very low angular momentum orbit, so requires e.g. the Binney+2026 torus mapping code (Agamab). AGAMAb turns out to not be user friendly, easy to compile, backwards compatible, or well documented. I neglect this step for simplicity.
+
+
+
+# Estimation of appropriate orbits
+
+We can use the tidal track formalism in EN2021 to estimate which combinations of halos+orbits result in near-observed final velocity dispersions. 
+
+
+
+## Procedure
+
+EN2021 provides various fitting formula we can apply to our use-case. Everything is in terms of $\rmax$ and $\vmax$. The relative final $\rmax$ and $\vmax$ follows a universal pre-defined track. 
+$$
+\vmax/\vmax_0 = ...
+$$
+  where $x = \rmax/\rmax_0$. 
+
+Next, the total evolution is split into two regiemes:
+$$
+\begin{cases}
+regieme 1 & Tmax/Torb < 3/4 \\
+regieme 2 & Tmax/Torb > 3/4
+\end{cases}
+$$
+
+
 # Halo by halo
+
+We evaluate models on a few different criteria:
+
+1. Fit to Boo III (position/velocity, velocity dispersion)
+2. Stellar and DM mass loss and tidal evolution
+3. Stream generation and morphology
+4. Anisotropic stellar components?
+
+
 
 ## NFW
 
@@ -42,17 +88,57 @@ Boo III was originally discovered in @grillmair2009 through matched filter analy
 
 The mean halo. Only weakly forms tidal tails since can only lose a small amount of dark matter mass and remain consistent with the velocity dispersion. 
 
-### v30_r1.0
+### 1e5_v35_r6.9
 
-### v30_r2.2
+A much heavier but mean-concentration halo (at $z=0$). 
 
 ### v30_r3.0
 
 +2 sigma more concentrated than Ludlow+2016 at $z=0$. 
 
-Relatively resilient, can survive
+Only somewhat resilient. Can survive one extreme pericentre of 1.5 kpc! (but with little evidence of tidal disruption), two mean pericentres of 7kpc, or until today at a pericentre of 18 kpc. 
+
+### **v30_r2.2 (fiducial)**
+
+This sits at $3\sigma$ more compact than ludlow+2016 at redshift $z=0$, or near the mean at redshift $z=2$ (about when Boo III infalls into the Milky Way)
+
+The fiducial halo can survive until today 
+
+### v30_r1.0
+
+An extraordinarily compact halo, at the upper limits of what we might consider. At a redshift $z=2$, the $3-\sigma$ most compact halos have a scale radius of about $1\,\kpc$. 
+
+At such a high compactness, this halo does successfully survive until today on the mean orbit with a pericentre of 7 kpc (and matching the present day observed velocity dispersion)). 
+
+
 
 ## Cored
+
+Cored models interestingly do not fare worse than the cuspy ones, only requiring about a 1$\sigma$ increase in concentration. This is likely a result of the required compactness such that the stellar component survives
+
+### v30_r2.2_c0.1
+
+
+
+### v30_r2.2_c1
+
+
+
+## Anisotropy  / oblate
+
+
+
+
+
+
+
+# Plots
+
+- [x] Final position/velocity/etc agreement
+- [ ] Tidal and stellar tracks for each model (1/2)
+- [ ] Final tangent plane distribution of all models 
+- [ ] quantitative bound mass loss for each model (1/2)
+- [ ] halo constraints plot
 
 
 
@@ -62,7 +148,8 @@ Relatively resilient, can survive
 
 
 
-- More compact halo (fix orbit...)
-- Low final velocity dispersion
+
+
+- Low final velocity dispersion!?
 - More cored models
 

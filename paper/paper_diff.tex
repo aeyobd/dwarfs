@@ -1,7 +1,7 @@
 %% Beginning of file 'sample701.tex'
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL paper_submitted.tex   Fri Jun  5 13:41:29 2026
-%DIF ADD paper.tex             Fri Jun  5 13:46:03 2026
+%DIF ADD paper.tex             Thu Jun 11 14:09:38 2026
 %%
 %% Version 7.0.1. Created May 2025.
 %% Version 7. Created January 2025.  
@@ -739,7 +739,9 @@ For comparison, the black lines in Figure~\ref{fig:orbits} show the orbits of ou
 
 
 
-Next, we consider the tidal evolution of our N-body models in the MW-only case. Because of its smaller pericenter, UMi is more strongly affected by Galactic tides than Scl (also discussed below). Figure~\ref{fig:umi_sim_image} shows the final distribution of dark matter and stars for our N-body simulation of UMi. More than 95\% of UMi's initial dark matter mass has been  lost by the present day. However, the stellar component remains almost entirely bound and spherical, only expanding slightly over time due to the reduction in the galaxy's inner mass (see insets of Figure~\ref{fig:umi_sim_image}). 
+Next, we consider the tidal evolution of our N-body models in the MW-only case. Because of its smaller pericenter, UMi is more strongly affected by Galactic tides than Scl (also discussed below). Figure~\ref{fig:umi_sim_image} shows the final distribution of dark matter and stars for our N-body simulation of UMi. More than 95\% of UMi's initial dark matter mass has been  lost by the present day. However, the stellar component remains almost entirely bound and spherical\DIFaddbegin \footnote{
+    \DIFadd{specifically, the ellipticity $=1-c/a$, as calculated from the reduced moment of inertia tensor's eigenvalues using the method of \citet{dubinski+carlberg1991} is less than 0.02 for both galaxies at the end of the simulation.
+}}\DIFaddend , only expanding slightly over time due to the reduction in the galaxy's inner mass (see insets of Figure~\ref{fig:umi_sim_image}). 
 
 The left two panels of Figure~\ref{fig:stellar_model_density} show the initial and final stellar
 density profiles of each galaxy in the MW-only potential compared to observations (shown as black circles). The top panels assume that the initial stellar density profile of each dwarf is exponential; the bottom panels assume a Plummer profile instead. The final profiles resemble the initial profiles over the full radial range observed in \jj{} (apart from a slight augmentation of the profile scale from the evolution of total mass). UMi's exponential stellar model experiences the strongest evolution, with the stars expanding slightly and flattening past 100 arcminutes. 

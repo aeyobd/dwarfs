@@ -1,30 +1,16 @@
-*Abstract*. Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellites, and is among the largest and most diffuse faint dwarf galaxies known. While having a small Milky Way pericentre (<10 kpc), Boo3 remains spare in the literature and has no resolved stream stars reported. Here, we will characterize the tidal disruption of Boo3 with idealized N-body simulations. Specifically, we investigate the impact of Boo3's orbit, the dwarf's initial structure, and the inner MW potential. We then assess the observational characteristics of disruption in Boo3 under each scenario and predict the properties of a possible stellar stream. 
-
-
-
-
+Boötes III (Boo3) is one of few suspected tidally-disrupting Milky Way satellites, and is among the largest and most diffuse faint dwarf galaxies known. While having a small Milky Way pericentre (<10 kpc), Boo3 remains spare in the literature and has no resolved stream stars reported. Here, we will characterize the tidal disruption of Boo3 with idealized N-body simulations. Specifically, we investigate the impact of Boo3's orbit, the dwarf's initial structure, and the inner MW potential. We then assess the observational characteristics of disruption in Boo3 under each scenario and predict the properties of a possible stellar stream. 
 
 # Introduction
 
-Only ${\sim}5$ dwarf galaxy satellites of the Milky Way show signs of tidal perturbations. While the Sagittarius dSph forms a stream wrapping across the entire sky (e.g., ) and the Large Magellanic Cloud (LMC)  has an extensive gas tail, the only other known tidal streams are from the Tucana III, Antlia II, and Crater II dwarf spheroidals (dSph). 
+Only ${\sim}5$ dwarf galaxy satellites of the Milky Way show signs of tidal perturbations. The most dramatic examples are the Sagittarius dSph's extensive stream wrapping across the entire sky and the Large Magellanic Cloud (LMC) 30?? degree gas tail. Otherwise, the only other known tidal streams are from the Tucana III, Antlia II, and Crater II dwarf spheroidals (dSph). Indeed, most dwarf galaxies are expected to orbit too far from the Milky Way to be susceptible to tides (e.g., @pace+2020).
 
-Boötes III is the next most promising candidate for tidal disruption. With a pericentres of ${\sim} 7\,$kpc, Boo III should be tidally disrupting (e.g., ). Indeed, @carlin+sand2018 claim that Boo III's orbit is consistent with the formation of the Styx stellar stream, detected alongside Boo III in @grillmair2009. In addition, the high initial velocity dispersions reported for Boo III of $\gtrsim 10$ km/s (@calin+2009, @carlin+sand2018) would potentially be consistent with active tidal disruption contaiminating these measurements (most similar ultra-faint dwarfs have velocity dispersions $\lesssim 5$). 
+Boötes III is a unique candidate for tidal disruption. With a pericentres of ${\sim} 7\,$kpc, Boo III orbit implies the galaxy should be tidally disruption. In addition, Boo III appears to be situated within the *Styx* stream discovered in @grillmair2009. Boo III furthermore has had high previously measured velocity dispersions for an ultra-faint dwarf of $\gtrsim 10$ km/s (@calin+2009, @carlin+sand2018). Recently, extended structures around Boo III have been tentatively identified in @jensen+2024, @tau+2024, @yang+2025. The literature appears to coincide that Boo III is actively disrupting and the progenitor of the Styx stream. 
 
-@carlin+sand2018 perform the first orbital modelling of Boo III. They derive a proper motion of (μα cos d, μδ)=(−1.14, −0.98)±(0.18, 0.20) mas yr−1 based on LOS velocity selected members. By excluding members from @carlin+2009 with inconsistent proper motions, they further re-derive the systematic velocity (197.1\pm3.6) and dispersion(10.7\pm3.5km/s). Based on their orbital analysis, the pericentre is 10-12\pm6 kpc and they assert that Boo III is likely disrupting and is consistent with the position of Styx.
+However, no resolved members of the *Styx* stellar stream have been identified. @jensen+2026 fail to confirm the Styx stellar stream with modern SDSS and DELVE data when repeating the methods in @grillmair2009. Furthermore, no one has modelled the tidal disruption of Boo III beyond test-particle orbits to test whether Styx has the appropriate morphology or luminosity to arise from Boo III. 
 
-@moskowitz+walker2020: Stellar density profiles and structural parameters for many dwarfs including Boo III. 
+Idealized N-body simulations are an ideal framework to model the tidal disruption of gassless dwarf spheroidal galaxies. While cosmological simulations may provide a more realistic environment, they struggle to resolve even bright dwarf spheroidals (e.g., ). 
 
-@vivas+martinez-vazquez+walker2020: Updated RRL census. derive new distance to Boo III ($18.34  \pm 0.19$) with 7 RRL stars. (One previously known from @seaser+2014). They find two RRL beyond the tidal radius, and mention that the disruption of the galaxy is a known fact. 
-
-
-
-@tau+2024 find possible RRL stars nearby Bootes III out to very far distances, but some may have came from Sgr stream. They find 32 total RRL members, but not in line with Styx and with a gradient consistent with Sgr contaimination. 
-
-@jensen+2024: finding Boo III extended structure
-
-@Yang+2025, weird features/morphology in Boo III with new observations (photometry). 
-
-
+In this work, we revisit the observational properties of Boo III and then model its tidal disruption with N-body simulations to predict what a stellar stream around Boo III should appear as. 
 
 # The observational status of Boötes III
 
@@ -32,22 +18,24 @@ We revisit the structural and line-of-sight velocity properties of the galaxy. @
 
 
 
-| parameter                | Units              | value                       | Reference       |
-| ------------------------ | ------------------ | --------------------------- | --------------- |
-| $\alpha$                 | deg                | $209.47\pm0.11$             | @struct_params  |
-| $\delta$                 | deg                | $26.68\pm0.06$              | @struct_params  |
-| distance modulus         | mag                | $18.34 \pm 0.19$            | @vivas+2020     |
-| distance                 | mag                | $46.56 \pm 4$ kpc           | @vivas+2020     |
-| $\mu_\alpha \cos \delta$ | mas yr$^{-1}$      | $-1.16 \pm 0.02 \pm 0.017$  | @battaglia+2022 |
-| $\mu_\delta$             | mas yr$^{-1}$      | $-0.88  \pm 0.01 \pm 0.017$ | @battaglia+2022 |
-| $\mathrm{v}_\text{los}$  | km s$^{-1}$        | $188 \pm 2.2$               | @kin_params     |
-| $\sigma_\mathrm{v}$      | km s$^{-1}$        | $7.7_{-1.5}^{+2.0}$ km/s    | @kin_params     |
-| $R_h$*                   | arcmin             | $44_{-6}^{+7}$              | @struct_params  |
-| ellipticity              | --                 | $0.42_{-0.14}^{+0.11}$      | @struct_params  |
-| position angle           | deg                | $89\pm9$                    | @struct_params  |
-| $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity     |
-| $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity     |
-| [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params     |
+
+
+| parameter                | Units              | value                       | Reference          |
+| ------------------------ | ------------------ | --------------------------- | ------------------ |
+| $\alpha$                 | deg                | $209.47\pm0.11$             | @struct_params     |
+| $\delta$                 | deg                | $26.68\pm0.06$              | @struct_params     |
+| distance modulus         | mag                | $18.34 \pm 0.19$            | @vivas+2020        |
+| distance                 | mag                | $46.56 \pm 4$ kpc           | @vivas+2020        |
+| $\mu_\alpha \cos \delta$ | mas yr$^{-1}$      | $-1.16 \pm 0.02 \pm 0.017$  | @battaglia+2022    |
+| $\mu_\delta$             | mas yr$^{-1}$      | $-0.88  \pm 0.01 \pm 0.017$ | @battaglia+2022    |
+| $\mathrm{v}_\text{los}$  | km s$^{-1}$        | $188 \pm 2.2*$              | Will likely change |
+| $\sigma_\mathrm{v}$      | km s$^{-1}$        | $7.7_{-1.5}^{+2.0}*$ km/s   | Will likely change |
+| $R_h$*                   | arcmin             | $44_{-6}^{+7}$              | @struct_params     |
+| ellipticity              | --                 | $0.42_{-0.14}^{+0.11}$      | @struct_params     |
+| position angle           | deg                | $89\pm9$                    | @struct_params     |
+| $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity        |
+| $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity        |
+| [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params        |
 
 Table: Recommended and derived properties of Boo III. Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity. 
 
@@ -202,52 +190,37 @@ For simplicity, we do not include the LMC, which does not affect Boo III's recen
 
 
 
-## Initial conditions
+| name | Peri  | Apo    | Helio dist | pmra       | pmdec      | vlos     | period |      |
+| ---- | ----- | ------ | ---------- | ---------- | ---------- | -------- | ------ | ---- |
+|      | (kpc) | (kpc)  | (kpc)      | ($\masyr$) | ($\masyr$) | ($\kms$) | Gyr    |      |
+| 1.5  | 1.52  | 74.36  | 39.1       | -1.15      | -0.88      | 188.1    | 0.89   |      |
+| 4    | 3.74  | 84.08  | 42.68      | -1.15      | -0.88      | 188      | 1.04   |      |
+| mean | 7.1   | 97.55  | 46.56      | -1.16      | -0.88      | 188      | 1.25   |      |
+| 12   | 11.86 | 117.48 | 50.79      | -1.17      | -0.88      | 188      | 1.57   |      |
+| 18   | 18.06 | 149.38 | 55.5       | -1.17      | -0.88      | 187.9    | 2.13   |      |
+| 26   | 26.14 | 210.61 | 60.76      | -1.17      | -0.88      | 187.6    | 3.25   |      |
 
+Table: The mean properties of point orbits for different pericentres. 
 
+## Permissible initial conditions
 
-| Orbit      | -2 (1.5 kpc) | -1 (4 kpc) | Mean (7kpc) | +1 (12kpc) | +2 (18kpc) | +3 (26kpc) |
-| ---------- | ------------ | ---------- | ----------- | ---------- | ---------- | ---------- |
-| dist       |              |            |             |            |            |            |
-| pm ra      |              |            |             |            |            |            |
-| pm_dec     |              |            |             |            |            |            |
-| rv         |              |            |             |            |            |            |
-| pericentre |              |            |             |            |            |            |
-| apocentre  |              |            |             |            |            |            |
+In $\Lambda$-Cold Dark Matter (\LCDM), dark matter subhaloes (self-bound gravitating overdensities) all follow the NFW relation. In addition, the concentration of a dark matter halo (i.e. scale radius given the halo mass) is related to the halo's mass. We furthermore expect dark matter haloes to be related to stellar masses following the stellar mass--halo mass relation. Consequently, given an estimate of a dwarf's initial mass, we can infer its initial dark matter halo properties. 
 
+From the models that follow, we find it unlikely that Boo III has lost more than about 90% of its stellar mass (unless the initial galaxy was unusually extended).
 
+Based on a selected orbit, we can find which initial dark matter haloes then result in agreement with the present-day velocity dispersion using the tidal track machinery from @EN2021. @EN2021 Eq. 5 describes the relationship between rmax and vmax during tidal evolution, and their eqns. 10-16 predict the time evolution of a halo given the potential circular timescale at pericentre, initial halo circular timescale at rmax, and orbital eccentricity. 
 
+Using the properties of select median orbits, we can thus solve for which halos produce a specified final velocity dispersion after 10 Gyr. We numerically solve for this root via a standard bisection algorithm. 
 
-
-
-
-| halo     | $v_{\rm circ,\ max}$ | $r_{\rm max}$ | $\sigma$ conc. | $v_\text{circ, end, req}$ | $h  / {\rm kpc}$ | $z_\text{mean}$ |
-| -------- | -------------------- | ------------- | -------------- | ------------------------- | ---------------- | --------------- |
-| fiducial | 30                   | 2.2           |                |                           |                  |                 |
-| compact  | 30                   | 1.0           |                |                           |                  |                 |
-| average  | 22                   | 3.9           | 0              |                           |                  |                 |
-| less?    | 30                   | 3.0           | +2             | 15?                       |                  |                 |
-
+@fig:initial_halos shows which halos are predicted to produce the present day velocity dispersion $7km/s??$ after 10 Gyr on orbits with pericentres of 7, 12, and 18 kpc (the mean, 84th, and 95th percentile pericentres). The break in the curves occurs because of the slightly different fitting formulae in EN2021 between their modest and heavy mass loss regiemes. 
 
 
 
 
-| halo        | 26   | 18   | 12   | 7    | 4    | 1.5  |
-| ----------- | ---- | ---- | ---- | ---- | ---- | ---- |
-| average     | 3*   | 2    | 1*   | --   | --   | --   |
-| heavy       | 3    | 2-3  | 1    | 1    | --   | --   |
-| **compact** | --   | 5*   | 3-4  | 2    | 1*   | --   |
 
-Table: the number of pericentres which a given halo must experience to match the present day velocity dispersion under a specified pericentre. 
+![image-20260612115749998](/Users/daniel/Library/Application Support/typora-user-images/image-20260612115749998.png)
 
-1. Compact halo; 5 x 18kpc peris (default 10 Gyr)
-   1. `bootes3/1e5_v30_r3.0/5_peri_18kpc`
-2. Compact halo; 1 x 4 kpc pericentre (1.5 Gyr sim)
-   1. `bootes3/1e5_v30_r3.0/5_peri_18kpc`
-3. Average halo: 3 x 26 kpc pericentre (default 10 Gyr)
-   1. `bootes3/1e5_v22_r3.9/3_peri_26kpc`
-4. Average halo: 1 x 12 kpc peri (1.5 Gyr)
-   1. `bootes3/1e5_v22_r3.9/1_peri_12kpc`
+Figure: The initial rmax and vmax es which EN2021 predicts will acchieve Boo III's velocity dispersion (curves), and the cosmologically expectations fo rBoo III's vmax given its stellar mass (green horizontal line), and Boo III's rmax given a vmax (grey slanted line). **Left:** the required halos matching the final velocity dispersion for different orbits. **Middle** The required halos for different final velocity dispersions on the fiducial 12kpc orbit. **Right:** The required halos for different lengths of orbit on the fiducial 12kpc orbit. In any case, Boo III requires either an unlikely orbit (e.g. 26kpc pericentre or a low number of pericentres) or an unexpectedly massive and concentrated initial halo. 
 
 
 
@@ -285,6 +258,10 @@ Figure: The pericentre (top) and total angular momentum (bottom) as a function o
 
 
 
+
+
+
+
 ## Tidal evolution
 
 Given the wide range of pericentres, we must assume an orbital history then explore the tidal evolution of select dark matter and stellar components on that tidal history. 
@@ -301,41 +278,51 @@ Figure: The final distribution of dark matter (purple) and stars (white) for the
 
 
 
-### Alternate orbits
-
-Instead of gradually loosing mass over 10 Gyr, it is possible that a massive perturber recently shifted Boo III's orbit to become small pericentre. 
-
-For our fiducial halo, orbits having two 4kpc pericentres also evolve to match the present-day velocity dispersion. 
 
 
+![image-20260608154613744](/Users/daniel/Library/Application Support/typora-user-images/image-20260608154613744.png)
+
+Figure: The tidal track of the fiducial model in terms of the stellarand dark matter component. The stars track is plotted as $r_h$, $\sqrt3\ \sigma_\text{v}$ (i.e. using the 3D velocity dispersion). As the stellar and DM track eventually coincide, the stellar component is *tidally limited* in this model, causing significant stellar mass loss and setting an upper limit on the extent of the stellar component. 
 
 
 
+## Alternate orbits and halos
 
+Tidal evolution is primarily determined by four properties: the pericentre, the orbital time (including eccentricity...), the halo mass, and the halo concentration. 
+
+While this is a 4-dimensional problem, the present-day velocity dispersion constrains one variable, and assuming that the model survives for 10 Gyr constrains another. In this case, for a given halo scale radius (rmax), there is a unique solution to vmax which evolves to match the present day 
+
+Generally, less concentrated halos and orbits with smaller pericentres should evolve more tidally. 
+
+In any case, Boo III is unlikely to arise 
+
+
+
+Another possibility is that Boo III was recently shifted onto an extreme orbit due to a perturber (e.g., s+++). We explore a model which evolves our fiducial halo on one pericentre of 4 kpc!? While such a pericentre exposes the galaxy to strong tidal forces, the short time evolved on such an orbit prevents the galaxy from developing significant stellar mass loss. *We have also explored other orbits not shown using yet more compact halos on tight orbits.* 
 
 
 
 ![image-20260430082213646](/Users/daniel/Library/Application Support/typora-user-images/image-20260430082213646.png)
 
-
-
-
-
-### Reducing the mass or concentration of the halo
-
-If Boo III has a less massive dark matter halo, than the galaxy would be more susceptiple to tides. However, the stellar velocity dispersion would also be lower. 
-
-Instead, the dark matter concentration plays a key role in the tidal evolution. More extended halos are more loosely bound and consequently lose mass more rapidly on the same orbit. To acchieve the observed velocity dispersion on a long-term orbit, a low-concentration halo must have a substantially higher pericentre than our fiducial model. We explore a low-concentration low-velocity dispersion halo (`mean` ) on a long-term orbit with a pericentre of *26* kpc!
-
-
-
-### Cored and other halo models. 
+Figure: The present-day dark matter and stellar distribution for the *shocked* model which experiences one extreme pericentre of 1.5 kpc. While dark matter is heavily disrupted, the stars remain relatively near the remnant but are stretched into an oblong/spiral shape. 
 
 
 
 
 
-### Comparison of present-day properties
+
+
+We may also explore halos which are more or less concentrated than our fiducial model on the same orbit. *TODO* a model with a smaller concentration and mass, e.g., 2.2 kpc, 22 km/s, is more resilient to tides. As we select models near the upper limit of cosmologically-reasonable initial conditions for a ultra-faint dwarf galaxy, we do not expect tides to be more severe than the models presented here. 
+
+
+
+## Cored and other halo models. 
+
+
+
+
+
+## Comparison of present-day properties
 
 In all cases, we select models which roughly agree with the present-day properties of Boo III (half-light radius, velocity dispersion, sky position, distance, and kinematics).
 
@@ -446,13 +433,4 @@ Figure: Density profile of DELVE stars
 
 
 
-## Additional Models
-
-![image-20260430075012123](/Users/daniel/Library/Application Support/typora-user-images/image-20260430075012123.png)
-
-Figure: The final distribution of dark matter for the x.x simulation. 
-
-
-
-![image-20260430075003149](/Users/daniel/Library/Application Support/typora-user-images/image-20260430075003149.png)
 
