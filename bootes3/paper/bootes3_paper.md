@@ -36,6 +36,7 @@ We revisit the structural and line-of-sight velocity properties of the galaxy. @
 | $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity        |
 | $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity        |
 | [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params        |
+| age                      | Gyr                | 12:                         |                    |
 
 Table: Recommended and derived properties of Boo III. Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity. 
 
@@ -94,9 +95,9 @@ While two (much brighter) globular clusters are in the same field, excluding the
 
 
 
-![image-20260429160516556](/Users/daniel/Library/Application Support/typora-user-images/image-20260429160516556.png)
+![](figures/gaia_tangent_cmd_pm.png)
 
-Figure: The distribution of *Gaia* stars 
+Figure: The distribution of *Gaia* stars in the tangent plane (left),  the *Gaia* colour-magnitude diagram (right), and proper motion space (lower right). The small grey stars satisfy basic quality cuts, the larger solid blue points are likely members based on CMD and PM likelihoods (see text), and the red diamonds are additionally RV members.
 
 
 
@@ -106,15 +107,21 @@ Figure: The distribution of *Gaia* stars
 | Exponential | $9.4\pm6$      | $-6.1\pm5$      |                        |                  |                  |                     | $130 \pm20$    |
 | Sérsic      | $12\pm4$       | $-9_{-3}^{+4}$  | $0.23\pm0.14$          | $93^{+20}_{-19}$ | $67_{-15}^{+23}$ | $2.9_{-0.7}^{+0.9}$ | $57_{-7}^{+8}$ |
 
-
+Table: The results of our fits to structural properties using *Gaia* data. Columns are: the change in RA centroid in arcmin, the change in dec centroid in arcmin, the ellipticity, the position angle, the half-light radius, the Sérsic index, and the number of satellite members. 
 
 While the likelihoods above can provide a membership list of stars, using this to then derive a density profile of the satellite risks "double fitting" the surface density. Instead, we derive density profiles by taking a sample of stars selected based on the likelihood of the foreground to background ratios, excluding the spatial likelihood terms. The resulting density profiles, and comparison MCMC parameterized density profiles, are shown in Fig. X
 
 
 
-![image-20260429155837759](/Users/daniel/Library/Application Support/typora-user-images/image-20260429155837759.png)
+![](figures/obs_profiles.png)
 
 Figure: The density profiles of Boo III using a sample of *Gaia* stars as selected based on their combined CMD+PM likelihood. 
+
+
+
+![](figures/mcmc_density_profiles.png)
+
+Figure: The MCMC fits to Boo III density profile 
 
 ## Luminosity
 
@@ -163,7 +170,7 @@ where $\text v_i$ is the perspective-motion corrected velocity of the $i$-th sta
 
 We use a NUTS sampler with 16 chains 10,000 steps each. The resulting distributions are shown in @fig:velocity_dispersion. Compared to @geha+2026, our velocity dispersion is slightly higher and we have
 
-![image-20260407165057367](/Users/daniel/Library/Application Support/typora-user-images/image-20260407165057367.png)
+![](figures/RV_hist_mcmc.png)
 
 Figure: The resulting velocity dispersion fits. Black curves illustrate sampled Gaussian fits to the distribution from the MCMC model, and the orange points with errorbars are the observed velocity member stars.
 
@@ -218,7 +225,7 @@ Using the properties of select median orbits, we can thus solve for which halos 
 
 
 
-![image-20260612115749998](/Users/daniel/Library/Application Support/typora-user-images/image-20260612115749998.png)
+![](figures/initial_halo_selection.png)
 
 Figure: The initial rmax and vmax es which EN2021 predicts will acchieve Boo III's velocity dispersion (curves), and the cosmologically expectations fo rBoo III's vmax given its stellar mass (green horizontal line), and Boo III's rmax given a vmax (grey slanted line). **Left:** the required halos matching the final velocity dispersion for different orbits. **Middle** The required halos for different final velocity dispersions on the fiducial 12kpc orbit. **Right:** The required halos for different lengths of orbit on the fiducial 12kpc orbit. In any case, Boo III requires either an unlikely orbit (e.g. 26kpc pericentre or a low number of pericentres) or an unexpectedly massive and concentrated initial halo. 
 
@@ -240,21 +247,17 @@ Appendix @sec:extra_orbits compares the effects of including a Large Magellanic 
 
 
 
-![image-20260429151837975](/Users/daniel/Library/Application Support/typora-user-images/image-20260429151837975.png)
+![](figures/pericentre_hist_corr.png)
 
 Figure: The distribution of possible pericentres, with the examples considered here marked along the bottom.
 
 
 
-![image-20260429143711521](/Users/daniel/Library/Application Support/typora-user-images/image-20260429143711521.png)
+![](figures/orbits.png)
 
 Figure: Orbits of Boo III with different pericentres. 
 
 
-
-![image-20260429150209385](/Users/daniel/Library/Application Support/typora-user-images/image-20260429150209385.png)
-
-Figure: The pericentre (top) and total angular momentum (bottom) as a function of heliocentric distance. Green points show the sampled MC orbits, and the large dots show the example orbits discussed in the text.
 
 
 
@@ -270,7 +273,7 @@ Our fiducial model assumes Boo III follows mean orbit (12 kpc pericentre) for 9?
 
 
 
-![image-20260605104424706](/Users/daniel/Library/Application Support/typora-user-images/image-20260605104424706.png)
+![](figures/fiducial_zoom_image.png)
 
 Figure: The final distribution of dark matter (purple) and stars (white) for the fiducial model in the $y$--$z$ Galactocentric plane. The density scale spans 5 orders of magnitude and is logarithmic??
 
@@ -428,7 +431,6 @@ Figure: Density profile of DELVE stars
 
 
 ## The effects of the LMC and potential choice
-
 
 
 
