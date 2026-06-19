@@ -1,0 +1,248 @@
+%\documentclass[referee]{aa}    % for a referee version
+
+
+\documentclass{aa}  
+
+\usepackage{graphicx}
+\usepackage{txfonts}
+\usepackage{subcaption}         % necessary for continued figures, example in section 3
+                                % and appendix
+\usepackage{lscape}             % to rotate a single page table, example in appendix.
+                                % For landscape tables, see the longtable examples.
+\usepackage{placeins}           % useful with \FloatBarrier, to keep 
+                                % onecolumn floats from drifting to the next section
+                                
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[]{hyperref}
+% To add links in your PDF file, use the package "hyperref"
+% with options according to your LaTeX or PDFLaTeX drivers.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\Gaia}{\textit{Gaia}}
+\newcommand{\bootes}{Bo\"otes \textsc{III}}
+\newcommand{\boo}{Bo\"o \textsc{III}}
+% mathematics commands
+\newcommand{\rmax}{\ensuremath r_\textrm{math}}
+\newcommand{\vmax}{\ensuremath \mathrm{v}_\textrm{math}}
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% if you use custom commands in your title,
+% ensure to check your title when submitting!
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+   \title{Where is Bo\"otes III's tidal stream?}
+
+   %\subtitle{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Please separate each author with the \and command
+%
+% Use the \corrauth to provide the corresponding
+% author address. It will be automatically inserted as 
+% footnote in the PDF output.
+%
+% Please DO NOT include ORCIDs next to author names.
+% Instead, please provide an active address for each coauthor:
+% it will be automatically extracted by EDPS editorial system, 
+% and co-authors will be be able to authenticate their ORCID.
+%
+% Only authenticated ORCIDs will be taken into account.
+% ORCIDs included here will be removed.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+   \author{D. A. Boyea\inst{1}\corrauth{danielaboyea@gmail.com}        % use \corrauth for the corresponding author
+       \and all
+        %\and F. Déliat\inst{1}\email{fab@nestor-edp.org}\fnmsep\thanks{NASA fellow (shows the usage of elements in the author field)}
+        }
+
+   \institute{UVic, V8W 2Y2, BC, Canada
+       %\and
+   }
+
+   \date{Received date}
+
+% \abstract{}{}{}{}{}
+% 5 {} token are mandatory
+ 
+  \abstract
+  % context heading (optional)
+  % {} leave it empty if necessary  
+   {}
+  % aims heading (mandatory)
+   {} 
+  % methods heading (mandatory)
+   {}
+  % results heading (mandatory)
+   {}
+  % conclusions heading (optional), leave it empty if necessary
+   {}
+
+   \keywords{
+       dSph galaxies --
+       tidal effects
+               }
+
+   \maketitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+
+\section{The observational status of Bootes III}
+
+\begin{figure*}
+    \centering
+    \includegraphics{figures/gaia_tangent_cmd_pm.pdf}
+    \caption{The distribution of \Gaia{} stars in the tangent plane (left),  the \Gaia{} colour-magnitude diagram (right), and proper motion space (lower right). The small grey stars satisfy basic quality cuts, the larger solid blue points are likely members based on CMD and PM likelihoods (see text), and the red diamonds are additionally RV members.}
+
+      \label{fig:gaia_tangent}
+\end{figure*}
+
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/mcmc_density_profiles.pdf}
+    \caption{
+        The observed density profile of \boo{} plotted as log surface density $\Sigma_\star$ agains log elliptical radius $R_\textrm{ell}$ . 
+        The blue points with error bars are the binned density profile, whereas the orange and green transparent lines are individual samples from the Plummer and S\'ersic MCMC structural fits to \Gaia{} data, respectively.
+        \newline{}
+        \boo{} is characterized by a diffuse and extended surface density profile. Because of \boo{}'s low surface brightness, the background/forground limit our ability to determining the density profile.
+    }
+    \label{fig:density_profile_fit}
+\end{figure}
+
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/RV_hist_mcmc.pdf}
+    \caption{
+        Our MCMC fits to the velocity profile of \boo{}. 
+        Black lines show the individual MCMC Gaussian samples, and the orange points with error bars show the 16 los-velocity member stars with their associated uncertainties (placed arbitrarily).
+    }
+    \label{fig:sigma_v_fit}
+\end{figure}
+
+
+
+\section{Numerical methods}
+
+\subsection{Selection of initial dark matter halos}
+
+\begin{figure*}
+    \centering
+    \includegraphics{figures/initial_halo_selection.pdf}
+    \caption{
+        The initial $\rmax$ and $\vmax$ which \citep{EN2021} predicts will acchieve Boo III's velocity dispersion (curves), and the cosmologically expectations fo rBoo III's vmax given its stellar mass (green horizontal line), and Boo III's rmax given a vmax (grey slanted line). 
+        \textbf{Left:} the required halos matching the final velocity dispersion for different orbits. 
+        \textbf{Middle:} The required halos for different final velocity dispersions on the fiducial 12kpc orbit. 
+        \textbf{Right:} The required halos for different lengths of orbit on the fiducial 12kpc orbit. In any case, Boo III requires either an unlikely orbit (e.g. 26kpc pericentre or a low number of pericentres) or an unexpectedly massive and concentrated initial halo.
+    }
+    \label{fig:initial_halo_selection}
+\end{figure*}
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/pericentre_hist_corr.pdf}
+    \caption{
+        The distribution of possible pericentres. 
+    }
+    \label{fig:peri_dist}
+\end{figure}
+
+
+\begin{figure*}
+    \centering
+    \includegraphics{figures/orbits.pdf}
+
+    \caption{
+        Six example orbits of \boo{} shown on the $x$--$y$ Galactocentric plane (left), the $y$--$z$ plane (middle), and in Galactocentric radius versus time (right).
+        \newline{}
+        A wide range of orbits is possible for \boo{}. Orbits with smaller pericentres also have smaller apocentres and shorter orbital periods. 
+    }
+    \label{fig:orbits}
+\end{figure*}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results}
+
+\subsection{Tidal evolution}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\columnwidth]{figures/fiducial_zoom_image.png}
+    \caption{
+        The final distribution of dark matter (purple) and stars (white) for the fiducial model in the $y$--$z$ Galactocentric plane. The density scale spans 5 orders of magnitude and is logarithmic
+    }
+    \label{fig:fiducial_sim_image}
+\end{figure}
+
+
+\begin{figure*}
+    \centering
+
+    \caption{
+        The tidal tracks, evolution of stellar mass, and change invelocity dispersion for each selected model.
+    }
+
+    \label{fig:tidal_tracks}
+\end{figure*}
+
+
+\begin{figure*}
+    \centering
+    \includegraphics{figures/final_stellar_streams.pdf}
+    \caption{
+        The distribution of stars onsky at the end of each simulation. 
+        Stream brightness and morphology depends on the choice of pericentre most strongly
+    }
+    \label{fig:predicted_stars_onsky}
+\end{figure*}
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/along_stream_density.pdf}
+    \caption{
+        The predicted surface brightness along the stream axis (marked in Fig.~\ref{fig:predicted_stars_onsky}).
+        In all cases, the brightness of a stellar stream is very faint. 
+    }
+    \label{fig:stream_brightness}
+\end{figure}
+
+\subsection{Prediction of a stream}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusions}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{acknowledgements}
+\end{acknowledgements}
+
+
+
+\bibliographystyle{aa}
+\bibliography{paper.bib}
+
+
+
+\begin{appendix}
+
+
+\end{appendix}
+\end{document}
