@@ -20,11 +20,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\Gaia}{\textit{Gaia}}
-\newcommand{\bootes}{Bo\"otes \textsc{III}}
-\newcommand{\boo}{Bo\"o \textsc{III}}
+\newcommand{\bootes}{Bo\"otes III}
+\newcommand{\boo}{Boo III}
 % mathematics commands
-\newcommand{\rmax}{\ensuremath r_\textrm{math}}
-\newcommand{\vmax}{\ensuremath \mathrm{v}_\textrm{math}}
+\newcommand{\rmax}{\ensuremath{r_\textrm{math}}}
+\newcommand{\vmax}{\ensuremath{\mathrm{v}_\textrm{math}}}
 
 
 \begin{document}
@@ -142,10 +142,12 @@
     \centering
     \includegraphics{figures/initial_halo_selection.pdf}
     \caption{
-        The initial $\rmax$ and $\vmax$ which \citep{EN2021} predicts will acchieve Boo III's velocity dispersion (curves), and the cosmologically expectations fo rBoo III's vmax given its stellar mass (green horizontal line), and Boo III's rmax given a vmax (grey slanted line). 
+        The initial $\rmax$ and $\vmax$ which \citep{EN2021} predicts will acchieve \boo{}'s velocity dispersion (curves), and the cosmologically expectations for \boo{}'s vmax given its stellar mass (green horizontal line), and \boo{}'s rmax given a vmax (grey slanted line). 
         \textbf{Left:} the required halos matching the final velocity dispersion for different orbits. 
         \textbf{Middle:} The required halos for different final velocity dispersions on the fiducial 12kpc orbit. 
-        \textbf{Right:} The required halos for different lengths of orbit on the fiducial 12kpc orbit. In any case, Boo III requires either an unlikely orbit (e.g. 26kpc pericentre or a low number of pericentres) or an unexpectedly massive and concentrated initial halo.
+        \textbf{Right:} The required halos for different lengths of orbit on the fiducial 12kpc orbit. 
+        \newline
+        \textbf{Explanation:} \boo{} requires either an unlikely orbit (e.g. 26kpc pericentre or a low number of pericentres) or an unexpectedly massive and concentrated initial halo.
     }
     \label{fig:initial_halo_selection}
 \end{figure*}
@@ -169,7 +171,7 @@
     \caption{
         Six example orbits of \boo{} shown on the $x$--$y$ Galactocentric plane (left), the $y$--$z$ plane (middle), and in Galactocentric radius versus time (right).
         \newline{}
-        A wide range of orbits is possible for \boo{}. Orbits with smaller pericentres also have smaller apocentres and shorter orbital periods. 
+        \textbf{Explanation:} A wide range of orbits is possible for \boo{}. Orbits with smaller pericentres also have smaller apocentres and shorter orbital periods. 
     }
     \label{fig:orbits}
 \end{figure*}
@@ -184,7 +186,9 @@
     \centering
     \includegraphics[width=\columnwidth]{figures/fiducial_zoom_image.png}
     \caption{
-        The final distribution of dark matter (purple) and stars (white) for the fiducial model in the $y$--$z$ Galactocentric plane. The density scale spans 5 orders of magnitude and is logarithmic
+        The final distribution of dark matter (purple) and stars (white) for the fiducial model in the $y$--$z$ Galactocentric plane. The density scale spans 5 orders of magnitude and is logarithmic.
+        \newline
+        \textbf{Explanation:} The model forms substantial streams. Stars span nearly a half-orbital period forward and backwards in the orbit. \boo{} has a radial enough orbit such that the stream forms shells at apocentres.
     }
     \label{fig:fiducial_sim_image}
 \end{figure}
@@ -206,10 +210,25 @@
     \includegraphics{figures/final_stellar_streams.pdf}
     \caption{
         The distribution of stars onsky at the end of each simulation. 
-        Stream brightness and morphology depends on the choice of pericentre most strongly
+        \newline
+        \textbf{Explanation:}
+        Stream brightness and morphology depends most strongly on the pericentre and number of pericentres. Smaller pericentres form more significant and thicker streams (compare fiducial, 7kpc, and 26kpc pericentres). However, experiencing only two small pericentres only formss a meager tidal stream. 
+        Across models, the tidal stream is relatively faint (surface densities of $\lesssim 1 \text{stars\ deg}^{-2}$. 
     }
     \label{fig:predicted_stars_onsky}
 \end{figure*}
+
+\begin{figure}
+    \centering
+    %\includegraphics{figure/tidal_stellar_tracks.pdf}
+
+    \caption{
+        The evolution of stellar velocity dispersion (left,  $\sigma_\text{los}$) and stellar/dark matter bound mass (right) over time for each simulation.
+        \newline{}
+        \textbf{Explanation:} The observed stellar velocity dispersion is acchieved, but the total stellar mass loss varies depending on the model. \boo{} may have lost a majority of its initial stellar mass!
+    }
+
+\end{figure}
 
 
 
@@ -218,7 +237,7 @@
     \includegraphics{figures/along_stream_density.pdf}
     \caption{
         The predicted surface brightness along the stream axis (marked in Fig.~\ref{fig:predicted_stars_onsky}).
-        In all cases, the brightness of a stellar stream is very faint. 
+        \textbf{Explanation:} Within the inner 4 degrees, the surface density drops but with a possible halo-like extension. Outside of the inner galaxy, the stream remains extemely diffuse, with less than 0.1 stars per square degree predicted in \textit{Gaia} data. \boo{}'s stream remains unacessable without extremely deep, low-foreground data. 
     }
     \label{fig:stream_brightness}
 \end{figure}

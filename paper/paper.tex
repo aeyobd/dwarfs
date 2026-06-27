@@ -92,7 +92,7 @@ Carnegie Mellon University, Pittsburgh, PA 15213, USA
 \begin{abstract}
    Most dwarf spheroidal (dSph) satellites  of the Milky Way follow exponential surface density profiles that decline sharply in the outer regions. The Sculptor (Scl) and Ursa Minor (UMi) dSphs deviate from this trend and show a clear excess of stars in the outskirts. Individual members have recently been identified as far as ${\sim}10$ effective radii from the center in both systems.
    We study whether far-outlying stars in Scl and UMi may result from Galactic tidal forces using idealized N-body simulations.
-   Our results indicate that, on their current orbits, neither galaxy has experienced tidal forces sufficient to affect its stellar density profile. The observed velocity dispersion and size of Scl and UMi imply the dwarfs are simply too dense to have been affected by Galactic tides. We also find weak tidal evolution when including the effects of the Large Magellanic Cloud, which our simulations suggest substantially perturbed Scl's orbit during a close encounter. Our results are insensitive to assumptions about the detailed dark matter density profile of either galaxy, including the presence of an inner core. 
+   Our results indicate that, on their current orbits, neither galaxy has experienced tidal forces strong enough to affect its stellar density profile. The observed velocity dispersion and size of Scl and UMi imply that these dwarfs are simply too dense to have been affected by Galactic tides. Our conclusions do not change when including the effects of the Large Magellanic Cloud, which, according to our simulations, has substantially perturbed Scl's orbit during a recent, close encounter. Our results are insensitive to assumptions about the detailed dark matter density profile of either galaxy, including the presence of an inner core. 
   We conclude that the outlying stars in Scl or UMi are not of tidal origin, but rather innate features that possibly reflect past merger events or the presence of multiple dynamical components.
 \end{abstract}
 
@@ -126,7 +126,7 @@ often near the resolution limit and vulnerable to artificial disruption
 these challenges, idealized simulations typically model a single subhalo\footnote{A ``halo" is a gravitationally self-bound overdensity of dark matter. A subhalo is a halo that orbits inside the virial radius of a larger system. The virial radius is defined as the radius that encloses a mean overdensity equal to $200$ times the critical density for closure.} in an
 analytic host potential, achieving excellent numerical resolution and convergence \citep[e.g.,][]{hayashi+2003, bullock+johnston2005, penarrubia+2010, EN2021}. 
 
-Few recent works modeled the tidal evolution of Scl or UMi specifically. Most relevantly, \citet{iorio+2019} have simulated Scl, also finding little tidal evolution. \citet{tchiorniy+genina2026} also modeled the tidal evolution of Scl, UMi, Fornax, Carina, but their main focus has been on how tidal effects may bias mass profiles recovered using Jeans' methods. No studies have yet fully explored tidal effects on Scl and UMi using updated structural and kinematic properties or accounted for orbital and tidal effects from the Large Magellanic Cloud (LMC), as we attempt to do in this study. 
+A few recent studies have modeled the tidal evolution of Scl or UMi. Most relevantly, \citet{iorio+2019} have simulated Scl, also finding little tidal evolution. \citet{tchiorniy+genina2026} also modeled the tidal evolution of Scl, UMi, Fornax, Carina, but their main focus has been on how tidal effects may bias mass profiles recovered using Jeans' methods. No studies have yet fully explored tidal effects on Scl and UMi using updated structural and kinematic properties or accounted for orbital and tidal effects from the Large Magellanic Cloud (LMC), as we attempt to do in this study. 
 
 Our paper is organized as follows.  Section~\ref{sec:gaia}  describes the density profiles of classical dSphs and compares them with those of Scl and UMi. Section~\ref{sec:methods} then describes our numerical N-body methods, initial conditions, and orbital integrations.  Section~\ref{sec:results} presents the results of our tidal simulations, while Section~\ref{sec:discussion} summarizes our main results and discusses our conclusions regarding the origin of extended stellar density profiles.
 
@@ -183,12 +183,12 @@ high (averaging ${\sim}90\%$, \jj{}).
 Figure~\ref{fig:observed_density_profiles} compares the density profiles of Scl, UMi, and eight other classical dSphs. 
 We include Fornax, Leo I, Leo II, Carina, Draco, Canes Venatici I, Sextans I, and Crater II. 
 We exclude Sagittarius and Antlia II because of the high foreground density of Milky Way (MW) stars.
-We use sphericalized ellipticity radii for stars, given by
+We use sphericalized elliptical radii for stars, given by
 \begin{equation} \label{eq:r_ell}
     R_\text{ell} = \sqrt{a\,b},
 \end{equation}
-where $a$ and $b$ are the semi-major and semi-minor axis of an ellipse centred on the dwarf galaxy coicedent with the star.
-The density profiles are shown out to the radius where the surface density reaches the background density of stars, as calculated from a sample of stars selected to have the product of the satellite to background likelihood ratios in CMD and PM space greater than one.
+where $a$ and $b$ are the semi-major and semi-minor axis of an ellipse centred on the dwarf galaxy and coincident with the star.
+The density profiles are shown out to the radius where the surface density reaches the background density of stars, which are selected by stars such that the product of the probability distributions in proper motion space and in colour-magnitude space from \jj{} is higher for satellite stars than background stars. 
 
 All classical dwarfs are well described by an exponential profile in the inner regions, as shown in Figure~\ref{fig:observed_density_profiles}.
 In the outer regions, however, Scl and UMi deviate and show a clear  excess of stars over an exponential law. The deviation from an exponential grows outwards and  reaches over an order of magnitude at $6 R_h$. A Plummer profile better characterizes this excess (dashed black line, see equation~\ref{EqPlummer}), where the outer region of the profile approximates a power law rather than an exponential cutoff. 
@@ -394,7 +394,7 @@ Halos with these parameters, however, result in a stellar velocity dispersion sm
 $\vmax=38\,\kms$ and $\rmax=4\,\kpc$ for UMi. 
 Our initial dark matter halos are very near the mean concentration at $z=1$ from \citet{ludlow+2016}.
 
-We assume that Scl and UMi's velocity dispersions entirely arise from a virialized dark matter component. The crossing time at the half-light radius is $2\pi\, r_h / \mathrm{v}_\textrm{circ} \approx 2\pi\, r_h / \sqrt{3}\,\sigma_\V \approx 130\,\text{Myr}$. As the time of last pericentre is significantly greater ($\gtrsim400\,\text{Myr}$), we expect both systems to have since reached virial equilibrium in the inner regions.
+We assume that Scl and UMi's velocity dispersions arise from a virialized dark matter component. The crossing time at the half-light radius is $2\pi\, r_h / \mathrm{v}_\textrm{circ} \approx 2\pi\, r_h / \sqrt{3}\,\sigma_\V \approx 130\,\text{Myr}$. As the time of last pericentre is significantly greater ($\gtrsim400\,\text{Myr}$), we expect both systems to have since reached virial equilibrium in the inner regions.
 Indeed, we find that the velocity dispersion in the simulations today is within one percent of the velocity dispersion calculated assuming virial equilibrium.\footnote{
     We derive the virial velocity dispersion using the Jeans equations from the
     empirical cumulative mass profile and stellar density profile of the final
@@ -653,7 +653,7 @@ It is clear from this plot that only Sagittarius, Antlia II, and Crater II fall 
 
 Since tides are insufficient to affect the outer profiles of  Scl and UMi, are there other hints as to why their density profiles differ from other classical dSphs? One clue  may be that Scl and UMi are known to host at least two distinct chemodynamic populations \citep[e.g.,][]{tolstoy+2004, battaglia+2008}.
 The inner population is younger, higher metallicity, and dynamically colder, whereas the outer population is older, lower metallicity, and dynamically hotter.
-Such distinct populations could indicate past accretion events or multiple generations of star formation, processes which may have had a role in the origin of their extended outer profiles. In this section, we explore whether Scl and UMi's multiple populations may correspond to their unusual density profile.
+Such distinct populations could indicate past accretion events or multiple generations of star formation, processes which may have had a role in the origin of their extended outer profiles. In this section, we explore whether Scl and UMi's multiple populations may be responsible for their unusual density profile.
 
 
 The top row of Figure~\ref{fig:metallicity_gradient} shows Scl and UMi's density profiles decomposed into two distinct populations with different masses and radial extents. In Appendix~\ref{sec:double_exp_fits}, we describe our method to fit the \textit{Gaia} distribution of stars in Scl and UMi with a two-component exponential density profile (not including metallicity or kinematic information). In contrast to \citet{pace+2020, arroyo-polonio+2024}, we do not use metallicities or line-of-sight (los) velocities to constrain our two populations. The blue and rust curves in the top panels of the figure illustrate our best-fitting profiles, where the outer component dominates the inner one at $20$ arcmin and at $31$ arcmin from the center of Scl and UMi, respectively. 
@@ -683,8 +683,8 @@ The presence of multiple populations is not a unique feature of Scl and UMi.
 Within the MW satellite system, Carina \citep[e.g.,]{battaglia+2012},
 Fornax \citep[e.g.,][]{battaglia+2006},
 and Sextans \citep[e.g.,][]{battaglia+2011},
-all also also host several distinct populations of stars.
-Why only Scl and UMi's density profiles appear to reflect underlying stellar populations and not other dSphs is not presently clear, and future investigation is warrented. 
+also host several distinct populations of stars.
+Why only Scl and UMi's density profiles appear to reflect underlying stellar populations and not other dSphs is not clear, and future investigation is warranted. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
