@@ -5,7 +5,7 @@ We thank the reviewer for their comments concerning our manuscript, which have h
 > [included in the introduction of the report]
 > Incidentally: what is the meaning of $R_{ell}$ as ascissa label of Fig. 1? 
 
-We have added a more explicit definition of $R_\text{ell}$ (new Equation 1) now referenced in Figure 1.
+We have added a more explicit definition of $R_\text{ell}$ (new Equation 1), now referenced in Figure 1.
 
 
 
@@ -29,7 +29,7 @@ We have added a quantification of the deviation from spherical symmetry in Secti
 
 > the quantity of DM considered for the simulations of the two dSphs studied is based on the assumption that the observed velocity dispersion is entirely due to DM presence and on the assumption of viral equilibrium. This a standard view which, anyway, would deserve some discussion. Actually, the claimed “high density” of these galaxies, thing that explains why they are robust against tidal perturbations, is mainly based on this almost undiscussed assumption.
 
-We have added a short discussion concerning the assumptions we make about what produces the velocity dispersion in Section 3.3. 
+We have added a short discussion of the assumptions we make about the source of the velocity dispersion in Section 3.3. 
 
 
 
@@ -48,7 +48,7 @@ The updated manuscript replaces our statement with a more carefully written vers
 > [Included after point 6 in the report] 
 > Finally: the paper is sufficiently strong in the statement of the irrelevant role of tides on shaping the stellar distribution in Sculptor and Ursa Minor, much less in the interpretation of the difference of their shapes respect to other [dwarfs].
 
-We have clarified and better summarized the discussion concerning this issue in Section 6. We believe that current observations do not provide "smoking gun" evidence for the difference in the outer density profiles of Scl and UMi and other dwarf spheroidals—a peculiar star formation is only one possibility. A more definitive interpretation likely requires new observations. 
+We have clarified and added a summary of the discussion of this issue in Section 6. We believe that current observations do not provide "smoking gun" evidence for the difference in the outer density profiles of Scl and UMi and other dwarf spheroidals—a peculiar star formation history is only one possibility. A more definitive interpretation likely requires new observations. 
 
 
 
@@ -56,4 +56,4 @@ We have clarified and better summarized the discussion concerning this issue in 
 
 > Are 150 bibliographic references really needed for this paper? This corresponds to 5 out 21 pages in the whole paper dedicated to references. I think this overabundance of citations is not of help for the reader to understand the background because it is confusing. 
 
-We have trimmed down the number of citations, particularly in places where multiple works are given as examples. The references are trimmed to 120 and now span less than 3 full pages in draft form (including DOI's). 
+We have trimmed the number of citations, particularly where multiple works are given as examples. The references are trimmed to 124 and now span less than 3 full pages in draft form (including DOI's). 

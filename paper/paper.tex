@@ -1,4 +1,4 @@
-\documentclass[twocolumn, twocolappendix, linenumbers]{aastex701}
+\documentclass[twocolumn, twocolappendix]{aastex701}
 
 \usepackage{amsmath}
 \usepackage{apjfonts}
@@ -46,6 +46,15 @@
 
 \makeatother
 
+
+%\newcounter{bibcount}
+%\makeatletter
+%\patchcmd{\@lbibitem}{\item[}{\item[\hfil\stepcounter{bibcount}{\thebibcount.}}{}{}
+%\setlength{\bibhang}{2\parindent}
+%\renewcommand\NAT@bibsetup%
+%   [1]{\setlength{\leftmargin}{\bibhang}\setlength{\itemindent}{-\parindent}%
+%       \setlength{\itemsep}{\bibsep}\setlength{\parsep}{\z@}}
+%\makeatother
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \received{April 25, 2026}
@@ -120,7 +129,7 @@ Galactic tides  provide a possible mechanism for stars to populate the far outsk
 However, there has been no convincing evidence for obvious tidal features---such as streams, tails, or shells---around either dwarf.
 The aim of our study is to use N-body simulations to assess whether Galactic tides influence the outer regions of Scl and UMi and explain the presence of their far-outlying members. 
 
-Accurate modeling of tidal interactions often requires idealized simulations that reach high numerical convergence and resolution. Cosmological simulations struggle to resolve tidal effects on dwarfs, which are 
+Accurate modelling of tidal interactions often requires idealized simulations that reach high numerical convergence and resolution. Cosmological simulations struggle to resolve tidal effects on dwarfs, which are 
 often near the resolution limit and vulnerable to artificial disruption
 \citep[e.g.,][]{PNM2008, vandenbosch+2018, santos-santos+2025}. To overcome
 these challenges, idealized simulations typically model a single subhalo\footnote{A ``halo" is a gravitationally self-bound overdensity of dark matter. A subhalo is a halo that orbits inside the virial radius of a larger system. The virial radius is defined as the radius that encloses a mean overdensity equal to $200$ times the critical density for closure.} in an
@@ -187,8 +196,8 @@ We use sphericalized elliptical radii for stars, given by
 \begin{equation} \label{eq:r_ell}
     R_\text{ell} = \sqrt{a\,b},
 \end{equation}
-where $a$ and $b$ are the semi-major and semi-minor axis of an ellipse centred on the dwarf galaxy and coincident with the star.
-The density profiles are shown out to the radius where the surface density reaches the background density of stars, which are selected by stars such that the product of the probability distributions in proper motion space and in colour-magnitude space from \jj{} is higher for satellite stars than background stars. 
+where $a$ and $b$ are the semi-major and semi-minor axes of an ellipse centred on the dwarf galaxy and coincident with the star.
+The density profiles are shown out to the radius where the surface density reaches the background density of stars, which are selected by stars where the product of the probability distributions in proper motion and colour-magnitude spaces from \jj{} is higher for satellite stars than background stars. 
 
 All classical dwarfs are well described by an exponential profile in the inner regions, as shown in Figure~\ref{fig:observed_density_profiles}.
 In the outer regions, however, Scl and UMi deviate and show a clear  excess of stars over an exponential law. The deviation from an exponential grows outwards and  reaches over an order of magnitude at $6 R_h$. A Plummer profile better characterizes this excess (dashed black line, see equation~\ref{EqPlummer}), where the outer region of the profile approximates a power law rather than an exponential cutoff. 
@@ -199,7 +208,7 @@ In the outer regions, however, Scl and UMi deviate and show a clear  excess of s
 
 \section{Methods} \label{sec:methods}
 
-This paper aims to assess whether the outer excess of stars seen in Scl and UMi may arise from Galactic tides. Since both galaxies are dark-matter dominated, we use N-body simulations, which assume that the evolution is well-represented by the evolution of collisionless particles within a single dark matter subhalo under a specified Milky Way potential. We choose an orbit consistent with the present-day locations of Scl and UMi while maximizing tidal effects. We shall also consider a model which includes a time-evolving potential motivated by the ongoing accretion of the Large Magellanic Cloud into the Galactic halo.  We provide below details on our assumed Galactic potentials (Section~\ref{milky-way-potential}), orbital modeling and initial conditions (Section~\ref{sec:point_orbits}), N-body methods (Section~\ref{sec:nbody_methods}), and the particle-tagging method used to track the evolution of the stellar component of the satellites (Section~\ref{sec:painting_stars}).
+This paper aims to assess whether the outer excess of stars seen in Scl and UMi may arise from Galactic tides. Since both galaxies are dark-matter dominated, we use N-body simulations, which assume that the evolution is well-represented by the evolution of collisionless particles within a single dark matter subhalo under a specified Milky Way potential. We choose an orbit consistent with the present-day locations of Scl and UMi while maximizing tidal effects. We shall also consider a model which includes a time-evolving potential motivated by the ongoing accretion of the Large Magellanic Cloud into the Galactic halo.  We provide below details on our assumed Galactic potentials (Section~\ref{milky-way-potential}), orbital modelling and initial conditions (Section~\ref{sec:point_orbits}), N-body methods (Section~\ref{sec:nbody_methods}), and the particle-tagging method used to track the evolution of the stellar component of the satellites (Section~\ref{sec:painting_stars}).
 
 \subsection{Galactic Potential and Reference Frame \label{milky-way-potential}}
 
@@ -403,7 +412,7 @@ Indeed, we find that the velocity dispersion in the simulations today is within 
     line-of-sight velocity of stars within three half-light radii of the
     center.
 }
-Binary stars may also inflate the velocity dispersion of dwarf galaxies. However even for a dwarf with a population of only binary stars, Scl or UMi's velocity dispersion would only increase by ${\sim} 1\,\kms$  \citep[e.g.,][]{spencer+2017}. In summary, Scl and UMi's velocity dispersion likely accurately reflects the underlying dark matter component.
+Binary stars may also inflate the velocity dispersion of dwarf galaxies. However, even for a dwarf with a population of only binary stars, Scl or UMi's velocity dispersion would only increase by ${\sim} 1\,\kms$  \citep[e.g.,][]{spencer+2017}. In summary, Scl and UMi's velocity dispersion likely accurately reflects the underlying dark matter component.
 
 
 We use \gadget{}, with an \agama{} external potential plug-in, for our N-body simulations. 
@@ -556,7 +565,7 @@ For comparison, the black lines in Figure~\ref{fig:orbits} show the orbits of ou
 Next, we consider the tidal evolution of our N-body models in the MW-only case. Because of its smaller pericenter, UMi is more strongly affected by Galactic tides than Scl (also discussed below). Figure~\ref{fig:umi_sim_image} shows the final distribution of dark matter and stars for our N-body simulation of UMi. More than 95\% of UMi's initial dark matter mass has been  lost by the present day. 
 However, the stellar component remains almost entirely bound (99.85\%) and spherical (ellipticity $< 0.02$).\footnote{
     We define ellipticity here as $e=1-c/a$ where $a, b, c$ are the semi-axes
-    in descending order. We calculate the ellipticity based on the eigenvalues
+    in descending order. We calculate the ellipticity from the eigenvalues
     of the reduced moment of inertia tensor
     \citep[e.g.,][]{dubinski+carlberg1991}. For bound particles, we assume
     spherical symmetry and iteratively remove unbound particles, recalculating
@@ -680,11 +689,12 @@ For our best-fit double-exponential density profile, the velocity dispersion of 
 Another observation that may be used to constrain the two-component model is the presence of a metallicity gradient, which would arise naturally if each component had different average metallicities. Assuming that Scl's two components have metallicities $\mathrm{[Fe/H]}=-1.69$ (inner) and $-1.97$ (outer) derived from the two-population fit in Appendix~\ref{sec:double_exp_fits}, we are able to approximately fit the observed mean metallicity gradient in Scl (left-middle panel in Figure~\ref{fig:metallicity_gradient}). The same is true for UMi, where we assume the inner and outer components have $\mathrm{[Fe/H]} = -2.14$ and $-2.54$ respectively. While our simplistic model accounts for the main trends of velocity and metallicity, our constraints are limited by the few spectroscopic members in the very outskirts of Scl and UMi. 
 
 The presence of multiple populations is not a unique feature of Scl and UMi. 
-Within the MW satellite system, Carina \citep[e.g.,]{battaglia+2012},
+Within the MW satellite system, Carina \citep[e.g.,][]{battaglia+2012},
 Fornax \citep[e.g.,][]{battaglia+2006},
 and Sextans \citep[e.g.,][]{battaglia+2011},
 also host several distinct populations of stars.
-Why only Scl and UMi's density profiles appear to reflect underlying stellar populations and not other dSphs is not clear, and future investigation is warranted. 
+Why only Scl and UMi, and not other dSphs, have density profiles which may reflect underlying stellar populations is unclear, and future investigation is warranted.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -722,7 +732,7 @@ or even fuzzy dark matter interference fringes \citep[e.g.,][]{el-zant+2020}.
 However, most of these processes should operate similarly across dwarf galaxies, failing to explain why Scl and UMi have unusual density profiles.
 
 
-We cannot provide a definite interpretation of Scl and UMi's differing density profile here as current data do not allow us to distinguish between (or rule out) some of the previous scenarios. Yet, these interpretations are useful to revisit as further observations are collected and improvements are made to our understanding and modelling of MW dwarf satellites.
+We cannot yet provide a definitive interpretation of Scl and UMi's differing density profiles as current data do not allow us to distinguish between (or rule out) some of the previous scenarios. Yet, these interpretations are useful to revisit as observations and modelling of MW dwarf satellites improve.
 
 
 
@@ -1048,7 +1058,7 @@ Figures~\ref{fig:scl_sim_images} and \ref{fig:scl_lmc_sim_images} are similar to
     \end{interactive}
     \caption{
     Similar to Figure~\ref{fig:umi_sim_image} except for Scl in the MW-only potential. A ten-second animated version illustrating Scl's tidal evolution from 9.2 Gyr ago until today is available on the online journal. 
-        In the animated figure, Scl's begins at apocentre with a spherical dark matter halo. The galaxy is most strongly affected by its first pericentre. During the following five pericentres, Scl loses more mass. Scl appears less affected than UMi, with fainter evidence of dark matter streams.
+        In the animated figure, Scl begins at apocentre with a spherical dark matter halo. The galaxy is most strongly affected by its first pericentre. During the following five pericentres, Scl loses more mass. Scl appears less affected than UMi, with fainter evidence of dark matter streams.
     }
     \label{fig:scl_sim_images}
 \end{figure}
@@ -1060,7 +1070,7 @@ Figures~\ref{fig:scl_sim_images} and \ref{fig:scl_lmc_sim_images} are similar to
     \caption{
     Similar to Figure~\ref{fig:umi_sim_image} except for Scl in the MW-only potential. We also denote the path of the LMC with a green line.
     A seven-second animated version of this figure showing the 2 Gyr of simulated evolution is available on the online journal.
-    The animated figure shows Scl and the LMC begining far away from the MW centre. As then Scl approaches the MW, Scl's halo elongates and forms slight dark matter tails. After passing its MW pericentre, Scl's dark matter ``stream"" begins to contract and appears unaffected by the near passage of the LMC. Scl evolves little compared to the MW-only model in Figure~\ref{fig:scl_sim_images}. 
+    The animated figure shows Scl and the LMC beginning far away from the MW centre. As Scl approaches the MW, Scl's halo elongates and forms slight dark matter tails. After passing its MW pericentre, Scl's dark matter ``stream"" begins to contract and appears unaffected by the near passage of the LMC. Scl evolves little compared to the MW-only model in Figure~\ref{fig:scl_sim_images}. 
     }
     \label{fig:scl_lmc_sim_images}
 \end{figure}
