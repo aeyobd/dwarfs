@@ -18,28 +18,6 @@ We revisit the structural and line-of-sight velocity properties of the galaxy. @
 
 
 
-
-
-| parameter                | Units              | value                       | Reference          |
-| ------------------------ | ------------------ | --------------------------- | ------------------ |
-| $\alpha$                 | deg                | $209.47\pm0.11$             | @struct_params     |
-| $\delta$                 | deg                | $26.68\pm0.06$              | @struct_params     |
-| distance modulus         | mag                | $18.34 \pm 0.19$            | @vivas+2020        |
-| distance                 | mag                | $46.56 \pm 4$ kpc           | @vivas+2020        |
-| $\mu_\alpha \cos \delta$ | mas yr$^{-1}$      | $-1.16 \pm 0.02 \pm 0.017$  | @battaglia+2022    |
-| $\mu_\delta$             | mas yr$^{-1}$      | $-0.88  \pm 0.01 \pm 0.017$ | @battaglia+2022    |
-| $\mathrm{v}_\text{los}$  | km s$^{-1}$        | $188 \pm 2.2*$              | Will likely change |
-| $\sigma_\mathrm{v}$      | km s$^{-1}$        | $7.7_{-1.5}^{+2.0}*$ km/s   | Will likely change |
-| $R_h$*                   | arcmin             | $44_{-6}^{+7}$              | @struct_params     |
-| ellipticity              | --                 | $0.42_{-0.14}^{+0.11}$      | @struct_params     |
-| position angle           | deg                | $89\pm9$                    | @struct_params     |
-| $M_V$                    | mag                | $-5.1\pm0.24$               | @luminosity        |
-| $M_\star$                | $\mathrm{M}_\odot$ | $(14\pm3) \times10^3$       | @luminosity        |
-| [Fe/H]                   | dex                | $-2.5\pm0.1$                | @kin_params        |
-| age                      | Gyr                | 12:                         |                    |
-
-Table: Recommended and derived properties of Boo III. Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity. 
-
 ## Survey Data {#gaia_data}
 
 To derive observed properties in what follows, we use three data sources: *Gaia* photometry and astrometry, and the Geha+2026 catalogue of radial velocities and metallicities. 
@@ -95,12 +73,6 @@ While two (much brighter) globular clusters are in the same field, excluding the
 
 
 
-![](figures/gaia_tangent_cmd_pm.png)
-
-Figure: The distribution of *Gaia* stars in the tangent plane (left),  the *Gaia* colour-magnitude diagram (right), and proper motion space (lower right). The small grey stars satisfy basic quality cuts, the larger solid blue points are likely members based on CMD and PM likelihoods (see text), and the red diamonds are additionally RV members.
-
-
-
 | model       | $\Delta \xi/'$ | $\Delta \eta/'$ | $e$                    | $\theta / \deg$  | $R_h\ /\ '$      | $n_\text{S\'ersic}$ | $N_\text{sat}$ |
 | ----------- | -------------- | --------------- | ---------------------- | ---------------- | ---------------- | ------------------- | -------------- |
 | Plummer     | $9.0\pm5.7$    | $-7.2 \pm 3.4$  | $0.42_{-0.11}^{+0.14}$ | $88.5\pm9.5$     | $43.8_{-6}^{+7}$ | --                  | $112 \pm 15$   |
@@ -112,16 +84,6 @@ Table: The results of our fits to structural properties using *Gaia* data. Colum
 While the likelihoods above can provide a membership list of stars, using this to then derive a density profile of the satellite risks "double fitting" the surface density. Instead, we derive density profiles by taking a sample of stars selected based on the likelihood of the foreground to background ratios, excluding the spatial likelihood terms. The resulting density profiles, and comparison MCMC parameterized density profiles, are shown in Fig. X
 
 
-
-![](figures/obs_profiles.png)
-
-Figure: The density profiles of Boo III using a sample of *Gaia* stars as selected based on their combined CMD+PM likelihood. 
-
-
-
-![](figures/mcmc_density_profiles.png)
-
-Figure: The MCMC fits to Boo III density profile 
 
 ## Luminosity
 
@@ -169,10 +131,6 @@ $$
 where $\text v_i$ is the perspective-motion corrected velocity of the $i$-th star, for each star, $\delta \text v_i$ is the velocity uncertainty, $\mu$ is the systemic velocity, and $\sigma$ is the velocity dispersion. We adopt a prior of $\mu \sim N(0, 100)$ for km/s in the GSR frame, and $\sigma \sim U(0, 20)$. 
 
 We use a NUTS sampler with 16 chains 10,000 steps each. The resulting distributions are shown in @fig:velocity_dispersion. Compared to @geha+2026, our velocity dispersion is slightly higher and we have
-
-![](figures/RV_hist_mcmc.png)
-
-Figure: The resulting velocity dispersion fits. Black curves illustrate sampled Gaussian fits to the distribution from the MCMC model, and the orange points with errorbars are the observed velocity member stars.
 
 
 
@@ -363,20 +321,9 @@ Figure: The along-stream density
 
 
 
-# Discussion & Conclusions
-
-
-
-- Caveat about orbital evolution
-- More precise distance and velocity dispersion key to pinning down Boo III evolution—future/ongoing facilities.
-
-
-
-
-
-
-
 # Appendix
+
+
 
 ## Structural parameters in DELVE
 

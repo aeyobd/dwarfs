@@ -1,7 +1,5 @@
-%\documentclass[referee]{aa}    % for a referee version
-
-
 \documentclass{aa}  
+%\documentclass[referee]{aa}    % for a referee version
 
 \usepackage{graphicx}
 \usepackage{txfonts}
@@ -25,6 +23,14 @@
 % mathematics commands
 \newcommand{\rmax}{\ensuremath{r_\textrm{math}}}
 \newcommand{\vmax}{\ensuremath{\mathrm{v}_\textrm{math}}}
+\newcommand{\pmra}{\ensuremath{\mu_{\alpha*}}}
+\newcommand{\pmdec}{\ensuremath{\mu_\delta}}
+\newcommand{\masyr}{\ensuremath{\textrm{mas yr}^{-1}}}
+\newcommand{\kms}{\ensuremath{\textrm{km s}^{-1}}}
+\newcommand{\vlos}{\ensuremath{\mathrm{v}_\text{los}}}
+\newcommand{\kpc}{\ensuremath{\textrm{kpc}}}
+\newcommand{\Gyr}{\ensuremath{\textrm{Gyr}}}
+\newcommand{\Mo}{\ensuremath{\mathrm{M}_\sun}}
 
 
 \begin{document}
@@ -74,13 +80,17 @@
   % {} leave it empty if necessary  
    {}
   % aims heading (mandatory)
-   {} 
+   {We aim to update the observational properties of \bootes{} with modern datasets and simulate its tidal evolution to understand the formation of a possible stream.} 
   % methods heading (mandatory)
-   {}
+   {We select stars from \textit{Gaia} to derive structural properties using standard Monte Carlo Markov Chain fitting. We then use N-body collisionless dark matter simulations to predict the tidal evolution of \bootes{} in the Milky Way potential.
+   }
   % results heading (mandatory)
-   {}
+   {We present some of the first structural parameter derivations in over a decade, improving on past determinations. Our orbtial analysis indicates that \boo{}'s orbit depends heavily on the current heliocentric distance, allowing pericentrew from between 1.5 and 18 kpc (2-$\sigma$ confidence range). With full N-body simulations, we dermine that \bootes{} requires a larger pericentre of at least 18 kpc in order to reproduce the presenty observed properties. Additionally, while some models lose more than half their initial stellar material, we find that all models form tidal streams which are diffuse (spanning $\sim 5$ degrees in width) and orders of magnitude fainter than the currently detectible in the \textit{Gaia} or DELVE (Dark Energe camera Local Volumne Experiement) surveys. Excellent photometric depth and discrimination of background sources will be required to observe such features. 
+   }
   % conclusions heading (optional), leave it empty if necessary
-   {}
+   {
+       If the Styx stream exists, its current apparent properties are inconsistent with an origin from \boo{}.  More precise determinations of \boo{}'s distance will be essential to understanding its dynamical evolution and consistency with $\Lambda$CDM cosmology. 
+   }
 
    \keywords{
        dSph galaxies --
@@ -93,8 +103,51 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
+Of the ${\sim}60$ dwarf galaxies known to orbit the Milky Way, only five show obvious signs of tidal perturbations. The most dramatic examples are the Sagittarius dwarf spheroidal (dSph), forming streams wrapping across the entire sky, and the Large Magellanic Cloud's extensive gas tail (LMC). Otherwise, only Crater II, Antlia II, and Tucana III have detected streams. Indeed, most dwarf galaxies have central densities too high for tidal affects to perturb their stellar component \citep[e.g.,][]{pace+2020}.
+
+\bootes{} (\boo{}) has always thought to be in the throws of tidal disruption, forming the extensive Styx stellar stream. \boo{} was discovered with Styx in \citet{grillmair2009} through a matched filter method (where stars are weighted based on their CMD position to increase the contrast of a specific stellar population). Along with an initially high velocity dispersion of $14$ km\,s, later proper motions suggesting a small pericentre, and the apparent consistency of \boo{}'s orbit with Styx lead to a clear conclusion: \boo{} must be undergoing active tidal disruption and is the proginiter of Styx. 
+
+However, \citep{jensen2026} find that Styx does not appear to be reflected in any overdensities in Blue Horizontal Branch or Red Giant Branch stars, nearly no \Gaia{} stars are consistent with being Styx members, and only a tenous detection in matched filter analysis can be confirmed. A proper dynamical model of \boo{} is needed to understand if a stream like Styx plausably formed from \boo{} and whether \boo{} may reveal something about tidal evolution in the Milky Way. 
+
+
 
 \section{The observational status of Bootes III}
+In this section, we review the current observational properties of \boo{} and derive new structural properties, kinematic information, and metallicity dispersions. We also outline the datasets used later for comparison with our models.
+
+Table~\ref{tab:obs_props} summarizes our recommended observational properties of \boo{}.
+
+\begin{table}
+    \begin{tabular}{l l l l}
+        \hline\hline
+        parameter & units & value & reference \\
+        \hline
+        $\alpha$ & deg & $209.47 \pm 0.11$ & section~\ref{sec:struct_params} \\
+        $\delta$ & deg & $26.68 \pm 0.06$ & section~\ref{sec:struct_params}\\
+        DM & mag & $18.34 \pm 0.19$ & \citet{vivas+2020} \\
+        distance & kpc & $46.56 \pm 4$ & \citet{vivas+2020} \\
+        $\pmra$ & $\masyr$ & $-1.16 \pm 0.02 \pm 0.017$ & \citet{battaglia+2022} \\
+        $\pmdec$ & $\masyr$ & $-0.88  \pm 0.01 \pm 0.017$ & \citet{battaglia+2022} \\
+        $\vlos$ & $\kms$ & ** & (Ting Li in prep) \\
+        $\sigma_\mathrm{v}$ & $\kms$ & ** & (Ting Li in prep) \\
+        $R_h$ & arcmin & $44_{-6}^{+7}$ & section~\ref{sec:struct_params}\\
+        ellipticity & --- & $0.42_{-14}^{+0.11}$ & section~\ref{sec:struct_params}\\
+        position angle & deg & $89 \pm 9$ & section~\ref{sec:struct_params}\\
+        $M_V$ & mag & $-5.1 \pm 0.24$ & section~\ref{sec:luminosity} \\
+        $M_\star$ & $\Mo$ & $(1.4 \pm 0.3) \times 10^4$ & section~\ref{sec:luminosity} \\
+        %[Fe/H] & dex & $-2.5 \pm 0.1$ & section \\
+        age & Gyr & 12: & assumed \\
+        \hline
+    \end{tabular}
+
+    \caption{The observational properties of \boo{} from the literature and derived here.
+        Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity.
+    }
+    \label{tab:obs_props}
+\end{table}
+
+\subsection{\textit{Gaia} observations\label{sec:gaia_obs}}
+
+
 
 \begin{figure*}
     \centering
@@ -106,6 +159,8 @@
 
 
 
+
+\subsection{Structural Parameters\label{sec:struct_params}}
 
 \begin{figure}
     \centering
@@ -194,15 +249,17 @@
 \end{figure}
 
 
-\begin{figure*}
+\begin{figure}
     \centering
+    \includegraphics{figures/boundmass_sigma_v.pdf}
 
     \caption{
-        The tidal tracks, evolution of stellar mass, and change invelocity dispersion for each selected model.
+        The evolution of stellar velocity dispersion (left,  $\sigma_\text{los}$) and stellar/dark matter bound mass (right) over time for each simulation.
+        \newline{}
+        \textbf{Explanation:} The observed stellar velocity dispersion is acchieved, but the total stellar mass loss varies depending on the model. \boo{} may have lost a majority of its initial stellar mass!
     }
 
-    \label{fig:tidal_tracks}
-\end{figure*}
+\end{figure}
 
 
 \begin{figure*}
@@ -218,17 +275,6 @@
     \label{fig:predicted_stars_onsky}
 \end{figure*}
 
-\begin{figure}
-    \centering
-    %\includegraphics{figure/tidal_stellar_tracks.pdf}
-
-    \caption{
-        The evolution of stellar velocity dispersion (left,  $\sigma_\text{los}$) and stellar/dark matter bound mass (right) over time for each simulation.
-        \newline{}
-        \textbf{Explanation:} The observed stellar velocity dispersion is acchieved, but the total stellar mass loss varies depending on the model. \boo{} may have lost a majority of its initial stellar mass!
-    }
-
-\end{figure}
 
 
 
@@ -237,6 +283,7 @@
     \includegraphics{figures/along_stream_density.pdf}
     \caption{
         The predicted surface brightness along the stream axis (marked in Fig.~\ref{fig:predicted_stars_onsky}).
+        \newline{}
         \textbf{Explanation:} Within the inner 4 degrees, the surface density drops but with a possible halo-like extension. Outside of the inner galaxy, the stream remains extemely diffuse, with less than 0.1 stars per square degree predicted in \textit{Gaia} data. \boo{}'s stream remains unacessable without extremely deep, low-foreground data. 
     }
     \label{fig:stream_brightness}
@@ -262,6 +309,48 @@
 
 \begin{appendix}
 
+
+\section{Extended structure search in \textit{Gaia}}
+
+To search for structure over an extended area in \textit{Gaia}, we download and reprocess \textit{Gaia} sources following \citet{MV2020}. For simplicity, we select all \textit{Gaia} sources within a rectangle of 10 degrees by 10 degrees in RA and Dec of the literature centre of \boo{} (209.3, 26.8). Next, we apply the quality cuts from \citet{MV2020, MV2020a}
+\begin{itemize}
+    %\item All relevant parameters are defined ($\alpha$, $\delta$, $\pmra$, $\pmdec$, $\sigma_\pmra$, $\sigma_\pmdec$, $G$, $BP$, $RP$, $\sigma_G$, $\sigma_{BP}$, $\sigma_{RP}$, $\mu$, $\delta \mu$).
+    %\item Proper motions are between $-10$ and $10$ $\masyr$
+    \item The parallax is within $3\sigma$ of \boo{}'s parallax (includeing \boo{}'s parallax uncertainty, the sources parallax uncertainty, and the systemic parallax uncertainty from CITE. 
+    \item The colour flux excess is within $3\sigma$ of the expected value from XXX.
+    \item BP - RP colour is between XX and XX
+    \item 
+\end{itemize}
+
+\section{Structural properties in DELVE}
+
+For DELVE (DR2), we select all stars within 6 arcminutes of BooIII's literature centre (209.3, 26.8).\footnote{DELVE DR3 has incomplete coverage near Boo3.} We require the sources to further satisfy:  
+\begin{itemize}
+    \item g and r PSF magnitudes and their errors are defined
+    \item g and r PSF magnitudes greater than the 5-$\sigma$ PSF depth (24.3, and 23.9, respectively, \citep{delve_dr2})
+  - likely star source ($\texttt{extended\_class\_g} \leq 1$)
+\end{itemize}
+
+In total, this returns 558,046 sources. We then correct the magnitudes for dust extinction using the @SFD dustmap with coefficients from @aboot+2018 with the dustmaps package.
+
+We believe that DELVE has slightly inhomogenous completeness near \boo{}. Fig.~\ref{fig:delve_completeness} illustrates our derived 5-sigma point magnitude depth and the matched filter density as a function of position. We calculate the 5-sigma point source depth by taking the median magnitude of stars with magnitude uncertainties in the g band between (0.2 and ???), when spatially binning in the tangent plane. Patterns in the 5-sigma point source depth are refelcted in the matched filter density. We conclude that a proper correction of the inhomogenous completeness of DELVE is necessary to properly search for faint, extended structure. 
+
+
+
+\begin{figure}
+    %\includegraphics{figures/temp}
+    \caption{Our derived matched filter density for DELVE data. 
+    }
+\end{figure}
+
+For simplicity, we instead reduce our magnitude limit to $g=22$. While this appears to be extreme, we avoid possible biases from improper 
+
+\section{Cored dark matter haloes}
+
+
+\begin{figure*}
+   \includegraphics{figures/cored_tracks.pdf}
+\end{figure*}
 
 \end{appendix}
 \end{document}
