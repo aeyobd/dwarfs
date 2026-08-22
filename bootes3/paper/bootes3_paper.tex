@@ -3,9 +3,9 @@
 
 \usepackage{graphicx}
 \usepackage{txfonts}
-\usepackage{subcaption}         % necessary for continued figures, example in section 3
+%\usepackage{subcaption}         % necessary for continued figures, example in section 3
                                 % and appendix
-\usepackage{lscape}             % to rotate a single page table, example in appendix.
+%\usepackage{lscape}             % to rotate a single page table, example in appendix.
                                 % For landscape tables, see the longtable examples.
 \usepackage{placeins}           % useful with \FloatBarrier, to keep 
                                 % onecolumn floats from drifting to the next section
@@ -13,6 +13,14 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[]{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=blue,
+    urlcolor=blue,
+    citecolor=blue,
+}
+
 % To add links in your PDF file, use the package "hyperref"
 % with options according to your LaTeX or PDFLaTeX drivers.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,7 +39,24 @@
 \newcommand{\kpc}{\ensuremath{\textrm{kpc}}}
 \newcommand{\Gyr}{\ensuremath{\textrm{Gyr}}}
 \newcommand{\Mo}{\ensuremath{\mathrm{M}_\sun}}
+\newcommand{\sigmav}{\ensuremath{\sigma_\mathrm{v}}}
+\newcommand{\sv}{S\textsuperscript{5}}
 
+
+
+
+%%% citepos command
+\makeatletter
+\DeclareRobustCommand\citepos
+  {\begingroup
+   \let\NAT@nmfmt\NAT@posfmt% ...except with a different name format
+   \NAT@swafalse\let\NAT@ctype\z@\NAT@partrue
+   \@ifstar{\NAT@fulltrue\NAT@citetp}{\NAT@fullfalse\NAT@citetp}}
+
+\let\NAT@orig@nmfmt\NAT@nmfmt
+\def\NAT@posfmt#1{\NAT@orig@nmfmt{#1's}}
+
+\makeatother
 
 \begin{document}
 
@@ -107,7 +132,7 @@ Of the ${\sim}60$ dwarf galaxies known to orbit the Milky Way, only five show ob
 
 \bootes{} (\boo{}) has always thought to be in the throws of tidal disruption, forming the extensive Styx stellar stream. \boo{} was discovered with Styx in \citet{grillmair2009} through a matched filter method (where stars are weighted based on their CMD position to increase the contrast of a specific stellar population). Along with an initially high velocity dispersion of $14$ km\,s, later proper motions suggesting a small pericentre, and the apparent consistency of \boo{}'s orbit with Styx lead to a clear conclusion: \boo{} must be undergoing active tidal disruption and is the proginiter of Styx. 
 
-However, \citep{jensen2026} find that Styx does not appear to be reflected in any overdensities in Blue Horizontal Branch or Red Giant Branch stars, nearly no \Gaia{} stars are consistent with being Styx members, and only a tenous detection in matched filter analysis can be confirmed. A proper dynamical model of \boo{} is needed to understand if a stream like Styx plausably formed from \boo{} and whether \boo{} may reveal something about tidal evolution in the Milky Way. 
+However, \citep{jensen+2026} find that Styx does not appear to be reflected in any overdensities in Blue Horizontal Branch or Red Giant Branch stars, nearly no \Gaia{} stars are consistent with being Styx members, and only a tenous detection in matched filter analysis can be confirmed. A proper dynamical model of \boo{} is needed to understand if a stream like Styx plausably formed from \boo{} and whether \boo{} may reveal something about tidal evolution in the Milky Way. 
 
 
 
@@ -116,34 +141,35 @@ In this section, we review the current observational properties of \boo{} and de
 
 Table~\ref{tab:obs_props} summarizes our recommended observational properties of \boo{}.
 
-\begin{table}
-    \begin{tabular}{l l l l}
+\begin{table*}
+    \centering
+    \begin{tabular}{l l l l l}
         \hline\hline
-        parameter & units & value & reference \\
+        parameter & units & literature & this work & reference \\
         \hline
-        $\alpha$ & deg & $209.47 \pm 0.11$ & section~\ref{sec:struct_params} \\
-        $\delta$ & deg & $26.68 \pm 0.06$ & section~\ref{sec:struct_params}\\
-        DM & mag & $18.34 \pm 0.19$ & \citet{vivas+2020} \\
-        distance & kpc & $46.56 \pm 4$ & \citet{vivas+2020} \\
-        $\pmra$ & $\masyr$ & $-1.16 \pm 0.02 \pm 0.017$ & \citet{battaglia+2022} \\
-        $\pmdec$ & $\masyr$ & $-0.88  \pm 0.01 \pm 0.017$ & \citet{battaglia+2022} \\
-        $\vlos$ & $\kms$ & ** & (Ting Li in prep) \\
-        $\sigma_\mathrm{v}$ & $\kms$ & ** & (Ting Li in prep) \\
-        $R_h$ & arcmin & $44_{-6}^{+7}$ & section~\ref{sec:struct_params}\\
-        ellipticity & --- & $0.42_{-14}^{+0.11}$ & section~\ref{sec:struct_params}\\
-        position angle & deg & $89 \pm 9$ & section~\ref{sec:struct_params}\\
-        $M_V$ & mag & $-5.1 \pm 0.24$ & section~\ref{sec:luminosity} \\
-        $M_\star$ & $\Mo$ & $(1.4 \pm 0.3) \times 10^4$ & section~\ref{sec:luminosity} \\
+        $\alpha$ & deg & $209.557 \pm 0.3$ & $209.47 \pm 0.11$ & \citet{li+2026}; \S~\ref{sec:struct_params} \\
+        $\delta$ & deg & $26.553 \pm 0.3$ & $26.68 \pm 0.06$ &\citet{li+2026}; \S \ref{sec:struct_params}\\
+        DM & mag & $18.43 \pm 0.09$ & --- & \citet{li+2026} \\
+        distance & kpc & $48.5 \pm 1.9$ & --- & \citet{li+2026} \\
+        $\pmra$ & $\masyr$ & $-1.16 \pm 0.02 \pm 0.017$ & --- &  \citet{battaglia+2022} \\
+        $\pmdec$ & $\masyr$ & $-0.88  \pm 0.01 \pm 0.017$ & --- & \citet{battaglia+2022} \\
+        $\vlos$ & $\kms$ & 181 & $180$ & \citet{li+2026}; \S 2.3 \\
+        $\sigmav$ & $\kms$ & 1.7 & 4 & \citet{li+2026}; \S 2.3 \\
+        $R_h$ & arcmin & 33 & $44_{-6}^{+7}$ & \S~\ref{sec:struct_params}\\
+        ellipticity & --- & 0.3 & $0.42_{-14}^{+0.11}$ & \S~\ref{sec:struct_params}\\
+        position angle & deg & 88 & $89 \pm 9$ & \citet{moskowitz+walker2020}; \S~\ref{sec:struct_params}\\
+        $M_V$ & mag & $-5.8\pm0.5$ & $-5.1 \pm 0.24$ & \citet{moskowitz+walker2020}; \S~\ref{sec:luminosity} \\
+        $M_\star$ & $\Mo$ & --- & $(1.4 \pm 0.3) \times 10^4$ & \S~\ref{sec:luminosity} \\
         %[Fe/H] & dex & $-2.5 \pm 0.1$ & section \\
         age & Gyr & 12: & assumed \\
         \hline
     \end{tabular}
 
     \caption{The observational properties of \boo{} from the literature and derived here.
-        Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigma_\textrm{v}$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity.
+        Rows: right ascension ($\alpha$), declination $\delta$, distance modulus, distance, absolute proper motion in right ascension $\mu_\alpha \cos\delta$, proper motion in declination $\mu_\delta$, line of sight (los) velocity $\mathrm{v_{los}}$, LOS velocity dispersion $\sigmav$, tentative half-light radius $R_h$, ellipticity, position angle, absolute V-band magnitude, total stellar mass, and metallicity.\\
     }
     \label{tab:obs_props}
-\end{table}
+\end{table*}
 
 \subsection{\textit{Gaia} observations\label{sec:gaia_obs}}
 
@@ -176,6 +202,21 @@ Table~\ref{tab:obs_props} summarizes our recommended observational properties of
 
 
 
+\subsection{Kinematic analysis}
+
+As discussed in the Introduction, \boo{} has an extrodinary range of measurements for its velocity dispersion, $\sigmav$, ranging from an initial measurment of $\sigmav \sim 14$ down to \citepos{li+2026} recent measurement of $\sigmav \sim 1.69^{+1.03}_{-0.85}\ \kms$. Given that $\sigmav$ is crucial for understanding the tidal evolution of \boo{}, we revisit these measurements here. 
+
+For data, we use the publically available reprocessed Keck/DEIMOS observations \citet{geha+2026} and the \sv{} (acronym) from \citet{li+2026}. 
+
+\citet{geha+2026} reprocess the single Keck/DEIMOS pointing from \citet{carlin+2009} using a homogenised and calibrated anaysis across many archival dwarfs observations. 
+
+
+\citet{li+2026} instead take recent observations with \sv{} and only report their 21 candidate member stars. 
+
+
+
+
+Fascinatingly, the measurement from \citet{geha+2026} appears to be better constrained. Unfortunately, the \sv{} stars appear to 
 
 \begin{figure}
     \centering
@@ -298,12 +339,13 @@ Table~\ref{tab:obs_props} summarizes our recommended observational properties of
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{acknowledgements}
+    We acknowledgeme varios peoples and institutions. Thank you!
 \end{acknowledgements}
 
 
 
 \bibliographystyle{aa}
-\bibliography{paper.bib}
+\bibliography{paper}
 
 
 
@@ -312,7 +354,7 @@ Table~\ref{tab:obs_props} summarizes our recommended observational properties of
 
 \section{Extended structure search in \textit{Gaia}}
 
-To search for structure over an extended area in \textit{Gaia}, we download and reprocess \textit{Gaia} sources following \citet{MV2020}. For simplicity, we select all \textit{Gaia} sources within a rectangle of 10 degrees by 10 degrees in RA and Dec of the literature centre of \boo{} (209.3, 26.8). Next, we apply the quality cuts from \citet{MV2020, MV2020a}
+To search for structure over an extended area in \textit{Gaia}, we download and reprocess \textit{Gaia} sources following \citet{MV2020a}. For simplicity, we select all \textit{Gaia} sources within a rectangle of 10 degrees by 10 degrees in RA and Dec of the literature centre of \boo{} (209.3, 26.8). Next, we apply the quality cuts from \citet{MV2020a, MV2020b}
 \begin{itemize}
     %\item All relevant parameters are defined ($\alpha$, $\delta$, $\pmra$, $\pmdec$, $\sigma_\pmra$, $\sigma_\pmdec$, $G$, $BP$, $RP$, $\sigma_G$, $\sigma_{BP}$, $\sigma_{RP}$, $\mu$, $\delta \mu$).
     %\item Proper motions are between $-10$ and $10$ $\masyr$

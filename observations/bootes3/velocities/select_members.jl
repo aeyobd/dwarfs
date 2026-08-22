@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v1.0.3
 
 using Markdown
 using InteractiveUtils
@@ -175,16 +175,13 @@ scatter(nonmemb_stars.xi, nonmemb_stars.eta)
 scatter(memb_stars.xi, memb_stars.eta, markersize=2, alpha=0.4)
 
 # ╔═╡ 732a4a2d-963b-44a8-aa81-c008906728fe
-sum(memb_stars.P_SAT_deimos .> 0.2)
+sum(skipmissing(memb_stars.P_SAT_deimos_geha26 .> 0.2))
 
 # ╔═╡ 1a2a5771-a6c5-4481-8c99-e82c3d50160c
-sum(nonmemb_stars.P_SAT_deimos .> 0.2)
-
-# ╔═╡ 82105731-560f-4716-8e4c-2a2539cf6f08
-rv_all[rv_all.P_SAT_deimos .> 0.5, :]
+sum(skipmissing(memb_stars.P_sat_li26 .> 0.5))
 
 # ╔═╡ 3395339f-4679-4c2a-a420-319cddc64706
-
+sum(memb_stars.PSAT_RV .> 0.2)
 
 # ╔═╡ Cell order:
 # ╟─3ed8c28f-5908-42dc-a56b-24a9b2685a07
@@ -230,5 +227,4 @@ rv_all[rv_all.P_SAT_deimos .> 0.5, :]
 # ╠═6493a62d-cdb7-4831-9da6-25035e3cb7c5
 # ╠═732a4a2d-963b-44a8-aa81-c008906728fe
 # ╠═1a2a5771-a6c5-4481-8c99-e82c3d50160c
-# ╠═82105731-560f-4716-8e4c-2a2539cf6f08
 # ╠═3395339f-4679-4c2a-a420-319cddc64706

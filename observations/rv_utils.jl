@@ -114,29 +114,22 @@ Differing from turing in that we add the mean
 and p-value quantile interval
 """
 function summarize(chain; p=0.16, pp=0.025)
-    df = Turing.summarize(chain) |> DataFrame
-    Nvar = size(df, 1)
-    lows = zeros(Nvar)
-    lowlows = zeros(Nvar)
-    mids = zeros(Nvar)
-    highs = zeros(Nvar)
-    highhighs = zeros(Nvar)
+    df = Turing.summarystats(chain) |> DataFrame
 
-    for i in 1:Nvar
-        x = chain[:, i, :].data
-        llow, low, mid, high, hhigh = quantile(vec(x), [pp, p, 0.5, 1-p, 1-pp])
-        lows[i] = low
-        mids[i] = mid
-        highs[i] = high
-        lowlows[i] = llow
-        highhighs[i] = hhigh
-    end
+    df_new  = Turing.FlexiChains.collapse(chain, [
+        (:q_lower_2, x -> quantile(x, pp)),
+        (:q_lower, x -> quantile(x, p)),
+        (:q_upper, x -> quantile(x, 1-p)),
+        (:q_upper_2, x -> quantile(x, 1-pp)),
+        median
+    ]) |> DataFrame
 
-    df[!, :median] = mids
-    df[!, :error_lower] = mids .- lows
-    df[!, :error_upper] = highs .- mids
-    df[!, :error_lower_2] = mids .- lowlows
-    df[!, :error_upper_2] = highhighs .- mids
+    df[:, :error_lower_2] = df_new.median .- df_new.q_lower_2 
+    df[:, :error_lower] = df_new.median .- df_new.q_lower
+    df[:, :error_upper] = -df_new.median .+ df_new.q_upper 
+    df[:, :error_upper_2] = -df_new.median .+ df_new.q_upper_2 
+    df[!, :param] = string.(df.param)
+
 
     return df
 end

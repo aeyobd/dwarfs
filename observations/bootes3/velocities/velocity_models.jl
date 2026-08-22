@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v1.0.3
 
 using Markdown
 using InteractiveUtils
@@ -38,7 +38,9 @@ md"""
 
 # ╔═╡ 428c3d92-e49c-426e-b328-2d2a8d4c4159
 rv_file = let
-	"rv_deimos_geha_x_2c.fits"
+	# "rv_deimos_geha_x_2c.fits"
+	# "rv_combined_x_2c_psat_0.5.fits"
+	"rv_li_x_2c_psat_0.2.fits"
 	# "rv_deimos_x_2c_sigma_3.fits"
 	# "rv_deimos_x_2c_psat_0.2.fits"
 end
@@ -212,7 +214,7 @@ let
 		ylabel="density"
 	)
 
-	errorscatter!(memb_stars.RV, zeros(length(memb_stars.RV)) .+ 0.003*randn(length(memb_stars.vz)), xerror=memb_stars.RV_err,  color=COLORS[2])
+	errorscatter!(memb_stars.RV, zeros(length(memb_stars.RV)) .+ 0.005*randn(length(memb_stars.vz)), xerror=memb_stars.RV_err,  color=COLORS[2])
 	RVUtils.plot_samples!(samples, LinRange(160, 220, 100), thin=150)
 
 	fig
@@ -237,10 +239,13 @@ samples_gsr = sample(RVUtils.model_vel_1c(memb_stars.vz, memb_stars.vz_err), sam
 df_gsr = DataFrame(samples_gsr)
 
 # ╔═╡ 3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
-@savefig "rv_sigma_corner" pairplot(samples_gsr)
+@savefig "rv_sigma_corner" pairplot(df_gsr[:, [:μ, :σ]])
 
 # ╔═╡ 1f251e67-7fed-4375-8bed-697704302e43
 summary_vz = RVUtils.summarize(samples_gsr)
+
+# ╔═╡ e67cca0a-9703-4e09-9d73-4e175ab34589
+samples_gsr._data
 
 # ╔═╡ a5f1a339-6093-49ea-bd10-b513688d668c
 median(df_gsr.μ) + Δv_gsr
@@ -265,7 +270,162 @@ stephist(Float64.(memb_stars.vz), bins=9, normalization=:pdf)
 
 
 # ╔═╡ c1cf3a80-1c26-4417-9ddf-1046f3f5f608
-CSV.write("processed/mcmc_samples_vz$FIGSUFFIX.csv", samples_gsr)
+CSV.write("processed/mcmc_samples_vz$FIGSUFFIX.csv", DataFrame(samples_gsr))
+
+# ╔═╡ 52425d3c-9918-46eb-bd5d-759491837886
+md"""
+## Gradient
+"""
+
+# ╔═╡ e4ee266e-702a-47a5-a8fb-11c1b0a6e75a
+model_gradient = RVUtils.model_vel_gradient(memb_stars.vz, memb_stars.vz_err, memb_stars.xi, memb_stars.eta)
+
+# ╔═╡ b85ef69a-103d-4e08-84ea-cdcbf65ad94c
+samples_gradient = sample(model_gradient, sampler, MCMCThreads(), n_samples, n_threads)
+
+# ╔═╡ d6b46b49-c11b-417b-89c8-c8d501000328
+df_gradient = let
+	df = DataFrame(samples_gradient)
+	df[:, :A]
+	df[:, :B]
+	df[!, :r_grad] = @. 60 * (df.A ⊕ df.B )
+	df[!, :Θ_grad] = @. atand(df.A, df.B) 
+
+	df
+end
+
+# ╔═╡ fd5b8ec9-b9f3-4a20-b0af-cf9aa9d3905e
+@savefig "gradient_corner" pairplot(df_gradient[:, [:μ, :σ, :A, :B]])
+
+# ╔═╡ 3f102a8b-06e9-49be-9b80-dd56dc24dd1b
+@savefig "gradient_cyl_corner" pairplot(df_gradient[:, [:μ, :σ, :r_grad, :Θ_grad]])
+
+# ╔═╡ 7d7a601c-7445-462f-87d3-ef76fe68dae4
+median(df_gradient.μ) + Δv_gsr
+
+# ╔═╡ bd267edd-23f6-4107-90e3-eebf3b6cffe2
+bf_gradient = RVUtils.bayes_evidence(model_gradient, df_gradient, ["A", "B"])
+
+# ╔═╡ be42ee18-b2d6-4a3c-b776-ddc5cc67ebdb
+θs = mod1.(df_gradient.Θ_grad, 360.) .- 360
+
+# ╔═╡ e5f25c66-c969-4245-8569-927918451ac6
+θ_err = quantile(θs, [0.16, 0.5, 0.84]) .- median(θs)
+
+# ╔═╡ fb2536fa-9703-49c9-b748-bfc5c39f27c1
+median(θs)
+
+# ╔═╡ c1d08fe4-7371-4a8a-8452-b3b85b8488cc
+summary_gradient = RVUtils.summarize(samples_gradient)
+
+# ╔═╡ 8cf7f467-dce1-4a79-b9ea-88080bbe18bf
+Turing.summarystats(samples_gradient)
+
+# ╔═╡ 2235ef70-9cfd-46a0-a084-d0befca8bc5c
+md"""
+code below validates induced PM gradient (should be approx 2).
+"""
+
+# ╔═╡ d76aeb1d-e2c1-4082-9737-16b53307624b
+θ_m = median(df_gradient.Θ_grad)
+
+# ╔═╡ ee8c24ea-86ad-4846-9fec-9005d55fb062
+xi_rot, eta_rot = lguys.to_orbit_coords(memb_stars.ra, memb_stars.dec, obs_properties["ra"], obs_properties["dec"], θ_m) .* 60
+
+# ╔═╡ 16666018-5329-4c6e-b8d7-27d6d6142965
+icrs0 = lguys.ICRS(obs_properties)
+
+# ╔═╡ b2404406-7670-4092-ac52-bc7e12c39289
+vec_pm = LilGuys.pm2kms.([icrs0.pmra, icrs0.pmdec], icrs0.distance) /(180/π)
+
+# ╔═╡ fc8b93ae-8d33-4de5-86ac-6c72a48129ba
+@savefig "v_gradient_derived" let
+	fig = Figure()
+
+	ax=Axis(fig[1,1];
+		  limits=(-10, 10, -10, 10), 
+		  aspect=DataAspect(),
+		  xlabel = L"$\partial \,v_z / \partial\, \xi$ / km\,s$^{-1}$\,degree$^{-1}$",
+		  ylabel = L"$\partial \,v_z / \partial\, \eta$ / km\,s$^{-1}$\,degree$^{-1}$",
+		xreversed=true
+		 )
+	
+	scatter!(60df_gradient.A, 60df_gradient.B, alpha=0.1, markersize=1, 
+
+	   )
+
+	scatter!(0, 0, color=:black)
+	arrows!([0], [0], [vec_pm[1]], [vec_pm[2]])
+
+	fig
+end
+
+# ╔═╡ 58ba58b3-34c8-4ba8-bb63-90338269f7e4
+lguys.transform(ICRS, lguys.GSR(ra=icrs0.ra + 2/vec_pm[1] *cos(icrs0.dec), dec=icrs0.dec + 2/vec_pm[2], distance=icrs0.distance, radial_velocity=0)).radial_velocity  .- Δv_gsr
+
+# ╔═╡ 17b378e4-4bfb-41a3-b85a-58b84fde154b
+gsr0 = lguys.transform(lguys.GSR, icrs0)
+
+# ╔═╡ 08fe234c-6c55-4b0b-b762-74b21b415180
+pm_gsr_induced = lguys.transform(lguys.GSR, lguys.ICRS(ra=icrs0.ra, dec=icrs0.dec, distance=icrs0.distance, pmra=0, pmdec=0, radial_velocity=0))
+
+# ╔═╡ e1f7ff04-de05-4e0b-aa37-caa1f644953a
+kde = KernelDensity.kde((df_gradient.A, df_gradient.B))
+
+# ╔═╡ 1fee83bd-2aca-40ac-bfe2-26930945220f
+log(pdf(kde, 0, 0) ./ lguys.gaussian(0, 0., 0.1)^2)
+
+# ╔═╡ a02f7381-e5c0-4cb2-8c78-861c71ae98b3
+mean(df_gradient.A .> 0)
+
+# ╔═╡ e41d0620-0ae6-48e8-8ebe-1cf40a1253f7
+mean(df_gradient.B .> 0)
+
+# ╔═╡ ba37b4a3-0d3f-48d5-8242-64eb09cd91f5
+median(atand.(df_gradient.B ./ df_gradient.A))
+
+# ╔═╡ 1caab97e-db29-492c-b7f1-aba0cb28e5a3
+median(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2)) * 60
+
+# ╔═╡ eb4c231b-5e61-48c0-bbc5-ee31b8e11830
+quantile(sqrt.(df_gradient.B .^ 2 .+ df_gradient.A .^ 2), [0.16, 0.5, 0.84]) * 60
+
+# ╔═╡ 1368bddb-c118-493a-9590-0f1004f3853f
+quantile(atand.(df_gradient.B ./ df_gradient.A), [0.16, 0.5, 0.84])
+
+# ╔═╡ 96e82c86-2171-48f6-828d-991303fd8e38
+KernelDensity.default_bandwidth((df_gradient.A, df_gradient.B))
+
+# ╔═╡ d7a56457-4f05-411f-880c-1636dd65d25a
+let
+	fig = Figure()
+	ax = Axis(fig[1,1])
+		
+	
+	contour!(kde.x, kde.y, asinh.(kde.density ./ 1e-5), levels=100,)
+
+	scatter!(0, 0, color=:black)
+
+
+	fig
+end
+
+# ╔═╡ dd4dad6f-0b0e-4c09-8c78-d61d92dfffbd
+let
+	fig, ax = FigAxis(
+		xlabel=L"radial velocity / km s$^{-1}$",
+		ylabel="density"
+	)
+	h = histogram(Float64.(memb_stars.radial_velocity_gsr), 60, normalization=:pdf)
+	
+	# RVUtils.plot_samples!(DataFrame(samples_gradient), LinRange(40, 110, 100), thin=15)
+	# errorscatter!(midpoints(h.bins), h.values, yerror=h.err, color=COLORS[6])
+
+	fig
+end
+
+# ╔═╡ 9a3031a4-e4c0-4365-ac0a-f8ed3c9c93ea
+CSV.write("processed/mcmc_samples_gradient$FIGSUFFIX.csv", df_gradient)
 
 # ╔═╡ 1acdc61b-fb5f-449d-ba86-46525c881a39
 md"""
@@ -289,7 +449,7 @@ end
 # ╔═╡ ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37
 df_summaries = OrderedDict(
 	"vz" => summary_vz |> OrderedDict, 
-	# "gradient" => summary_gradient |> OrderedDict,
+	"gradient" => summary_gradient |> OrderedDict,
 	# "rell" => summary_Rell |> OrderedDict,
 	# "both" => summary_both |> OrderedDict,
 	# "bf_gradient" => bf_gradient,
@@ -316,7 +476,7 @@ end
 # ╠═dead238a-f726-4c26-9402-c42797f08f06
 # ╠═0b8f0193-f1e5-471e-8c34-498ac827be63
 # ╠═ad79710a-0392-4b75-94ac-23881376a70b
-# ╠═680e7f76-cb4d-40d6-9a9f-d4672427a633
+# ╟─680e7f76-cb4d-40d6-9a9f-d4672427a633
 # ╠═86fe351f-ef12-474a-85cc-c10c22a65e77
 # ╟─7330c75e-1bf9-476a-8274-ebc86d555e6f
 # ╟─6bec7416-40c8-4e2b-9d3d-14aa19e5642d
@@ -356,7 +516,7 @@ end
 # ╠═abbd2a53-e077-4af7-a168-b571e1a906b8
 # ╠═5cf336f6-e3eb-4668-b074-18b396f027be
 # ╠═ccbb694d-f973-40fd-bab7-a2aefbd9fb0b
-# ╠═74ad07df-f15c-436f-b390-ce95b27f7fab
+# ╟─74ad07df-f15c-436f-b390-ce95b27f7fab
 # ╟─95ef12d2-174a-47c3-a106-9b4005b2a80d
 # ╠═318d29b9-4c84-4d38-af6d-048518952970
 # ╠═bc7bd936-3f62-4430-8acd-8331ca3ee5ad
@@ -369,10 +529,45 @@ end
 # ╠═f8904d41-c448-417c-bbe9-6626a6283b67
 # ╠═3f9dfb6e-e4d5-4895-b8ac-f5304dd15088
 # ╠═1f251e67-7fed-4375-8bed-697704302e43
+# ╠═e67cca0a-9703-4e09-9d73-4e175ab34589
 # ╠═a5f1a339-6093-49ea-bd10-b513688d668c
 # ╠═7514e306-ddc1-44a3-9242-5b12cf2a1536
 # ╠═6dd003db-bd29-4872-94f2-445f5c4536ba
 # ╠═c1cf3a80-1c26-4417-9ddf-1046f3f5f608
+# ╟─52425d3c-9918-46eb-bd5d-759491837886
+# ╠═e4ee266e-702a-47a5-a8fb-11c1b0a6e75a
+# ╠═b85ef69a-103d-4e08-84ea-cdcbf65ad94c
+# ╠═fd5b8ec9-b9f3-4a20-b0af-cf9aa9d3905e
+# ╠═d6b46b49-c11b-417b-89c8-c8d501000328
+# ╠═3f102a8b-06e9-49be-9b80-dd56dc24dd1b
+# ╠═7d7a601c-7445-462f-87d3-ef76fe68dae4
+# ╠═bd267edd-23f6-4107-90e3-eebf3b6cffe2
+# ╠═be42ee18-b2d6-4a3c-b776-ddc5cc67ebdb
+# ╠═e5f25c66-c969-4245-8569-927918451ac6
+# ╠═fb2536fa-9703-49c9-b748-bfc5c39f27c1
+# ╠═1fee83bd-2aca-40ac-bfe2-26930945220f
+# ╠═c1d08fe4-7371-4a8a-8452-b3b85b8488cc
+# ╠═8cf7f467-dce1-4a79-b9ea-88080bbe18bf
+# ╠═fc8b93ae-8d33-4de5-86ac-6c72a48129ba
+# ╠═b2404406-7670-4092-ac52-bc7e12c39289
+# ╠═2235ef70-9cfd-46a0-a084-d0befca8bc5c
+# ╠═58ba58b3-34c8-4ba8-bb63-90338269f7e4
+# ╠═d76aeb1d-e2c1-4082-9737-16b53307624b
+# ╠═ee8c24ea-86ad-4846-9fec-9005d55fb062
+# ╠═17b378e4-4bfb-41a3-b85a-58b84fde154b
+# ╠═16666018-5329-4c6e-b8d7-27d6d6142965
+# ╠═08fe234c-6c55-4b0b-b762-74b21b415180
+# ╠═e1f7ff04-de05-4e0b-aa37-caa1f644953a
+# ╠═a02f7381-e5c0-4cb2-8c78-861c71ae98b3
+# ╠═e41d0620-0ae6-48e8-8ebe-1cf40a1253f7
+# ╠═ba37b4a3-0d3f-48d5-8242-64eb09cd91f5
+# ╠═1caab97e-db29-492c-b7f1-aba0cb28e5a3
+# ╠═eb4c231b-5e61-48c0-bbc5-ee31b8e11830
+# ╠═1368bddb-c118-493a-9590-0f1004f3853f
+# ╠═96e82c86-2171-48f6-828d-991303fd8e38
+# ╠═d7a56457-4f05-411f-880c-1636dd65d25a
+# ╠═dd4dad6f-0b0e-4c09-8c78-d61d92dfffbd
+# ╠═9a3031a4-e4c0-4365-ac0a-f8ed3c9c93ea
 # ╟─1acdc61b-fb5f-449d-ba86-46525c881a39
 # ╠═0532010e-7832-44d4-a7ee-5a6f6ee9d7da
 # ╠═ba6c51c9-6d8f-4eca-af33-c75d0a5a5b37

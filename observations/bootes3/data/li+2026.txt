@@ -1,4 +1,4 @@
-source_id ra dec gmag rmag radial_velocity radial_velocity_err fe_h fe_h_err snr P_sat
+source_id ra dec gmag rmag RV RV_err fe_h fe_h_err snr P_sat
 1258541764098047104 210.4413 26.0983 16.52 15.53 190.83 0.70 -2.15 0.05 64.4 1.000
 1260240127310861184 211.2317 27.1648 19.52 18.99 188.41 5.05 -2.27 0.38 3.5 1.000
 1450579200830093312 207.4225 26.4815 16.82 15.79 189.50 0.79 -1.43 0.09 30.1 0.985
